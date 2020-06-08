@@ -35,7 +35,6 @@ struct mailmime * get_file_part(
         const char * mime_type,
         char * data,
         size_t length,
-        bool transport_encode,
         bool set_attachment_forward_comment
     );
 

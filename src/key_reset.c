@@ -782,6 +782,16 @@ PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
         if (is_me(session, curr_id))
             continue;
             
+        // Also, don't bother to send it to non-pEp-users 
+        bool pEp_user = false;
+        status = is_pEp_user(session, curr_id, &pEp_user);
+
+        if (status != PEP_STATUS_OK)
+            goto pEp_free;
+
+        if (!pEp_user)
+            continue;
+            
         // Check if they've already been told - this shouldn't be the case, but...
         bool contacted = false;
         status = has_key_reset_been_sent(session, from_ident->address, user_id, old_fpr, &contacted);

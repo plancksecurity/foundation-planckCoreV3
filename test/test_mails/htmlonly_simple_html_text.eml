@@ -1,0 +1,123 @@
+X-Envelope-From: <SRS0=I20PID=6G=darthmama.org=krista@srs.smtpin.rzone.de>
+X-Envelope-To: <krista@darthmama.org>
+X-Delivery-Time: 1587540868
+X-UID: 6191
+Return-Path: <SRS0=I20PID=6G=darthmama.org=krista@srs.smtpin.rzone.de>
+Authentication-Results: strato.com; dmarc=none header.from=darthmama.org
+Authentication-Results: strato.com; arc=none
+Authentication-Results: strato.com; dkim=pass header.d=darthmama.org
+Authentication-Results: strato.com; dkim-adsp=pass header.from="krista@darthmama.org"
+Authentication-Results: strato.com; spf=pass smtp.mailfrom="SRS0=I20PID=6G=darthmama.org=krista@srs.smtpin.rzone.de"
+X-RZG-Expurgate: clean/normal
+X-RZG-Expurgate-ID: 149500::1587540868-00004BAD-469590D0/0/0
+X-RZG-CLASS-ID: mi00
+Received-SPF: pass
+	(strato.com: domain _spf.strato.com designates 2a01:238:20a:202:5100::11 as permitted sender)
+	mechanism=ip6;
+	client-ip=2a01:238:20a:202:5100::11;
+	helo="mi6-p00-ob.smtp.rzone.de";
+	envelope-from="SRS0=I20PID=6G=darthmama.org=krista@srs.smtpin.rzone.de";
+	receiver=smtpin.rzone.de;
+	identity=mailfrom;
+Received: from mi6-p00-ob.smtp.rzone.de ([IPv6:2a01:238:20a:202:5100::11])
+	by smtpin.rzone.de (RZmta 46.6.0 OK)
+	with ESMTPS id 20aea8w3M7YSAKT
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
+	(Client CN "*.smtp.rzone.de", Issuer "TeleSec ServerPass Class 2 CA" (verified OK (+EmiG)))
+	(Client hostname verified OK)
+	for <krista@darthmama.org>;
+	Wed, 22 Apr 2020 09:34:28 +0200 (CEST)
+X-RZG-FWD-BY: julio_iglesias@darthmama.org
+Received: from mailin.rzone.de ([unix socket])
+	by mailin.rzone.de (RZmta 46.6.2) with LMTPA;
+	Wed, 22 Apr 2020 09:34:24 +0200 (CEST)
+Authentication-Results: strato.com; dmarc=none header.from=darthmama.org
+Authentication-Results: strato.com; arc=none
+Authentication-Results: strato.com; dkim=pass header.d=darthmama.org
+Authentication-Results: strato.com; dkim-adsp=pass header.from="krista@darthmama.org"
+Authentication-Results: strato.com; spf=none smtp.mailfrom="krista@darthmama.org"
+X-RZG-Expurgate: clean/normal
+X-RZG-Expurgate-ID: 149500::1587540864-00004380-B43F2B11/0/0
+X-RZG-CLASS-ID: mi00
+Received-SPF: none
+	client-ip=2a01:238:20a:202:5307::5;
+	helo="mo6-p07-ob.smtp.rzone.de";
+	envelope-from="krista@darthmama.org";
+	receiver=smtpin.rzone.de;
+	identity=mailfrom;
+Received: from mo6-p07-ob.smtp.rzone.de ([IPv6:2a01:238:20a:202:5307::5])
+	by smtpin.rzone.de (RZmta 46.6.2 OK)
+	with ESMTPS id A057bew3M7YO00a
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
+	(Client CN "*.smtp.rzone.de", Issuer "TeleSec ServerPass Class 2 CA" (verified OK (+EmiG)))
+	(Client hostname verified OK)
+	for <julio_iglesias@darthmama.org>;
+	Wed, 22 Apr 2020 09:34:24 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1587540864;
+	s=strato-dkim-0002; d=darthmama.org;
+	h=Date:Message-ID:Subject:From:To:X-RZG-AUTH:X-RZG-CLASS-ID:From:
+	Subject:Sender;
+	bh=J+wH7gYfbTPhHjSM+qD4mLbO30Me/SfkoBOvO/SonPI=;
+	b=PC+SuL/unD4gntJjDRBnZAqVL6uM3dCHMl4rFWgjxrROrdgVKPq4s2R3khdCEx8Vj2
+	X9wu8f4/LhBoJtFNMO8QZf0LkFEt9UEDwekfs9wYtmNiJO0uoS6zzferhH0bqQMIu8xD
+	+GZC/CG5yR5PmYv4ES6ROq74W9PyRq9ji/2LXShPwlaGllQXpA0/9e3PTpf9HiKWefNS
+	wPa1MLC6XDVOsiCMU61QtTniNsAVdPyiCbK+JTgUsJw13Cwd43FsLfi8IlHPtSqs8i7E
+	q5fc26LO/4JzB0kO6OP4g067ud5B9E/pzD2yfjURXGTNh0uv18uMqICVZmlicpVOIRTw
+	tpTw==
+X-RZG-CLASS-ID: mo07
+X-RZG-AUTH: ":J34NZlSpW/vPDlKSRxUBevLT/2WDdlCqkty/deruLplgoO4nY+csF8wOXLHBXKAYNsYMbdY="
+Received: from rylen.home
+	by smtp.strato.de (RZmta 46.5.0 DYNA|AUTH)
+	with ESMTPSA id U08b44w3M7YOIJ6
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
+	(Client did not present a certificate)
+	for <julio_iglesias@darthmama.org>;
+	Wed, 22 Apr 2020 09:34:24 +0200 (CEST)
+To: julio_iglesias@darthmama.org
+From: Krista Bennett <krista@darthmama.org>
+Subject: Your Mama
+Message-ID: <e31f5f3d-35cf-2d9e-222b-6a8b5b9eb57a@darthmama.org>
+Date: Wed, 22 Apr 2020 09:34:24 +0200
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.6.0
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------693FCCD6AEE78505BE42C641"
+Content-Language: en-GB
+
+This is a multi-part message in MIME format.
+--------------693FCCD6AEE78505BE42C641
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+<html>
+  <head>
+
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  </head>
+  <body>
+    <h1>This is the most fun I have ever had</h1>
+    <p><font color="#ff0000">I'm a crappy liar.</font></p>
+    <p><font color="#ff0000"><br>
+      </font></p>
+  </body>
+</html>
+
+--------------693FCCD6AEE78505BE42C641
+Content-Type: text/html; charset=UTF-8; x-mac-type="0"; x-mac-creator="0";
+ name="meh.html"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="meh.html"
+
+PGh0bWw+Cjxib2R5Pgo8aDE+SFRNTCBNYWlsIGlzIEZvciBMb3NlcnM8L2gxPgo8cD5CdXQg
+cGVvcGxlIHVzZSBpdC48L3A+CjwvYm9keT4KPC9odG1sPgo=
+--------------693FCCD6AEE78505BE42C641
+Content-Type: text/plain; charset=UTF-8; x-mac-type="0"; x-mac-creator="0";
+ name="bah.text"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="bah.text"
+
+CkJBSC4K
+--------------693FCCD6AEE78505BE42C641--

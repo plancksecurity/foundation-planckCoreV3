@@ -179,13 +179,13 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj) {
     ASSERT_NE(decrypted_text , nullptr);
     ASSERT_NE(modified_src , nullptr);
     message* checker = NULL;
-    status = mime_decode_message(modified_src, strlen(modified_src), &checker);
+    status = mime_decode_message(modified_src, strlen(modified_src), &checker, NULL);
     ASSERT_NE(checker, nullptr);
     ASSERT_STREQ(checker->shortmsg, "Boom shaka laka");
     config_unencrypted_subject(session, false);
     cout << modified_src << endl;
     message* src_msg = NULL;
-    status = mime_decode_message(mailfile.c_str(), mailfile.size(), &src_msg);
+    status = mime_decode_message(mailfile.c_str(), mailfile.size(), &src_msg, NULL);
     ASSERT_NE(src_msg, nullptr);
     ASSERT_STREQ(src_msg->attachments->next->value, checker->attachments->next->value);
     config_unencrypted_subject(session, false);
@@ -226,12 +226,12 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_check_effici
     ASSERT_NE(decrypted_text , nullptr);
     ASSERT_NE(modified_src , nullptr);
     message* checker = NULL;
-    status = mime_decode_message(modified_src, strlen(modified_src), &checker);
+    status = mime_decode_message(modified_src, strlen(modified_src), &checker, NULL);
     ASSERT_NE(checker, nullptr);
     ASSERT_STREQ(checker->shortmsg, "Boom shaka laka");
     cout << modified_src << endl;
     message* src_msg = NULL;
-    status = mime_decode_message(mailfile.c_str(), mailfile.size(), &src_msg);
+    status = mime_decode_message(mailfile.c_str(), mailfile.size(), &src_msg, NULL);
     ASSERT_NE(src_msg, nullptr);
     ASSERT_STREQ(src_msg->attachments->next->value, checker->attachments->next->value);
     
@@ -293,12 +293,12 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys) 
     ASSERT_NE(decrypted_text , nullptr);
     ASSERT_NE(modified_src , nullptr);
     message* checker = NULL;
-    status = mime_decode_message(modified_src, strlen(modified_src), &checker);
+    status = mime_decode_message(modified_src, strlen(modified_src), &checker, NULL);
     ASSERT_NE(checker, nullptr);
     ASSERT_STREQ(checker->shortmsg, "Boom shaka laka");
     cout << modified_src << endl;
     message* src_msg = NULL;
-    status = mime_decode_message(mailfile.c_str(), mailfile.size(), &src_msg);
+    status = mime_decode_message(mailfile.c_str(), mailfile.size(), &src_msg, NULL);
     ASSERT_NE(src_msg, nullptr);
     ASSERT_STRNE(src_msg->attachments->next->value, checker->attachments->next->value);
 
@@ -376,12 +376,12 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys_e
     ASSERT_NE(decrypted_text , nullptr);
     ASSERT_NE(modified_src , nullptr);
     message* checker = NULL;
-    status = mime_decode_message(modified_src, strlen(modified_src), &checker);
+    status = mime_decode_message(modified_src, strlen(modified_src), &checker, NULL);
     ASSERT_NE(checker, nullptr);
     ASSERT_STREQ(checker->shortmsg, "Boom shaka laka");
     cout << modified_src << endl;
     message* src_msg = NULL;
-    status = mime_decode_message(mailfile.c_str(), mailfile.size(), &src_msg);
+    status = mime_decode_message(mailfile.c_str(), mailfile.size(), &src_msg, NULL);
     ASSERT_NE(src_msg, nullptr);
     ASSERT_STRNE(src_msg->attachments->next->value, checker->attachments->next->value);
 
@@ -447,12 +447,12 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys_e
     ASSERT_NE(decrypted_text , nullptr);
     ASSERT_NE(modified_src , nullptr);
     message* checker = NULL;
-    status = mime_decode_message(modified_src, strlen(modified_src), &checker);
+    status = mime_decode_message(modified_src, strlen(modified_src), &checker, NULL);
     ASSERT_NE(checker, nullptr);
     ASSERT_STREQ(checker->shortmsg, "Boom shaka laka");
     cout << modified_src << endl;
     message* src_msg = NULL;
-    status = mime_decode_message(mailfile.c_str(), mailfile.size(), &src_msg);
+    status = mime_decode_message(mailfile.c_str(), mailfile.size(), &src_msg, NULL);
     ASSERT_NE(src_msg, nullptr);
     ASSERT_STRNE(src_msg->attachments->next->value, checker->attachments->next->value);
 
@@ -897,7 +897,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt_from_enigmail) {
     flags = PEP_decrypt_flag_untrusted_server;
 
     // Put the original message into a message struct
-    status = mime_decode_message(to_reencrypt_from_enigmail.c_str(), to_reencrypt_from_enigmail.size(), &enc_msg);
+    status = mime_decode_message(to_reencrypt_from_enigmail.c_str(), to_reencrypt_from_enigmail.size(), &enc_msg, NULL);
 
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(enc_msg , nullptr);
@@ -970,7 +970,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt_from_enigmail_w_own
 
     // Put the original message into a message struct
 
-    status = mime_decode_message(to_reencrypt_from_enigmail_BCC.c_str(), to_reencrypt_from_enigmail_BCC.size(), &enc_msg);
+    status = mime_decode_message(to_reencrypt_from_enigmail_BCC.c_str(), to_reencrypt_from_enigmail_BCC.size(), &enc_msg, NULL);
 
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(enc_msg , nullptr);
@@ -1042,7 +1042,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt_from_pEp_2_0) {
     flags = PEP_decrypt_flag_untrusted_server;
 
     // Put the original message into a message struct
-    status = mime_decode_message(to_reencrypt_from_pEp.c_str(), to_reencrypt_from_pEp.size(), &enc_msg);
+    status = mime_decode_message(to_reencrypt_from_pEp.c_str(), to_reencrypt_from_pEp.size(), &enc_msg, NULL);
 
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(enc_msg , nullptr);

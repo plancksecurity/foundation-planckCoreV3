@@ -142,7 +142,7 @@ TEST_F(MessageTwoPointOhTest, check_message_two_point_oh) {
     output_stream << "message created.\n";
 
     char* encoded_text = nullptr;
-    status = mime_encode_message(outgoing_message, false, &encoded_text);
+    status = mime_encode_message(outgoing_message, false, &encoded_text, false);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(encoded_text, nullptr);
 
@@ -162,7 +162,7 @@ TEST_F(MessageTwoPointOhTest, check_message_two_point_oh) {
     output_stream << "message encrypted.\n";
 
     encrypted_msg->enc_format = PEP_enc_none;
-    status = mime_encode_message(encrypted_msg, false, &encoded_text);
+    status = mime_encode_message(encrypted_msg, false, &encoded_text, false);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(encoded_text, nullptr);
 
@@ -183,7 +183,7 @@ TEST_F(MessageTwoPointOhTest, check_message_two_point_oh) {
 //    output_stream << decrypted_text << endl;
 
     message* decoded_msg = nullptr;
-    status = mime_decode_message(encoded_text, strlen(encoded_text), &decoded_msg);
+    status = mime_decode_message(encoded_text, strlen(encoded_text), &decoded_msg, NULL);
     ASSERT_EQ(status , PEP_STATUS_OK);
     const string string3 = encoded_text;
 
@@ -217,7 +217,7 @@ TEST_F(MessageTwoPointOhTest, check_message_two_point_oh) {
     }
 
     decrypted_msg->enc_format = PEP_enc_none;
-    status = _mime_encode_message_internal(decrypted_msg, false, &encoded_text, false, false);
+    status = mime_encode_message(decrypted_msg, false, &encoded_text, false);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(encoded_text, nullptr);
     output_stream << "Decrypted message: " << endl;

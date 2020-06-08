@@ -1,8 +1,6 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#define PEP_ENGINE_VERSION "1.1.1"
-
 // maximum attachment size to import as key 1MB, maximum of 20 attachments
 
 #define MAX_KEY_SIZE (1024 * 1024)
@@ -162,7 +160,8 @@ struct _pEpSession {
     sqlite3_stmt *get_main_user_fpr;
     sqlite3_stmt *refresh_userid_default_key;
     sqlite3_stmt *delete_key;
-    sqlite3_stmt *remove_fpr_as_default;
+    sqlite3_stmt *remove_fpr_as_identity_default;
+    sqlite3_stmt *remove_fpr_as_user_default;
     sqlite3_stmt *set_person;
     sqlite3_stmt *update_person;
     sqlite3_stmt *delete_person;

@@ -131,7 +131,7 @@ TEST_F(LeastColorGroupTest, check_least_color_group) {
     PEP_rating rating;
     PEP_decrypt_flags_t flags;
 
-    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(msg_ptr, nullptr);
     final_ptr = msg_ptr;

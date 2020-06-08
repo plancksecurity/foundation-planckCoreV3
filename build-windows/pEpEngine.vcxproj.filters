@@ -126,6 +126,9 @@
     <ClCompile Include="..\src\distribution_codec.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\internal_format.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\keymanagement.h">
@@ -264,6 +267,9 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="..\src\sync_codec.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\internal_format.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
