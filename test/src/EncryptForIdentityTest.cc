@@ -15,8 +15,6 @@
 #include "keymanagement.h"
 #include "test_util.h"
 
-
-
 #include "Engine.h"
 
 #include <gtest/gtest.h>

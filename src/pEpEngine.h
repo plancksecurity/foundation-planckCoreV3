@@ -1350,6 +1350,53 @@ DYNAMIC_API const char *per_user_directory(void);
 
 DYNAMIC_API const char *per_machine_directory(void);
 
+// FIXME: replace in canonical style
+//
+// config_passphrase() - configure a key passphrase for the current session.
+//
+// A passphrase can be configured into a p≡p session. Then it is used whenever a
+// secret key is used which requires a passphrase.
+// 
+// A passphrase is a string between 1 and 1024 bytes and is only ever present in
+// memory. Because strings in the p≡p engine are UTF-8 NFC, the string is
+// restricted to 250 code points in UI.
+// 
+// This function copies the passphrase into the session. It may return
+// PEP_OUT_OF_MEMORY. The behaviour of all functions which use secret keys may
+// change after this is configured.  Error behaviour
+// 
+// For any function which may trigger the use of a secret key, if an attempt
+// to use a secret key which requires a passphrase occurs and no passphrase
+// is configured for the current session, PEP_PASSPHRASE_REQUIRED is
+// returned by this function (and thus, all functions which could trigger
+// such a usage must be prepared to return this value).  For any function
+// which may trigger the use of a secret key, if a passphrase is configured
+// and the configured passphrase is the wrong passphrase for the use of a
+// given passphrase-protected secret key, PEP_WRONG_PASSPHRASE is returned
+// by this function (and thus, all functions which could trigger such a
+// usage must be prepared to return this value).
+
+DYNAMIC_API PEP_STATUS config_passphrase(PEP_SESSION session, const char *passphrase);
+
+// FIXME: replace in canonical style
+//
+// Passphrase enablement for newly-generated secret keys
+// 
+// If it is desired that new p≡p keys are passphrase-protected, the following
+// API call is used to enable the addition of passphrases to new keys during key
+// generation:
+// 
+// If enabled and a passphrase has been configured (see above), then any
+// time a secret key is generated while enabled, the configured passphrase
+// will be used as the passphrase for any newly-generated secret key.  If
+// enabled and a passphrase has not been configured, then any function which
+// can attempt to generate a secret key will return
+// PEP_PASSPHRASE_FOR_NEW_KEY_REQUIRED.  If disabled (i.e. not enabled) and
+// a passphrase has been configured, no passphrases will be used for
+// newly-generated keys.
+// 
+
+DYNAMIC_API void config_passphrase_for_new_keys(PEP_SESSION session, bool enable);
 
 PEP_STATUS _generate_keypair(PEP_SESSION session, 
                              pEp_identity *identity,

@@ -2295,6 +2295,27 @@ DYNAMIC_API void config_unencrypted_subject(PEP_SESSION session, bool enable)
         session->unencrypted_subject = enable;
 }
 
+DYNAMIC_API PEP_STATUS config_passphrase(PEP_SESSION session, const char *passphrase) {
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+        
+    PEP_STATUS status = PEP_STATUS_OK;
+    free(session->passphrase);
+    if (!passphrase)
+        session->passphrase = NULL;
+    else {
+        session->passphrase = strdup(passphrase);
+        if (!session->passphrase)
+            status = PEP_OUT_OF_MEMORY;
+    }
+    return status;
+}
+
+DYNAMIC_API void config_passphrase_for_new_keys(PEP_SESSION session, bool enable) {
+    session->new_key_pass_enable = enable;
+}
+
+
 DYNAMIC_API void config_service_log(PEP_SESSION session, bool enable)
 {
     assert(session);

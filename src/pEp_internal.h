@@ -141,6 +141,9 @@ struct _pEpSession {
 
     PEP_cryptotech_t *cryptotech;
     PEP_CIPHER_SUITE cipher_suite;
+    
+    char* passphrase;
+    bool new_key_pass_enable;
 
     PEP_transport_t *transports;
 
