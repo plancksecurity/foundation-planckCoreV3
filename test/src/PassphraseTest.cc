@@ -9,7 +9,7 @@
 
 #include <gtest/gtest.h>
 
-#define PPTEST_DUMP 1
+#define PPTEST_DUMP 0
 
 namespace {
 
