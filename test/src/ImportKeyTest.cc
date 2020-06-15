@@ -306,3 +306,23 @@ TEST_F(ImportKeyTest, check_import_huge_concat_then_change) {
     ASSERT_EQ(changes, 938); // 1, 3, 5, 7, 8, 9 = 1110101010 = 938
     free_stringlist(keylist);    
 }
+
+TEST_F(ImportKeyTest, check_non_cleared_list_usage) {
+    // Contains 10 keys
+    string pubkey_material = slurp("test_keys/pub/import_keys_multi_pub_concat.asc");
+    stringlist_t* keylist = NULL;
+    uint64_t changes = 0;
+    PEP_STATUS status = _import_key_with_fpr_return(session, pubkey_material.c_str(), pubkey_material.size(), NULL, &keylist, &changes);
+    ASSERT_EQ(status, PEP_KEY_IMPORTED);
+    ASSERT_NE(keylist, nullptr);    
+    ASSERT_EQ(stringlist_length(keylist), 10);
+    ASSERT_EQ(changes, 1023); 
+
+    string some_changed_material = slurp("test_keys/pub/import_keys_multi_with_mult_changes_concat.asc");
+    status = _import_key_with_fpr_return(session, some_changed_material.c_str(), some_changed_material.size(), NULL, &keylist, &changes);
+    ASSERT_EQ(status, PEP_KEY_IMPORTED);
+    ASSERT_NE(keylist, nullptr);    
+    ASSERT_EQ(stringlist_length(keylist), 20);
+    ASSERT_EQ(changes, 0xEABFF); // (938 << 10 | 1023) -> 11101010101111111111 = 0xEABFF
+    free_stringlist(keylist);    
+}
