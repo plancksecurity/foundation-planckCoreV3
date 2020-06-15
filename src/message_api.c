@@ -1119,7 +1119,7 @@ static PEP_STATUS encrypt_PGP_MIME(
         status = encrypt_and_sign(session, keys, mimetext, strlen(mimetext),
             &ctext, &csize);
     free(mimetext);
-    if (ctext == NULL)
+    if (ctext == NULL || status)
         goto pEp_error;
 
     dst->longmsg = strdup("this message was encrypted with p≡p "
@@ -2230,6 +2230,10 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
     if (!encrypted_key_text) {
         status = PEP_UNKNOWN_ERROR;
         goto pEp_free;
+    }
+    else if (status) {
+        free(encrypted_key_text);
+        goto pEp_free; // FIXME - we need an error return overall
     }
 
     // We will have to delete this before returning, as we allocated it.

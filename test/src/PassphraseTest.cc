@@ -222,8 +222,8 @@ TEST_F(PassphraseTest, check_bob_primary_pass_subkey_no_passphrase_nopass_sign) 
     
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
-    ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NE(status, PEP_STATUS_OK);
+    ASSERT_EQ(enc_msg, nullptr);
     
     free_message(msg);
     free_message(enc_msg);
