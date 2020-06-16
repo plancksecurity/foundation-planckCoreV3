@@ -132,6 +132,10 @@ typedef enum {
     PEP_STATEMACHINE_INHIBITED_EVENT                = 0x0986,
     PEP_STATEMACHINE_CANNOT_SEND                    = 0x0987,
 
+    PEP_PASSPHRASE_REQUIRED                         = 0x0a00,
+    PEP_WRONG_PASSPHRASE                            = 0x0a01,
+    PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED            = 0x0a02,
+
     PEP_DISTRIBUTION_ILLEGAL_MESSAGE                = 0x1002,
 
     PEP_COMMIT_FAILED                               = 0xff01,
@@ -1384,19 +1388,29 @@ DYNAMIC_API PEP_STATUS config_passphrase(PEP_SESSION session, const char *passph
 // 
 // If it is desired that new p≡p keys are passphrase-protected, the following
 // API call is used to enable the addition of passphrases to new keys during key
-// generation:
-// 
-// If enabled and a passphrase has been configured (see above), then any
-// time a secret key is generated while enabled, the configured passphrase
-// will be used as the passphrase for any newly-generated secret key.  If
-// enabled and a passphrase has not been configured, then any function which
-// can attempt to generate a secret key will return
-// PEP_PASSPHRASE_FOR_NEW_KEY_REQUIRED.  If disabled (i.e. not enabled) and
-// a passphrase has been configured, no passphrases will be used for
-// newly-generated keys.
-// 
+// generation.
+//
+// If enabled and a passphrase for new keys has been configured
+// through this function (NOT the one above - this is a separate passphrase!),
+// then anytime a secret key is generated while enabled, the configured
+// passphrase will be used as the passphrase for any newly-generated secret key.
+//
+// If enabled and a passphrase for new keys has not been configured, then any
+// function which can attempt to generate a secret key will return
+// PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED.  
+//
+// If disabled (i.e. not enabled) and a passphrase for new keys has been
+// configured, no passphrases will be used for newly-generated keys.
+//
+// This function copies the passphrase for new keys into a special field that is
+// specifically for key generation into the session. It may return
+// PEP_OUT_OF_MEMORY. The behaviour of all functions which use secret keys may
+// change after this is configured.
+//
 
-DYNAMIC_API void config_passphrase_for_new_keys(PEP_SESSION session, bool enable);
+DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys(PEP_SESSION session, 
+                                                bool enable, 
+                                                const char *passphrase);
 
 PEP_STATUS _generate_keypair(PEP_SESSION session, 
                              pEp_identity *identity,

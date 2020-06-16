@@ -2300,19 +2300,33 @@ DYNAMIC_API PEP_STATUS config_passphrase(PEP_SESSION session, const char *passph
         return PEP_ILLEGAL_VALUE;
         
     PEP_STATUS status = PEP_STATUS_OK;
-    free(session->passphrase);
+    free(session->curr_passphrase);
     if (!passphrase)
-        session->passphrase = NULL;
+        session->curr_passphrase = NULL;
     else {
-        session->passphrase = strdup(passphrase);
-        if (!session->passphrase)
+        session->curr_passphrase = strdup(passphrase);
+        if (!session->curr_passphrase)
             status = PEP_OUT_OF_MEMORY;
     }
     return status;
 }
 
-DYNAMIC_API void config_passphrase_for_new_keys(PEP_SESSION session, bool enable) {
+DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys(PEP_SESSION session, bool enable, const char *passphrase) {
+    if (enable && EMPTYSTR(passphrase))
+        return PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED;
+        
     session->new_key_pass_enable = enable;
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    free(session->generation_passphrase);
+    if (!passphrase)
+        session->generation_passphrase = NULL;
+    else {
+        session->generation_passphrase = strdup(passphrase);
+        if (!session->generation_passphrase)
+            status = PEP_OUT_OF_MEMORY;
+    }
+    return status;    
 }
 
 
