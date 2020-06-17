@@ -820,7 +820,9 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
     size_t curr_buffer_len = 0;
     int tried_commit = 0;
     pgp_cert_key_iter_t key_iter = NULL;
-    pgp_user_id_bundle_iter_t user_id_iter = NULL;
+    pgp_cert_valid_user_id_iter_t ua_iter = NULL;
+    pgp_valid_user_id_amalgamation_t ua = NULL;
+    pgp_packet_t user_id = NULL;
     char *email = NULL;
     char *name = NULL;
     
@@ -926,18 +928,17 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
 
     // Insert the "userids".
     stmt = session->sq_sql.cert_save_insert_userids;
-    user_id_iter = pgp_cert_user_id_bundle_iter(cert);
-    pgp_user_id_bundle_t bundle;
+    ua_iter = pgp_cert_valid_user_id_iter(cert, session->policy, 0);
     int first = 1;
-    while ((bundle = pgp_user_id_bundle_iter_next(user_id_iter))) {
-        char *user_id_value = pgp_user_id_bundle_user_id(bundle);
-        if (!user_id_value || !*user_id_value)
-            continue;
+    while ((ua = pgp_cert_valid_user_id_iter_next(ua_iter))) {
+        user_id = pgp_valid_user_id_amalgamation_user_id(ua);
 
-        // Ignore user ids with a self-revocation certificate, but no
-        // self-signature.
-        if (!pgp_user_id_bundle_selfsig(bundle, session->policy)) {
-            free(user_id_value);
+        const uint8_t *user_id_value = pgp_user_id_value(user_id, NULL);
+        if (!user_id_value || !*user_id_value) {
+            pgp_packet_free (user_id);
+            user_id = NULL;
+            pgp_valid_user_id_amalgamation_free(ua);
+            ua = NULL;
             continue;
         }
 
@@ -946,16 +947,13 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
         free(email);
         email = NULL;
 
-        pgp_packet_t userid = pgp_user_id_new(user_id_value);
-        pgp_user_id_name(NULL, userid, &name);
+        pgp_user_id_name(NULL, user_id, &name);
         // Try to get the normalized address.
-        pgp_user_id_email_normalized(NULL, userid, &email);
+        pgp_user_id_email_normalized(NULL, user_id, &email);
         if (! email)
             // Ok, it's not a proper RFC 2822 name-addr.  Perhaps it
             // is a URI.
-            pgp_user_id_uri(NULL, userid, &email);
-        pgp_packet_free(userid);
-        free(user_id_value);
+            pgp_user_id_uri(NULL, user_id, &email);
 
         if (email) {
             T("  userid: %s", email);
@@ -967,7 +965,6 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
             sqlite3_reset(stmt);
 
             if (sqlite_result != SQLITE_DONE) {
-                pgp_user_id_bundle_iter_free(user_id_iter);
                 ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
                           "Updating userids: %s", sqlite3_errmsg(session->key_db));
             }
@@ -986,9 +983,11 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
                 ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "identity_list_add");
         }
 
+        pgp_packet_free (user_id);
+        user_id = NULL;
+        pgp_valid_user_id_amalgamation_free(ua);
+        ua = NULL;
     }
-    pgp_user_id_bundle_iter_free(user_id_iter);
-    user_id_iter = NULL;
 
  out:
     // Prevent ERROR_OUT from causing an infinite loop.
@@ -1013,7 +1012,9 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
 
     free(email);
     free(name);
-    pgp_user_id_bundle_iter_free(user_id_iter);
+    pgp_packet_free(user_id);
+    pgp_valid_user_id_amalgamation_free(ua);
+    pgp_cert_valid_user_id_iter_free(ua_iter);
     pgp_cert_key_iter_free(key_iter);
     if (stmt)
         sqlite3_reset(stmt);
@@ -1169,9 +1170,8 @@ decrypt_cb(void *cookie_opaque,
         }
 
         sk = pgp_session_key_from_bytes (session_key, session_key_len);
-        pgp_status_t status;
-        if ((status = decrypt (decrypt_cookie, algo, sk))) {
-            DUMP_STATUS(status, PEP_UNKNOWN_ERROR, "decrypt_cb");
+        if (! decrypt (decrypt_cookie, algo, sk)) {
+            DUMP_STATUS(PGP_STATUS_UNKNOWN_ERROR, PEP_CANNOT_DECRYPT_UNKNOWN, "decrypt_cb");
             goto eol;
         }
 
@@ -1242,9 +1242,8 @@ decrypt_cb(void *cookie_opaque,
 
                 pgp_session_key_t sk = pgp_session_key_from_bytes (session_key,
                                                                    session_key_len);
-                pgp_status_t status;
-                if ((status = decrypt (decrypt_cookie, algo, sk))) {
-                    DUMP_STATUS(status, PEP_UNKNOWN_ERROR, "decrypt_cb");
+                if (! decrypt (decrypt_cookie, algo, sk)) {
+                    DUMP_STATUS(PGP_STATUS_UNKNOWN_ERROR, PEP_CANNOT_DECRYPT_UNKNOWN, "decrypt_cb");
                     goto eol2;
                 }
 
@@ -1284,7 +1283,7 @@ check_signatures_cb(void *cookie_opaque, pgp_message_structure_t structure)
     struct decrypt_cookie *cookie = cookie_opaque;
 
     pgp_message_structure_iter_t iter
-        = pgp_message_structure_iter (structure);
+        = pgp_message_structure_into_iter (structure);
     for (pgp_message_layer_t layer = pgp_message_structure_iter_next (iter);
          layer;
          layer = pgp_message_structure_iter_next (iter)) {
@@ -1418,7 +1417,7 @@ check_signatures_cb(void *cookie_opaque, pgp_message_structure_t structure)
                         cookie->revoked_key ++;
                     } else {
                         pgp_revocation_status_free (rs);
-                        rs = pgp_cert_revoked (cert, cookie->session->policy, 0);
+                        rs = pgp_cert_revocation_status (cert, cookie->session->policy, 0);
                         if (pgp_revocation_status_variant(rs)
                             == PGP_REVOCATION_STATUS_REVOKED) {
                             // Cert is revoked.
@@ -1492,7 +1491,6 @@ check_signatures_cb(void *cookie_opaque, pgp_message_structure_t structure)
     }
 
     pgp_message_structure_iter_free (iter);
-    pgp_message_structure_free (structure);
 
     return PGP_STATUS_SUCCESS;
 }
@@ -1642,7 +1640,6 @@ PEP_STATUS pgp_verify_text(
     struct decrypt_cookie cookie = { session, 0, NULL, NULL, 0, 0, 0, };
     pgp_reader_t reader = NULL;
     pgp_reader_t dsig_reader = NULL;
-    pgp_reader_t verifier = NULL;
 
     if (size == 0 || sig_size == 0)
         return PEP_DECRYPT_WRONG_FORMAT;
@@ -1693,21 +1690,36 @@ PEP_STATUS pgp_verify_text(
             ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "Creating signature reader");
     }
 
-    if (dsig_reader)
-        verifier = pgp_detached_verifier_new(&err, session->policy,
-                                             dsig_reader, reader,
-                                             get_public_keys_cb,
-                                             check_signatures_cb,
-                                             &cookie, 0);
-    else
+    if (dsig_reader) {
+        pgp_detached_verifier_t verifier
+            = pgp_detached_verifier_new(&err, session->policy,
+                                        dsig_reader,
+                                        get_public_keys_cb,
+                                        check_signatures_cb,
+                                        NULL,
+                                        &cookie, 0);
+        if (! verifier)
+            ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Creating verifier");
+
+        pgp_status_t status = pgp_detached_verifier_verify (&err, verifier, reader);
+        pgp_detached_verifier_free (verifier);
+        if (status)
+            ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Verifying data");
+    } else {
+        pgp_reader_t verifier = NULL;
         verifier = pgp_verifier_new(&err, session->policy, reader,
                                     get_public_keys_cb,
                                     check_signatures_cb,
+                                    NULL,
                                     &cookie, 0);
-    if (! verifier)
-        ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Creating verifier");
-    if (pgp_reader_discard(&err, verifier) < 0)
-        ERROR_OUT(err, PEP_UNKNOWN_ERROR, "verifier");
+        if (! verifier)
+            ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Creating verifier");
+
+        pgp_status_t status = pgp_reader_discard(&err, verifier);
+        pgp_reader_free(verifier);
+        if (status)
+            ERROR_OUT(err, PEP_UNKNOWN_ERROR, "verifier");
+    }
 
     if (! cookie.signer_keylist) {
         cookie.signer_keylist = new_stringlist("");
@@ -1753,7 +1765,6 @@ PEP_STATUS pgp_verify_text(
         free_stringlist(cookie.signer_keylist);
     }
 
-    pgp_reader_free(verifier);
     pgp_reader_free(reader);
     pgp_reader_free(dsig_reader);
 
@@ -2697,7 +2708,7 @@ static stringpair_list_t *add_key(PEP_SESSION session,
     bool revoked = false;
     // Don't add revoked keys to the keyinfo_list.
     if (keyinfo_list) {
-        pgp_revocation_status_t rs = pgp_cert_revoked(cert, session->policy, 0);
+        pgp_revocation_status_t rs = pgp_cert_revocation_status(cert, session->policy, 0);
         pgp_revocation_status_variant_t rsv = pgp_revocation_status_variant(rs);
         pgp_revocation_status_free(rs);
         if (rsv == PGP_REVOCATION_STATUS_REVOKED)
@@ -2942,47 +2953,41 @@ PEP_STATUS pgp_renew_key(
     while ((ka = pgp_cert_valid_key_iter_next(key_iter, NULL, NULL))) {
         pgp_status_t sq_status;
         pgp_error_t err;
-        pgp_packet_t *packets_tmp = NULL;
-        size_t packet_count_tmp = 0;
+        pgp_signature_t *sigs = NULL;
+        size_t sig_count = 0;
 
         sq_status = pgp_valid_key_amalgamation_set_expiration_time
-            (&err, ka, signer, t, &packets_tmp, &packet_count_tmp);
+            (&err, ka, signer, t, &sigs, &sig_count);
         if (sq_status)
             ERROR_OUT(err, PEP_UNKNOWN_ERROR,
                       "setting expiration (generating self signatures)");
 
-        if (! packets) {
-            assert(packet_count == 0);
-            assert(packet_capacity == 0);
-
-            packets = packets_tmp;
-            packet_count = packet_count_tmp;
-            packet_capacity = packet_count_tmp;
-        } else {
-            assert(packet_capacity > 0);
-            if (packet_capacity - packet_count < packet_count_tmp) {
-                // Grow the array.
-                int c = packet_capacity;
-                while (c < packet_count + packet_count_tmp) {
-                    c *= 2;
-                }
-
-                void * tmp = _pEp_reallocarray(packets, c, sizeof (*packets));
-                if (! tmp)
-                    ERROR_OUT(NULL, PEP_OUT_OF_MEMORY,
-                              "setting expiration (resizing buffer)");
-
-                packets = tmp;
-                packet_capacity = c;
+        if (packet_capacity - packet_count < sig_count) {
+            // Grow the array.
+            int c = packet_capacity;
+            if (c == 0) {
+                c = 1;
+            }
+            while (c < packet_count + sig_count) {
+                c *= 2;
             }
 
-            int i;
-            for (i = 0; i < packet_count_tmp; i ++) {
-                packets[packet_count + i] = packets_tmp[i];
-            }
-            packet_count += packet_count_tmp;
+            void * tmp = _pEp_reallocarray(packets, c, sizeof (*packets));
+            if (! tmp)
+                ERROR_OUT(NULL, PEP_OUT_OF_MEMORY,
+                          "setting expiration (resizing buffer)");
+
+            packets = tmp;
+            packet_capacity = c;
         }
 
+        int i;
+        for (i = 0; i < sig_count; i ++) {
+            packets[packet_count + i] = pgp_signature_into_packet(sigs[i]);
+        }
+        packet_count += sig_count;
+
+        free (sigs);
         pgp_valid_key_amalgamation_free (ka);
     }
 
@@ -3072,7 +3077,7 @@ PEP_STATUS pgp_revoke_key(
     if (! cert)
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "setting expiration");
 
-    assert(pgp_revocation_status_variant(pgp_cert_revoked(cert, session->policy, 0))
+    assert(pgp_revocation_status_variant(pgp_cert_revocation_status(cert, session->policy, 0))
            == PGP_REVOCATION_STATUS_REVOKED);
 
     status = cert_save(session, cert, NULL, NULL);
@@ -3239,7 +3244,7 @@ PEP_STATUS pgp_key_expired(PEP_SESSION session, const char *fpr,
 }
 
 static void _pgp_key_revoked(PEP_SESSION session, pgp_cert_t cert, bool* revoked) {
-    pgp_revocation_status_t rs = pgp_cert_revoked(cert, session->policy, 0);
+    pgp_revocation_status_t rs = pgp_cert_revocation_status(cert, session->policy, 0);
     *revoked = pgp_revocation_status_variant(rs) == PGP_REVOCATION_STATUS_REVOKED;
     pgp_revocation_status_free (rs); 
     
@@ -3316,7 +3321,7 @@ PEP_STATUS pgp_key_revoked(PEP_SESSION session, const char *fpr, bool *revoked)
     pgp_fingerprint_free(pgp_fpr);
     ERROR_OUT(NULL, status, "Looking up %s", fpr);
 
-    // pgp_revocation_status_t rs = pgp_cert_revoked(cert, 0);
+    // pgp_revocation_status_t rs = pgp_cert_revocation_status(cert, 0);
     // *revoked = pgp_revocation_status_variant(rs) == PGP_REVOCATION_STATUS_REVOKED;
     // pgp_revocation_status_free (rs);
     _pgp_key_revoked(session, cert, revoked);
@@ -3346,7 +3351,7 @@ PEP_STATUS pgp_get_key_rating(
 
     *comm_type = PEP_ct_OpenPGP_unconfirmed;
 
-    // pgp_revocation_status_t rs = pgp_cert_revoked(cert, 0);
+    // pgp_revocation_status_t rs = pgp_cert_revocation_status(cert, 0);
     // pgp_revocation_status_variant_t rsv = pgp_revocation_status_variant(rs);
     // pgp_revocation_status_free(rs);
     // if (rsv == PGP_REVOCATION_STATUS_REVOKED) {
