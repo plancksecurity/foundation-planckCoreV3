@@ -46,25 +46,33 @@ int sql_trace_callback (unsigned trace_constant,
                         void* context_ptr,
                         void* P,
                         void* X) {
+                            
+    const char* TC_str = "";
+    const char* info_str = "";
+    const char* title = "SQL_DEBUG";
+                                
     switch (trace_constant) {
         case SQLITE_TRACE_STMT:
-            fprintf(stderr, "SQL_DEBUG: STMT - ");
-            const char* X_str = (const char*) X;
-            if (!EMPTYSTR(X_str) && X_str[0] == '-' && X_str[1] == '-')
-                fprintf(stderr, "%s\n", X_str);
-            else
-                fprintf(stderr, "%s\n", sqlite3_expanded_sql((sqlite3_stmt*)P));    
+            TC_str = "STMT";
+            info_str = (const char*) X;
+            if (EMPTYSTR(info_str) || info_str[0] != '-' || info_str[1] != '-')
+                info_str = sqlite3_expanded_sql((sqlite3_stmt*)P);
             break;
         case SQLITE_TRACE_ROW:
-            fprintf(stderr, "SQL_DEBUG: ROW - ");
-            fprintf(stderr, "%s\n", sqlite3_expanded_sql((sqlite3_stmt*)P));
-            break;            
+            TC_str = "ROW";
+            info_str = sqlite3_expanded_sql((sqlite3_stmt*)P);
+            break;
         case SQLITE_TRACE_CLOSE:
-            fprintf(stderr, "SQL_DEBUG: CLOSE - ");
+            TC_str = "CLOSE";
             break;
         default:
             break;
     }
+#ifndef ANDROID
+    fprintf(stderr, "%s: %s - %s\n", title, TC_str, info_str);
+#else
+    log_event(session, title, TC_str, info_str, NULL);
+#endif    
     return 0;
 }
 #endif
