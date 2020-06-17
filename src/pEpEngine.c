@@ -71,7 +71,8 @@ int sql_trace_callback (unsigned trace_constant,
 #ifndef ANDROID
     fprintf(stderr, "%s: %s - %s\n", title, TC_str, info_str);
 #else
-    log_event(session, title, TC_str, info_str, NULL);
+    __android_log_print(ANDROID_LOG_DEBUG, "pEpEngine", " %s :: %s :: %s :: %s ",
+            title, TC_str, info_str, NULL);
 #endif    
     return 0;
 }
