@@ -960,7 +960,7 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
                       sqlite3_errmsg(session->key_db));
         T("cert_save - %s transaction for saving %s", 
            (status == PEP_STATUS_OK ? "committed" : "rolled back"), 
-           fpr);                              
+           fpr);                                
     }
 
     T("(%s) -> %s", fpr, pEp_status_to_string(status));
@@ -2382,17 +2382,6 @@ PEP_STATUS _pgp_import_keydata(PEP_SESSION session, const char *key_data,
                   "Can't import %s", pgp_tag_to_string(tag));
         break;
     }
-
-    int int_result = sqlite3_exec(
-        session->key_db,
-        "PRAGMA wal_checkpoint(FULL);\n"
-        ,
-        NULL,
-        NULL,
-        NULL
-    );
-    if (int_result != SQLITE_OK)
-        status = PEP_UNKNOWN_DB_ERROR;
 
  out:
     pgp_cert_parser_free(parser);
