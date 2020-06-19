@@ -957,6 +957,10 @@ TEST_F(PassphraseTest, check_carol_primary_unenc_subkeys_passphrase_withpass_dec
     status = set_identity(session, to_ident);
     ASSERT_EQ(status, PEP_STATUS_OK);
     
+    const char* pass = "carol";
+    status = config_passphrase(session, pass);    
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    
     string msg = slurp("test_mails/encrypt_to_carol.eml");
     char* decrypted_msg = NULL;
     char* modified_src = NULL;  
@@ -967,10 +971,6 @@ TEST_F(PassphraseTest, check_carol_primary_unenc_subkeys_passphrase_withpass_dec
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NE(decrypted_msg, nullptr);
     
-    const char* pass = "carol";
-    status = config_passphrase(session, pass);    
-    ASSERT_EQ(status, PEP_STATUS_OK);
-
     free(decrypted_msg);
     free(modified_src);
     free_stringlist(keylist_used);

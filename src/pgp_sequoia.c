@@ -1045,6 +1045,9 @@ struct decrypt_cookie {
     // Whether we decrypted anything.
     int decrypted;
 
+    int missing_passphrase;
+    int bad_passphrase;
+
     // The filename stored in the literal data packet.  Note: this is
     // *not* protected by the signature and should not be trusted!!!
     char *filename;
@@ -1097,6 +1100,7 @@ decrypt_cb(void *cookie_opaque,
         // Prevent iterations, which isn't needed since we don't
         // support SKESKs.
         return PGP_STATUS_UNKNOWN_ERROR;
+        
     cookie->get_secret_keys_called = 1;
 
     T("%zd PKESKs", pkesk_count);
@@ -1138,7 +1142,7 @@ decrypt_cb(void *cookie_opaque,
         assert(is_tsk == pgp_cert_is_tsk(cert));
         if (! is_tsk)
             goto eol;
-
+        
         key_iter = pgp_cert_key_iter(cert);
         while (key = NULL, (ka = pgp_cert_key_iter_next(key_iter))) {
             key = pgp_key_amalgamation_key (ka);
@@ -1160,9 +1164,33 @@ decrypt_cb(void *cookie_opaque,
             goto eol;
         }
 
+        if (!pgp_key_has_unencrypted_secret(key)) {
+            const char* pass = session->curr_passphrase;
+            if (pass && pass[0]) {
+                pgp_key_t decrypted_key = NULL;
+                decrypted_key = pgp_key_decrypt_secret(&err, pgp_key_clone(key), (uint8_t*)session->curr_passphrase,
+                                             strlen(session->curr_passphrase));                             
+                if (!decrypted_key) {                               
+                    DUMP_ERR(err, PEP_WRONG_PASSPHRASE, "pgp_key_decrypt_secret");
+                    cookie->bad_passphrase = 1;
+                    goto eol;
+                }
+                else {
+                    pgp_key_free(key);
+                    key = decrypted_key;
+                }
+            }
+            else {
+                DUMP_ERR(err, PEP_PASSPHRASE_REQUIRED, "pgp_key_decrypt_secret");
+                cookie->missing_passphrase = 1;
+                goto eol;
+            }    
+        }
+
         uint8_t algo;
         uint8_t session_key[1024];
         size_t session_key_len = sizeof(session_key);
+
         if (pgp_pkesk_decrypt(&err, pkesk, key, &algo,
                               session_key, &session_key_len) != 0) {
             DUMP_ERR(err, PEP_UNKNOWN_ERROR, "pgp_pkesk_decrypt");
@@ -1215,7 +1243,29 @@ decrypt_cb(void *cookie_opaque,
 
             while (key = NULL, (ka = pgp_cert_key_iter_next(key_iter))) {
                 key = pgp_key_amalgamation_key (ka);
-
+                
+                if (!pgp_key_has_unencrypted_secret(key)) {
+                    const char* pass = session->curr_passphrase;
+                    if (pass && pass[0]) {
+                        pgp_key_t decrypted_key = NULL;
+                        decrypted_key = pgp_key_decrypt_secret(&err, pgp_key_clone(key), (uint8_t*)session->curr_passphrase,
+                                                     strlen(session->curr_passphrase));                             
+                        if (!decrypted_key) {                               
+                            DUMP_ERR(err, PEP_WRONG_PASSPHRASE, "pgp_key_decrypt_secret");
+                            cookie->bad_passphrase = 1;
+                            continue;
+                        }
+                        else {
+                            pgp_key_free(key);
+                            key = decrypted_key;
+                        }
+                    }
+                    else {
+                        DUMP_ERR(err, PEP_PASSPHRASE_REQUIRED, "pgp_key_decrypt_secret");
+                        cookie->missing_passphrase = 1;
+                        continue;
+                    }    
+                }
                 // Note: for decryption to appear to succeed, we must
                 // get a valid algorithm (8 of 256 values) and a
                 // 16-bit checksum must match.  Thus, we have about a
@@ -1525,7 +1575,7 @@ PEP_STATUS pgp_decrypt_and_verify(
     char** filename_ptr)
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    struct decrypt_cookie cookie = { session, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL };
+    struct decrypt_cookie cookie = { session, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL };
     pgp_reader_t reader = NULL;
     pgp_writer_t writer = NULL;
     pgp_reader_t decryptor = NULL;
@@ -1557,9 +1607,16 @@ PEP_STATUS pgp_decrypt_and_verify(
                                   get_public_keys_cb, decrypt_cb,
                                   check_signatures_cb, inspect_cb,
                                   &cookie, 0);
-    if (! decryptor)
-        ERROR_OUT(err, PEP_DECRYPT_NO_KEY, "pgp_decryptor_new");
-
+    if (! decryptor) {
+        if (cookie.bad_passphrase)
+            status = PEP_WRONG_PASSPHRASE;
+        else if (cookie.missing_passphrase)
+            status = PEP_PASSPHRASE_REQUIRED;
+        else 
+            status = PEP_DECRYPT_NO_KEY;
+        ERROR_OUT(err, status, "pgp_decryptor_new");
+    }
+    
     // Copy 128 MB at a time.
     ssize_t nread;
     while ((nread = pgp_reader_copy (&err, decryptor, writer,
@@ -2015,23 +2072,67 @@ static PEP_STATUS pgp_encrypt_sign_optional(
     // pgp_encrypt_new consumes the recipients (but not the keys).
     recipient_count = 0;
 
-    if (sign) {
+    if (sign) {            
+        
         iter = pgp_cert_valid_key_iter(signer_cert, session->policy, 0);
         pgp_cert_valid_key_iter_alive(iter);
         pgp_cert_valid_key_iter_revoked(iter, false);
         pgp_cert_valid_key_iter_for_signing (iter);
-        pgp_cert_valid_key_iter_unencrypted_secret (iter);
+//        pgp_cert_valid_key_iter_unencrypted_secret (iter);
 
+        
         // If there are multiple signing capable subkeys, we just take
-        // the first one, whichever one that happens to be.
+        // the first one, whichever one that happens to be.            
+            
         ka = pgp_cert_valid_key_iter_next (iter, NULL, NULL);
         if (! ka)
             ERROR_OUT (err, PEP_UNKNOWN_ERROR,
                        "%s has no signing capable key", keylist->value);
 
-        // pgp_key_into_key_pair needs to own the key, but here we
-        // only get a reference (which we still need to free).
-        pgp_key_t key = pgp_valid_key_amalgamation_key (ka);
+        pgp_key_t key = NULL;
+        bool bad_pass = false;
+        bool missing_pass = false;                
+        for ( ; ka ; (ka = pgp_cert_valid_key_iter_next(iter, NULL, NULL))) {                       
+            // pgp_key_into_key_pair needs to own the key, but here we
+            // only get a reference (which we still need to free).
+            key = pgp_valid_key_amalgamation_key (ka);
+
+            if (pgp_key_has_unencrypted_secret(key)) 
+                break;
+            else {
+                const char* pass = session->curr_passphrase;
+                if (pass && pass[0]) {
+                    pgp_key_t decrypted_key = NULL;
+                    decrypted_key = pgp_key_decrypt_secret(&err, pgp_key_clone(key), (uint8_t*)session->curr_passphrase,
+                                                            strlen(session->curr_passphrase));                             
+                    pgp_key_free(key);
+                    key = NULL;
+                    
+                    if (!decrypted_key) {                               
+                        bad_pass = true;
+                        continue;
+                    }    
+                    else {
+                        key = decrypted_key;
+                        break;
+                    }
+                }
+                else {
+                    missing_pass = true;
+                    continue;
+                }
+            }
+        }
+        if (!key) {
+            if (bad_pass)
+                ERROR_OUT(err, PEP_PASSPHRASE_REQUIRED, "pgp_key_decrypt_secret");
+            else if (missing_pass)    
+                ERROR_OUT(err, PEP_WRONG_PASSPHRASE, "pgp_key_decrypt_secret");
+            else        
+                ERROR_OUT(err, PEP_UNKNOWN_ERROR, "pgp_valid_key_amalgamation_key");            
+        }
+                
+                    
         signing_keypair = pgp_key_into_key_pair (NULL, pgp_key_clone (key));
         pgp_key_free (key);
         if (! signing_keypair)
