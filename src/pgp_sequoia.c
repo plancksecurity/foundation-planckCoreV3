@@ -1701,9 +1701,9 @@ PEP_STATUS pgp_verify_text(
         if (! verifier)
             ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Creating verifier");
 
-        pgp_status_t status = pgp_detached_verifier_verify (&err, verifier, reader);
+        pgp_status_t pgp_status = pgp_detached_verifier_verify (&err, verifier, reader);
         pgp_detached_verifier_free (verifier);
-        if (status)
+        if (pgp_status)
             ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Verifying data");
     } else {
         pgp_reader_t verifier = NULL;
@@ -1715,9 +1715,9 @@ PEP_STATUS pgp_verify_text(
         if (! verifier)
             ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Creating verifier");
 
-        pgp_status_t status = pgp_reader_discard(&err, verifier);
+        pgp_status_t pgp_status = pgp_reader_discard(&err, verifier);
         pgp_reader_free(verifier);
-        if (status)
+        if (pgp_status)
             ERROR_OUT(err, PEP_UNKNOWN_ERROR, "verifier");
     }
 
@@ -2481,17 +2481,6 @@ PEP_STATUS _pgp_import_keydata(PEP_SESSION session, const char *key_data,
                   "Can't import %s", pgp_tag_to_string(tag));
         break;
     }
-
-    int int_result = sqlite3_exec(
-        session->key_db,
-        "PRAGMA wal_checkpoint(FULL);\n"
-        ,
-        NULL,
-        NULL,
-        NULL
-    );
-    if (int_result != SQLITE_OK)
-        status = PEP_UNKNOWN_DB_ERROR;
 
  out:
     pgp_cert_parser_free(parser);
