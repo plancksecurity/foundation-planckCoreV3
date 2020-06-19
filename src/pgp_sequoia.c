@@ -361,6 +361,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                                  "CREATE INDEX IF NOT EXISTS userids_index\n"
                                  "  ON userids (userid COLLATE EMAIL, primary_key)\n",
                                  NULL, NULL, NULL);
+
     if (sqlite_result != SQLITE_OK)
         ERROR_OUT(NULL, PEP_INIT_CANNOT_OPEN_DB,
                   "creating userids table: %s",
@@ -482,6 +483,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                              -1, &session->sq_sql.delete_keypair, NULL);
     assert(sqlite_result == SQLITE_OK);
 
+    
     session->policy = pgp_null_policy ();
     if (! session->policy)
         ERROR_OUT(NULL, PEP_OUT_OF_MEMORY,
@@ -760,14 +762,53 @@ static PEP_STATUS cert_find_by_email(PEP_SESSION session,
     return status;
 }
 
+// end detect possibly changed key stuff
+static PEP_STATUS serialize_cert(PEP_SESSION session, pgp_cert_t cert,
+                                 void** buffer_ptr, size_t* buffer_size_ptr)   {
+    
+    if (!session || !cert || !buffer_ptr || !buffer_size_ptr)
+        return PEP_ILLEGAL_VALUE;
+        
+    PEP_STATUS status = PEP_STATUS_OK;
+        
+    void* curr_buffer = NULL;
+    size_t curr_buffer_len = 0;                                 
+    pgp_status_t pgp_status;
+    pgp_tsk_t tsk = NULL;
+    pgp_error_t err = NULL;
+    
+    pgp_writer_t writer = pgp_writer_alloc(&curr_buffer, &curr_buffer_len);
+    if (!writer)
+        ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
+
+    tsk = pgp_cert_as_tsk(cert);
+    pgp_status = pgp_tsk_serialize(&err, tsk, writer);
+    if (pgp_status != 0)
+        ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Serializing certificates");
+    
+out: 
+    pgp_tsk_free(tsk);
+    pgp_writer_free(writer);   
+
+    if (status == PEP_STATUS_OK) {
+        *buffer_ptr = curr_buffer;
+        *buffer_size_ptr = curr_buffer_len;
+    }
+    else
+        free(buffer_ptr);
+        
+    T(" -> %s", pEp_status_to_string(status));
+    return status;    
+}
+
 
 // Saves the specified certificates.
 //
 // This function takes ownership of CERT.
-static PEP_STATUS cert_save(PEP_SESSION, pgp_cert_t, identity_list **)
+static PEP_STATUS cert_save(PEP_SESSION, pgp_cert_t, identity_list **, bool* changed_ptr)
     __attribute__((nonnull(1, 2)));
 static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
-                           identity_list **private_idents)
+                           identity_list **private_idents, bool* changed_ptr)
 {
     PEP_STATUS status = PEP_STATUS_OK;
     pgp_error_t err = NULL;
@@ -775,11 +816,17 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
     char *fpr = NULL;
     void *tsk_buffer = NULL;
     size_t tsk_buffer_len = 0;
+    void *curr_buffer = NULL;
+    size_t curr_buffer_len = 0;
     int tried_commit = 0;
     pgp_cert_key_iter_t key_iter = NULL;
-    pgp_user_id_bundle_iter_t user_id_iter = NULL;
+    pgp_cert_valid_user_id_iter_t ua_iter = NULL;
+    pgp_valid_user_id_amalgamation_t ua = NULL;
+    pgp_packet_t user_id = NULL;
     char *email = NULL;
     char *name = NULL;
+    
+    bool _changed = false;    
 
     sqlite3_stmt *stmt = session->sq_sql.begin_transaction;
     int sqlite_result = sqlite3_step(stmt);
@@ -799,29 +846,44 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
     if (status == PEP_KEY_NOT_FOUND)
         status = PEP_STATUS_OK;
     else
-        ERROR_OUT(NULL, status, "Looking up %s", fpr);
+        ERROR_OUT(NULL, status, "Looking up %s", fpr);    
+    
     if (current) {
+        if (changed_ptr) {
+            // Serialize current for comparison (ugh).        
+            status = serialize_cert(session, current, &curr_buffer, &curr_buffer_len);
+            if (status != PEP_STATUS_OK)
+                ERROR_OUT(NULL, status, "Could not serialize existing cert for change check");
+        }        
+
         cert = pgp_cert_merge(&err, cert, current);
         if (! cert)
             ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Merging certificates");
     }
+    else if (changed_ptr)
+        _changed = true;
 
     int is_tsk = pgp_cert_is_tsk(cert);
 
     // Serialize it.
-    pgp_writer_t writer = pgp_writer_alloc(&tsk_buffer, &tsk_buffer_len);
-    if (! writer)
-        ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
-
-    pgp_status_t pgp_status;
-    pgp_tsk_t tsk = pgp_cert_as_tsk(cert);
-    pgp_status = pgp_tsk_serialize(&err, tsk, writer);
-    pgp_tsk_free(tsk);
-    pgp_writer_free(writer);
-    if (pgp_status != 0)
-        ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Serializing certificates");
-
-
+    // NOTE: Just because it's called tsk in tsk_buffer does NOT mean it necessarily 
+    //       has secret key material; it is just that is could. is_tsk is the 
+    //       part that asks whether or not it contains such.
+    status = serialize_cert(session, cert, &tsk_buffer, &tsk_buffer_len);
+    if (status != PEP_STATUS_OK)
+        ERROR_OUT(NULL, status, "Could not serialize tsk cert for saving");
+    
+    // Before we do anything else, if we need to know if things MAY have changed, 
+    // we check the key blob (this is not comprehensive and can generate false 
+    // positives)
+    //
+    if (changed_ptr) {
+        if (!current || !curr_buffer || (curr_buffer_len != tsk_buffer_len))
+            _changed = true;
+        else if (memcmp(curr_buffer, tsk_buffer, tsk_buffer_len) != 0)
+            _changed = true;
+    }
+                    
     // Insert the TSK into the DB.
     stmt = session->sq_sql.cert_save_insert_primary;
     sqlite3_bind_text(stmt, 1, fpr, -1, SQLITE_STATIC);
@@ -866,18 +928,17 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
 
     // Insert the "userids".
     stmt = session->sq_sql.cert_save_insert_userids;
-    user_id_iter = pgp_cert_user_id_bundle_iter(cert);
-    pgp_user_id_bundle_t bundle;
+    ua_iter = pgp_cert_valid_user_id_iter(cert, session->policy, 0);
     int first = 1;
-    while ((bundle = pgp_user_id_bundle_iter_next(user_id_iter))) {
-        char *user_id_value = pgp_user_id_bundle_user_id(bundle);
-        if (!user_id_value || !*user_id_value)
-            continue;
+    while ((ua = pgp_cert_valid_user_id_iter_next(ua_iter))) {
+        user_id = pgp_valid_user_id_amalgamation_user_id(ua);
 
-        // Ignore user ids with a self-revocation certificate, but no
-        // self-signature.
-        if (!pgp_user_id_bundle_selfsig(bundle, session->policy)) {
-            free(user_id_value);
+        const uint8_t *user_id_value = pgp_user_id_value(user_id, NULL);
+        if (!user_id_value || !*user_id_value) {
+            pgp_packet_free (user_id);
+            user_id = NULL;
+            pgp_valid_user_id_amalgamation_free(ua);
+            ua = NULL;
             continue;
         }
 
@@ -886,16 +947,13 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
         free(email);
         email = NULL;
 
-        pgp_packet_t userid = pgp_user_id_new (user_id_value);
-        pgp_user_id_name(NULL, userid, &name);
+        pgp_user_id_name(NULL, user_id, &name);
         // Try to get the normalized address.
-        pgp_user_id_email_normalized(NULL, userid, &email);
+        pgp_user_id_email_normalized(NULL, user_id, &email);
         if (! email)
             // Ok, it's not a proper RFC 2822 name-addr.  Perhaps it
             // is a URI.
-            pgp_user_id_uri(NULL, userid, &email);
-        pgp_packet_free(userid);
-        free(user_id_value);
+            pgp_user_id_uri(NULL, user_id, &email);
 
         if (email) {
             T("  userid: %s", email);
@@ -907,7 +965,6 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
             sqlite3_reset(stmt);
 
             if (sqlite_result != SQLITE_DONE) {
-                pgp_user_id_bundle_iter_free(user_id_iter);
                 ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
                           "Updating userids: %s", sqlite3_errmsg(session->key_db));
             }
@@ -926,9 +983,11 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
                 ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "identity_list_add");
         }
 
+        pgp_packet_free (user_id);
+        user_id = NULL;
+        pgp_valid_user_id_amalgamation_free(ua);
+        ua = NULL;
     }
-    pgp_user_id_bundle_iter_free(user_id_iter);
-    user_id_iter = NULL;
 
  out:
     // Prevent ERROR_OUT from causing an infinite loop.
@@ -948,13 +1007,19 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
 
     T("(%s) -> %s", fpr, pEp_status_to_string(status));
 
+    if (changed_ptr)
+        *changed_ptr = _changed;
+
     free(email);
     free(name);
-    pgp_user_id_bundle_iter_free(user_id_iter);
+    pgp_packet_free(user_id);
+    pgp_valid_user_id_amalgamation_free(ua);
+    pgp_cert_valid_user_id_iter_free(ua_iter);
     pgp_cert_key_iter_free(key_iter);
     if (stmt)
-      sqlite3_reset(stmt);
+        sqlite3_reset(stmt);
     free(tsk_buffer);
+    free(curr_buffer);
     pgp_cert_free(cert);
     free(fpr);
     pgp_fingerprint_free(pgp_fpr);
@@ -1105,9 +1170,8 @@ decrypt_cb(void *cookie_opaque,
         }
 
         sk = pgp_session_key_from_bytes (session_key, session_key_len);
-        pgp_status_t status;
-        if ((status = decrypt (decrypt_cookie, algo, sk))) {
-            DUMP_STATUS(status, PEP_UNKNOWN_ERROR, "decrypt_cb");
+        if (! decrypt (decrypt_cookie, algo, sk)) {
+            DUMP_STATUS(PGP_STATUS_UNKNOWN_ERROR, PEP_CANNOT_DECRYPT_UNKNOWN, "decrypt_cb");
             goto eol;
         }
 
@@ -1178,9 +1242,8 @@ decrypt_cb(void *cookie_opaque,
 
                 pgp_session_key_t sk = pgp_session_key_from_bytes (session_key,
                                                                    session_key_len);
-                pgp_status_t status;
-                if ((status = decrypt (decrypt_cookie, algo, sk))) {
-                    DUMP_STATUS(status, PEP_UNKNOWN_ERROR, "decrypt_cb");
+                if (! decrypt (decrypt_cookie, algo, sk)) {
+                    DUMP_STATUS(PGP_STATUS_UNKNOWN_ERROR, PEP_CANNOT_DECRYPT_UNKNOWN, "decrypt_cb");
                     goto eol2;
                 }
 
@@ -1220,7 +1283,7 @@ check_signatures_cb(void *cookie_opaque, pgp_message_structure_t structure)
     struct decrypt_cookie *cookie = cookie_opaque;
 
     pgp_message_structure_iter_t iter
-        = pgp_message_structure_iter (structure);
+        = pgp_message_structure_into_iter (structure);
     for (pgp_message_layer_t layer = pgp_message_structure_iter_next (iter);
          layer;
          layer = pgp_message_structure_iter_next (iter)) {
@@ -1354,7 +1417,7 @@ check_signatures_cb(void *cookie_opaque, pgp_message_structure_t structure)
                         cookie->revoked_key ++;
                     } else {
                         pgp_revocation_status_free (rs);
-                        rs = pgp_cert_revoked (cert, cookie->session->policy, 0);
+                        rs = pgp_cert_revocation_status (cert, cookie->session->policy, 0);
                         if (pgp_revocation_status_variant(rs)
                             == PGP_REVOCATION_STATUS_REVOKED) {
                             // Cert is revoked.
@@ -1428,7 +1491,6 @@ check_signatures_cb(void *cookie_opaque, pgp_message_structure_t structure)
     }
 
     pgp_message_structure_iter_free (iter);
-    pgp_message_structure_free (structure);
 
     return PGP_STATUS_SUCCESS;
 }
@@ -1578,7 +1640,6 @@ PEP_STATUS pgp_verify_text(
     struct decrypt_cookie cookie = { session, 0, NULL, NULL, 0, 0, 0, };
     pgp_reader_t reader = NULL;
     pgp_reader_t dsig_reader = NULL;
-    pgp_reader_t verifier = NULL;
 
     if (size == 0 || sig_size == 0)
         return PEP_DECRYPT_WRONG_FORMAT;
@@ -1629,21 +1690,36 @@ PEP_STATUS pgp_verify_text(
             ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "Creating signature reader");
     }
 
-    if (dsig_reader)
-        verifier = pgp_detached_verifier_new(&err, session->policy,
-                                             dsig_reader, reader,
-                                             get_public_keys_cb,
-                                             check_signatures_cb,
-                                             &cookie, 0);
-    else
+    if (dsig_reader) {
+        pgp_detached_verifier_t verifier
+            = pgp_detached_verifier_new(&err, session->policy,
+                                        dsig_reader,
+                                        get_public_keys_cb,
+                                        check_signatures_cb,
+                                        NULL,
+                                        &cookie, 0);
+        if (! verifier)
+            ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Creating verifier");
+
+        pgp_status_t pgp_status = pgp_detached_verifier_verify (&err, verifier, reader);
+        pgp_detached_verifier_free (verifier);
+        if (pgp_status)
+            ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Verifying data");
+    } else {
+        pgp_reader_t verifier = NULL;
         verifier = pgp_verifier_new(&err, session->policy, reader,
                                     get_public_keys_cb,
                                     check_signatures_cb,
+                                    NULL,
                                     &cookie, 0);
-    if (! verifier)
-        ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Creating verifier");
-    if (pgp_reader_discard(&err, verifier) < 0)
-        ERROR_OUT(err, PEP_UNKNOWN_ERROR, "verifier");
+        if (! verifier)
+            ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Creating verifier");
+
+        pgp_status_t pgp_status = pgp_reader_discard(&err, verifier);
+        pgp_reader_free(verifier);
+        if (pgp_status)
+            ERROR_OUT(err, PEP_UNKNOWN_ERROR, "verifier");
+    }
 
     if (! cookie.signer_keylist) {
         cookie.signer_keylist = new_stringlist("");
@@ -1689,7 +1765,6 @@ PEP_STATUS pgp_verify_text(
         free_stringlist(cookie.signer_keylist);
     }
 
-    pgp_reader_free(verifier);
     pgp_reader_free(reader);
     pgp_reader_free(dsig_reader);
 
@@ -2174,7 +2249,7 @@ PEP_STATUS _pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity, ti
     pgp_fpr = pgp_cert_fingerprint(cert);
     fpr = pgp_fingerprint_to_hex(pgp_fpr);
 
-    status = cert_save(session, cert, NULL);
+    status = cert_save(session, cert, NULL, NULL);
     cert = NULL;
     if (status != 0)
         ERROR_OUT(NULL, PEP_CANNOT_CREATE_KEY, "saving TSK");
@@ -2252,15 +2327,26 @@ static unsigned int count_keydata_parts(const char* key_data, size_t size) {
     return retval;
  }
 
+// This is for single keys, which is why we're using a boolean here.
 PEP_STATUS _pgp_import_keydata(PEP_SESSION session, const char *key_data,
-                              size_t size, identity_list **private_idents)
+                               size_t size, identity_list **private_idents,
+                               stringlist_t** imported_keys,
+                               uint64_t* changed_bitvec)
 {
     PEP_STATUS status = PEP_NO_KEY_IMPORTED;
     pgp_error_t err;
     pgp_cert_parser_t parser = NULL;
+    char* issuer_fpr_hex = NULL;
+    char* cert_fpr_hex = NULL;
+    
+    if (changed_bitvec && !imported_keys)
+        return PEP_ILLEGAL_VALUE;    
 
     if (private_idents)
         *private_idents = NULL;
+
+    stringlist_t* _import_keylist = imported_keys ? *imported_keys : NULL;    
+    int _import_keylist_len = stringlist_length(_import_keylist);    
         
     T("parsing %zd bytes", size);
 
@@ -2288,8 +2374,11 @@ PEP_STATUS _pgp_import_keydata(PEP_SESSION session, const char *key_data,
         pgp_cert_t cert = NULL;
 
         pgp_fingerprint_t issuer_fpr = pgp_signature_issuer_fingerprint(sig);
+        
+        char* issuer_fpr_hex = NULL;
+
         if (issuer_fpr) {
-            char *issuer_fpr_hex = pgp_fingerprint_to_hex(issuer_fpr);
+            issuer_fpr_hex = pgp_fingerprint_to_hex(issuer_fpr);
             T("Importing a signature issued by %s", issuer_fpr_hex);
 
             status = cert_find_by_fpr_hex(session, issuer_fpr_hex,
@@ -2297,22 +2386,20 @@ PEP_STATUS _pgp_import_keydata(PEP_SESSION session, const char *key_data,
             if (status && status != PEP_KEY_NOT_FOUND)
                 DUMP_ERR(NULL, status, "Looking up %s", issuer_fpr_hex);
 
-            free(issuer_fpr_hex);
             pgp_fingerprint_free(issuer_fpr);
         }
 
         if (! cert) {
             pgp_keyid_t issuer = pgp_signature_issuer(sig);
             if (issuer) {
-                char *issuer_hex = pgp_keyid_to_hex(issuer);
-                T("Importing a signature issued by %s", issuer_hex);
+                issuer_fpr_hex = pgp_keyid_to_hex(issuer);
+                T("Importing a signature issued by %s", issuer_fpr_hex);
 
-                status = cert_find_by_keyid_hex(session, issuer_hex,
+                status = cert_find_by_keyid_hex(session, issuer_fpr_hex,
                                                false, &cert, NULL);
                 if (status && status != PEP_KEY_NOT_FOUND)
-                    DUMP_ERR(NULL, status, "Looking up %s", issuer_hex);
+                    DUMP_ERR(NULL, status, "Looking up %s", issuer_fpr_hex);
 
-                free(issuer_hex);
                 pgp_keyid_free(issuer);
             }
         }
@@ -2328,7 +2415,18 @@ PEP_STATUS _pgp_import_keydata(PEP_SESSION session, const char *key_data,
             if (! cert)
                 ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Merging signature");
 
-            status = cert_save(session, cert, NULL);
+            bool changed = false;  
+              
+            status = cert_save(session, cert, NULL, changed_bitvec ? &changed : NULL);
+            if (imported_keys) {
+                if (_import_keylist)
+                    stringlist_add(_import_keylist, issuer_fpr_hex);
+                else 
+                    _import_keylist = new_stringlist(issuer_fpr_hex);
+                
+                if (changed_bitvec && changed)
+                    *changed_bitvec |= 1 << _import_keylist_len;
+            }
             if (status)
                 ERROR_OUT(NULL, status, "saving merged CERT");
             status = PEP_KEY_IMPORTED;
@@ -2341,20 +2439,38 @@ PEP_STATUS _pgp_import_keydata(PEP_SESSION session, const char *key_data,
         pgp_cert_t cert;
         int count = 0;
         err = NULL;
+        
         while ((cert = pgp_cert_parser_next(&err, parser))) {
             count ++;
 
+            char* cert_fpr_hex = pgp_fingerprint_to_hex(pgp_cert_fingerprint(cert)); 
             T("#%d. CERT for %s, %s",
               count, pgp_cert_primary_user_id(cert, session->policy, 0),
-              pgp_fingerprint_to_hex(pgp_cert_fingerprint(cert)));
+              cert_fpr_hex);
 
             // If private_idents is not NULL and there is any private key
-            // material, it will be saved.
-            status = cert_save(session, cert, private_idents);
-            if (status == PEP_STATUS_OK)
+            // material, then we'll put an entry for it into private_idents 
+            bool changed = false;
+            status = cert_save(session, cert, private_idents, changed_bitvec ? &changed : NULL);
+            if (status == PEP_STATUS_OK) {
                 status = PEP_KEY_IMPORTED;
+                if (imported_keys) {
+                    if (_import_keylist)
+                        stringlist_add(_import_keylist, cert_fpr_hex);
+                    else
+                        _import_keylist = new_stringlist(cert_fpr_hex);
+                        
+                    if (_import_keylist_len < 64 && changed) {
+                        *changed_bitvec |= 1 << _import_keylist_len;
+                    }   
+                    _import_keylist_len++;
+                }    
+            }    
             else
                 ERROR_OUT(NULL, status, "saving certificate");
+            
+            free(cert_fpr_hex);
+            cert_fpr_hex = NULL;
         }
         if (err || count == 0)
             ERROR_OUT(err, PEP_UNKNOWN_ERROR, "parsing key data");
@@ -2366,30 +2482,31 @@ PEP_STATUS _pgp_import_keydata(PEP_SESSION session, const char *key_data,
         break;
     }
 
-    int int_result = sqlite3_exec(
-        session->key_db,
-        "PRAGMA wal_checkpoint(FULL);\n"
-        ,
-        NULL,
-        NULL,
-        NULL
-    );
-    if (int_result != SQLITE_OK)
-        status = PEP_UNKNOWN_DB_ERROR;
-
  out:
     pgp_cert_parser_free(parser);
 
+    if (imported_keys && status == PEP_KEY_IMPORTED)
+        *imported_keys = _import_keylist;
+    
+    free(issuer_fpr_hex);
+    free(cert_fpr_hex);    
+        
     T("-> %s", pEp_status_to_string(status));
     return status;
 }
 
 PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
-                              size_t size, identity_list **private_idents)
+                              size_t size, identity_list **private_idents,
+                              stringlist_t** imported_keys,
+                              uint64_t* changed_key_index)
 {
-
+    if (!imported_keys && changed_key_index)
+        return PEP_ILLEGAL_VALUE;
+        
     const char* pgp_begin = "-----BEGIN PGP";
     size_t prefix_len = strlen(pgp_begin);
+    
+    PEP_STATUS retval = PEP_STATUS_OK;
 
     // Because we also import binary keys we have to be careful with this.
     // 
@@ -2403,8 +2520,11 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
     }
 
     unsigned int keycount = count_keydata_parts(key_data, size);
-    if (keycount < 2)
-        return(_pgp_import_keydata(session, key_data, size, private_idents));
+    if (keycount < 2) {
+        retval = _pgp_import_keydata(session, key_data, size, private_idents,
+                                     imported_keys, changed_key_index);        
+        return retval;    
+    }        
 
     unsigned int i;
     const char* curr_begin;
@@ -2412,7 +2532,7 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
 
     identity_list* collected_idents = NULL;
 
-    PEP_STATUS retval = PEP_KEY_IMPORTED;
+    retval = PEP_KEY_IMPORTED;
             
     for (i = 0, curr_begin = key_data; i < keycount; i++) {
         const char* next_begin = NULL;
@@ -2428,7 +2548,12 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
         else
             curr_size = (key_data + size) - curr_begin;
 
-        PEP_STATUS curr_status = _pgp_import_keydata(session, curr_begin, curr_size, private_idents);
+        PEP_STATUS curr_status = _pgp_import_keydata(session, 
+                                                     curr_begin, 
+                                                     curr_size, 
+                                                     private_idents,
+                                                     imported_keys,
+                                                     changed_key_index);
         if (private_idents && *private_idents) {
             if (!collected_idents)
                 collected_idents = *private_idents;
@@ -2572,7 +2697,7 @@ static stringpair_list_t *add_key(PEP_SESSION session,
     bool revoked = false;
     // Don't add revoked keys to the keyinfo_list.
     if (keyinfo_list) {
-        pgp_revocation_status_t rs = pgp_cert_revoked(cert, session->policy, 0);
+        pgp_revocation_status_t rs = pgp_cert_revocation_status(cert, session->policy, 0);
         pgp_revocation_status_variant_t rsv = pgp_revocation_status_variant(rs);
         pgp_revocation_status_free(rs);
         if (rsv == PGP_REVOCATION_STATUS_REVOKED)
@@ -2817,47 +2942,41 @@ PEP_STATUS pgp_renew_key(
     while ((ka = pgp_cert_valid_key_iter_next(key_iter, NULL, NULL))) {
         pgp_status_t sq_status;
         pgp_error_t err;
-        pgp_packet_t *packets_tmp = NULL;
-        size_t packet_count_tmp = 0;
+        pgp_signature_t *sigs = NULL;
+        size_t sig_count = 0;
 
         sq_status = pgp_valid_key_amalgamation_set_expiration_time
-            (&err, ka, signer, t, &packets_tmp, &packet_count_tmp);
+            (&err, ka, signer, t, &sigs, &sig_count);
         if (sq_status)
             ERROR_OUT(err, PEP_UNKNOWN_ERROR,
                       "setting expiration (generating self signatures)");
 
-        if (! packets) {
-            assert(packet_count == 0);
-            assert(packet_capacity == 0);
-
-            packets = packets_tmp;
-            packet_count = packet_count_tmp;
-            packet_capacity = packet_count_tmp;
-        } else {
-            assert(packet_capacity > 0);
-            if (packet_capacity - packet_count < packet_count_tmp) {
-                // Grow the array.
-                int c = packet_capacity;
-                while (c < packet_count + packet_count_tmp) {
-                    c *= 2;
-                }
-
-                void * tmp = _pEp_reallocarray(packets, c, sizeof (*packets));
-                if (! tmp)
-                    ERROR_OUT(NULL, PEP_OUT_OF_MEMORY,
-                              "setting expiration (resizing buffer)");
-
-                packets = tmp;
-                packet_capacity = c;
+        if (packet_capacity - packet_count < sig_count) {
+            // Grow the array.
+            int c = packet_capacity;
+            if (c == 0) {
+                c = 1;
+            }
+            while (c < packet_count + sig_count) {
+                c *= 2;
             }
 
-            int i;
-            for (i = 0; i < packet_count_tmp; i ++) {
-                packets[packet_count + i] = packets_tmp[i];
-            }
-            packet_count += packet_count_tmp;
+            void * tmp = _pEp_reallocarray(packets, c, sizeof (*packets));
+            if (! tmp)
+                ERROR_OUT(NULL, PEP_OUT_OF_MEMORY,
+                          "setting expiration (resizing buffer)");
+
+            packets = tmp;
+            packet_capacity = c;
         }
 
+        int i;
+        for (i = 0; i < sig_count; i ++) {
+            packets[packet_count + i] = pgp_signature_into_packet(sigs[i]);
+        }
+        packet_count += sig_count;
+
+        free (sigs);
         pgp_valid_key_amalgamation_free (ka);
     }
 
@@ -2872,7 +2991,7 @@ PEP_STATUS pgp_renew_key(
     if (! cert)
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "setting expiration (updating cert)");
 
-    status = cert_save(session, cert, NULL);
+    status = cert_save(session, cert, NULL, NULL);
     cert = NULL;
     ERROR_OUT(NULL, status, "Saving %s", fpr);
 
@@ -2947,10 +3066,10 @@ PEP_STATUS pgp_revoke_key(
     if (! cert)
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "setting expiration");
 
-    assert(pgp_revocation_status_variant(pgp_cert_revoked(cert, session->policy, 0))
+    assert(pgp_revocation_status_variant(pgp_cert_revocation_status(cert, session->policy, 0))
            == PGP_REVOCATION_STATUS_REVOKED);
 
-    status = cert_save(session, cert, NULL);
+    status = cert_save(session, cert, NULL, NULL);
     cert = NULL;
     ERROR_OUT(NULL, status, "Saving %s", fpr);
 
@@ -3114,7 +3233,7 @@ PEP_STATUS pgp_key_expired(PEP_SESSION session, const char *fpr,
 }
 
 static void _pgp_key_revoked(PEP_SESSION session, pgp_cert_t cert, bool* revoked) {
-    pgp_revocation_status_t rs = pgp_cert_revoked(cert, session->policy, 0);
+    pgp_revocation_status_t rs = pgp_cert_revocation_status(cert, session->policy, 0);
     *revoked = pgp_revocation_status_variant(rs) == PGP_REVOCATION_STATUS_REVOKED;
     pgp_revocation_status_free (rs); 
     
@@ -3191,7 +3310,7 @@ PEP_STATUS pgp_key_revoked(PEP_SESSION session, const char *fpr, bool *revoked)
     pgp_fingerprint_free(pgp_fpr);
     ERROR_OUT(NULL, status, "Looking up %s", fpr);
 
-    // pgp_revocation_status_t rs = pgp_cert_revoked(cert, 0);
+    // pgp_revocation_status_t rs = pgp_cert_revocation_status(cert, 0);
     // *revoked = pgp_revocation_status_variant(rs) == PGP_REVOCATION_STATUS_REVOKED;
     // pgp_revocation_status_free (rs);
     _pgp_key_revoked(session, cert, revoked);
@@ -3221,7 +3340,7 @@ PEP_STATUS pgp_get_key_rating(
 
     *comm_type = PEP_ct_OpenPGP_unconfirmed;
 
-    // pgp_revocation_status_t rs = pgp_cert_revoked(cert, 0);
+    // pgp_revocation_status_t rs = pgp_cert_revocation_status(cert, 0);
     // pgp_revocation_status_variant_t rsv = pgp_revocation_status_variant(rs);
     // pgp_revocation_status_free(rs);
     // if (rsv == PGP_REVOCATION_STATUS_REVOKED) {

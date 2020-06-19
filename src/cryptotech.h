@@ -65,7 +65,8 @@ typedef PEP_STATUS (*get_key_rating_t)(
     );
 
 typedef PEP_STATUS (*import_key_t)(PEP_SESSION session, const char *key_data,
-        size_t size, identity_list **private_keys);
+        size_t size, identity_list **private_keys, stringlist_t** imported_keys,
+        uint64_t* changed_key_index);
 
 typedef PEP_STATUS (*recv_key_t)(PEP_SESSION session, const char *pattern);
 
@@ -133,4 +134,3 @@ typedef uint64_t cryptotech_mask;
 
 PEP_STATUS init_cryptotech(PEP_SESSION session, bool in_first);
 void release_cryptotech(PEP_SESSION session, bool out_last);
-

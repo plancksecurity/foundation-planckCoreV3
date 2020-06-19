@@ -2577,7 +2577,7 @@ TEST_F(KeyResetMessageTest, check_reset_own_with_revocations) {
     // Reimport
     curr_key = revocations;
     for (i = 0; i < 4; curr_key = curr_key->next, i++) {
-        status = import_key(session, curr_key->value, strlen(curr_key->value), NULL);
+        status = import_key($1, $2, $3, $4, NULL, NULL);
         ASSERT_EQ(status, PEP_KEY_IMPORTED);
     }
     ASSERT_EQ(i, 4);
@@ -2585,7 +2585,7 @@ TEST_F(KeyResetMessageTest, check_reset_own_with_revocations) {
 
     curr_key = keys;
     for (i = 0; i < 4; curr_key = curr_key->next, i++) {
-        status = import_key(session, curr_key->value, strlen(curr_key->value), NULL);
+        status = import_key($1, $2, $3, $4, NULL, NULL);
         ASSERT_EQ(status, PEP_KEY_IMPORTED);
     }
     ASSERT_EQ(i, 4);
