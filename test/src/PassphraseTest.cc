@@ -1065,3 +1065,163 @@ TEST_F(PassphraseTest, check_bob_primary_pass_subkey_no_passphrase_wrongpass_sig
     free_message(enc_msg);
     free_stringlist(found_key);
 }
+
+TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase) {
+    const char* pass = "lyrium";    
+    PEP_STATUS status = config_passphrase_for_new_keys(session, true, pass);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    pEp_identity* my_ident = new_identity("fenris@darthmama.org", NULL, "FENRIS", "Fenris Hawke");    
+    status = myself(session, my_ident);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(my_ident->fpr, nullptr);
+    
+    // Set up "to"
+    ASSERT_TRUE(slurp_and_import_key(session, alice_pub_filename));    
+    const char* to_fpr = alice_fpr;
+    const char* to_name = "Alice Malice";
+    const char* to_address = "alice_malice@darthmama.cool";
+    pEp_identity* to_ident = new_identity(to_address, to_fpr, "ALICE", to_name);
+    status = set_identity(session, to_ident);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    
+    message* msg = new_message(PEP_dir_outgoing);   
+    msg->from = my_ident;
+    msg->to = new_identity_list(to_ident);
+    msg->shortmsg = strdup("This is an exciting message from Fenris!");
+    msg->longmsg = strdup("Not\nVery\nExciting\n");   
+    
+    status = config_passphrase(session, pass);    
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    
+    message* enc_msg = NULL;
+    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(enc_msg, nullptr);
+    
+    free_message(msg);
+    free_message(enc_msg);
+}
+
+TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase_decrypt_nopass) {
+    PEP_STATUS status = config_passphrase_for_new_keys(session, true, "lyrium");
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    pEp_identity* my_ident = new_identity("fenris@darthmama.org", NULL, "FENRIS", "Fenris Hawke");    
+    status = myself(session, my_ident);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(my_ident->fpr, nullptr);
+    
+    // Set up "to"
+    ASSERT_TRUE(slurp_and_import_key(session, alice_pub_filename));    
+    const char* to_fpr = alice_fpr;
+    const char* to_name = "Alice Malice";
+    const char* to_address = "alice_malice@darthmama.cool";
+    pEp_identity* to_ident = new_identity(to_address, to_fpr, "ALICE", to_name);
+    status = set_identity(session, to_ident);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    
+    message* msg = new_message(PEP_dir_outgoing);   
+    msg->from = my_ident;
+    msg->to = new_identity_list(to_ident);
+    msg->shortmsg = strdup("This is an exciting message from Fenris!");
+    msg->longmsg = strdup("Not\nVery\nExciting\n");   
+        
+    message* enc_msg = NULL;
+    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+    ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);
+    ASSERT_EQ(enc_msg, nullptr);
+    
+    free_message(msg);
+}
+
+TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase_decrypt) {
+    const char* pass = "lyrium";    
+    PEP_STATUS status = config_passphrase_for_new_keys(session, true, pass);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    pEp_identity* my_ident = new_identity("fenris@darthmama.org", NULL, "FENRIS", "Fenris Hawke");    
+    status = myself(session, my_ident);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(my_ident->fpr, nullptr);
+    
+    // Set up "to"
+    ASSERT_TRUE(slurp_and_import_key(session, alice_pub_filename));    
+    const char* to_fpr = alice_fpr;
+    const char* to_name = "Alice Malice";
+    const char* to_address = "alice_malice@darthmama.cool";
+    pEp_identity* to_ident = new_identity(to_address, to_fpr, "ALICE", to_name);
+    status = set_identity(session, to_ident);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    
+    message* msg = new_message(PEP_dir_outgoing);   
+    msg->from = my_ident;
+    msg->to = new_identity_list(to_ident);
+    msg->shortmsg = strdup("This is an exciting message from Fenris!");
+    msg->longmsg = strdup("Not\nVery\nExciting\n");   
+    
+    status = config_passphrase(session, pass);    
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    
+    message* enc_msg = NULL;
+    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(enc_msg, nullptr);
+    
+    free_message(msg);
+    msg = NULL;
+    stringlist_t* keylist_used = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+    status = decrypt_message(session, enc_msg, &msg, &keylist_used, &rating, &flags);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(msg, nullptr);
+
+    free_message(msg);    
+    free_message(enc_msg);    
+}
+
+TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase_decrypt_wrongphrase) {
+    const char* pass = "lyrium";    
+    PEP_STATUS status = config_passphrase_for_new_keys(session, true, pass  );
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    pEp_identity* my_ident = new_identity("fenris@darthmama.org", NULL, "FENRIS", "Fenris Hawke");    
+    status = myself(session, my_ident);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(my_ident->fpr, nullptr);
+    
+    // Set up "to"
+    ASSERT_TRUE(slurp_and_import_key(session, alice_pub_filename));    
+    const char* to_fpr = alice_fpr;
+    const char* to_name = "Alice Malice";
+    const char* to_address = "alice_malice@darthmama.cool";
+    pEp_identity* to_ident = new_identity(to_address, to_fpr, "ALICE", to_name);
+    status = set_identity(session, to_ident);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    
+    message* msg = new_message(PEP_dir_outgoing);   
+    msg->from = my_ident;
+    msg->to = new_identity_list(to_ident);
+    msg->shortmsg = strdup("This is an exciting message from Fenris!");
+    msg->longmsg = strdup("Not\nVery\nExciting\n");   
+    
+    status = config_passphrase(session, pass);    
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    
+    message* enc_msg = NULL;
+    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(enc_msg, nullptr);
+
+    pass = "bob";
+    status = config_passphrase(session, pass);    
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    
+    free_message(msg);
+    msg = NULL;
+    stringlist_t* keylist_used = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+    status = decrypt_message(session, enc_msg, &msg, &keylist_used, &rating, &flags);
+    ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);
+    ASSERT_EQ(msg, nullptr);
+
+    free_message(enc_msg);    
+}

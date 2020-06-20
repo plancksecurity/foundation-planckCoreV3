@@ -2290,6 +2290,11 @@ PEP_STATUS _pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity, ti
     assert(identity->fpr == NULL || identity->fpr[0] == 0);
 //    assert(identity->username);
 
+    const char* passphrase = session->generation_passphrase;
+
+    if (session->new_key_pass_enable && (!passphrase || passphrase[0] == '\0'))
+        return PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED;
+
     char* cached_username = identity->username;
     
     if (identity->username && strcmp(identity->address, identity->username) == 0) {
@@ -2339,6 +2344,9 @@ PEP_STATUS _pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity, ti
     // Generate a key.
     pgp_cert_builder_t certb = pgp_cert_builder_general_purpose(
         cipher_suite(session->cipher_suite), userid);
+
+    if (session->new_key_pass_enable)        
+        pgp_cert_builder_set_password(&certb, (uint8_t*)passphrase, strlen(passphrase));        
 
     pgp_cert_builder_set_creation_time(&certb, when);
 
