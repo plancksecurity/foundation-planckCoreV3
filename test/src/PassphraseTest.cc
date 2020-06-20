@@ -283,7 +283,7 @@ TEST_F(PassphraseTest, check_bob_primary_pass_subkey_no_passphrase_nopass_sign) 
     
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
-    ASSERT_NE(status, PEP_STATUS_OK);
+    ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);
     ASSERT_EQ(enc_msg, nullptr);
     
     free_message(msg);
@@ -683,7 +683,7 @@ TEST_F(PassphraseTest, check_carol_primary_unenc_subkeys_passphrase_nopass_decry
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
-    ASSERT_NE(status, PEP_STATUS_OK);
+    ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);
     ASSERT_EQ(decrypted_msg, nullptr);
     
     free(decrypted_msg);
@@ -919,7 +919,6 @@ TEST_F(PassphraseTest, check_erwin_primary_enc_subkey_encrypted_plus_unenc_sign_
     const char* pass = "erwin";
     status = config_passphrase(session, pass);    
     ASSERT_EQ(status, PEP_STATUS_OK);
-     
     
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
@@ -975,3 +974,94 @@ TEST_F(PassphraseTest, check_carol_primary_unenc_subkeys_passphrase_withpass_dec
     free(modified_src);
     free_stringlist(keylist_used);
 }    
+
+TEST_F(PassphraseTest, check_carol_primary_unenc_subkeys_passphrase_wrongpass_decrypt) {
+    ASSERT_TRUE(slurp_and_import_key(session, carol_filename));
+    stringlist_t* found_key = NULL;
+    PEP_STATUS status = find_keys(session, carol_fpr, &found_key);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(found_key, nullptr);
+    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_STREQ(found_key->value, carol_fpr);
+    ASSERT_EQ(found_key->next, nullptr);
+    
+    const char* my_fpr = carol_fpr;
+    const char* my_name = "Carol Peril";
+    const char* my_address = "carol_peril@darthmama.cool";
+    pEp_identity* my_ident = new_identity(my_address, my_fpr, PEP_OWN_USERID, my_name);
+    status = set_own_key(session, my_ident, my_fpr);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    
+    // Set up "to"
+    ASSERT_TRUE(slurp_and_import_key(session, alice_pub_filename));    
+    const char* to_fpr = alice_fpr;
+    const char* to_name = "Alice Malice";
+    const char* to_address = "alice_malice@darthmama.cool";
+    pEp_identity* to_ident = new_identity(to_address, to_fpr, "ALICE", to_name);
+    status = set_identity(session, to_ident);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    
+    const char* pass = "biteme";
+    status = config_passphrase(session, pass);    
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    
+    string msg = slurp("test_mails/encrypt_to_carol.eml");
+    char* decrypted_msg = NULL;
+    char* modified_src = NULL;  
+    stringlist_t* keylist_used = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+    status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
+    ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);
+    ASSERT_EQ(decrypted_msg, nullptr);
+    
+    free(decrypted_msg);
+    free(modified_src);
+    free_stringlist(keylist_used);
+}    
+
+TEST_F(PassphraseTest, check_bob_primary_pass_subkey_no_passphrase_wrongpass_sign) {
+    ASSERT_TRUE(slurp_and_import_key(session, bob_filename));
+    stringlist_t* found_key = NULL;
+    PEP_STATUS status = find_keys(session, bob_fpr, &found_key);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(found_key, nullptr);
+    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_STREQ(found_key->value, bob_fpr);
+    ASSERT_EQ(found_key->next, nullptr);
+
+    const char* my_fpr = bob_fpr;
+    const char* my_name = "Bob Mob";
+    const char* my_address = "bob_mob@darthmama.cool";
+    pEp_identity* my_ident = new_identity(my_address, my_fpr, PEP_OWN_USERID, my_name);
+    status = set_own_key(session, my_ident, my_fpr);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    
+    // Set up "to"
+    ASSERT_TRUE(slurp_and_import_key(session, alice_pub_filename));    
+    const char* to_fpr = alice_fpr;
+    const char* to_name = "Alice Malice";
+    const char* to_address = "alice_malice@darthmama.cool";
+    pEp_identity* to_ident = new_identity(to_address, to_fpr, "ALICE", to_name);
+    status = set_identity(session, to_ident);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    
+    message* msg = new_message(PEP_dir_outgoing);   
+    msg->from = my_ident;
+    msg->to = new_identity_list(to_ident);
+    msg->shortmsg = strdup("This is an exciting message from Bob!");
+    msg->longmsg = strdup("Not\nVery\nExciting\n");   
+    
+    const char* pass = "biteme";
+    status = config_passphrase(session, pass);    
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    
+    message* enc_msg = NULL;
+    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+    ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);
+    ASSERT_EQ(enc_msg, nullptr);
+    
+    free_message(msg);
+    free_message(enc_msg);
+    free_stringlist(found_key);
+}

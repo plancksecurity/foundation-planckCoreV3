@@ -2072,6 +2072,9 @@ static PEP_STATUS pgp_encrypt_sign_optional(
     // pgp_encrypt_new consumes the recipients (but not the keys).
     recipient_count = 0;
 
+    bool bad_pass = false;
+    bool missing_pass = false;                
+
     if (sign) {            
         
         iter = pgp_cert_valid_key_iter(signer_cert, session->policy, 0);
@@ -2090,8 +2093,6 @@ static PEP_STATUS pgp_encrypt_sign_optional(
                        "%s has no signing capable key", keylist->value);
 
         pgp_key_t key = NULL;
-        bool bad_pass = false;
-        bool missing_pass = false;                
         for ( ; ka ; (ka = pgp_cert_valid_key_iter_next(iter, NULL, NULL))) {                       
             // pgp_key_into_key_pair needs to own the key, but here we
             // only get a reference (which we still need to free).
@@ -2118,6 +2119,8 @@ static PEP_STATUS pgp_encrypt_sign_optional(
                     }
                 }
                 else {
+                    pgp_key_free(key);
+                    key = NULL;
                     missing_pass = true;
                     continue;
                 }
@@ -2125,9 +2128,9 @@ static PEP_STATUS pgp_encrypt_sign_optional(
         }
         if (!key) {
             if (bad_pass)
-                ERROR_OUT(err, PEP_PASSPHRASE_REQUIRED, "pgp_key_decrypt_secret");
-            else if (missing_pass)    
                 ERROR_OUT(err, PEP_WRONG_PASSPHRASE, "pgp_key_decrypt_secret");
+            else if (missing_pass)    
+                ERROR_OUT(err, PEP_PASSPHRASE_REQUIRED, "pgp_key_decrypt_secret");
             else        
                 ERROR_OUT(err, PEP_UNKNOWN_ERROR, "pgp_valid_key_amalgamation_key");            
         }
@@ -2180,7 +2183,7 @@ static PEP_STATUS pgp_encrypt_sign_optional(
     *ctext = t;
     (*ctext)[*csize] = 0;
 
- out:
+ out:    
     pgp_signer_free (signer);
     // XXX: pgp_key_pair_as_signer is only supposed to reference
     // signing_keypair, but it consumes it.  If this is fixed, this
