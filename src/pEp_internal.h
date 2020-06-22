@@ -141,7 +141,11 @@ struct _pEpSession {
 
     PEP_cryptotech_t *cryptotech;
     PEP_CIPHER_SUITE cipher_suite;
-
+    
+    char* curr_passphrase;
+    bool new_key_pass_enable;
+    char* generation_passphrase;
+    
     PEP_transport_t *transports;
 
     sqlite3 *db;
