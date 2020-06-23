@@ -100,25 +100,34 @@ int sq_sql_trace_callback (unsigned trace_constant,
                         void* context_ptr,
                         void* P,
                         void* X) {
+    const char* TC_str = "";
+    const char* info_str = "";
+    const char* title = "SEQUOIA_SQL_DEBUG";
+                                
     switch (trace_constant) {
         case SQLITE_TRACE_STMT:
-            fprintf(stderr, "SEQUOIA_SQL_DEBUG: STMT - ");
-            const char* X_str = (const char*) X;
-            if (!EMPTYSTR(X_str) && X_str[0] == '-' && X_str[1] == '-')
-                fprintf(stderr, "%s\n", X_str);
-            else
-                fprintf(stderr, "%s\n", sqlite3_expanded_sql((sqlite3_stmt*)P));
+            TC_str = "STMT";
+            info_str = (const char*) X;
+            if (EMPTYSTR(info_str) || info_str[0] != '-' || info_str[1] != '-')
+                info_str = sqlite3_expanded_sql((sqlite3_stmt*)P);
             break;
         case SQLITE_TRACE_ROW:
-            fprintf(stderr, "SEQUOIA_SQL_DEBUG: ROW - ");
-            fprintf(stderr, "%s\n", sqlite3_expanded_sql((sqlite3_stmt*)P));
+            TC_str = "ROW";
+            info_str = sqlite3_expanded_sql((sqlite3_stmt*)P);
             break;
         case SQLITE_TRACE_CLOSE:
-            fprintf(stderr, "SEQUOIA_SQL_DEBUG: CLOSE - ");
+            TC_str = "CLOSE";
             break;
         default:
             break;
     }
+
+#ifndef ANDROID
+    fprintf(stderr, "%s: %s - %s\n", title, TC_str, info_str);
+#else
+    __android_log_print(ANDROID_LOG_DEBUG, "pEpEngine", " %s :: %s :: %s :: %s ",
+            title, TC_str, info_str, NULL);
+#endif    
     return 0;
 }
 #endif
@@ -781,6 +790,7 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
     char *email = NULL;
     char *name = NULL;
 
+    T("cert_save - begin transaction for saving %s", fpr);
     sqlite3_stmt *stmt = session->sq_sql.begin_transaction;
     int sqlite_result = sqlite3_step(stmt);
     sqlite3_reset(stmt);
@@ -788,7 +798,8 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
         ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
                   "begin transaction failed: %s",
                   sqlite3_errmsg(session->key_db));
-
+                  
+    T("cert_save - successfully began transaction for saving %s", fpr);
     pgp_fpr = pgp_cert_fingerprint(cert);
     fpr = pgp_fingerprint_to_hex(pgp_fpr);
     T("(%s, private_idents: %s)", fpr, private_idents ? "yes" : "no");
@@ -934,16 +945,22 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
     // Prevent ERROR_OUT from causing an infinite loop.
     if (! tried_commit) {
         tried_commit = 1;
+        T("cert_save - about to %s transaction for saving %s", 
+           (status == PEP_STATUS_OK ? "commit" : "roll back"), 
+           fpr);        
         stmt = status == PEP_STATUS_OK
             ? session->sq_sql.commit_transaction
             : session->sq_sql.rollback_transaction;
         int sqlite_result = sqlite3_step(stmt);
-        sqlite3_reset(stmt);
+        sqlite3_reset(stmt);        
         if (sqlite_result != SQLITE_DONE)
             ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
                       status == PEP_STATUS_OK
                       ? "commit failed: %s" : "rollback failed: %s",
                       sqlite3_errmsg(session->key_db));
+        T("cert_save - %s transaction for saving %s", 
+           (status == PEP_STATUS_OK ? "committed" : "rolled back"), 
+           fpr);                                
     }
 
     T("(%s) -> %s", fpr, pEp_status_to_string(status));
@@ -2365,17 +2382,6 @@ PEP_STATUS _pgp_import_keydata(PEP_SESSION session, const char *key_data,
                   "Can't import %s", pgp_tag_to_string(tag));
         break;
     }
-
-    int int_result = sqlite3_exec(
-        session->key_db,
-        "PRAGMA wal_checkpoint(FULL);\n"
-        ,
-        NULL,
-        NULL,
-        NULL
-    );
-    if (int_result != SQLITE_OK)
-        status = PEP_UNKNOWN_DB_ERROR;
 
  out:
     pgp_cert_parser_free(parser);
