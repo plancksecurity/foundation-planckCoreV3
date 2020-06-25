@@ -1852,6 +1852,9 @@ PEP_STATUS pgp_sign_only(
     pgp_signer_t signer = NULL;
     pgp_writer_stack_t ws = NULL;
 
+    bool bad_pass = false;
+    bool missing_pass = false;                    
+
     status = cert_find_by_fpr_hex(session, fpr, true, &signer_cert, NULL);
     ERROR_OUT(NULL, status, "Looking up key '%s'", fpr);
 
@@ -1859,7 +1862,7 @@ PEP_STATUS pgp_sign_only(
     pgp_cert_valid_key_iter_alive(iter);
     pgp_cert_valid_key_iter_revoked(iter, false);
     pgp_cert_valid_key_iter_for_signing (iter);
-    pgp_cert_valid_key_iter_unencrypted_secret (iter);
+//    pgp_cert_valid_key_iter_unencrypted_secret (iter);
 
     // If there are multiple signing capable subkeys, we just take
     // the first one, whichever one that happens to be.
@@ -1870,7 +1873,50 @@ PEP_STATUS pgp_sign_only(
 
     // pgp_key_into_key_pair needs to own the key, but here we
     // only get a reference (which we still need to free).
-    pgp_key_t key = pgp_valid_key_amalgamation_key (ka);
+    
+    pgp_key_t key = NULL;
+    for ( ; ka ; (ka = pgp_cert_valid_key_iter_next(iter, NULL, NULL))) {                       
+        // pgp_key_into_key_pair needs to own the key, but here we
+        // only get a reference (which we still need to free).
+        key = pgp_valid_key_amalgamation_key (ka);
+
+        if (pgp_key_has_unencrypted_secret(key)) 
+            break;
+        else {
+            const char* pass = session->curr_passphrase;
+            if (pass && pass[0]) {
+                pgp_key_t decrypted_key = NULL;
+                decrypted_key = pgp_key_decrypt_secret(&err, pgp_key_clone(key), (uint8_t*)session->curr_passphrase,
+                                                        strlen(session->curr_passphrase));                             
+                pgp_key_free(key);
+                key = NULL;
+                
+                if (!decrypted_key) {                               
+                    bad_pass = true;
+                    continue;
+                }    
+                else {
+                    key = decrypted_key;
+                    break;
+                }
+            }
+            else {
+                pgp_key_free(key);
+                key = NULL;
+                missing_pass = true;
+                continue;
+            }
+        }
+    }
+    if (!key) {
+        if (bad_pass)
+            ERROR_OUT(err, PEP_WRONG_PASSPHRASE, "pgp_key_decrypt_secret");
+        else if (missing_pass)    
+            ERROR_OUT(err, PEP_PASSPHRASE_REQUIRED, "pgp_key_decrypt_secret");
+        else        
+            ERROR_OUT(err, PEP_UNKNOWN_ERROR, "pgp_valid_key_amalgamation_key");            
+    }    
+    
     signing_keypair = pgp_key_into_key_pair (NULL, pgp_key_clone (key));
     pgp_key_free (key);
     if (! signing_keypair)

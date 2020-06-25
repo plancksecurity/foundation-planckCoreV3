@@ -6,6 +6,7 @@
 #include "test_util.h"
 #include "TestConstants.h"
 #include "Engine.h"
+#include <fstream>
 
 #include <gtest/gtest.h>
 
@@ -1224,4 +1225,89 @@ TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase_decry
     ASSERT_EQ(msg, nullptr);
 
     free_message(enc_msg);    
+}
+
+TEST_F(PassphraseTest, check_sign_only_nopass) {
+    ASSERT_TRUE(slurp_and_import_key(session, bob_filename));
+    stringlist_t* found_key = NULL;
+    PEP_STATUS status = find_keys(session, bob_fpr, &found_key);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(found_key, nullptr);
+    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_STREQ(found_key->value, bob_fpr);
+    ASSERT_EQ(found_key->next, nullptr);
+    free_stringlist(found_key);
+    
+    const char* my_fpr = bob_fpr;
+    const char* my_name = "Bob Mob";
+    const char* my_address = "bob_mob@darthmama.cool";
+    pEp_identity* my_ident = new_identity(my_address, my_fpr, PEP_OWN_USERID, my_name);
+    status = set_own_key(session, my_ident, my_fpr);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+            
+    string msg_text = "Grrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr! I mean, yo. Greetings to Meesti.\n - Alice";
+    ofstream test_file;
+    test_file.open("tmp/signed_text.txt");
+    test_file << msg_text;
+    test_file.close();
+    char* signed_text = NULL;
+    size_t signed_text_size = 0;
+
+    stringlist_t* keylist = NULL;
+
+    status = sign_only(session, msg_text.c_str(), msg_text.size(), bob_fpr, &signed_text, &signed_text_size);
+    ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);
+
+    // FIXME: free stuff    
+}
+
+TEST_F(PassphraseTest, check_sign_only_withpass) {
+    
+    ASSERT_TRUE(slurp_and_import_key(session, bob_filename));
+    stringlist_t* found_key = NULL;
+    PEP_STATUS status = find_keys(session, bob_fpr, &found_key);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(found_key, nullptr);
+    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_STREQ(found_key->value, bob_fpr);
+    ASSERT_EQ(found_key->next, nullptr);
+    free_stringlist(found_key);
+    
+    const char* my_fpr = bob_fpr;
+    const char* my_name = "Bob Mob";
+    const char* my_address = "bob_mob@darthmama.cool";
+    pEp_identity* my_ident = new_identity(my_address, my_fpr, PEP_OWN_USERID, my_name);
+    status = set_own_key(session, my_ident, my_fpr);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+        
+    const char* pass = "bob";
+    status = config_passphrase(session, pass);    
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    
+    string msg_text = "Grrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr! I mean, yo. Greetings to Meesti.\n - Alice";
+    ofstream test_file;
+    test_file.open("tmp/signed_text.txt");
+    test_file << msg_text;
+    test_file.close();
+    char* signed_text = NULL;
+    size_t signed_text_size = 0;
+
+    stringlist_t* keylist = NULL;
+
+    status = sign_only(session, msg_text.c_str(), msg_text.size(), bob_fpr, &signed_text, &signed_text_size);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    output_stream << signed_text << endl;
+    test_file.open("tmp/signature.txt");
+    test_file << signed_text;
+    test_file.close();
+
+    status = verify_text(session, msg_text.c_str(), msg_text.size(),
+                         signed_text, signed_text_size, &keylist);
+
+    ASSERT_EQ(status , PEP_VERIFIED);
+    ASSERT_NE(keylist, nullptr);
+    ASSERT_NE(keylist->value, nullptr);
+    ASSERT_STREQ(keylist->value, bob_fpr);
+
+    // FIXME: free stuff
 }
