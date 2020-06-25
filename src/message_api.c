@@ -5322,11 +5322,12 @@ PEP_STATUS try_encrypt_message(
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
-    assert(session && session->messageToSend);
+    assert(session && session->messageToSend && session->notifyHandshake);
     assert(src && src->from);
     assert(dst);
 
-    if (!(session && session->messageToSend && src && src->from && dst))
+    if (!(session && session->messageToSend && session->notifyHandshake && src
+                && src->from && dst))
         return PEP_ILLEGAL_VALUE;
 
     if (src->dir == PEP_dir_incoming)

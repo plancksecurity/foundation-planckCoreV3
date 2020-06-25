@@ -228,12 +228,16 @@ PEP_STATUS try_base_prepare_message(
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
+    assert(session && session->messageToSend && session->notifyHandshake);
     assert(me);
     assert(partner);
     assert(payload);
     assert(size);
     assert(result);
     assert(type == BASE_SYNC || type == BASE_KEYRESET);
+
+    if (!(session && session->messageToSend && session->notifyHandshake))
+        return PEP_ILLEGAL_VALUE;
 
     if (!(me && partner && payload && size && result && type))
         return PEP_ILLEGAL_VALUE;
