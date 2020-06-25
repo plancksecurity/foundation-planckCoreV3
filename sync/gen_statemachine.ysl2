@@ -568,7 +568,7 @@ tstylesheet {
                     switch (message_type) {
                     `` for "fsm/message[@security='unencrypted' and ../@name!='KeySync']" | #error unencrypted only allowed with KeySync
                     `` for "fsm/message[@security='unencrypted' and ../@name='KeySync']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
-                            status = base_prepare_message(
+                            status = try_base_prepare_message(
                                     session,
                                     li->ident,
                                     li->ident,
