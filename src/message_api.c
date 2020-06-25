@@ -5334,12 +5334,32 @@ PEP_STATUS try_encrypt_message(
 
     // https://dev.pep.foundation/Engine/MessageToSendPassphrase
 
-    do {
+    if (session->curr_passphrase) {
+        // first try with empty passphrase
+        char *passphrase = session->curr_passphrase;
+        session->curr_passphrase = NULL;
         status = encrypt_message(session, src, extra, dst, enc_format, flags);
-        if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE)
+        session->curr_passphrase = passphrase;
+        if (!(status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE))
+            return status;
+    }
+
+    do {
+        // then try passphrases
+        status = encrypt_message(session, src, extra, dst, enc_format, flags);
+        if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
             status = session->messageToSend(NULL);
-        else
+            if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
+                pEp_identity *me = identity_dup(src->from);
+                if (!me)
+                    return PEP_OUT_OF_MEMORY;
+                session->notifyHandshake(me, NULL, SYNC_PASSPHRASE_REQUIRED);
+                break;
+            }
+        }
+        else {
             break;
+        }
     } while (!status);
 
     return status;

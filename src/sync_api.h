@@ -35,6 +35,9 @@ typedef enum _sync_handshake_signal {
     // forming group
     // SYNC_NOTIFY_FORMING_GROUP = 10,
 
+    // message cannot be sent, need passphrase
+    SYNC_PASSPHRASE_REQUIRED = 128,
+
     // notification of actual group status
     SYNC_NOTIFY_SOLE = 254,
     SYNC_NOTIFY_IN_GROUP = 255
@@ -53,7 +56,7 @@ typedef enum _sync_handshake_signal {
 //      PEP_STATUS_OK or any other value on error
 //
 //  caveat:
-//      ownership of self and partner go to the callee
+//      ownership of me and partner go to the callee
 
 typedef PEP_STATUS (*notifyHandshake_t)(
         pEp_identity *me,
