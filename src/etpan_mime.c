@@ -556,11 +556,13 @@ struct mailimf_mailbox * mailbox_from_string(
         const char *address
     )
 {
+    assert(address);
+    if (!address)
+        return NULL;
+
     struct mailimf_mailbox *mb = NULL;
     char *_name = NULL;
     char *_address = NULL;
-
-    assert(address);
 
     _name = name ? strdup(name) : strdup("");
     if (_name == NULL)
