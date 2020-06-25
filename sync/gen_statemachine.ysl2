@@ -618,7 +618,7 @@ tstylesheet {
                                 goto the_end;
                             }
 
-                            status = encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
+                            status = try_encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
                             if (status) {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 goto the_end;
@@ -799,7 +799,7 @@ tstylesheet {
                             }
                             key_data = NULL;
 
-                            status = encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
+                            status = try_encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
                             if (status) {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 goto the_end;
@@ -905,7 +905,7 @@ tstylesheet {
                             key_data = NULL;
 
                             // we do not support extra keys here and will only encrypt to ourselves
-                            status = encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
+                            status = try_encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
                             if (status) {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 goto the_end;
@@ -931,7 +931,7 @@ tstylesheet {
                                 goto the_end;
                             }
 
-                            status = encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
+                            status = try_encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
                             if (status) {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 goto the_end;
