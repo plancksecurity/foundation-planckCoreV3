@@ -214,3 +214,60 @@ the_end:
     free_stringlist(keylist);
     return status;
 }
+
+PEP_STATUS try_base_prepare_message(
+        PEP_SESSION session,
+        const pEp_identity *me,
+        const pEp_identity *partner,
+        base_protocol_type type,
+        char *payload,
+        size_t size,
+        const char *fpr,
+        message **result
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(me);
+    assert(partner);
+    assert(payload);
+    assert(size);
+    assert(result);
+    assert(type == BASE_SYNC || type == BASE_KEYRESET);
+
+    if (!(me && partner && payload && size && result && type))
+        return PEP_ILLEGAL_VALUE;
+
+    // https://dev.pep.foundation/Engine/MessageToSendPassphrase
+
+    if (session->curr_passphrase) {
+        // first try with empty passphrase
+        char *passphrase = session->curr_passphrase;
+        session->curr_passphrase = NULL;
+        status = base_prepare_message(session, me, partner, type, payload, size, fpr, result);
+        session->curr_passphrase = passphrase;
+        if (!(status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE))
+            return status;
+    }
+
+    do {
+        // then try passphrases
+        status = base_prepare_message(session, me, partner, type, payload, size, fpr, result);
+        if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
+            status = session->messageToSend(NULL);
+            if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
+                pEp_identity *_me = identity_dup(me);
+                if (!_me)
+                    return PEP_OUT_OF_MEMORY;
+                session->notifyHandshake(_me, NULL, SYNC_PASSPHRASE_REQUIRED);
+                break;
+            }
+        }
+        else {
+            break;
+        }
+    } while (!status);
+
+    return status;
+}
+

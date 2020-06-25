@@ -5310,3 +5310,58 @@ the_end:
     free_identity(ident);
     return status;
 }
+
+PEP_STATUS try_encrypt_message(
+        PEP_SESSION session,
+        message *src,
+        stringlist_t *extra,
+        message **dst,
+        PEP_enc_format enc_format,
+        PEP_encrypt_flags_t flags
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session && session->messageToSend);
+    assert(src && src->from);
+    assert(dst);
+
+    if (!(session && session->messageToSend && src && src->from && dst))
+        return PEP_ILLEGAL_VALUE;
+
+    if (src->dir == PEP_dir_incoming)
+        return PEP_ILLEGAL_VALUE;
+
+    // https://dev.pep.foundation/Engine/MessageToSendPassphrase
+
+    if (session->curr_passphrase) {
+        // first try with empty passphrase
+        char *passphrase = session->curr_passphrase;
+        session->curr_passphrase = NULL;
+        status = encrypt_message(session, src, extra, dst, enc_format, flags);
+        session->curr_passphrase = passphrase;
+        if (!(status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE))
+            return status;
+    }
+
+    do {
+        // then try passphrases
+        status = encrypt_message(session, src, extra, dst, enc_format, flags);
+        if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
+            status = session->messageToSend(NULL);
+            if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
+                pEp_identity *me = identity_dup(src->from);
+                if (!me)
+                    return PEP_OUT_OF_MEMORY;
+                session->notifyHandshake(me, NULL, SYNC_PASSPHRASE_REQUIRED);
+                break;
+            }
+        }
+        else {
+            break;
+        }
+    } while (!status);
+
+    return status;
+}
+

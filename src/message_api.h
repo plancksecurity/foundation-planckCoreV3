@@ -547,6 +547,22 @@ DYNAMIC_API PEP_STATUS get_key_rating_for_user(
 DYNAMIC_API PEP_rating rating_from_comm_type(PEP_comm_type ct);
 
 
+// this is the internal function to be used by asynchronous network protocol
+// implementations
+//
+// this function is calling messageToSend(NULL) in case there is a missing or wrong passphrase
+//
+// do not use it in adapters
+
+PEP_STATUS try_encrypt_message(
+        PEP_SESSION session,
+        message *src,
+        stringlist_t *extra,
+        message **dst,
+        PEP_enc_format enc_format,
+        PEP_encrypt_flags_t flags
+    );
+
 #ifdef __cplusplus
 }
 #endif
