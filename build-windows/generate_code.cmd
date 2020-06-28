@@ -71,6 +71,10 @@ IF %ERRORLEVEL% NEQ 0 (
 DEL *-sample.c
 
 CD %pwd%\..
-IF NOT EXIST pEp mklink /d pEp pEpEngine\src
+RD /S/Q pEp
+MKDIR pEp
+XCOPY pEpEngine\src\*.h pEp\
+XCOPY libpEpAdapter\*.hh pEp\
+XCOPY libpEpAdapter\*.hxx pEp\
 
 POPD
