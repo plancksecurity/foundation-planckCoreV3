@@ -3845,6 +3845,13 @@ static PEP_STATUS _decrypt_message(
                         goto pEp_error;
                     }
                 }
+
+                status = import_keys_from_decrypted_msg(session, msg,
+                                                        &keys_were_imported,
+                                                        &imported_private_key_address,
+                                                        private_il,
+                                                        (imported_key_fprs ? &_imported_key_list : NULL), 
+                                                        (changed_public_keys ? &_changed_keys : NULL));
                 break;
 
             default:
