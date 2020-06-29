@@ -3812,7 +3812,7 @@ static PEP_STATUS _decrypt_message(
                         decrypt_status = _decrypt_in_pieces_status;
                 }
 
-                if (src->enc_format == PEP_enc_inline_EA && msg->longmsg[0] == 0) {
+                if (src->enc_format == PEP_enc_inline_EA && msg->longmsg && msg->longmsg[0] == 0) {
                     char *value;
                     size_t size;
                     char *mime_type;
