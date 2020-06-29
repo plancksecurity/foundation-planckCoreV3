@@ -1601,8 +1601,9 @@ static bool compare_first_n_bytes(const char* first, const char* second, size_t 
 bool import_attached_keys(
         PEP_SESSION session,
         message *msg,
-        identity_list **private_idents,
-        stringlist_t **imported_fprs
+        identity_list **private_idents, 
+        stringlist_t** imported_key_list,
+        uint64_t* changed_keys
     )
 {
     assert(session);
