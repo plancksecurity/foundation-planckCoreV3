@@ -237,13 +237,13 @@ char *strnstr(const char *big, const char *little, size_t len) {
 }
 
 
-#ifdef USE_NETPGP
-// FIXME: This may cause problems - this is a quick compatibility fix for netpgp code
-int regnexec(const regex_t* preg, const char* string,
-             size_t len, size_t nmatch, regmatch_t pmatch[], int eflags) {
-    return regexec(preg, string, nmatch, pmatch, eflags);
-}
-#endif
+// #ifdef USE_NETPGP
+// // FIXME: This may cause problems - this is a quick compatibility fix for netpgp code
+// int regnexec(const regex_t* preg, const char* string,
+//              size_t len, size_t nmatch, regmatch_t pmatch[], int eflags) {
+//     return regexec(preg, string, nmatch, pmatch, eflags);
+// }
+// #endif
 
 #endif
 
@@ -369,7 +369,7 @@ const char *unix_local_db(int reset)
 #endif
         return path;
 
-    char* pathret = NULL;
+    const char* pathret = NULL;
 #ifndef NDEBUG 
     pathret = _per_user_directory(reset);
 #else 
@@ -494,218 +494,11 @@ the_end:
 
 DYNAMIC_API const char *per_user_directory(void) {
 #ifdef NDEBUG
-    return _per_user_directory(void);
+    return _per_user_directory();
 #else 
     return _per_user_directory(false);
 #endif
 }
-
-
-static const char *gpg_conf_path = ".gnupg";
-static const char *gpg_conf_name = "gpg.conf";
-static const char *gpg_agent_conf_name = "gpg-agent.conf";
-static const char *gpg_conf_empty = "# Created by pEpEngine\n";
-
-#ifdef NDEBUG
-static bool ensure_gpg_home(const char **conf, const char **home){
-#else
-static bool ensure_gpg_home(const char **conf, const char **home, int reset){
-#endif    
-    static char path[MAX_PATH];
-    static char dirname[MAX_PATH];
-    static bool done = false;
-
-#ifdef NDEBUG
-    if (!done) {
-#else
-    if (reset || !done) {
-#endif        
-        char *p;
-        ssize_t len;
-        char *gpg_home_env = getenv("GNUPGHOME");
-        char *home_env = getenv("HOME");
-
-        if(gpg_home_env){
-
-            p = stpncpy(path, gpg_home_env, MAX_PATH);
-            len = MAX_PATH - (p - path) - 2;
-
-            if (len < strlen(gpg_conf_name))
-            {
-                assert(0);
-                return false;
-            }
-
-        }else if(home_env){
-
-            p = stpncpy(path, home_env, MAX_PATH);
-            len = MAX_PATH - (p - path) - 3;
-
-            if (len < strlen(gpg_conf_path) + strlen(gpg_conf_name))
-            {
-                assert(0);
-                return false;
-            }
-
-            *p++ = '/';
-            strncpy(p, gpg_conf_path, len);
-            p += strlen(gpg_conf_path);
-            len -= strlen(gpg_conf_path) - 1;
-
-        }else{
-
-            assert(0);
-            return false;
-        }
-
-        strncpy(dirname, path, MAX_PATH);
-        *p++ = '/';
-        strncpy(p, gpg_conf_name, len);
-
-        if(access(path, F_OK)){ 
-            int fd;
-            if(access(dirname, F_OK )) { 
-                mkdir(dirname, S_IRUSR | S_IWUSR | S_IXUSR);
-            }
-
-            fd = open(path, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
-
-            if(fd>0) {
-                ssize_t res;
-                len = strlen(gpg_conf_empty);
-                res = write(fd, gpg_conf_empty, len);
-                close(fd);
-                if(res < len) {
-                    assert(0);
-                    return false;
-                }
-            }
-        }
-
-        done = true;
-    }
-
-    if(conf) *conf=path;
-    if(home) *home=dirname;
-
-    return true;
-}
-
-#ifdef NDEBUG
-static bool ensure_gpg_agent_conf(const char **agent_conf){
-#else
-static bool ensure_gpg_agent_conf(const char **agent_conf, int reset){    
-#endif    
-    static char agent_path[MAX_PATH];
-    static bool done = false;
-
-#ifdef NDEBUG
-    if (!done) {
-        const char *dirname;
-
-        if (!ensure_gpg_home(NULL, &dirname)) /* Then dirname won't be set. */
-            return false;
-#else
-    if (reset || !done) {
-        const char *dirname;
-
-        if (!ensure_gpg_home(NULL, &dirname, reset)) /* Then dirname won't be set. */
-            return false;
-#endif
-
-        char *p = stpncpy(agent_path, dirname, MAX_PATH);
-        
-        ssize_t len = MAX_PATH - (p - agent_path) - 2;
-
-        if (len < strlen(gpg_agent_conf_name))
-        {
-            assert(0);
-            return false;
-        }
-
-        *p++ = '/';
-     
-        strncpy(p, gpg_agent_conf_name, len);
-
-        if(access(agent_path, F_OK)){ 
-            int fd;
-            if(access(dirname, F_OK )) { 
-                mkdir(dirname, S_IRUSR | S_IWUSR | S_IXUSR);
-            }
-
-            fd = open(agent_path, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
-
-            if(fd>0) {
-                ssize_t res;
-                len = strlen(gpg_conf_empty);
-                res = write(fd, gpg_conf_empty, len);
-                close(fd);
-                if(res < len) {
-                    assert(0);
-                    return false;
-                }
-            }
-        }
-        done = true;
-    }
-    if(agent_conf) *agent_conf=agent_path;
-
-    return true;
-}
-
-#ifdef NDEBUG
-const char *gpg_conf(void)
-{
-    const char *conf;
-    if(ensure_gpg_home(&conf, NULL))
-        return conf;
-    return NULL;
-}
-#else
-const char *gpg_conf(int reset)
-{
-    const char *conf;
-    if(ensure_gpg_home(&conf, NULL, reset))
-        return conf;
-    return NULL;
-}
-#endif
-
-#ifdef NDEBUG
-const char *gpg_home(void)
-{
-    const char *home;
-    if(ensure_gpg_home(NULL, &home))
-        return home;
-    return NULL;
-}
-#else
-const char *gpg_home(int reset)
-{
-    const char *home;
-    if(ensure_gpg_home(NULL, &home, reset))
-        return home;
-    return NULL;
-}
-#endif
-
-#ifdef NDEBUG
-const char *gpg_agent_conf(void)
-{
-    const char *agent_conf;
-    if(ensure_gpg_agent_conf(&agent_conf))
-        return agent_conf;
-    return NULL;
-}
-#else
-const char *gpg_agent_conf(int reset)
-{
-    const char *agent_conf;
-    if(ensure_gpg_agent_conf(&agent_conf, reset))
-        return agent_conf;
-    return NULL;
-}
-#endif
 
 DYNAMIC_API const char *per_machine_directory(void)
 {

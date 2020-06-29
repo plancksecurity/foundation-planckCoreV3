@@ -33,7 +33,7 @@ namespace {
             // is empty.
             DecorateTest() {
                 // You can do set-up work for each test here.
-                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->test_suite_name();
+                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->GTEST_SUITE_SYM();
                 test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
                 test_path = get_main_test_home_dir() + "/" + test_suite_name + "/" + test_name;
             }
@@ -129,7 +129,7 @@ TEST_F(DecorateTest, check_decorate) {
     ASSERT_NE(encrypted_msg, nullptr);
     output_stream << "message encrypted.\n";
 
-    status = mime_encode_message(encrypted_msg, false, &encoded_text);
+    status = mime_encode_message(encrypted_msg, false, &encoded_text, false);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(encoded_text, nullptr);
 

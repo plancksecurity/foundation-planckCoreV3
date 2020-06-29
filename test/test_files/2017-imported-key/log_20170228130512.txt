@@ -1,0 +1,31 @@
+13:02:28.595 | ThisAddIn_Startup: Disable GPGOL
+13:02:30.227 | ThisAddIn_Startup: Set UI language
+13:02:30.229 | ThisAddIn_Startup: en language detected.
+13:02:30.230 | ThisAddIn_Startup: Connect Events
+13:02:30.230 | ThisAddIn_Startup: Loading settings
+13:02:30.262 |W| GetRegistryBoolean: No value retrieved for IsCrashReportVisible. Returning default value True.
+13:02:30.262 |W| GetRegistryBoolean: No value retrieved for IsDeveloperModeEnabled. Returning default value False.
+13:02:30.262 |W| GetRegistryBoolean: No value retrieved for IsDisableProtectionForContactsEnabled. Returning default value False.
+13:02:30.263 |W| GetRegistryBoolean: No value retrieved for IsGrouped. Returning default value False.
+13:02:30.264 |W| GetRegistryBoolean: No value retrieved for IsSensitiveDataLoggingEnabled. Returning default value False.
+13:02:30.265 |W| GetRegistryBoolean: No value retrieved for IsUXImprovementEnabled. Returning default value True.
+13:02:30.328 |E| AccountExtensions.IsLocalDomain: Error determining if local domain, returning default. System.Net.Sockets.SocketException (0x80004005): A non-recoverable error occurred during a database lookup
+   at System.Net.Dns.GetAddrInfo(String name)
+   at System.Net.Dns.InternalGetHostByName(String hostName, Boolean includeIPv6)
+   at System.Net.Dns.GetHostEntry(String hostNameOrAddress)
+   at pEp.AccountExtensions.GetIsInLocalDomain(Account account)
+13:02:31.316 | ThisAddIn_Startup: Register callbacks
+13:02:31.322 | ThisAddIn_Startup: Setting cipher suite pEpCipherSuiteDefault
+13:02:31.323 | ThisAddIn_Startup: Register myself
+13:02:31.327 | ThisAddIn_Startup: Sync settings
+13:02:32.556 | ThisAddIn_Startup: Get Outlook options and set pEp required values.
+13:02:32.560 | ThisAddIn_Startup: Connect Watched objects
+13:02:32.625 | ThisAddIn_Startup: Connect Application Events.
+13:02:32.626 | ThisAddIn_Startup: Initializing inbox cleaner.
+13:02:32.630 | ThisAddIn_Startup: Main program started.
+13:05:12.501 |W| GetRegistryBoolean: No value retrieved for IsCrashReportVisible. Returning default value True.
+13:05:12.501 |W| GetRegistryBoolean: No value retrieved for IsDeveloperModeEnabled. Returning default value False.
+13:05:12.501 |W| GetRegistryBoolean: No value retrieved for IsDisableProtectionForContactsEnabled. Returning default value False.
+13:05:12.501 |W| GetRegistryBoolean: No value retrieved for IsGrouped. Returning default value False.
+13:05:12.501 |W| GetRegistryBoolean: No value retrieved for IsSensitiveDataLoggingEnabled. Returning default value False.
+13:05:12.501 |W| GetRegistryBoolean: No value retrieved for IsUXImprovementEnabled. Returning default value True.

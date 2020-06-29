@@ -33,7 +33,7 @@ namespace {
             // is empty.
             EncryptAttachPrivateKeyTest() {
                 // You can do set-up work for each test here.
-                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->test_suite_name();
+                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->GTEST_SUITE_SYM();
                 test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
                 test_path = get_main_test_home_dir() + "/" + test_suite_name + "/" + test_name;
             }
@@ -346,7 +346,7 @@ TEST_F(EncryptAttachPrivateKeyTest, check_encrypt_attach_private_key) {
 
     output_stream << "Correctly encrypted message:" << endl << endl;
     char* encrypted_msg_text = NULL;
-    mime_encode_message(enc_same_addr_same_uid_trusted, false, &encrypted_msg_text);
+    mime_encode_message(enc_same_addr_same_uid_trusted, false, &encrypted_msg_text, false);
     output_stream << encrypted_msg_text << endl << endl;
 
     // FIXME: Free all the damned things

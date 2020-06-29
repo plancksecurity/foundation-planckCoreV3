@@ -33,7 +33,7 @@ namespace {
             // is empty.
             MimeTest() {
                 // You can do set-up work for each test here.
-                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->test_suite_name();
+                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->GTEST_SUITE_SYM();
                 test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
                 test_path = get_main_test_home_dir() + "/" + test_suite_name + "/" + test_name;
             }
@@ -93,7 +93,7 @@ namespace {
 
                 output_stream << "decoding message…\n";
                 message *msg3;
-                PEP_STATUS status3 = mime_decode_message(mimetext3.c_str(), mimetext3.length(), &msg3);
+                PEP_STATUS status3 = mime_decode_message(mimetext3.c_str(), mimetext3.length(), &msg3, NULL);
                 assert(status3 == PEP_STATUS_OK);
                 assert(msg3);
                 output_stream << "decoded.\n\n";
@@ -147,7 +147,7 @@ TEST_F(MimeTest, check_mime) {
 
     output_stream << "encoding message…\n";
     char *result2;
-    PEP_STATUS status2 = mime_encode_message(msg2, false, &result2);
+    PEP_STATUS status2 = mime_encode_message(msg2, false, &result2, false);
     ASSERT_NE(result2, nullptr);
     ASSERT_EQ(status2, PEP_STATUS_OK);
 

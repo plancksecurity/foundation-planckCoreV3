@@ -1,8 +1,6 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#define PEP_ENGINE_VERSION "1.1.1"
-
 // maximum attachment size to import as key 1MB, maximum of 20 attachments
 
 #define MAX_KEY_SIZE (1024 * 1024)
@@ -18,9 +16,6 @@
 
 // maximum busy wait time in ms
 #define BUSY_WAIT_TIME 5000
-
-// maximum line length for reading gpg.conf
-#define MAX_LINELENGTH 1024
 
 // default keyserver
 #ifndef DEFAULT_KEYSERVER
@@ -65,7 +60,6 @@
 #define KEYS_DB windoze_keys_db()
 #define LOCAL_DB windoze_local_db()
 #define SYSTEM_DB windoze_system_db()
-#define LIBGPGME "libgpgme-11.dll"
 #else // UNIX
 #define _POSIX_C_SOURCE 200809L
 #include <dlfcn.h>
@@ -78,9 +72,6 @@
 #define SYSTEM_DB android_system_db()
 #else
 #define SYSTEM_DB unix_system_db()
-#endif
-#ifndef LIBGPGME
-#define LIBGPGME "libgpgme-pthread.so"
 #endif
 #endif
 
@@ -100,21 +91,13 @@
 
 #include "pEpEngine.h"
 
-// If not specified, build for GPG
+// If not specified, build for Sequoia
 #ifndef USE_SEQUOIA
-#ifndef USE_NETPGP
-#ifndef USE_GPG
-#define USE_GPG
-#endif
-#endif
+#define USE_SEQUOIA
 #endif
 
 #if defined(USE_SEQUOIA)
 #include "pgp_sequoia_internal.h"
-#elif defined(USE_NETPGP)
-#include "pgp_netpgp_internal.h"
-#elif defined(USE_GPG)
-#include "pgp_gpg_internal.h"
 #endif
 
 #include "keymanagement.h"
@@ -133,34 +116,36 @@ struct _pEpSession {
     const char *version;
     messageToSend_t messageToSend;
 
-#ifdef USE_GPG
-    gpgme_ctx_t ctx;
-#elif defined(USE_NETPGP)
-    pEpNetPGPSession ctx;
-#elif defined(USE_SEQUOIA)
+#if defined(USE_SEQUOIA)
     sqlite3 *key_db;
     struct {
         sqlite3_stmt *begin_transaction;
         sqlite3_stmt *commit_transaction;
         sqlite3_stmt *rollback_transaction;
-        sqlite3_stmt *tpk_find;
+        sqlite3_stmt *cert_find;
         sqlite3_stmt *tsk_find;
-        sqlite3_stmt *tpk_find_by_keyid;
+        sqlite3_stmt *cert_find_by_keyid;
         sqlite3_stmt *tsk_find_by_keyid;
-        sqlite3_stmt *tpk_find_by_email;
+        sqlite3_stmt *cert_find_by_email;
         sqlite3_stmt *tsk_find_by_email;
-        sqlite3_stmt *tpk_all;
+        sqlite3_stmt *cert_all;
         sqlite3_stmt *tsk_all;
-        sqlite3_stmt *tpk_save_insert_primary;
-        sqlite3_stmt *tpk_save_insert_subkeys;
-        sqlite3_stmt *tpk_save_insert_userids;
+        sqlite3_stmt *cert_save_insert_primary;
+        sqlite3_stmt *cert_save_insert_subkeys;
+        sqlite3_stmt *cert_save_insert_userids;
         sqlite3_stmt *delete_keypair;
     } sq_sql;
+
+    pgp_policy_t policy;
 #endif
 
     PEP_cryptotech_t *cryptotech;
     PEP_CIPHER_SUITE cipher_suite;
-
+    
+    char* curr_passphrase;
+    bool new_key_pass_enable;
+    char* generation_passphrase;
+    
     PEP_transport_t *transports;
 
     sqlite3 *db;
@@ -175,10 +160,12 @@ struct _pEpSession {
     sqlite3_stmt *get_identities_by_main_key_id;
     sqlite3_stmt *replace_identities_fpr;
     sqlite3_stmt *replace_main_user_fpr;
+    sqlite3_stmt *replace_main_user_fpr_if_equal;
     sqlite3_stmt *get_main_user_fpr;
     sqlite3_stmt *refresh_userid_default_key;
     sqlite3_stmt *delete_key;
-    sqlite3_stmt *remove_fpr_as_default;
+    sqlite3_stmt *remove_fpr_as_identity_default;
+    sqlite3_stmt *remove_fpr_as_user_default;
     sqlite3_stmt *set_person;
     sqlite3_stmt *update_person;
     sqlite3_stmt *delete_person;
@@ -191,6 +178,7 @@ struct _pEpSession {
     sqlite3_stmt *set_revoke_contact_as_notified;
     sqlite3_stmt *get_contacted_ids_from_revoke_fpr;
     sqlite3_stmt *was_id_for_revoke_contacted;
+    sqlite3_stmt *has_id_contacted_address;
     sqlite3_stmt *get_last_contacted;
     // sqlite3_stmt *set_device_group;
     // sqlite3_stmt *get_device_group;
@@ -200,7 +188,8 @@ struct _pEpSession {
     sqlite3_stmt *exists_identity_entry;        
     sqlite3_stmt *set_identity_flags;
     sqlite3_stmt *unset_identity_flags;
-    sqlite3_stmt *set_pEp_version;    
+    sqlite3_stmt *set_pEp_version; 
+    sqlite3_stmt *clear_trust_info;   
     sqlite3_stmt *set_trust;
     sqlite3_stmt *update_trust;
     sqlite3_stmt *exists_trust_entry;
@@ -227,6 +216,7 @@ struct _pEpSession {
     sqlite3_stmt *is_own_address;
     sqlite3_stmt *own_identities_retrieve;
     sqlite3_stmt *own_keys_retrieve;
+    sqlite3_stmt *key_identities_retrieve;
     sqlite3_stmt *get_user_default_key;
     sqlite3_stmt *get_all_keys_for_user;
         
@@ -276,8 +266,11 @@ struct _pEpSession {
     bool unencrypted_subject;
     bool service_log;
     
-#ifdef DEBUG_ERRORSTACK
+#ifndef NDEBUG
+#   ifdef DEBUG_ERRORSTACK
     stringlist_t* errorstack;
+#   endif
+    int debug_color;
 #endif
 };
 
@@ -297,13 +290,6 @@ void decorate_message(
     stringlist_t *keylist,
     bool add_version,
     bool clobber);
-
-PEP_STATUS _import_key_with_fpr_return(
-        PEP_SESSION session,
-        const char *key_data,
-        size_t size,
-        identity_list **private_idents,
-        stringlist_t** imported_keys);
 
 #if defined(NDEBUG) || defined(NOLOG)
 #define DEBUG_LOG(TITLE, ENTITY, DESC)

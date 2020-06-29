@@ -44,8 +44,9 @@ public:
 void Sync_Adapter::processing()
 {
     output_stream << "waiting for processing\n";
+    const struct timespec arr[] = {{0, 100000000L}};
     while (!q.empty()) {
-        nanosleep((const struct timespec[]){{0, 100000000L}}, NULL);
+        nanosleep(arr, NULL);
     }
 }
 
@@ -90,7 +91,8 @@ Sync_event_t *Sync_Adapter::retrieve_next_sync_event(void *management, unsigned 
             }
             i = 0;
         }
-        nanosleep((const struct timespec[]){{0, 100000000L}}, NULL);
+        const struct timespec arr[] = {{0, 100000000L}};        
+        nanosleep(arr, NULL);
     }
 
     if (timeout)
@@ -162,7 +164,7 @@ namespace {
             // is empty.
             SyncTest() {
                 // You can do set-up work for each test here.
-                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->test_suite_name();
+                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->GTEST_SUITE_SYM();
                 test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
                 test_path = get_main_test_home_dir() + "/" + test_suite_name + "/" + test_name;
             }
@@ -263,3 +265,30 @@ TEST_F(SyncTest, check_sync)
     output_stream << "check_sync(): cry for unknown key\n";
     signal_Sync_event(sync, Sync_PR_keysync, CannotDecrypt, NULL);
 }
+
+/*
+TEST_F(SyncTest, check_sync_enable)
+{
+    pEp_identity* julio = new_identity("julio.iglesias@truhan.senor.es", NULL, PEP_OWN_USERID, "Julio Iglesias");
+    enable_identity_for_sync(session, julio);
+    adapter.processing();
+    myself(session, julio);
+    ASSERT_EQ(julio->flags, PEP_idf_devicegroup);
+    string current_fpr = julio->fpr;
+
+// Passes if you step through and ignore the send_key_to_recents part of key reset, because the attempt to pass the static class vars above doesn't work.
+// FIXME: KB, reimplement according to now-standard method used in key reset tests
+   // disable_identity_for_sync(session, julio);
+   // adapter.processing();
+   // myself(session, julio);
+   // ASSERT_EQ(julio->flags, PEP_idf_not_for_sync);
+   // ASSERT_STRNE(current_fpr.c_str(), julio->fpr);
+   // 
+   // pEp_identity* juan = new_identity("juan.valdez@columbian.coffee.co", NULL, PEP_OWN_USERID, "Juan Valdez");
+   // disable_identity_for_sync(session, juan);
+   // adapter.processing();
+   // myself(session, juan);
+   // ASSERT_EQ(juan->flags, PEP_idf_not_for_sync);
+   // ASSERT_FALSE(EMPTYSTR(juan->fpr));
+}
+*/

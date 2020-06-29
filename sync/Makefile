@@ -16,12 +16,14 @@ generated:
 .statemachines: sync.fsm gen_statemachine.ysl2 fsm.yml2 functions.ysl2 | generated
 	$(YML2_PROC) -y gen_statemachine.ysl2 $< -o $@
 
-.codecs: sync.fsm gen_codec.ysl2 fsm.yml2 functions.ysl2 | generated
+.codecs: sync.fsm distribution.fsm gen_codec.ysl2 fsm.yml2 functions.ysl2 | generated
 	$(YML2_PROC) -y gen_codec.ysl2 $< -o $@
+	$(YML2_PROC) -y gen_codec.ysl2 distribution.fsm -o $@
 
-.messages: sync.fsm gen_messages.ysl2 gen_message_func.ysl2 fsm.yml2 functions.ysl2 | generated
+.messages: sync.fsm distribution.fsm gen_messages.ysl2 gen_message_func.ysl2 fsm.yml2 functions.ysl2 | generated
 	$(YML2_PROC) -y gen_messages.ysl2 $< -o $@
 	$(YML2_PROC) -y gen_message_func.ysl2 $< -o $@
+	$(YML2_PROC) -y gen_messages.ysl2 distribution.fsm -o $@
 
 clean:
 	rm -rf generated

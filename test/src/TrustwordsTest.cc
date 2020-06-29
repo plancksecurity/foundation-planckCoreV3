@@ -27,7 +27,7 @@ namespace {
             // is empty.
             TrustwordsTest() {
                 // You can do set-up work for each test here.
-                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->test_suite_name();
+                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->GTEST_SUITE_SYM();
                 test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
                 test_path = get_main_test_home_dir() + "/" + test_suite_name + "/" + test_name;
             }
@@ -93,16 +93,16 @@ TEST_F(TrustwordsTest, check_trustwords) {
         "Leon Schumacher");
 
     pEp_identity* identity2 = new_identity(
-        "krista@kgrothoff.org",
+        "krista@darthmama.org",
         "62D4932086185C15917B72D30571AFBCA5493553",
         "blargh",
-        "Krista Grothoff");
+        "Krista Bennett");
 
     pEp_identity* identity2_with_spaces = new_identity(
-        "krista@kgrothoff.org",
+        "krista@darthmama.org",
         " 62D4932086185C159 17B72D30571A FBCA    5493553   ",
         "blargh",
-        "Krista Grothoff");
+        "Krista Bennett");
 
     string fingerprint1 = identity1->fpr;
     string fingerprint2 = identity2->fpr;
@@ -150,19 +150,26 @@ TEST_F(TrustwordsTest, check_trustwords) {
     output_stream << "\nTest 2: fpr1 == fpr1, short" << endl;
 
     output_stream << "\nfinding French trustwords for " << fingerprint2 << "...\n";
-    trustwords(session, fingerprint1.c_str(), "fr", &words1, &wsize1, 5);
+    trustwords(session, fingerprint2.c_str(), "fr", &words1, &wsize1, 5);
     ASSERT_NE(words1, nullptr);
     output_stream << words1 << "\n";
 
     output_stream << "\nfinding French trustwords for " << identity2->address << " and " << identity2->address << "...\n";
     status = get_trustwords(session, identity2, identity2, "fr", &full_wordlist, &wsize_full, false);
-    ASSERT_EQ(status , PEP_TRUSTWORDS_DUPLICATE_FPR);
-    output_stream << "Discovered duplicate fprs as desired" << endl;
+    ASSERT_STREQ(words1, full_wordlist);
+    // ASSERT_EQ(status , PEP_TRUSTWORDS_DUPLICATE_FPR);
+    // output_stream << "Discovered duplicate fprs as desired" << endl;
+
+    output_stream << "\nfinding English trustwords for " << fingerprint2 << "...\n";
+    trustwords(session, fingerprint2.c_str(), "en", &words1, &wsize1, 5);
+    ASSERT_NE(words1, nullptr);
+    output_stream << words1 << "\n";
 
     output_stream << "\nfinding English trustwords for " << identity2->address << " and " << identity2->address << "... with spaces\n";
     get_trustwords(session, identity2, identity2_with_spaces, "en", &full_wordlist, &wsize_full, false);
-    ASSERT_EQ(status , PEP_TRUSTWORDS_DUPLICATE_FPR);
-    output_stream << "Discovered duplicate fprs as desired" << endl;
+    ASSERT_STREQ(words1, full_wordlist);    
+    // ASSERT_EQ(status , PEP_TRUSTWORDS_DUPLICATE_FPR);
+    // output_stream << "Discovered duplicate fprs as desired" << endl;
 
     pEp_free(words1);
     words1 = nullptr;
@@ -201,22 +208,22 @@ TEST_F(TrustwordsTest, check_trustwords) {
     output_stream << "\nTest 4: fpr1 < fpr2, leading zeros (fpr1 has more), long" << endl;
 
     pEp_identity* identity3 = new_identity(
-        "nobody@kgrothoff.org",
+        "nobody@darthmama.org",
         "000F932086185C15917B72D30571AFBCA5493553",
         "blargh",
-        "Krista Grothoff");
+        "Krista Bennett");
 
     pEp_identity* identity4 = new_identity(
-        "nobody2@kgrothoff.org",
+        "nobody2@darthmama.org",
         "001F932086185C15917B72D30571AFBCA5493553",
         "blargh",
-        "Krista Grothoff");
+        "Krista Bennett");
 
     pEp_identity* identity5 = new_identity(
-        "nobody3@kgrothoff.org",
+        "nobody3@darthmama.org",
         "001F732086185C15917B72D30571AFBCA5493553",
         "blargh",
-        "Krista Grothoff");
+        "Krista Bennett");
 
     string fingerprint3 = identity3->fpr;
     string fingerprint4 = identity4->fpr;
@@ -271,10 +278,10 @@ TEST_F(TrustwordsTest, check_trustwords) {
     output_stream << "\nTest 6: fpr2 is shorter" << endl;
 
     pEp_identity* identity6 = new_identity(
-        "nobody4@kgrothoff.org",
+        "nobody4@darthmama.org",
         "F1F932086185c15917B72D30571AFBCA5493553",
         "blargh",
-        "Krista Grothoff");
+        "Krista Bennett");
 
     output_stream << "\nfinding Turkish trustwords for " << identity5->address << " and " << identity6->address << "...\n";
     PEP_STATUS status6 = get_trustwords(session, identity5, identity6, "tr", &full_wordlist, &wsize_full, false);
@@ -282,10 +289,10 @@ TEST_F(TrustwordsTest, check_trustwords) {
     output_stream << full_wordlist << endl;
 
     pEp_identity* identity7 = new_identity(
-        "nobody5@kgrothoff.org",
+        "nobody5@darthmama.org",
         "F01X932086185C15917B72D30571AFBCA5493553",
         "blargh",
-        "Krista Grothoff");
+        "Krista Bennett");
 
     output_stream << "\nTest 7: fpr2 has a non-hex character" << endl;
 
@@ -302,4 +309,53 @@ TEST_F(TrustwordsTest, check_trustwords) {
     free_identity(identity5);
     free_identity(identity6);
     free_identity(identity7);
+}
+
+TEST_F(TrustwordsTest, check_trustwords_short_trailing_space) {
+    pEp_identity* identity1  = new_identity(
+        "leon.schumacher@digitalekho.com",
+        "8BD08954C74D830EEFFB5DEB2682A17F7C87F73D",
+        "23",
+        "Leon Schumacher");
+
+    pEp_identity* identity2 = new_identity(
+        "krista@darthmama.org",
+        "62D4932086185C15917B72D30571AFBCA5493553",
+        "blargh",
+        "Krista Bennett");    
+        
+    char* wordlist = nullptr;
+    size_t wsize_full = 0;
+
+    get_trustwords(session, identity1, identity2, "en", &wordlist, &wsize_full, false);        
+
+    ASSERT_NE(wsize_full, 0);
+    ASSERT_NE(wordlist, nullptr);
+    ASSERT_NE(wordlist[wsize_full - 1], ' ');
+    ASSERT_STREQ(wordlist, "CAPTIVITY BULIMIC EXEMPT BETTYE NEWTONIAN");
+}
+
+
+TEST_F(TrustwordsTest, check_trustwords_long_trailing_space) {
+    pEp_identity* identity1  = new_identity(
+        "leon.schumacher@digitalekho.com",
+        "8BD08954C74D830EEFFB5DEB2682A17F7C87F73D",
+        "23",
+        "Leon Schumacher");
+
+    pEp_identity* identity2 = new_identity(
+        "krista@darthmama.org",
+        "62D4932086185C15917B72D30571AFBCA5493553",
+        "blargh",
+        "Krista Bennett");    
+        
+    char* wordlist = nullptr;
+    size_t wsize_full = 0;
+
+    get_trustwords(session, identity1, identity2, "en", &wordlist, &wsize_full, true);        
+
+    ASSERT_NE(wsize_full, 0);
+    ASSERT_NE(wordlist, nullptr);
+    ASSERT_NE(wordlist[wsize_full - 1], ' ');
+    ASSERT_STREQ(wordlist, "CAPTIVITY BULIMIC EXEMPT BETTYE NEWTONIAN DANDELION CLASSICISM BAGGAGEMAN BABBAGE VERSATILITY");
 }

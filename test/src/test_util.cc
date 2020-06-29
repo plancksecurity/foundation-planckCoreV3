@@ -9,9 +9,11 @@
 #include "keymanagement.h"
 
 #include <fstream>
+#include <algorithm>
 #include <sstream>
 #include <iostream>
 #include <stdexcept>
+#include <algorithm>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <errno.h>
@@ -23,19 +25,47 @@ using namespace std;
 
 std::string _main_test_home_dir;
 
+#define BUF_MAX_PATHLEN 4097
+
+bool is_pEpmsg(const message *msg)
+{
+    for (stringpair_list_t *i = msg->opt_fields; i && i->value ; i=i->next) {
+        if (strcasecmp(i->value->key, "X-pEp-Version") == 0)
+            return true;
+    }
+    return false;
+}
+
+// Lazy:
+// https://stackoverflow.com/questions/440133/how-do-i-create-a-random-alpha-numeric-string-in-c
+std::string random_string( size_t length )
+{
+    auto randchar = []() -> char
+    {
+        const char charset[] =
+        "0123456789"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz";
+        const size_t max_index = (sizeof(charset) - 1);
+        return charset[ rand() % max_index ];
+    };
+    std::string str(length,0);
+    std::generate_n( str.begin(), length, randchar );
+    return str;
+}
+
 std::string get_main_test_home_dir() {
-    size_t BUF_MAX_PATHLEN = 4097; 
     char buf[BUF_MAX_PATHLEN];// Linux max path size...
 
     if (_main_test_home_dir.empty()) {
         string curr_wd = getcwd(buf, BUF_MAX_PATHLEN);
-    
-        if (curr_wd.empty())
-            throw std::runtime_error("Error grabbing current working directory"); 
 
-        _main_test_home_dir = "/tmp/pEp_test_home";
+        if (curr_wd.empty())
+            throw std::runtime_error("Error grabbing current working directory");
+
+        _main_test_home_dir = curr_wd + "/pEp_test_home";
     }
-    return _main_test_home_dir;        
+    return _main_test_home_dir;
 }
 
 PEP_STATUS read_file_and_import_key(PEP_SESSION session, const char* fname) {
@@ -43,7 +73,7 @@ PEP_STATUS read_file_and_import_key(PEP_SESSION session, const char* fname) {
     PEP_STATUS status = (key.empty() ? PEP_KEY_NOT_FOUND : PEP_STATUS_OK);
     if (status == PEP_STATUS_OK)
         status = import_key(session, key.c_str(), key.size(), NULL);
-    return status;    
+    return status;
 }
 
 PEP_STATUS set_up_ident_from_scratch(PEP_SESSION session,
@@ -59,31 +89,31 @@ PEP_STATUS set_up_ident_from_scratch(PEP_SESSION session,
         return status;
     else
         status = PEP_STATUS_OK;
-    
+
     pEp_identity* ident = new_identity(address, fpr, user_id, username);
     if (is_priv && fpr) {
         status = set_own_key(session, ident, fpr);
         if (status == PEP_STATUS_OK)
             status = myself(session, ident);
     }
-    else    
+    else
         status = update_identity(session, ident);
 
     if (status != PEP_STATUS_OK)
         goto pep_free;
-        
+
     if (!ident || !ident->fpr) {
         status = PEP_CANNOT_FIND_IDENTITY;
         goto pep_free;
     }
-    
+
     if (ret_ident)
         *ret_ident = ident;
-        
+
 pep_free:
     if (!ret_ident)
         free_identity(ident);
-    return status;    
+    return status;
 }
 
 
@@ -99,11 +129,11 @@ char* str_to_lower(const char* str) {
     if (str_len == 0)
         return strdup("");
     int i;
-    
+
     char* retval = (char*) calloc(1, str_len + 1);
     for (i = 0; i < str_len; i++) {
         retval[i] = tolower(str[i]);
-    }    
+    }
     return retval;
 }
 
@@ -116,7 +146,7 @@ bool _streq(const char* str1, const char* str2) {
     }
     if (!str2)
         return false;
-        
+
     return (strcmp(str1, str2) == 0);
 }
 
@@ -143,7 +173,7 @@ std::string slurp(const std::string& filename)
 	{
 		throw std::runtime_error("Cannot read file \"" + filename + "\"! ");
 	}
-	
+
 	std::stringstream sstr;
 	sstr << input.rdbuf();
 	return sstr.str();
@@ -156,7 +186,7 @@ void dump_out(const char* filename, const char* outdata)
 	{
 		throw std::runtime_error("Cannot open output file!");
 	}
-	
+
 	outfile << outdata;
     outfile.close();
 }
@@ -173,14 +203,14 @@ const char* tl_status_string(PEP_STATUS status) {
     switch (status) {
         case PEP_STATUS_OK:
             return "PEP_STATUS_OK";
-        case PEP_INIT_CANNOT_LOAD_GPGME:
-            return "PEP_INIT_CANNOT_LOAD_GPGME";
-        case PEP_INIT_GPGME_INIT_FAILED:
-            return "PEP_INIT_GPGME_INIT_FAILED";
-        case PEP_INIT_NO_GPG_HOME:
-            return "PEP_INIT_NO_GPG_HOME";
-        case PEP_INIT_NETPGP_INIT_FAILED:
-            return "PEP_INIT_NETPGP_INIT_FAILED";
+        case PEP_INIT_CANNOT_LOAD_CRYPTO_LIB:
+            return "PEP_INIT_CANNOT_LOAD_CRYPTO_LIB";
+        case PEP_INIT_CRYPTO_LIB_INIT_FAILED:
+            return "PEP_INIT_CRYPTO_LIB_INIT_FAILED";
+        case PEP_INIT_NO_CRYPTO_HOME:
+            return "PEP_INIT_NO_CRYPTO_HOME";
+        // case PEP_INIT_NETPGP_INIT_FAILED:
+        //     return "PEP_INIT_NETPGP_INIT_FAILED";
         case PEP_INIT_SQLITE3_WITHOUT_MUTEX:
             return "PEP_INIT_SQLITE3_WITHOUT_MUTEX";
         case PEP_INIT_CANNOT_OPEN_DB:
@@ -294,9 +324,9 @@ const char* tl_status_string(PEP_STATUS status) {
         case PEP_OUT_OF_MEMORY:
             return "PEP_OUT_OF_MEMORY";
         case PEP_UNKNOWN_ERROR:
-            return "PEP_UNKNOWN_ERROR";    
+            return "PEP_UNKNOWN_ERROR";
         default:
- 
+
             return "PEP_STATUS_OMGWTFBBQ - This means you're using a status the test lib doesn't know about!";
     }
 }
@@ -310,8 +340,6 @@ const char* tl_rating_string(PEP_rating rating) {
             return "PEP_rating_have_no_key";
         case PEP_rating_unencrypted:
             return "PEP_rating_unencrypted";
-        case PEP_rating_unencrypted_for_some:
-            return "PEP_rating_unencrypted_for_some";
         case PEP_rating_unreliable:
             return "PEP_rating_unreliable";
         case PEP_rating_reliable:
@@ -435,9 +463,9 @@ bool slurp_message_and_import_key(PEP_SESSION session, const char* message_fname
     return ok;
 }
 
-int util_delete_filepath(const char *filepath, 
-                         const struct stat *file_stat, 
-                         int ftw_info, 
+int util_delete_filepath(const char *filepath,
+                         const struct stat *file_stat,
+                         int ftw_info,
                          struct FTW * ftw_struct) {
     int retval = 0;
     switch (ftw_info) {
@@ -447,11 +475,11 @@ int util_delete_filepath(const char *filepath,
         case FTW_F:
         case FTW_SLN:
             retval = unlink(filepath);
-            break;    
+            break;
         default:
             retval = -1;
     }
-    
+
     return retval;
 }
 
@@ -464,9 +492,9 @@ static PEP_STATUS update_identity_recip_list(PEP_SESSION session,
 
     if (!session)
         return PEP_UNKNOWN_ERROR;
-    
+
     identity_list* id_list_ptr = NULL;
-        
+
     for (id_list_ptr = list; id_list_ptr; id_list_ptr = id_list_ptr->next) {
         pEp_identity* curr_identity = id_list_ptr->ident;
         if (curr_identity) {
@@ -474,11 +502,11 @@ static PEP_STATUS update_identity_recip_list(PEP_SESSION session,
                 char* name_bak = curr_identity->username;
                 curr_identity->username = NULL;
                 status = update_identity(session, curr_identity);
-                if (name_bak && 
+                if (name_bak &&
                     (EMPTYSTR(curr_identity->username) || strcmp(name_bak, curr_identity->username) != 0)) {
                     free(curr_identity->username);
                     curr_identity->username = name_bak;
-                }                        
+                }
             }
             else
                 status = _myself(session, curr_identity, false, false, true);
@@ -486,8 +514,8 @@ static PEP_STATUS update_identity_recip_list(PEP_SESSION session,
             return status;
         }
     }
-    
-    return PEP_STATUS_OK;                                  
+
+    return PEP_STATUS_OK;
 }
 
 PEP_STATUS MIME_decrypt_message(
@@ -510,15 +538,15 @@ PEP_STATUS MIME_decrypt_message(
 
     if (!(mimetext && mime_plaintext && keylist && rating && flags && modified_src))
         return PEP_ILLEGAL_VALUE;
-        
+
     PEP_STATUS status = PEP_STATUS_OK;
     PEP_STATUS decrypt_status = PEP_CANNOT_DECRYPT_UNKNOWN;
-         
+
     message* tmp_msg = NULL;
     message* dec_msg = NULL;
     *mime_plaintext = NULL;
 
-    status = mime_decode_message(mimetext, size, &tmp_msg);
+    status = mime_decode_message(mimetext, size, &tmp_msg, NULL);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
@@ -557,7 +585,7 @@ PEP_STATUS MIME_decrypt_message(
     if (!dec_msg && (decrypt_status == PEP_UNENCRYPTED || decrypt_status == PEP_VERIFIED)) {
         dec_msg = message_dup(tmp_msg);
     }
-    
+
     if (decrypt_status > PEP_CANNOT_DECRYPT_UNKNOWN || !dec_msg)
     {
         status = decrypt_status;
@@ -565,7 +593,7 @@ PEP_STATUS MIME_decrypt_message(
     }
 
     if (*flags & PEP_decrypt_flag_src_modified) {
-        _mime_encode_message_internal(tmp_msg, false, modified_src, true, false, false);
+        mime_encode_message(tmp_msg, false, modified_src, false);
         if (!modified_src) {
             *flags &= (~PEP_decrypt_flag_src_modified);
             decrypt_status = PEP_CANNOT_REENCRYPT; // Because we couldn't return it, I guess.
@@ -573,7 +601,7 @@ PEP_STATUS MIME_decrypt_message(
     }
 
     // FIXME: test with att
-    status = _mime_encode_message_internal(dec_msg, false, mime_plaintext, true, false, false);
+    status = mime_encode_message(dec_msg, false, mime_plaintext, false);
 
     if (status == PEP_STATUS_OK)
     {
@@ -581,7 +609,7 @@ PEP_STATUS MIME_decrypt_message(
         free(dec_msg);
         return decrypt_status;
     }
-    
+
 pEp_error:
     free_message(tmp_msg);
     free_message(dec_msg);
@@ -600,10 +628,12 @@ PEP_STATUS MIME_encrypt_message(
 )
 {
     PEP_STATUS status = PEP_STATUS_OK;
+    PEP_STATUS tmp_status = PEP_STATUS_OK;
     message* tmp_msg = NULL;
     message* enc_msg = NULL;
+    message* ret_msg = NULL;                             
 
-    status = mime_decode_message(mimetext, size, &tmp_msg);
+    status = mime_decode_message(mimetext, size, &tmp_msg, NULL);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
@@ -612,14 +642,14 @@ PEP_STATUS MIME_encrypt_message(
         char* own_id = NULL;
         status = get_default_own_userid(session, &own_id);
         free(tmp_msg->from->user_id);
-        
+    
         if (status != PEP_STATUS_OK || !own_id) {
             tmp_msg->from->user_id = strdup(PEP_OWN_USERID);
         }
         else {
             tmp_msg->from->user_id = own_id; // ownership transfer
         }
-            
+    
         status = myself(session, tmp_msg->from);
         if (status != PEP_STATUS_OK)
             goto pEp_error;
@@ -648,17 +678,20 @@ PEP_STATUS MIME_encrypt_message(
                              &enc_msg,
                              enc_format,
                              flags);
-                             
-    if (status != PEP_STATUS_OK)
+    
+    if (status == PEP_STATUS_OK || status == PEP_UNENCRYPTED)
+        ret_msg = (status == PEP_STATUS_OK ? enc_msg : tmp_msg);
+    else                                
         goto pEp_error;
 
-
-    if (!enc_msg) {
+    if (status == PEP_STATUS_OK && !enc_msg) {
         status = PEP_UNKNOWN_ERROR;
         goto pEp_error;
     }
-
-    status = _mime_encode_message_internal(enc_msg, false, mime_ciphertext, false, false, false);
+    
+    tmp_status = mime_encode_message(ret_msg, false, mime_ciphertext, false);     
+    if (tmp_status != PEP_STATUS_OK)
+        status = tmp_status;
 
 pEp_error:
     free_message(tmp_msg);
@@ -683,7 +716,7 @@ PEP_STATUS MIME_encrypt_message_for_self(
     message* tmp_msg = NULL;
     message* enc_msg = NULL;
 
-    status = mime_decode_message(mimetext, size, &tmp_msg);
+    status = mime_decode_message(mimetext, size, &tmp_msg, NULL);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
@@ -698,13 +731,13 @@ PEP_STATUS MIME_encrypt_message_for_self(
                                       flags);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
- 
+
     if (!enc_msg) {
         status = PEP_UNKNOWN_ERROR;
         goto pEp_error;
     }
 
-    status = mime_encode_message(enc_msg, false, mime_ciphertext);
+    status = mime_encode_message(enc_msg, false, mime_ciphertext, false);
 
 pEp_error:
     free_message(tmp_msg);
@@ -717,15 +750,15 @@ pEp_error:
 
 PEP_STATUS set_up_preset(PEP_SESSION session,
                          pEp_test_ident_preset preset_name,
-                         bool set_ident, 
+                         bool set_ident,
                          bool set_pep,
                          bool trust,
-                         bool set_own, 
-                         bool setup_private, 
+                         bool set_own,
+                         bool setup_private,
                          pEp_identity** ident) {
     if (set_own && !set_ident)
         return PEP_ILLEGAL_VALUE;
-        
+
     const char* name = NULL;
     const char* user_id = NULL;
     const char* email = NULL;
@@ -734,12 +767,12 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
     string privkey_dir = "test_keys/priv/";
     const char* fpr = NULL;
     PEP_STATUS status = PEP_STATUS_OK;
-    
+
     if (ident)
         *ident = NULL;
 
     pEp_identity* retval = NULL;
-        
+
     switch (preset_name) {
         case ALICE:
             name = "Alice Spivak Hyatt";
@@ -919,14 +952,14 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
         default:
             return PEP_CANNOT_SET_IDENTITY;
     }
-    
+
     string pubkey_file = pubkey_dir + key_prefix + "_pub.asc";
     string privkey_file = privkey_dir + key_prefix + "_priv.asc";
-    
+
     if (!slurp_and_import_key(session, pubkey_file.c_str()))
         return PEP_KEY_NOT_FOUND;
 
-    if (setup_private) {    
+    if (setup_private) {
         if (!slurp_and_import_key(session, privkey_file.c_str()))
             return PEP_KEY_NOT_FOUND;
     }
@@ -934,37 +967,34 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
     retval = new_identity(email, NULL, user_id, name);
     if (!retval)
         return PEP_OUT_OF_MEMORY;
-        
-    // honestly probably happens anyway  
+
+    // honestly probably happens anyway
     if (set_ident && status == PEP_STATUS_OK)
         status = set_identity(session, retval);
 
     if (set_own) {
         retval->me = true;
         status = set_own_key(session, retval, fpr);
-    }        
-    
+    }
+
     if (set_pep && status == PEP_STATUS_OK)
         status = set_as_pEp_user(session, retval);
-        
+
     if (trust && status == PEP_STATUS_OK) {
         if (!retval->me)
             status = update_identity(session, retval);
-        else
-            status = myself(session, retval);
-            
         if (retval->comm_type >= PEP_ct_strong_but_unconfirmed) {
             retval->comm_type = (PEP_comm_type)(retval->comm_type | PEP_ct_confirmed);
             status = set_trust(session, retval);
         }
     }
-    
-    
+
+
     if (ident)
         *ident = retval;
-    else 
+    else
         free_identity(retval);
-        
+
     return status;
 }
 

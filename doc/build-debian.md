@@ -73,16 +73,16 @@ For a more detailed explanation of the mechanics of these build configuration fi
 Below is a sample `./local.conf` file, for orientation.
 
 ~~~
-PREFIX=$(HOME)/engine/build
-SYSTEM_DB=$(PREFIX)/share/pEp/system.db
+PREFIX=$(HOME)/code/pep-engine/build
+PER_MACHINE_DIRECTORY=$(PREFIX)/share/pEp
 
-YML2_PATH=$(HOME)/yml2
+YML2_PATH=$(HOME)/code/yml2
 
-ETPAN_LIB=-L$(HOME)/libetpan/build/lib
-ETPAN_INC=-I$(HOME)/libetpan/build/include
+ETPAN_LIB=-L$(HOME)/code/libetpan/build/lib
+ETPAN_INC=-I$(HOME)/code/libetpan/build/include
 
-ASN1C=$(HOME)/asn1c/build/bin/asn1c
-ASN1C_INC=-I$(HOME)/asn1c/build/share/asn1c
+ASN1C=$(HOME)/code/asn1c/build/bin/asn1c
+ASN1C_INC=-I$(HOME)/code/asn1c/build/share/asn1c
 ~~~
 
 The engine is built as follows:

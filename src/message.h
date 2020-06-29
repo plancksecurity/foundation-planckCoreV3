@@ -36,6 +36,7 @@ typedef enum _PEP_enc_format {
     PEP_enc_PGP_MIME,                       // RFC3156
     PEP_enc_PEP,                            // pEp encryption format
     PEP_enc_PGP_MIME_Outlook1,              // Message B0rken by Outlook type 1
+    PEP_enc_inline_EA,
     PEP_enc_sign_only                       // signed, but not encrypted, PGP messages
 } PEP_enc_format;
 
@@ -80,7 +81,6 @@ typedef struct _message_ref_list {
     message *msg_ref;                       // reference to message
     struct _message_ref_list *next;
 } message_ref_list;
-
 
 // new_message() - allocate new message
 //

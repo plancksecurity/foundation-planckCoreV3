@@ -126,6 +126,7 @@ DYNAMIC_API int bloblist_length(const bloblist_t *bloblist);
 DYNAMIC_API void set_blob_disposition(bloblist_t* blob, 
         content_disposition_type disposition);
 
+DYNAMIC_API bloblist_t* bloblist_join(bloblist_t* first, bloblist_t* second);
 
 #ifdef __cplusplus
 }

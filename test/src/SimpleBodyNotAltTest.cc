@@ -31,7 +31,7 @@ namespace {
             // is empty.
             SimpleBodyNotAltTest() {
                 // You can do set-up work for each test here.
-                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->test_suite_name();
+                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->GTEST_SUITE_SYM();
                 test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
                 test_path = get_main_test_home_dir() + "/" + test_suite_name + "/" + test_name;
             }
@@ -89,7 +89,7 @@ TEST_F(SimpleBodyNotAltTest, check_text_w_html_attach) {
     string msg = slurp("test_mails/text message with html attach.eml");
     message* parsed = NULL;
 
-    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &parsed);
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &parsed, NULL);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(parsed, nullptr);
     ASSERT_NE(parsed->longmsg, nullptr);
@@ -107,7 +107,7 @@ TEST_F(SimpleBodyNotAltTest, check_html_w_text_attach) {
     string msg = slurp("test_mails/HTML-only body w text attachment.eml");
     message* parsed = NULL;
 
-    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &parsed);
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &parsed, NULL);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(parsed, nullptr);
     ASSERT_EQ(parsed->longmsg , nullptr);

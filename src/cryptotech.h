@@ -64,8 +64,9 @@ typedef PEP_STATUS (*get_key_rating_t)(
         PEP_comm_type *comm_type
     );
 
-typedef PEP_STATUS (*import_key_with_fpr_return_t)(PEP_SESSION session, const char *key_data,
-        size_t size, identity_list **private_idents, stringlist_t** imported_keys);
+typedef PEP_STATUS (*import_key_t)(PEP_SESSION session, const char *key_data,
+        size_t size, identity_list **private_keys, stringlist_t** imported_keys,
+        uint64_t* changed_key_index);
 
 typedef PEP_STATUS (*recv_key_t)(PEP_SESSION session, const char *pattern);
 
@@ -113,7 +114,7 @@ typedef struct _PEP_cryptotech_t {
     find_keys_t find_keys;
     generate_keypair_t generate_keypair;
     get_key_rating_t get_key_rating;
-    import_key_with_fpr_return_t _import_key_with_fpr_return;
+    import_key_t import_key;
     recv_key_t recv_key;
     send_key_t send_key;
     renew_key_t renew_key;

@@ -29,7 +29,7 @@ namespace {
             // is empty.
             SenderFPRTest() {
                 // You can do set-up work for each test here.
-                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->test_suite_name();
+                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->GTEST_SUITE_SYM();
                 test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
                 test_path = get_main_test_home_dir() + "/" + test_suite_name + "/" + test_name;
             }
@@ -129,7 +129,7 @@ TEST_F(SenderFPRTest, check_sender_f_p_r) {
     ASSERT_EQ(status , PEP_STATUS_OK);
 
     char* text = NULL;
-    mime_encode_message(dec_msg, false, &text);
+    mime_encode_message(dec_msg, false, &text, false);
     output_stream << text << endl;
     free(text);
 

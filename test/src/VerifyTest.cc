@@ -29,7 +29,7 @@ namespace {
             // is empty.
             VerifyTest() {
                 // You can do set-up work for each test here.
-                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->test_suite_name();
+                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->GTEST_SUITE_SYM();
                 test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
                 test_path = get_main_test_home_dir() + "/" + test_suite_name + "/" + test_name;
             }
@@ -126,7 +126,7 @@ TEST_F(VerifyTest, check_revoked_tpk) {
                                 &keylist, NULL);
 
     // Now it should fail.
-    ASSERT_EQ(status , PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH);
+    ASSERT_EQ(status , PEP_VERIFY_SIGNER_KEY_REVOKED);
     ASSERT_NE(keylist, nullptr);
     // No signer.
     ASSERT_STREQ(keylist->value, "");
@@ -150,7 +150,7 @@ TEST_F(VerifyTest, check_revoked_tpk) {
                          &keylist);
 
     // Now it should fail.
-    ASSERT_EQ(status , PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH);
+    ASSERT_EQ(status , PEP_VERIFY_SIGNER_KEY_REVOKED);
     ASSERT_NE(keylist, nullptr);
     // No signer.
     ASSERT_STREQ(keylist->value, "");
@@ -175,7 +175,7 @@ TEST_F(VerifyTest, check_revoked_signing_key) {
                                            &keylist, NULL);
 
     // It should fail.
-    ASSERT_EQ(status , PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH);
+    ASSERT_EQ(status , PEP_VERIFY_SIGNER_KEY_REVOKED);
     ASSERT_NE(keylist, nullptr);
     // No signer.
     ASSERT_STREQ(keylist->value, "");
@@ -199,13 +199,15 @@ TEST_F(VerifyTest, check_revoked_signing_key) {
                          &keylist);
 
     // Now it should fail.
-    ASSERT_EQ(status , PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH);
+    ASSERT_EQ(status , PEP_VERIFY_SIGNER_KEY_REVOKED);
     ASSERT_NE(keylist, nullptr);
     // No signer.
     ASSERT_STREQ(keylist->value, "");
     ASSERT_EQ(keylist->next, nullptr);
 }
 
+// Not REALLY sure what the difference here is btw this and the next one, but OK..
+// I'm guessing the keys differ in what's expired? Neal?
 TEST_F(VerifyTest, check_expired_tpk) {
     slurp_and_import_key(session, "test_keys/priv/pep-test-mary-0x7F59F03CD04A226E_priv.asc");
     slurp_and_import_key(session, "test_keys/pub/pep-test-mary-0x7F59F03CD04A226E_expired_pub.asc");
@@ -223,11 +225,11 @@ TEST_F(VerifyTest, check_expired_tpk) {
                                            &plaintext, &plaintext_size,
                                            &keylist, NULL);
 
-    // It should fail.
-    ASSERT_EQ(status , PEP_DECRYPTED);
+    // It should not fail.
+    ASSERT_EQ(status , PEP_DECRYPTED_AND_VERIFIED);
     ASSERT_NE(keylist, nullptr);
     // No signer.
-    ASSERT_STREQ(keylist->value, "");
+    ASSERT_STREQ(keylist->value, "599B3D67800DB37E2DCE05C07F59F03CD04A226E");
     // Recipient is mary.
     ASSERT_NE(keylist->next, nullptr);
     ASSERT_NE(keylist->next->value, nullptr);
@@ -248,11 +250,14 @@ TEST_F(VerifyTest, check_expired_tpk) {
                          &keylist);
 
     // Now it should fail.
-    ASSERT_EQ(status , PEP_UNENCRYPTED);
+    ASSERT_EQ(status , PEP_VERIFIED);
     ASSERT_NE(keylist, nullptr);
-    // No signer.
-    ASSERT_STREQ(keylist->value, "");
+    // Signer.
+    ASSERT_STREQ(keylist->value, "599B3D67800DB37E2DCE05C07F59F03CD04A226E");
     ASSERT_EQ(keylist->next, nullptr);
+
+    free(plaintext);
+    free_stringlist(keylist);
 }
 
 TEST_F(VerifyTest, check_expired_signing_key) {
@@ -272,18 +277,30 @@ TEST_F(VerifyTest, check_expired_signing_key) {
                                            &plaintext, &plaintext_size,
                                            &keylist, NULL);
 
-    // It should fail.
-    ASSERT_EQ(status , PEP_DECRYPTED);
+    // It should not fail.
+    ASSERT_EQ(status , PEP_DECRYPTED_AND_VERIFIED);
     ASSERT_NE(keylist, nullptr);
-    // No signer.
-    ASSERT_STREQ(keylist->value, "");
+    // Yes, signer.
+    ASSERT_STREQ(keylist->value, "599B3D67800DB37E2DCE05C07F59F03CD04A226E");
     // Recipient is mary.
     ASSERT_NE(keylist->next, nullptr);
     ASSERT_NE(keylist->next->value, nullptr);
     ASSERT_STREQ(mary_fpr, keylist->next->value);
     // Content is returned.
     ASSERT_STREQ(plaintext, "tu was!\n");
-
+    
+    // Let's try again though, this time doing the whole thing, because we should get 
+    // an unreliable rating back.
+    free(plaintext);
+    plaintext = NULL;
+    free_stringlist(keylist);
+    keylist = NULL;
+    PEP_decrypt_flags_t flags = 0;
+    PEP_rating rating;
+    char* mod_src = NULL;
+    MIME_decrypt_message(session, ciphertext.c_str(), ciphertext.size(), 
+                         &plaintext, &keylist, &rating, &flags, &mod_src);
+    ASSERT_EQ(rating, PEP_rating_unreliable);
 
     string text = slurp("test_files/pep-test-mary-signed.txt");
     string sig = slurp("test_files/pep-test-mary-signed.txt.sig");
@@ -296,11 +313,14 @@ TEST_F(VerifyTest, check_expired_signing_key) {
                          sig.c_str(), sig.size(),
                          &keylist);
 
-    // Now it should fail.
-    ASSERT_EQ(status , PEP_UNENCRYPTED);
+    // Shouldn't fail
+    ASSERT_EQ(status , PEP_VERIFIED);
     ASSERT_NE(keylist, nullptr);
-    // No signer.
-    ASSERT_STREQ(keylist->value, "");
+    // Signer exists.
+    ASSERT_STREQ(keylist->value, "599B3D67800DB37E2DCE05C07F59F03CD04A226E");
     ASSERT_EQ(keylist->next, nullptr);
+    
+    free(plaintext);
+    free_stringlist(keylist);
 }
 #endif

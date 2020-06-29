@@ -1,0 +1,32 @@
+13:11:13.583 | ThisAddIn_Startup: Disable GPGOL
+13:11:13.848 | ThisAddIn_Startup: Set UI language
+13:11:13.848 | ThisAddIn_Startup: en language detected.
+13:11:13.848 | ThisAddIn_Startup: Connect Events
+13:11:13.848 | ThisAddIn_Startup: Loading settings
+13:11:13.864 |W| GetRegistryBoolean: No value retrieved for IsCrashReportVisible. Returning default value True.
+13:11:13.864 |W| GetRegistryBoolean: No value retrieved for IsDeveloperModeEnabled. Returning default value False.
+13:11:13.864 |W| GetRegistryBoolean: No value retrieved for IsDisableProtectionForContactsEnabled. Returning default value False.
+13:11:13.864 |W| GetRegistryBoolean: No value retrieved for IsGrouped. Returning default value False.
+13:11:13.864 |W| GetRegistryBoolean: No value retrieved for IsSensitiveDataLoggingEnabled. Returning default value False.
+13:11:13.864 |W| GetRegistryBoolean: No value retrieved for IsUXImprovementEnabled. Returning default value True.
+13:11:13.880 | ThisAddIn_Startup: Register callbacks
+13:11:13.880 | ThisAddIn_Startup: Setting cipher suite pEpCipherSuiteDefault
+13:11:13.880 | ThisAddIn_Startup: Register myself
+13:11:13.895 | ThisAddIn_Startup: Sync settings
+13:11:15.864 | ThisAddIn_Startup: Get Outlook options and set pEp required values.
+13:11:15.864 | ThisAddIn_Startup: Connect Watched objects
+13:11:15.926 | ThisAddIn_Startup: Connect Application Events.
+13:11:15.942 | ThisAddIn_Startup: Initializing inbox cleaner.
+13:11:15.942 | ThisAddIn_Startup: Main program started.
+13:11:42.257 |W| GetRegistryBoolean: No value retrieved for IsCrashReportVisible. Returning default value True.
+13:11:42.257 |W| GetRegistryBoolean: No value retrieved for IsDeveloperModeEnabled. Returning default value False.
+13:11:42.257 |W| GetRegistryBoolean: No value retrieved for IsDisableProtectionForContactsEnabled. Returning default value False.
+13:11:42.257 |W| GetRegistryBoolean: No value retrieved for IsGrouped. Returning default value False.
+13:11:42.257 |W| GetRegistryBoolean: No value retrieved for IsSensitiveDataLoggingEnabled. Returning default value False.
+13:11:42.257 |W| GetRegistryBoolean: No value retrieved for IsUXImprovementEnabled. Returning default value True.
+13:11:45.694 |W| GetRegistryBoolean: No value retrieved for IsCrashReportVisible. Returning default value True.
+13:11:45.694 |W| GetRegistryBoolean: No value retrieved for IsDeveloperModeEnabled. Returning default value False.
+13:11:45.694 |W| GetRegistryBoolean: No value retrieved for IsDisableProtectionForContactsEnabled. Returning default value False.
+13:11:45.694 |W| GetRegistryBoolean: No value retrieved for IsGrouped. Returning default value False.
+13:11:45.694 |W| GetRegistryBoolean: No value retrieved for IsSensitiveDataLoggingEnabled. Returning default value False.
+13:11:45.694 |W| GetRegistryBoolean: No value retrieved for IsUXImprovementEnabled. Returning default value True.

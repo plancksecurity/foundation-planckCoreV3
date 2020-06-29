@@ -23,9 +23,21 @@ DYNAMIC_API bool is_PGP_message_text(const char *text);
 // mime_encode_message() - encode a MIME message
 //
 //  parameters:
-//      msg (in)                message to encode
-//      omit_fields (in)        only encode message body and attachments
-//      mimetext (out)          the resulting encoded text or NULL on any error
+//      msg (in)                       message to encode
+//      omit_fields (in)               only encode message body and 
+//                                     attachments
+//      mimetext (out)                 the resulting encoded text or 
+//                                     NULL on any error
+//      has_pEp_msg_attachment (in)    is the first *attachment* to this 
+//                                     message an embedded pEp message
+//                                     which needs appropriate marking
+//                                     (forwarded=no, etc) and encoding?
+//                                     (this argument is internal to 
+//                                     pEp and should almost
+//                                     ALWAYS be false when used 
+//                                     by external callers, including
+//                                     adapters!!!)
+//                                  
 //
 //  return value:
 //      PEP_STATUS_OK           if everything worked
@@ -48,16 +60,24 @@ DYNAMIC_API bool is_PGP_message_text(const char *text);
 DYNAMIC_API PEP_STATUS mime_encode_message(
         const message * msg,
         bool omit_fields,
-        char **mimetext
+        char **mimetext,
+        bool has_pEp_msg_attachment     
     );
 
 
 // mime_decode_message() - decode a MIME message
 //
 //  parameters:
-//      mimetext (in)           	MIME encoded text to decode
-//      size (in)               	size of text to decode
-//      msg (out)               	decoded message
+//      mimetext (in)           	   MIME encoded text to decode
+//      size (in)               	   size of text to decode
+//      msg (out)               	   decoded message
+//      has_possible_pEp_msg (inout)   If non-NULL, will return 
+//                                     true when the first attachment 
+//                                     is a potential pEp message
+//                                     (mime-type = message/rfc822 and 
+//                                     content-disposition parameter
+//                                     forwarded=no) 
+//      
 //
 //  return value:
 //      PEP_STATUS_OK           if everything worked
@@ -75,27 +95,9 @@ DYNAMIC_API PEP_STATUS mime_encode_message(
 DYNAMIC_API PEP_STATUS mime_decode_message(
         const char *mimetext,
         size_t size,
-        message **msg
-    );
-
-/* Carries extra return argument letting message api know if it needs to raise the attachment as 2.0/2.1 */
-PEP_STATUS _mime_decode_message_internal(
-        const char *mimetext,
-        size_t size,
         message **msg,
-        bool* raise_msg_attachment
+        bool* has_possible_pEp_msg
     );
-
-/* sometimes we don't want to transport encode */
-PEP_STATUS _mime_encode_message_internal(
-        const message * msg,
-        bool omit_fields,
-        char **mimetext,
-        bool transport_encode,
-        bool set_attachment_forward_comment,
-        bool omit_version       
-    );
-
 
 #ifdef __cplusplus
 }

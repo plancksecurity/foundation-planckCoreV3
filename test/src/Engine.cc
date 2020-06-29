@@ -83,43 +83,13 @@ void Engine::start() {
     output_stream << "Test home directory is " << engine_home << endl;
     
     int success = 0;
-    
-#ifdef USE_GPG
-    char* tmp = NULL;
-
-    success = system("gpgconf --kill all");
-    if (success != 0)
-        throw std::runtime_error("SETUP: Error when executing 'gpgconf --kill all'.");    
-    tmp = getenv("GNUPGHOME");
-
-    prev_pgp_home.clear();
-    
-    if (tmp)
-        prev_pgp_home = tmp;
-
-    if (engine_home.compare(real_home + "/gnupg") == 0 || engine_home.compare(real_home + "gnupg") == 0 ||
-        engine_home.compare(real_home + "/.gnupg") == 0 || engine_home.compare(real_home + ".gnupg") == 0 ||
-        engine_home.compare(prev_pgp_home) == 0 || engine_home.compare(prev_pgp_home + "/gnupg") == 0 ||
-        engine_home.compare(prev_pgp_home + "gnupg") == 0 || engine_home.compare(prev_pgp_home + "/.gnupg") == 0 ||
-        engine_home.compare(prev_pgp_home + ".gnupg") == 0)
-        throw std::runtime_error("Engine start: new pgp homedir threatens to mess up user pgp homedir (and delete all their keys). NO DICE.");
-    
-    success = setenv("GNUPGHOME", (engine_home + "/gnupg").c_str(), 1);
-    if (success != 0)
-        throw std::runtime_error("SETUP: Error when setting GNUPGHOME.");
-
-    output_stream << "New GNUPGHOME is " << getenv("GNUPGHOME") << endl << endl;
-
-#endif
-    
+        
     success = setenv("HOME", engine_home.c_str(), 1);
     if (success != 0)
         throw std::runtime_error("SETUP: Cannot set engine_home for init.");
             
     unix_local_db(true);
-    gpg_conf(true);
-    gpg_agent_conf(true);
-        
+            
     PEP_STATUS status = init(&session, cached_messageToSend, cached_inject_sync_event);
     assert(status == PEP_STATUS_OK);
     assert(session);
@@ -133,7 +103,7 @@ void Engine::start() {
 }
 
 void Engine::copy_conf_file_to_test_dir(const char* dest_path, const char* conf_orig_path, const char* conf_dest_name) {
-    string conf_dest_path = dest_path;
+    string conf_dest_path = string(dest_path) + "/.pEp/";
     
     struct stat pathinfo;
 
@@ -176,19 +146,6 @@ void Engine::shut_down() {
     session = NULL;
         
     int success = 0;    
-
-#ifdef USE_GPG 
-    success = system("gpgconf --kill all");
-    if (success != 0)
-        throw std::runtime_error("RESTORE: Error when executing 'gpgconf --kill all'.");
-    success = system("gpgconf --remove-socketdir");            
-    if (success != 0)
-        throw std::runtime_error("RESTORE: Error when executing 'gpgconf --remove-socketdir'.");    
-
-    success = setenv("GNUPGHOME", prev_pgp_home.c_str(), 1);
-    if (success != 0)
-        throw std::runtime_error("RESTORE: Warning - cannot restore GNUPGHOME. Either set environment variable manually back to your home, or quit this session!");
-#endif
                 
     success = nftw((engine_home + "/.").c_str(), util_delete_filepath, 100, FTW_DEPTH);
     
@@ -197,7 +154,4 @@ void Engine::shut_down() {
         throw std::runtime_error("RESTORE: Cannot reset home directory! Either set environment variable manually back to your home, or quit this session!");
 
     unix_local_db(true);
-    gpg_conf(true);
-    gpg_agent_conf(true);
-
 }

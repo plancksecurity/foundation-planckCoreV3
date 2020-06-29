@@ -236,3 +236,132 @@ TEST_F(StringlistTest, check_dedup_stringlist) {
     ASSERT_NE(s_list->next->next->next->value, nullptr);
     ASSERT_STREQ(s_list->next->next->next->value, str4);
 }
+
+TEST_F(StringlistTest, check_stringlist_to_string_null) {
+    stringlist_t* sl = NULL;
+    char* stringy = stringlist_to_string(sl);
+    ASSERT_EQ(stringy, nullptr);
+}
+
+TEST_F(StringlistTest, check_string_to_stringlist_null) {
+    const char* cl = NULL;
+    stringlist_t* sl = string_to_stringlist(cl);
+    ASSERT_EQ(sl, nullptr);
+}
+
+TEST_F(StringlistTest, check_stringlist_to_string_empty) {
+    stringlist_t* sl = new_stringlist(NULL);
+    char* stringy = stringlist_to_string(sl);
+    ASSERT_EQ(stringy, nullptr);
+}
+
+TEST_F(StringlistTest, check_string_to_stringlist_empty) {
+    const char* cl = "";
+    stringlist_t* sl = string_to_stringlist(cl);
+    ASSERT_EQ(sl, nullptr);
+}
+
+TEST_F(StringlistTest, check_stringlist_to_string_single) {
+    const char* str0 = "Eat my shorts";
+    stringlist_t* sl = new_stringlist(str0);
+    char* stringy = stringlist_to_string(sl);
+    ASSERT_STREQ(str0, stringy);
+}
+
+TEST_F(StringlistTest, check_string_to_stringlist_single) {
+    const char* cl = "Eat my shorts";
+    stringlist_t* sl = string_to_stringlist(cl);
+    ASSERT_NE(sl, nullptr);
+    ASSERT_NE(sl->value, nullptr);
+    ASSERT_EQ(sl->next, nullptr);
+    ASSERT_STREQ(sl->value, cl);
+}
+
+TEST_F(StringlistTest, check_stringlist_to_string_two) {
+    const char* str0 = "Non";
+    const char* str1 = "je ne regrette rien";
+    stringlist_t* sl = new_stringlist(str0);
+    stringlist_add(sl, str1);
+    char* stringy = stringlist_to_string(sl);
+    ASSERT_STREQ(stringy, "Non,je ne regrette rien");
+}
+
+TEST_F(StringlistTest, check_string_to_stringlist_two) {
+    const char* cl = "Non,je ne regrette rien";
+    const char* str0 = "Non";
+    const char* str1 = "je ne regrette rien";
+    stringlist_t* sl = string_to_stringlist(cl);
+    ASSERT_NE(sl, nullptr);
+    ASSERT_NE(sl->value, nullptr);
+    ASSERT_NE(sl->next, nullptr);
+    ASSERT_NE(sl->next->value, nullptr);
+    ASSERT_EQ(sl->next->next, nullptr);    
+    ASSERT_STREQ(sl->value, str0);
+    ASSERT_STREQ(sl->next->value, str1);    
+}
+
+
+TEST_F(StringlistTest, check_stringlist_to_string_five) {
+    const char* str0 = "I am so tired";
+    const char* str1 = " of doing stuff";
+    const char* str2 = "Bob";
+    const char* str3 = "Fix your crypto and your comma key";
+    const char* str4 = "Alice";
+
+    stringlist_t* sl = new_stringlist(str0);
+    stringlist_add(sl, str1);
+    stringlist_add(sl, str2);
+    stringlist_add(sl, str3);
+    stringlist_add(sl, str4);
+    
+    const char* result = "I am so tired, of doing stuff,Bob,Fix your crypto and your comma key,Alice";
+    char* stringy = stringlist_to_string(sl);
+    ASSERT_STREQ(stringy, result);
+}
+
+TEST_F(StringlistTest, check_string_to_stringlist_five) {
+    const char* cl = "I am so tired, of doing stuff,Bob,Fix your crypto and your comma key,Alice";
+    const char* str0 = "I am so tired";
+    const char* str1 = " of doing stuff";
+    const char* str2 = "Bob";
+    const char* str3 = "Fix your crypto and your comma key";
+    const char* str4 = "Alice";
+    stringlist_t* sl = string_to_stringlist(cl);
+    ASSERT_NE(sl, nullptr);
+    ASSERT_NE(sl->value, nullptr);
+    ASSERT_NE(sl->next, nullptr);
+    ASSERT_NE(sl->next->value, nullptr);
+    ASSERT_NE(sl->next->next, nullptr);    
+    ASSERT_NE(sl->next->next->value, nullptr);
+    ASSERT_NE(sl->next->next->next, nullptr);    
+    ASSERT_NE(sl->next->next->next->value, nullptr);
+    ASSERT_NE(sl->next->next->next->next, nullptr);    
+    ASSERT_NE(sl->next->next->next->next->value, nullptr);
+    ASSERT_EQ(sl->next->next->next->next->next, nullptr);    
+    ASSERT_STREQ(sl->value, str0);
+    ASSERT_STREQ(sl->next->value, str1);    
+    ASSERT_STREQ(sl->next->next->value, str2);
+    ASSERT_STREQ(sl->next->next->next->value, str3);
+    ASSERT_STREQ(sl->next->next->next->next->value, str4);            
+}
+
+
+TEST_F(StringlistTest, check_string_to_stringlist_commas) {
+    const char* cl = ",,,,";
+    stringlist_t* sl = string_to_stringlist(cl);
+    ASSERT_EQ(sl, nullptr);
+}
+
+TEST_F(StringlistTest, check_string_to_stringlist_commas_to_two) {
+    const char* cl = ",Non,,je ne regrette rien,";
+    const char* str0 = "Non";
+    const char* str1 = "je ne regrette rien";
+    stringlist_t* sl = string_to_stringlist(cl);
+    ASSERT_NE(sl, nullptr);
+    ASSERT_NE(sl->value, nullptr);
+    ASSERT_NE(sl->next, nullptr);
+    ASSERT_NE(sl->next->value, nullptr);
+    ASSERT_EQ(sl->next->next, nullptr);    
+    ASSERT_STREQ(sl->value, str0);
+    ASSERT_STREQ(sl->next->value, str1);    
+}

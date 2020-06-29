@@ -34,7 +34,7 @@ namespace {
             // is empty.
             LeastColorGroupTest() {
                 // You can do set-up work for each test here.
-                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->test_suite_name();
+                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->GTEST_SUITE_SYM();
                 test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
                 test_path = get_main_test_home_dir() + "/" + test_suite_name + "/" + test_name;
             }
@@ -131,7 +131,7 @@ TEST_F(LeastColorGroupTest, check_least_color_group) {
     PEP_rating rating;
     PEP_decrypt_flags_t flags;
 
-    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(msg_ptr, nullptr);
     final_ptr = msg_ptr;

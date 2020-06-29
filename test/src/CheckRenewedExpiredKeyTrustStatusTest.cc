@@ -29,7 +29,7 @@ namespace {
             // is empty.
             CheckRenewedExpiredKeyTrustStatusTest() {
                 // You can do set-up work for each test here.
-                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->test_suite_name();
+                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->GTEST_SUITE_SYM();
                 test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
                 test_path = get_main_test_home_dir() + "/" + test_suite_name + "/" + test_name;
             }
@@ -152,6 +152,12 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
 
     const char* inquisitor_fpr = "8E8D2381AE066ABE1FEE509821BA977CA4728718";
     pEp_identity* expired_inquisitor = new_identity("inquisitor@darthmama.org", "8E8D2381AE066ABE1FEE509821BA977CA4728718", "TOFU_inquisitor@darthmama.org", "Lady Claire Trevelyan");
+
+    PEP_comm_type key_ct;
+    status = get_key_rating(session, inquisitor_fpr, &key_ct);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(key_ct, PEP_ct_key_expired);
+
     status = set_identity(session, expired_inquisitor);
     ASSERT_EQ(status , PEP_STATUS_OK);
     expired_inquisitor->comm_type = PEP_ct_OpenPGP; // confirmed

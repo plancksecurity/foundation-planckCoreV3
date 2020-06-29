@@ -10,7 +10,7 @@ ifdef PER_USER_DIRECTORY
 endif
 
 ifdef PER_MACHINE_DIRECTORY
-	EXTRA_MACROS+= -DPER_MACHINE_DIRECTORY=$(PER_MACHINE_DIRECTORY)
+	EXTRA_MACROS+= -DPER_MACHINE_DIRECTORY=\"$(PER_MACHINE_DIRECTORY)\"
 endif
 
 CFLAGS+= $(ETPAN_INC) $(PEP_MIME_INC) -I../asn.1 $(EXTRA_MACROS)
@@ -49,18 +49,7 @@ ifdef SQLITE3_FROM_OS
     LDLIBS+= -lsqlite3
 endif
 
-ifeq ($(OPENPGP),GPG)
-    NO_SOURCE+= pgp_netpgp.c pgp_sequoia.c
-    CFLAGS+= -DUSE_GPG $(GPGME_INC) -DLIBGPGME=\"$(LIBGPGME)\"
-    LDFLAGS+= $(GPGME_LIB)
-    # No extra LDLIBS are needed here, because GPGME is dynamically loaded
-else ifeq ($(OPENPGP),NETPGP)
-    NO_SOURCE+= pgp_gpg.c pgp_sequoia.c
-    CFLAGS+= -DUSE_NETPGP $(NETGPG_INC)
-    LDFLAGS+= $(NETGPG_LIB)
-    LDLIBS+= -lnetpgp -lcurl
-else ifeq ($(OPENPGP),SEQUOIA)
-    NO_SOURCE+= pgp_gpg.c pgp_netpgp.c
+ifeq ($(OPENPGP),SEQUOIA)
     CFLAGS+= -DUSE_SEQUOIA $(SEQUOIA_CFLAGS) $(SEQUOIA_INC)
     LDFLAGS+= $(SEQUOIA_LDFLAGS)
     LDLIBS+= $(SEQUOIA_LIB)
@@ -90,7 +79,7 @@ endif
 $(TARGET): libpEpEngine.a
 	$(CC) $(CFLAGS) $(ALL_OBJECTS) $(LDFLAGS) $(LDLIBS) -o $@
 
-.PHONY: objects clean install_headers install uninstall
+.PHONY: objects clean install_headers install uninstall beinstall
 
 objects: $(ALL_OBJECTS)
 
@@ -100,7 +89,7 @@ libpEpEngine.a: $(ALL_OBJECTS)
 clean:
 	rm -f *.d *.o *.a $(TARGET) *.dll *.so *.zip *.d.* *.def *~
 	rm -Rf $(TARGET).dSYM
-	rm -f KeySync_fsm.* Sync_actions.c Sync_event.* Sync_func.* Sync_impl.* sync_codec.*
+	rm -f KeySync_fsm.* Sync_actions.c Sync_event.* Sync_func.* Sync_impl.* sync_codec.* distribution_codec.*
 
 # CAVEAT:
 # install_headers is needed for building pEp MIME
@@ -109,18 +98,22 @@ install_headers: $(TARGET)
 	mkdir -p $(PREFIX)/include/pEp
 	cp pEpEngine.h keymanagement.h message_api.h dynamic_api.h stringlist.h \
 	   timestamp.h identity_list.h bloblist.h stringpair.h message.h mime.h \
-	   cryptotech.h sync_api.h blacklist.h pEp_string.h openpgp_compat.h \
-	   labeled_int_list.h key_reset.h base64.h sync_codec.h status_to_string.h\
-	   aux_mime_msg.h ../asn.1/*.h $(PREFIX)/include/pEp/
+	   cryptotech.h sync_api.h blacklist.h pEp_string.h openpgp_compat.h mime.h \
+	   labeled_int_list.h key_reset.h base64.h sync_codec.h distribution_codec.h \
+	   status_to_string.h aux_mime_msg.h keyreset_command.h platform.h platform_unix.h ../asn.1/*.h \
+ 	   $(PREFIX)/include/pEp/
 
 install: $(TARGET) install_headers
 	mkdir -p "$(PREFIX)/lib/"
 	cp $< $(PREFIX)/lib/
+
+beinstall: install
+	cp platform*.h $(PREFIX)/include/pEp/
 
 uninstall:
 	rm -f $(PREFIX)/lib/$(TARGET)
 	rm -rf $(PREFIX)/include/pEp
 
 tags: $(wildcard *.c) $(wildcard *.h)
-	ctags *.c *.h
+	ctags --sort=yes *.c *.h
 

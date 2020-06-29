@@ -23,7 +23,11 @@
 #endif
 
 #ifndef PER_MACHINE_DIRECTORY
+#if defined(__APPLE__) && !defined(TARGET_OS_IPHONE)
+#define PER_MACHINE_DIRECTORY "/Library/Application Support/pEp"
+#else
 #define PER_MACHINE_DIRECTORY "/usr/local/share/pEp"
+#endif
 #endif
 
 
@@ -33,14 +37,8 @@ extern "C" {
 
 #ifdef NDEBUG
 const char *unix_local_db(void);
-const char *gpg_conf(void);
-const char *gpg_agent_conf(void);
-const char *gpg_home(void);
 #else
 const char *unix_local_db(int reset);
-const char *gpg_conf(int reset);
-const char *gpg_agent_conf(int reset);
-const char *gpg_home(int reset);
 #endif
 const char *unix_system_db(void);
 
@@ -58,11 +56,6 @@ char *stpcpy(char *, const char *);
 
 const char *android_system_db(void);
 #define SYSTEM_DB android_system_db()
-#ifdef __APPLE__
-#define LIBGPGME "libgpgme.11.dylib"
-#else
-#define LIBGPGME "libgpgme.so"
-#endif
 
 #elif __APPLE__
 #include "TargetConditionals.h"
@@ -83,10 +76,10 @@ char *strnstr(const char *big, const char *little, size_t len);
 // N.B. This is ifdef'd out because NDK users sometimes have trouble finding regex functions in
 //      the library in spite of the inclusion of regex.h - this is a FIXME, but since iOS is
 //      *currently* the only netpgp user, we will ifdef this so that we don't block Android.
-#ifdef USE_NETPGP
-int regnexec(const regex_t* preg, const char* string,
-             size_t len, size_t nmatch, regmatch_t pmatch[], int eflags);
-#endif
+// #ifdef USE_NETPGP
+// int regnexec(const regex_t* preg, const char* string,
+//              size_t len, size_t nmatch, regmatch_t pmatch[], int eflags);
+// #endif
 
 #endif
 

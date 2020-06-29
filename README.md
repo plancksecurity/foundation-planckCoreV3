@@ -40,21 +40,24 @@ Various adapters are also available at the link provided for the p≡p Engine's 
 # What is the current state of the project?
 The p≡p Engine is production-ready.
 It is under active development by several full-time employees of the p≡p foundation and its partner organizations.
-The most recent version of the source code can be obtained here: <https://cacert.pep.foundation/dev>.
+The most recent version of the source code can be obtained here: <https://pep.foundation/dev/repos>.
 This is the only offical way to obtain a copy of the source code.
 
 # I would like to contribute to the p≡p Engine or a realated project, where do I start?
-First of all, excellent!
-We'd love to dicuss this opportunity further with you.
-Please contact the upstream developers to get started.
-See the [Contact](#contact) section.
+First of all, excellent! You can find further information here: <https://contribution.pep.foundation/>
 
 # Legal notes
-The p≡p Engine is Copyright 2015-2017 by p≡p foundation, Switzerland.
+The p≡p Engine is Copyright 2015-2020 by p≡p foundation, Switzerland.
 The source code of the p≡p Engine is licensed under the terms of the GNU General Public License version 3.
 Accompanying documentation is licensed under the terms of the Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0) License.
 Each file includes a notice near its beginning, that indicates the applicable license.
 If you wish to license the p≡p Engine under different terms, please contact <mailto:council@pep.foundation>.
+
+_pEp_reallocarray in pgp_sequoia.c is reallocarray from the OpenBSD source. It is 
+copyright (c) 2008 Otto Moerbeek <otto@drijf.net> with the following permissions: 
+Permission to use, copy, modify, and distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
 
 # Contact
 The p≡p foundation and the developers of the p≡p Engine can be reached as detailed here: <https://pep.foundation/contact-us/index.html>.

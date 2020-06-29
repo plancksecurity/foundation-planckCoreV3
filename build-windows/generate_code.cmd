@@ -1,28 +1,76 @@
-pushd .
-cd %1\sync
+@ECHO OFF
+PUSHD .
+SET pwd=%cd%
+CD %pwd%\sync
 
-if not exist generated mkdir generated
+IF NOT EXIST generated MKDIR generated
 
-python "%YML_PATH%\yml2proc" -E utf-8 -y gen_actions.ysl2 sync.fsm
-python "%YML_PATH%\yml2proc" -E utf-8 -y gen_statemachine.ysl2 sync.fsm
-python "%YML_PATH%\yml2proc" -E utf-8 -y gen_codec.ysl2 sync.fsm
-python "%YML_PATH%\yml2proc" -E utf-8 -y gen_messages.ysl2 sync.fsm
-python "%YML_PATH%\yml2proc" -E utf-8 -y gen_message_func.ysl2 sync.fsm
+ECHO py "%YML_PATH%\yml2proc" -E utf-8 -y gen_actions.ysl2 sync.fsm
+py "%YML_PATH%\yml2proc" -E utf-8 -y gen_actions.ysl2 sync.fsm
+IF %ERRORLEVEL% NEQ 0 (
+	POPD
+	EXIT /B 1
+	)
+ECHO py "%YML_PATH%\yml2proc" -E utf-8 -y gen_codec.ysl2 distribution.fsm
+py "%YML_PATH%\yml2proc" -E utf-8 -y gen_codec.ysl2 distribution.fsm
+IF %ERRORLEVEL% NEQ 0 (
+	POPD
+	EXIT /B 1
+	)
+ECHO py "%YML_PATH%\yml2proc" -E utf-8 -y gen_codec.ysl2 sync.fsm
+py "%YML_PATH%\yml2proc" -E utf-8 -y gen_codec.ysl2 sync.fsm
+IF %ERRORLEVEL% NEQ 0 (
+	POPD
+	EXIT /B 1
+	)
+ECHO py "%YML_PATH%\yml2proc" -E utf-8 -y gen_messages.ysl2 sync.fsm
+py "%YML_PATH%\yml2proc" -E utf-8 -y gen_messages.ysl2 sync.fsm
+IF %ERRORLEVEL% NEQ 0 (
+	POPD
+	EXIT /B 1
+	)
+ECHO py "%YML_PATH%\yml2proc" -E utf-8 -y gen_messages.ysl2 distribution.fsm
+py "%YML_PATH%\yml2proc" -E utf-8 -y gen_messages.ysl2 distribution.fsm
+IF %ERRORLEVEL% NEQ 0 (
+	POPD
+	EXIT /B 1
+	)
+ECHO py "%YML_PATH%\yml2proc" -E utf-8 -y gen_message_func.ysl2 sync.fsm
+py "%YML_PATH%\yml2proc" -E utf-8 -y gen_message_func.ysl2 sync.fsm
+IF %ERRORLEVEL% NEQ 0 (
+	POPD
+	EXIT /B 1
+	)
+ECHO py "%YML_PATH%\yml2proc" -E utf-8 -y gen_statemachine.ysl2 sync.fsm
+py "%YML_PATH%\yml2proc" -E utf-8 -y gen_statemachine.ysl2 sync.fsm
+IF %ERRORLEVEL% NEQ 0 (
+	POPD
+	EXIT /B 1
+	)
 
 xcopy /y generated\*.asn1 ..\asn.1\
 xcopy /y generated\*.c ..\src\
 xcopy /y generated\*.h ..\src\
 
-cd %1\asn.1
+CD %pwd%\asn.1
 
-del *.h*
-del *.c*
+DEL *.h
+DEL *.c
 
 ..\..\Tools\asn1c\bin\asn1c -S ../../Tools/asn1c/share/asn1c -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keysync.asn1 sync.asn1
+IF %ERRORLEVEL% NEQ 0 (
+	POPD
+	EXIT /B 1
+	)
+..\..\Tools\asn1c\bin\asn1c -S ../../Tools/asn1c/share/asn1c -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keyreset.asn1 distribution.asn1
+IF %ERRORLEVEL% NEQ 0 (
+	POPD
+	EXIT /B 1
+	)
 
-del *-sample.c
+DEL *-sample.c
 
-cd %1\..
-if not exist pEp mklink /d pEp pEpEngine\src
+CD %pwd%\..
+IF NOT EXIST pEp mklink /d pEp pEpEngine\src
 
-popd
+POPD

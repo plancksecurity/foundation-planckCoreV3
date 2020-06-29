@@ -3,7 +3,7 @@
 
 // generate state machine code
 
-// Copyleft (c) 2016-2019, p≡p foundation
+// Copyleft (c) 2016-2020, p≡p foundation
 
 // Written by Volker Birk
 
@@ -58,7 +58,7 @@ tstylesheet {
         //      event must be valid for fsm or None
         //      in case msg is given event will be calculated out of message
 
-        «@name»_event_t *new_«@name»_event(«yml:ucase(@name)»_PR fsm, int event, «yml:ucase(@name)» *msg);
+        DYNAMIC_API «@name»_event_t *new_«@name»_event(«yml:ucase(@name)»_PR fsm, int event, «yml:ucase(@name)» *msg);
 
         #define «yml:ucase(@name)»_TIMEOUT_EVENT new_«@name»_event(«@name»_PR_NOTHING, 0, NULL);
 
@@ -68,7 +68,7 @@ tstylesheet {
         //  parameters:
         //      ev (in)         event to free
 
-        void free_«@name»_event(«@name»_event_t *ev);
+        DYNAMIC_API void free_«@name»_event(«@name»_event_t *ev);
 
 
         #ifdef __cplusplus
@@ -89,7 +89,7 @@ tstylesheet {
         #include "«@name»_func.h"
         `` for "fsm" | #include "«@name»_fsm.h"
 
-        «@name»_event_t *new_«@name»_event(«yml:ucase(@name)»_PR fsm, int event, «@name»_t *msg)
+        DYNAMIC_API «@name»_event_t *new_«@name»_event(«yml:ucase(@name)»_PR fsm, int event, «@name»_t *msg)
         {
             «@name»_event_t *ev = («@name»_event_t *) calloc(1, sizeof(«@name»_event_t));
             assert(ev);
@@ -113,7 +113,7 @@ tstylesheet {
             return ev;
         }
 
-        void free_«@name»_event(«@name»_event_t *ev)
+        DYNAMIC_API void free_«@name»_event(«@name»_event_t *ev)
         {
             if (ev) {
                 free_identity_list(ev->own_identities);
@@ -231,6 +231,7 @@ tstylesheet {
             #include "«@name»_event.h"
             #include "«yml:lcase(@name)»_codec.h"
             #include "baseprotocol.h"
+            #include "security_checks.h"
             `` for "fsm" | #include "«@name»_fsm.h"
 
             `` apply "fsm", 0, mode=timeout
@@ -307,6 +308,10 @@ tstylesheet {
                     goto the_end;
                 }
 
+                status = set_all_userids_to_own(session, own_identities);
+                if (status != PEP_STATUS_OK)
+                    goto the_end;
+                    
                 ev->own_identities = own_identities;
 
                 int result = session->inject_«yml:lcase(@name)»_event(ev,
@@ -407,7 +412,41 @@ tstylesheet {
                 assert(session && fsm > None && message_type > None);
                 if (!(session && fsm > None && message_type > None))
                     return PEP_ILLEGAL_VALUE;
-                
+            ||
+            if "fsm/message[@ratelimit>0]" {
+            ||
+
+                // test if a message with a rate limit was just sent; in case drop
+                time_t now = time(NULL);
+                switch (fsm) {
+            ||
+            for "fsm[message/@ratelimit>0]" {
+            ||
+                    case Sync_PR_«yml:lcase(@name)»:
+                        switch (message_type) {
+            ||
+            for "message[@ratelimit>0]"
+            ||
+                            case «../@name»_PR_«yml:mixedCase(@name)»:
+                                if (now < session->«yml:lcase(../../@name)»_state.own.last_«../@name»_«@name» + «@ratelimit»)
+                                    return PEP_STATUS_OK;
+                                break;
+            ||
+            ||
+                            default:
+                                break;
+                        }
+                        break;
+            ||
+            }
+            ||
+                    default:
+                        break;
+                }
+            ||
+            }
+            ||
+
                 «@name»_t *msg = new_«@name»_message(fsm, message_type);
                 if (!msg)
                     return PEP_OUT_OF_MEMORY;
@@ -429,6 +468,25 @@ tstylesheet {
                 if (status)
                     goto the_end;
 
+                // we never use this
+                if (session->«yml:lcase(@name)»_state.comm_partner.identity
+                        && session->«yml:lcase(@name)»_state.comm_partner.identity->fpr) {
+                    free(session->«yml:lcase(@name)»_state.comm_partner.identity->fpr);
+                    session->«yml:lcase(@name)»_state.comm_partner.identity->fpr = NULL;
+                }
+
+                // if we have this we always use this
+                if (session->«yml:lcase(@name)»_state.comm_partner.sender_fpr) {
+                    free(session->«yml:lcase(@name)»_state.transport.sender_fpr);
+                    session->«yml:lcase(@name)»_state.transport.sender_fpr =
+                            strdup(session->«yml:lcase(@name)»_state.comm_partner.sender_fpr);
+                    assert(session->«yml:lcase(@name)»_state.transport.sender_fpr);
+                    if (!session->«yml:lcase(@name)»_state.transport.sender_fpr) {
+                        status = PEP_OUT_OF_MEMORY;
+                        goto the_end;
+                    }
+                }
+
                 switch (message_type) {
                     // these messages are being broadcasted
                     `` for "fsm/message[@type='broadcast']" |>> case «../@name»_PR_«yml:mixedCase(@name)»:
@@ -447,27 +505,22 @@ tstylesheet {
 
                     // these go anycast; previously used address is sticky (unicast)
                     `` for "fsm/message[@type='anycast']" |>> case «../@name»_PR_«yml:mixedCase(@name)»:
-                        if (!session->«yml:lcase(@name)»_state.transport.from `> |`|
-                            (session->«yml:lcase(@name)»_state.transport.from->flags &
-                            PEP_idf_not_for_«yml:lcase(@name)»)) {
-
-                            // no address available yet, try to find one
-                            status = _own_identities_retrieve(session, &channels, PEP_idf_not_for_«yml:lcase(@name)»);
-                            if (status)
+                        // if we have a comm_partner fixed send it there
+                        if (session->«yml:lcase(@name)»_state.comm_partner.identity) {
+                            pEp_identity *channel = identity_dup(session->«yml:lcase(@name)»_state.comm_partner.identity);
+                            if (!channel) {
+                                status = PEP_OUT_OF_MEMORY;
                                 goto the_end;
-                            break;
-
-                            if (channels && channels->ident) {
-                                // only need the first one
-                                free_identity_list(channels->next);
-                                channels->next = NULL;
                             }
-                            else {
-                                status = PEP_«yml:ucase(@name)»_NO_CHANNEL;
+
+                            channels = new_identity_list(channel);
+                            if (!channels) {
+                                status = PEP_OUT_OF_MEMORY;
                                 goto the_end;
                             }
                         }
-                        else {
+                        // if we can reply just do
+                        else if (session->«yml:lcase(@name)»_state.transport.from) {
                             pEp_identity *channel = identity_dup(session->«yml:lcase(@name)»_state.transport.from);
                             if (!channel) {
                                 status = PEP_OUT_OF_MEMORY;
@@ -478,6 +531,19 @@ tstylesheet {
                             if (!channels) {
                                 status = PEP_OUT_OF_MEMORY;
                                 goto the_end;
+                            }
+                        }
+                        // real anycast, send it to the first matching
+                        else {
+                            status = _own_identities_retrieve(session, &channels, PEP_idf_not_for_«yml:lcase(@name)»);
+                            if (status)
+                                goto the_end;
+                            if (!channels)
+                                goto the_end;
+
+                            if (channels->next) {
+                                free_identity_list(channels->next);
+                                channels->next = NULL;
                             }
                         }
                         break;
@@ -500,11 +566,13 @@ tstylesheet {
                     memcpy(_data, data, size);
 
                     switch (message_type) {
-                    `` for "fsm/message[@security='unencrypted']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
-                            status = base_prepare_message(
+                    `` for "fsm/message[@security='unencrypted' and ../@name!='KeySync']" | #error unencrypted only allowed with KeySync
+                    `` for "fsm/message[@security='unencrypted' and ../@name='KeySync']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
+                            status = try_base_prepare_message(
                                     session,
                                     li->ident,
                                     li->ident,
+                                    BASE_SYNC,
                                     _data,
                                     size,
                                     li->ident->fpr,
@@ -519,16 +587,17 @@ tstylesheet {
                             m = _m;
                             break;
 
-                    `` for "fsm/message[@security='untrusted']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
+                    `` for "fsm/message[@security='untrusted' and ../@name!='KeySync']" | #error untrusted only allowed with KeySync
+                    `` for "fsm/message[@security='untrusted' and ../@name='KeySync']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
                             // add fpr of key of comm partner
 
-                            assert(session->«yml:lcase(@name)»_state.comm_partner.sender_fpr);
-                            if (!session->«yml:lcase(@name)»_state.comm_partner.sender_fpr) {
+                            assert(session->«yml:lcase(@name)»_state.transport.sender_fpr);
+                            if (!session->«yml:lcase(@name)»_state.transport.sender_fpr) {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 goto the_end;
                             }
 
-                            extra = new_stringlist(session->«yml:lcase(@name)»_state.comm_partner.sender_fpr);
+                            extra = new_stringlist(session->«yml:lcase(@name)»_state.transport.sender_fpr);
                             if (!extra) {
                                 status = PEP_OUT_OF_MEMORY;
                                 goto the_end;
@@ -538,6 +607,7 @@ tstylesheet {
                                     session,
                                     li->ident,
                                     li->ident,
+                                    BASE_SYNC,
                                     _data,
                                     size,
                                     NULL,
@@ -548,17 +618,18 @@ tstylesheet {
                                 goto the_end;
                             }
 
-                            status = encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
+                            status = try_encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
                             if (status) {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 goto the_end;
                             }
                             add_opt_field(m, "pEp-auto-consume", "yes");
-                            add_opt_field(m, "in-reply-to", "pEp-auto-consume@pEp.foundation");
+                            m->in_reply_to = stringlist_add(m->in_reply_to, "pEp-auto-consume@pEp.foundation");
                             free_message(_m);
                             break;
 
-                    `` for "fsm/message[@security='attach_own_keys']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
+                        // attach own keys for new member
+                        `` for "fsm/message[@security='attach_own_keys_for_new_member']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
                             // check if we had a former negotiation
 
                             transaction = false;
@@ -639,6 +710,7 @@ tstylesheet {
                                     session,
                                     li->ident,
                                     li->ident,
+                                    BASE_SYNC,
                                     _data,
                                     size,
                                     NULL,
@@ -727,21 +799,23 @@ tstylesheet {
                             }
                             key_data = NULL;
 
-                            status = encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
+                            status = try_encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
                             if (status) {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 goto the_end;
                             }
                             add_opt_field(m, "pEp-auto-consume", "yes");
-                            add_opt_field(m, "in-reply-to", "pEp-auto-consume@pEp.foundation");
+                            m->in_reply_to = stringlist_add(m->in_reply_to, "pEp-auto-consume@pEp.foundation");
                             free_message(_m);
                             break;
 
-                        default: // security=trusted only
+                        // attach own keys for group
+                        `` for "fsm/message[@security='attach_own_keys_for_group']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
                             status = base_prepare_message(
                                     session,
                                     li->ident,
                                     li->ident,
+                                    BASE_SYNC,
                                     _data,
                                     size,
                                     NULL,
@@ -752,19 +826,155 @@ tstylesheet {
                                 goto the_end;
                             }
 
-                            status = encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
+                            // export secret keys into memory
+
+                            key_data = strdup("");
+                            assert(key_data);
+                            if (!key_data) {
+                                free(_data);
+                                free_message(_m);
+                                status = PEP_OUT_OF_MEMORY;
+                                goto the_end;
+                            }
+                            key_data_size = 1; // N.B. If null termination makes us happy for debugging, fine, but 
+                                               // if we include this in the size, libetpan will null terminate and 
+                                               // go bananas. We can't have a NUL in the mime text.
+
+                            for (stringlist_t *sl = session->«yml:lcase(@name)»_state.own.keys;
+                                    sl && sl->value ; sl = sl->next)
+                            {
+                                char *_key_data = NULL;
+                                size_t _size = 0;
+                                status = export_secret_key(session, sl->value, &_key_data, &_size);
+                                if (status && status != PEP_KEY_NOT_FOUND) {
+                                    free(_data);
+                                    free_message(_m);
+                                    goto the_end;
+                                }
+
+                                if (status != PEP_KEY_NOT_FOUND) {
+                                    assert(_key_data && _size);
+                                    char *n = realloc(key_data, key_data_size + _size);
+                                    if (!n) {
+                                        free(_data);
+                                        free_message(_m);
+                                        status = PEP_OUT_OF_MEMORY;
+                                        goto the_end;
+                                    }
+                                    key_data = n;
+                                    key_data_size += _size;
+                                    strlcat(key_data, _key_data, key_data_size);
+                                    free(_key_data);
+                                    _key_data = NULL;
+                                }
+                                status = export_key(session, sl->value, &_key_data, &_size);
+                                if (status && status != PEP_KEY_NOT_FOUND) {
+                                    free(_data);
+                                    free_message(_m);
+                                    goto the_end;
+                                }
+
+                                if (status != PEP_KEY_NOT_FOUND) {
+                                    assert(_key_data && _size);
+                                    char *n = realloc(key_data, key_data_size + _size);
+                                    if (!n) {
+                                        free(_data);
+                                        free_message(_m);
+                                        status = PEP_OUT_OF_MEMORY;
+                                        goto the_end;
+                                    }
+                                    key_data = n;
+                                    key_data_size += _size;
+                                    strlcat(key_data, _key_data, key_data_size);
+                                    free(_key_data);
+                                    _key_data = NULL;
+                                }
+                            }
+
+                            // add secret key data as attachment
+
+                            // N.B. The -1 makes sure we do NOT add a NUL into the mime stream!
+                            bl = bloblist_add(_m->attachments, key_data, key_data_size - 1,
+                                    "application/octet-stream", "file://own.key");
+                            if (!bl) {
+                                free(_data);
+                                free_message(_m);
+                                status = PEP_OUT_OF_MEMORY;
+                                goto the_end;
+                            }
+                            key_data = NULL;
+
+                            // we do not support extra keys here and will only encrypt to ourselves
+                            status = try_encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
                             if (status) {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 goto the_end;
                             }
                             add_opt_field(m, "pEp-auto-consume", "yes");
-                            add_opt_field(m, "in-reply-to", "pEp-auto-consume@pEp.foundation");
+                            m->in_reply_to = stringlist_add(m->in_reply_to, "pEp-auto-consume@pEp.foundation");
+                            free_message(_m);
+                            break;
+
+                        default: // security=trusted only
+                            status = base_prepare_message(
+                                    session,
+                                    li->ident,
+                                    li->ident,
+                                    BASE_SYNC,
+                                    _data,
+                                    size,
+                                    NULL,
+                                    &_m
+                                );
+                            if (status) {
+                                free(_data);
+                                goto the_end;
+                            }
+
+                            status = try_encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
+                            if (status) {
+                                status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
+                                goto the_end;
+                            }
+                            add_opt_field(m, "pEp-auto-consume", "yes");
+                            m->in_reply_to = stringlist_add(m->in_reply_to, "pEp-auto-consume@pEp.foundation");
                             free_message(_m);
                     }
 
                     status = session->messageToSend(m);
                     m = NULL;
                 }
+            ||
+            if "fsm/message[@ratelimit>0]" {
+            ||
+
+                switch (fsm) {
+            ||
+            for "fsm[message/@ratelimit>0]" {
+            ||
+                    case Sync_PR_«yml:lcase(@name)»:
+                        switch (message_type) {
+            ||
+            for "message[@ratelimit>0]"
+            ||
+                            case «../@name»_PR_«yml:mixedCase(@name)»:
+                                session->«yml:lcase(../../@name)»_state.own.last_«../@name»_«@name» = now;
+                                break;
+            ||
+            ||
+                            default:
+                                break;
+                        }
+                        break;
+            ||
+            }
+            ||
+                    default:
+                        break;
+                }
+            ||
+            }
+            ||
 
             the_end:
                 free_stringlist(extra);
@@ -824,6 +1034,7 @@ tstylesheet {
                     free(session->«yml:lcase(@name)»_state.transport.sender_fpr);
                     session->«yml:lcase(@name)»_state.transport.sender_fpr = ev->sender_fpr;
                     
+                    /* Removed for temp ENGINE-647 fix. Will be reenabled once better sync debugging is in.
                     // Check against saved comm_partner sender_fpr state, if there is one yet
                     if (session->«yml:lcase(@name)»_state.comm_partner.sender_fpr) {
                         // 1. Does it match sender_fpr?
@@ -839,6 +1050,7 @@ tstylesheet {
                             }    
                         }
                     }
+                    */
                                                             
                     ev->sender_fpr = NULL;
                 }
@@ -1049,7 +1261,7 @@ tstylesheet {
         // events
 
         typedef enum _«@name»_event {
-            «@name»_event_None = None,
+            «@name»_event_Timeout = None,
             «@name»_event_Init = Init,
         ||
         for "message" {
@@ -1119,6 +1331,7 @@ tstylesheet {
         }
         ||
                 default:
+                    assert(0);
                     return "unknown state";
             }
         }
@@ -1130,7 +1343,7 @@ tstylesheet {
         {
             switch (event) {
                 case None:
-                    return "None";
+                    return "Timeout";
                 case Init:
                     return "Init";
         ||
@@ -1140,6 +1353,7 @@ tstylesheet {
         }
         ||
                 default:
+                    assert(0);
                     return "unknown event";
             }
         }
@@ -1192,6 +1406,7 @@ tstylesheet {
                 `` apply "state", 2, mode=fsm
                 default:
                     «@name»_ERR_LOG("invalid state", «@name»_state_name(state));
+                    assert(0);
                     return invalid_state;
             }
             
@@ -1212,7 +1427,7 @@ tstylesheet {
 
             switch (event) {
                 case None:
-                    «../@name»_SERVICE_LOG("received None event", "ignoring");
+                    «../@name»_SERVICE_LOG("received Timeout event", "ignoring");
                     break;
      
         ||
@@ -1242,7 +1457,7 @@ tstylesheet {
         if "condition|action|send" |
         ||
             «../../@name»_SERVICE_LOG("received event", "«@name»");
-            `` apply "transition|action|condition|else|send";
+            `` apply "transition|action|condition|else|send|debug";
         ||
         if "name(*[last()])!='transition'" {
             |
@@ -1280,6 +1495,9 @@ tstylesheet {
         ||
     }
 
+    template "debug"
+        | KeySync_SERVICE_LOG("«.»", "«ancestor::protocol/@name»");
+
     template "action" {
         const "fsm", "ancestor::fsm";
         ||
@@ -1290,6 +1508,7 @@ tstylesheet {
             return out_of_memory;
         if (status) {
             «$fsm/@name»_ERR_LOG_HEX("executing action «@name»() failed", status);
+            assert(0);
             return invalid_action;
         }
         ||
@@ -1304,12 +1523,13 @@ tstylesheet {
             return out_of_memory;
         if (status) {
             «$fsm/@name»_ERR_LOG_HEX("computing condition «@name» failed", status);
+            assert(0);
             return invalid_condition;
         }
         if (result) {
             «$fsm/@name»_SERVICE_LOG("condition applies", "«@name»");
         ||
-        apply "transition|action|condition|else|send";
+        apply "transition|action|condition|else|send|debug";
         | }
     }
 
@@ -1319,7 +1539,7 @@ tstylesheet {
 
         | else {
         |> «ancestor::fsm/@name»_SERVICE_LOG("condition does not apply", "«preceding-sibling::*[last()]/@name»");
-        apply "transition|action|condition|else|send";
+        apply "transition|action|condition|else|send|debug";
         | }
     }
 }

@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <cstring>
 #include <string>
+#include <iostream>
+#include <fstream>
 
 #include "test_util.h"
 #include "TestConstants.h"
@@ -30,7 +32,7 @@ namespace {
             // is empty.
             URIAddressTest() {
                 // You can do set-up work for each test here.
-                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->test_suite_name();
+                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->GTEST_SUITE_SYM();
                 test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
                 test_path = get_main_test_home_dir() + "/" + test_suite_name + "/" + test_name;
             }
@@ -83,6 +85,43 @@ namespace {
 
 }  // namespace
 
+#if 0
+TEST_F(URIAddressTest, check_uri_address_not_a_test) {
+    const char* uri_addr = "payto://BIC/SYSTEM";
+
+    pEp_identity* me = new_identity(uri_addr, NULL, "System", NULL);
+
+    PEP_STATUS status = myself(session, me);
+
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_TRUE(me->fpr && me->fpr[0] != '\0');
+
+    char* keydata = NULL;
+    size_t keysize = 0;
+    status = export_key(session, me->fpr,
+                        &keydata, &keysize);
+
+    ASSERT_GT(keydata && keysize, 0);
+    
+    ofstream outfile_pub, outfile_priv;
+    outfile_pub.open("test_keys/pub/URI_address_test_key_pub.asc");
+    outfile_pub << keydata;    
+    outfile_pub.close();
+    
+    free(keydata);
+    keydata = NULL;
+    keysize = 0;
+
+    status = export_secret_key(session, me->fpr,
+                              &keydata, &keysize);
+
+    ASSERT_GT(keydata && keysize, 0);
+    
+    outfile_priv.open("test_keys/priv/URI_address_test_key_priv.asc");  
+    outfile_priv << keydata;
+    outfile_priv.close();
+}
+#endif
 
 // FIXME: URL, URN
 TEST_F(URIAddressTest, check_uri_address_genkey) {
@@ -107,6 +146,91 @@ TEST_F(URIAddressTest, check_uri_address_genkey) {
 
     free(keydata);
     free_identity(me);
+}
+
+TEST_F(URIAddressTest, check_uri_address_genkey_empty_uname) {
+    const char* uri_addr = "payto://BIC/SYSTEMB";
+    const char* uname = "Jonas's Broken Identity";
+
+    pEp_identity* me = new_identity(uri_addr, NULL, "SystemB", NULL);
+
+    PEP_STATUS status = myself(session, me);
+
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_TRUE(me->fpr && me->fpr[0] != '\0');
+
+    char* keydata = NULL;
+    size_t keysize = 0;
+    status = export_key(session, me->fpr,
+                        &keydata, &keysize);
+
+    ASSERT_GT(keydata && keysize, 0);
+    // no guarantee of NUL-termination atm.
+//    output_stream << keydata << endl;
+
+    pEp_identity* me_copy = new_identity(uri_addr, NULL, "SystemB", NULL);
+    status = myself(session, me_copy);
+
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_TRUE(me_copy->fpr && me_copy->fpr[0] != '\0');
+    ASSERT_TRUE(me_copy->username && me_copy->username[0] != '\0');
+        
+    free(keydata);
+    free_identity(me);
+}
+
+TEST_F(URIAddressTest, check_uri_address_encrypt_2_keys_no_uname) {
+    const char* uri_addr_a = "payto://BIC/SYSTEMA";    
+    const char* uri_addr_b = "payto://BIC/SYSTEMB";
+    const char* uid_a = "SystemA";
+    const char* uid_b = "SystemB";
+    const char* fpr_a = "B425BAC5ED6014AAE8E34381429FA046E70B09F9";
+    const char* fpr_b = "80C8BE340FBF59BCB54FAD1B53703426DCC3681E";
+    slurp_and_import_key(session, "test_keys/pub/URI_address_test_key0_pub.asc");
+    slurp_and_import_key(session, "test_keys/pub/URI_address_test_key1_pub.asc");
+    slurp_and_import_key(session, "test_keys/priv/URI_address_test_key0_priv.asc");
+    
+    pEp_identity* me_setup = new_identity(uri_addr_a, fpr_a, uid_a, uri_addr_a);
+    PEP_STATUS status = set_own_key(session, me_setup, fpr_a);    
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    pEp_identity* me = new_identity(uri_addr_a, NULL, uid_a, NULL);
+    status = myself(session, me);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(me->fpr, nullptr);
+    ASSERT_NE(me->username, nullptr);    
+    ASSERT_STREQ(me->fpr, fpr_a);
+    ASSERT_STREQ(me->username, uri_addr_a);
+    
+    // Try without a userid
+    pEp_identity* you = new_identity(uri_addr_b, NULL, NULL, NULL);
+    status = update_identity(session, you);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(you->fpr, nullptr);
+    ASSERT_NE(you->username, nullptr);    
+    ASSERT_STREQ(you->fpr, fpr_b);
+    ASSERT_STREQ(you->username, uri_addr_b);
+    ASSERT_NE(you->user_id, nullptr);
+    
+    // Ok, all good. Let's go with fresh, ugly identities.
+    message* msg = new_message(PEP_dir_outgoing);
+    pEp_identity* me_from = new_identity(uri_addr_a, NULL, uid_a, NULL);
+    // Give this one a UID, we'll check the TOFU while we're at it.
+    pEp_identity* you_to = new_identity(uri_addr_b, NULL, uid_b, NULL);        
+    msg->from = me_from;
+    msg->to = new_identity_list(you_to);
+    msg->shortmsg = strdup("Some swift stuff!");            
+    msg->longmsg = strdup("Some more swift stuff!");
+    
+    message* outmsg = NULL;
+    status = encrypt_message(session, msg, NULL, &outmsg, PEP_enc_PGP_MIME, 0);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(outmsg, nullptr);
+    free_message(msg);
+    free_message(outmsg);
+    free_identity(me_setup);
+    free_identity(me);
+    free_identity(you);                
 }
 
 // FIXME: URL, URN
@@ -148,4 +272,100 @@ TEST_F(URIAddressTest, check_uri_address_encrypt) {
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     
     // We don't check for anything here??? FIXME! WTF!
+}
+
+TEST_F(URIAddressTest, check_uri_address_tofu_1) {
+    const char* sys_a_addr = "payto://BIC/SYSTEMA";
+    const char* sys_b_addr = "payto://BIC/SYSTEMB";
+    const char* sys_a_fpr = "4334D6DB751A8CA2B4944075462AFDB6DA3FB4B9";
+    const char* sys_b_fpr = "F5199E0B0AC4059572DAD8EA76B63B2954139F26";
+    
+    slurp_and_import_key(session, "test_keys/priv/BIC_SYSTEMA_0xDA3FB4B9_priv.asc");
+    slurp_and_import_key(session, "test_keys/pub/BIC_SYSTEMA_0xDA3FB4B9_pub.asc");
+    slurp_and_import_key(session, "test_keys/pub/BIC_SYSTEMB_0x54139F26_pub.asc");
+
+    pEp_identity* me = new_identity(sys_a_addr, NULL, PEP_OWN_USERID, sys_a_addr);
+    PEP_STATUS status = set_own_key(session, me, sys_a_fpr);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+
+    status = myself(session, me);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_TRUE(me->fpr && me->fpr[0] != '\0');
+
+    pEp_identity* you = new_identity(sys_b_addr, NULL, "SYSTEM_B", NULL);
+
+/*
+    stringlist_t* keylist = NULL;
+    status = update_identity(session, you);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_TRUE(you->fpr && you->fpr[0] != '\0');
+*/
+    message* msg = new_message(PEP_dir_outgoing);
+
+    msg->from = me;
+    msg->to = new_identity_list(you);
+    msg->shortmsg = strdup("Smurfs");
+    msg->longmsg = strdup("Are delicious?");
+
+    message* enc_msg = NULL;
+    
+    // We are doing key election here on purpose.
+    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    char* outmsg = NULL;
+    mime_encode_message(enc_msg, false, &outmsg, false);
+    output_stream << outmsg << endl;
+    
+    if (false) {
+        ofstream outfile;
+        outfile.open("test_mails/system_a_to_b_755_part_1.eml");
+        outfile << outmsg;    
+        outfile.close();    
+    }
+    free(outmsg);
+    free_message(msg);
+    free_message(enc_msg);
+}
+
+TEST_F(URIAddressTest, check_uri_address_tofu_2) {
+    const char* sys_a_addr = "payto://BIC/SYSTEMA";
+    const char* sys_b_addr = "payto://BIC/SYSTEMB";
+    const char* sys_a_fpr = "4334D6DB751A8CA2B4944075462AFDB6DA3FB4B9";
+    const char* sys_b_fpr = "F5199E0B0AC4059572DAD8EA76B63B2954139F26";
+    
+    slurp_and_import_key(session, "test_keys/pub/BIC_SYSTEMB_0x54139F26_pub.asc");
+    slurp_and_import_key(session, "test_keys/priv/BIC_SYSTEMB_0x54139F26_priv.asc");
+    slurp_and_import_key(session, "test_keys/pub/BIC_SYSTEMA_0xDA3FB4B9_pub.asc");
+
+    pEp_identity* me = new_identity(sys_b_addr, NULL, PEP_OWN_USERID, sys_b_addr);
+    PEP_STATUS status = set_own_key(session, me, sys_b_fpr);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+
+    status = myself(session, me);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_TRUE(me->fpr && me->fpr[0] != '\0');  
+    
+    pEp_identity* you = new_identity(sys_b_addr, NULL, "SYSTEM_B", NULL);
+    status = update_identity(session, you);
+        
+    string msg_txt = slurp("test_mails/system_a_to_b_755_part_1.eml");
+    message* msg = NULL;
+    
+    mime_decode_message(msg_txt.c_str(), msg_txt.size(), &msg, NULL);
+
+    message* dec_msg = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags); 
+
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(dec_msg, nullptr);
+    ASSERT_NE(dec_msg->from, nullptr);
+    ASSERT_NE(dec_msg->to, nullptr);
+    ASSERT_NE(dec_msg->to->ident, nullptr);
+    ASSERT_STREQ(dec_msg->from->address, "payto://BIC/SYSTEMA");
+    ASSERT_STREQ(dec_msg->to->ident->address, "payto://BIC/SYSTEMB");    
 }

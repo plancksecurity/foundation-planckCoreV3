@@ -17,7 +17,18 @@ extern "C" {
 #include "labeled_int_list.h"    
 #include "timestamp.h"
 
-#define PEP_VERSION "2.1" // protocol version
+#define PEP_VERSION "2.1" // pEp *protocol* version
+
+// RELEASE version this targets
+// (string: major.minor.patch)
+#define PEP_ENGINE_VERSION "2.1.0"
+
+// Numeric values of above:
+#define PEP_ENGINE_VERSION_MAJOR 2
+#define PEP_ENGINE_VERSION_MINOR 1
+#define PEP_ENGINE_VERSION_PATCH 0
+#define PEP_ENGINE_VERSION_RC    8
+
 
 #define PEP_OWN_USERID "pEp_own_userId"
     
@@ -34,17 +45,18 @@ typedef struct _pEpSession * PEP_SESSION;
 typedef enum {
     PEP_STATUS_OK                                   = 0,
 
-    PEP_INIT_CANNOT_LOAD_GPGME                      = 0x0110,
-    PEP_INIT_GPGME_INIT_FAILED                      = 0x0111,
-    PEP_INIT_NO_GPG_HOME                            = 0x0112,
-    PEP_INIT_NETPGP_INIT_FAILED                     = 0x0113,
-    PEP_INIT_CANNOT_DETERMINE_GPG_VERSION           = 0x0114,
-    PEP_INIT_UNSUPPORTED_GPG_VERSION                = 0x0115,
-    PEP_INIT_CANNOT_CONFIG_GPG_AGENT                = 0x0116,
+    PEP_INIT_CANNOT_LOAD_CRYPTO_LIB                 = 0x0110,
+    PEP_INIT_CRYPTO_LIB_INIT_FAILED                 = 0x0111,
+    PEP_INIT_NO_CRYPTO_HOME                         = 0x0112,
+//    PEP_INIT_NETPGP_INIT_FAILED                     = 0x0113,
+    PEP_INIT_CANNOT_DETERMINE_CRYPTO_VERSION        = 0x0114,
+    PEP_INIT_UNSUPPORTED_CRYPTO_VERSION             = 0x0115,
+    PEP_INIT_CANNOT_CONFIG_CRYPTO_AGENT             = 0x0116,
 
     PEP_INIT_SQLITE3_WITHOUT_MUTEX                  = 0x0120,
     PEP_INIT_CANNOT_OPEN_DB                         = 0x0121,
     PEP_INIT_CANNOT_OPEN_SYSTEM_DB                  = 0x0122,
+    PEP_INIT_DB_DOWNGRADE_VIOLATION                 = 0x0123,                        
     PEP_UNKNOWN_DB_ERROR                            = 0x01ff,
     
     PEP_KEY_NOT_FOUND                               = 0x0201,
@@ -84,8 +96,9 @@ typedef enum {
     PEP_VERIFY_NO_KEY                               = 0x0407,
     PEP_VERIFIED_AND_TRUSTED                        = 0x0408,
     PEP_CANNOT_REENCRYPT                            = 0x0409,
-    PEP_SIGNED_ONLY                                 = 0x040a,
-    PEP_CANNOT_SIGN                                 = 0x040b,    
+    PEP_VERIFY_SIGNER_KEY_REVOKED                   = 0x040a,
+    PEP_CANNOT_SIGN                                 = 0x040b,
+    PEP_SIGNED_ONLY                                 = 0x040c,
     PEP_CANNOT_DECRYPT_UNKNOWN                      = 0x04ff,
 
     PEP_TRUSTWORD_NOT_FOUND                         = 0x0501,
@@ -119,6 +132,12 @@ typedef enum {
     PEP_STATEMACHINE_INVALID_ACTION                 = 0x0985,
     PEP_STATEMACHINE_INHIBITED_EVENT                = 0x0986,
     PEP_STATEMACHINE_CANNOT_SEND                    = 0x0987,
+
+    PEP_PASSPHRASE_REQUIRED                         = 0x0a00,
+    PEP_WRONG_PASSPHRASE                            = 0x0a01,
+    PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED            = 0x0a02,
+
+    PEP_DISTRIBUTION_ILLEGAL_MESSAGE                = 0x1002,
 
     PEP_COMMIT_FAILED                               = 0xff01,
     PEP_MESSAGE_CONSUME                             = 0xff02,
@@ -159,7 +178,7 @@ typedef struct Sync_event *SYNC_EVENT;
 //  parameters:
 //      ev (in)         event to free
 
-void free_Sync_event(SYNC_EVENT ev);
+DYNAMIC_API void free_Sync_event(SYNC_EVENT ev);
 
 
 // inject_sync_event - inject sync protocol message
@@ -170,6 +189,10 @@ void free_Sync_event(SYNC_EVENT ev);
 //
 //  return value:
 //      0 if event could be stored successfully or nonzero otherwise
+//
+//  caveat:
+//      if ev is SHUTDOWN then the implementation has to be synchronous
+//      and the shutdown must be immediate
 
 typedef int (*inject_sync_event_t)(SYNC_EVENT ev, void *management);
 
@@ -187,8 +210,8 @@ typedef int (*inject_sync_event_t)(SYNC_EVENT ev, void *management);
 //      PEP_STATUS_OK = 0                   if init() succeeds
 //      PEP_INIT_SQLITE3_WITHOUT_MUTEX      if SQLite3 was compiled with
 //                                          SQLITE_THREADSAFE 0
-//      PEP_INIT_CANNOT_LOAD_GPGME          if libgpgme.dll cannot be found
-//      PEP_INIT_GPGME_INIT_FAILED          if GPGME init fails
+//      PEP_INIT_CANNOT_LOAD_CRYPTO_LIB     if crypto lin cannot be found
+//      PEP_INIT_CRYPTO_LIB_INIT_FAILED          if CRYPTO_LIB init fails
 //      PEP_INIT_CANNOT_OPEN_DB             if user's management db cannot be
 //                                          opened
 //      PEP_INIT_CANNOT_OPEN_SYSTEM_DB      if system's management db cannot be
@@ -407,6 +430,8 @@ DYNAMIC_API PEP_STATUS encrypt_and_sign(
         size_t psize, char **ctext, size_t *csize
     );
 
+
+DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color);
 
 // log_event() - log a user defined event defined by UTF-8 encoded strings into
 // management log
@@ -841,8 +866,10 @@ DYNAMIC_API PEP_STATUS mark_as_compromized(
 //        PEP_CANNOT_CREATE_KEY   key engine is on strike
 //
 //  caveat:
-//      address and username fields must be set to UTF-8 strings
+//      address must be set to UTF-8 string
 //      the fpr field must be set to NULL
+//      username field must either be NULL or be a UTF8-string conforming 
+//      to RFC4880 for PGP uid usernames  
 //
 //      this function allocates a string and sets set fpr field of identity
 //      the caller is responsible to call free() for that string or use
@@ -873,10 +900,11 @@ DYNAMIC_API PEP_STATUS delete_keypair(PEP_SESSION session, const char *fpr);
 // import_key() - import key from data
 //
 //  parameters:
-//      session (in)            session handle
-//      key_data (in)           key data, i.e. ASCII armored OpenPGP key
-//      size (in)               amount of data to handle
-//      private_idents (out)    List of identities representing imported private keys
+//      session (in)                session handle
+//      key_data (in)               key data, i.e. ASCII armored OpenPGP key
+//      size (in)                   amount of data to handle
+//      private_keys (out)          list of identities containing the 
+//                                  private keys that have been imported
 //
 //  return value:
 //      PEP_STATUS_OK = 0       key was successfully imported
@@ -891,8 +919,46 @@ DYNAMIC_API PEP_STATUS import_key(
         PEP_SESSION session,
         const char *key_data,
         size_t size,
-        identity_list **private_idents
+        identity_list **private_keys       
     );
+
+// _import_key_with_fpr_return() - 
+//                INTERNAL FUNCTION - import keys from data, return optional list 
+//                of fprs imported
+//
+//  parameters:
+//      session (in)                session handle
+//      key_data (in)               key data, i.e. ASCII armored OpenPGP key
+//      size (in)                   amount of data to handle
+//      private_keys (out)          list of identities containing the 
+//                                  private keys that have been imported
+//      imported_keys (out)         if non-NULL, list of actual keys imported
+//      changed_public_keys (out)   if non-NULL AND imported_keys is non-NULL:
+//                                  bitvector - corresponds to the first 64 keys
+//                                  imported. If nth bit is set, import changed a
+//                                  key corresponding to the nth element in
+//                                  imported keys (i.e. key was in DB and was
+//                                  changed by import)
+//
+//  return value:
+//      PEP_STATUS_OK = 0       key was successfully imported
+//      PEP_OUT_OF_MEMORY       out of memory
+//      PEP_ILLEGAL_VALUE       there is no key data to import, or imported keys was NULL and 
+//                              changed_public_keys was not
+//
+//  caveat:
+//      private_keys and imported_keys goes to the ownership of the caller
+//      private_keys and imported_keys can be left NULL, it is then ignored
+//      *** THIS IS THE ACTUAL FUNCTION IMPLEMENTED BY CRYPTOTECH "import_key" ***
+
+PEP_STATUS _import_key_with_fpr_return(
+        PEP_SESSION session,
+        const char *key_data,
+        size_t size,
+        identity_list** private_keys,
+        stringlist_t** imported_keys,
+        uint64_t* changed_public_keys // use as bit field for the first 64 changed keys
+);
 
 
 // export_key() - export ascii armored key
@@ -998,6 +1064,24 @@ DYNAMIC_API PEP_STATUS send_key(PEP_SESSION session, const char *pattern);
 //  <http://msdn.microsoft.com/en-us/library/windows/desktop/aa366711(v=vs.85).aspx>
 
 DYNAMIC_API void pEp_free(void *p);
+
+
+// pEp_realloc() - reallocate memory allocated by pEp engine
+//
+//  parameters:
+//      p (in)                  pointer to free
+//      size (in)               new memory size
+//
+//  returns:
+//      pointer to allocated memory
+//
+//  The reason for this function is that heap management can be a pretty
+//  complex task with Windoze. This realloc() version calls the realloc()
+//  implementation of the C runtime library which was used to build pEp engine,
+//  so you're using the correct heap. For more information, see:
+//  <http://msdn.microsoft.com/en-us/library/windows/desktop/aa366711(v=vs.85).aspx>
+
+DYNAMIC_API void *pEp_realloc(void *p, size_t size);
 
 
 // get_trust() - get the trust level a key has for a person
@@ -1310,6 +1394,67 @@ DYNAMIC_API const char *per_user_directory(void);
 
 DYNAMIC_API const char *per_machine_directory(void);
 
+// FIXME: replace in canonical style
+//
+// config_passphrase() - configure a key passphrase for the current session.
+//
+// A passphrase can be configured into a p≡p session. Then it is used whenever a
+// secret key is used which requires a passphrase.
+// 
+// A passphrase is a string between 1 and 1024 bytes and is only ever present in
+// memory. Because strings in the p≡p engine are UTF-8 NFC, the string is
+// restricted to 250 code points in UI.
+// 
+// This function copies the passphrase into the session. It may return
+// PEP_OUT_OF_MEMORY. The behaviour of all functions which use secret keys may
+// change after this is configured.  Error behaviour
+// 
+// For any function which may trigger the use of a secret key, if an attempt
+// to use a secret key which requires a passphrase occurs and no passphrase
+// is configured for the current session, PEP_PASSPHRASE_REQUIRED is
+// returned by this function (and thus, all functions which could trigger
+// such a usage must be prepared to return this value).  For any function
+// which may trigger the use of a secret key, if a passphrase is configured
+// and the configured passphrase is the wrong passphrase for the use of a
+// given passphrase-protected secret key, PEP_WRONG_PASSPHRASE is returned
+// by this function (and thus, all functions which could trigger such a
+// usage must be prepared to return this value).
+
+DYNAMIC_API PEP_STATUS config_passphrase(PEP_SESSION session, const char *passphrase);
+
+// FIXME: replace in canonical style
+//
+// Passphrase enablement for newly-generated secret keys
+// 
+// If it is desired that new p≡p keys are passphrase-protected, the following
+// API call is used to enable the addition of passphrases to new keys during key
+// generation.
+//
+// If enabled and a passphrase for new keys has been configured
+// through this function (NOT the one above - this is a separate passphrase!),
+// then anytime a secret key is generated while enabled, the configured
+// passphrase will be used as the passphrase for any newly-generated secret key.
+//
+// If enabled and a passphrase for new keys has not been configured, then any
+// function which can attempt to generate a secret key will return
+// PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED.  
+//
+// If disabled (i.e. not enabled) and a passphrase for new keys has been
+// configured, no passphrases will be used for newly-generated keys.
+//
+// This function copies the passphrase for new keys into a special field that is
+// specifically for key generation into the session. It may return
+// PEP_OUT_OF_MEMORY. The behaviour of all functions which use secret keys may
+// change after this is configured.
+//
+
+DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys(PEP_SESSION session, 
+                                                bool enable, 
+                                                const char *passphrase);
+
+PEP_STATUS _generate_keypair(PEP_SESSION session, 
+                             pEp_identity *identity,
+                             bool suppress_event);
 
 DYNAMIC_API PEP_STATUS reset_pEptest_hack(PEP_SESSION session);
 
@@ -1354,6 +1499,9 @@ PEP_STATUS get_main_user_fpr(PEP_SESSION session,
 
 PEP_STATUS replace_main_user_fpr(PEP_SESSION session, const char* user_id,
                               const char* new_fpr);
+
+PEP_STATUS replace_main_user_fpr_if_equal(PEP_SESSION session, const char* user_id,
+                                          const char* new_fpr, const char* compare_fpr);
     
 DYNAMIC_API PEP_STATUS get_replacement_fpr(
         PEP_SESSION session,
@@ -1375,6 +1523,10 @@ PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr);
 
 PEP_STATUS set_pEp_version(PEP_SESSION session, pEp_identity* ident, unsigned int new_ver_major, unsigned int new_ver_minor);
 
+PEP_STATUS clear_trust_info(PEP_SESSION session,
+                            const char* user_id,
+                            const char* fpr);
+                            
 // Generally ONLY called by set_as_pEp_user, and ONLY from < 2.0 to 2.0.
 PEP_STATUS upgrade_pEp_version_by_user_id(PEP_SESSION session, 
         pEp_identity* ident, 
@@ -1449,7 +1601,12 @@ PEP_STATUS sign_only(PEP_SESSION session,
                      char **sign, 
                      size_t *sign_size,
                      PEP_HASH_ALGO* hash_algo);
+                     
+PEP_STATUS set_all_userids_to_own(PEP_SESSION session, 
+                                  identity_list* id_list);
 
+PEP_STATUS has_partner_contacted_address(PEP_SESSION session, const char* partner_id,
+                                         const char* own_address, bool* was_contacted);
 #ifdef __cplusplus
 }
 #endif

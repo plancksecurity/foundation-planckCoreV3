@@ -32,7 +32,7 @@ namespace {
             // is empty.
             HeaderKeyImportTest() {
                 // You can do set-up work for each test here.
-                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->test_suite_name();
+                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->GTEST_SUITE_SYM();
                 test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
                 test_path = get_main_test_home_dir() + "/" + test_suite_name + "/" + test_name;
             }
@@ -742,4 +742,10 @@ TEST_F(HeaderKeyImportTest, check_header_key_import) {
     free(dec_msg);
     free(modified_src);
     free_identity(alice_check);
+    
+    char* outkey = NULL;
+    size_t size = 0;
+    status = export_key(session, alice_fpr, &outkey, &size);    
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    cout << outkey << endl;
 }
