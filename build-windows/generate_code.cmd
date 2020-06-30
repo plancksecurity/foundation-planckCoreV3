@@ -76,7 +76,5 @@ MKDIR pEp
 XCOPY pEpEngine\src\*.h pEp\
 XCOPY libpEpAdapter\*.hh pEp\
 XCOPY libpEpAdapter\*.hxx pEp\
-XCOPY libpEpAdapter\*.hh pEp
-XCOPY libpEpAdapter\*.hxx pEp
 
 POPD
