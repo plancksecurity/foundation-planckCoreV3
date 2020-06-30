@@ -82,7 +82,7 @@ static const char *sql_trustword =
 static const char *sql_get_identity =  
     "select identity.main_key_id, username, comm_type, lang,"
     "   identity.flags | pgp_keypair.flags,"
-    "   is_own, pEp_version_major, pEp_version_minor"
+    "   is_own, pEp_version_major, pEp_version_minor, enc_format"
     "   from identity"
     "   join person on id = identity.user_id"
     "   left join pgp_keypair on fpr = identity.main_key_id"
@@ -100,7 +100,7 @@ static const char *sql_get_identity =
 static const char *sql_get_identities_by_main_key_id =  
     "select address, identity.user_id, username, comm_type, lang,"
     "   identity.flags | pgp_keypair.flags,"
-    "   is_own, pEp_version_major, pEp_version_minor"
+    "   is_own, pEp_version_major, pEp_version_minor, enc_format"
     "   from identity"
     "   join person on id = identity.user_id"
     "   left join pgp_keypair on fpr = identity.main_key_id"
@@ -112,7 +112,7 @@ static const char *sql_get_identities_by_main_key_id =
 
 static const char *sql_get_identity_without_trust_check =  
     "select identity.main_key_id, username, lang,"
-    "   identity.flags, is_own, pEp_version_major, pEp_version_minor"
+    "   identity.flags, is_own, pEp_version_major, pEp_version_minor, enc_format"
     "   from identity"
     "   join person on id = identity.user_id"
     "   where (case when (address = ?1) then (1)"
@@ -126,7 +126,7 @@ static const char *sql_get_identity_without_trust_check =
 
 static const char *sql_get_identities_by_address =  
     "select user_id, identity.main_key_id, username, lang,"
-    "   identity.flags, is_own, pEp_version_major, pEp_version_minor"
+    "   identity.flags, is_own, pEp_version_major, pEp_version_minor, enc_format"
     "   from identity"
     "   join person on id = identity.user_id"
     "   where (case when (address = ?1) then (1)"
@@ -140,7 +140,7 @@ static const char *sql_get_identities_by_address =
 static const char *sql_get_identities_by_userid =  
     "select address, identity.main_key_id, username, comm_type, lang,"
     "   identity.flags | pgp_keypair.flags,"
-    "   is_own, pEp_version_major, pEp_version_minor"
+    "   is_own, pEp_version_major, pEp_version_minor, enc_format"
     "   from identity"
     "   join person on id = identity.user_id"
     "   left join pgp_keypair on fpr = identity.main_key_id"
@@ -2838,7 +2838,8 @@ DYNAMIC_API PEP_STATUS get_identity(
             sqlite3_column_int(session->get_identity, 6);
         _identity->minor_ver =
             sqlite3_column_int(session->get_identity, 7);
-    
+        _identity->enc_format =    
+            sqlite3_column_int(session->get_identity, 8);    
         *identity = _identity;
         break;
     default:
@@ -2916,6 +2917,9 @@ PEP_STATUS get_identities_by_userid(
             sqlite3_column_int(session->get_identities_by_userid, 7);
         ident->minor_ver =
             sqlite3_column_int(session->get_identities_by_userid, 8);
+        ident->enc_format =    
+            sqlite3_column_int(session->get_identities_by_userid, 9);    
+            
     
         identity_list_add(*identities, ident);
         ident = NULL;
@@ -2986,6 +2990,8 @@ PEP_STATUS get_identities_by_main_key_id(
             sqlite3_column_int(session->get_identities_by_main_key_id, 7);
         ident->minor_ver =
             sqlite3_column_int(session->get_identities_by_main_key_id, 8);
+        ident->enc_format =    
+            sqlite3_column_int(session->get_identities_by_main_key_id, 9);                
     
         identity_list_add(*identities, ident);
         ident = NULL;
@@ -3060,6 +3066,8 @@ PEP_STATUS get_identity_without_trust_check(
             sqlite3_column_int(session->get_identity_without_trust_check, 5);
         _identity->minor_ver =
             sqlite3_column_int(session->get_identity_without_trust_check, 6);
+        _identity->enc_format =    
+            sqlite3_column_int(session->get_identity_without_trust_check, 7);                
     
         *identity = _identity;
         break;
@@ -3129,7 +3137,9 @@ PEP_STATUS get_identities_by_address(
             sqlite3_column_int(session->get_identities_by_address, 6);
         ident->minor_ver =
             sqlite3_column_int(session->get_identities_by_address, 7);
-    
+        ident->enc_format =    
+            sqlite3_column_int(session->get_identities_by_address, 8);               
+                 
         if (ident_list)
             identity_list_add(ident_list, ident);
         else

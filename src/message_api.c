@@ -2027,14 +2027,16 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     if (max_version_major == 1)
         force_v_1 = true;
 
-    if (enc_format == PEP_enc_none) {
+    if (enc_format == PEP_enc_auto) {
         update_encryption_format(src->to, &enc_format);
-        if (enc_format == PEP_enc_none && src->cc)
+        if (enc_format == PEP_enc_auto && src->cc)
             update_encryption_format(src->cc, &enc_format);
-        if (enc_format == PEP_enc_none && src->bcc)
+        if (enc_format == PEP_enc_auto && src->bcc)
             update_encryption_format(src->bcc, &enc_format);
+        if (enc_format == PEP_enc_auto)
+            enc_format = PEP_enc_PEP;
     }    
-    else {
+    else if (enc_format != PEP_enc_none) {
         status = id_list_set_enc_format(session, src->to, enc_format);
         status = ((status != PEP_STATUS_OK || !(src->cc)) ? status : id_list_set_enc_format(session, src->cc, enc_format));
         status = ((status != PEP_STATUS_OK || !(src->bcc)) ? status : id_list_set_enc_format(session, src->bcc, enc_format));

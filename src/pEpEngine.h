@@ -161,7 +161,8 @@ typedef enum _PEP_enc_format {
     PEP_enc_PGP_MIME,                       // RFC3156
     PEP_enc_PEP,                            // pEp encryption format
     PEP_enc_PGP_MIME_Outlook1,              // Message B0rken by Outlook type 1
-    PEP_enc_inline_EA
+    PEP_enc_inline_EA,
+    PEP_enc_auto = 255                      // figure out automatically where possible
 } PEP_enc_format;
 
 
