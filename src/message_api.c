@@ -1183,8 +1183,8 @@ static PEP_STATUS sign_PGP_MIME(
     _src->attachments = src->attachments;
     _src->enc_format = PEP_enc_none;
     
-    // These vars are here to be clear, and because I don't know how this may change in the near future.
-    status = _mime_encode_message_internal(_src, true, &mimetext, true, false, true);
+    // Wait, what? Shouldn't have pEp message attachment.
+    status = mime_encode_message(_src, true, &mimetext, false);
     assert(status == PEP_STATUS_OK);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
@@ -4266,32 +4266,6 @@ static PEP_STATUS _decrypt_message(
                             }
                         }
                         else if (is_inner) {
-                            /*** KLB: Check to see if this should have been axed or not ***/
-
-                            // check for private key in decrypted message attachment while importing
-                            // N.B. Apparently, we always import private keys into the keyring; however,
-                            // we do NOT always allow those to be used for encryption. THAT is controlled
-                            // by setting it as an own identity associated with the key in the DB.
-                            
-                            // If we have a message 2.0 message, we are ONLY going to be ok with keys
-                            // we imported from THIS part of the message.
-                            imported_private_key_address = false;
-                            free(private_il); 
-                            private_il = NULL;
-                            
-                            // import keys from decrypted INNER source
-                            status = import_keys_from_decrypted_msg(session, inner_message,
-                                                                     &imported_keys,
-                                                                     &imported_private_key_address,
-                                                                     private_il,
-                                                                     &imported_fprs);
-                                                                                                              
-                            if (status != PEP_STATUS_OK)
-                                goto pEp_error;            
-
-                            
-                            /*** End KLB axe check ***/
-                            
                             // THIS is our message
                             // Now, let's make sure we've copied in 
                             // any information sent in by the app if
@@ -5613,4 +5587,3 @@ PEP_STATUS try_encrypt_message(
 
     return status;
 }
-

@@ -148,7 +148,7 @@ TEST_F(SignOnlyTest, check_signed_message) {
     
     char* outmsg = NULL;
     
-    status = mime_encode_message(enc_msg, false, &outmsg);
+    status = mime_encode_message(enc_msg, false, &outmsg, false);
     
     cout << outmsg << endl; 
     

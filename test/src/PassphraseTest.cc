@@ -1255,7 +1255,7 @@ TEST_F(PassphraseTest, check_sign_only_nopass) {
 
     stringlist_t* keylist = NULL;
 
-    status = sign_only(session, msg_text.c_str(), msg_text.size(), bob_fpr, &signed_text, &signed_text_size);
+    status = sign_only(session, msg_text.c_str(), msg_text.size(), bob_fpr, &signed_text, &signed_text_size, NULL);
     ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);
 
     // FIXME: free stuff    
@@ -1294,7 +1294,7 @@ TEST_F(PassphraseTest, check_sign_only_withpass) {
 
     stringlist_t* keylist = NULL;
 
-    status = sign_only(session, msg_text.c_str(), msg_text.size(), bob_fpr, &signed_text, &signed_text_size);
+    status = sign_only(session, msg_text.c_str(), msg_text.size(), bob_fpr, &signed_text, &signed_text_size,  NULL);
     ASSERT_EQ(status, PEP_STATUS_OK);
     output_stream << signed_text << endl;
     test_file.open("tmp/signature.txt");

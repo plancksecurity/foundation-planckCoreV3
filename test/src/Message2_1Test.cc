@@ -279,7 +279,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_1) {
 
     char* testme = NULL;
     
-    mime_encode_message(enc_msg, false, &testme);
+    mime_encode_message(enc_msg, false, &testme, false);
     output_stream << testme << endl;
     
     // ensure sent message is in 2.0 format
