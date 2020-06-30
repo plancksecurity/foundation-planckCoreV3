@@ -276,4 +276,9 @@
   <ItemGroup>
     <Text Include="..\LICENSE.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="generate_code.cmd">
+      <Filter>Quelldateien</Filter>
+    </None>
+  </ItemGroup>
 </Project>
