@@ -1,3 +1,6 @@
+/** @file */
+/** @brief File description for doxygen missing. FIXME */
+
 #pragma once
 
 #ifdef __cplusplus

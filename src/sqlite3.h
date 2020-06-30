@@ -1,3 +1,6 @@
+/** @file */
+/** @brief File description for doxygen missing. FIXME */
+
 /*
 ** 2001-09-15
 **
