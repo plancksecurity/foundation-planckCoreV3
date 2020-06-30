@@ -3,6 +3,7 @@
 
 #include "pEp_internal.h"
 #include "message_api.h"
+#include "pEpEngine.h"
 
 #include "platform.h"
 #include "mime.h"
@@ -1743,6 +1744,28 @@ static void _cleanup_src(message* src, bool remove_attached_key) {
     }                   
 }
 
+static PEP_STATUS id_list_set_enc_format(PEP_SESSION session, identity_list* id_list, PEP_enc_format enc_format) {
+    PEP_STATUS status = PEP_STATUS_OK;
+    identity_list* id_list_curr = id_list;
+    for ( ; id_list_curr && id_list_curr->ident && status == PEP_STATUS_OK; id_list_curr = id_list_curr->next) {
+        status = set_ident_enc_format(session, id_list_curr->ident, enc_format);
+    }
+    return status;
+}
+
+// N.B.
+// depends on update_identity and friends having already been called on list
+static void update_encryption_format(identity_list* id_list, PEP_enc_format* enc_format) {
+    identity_list* id_list_curr;
+    for (id_list_curr = id_list; id_list_curr && id_list_curr->ident; id_list_curr = id_list_curr->next) {
+        PEP_enc_format format = id_list_curr->ident->enc_format;
+        if (format != PEP_enc_none) {
+            *enc_format = format;
+            break;
+        }
+    }
+}
+
 DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_SESSION session,
         message *src,
@@ -2003,6 +2026,21 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     
     if (max_version_major == 1)
         force_v_1 = true;
+
+    if (enc_format == PEP_enc_none) {
+        update_encryption_format(src->to, &enc_format);
+        if (enc_format == PEP_enc_none && src->cc)
+            update_encryption_format(src->cc, &enc_format);
+        if (enc_format == PEP_enc_none && src->bcc)
+            update_encryption_format(src->bcc, &enc_format);
+    }    
+    else {
+        status = id_list_set_enc_format(session, src->to, enc_format);
+        status = ((status != PEP_STATUS_OK || !(src->cc)) ? status : id_list_set_enc_format(session, src->cc, enc_format));
+        status = ((status != PEP_STATUS_OK || !(src->bcc)) ? status : id_list_set_enc_format(session, src->bcc, enc_format));
+        if (status != PEP_STATUS_OK)
+            goto pEp_error;
+    }
         
     if (enc_format == PEP_enc_none || !dest_keys_found ||
         stringlist_length(keys)  == 0 ||
@@ -5372,4 +5410,3 @@ PEP_STATUS try_encrypt_message(
 
     return status;
 }
-

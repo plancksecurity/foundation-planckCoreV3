@@ -312,6 +312,16 @@ static const char *sql_unset_identity_flags =
     "          end) = 1"
     "          and user_id = ?3 ;";
 
+static const char *sql_set_ident_enc_format =
+    "update identity "
+    "   set enc_format = ?1 "
+    "   where (case when (address = ?2) then (1)"
+    "               when (lower(address) = lower(?2)) then (1)"
+    "               when (replace(lower(address),'.','') = replace(lower(?2),'.','')) then (1) "
+    "               else 0 "
+    "          end) = 1 "
+    "          and user_id = ?3 ;";
+
 static const char *sql_set_pEp_version =
     "update identity "
     "   set pEp_version_major = ?1, "
@@ -1058,7 +1068,7 @@ DYNAMIC_API PEP_STATUS init(
     sqlite3_busy_timeout(_session->system_db, 1000);
 
 // increment this when patching DDL
-#define _DDL_USER_VERSION "13"
+#define _DDL_USER_VERSION "14"
 
     if (in_first) {
 
@@ -1120,7 +1130,8 @@ DYNAMIC_API PEP_STATUS init(
                 "   flags integer default 0,\n"
                 "   is_own integer default 0,\n"
                 "   pEp_version_major integer default 0,\n"
-                "   pEp_version_minor integer default 0,\n"                
+                "   pEp_version_minor integer default 0,\n"
+                "   enc_format integer default 0,\n"               
                 "   timestamp integer default (datetime('now')),\n"
                 "   primary key (address, user_id)\n"
                 ");\n"
@@ -1232,7 +1243,10 @@ DYNAMIC_API PEP_STATUS init(
         // Sometimes the user_version wasn't set correctly. 
         if (version == 1) {
             bool version_changed = true;
-            if (table_contains_column(_session, "revocation_contact_list", "own_address")) {
+            if (table_contains_column(_session, "identity", "enc_format")) {
+                version = 14;
+            }
+            else if (table_contains_column(_session, "revocation_contact_list", "own_address")) {
                 version = 13;
             }
             else if (table_contains_column(_session, "identity", "pEp_version_major")) {
@@ -1692,7 +1706,19 @@ DYNAMIC_API PEP_STATUS init(
                 assert(status == PEP_STATUS_OK);
                 if (status != PEP_STATUS_OK)
                     return status;
-            }        
+            }
+            if (version < 14) {
+                int_result = sqlite3_exec(
+                    _session->db,
+                    "alter table identity\n"
+                    "   add column enc_format integer default 0;\n",
+                    NULL,
+                    NULL,
+                    NULL
+                );
+                assert(int_result == SQLITE_OK);
+            }
+                    
         }        
         else { 
             // Version from DB was 0, it means this is initial setup.
@@ -1906,6 +1932,11 @@ DYNAMIC_API PEP_STATUS init(
             NULL);
     assert(int_result == SQLITE_OK);
 
+    int_result = sqlite3_prepare_v2(_session->db, sql_set_ident_enc_format,
+            (int)strlen(sql_set_ident_enc_format), &_session->set_ident_enc_format,
+            NULL);
+    assert(int_result == SQLITE_OK);
+            
     int_result = sqlite3_prepare_v2(_session->db, sql_set_pEp_version,
             (int)strlen(sql_set_pEp_version), &_session->set_pEp_version,
             NULL);
@@ -2180,6 +2211,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->set_identity_flags);
             if (session->unset_identity_flags)
                 sqlite3_finalize(session->unset_identity_flags);
+            if (session->set_ident_enc_format)
+                sqlite3_finalize(session->set_ident_enc_format);
             if (session->set_pEp_version)
                 sqlite3_finalize(session->set_pEp_version);                
             if (session->exists_trust_entry)
@@ -3974,6 +4007,38 @@ DYNAMIC_API PEP_STATUS unset_identity_flags(
         return PEP_CANNOT_SET_IDENTITY;
 
     identity->flags &= ~flags;
+
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS set_ident_enc_format(
+        PEP_SESSION session,
+        pEp_identity *identity,
+        PEP_enc_format format
+    )
+{
+    int result;
+
+    assert(session);
+    assert(identity);
+    assert(identity->address);
+    assert(identity->user_id);
+
+    if (!(session && identity && identity->address && identity->user_id))
+        return PEP_ILLEGAL_VALUE;
+
+    sqlite3_reset(session->set_ident_enc_format);
+    sqlite3_bind_int(session->set_ident_enc_format, 1, format);
+    sqlite3_bind_text(session->set_ident_enc_format, 2, identity->address, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(session->set_ident_enc_format, 3, identity->user_id, -1,
+        SQLITE_STATIC);
+        
+    result = sqlite3_step(session->set_ident_enc_format);
+
+    sqlite3_reset(session->set_ident_enc_format);
+    if (result != SQLITE_DONE)
+        return PEP_CANNOT_SET_IDENTITY;
 
     return PEP_STATUS_OK;
 }
