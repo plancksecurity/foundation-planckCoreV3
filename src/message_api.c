@@ -3,6 +3,7 @@
 
 #include "pEp_internal.h"
 #include "message_api.h"
+#include "pEpEngine.h"
 
 #include "platform.h"
 #include "mime.h"
@@ -1954,6 +1955,28 @@ pEp_error:
 }
 
 
+static PEP_STATUS id_list_set_enc_format(PEP_SESSION session, identity_list* id_list, PEP_enc_format enc_format) {
+    PEP_STATUS status = PEP_STATUS_OK;
+    identity_list* id_list_curr = id_list;
+    for ( ; id_list_curr && id_list_curr->ident && status == PEP_STATUS_OK; id_list_curr = id_list_curr->next) {
+        status = set_ident_enc_format(session, id_list_curr->ident, enc_format);
+    }
+    return status;
+}
+
+// N.B.
+// depends on update_identity and friends having already been called on list
+static void update_encryption_format(identity_list* id_list, PEP_enc_format* enc_format) {
+    identity_list* id_list_curr;
+    for (id_list_curr = id_list; id_list_curr && id_list_curr->ident; id_list_curr = id_list_curr->next) {
+        PEP_enc_format format = id_list_curr->ident->enc_format;
+        if (format != PEP_enc_none) {
+            *enc_format = format;
+            break;
+        }
+    }
+}
+
 DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_SESSION session,
         message *src,
@@ -2214,6 +2237,23 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     
     if (max_version_major == 1)
         force_v_1 = true;
+
+    if (enc_format == PEP_enc_auto) {
+        update_encryption_format(src->to, &enc_format);
+        if (enc_format == PEP_enc_auto && src->cc)
+            update_encryption_format(src->cc, &enc_format);
+        if (enc_format == PEP_enc_auto && src->bcc)
+            update_encryption_format(src->bcc, &enc_format);
+        if (enc_format == PEP_enc_auto)
+            enc_format = PEP_enc_PEP;
+    }    
+    else if (enc_format != PEP_enc_none) {
+        status = id_list_set_enc_format(session, src->to, enc_format);
+        status = ((status != PEP_STATUS_OK || !(src->cc)) ? status : id_list_set_enc_format(session, src->cc, enc_format));
+        status = ((status != PEP_STATUS_OK || !(src->bcc)) ? status : id_list_set_enc_format(session, src->bcc, enc_format));
+        if (status != PEP_STATUS_OK)
+            goto pEp_error;
+    }
         
     if (enc_format == PEP_enc_none || enc_format == PEP_enc_sign_only ||
         !dest_keys_found || 
@@ -4035,7 +4075,7 @@ static PEP_STATUS _decrypt_message(
                         decrypt_status = _decrypt_in_pieces_status;
                 }
 
-                if (src->enc_format == PEP_enc_inline_EA) {
+                if (src->enc_format == PEP_enc_inline_EA && msg->longmsg && msg->longmsg[0] == 0) {
                     char *value;
                     size_t size;
                     char *mime_type;
@@ -4068,6 +4108,13 @@ static PEP_STATUS _decrypt_message(
                         goto pEp_error;
                     }
                 }
+
+                status = import_keys_from_decrypted_msg(session, msg,
+                                                        &keys_were_imported,
+                                                        &imported_private_key_address,
+                                                        private_il,
+                                                        (imported_key_fprs ? &_imported_key_list : NULL), 
+                                                        (changed_public_keys ? &_changed_keys : NULL));
                 break;
 
             default:
