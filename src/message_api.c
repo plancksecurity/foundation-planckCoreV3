@@ -1158,90 +1158,6 @@ pEp_error:
     return status;
 }
 
-static PEP_STATUS sign_PGP_MIME(
-    PEP_SESSION session,
-    const message *src,
-    const char* sign_fpr,
-    message *dst
-    )
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-    char *stext = NULL;
-    char *mimetext = NULL;
-    size_t ssize;
-    assert(dst->longmsg == NULL);
-    dst->enc_format = PEP_enc_none;
-
-    if (src->shortmsg)
-        dst->shortmsg = strdup(src->shortmsg);
-        
-    message *_src = calloc(1, sizeof(message));
-    assert(_src);
-    if (_src == NULL)
-        goto enomem;
-    _src->longmsg = src->longmsg;
-    _src->longmsg_formatted = src->longmsg_formatted;
-    _src->attachments = src->attachments;
-    _src->enc_format = PEP_enc_none;
-    
-    status = mime_encode_message(_src, true, &mimetext, false);
-    assert(status == PEP_STATUS_OK);
-    if (status != PEP_STATUS_OK)
-        goto pEp_error;
-
-    free(_src);
-    _src = NULL;
-    assert(mimetext);
-    if (EMPTYSTR(mimetext))
-        goto pEp_error;
-        
-    PEP_HASH_ALGO micalg = UNKNOWN_HASH_ALGO;
-        
-    status = sign_only(session, mimetext,
-                       strlen(mimetext),
-                       sign_fpr, 
-                       &stext, &ssize, &micalg);
-        
-    if (stext == NULL)
-        goto pEp_error;
-
-    dst->longmsg = strdup(mimetext);
-    assert(dst->longmsg);
-    if (dst->longmsg == NULL)
-        goto enomem;
-
-    const char* micalg_string = get_micalg_string(micalg);
-    if (!micalg_string) {
-        status = PEP_UNKNOWN_ERROR;
-        goto pEp_error;    
-    }
-        
-    char *v = strdup(micalg_string);
-    assert(v);
-    if (v == NULL)
-        goto enomem;
-
-    bloblist_t *_a = new_bloblist(v, strlen(v), "multipart/signed", NULL);
-    if (_a == NULL)
-        goto enomem;
-    dst->attachments = _a;
-
-    _a = bloblist_add(_a, stext, ssize, "application/pgp-signature",
-        "file://signature.asc");
-    if (_a == NULL)
-        goto enomem;
-
-    return PEP_STATUS_OK;
-
-enomem:
-    status = PEP_OUT_OF_MEMORY;
-
-pEp_error:
-    free(_src);
-    free(stext);
-    return status;
-}
-
 /*
 static bool _has_PGP_MIME_format(message* msg) {
     if (!msg || !msg->attachments || !msg->attachments->next)
@@ -1828,132 +1744,6 @@ static void _cleanup_src(message* src, bool remove_attached_key) {
     }                   
 }
 
-
-DYNAMIC_API PEP_STATUS message_sign_only(
-        PEP_SESSION session,
-        message *src,
-        message **dst
-    )
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-    message * msg = NULL;
-    message* _src = src;    
-    
-    assert(session);
-    assert(src && src->from);
-    assert(dst);
-
-    if (!(session && src && src->from && dst))
-        return PEP_ILLEGAL_VALUE;
-
-    if (src->dir == PEP_dir_incoming)
-        return PEP_ILLEGAL_VALUE;
-
-    *dst = NULL;
-
-    if (!src->from->user_id || src->from->user_id[0] == '\0') {
-        char* own_id = NULL;
-        status = get_default_own_userid(session, &own_id);
-        if (own_id) {
-            free(src->from->user_id);
-            src->from->user_id = own_id; // ownership transfer
-        }
-    }
-
-    status = myself(session, src->from);
-    
-    if (status != PEP_STATUS_OK)
-        goto pEp_error;
-
-    char* send_fpr = src->from->fpr;
-    if (EMPTYSTR(send_fpr))
-        return PEP_CANNOT_SIGN;
-        
-    identity_list * _il = NULL;
-
-    for (_il = src->to; _il && _il->ident; _il = _il->next) {
-        PEP_STATUS _status = PEP_STATUS_OK;
-        if (!is_me(session, _il->ident)) {
-            // Do this to get saved user data (name, etc), not for keys here
-            _status = update_identity(session, _il->ident);
-            if (_status == PEP_CANNOT_FIND_IDENTITY)
-                _status = PEP_STATUS_OK;
-                        
-            _status = bind_own_ident_with_contact_ident(session, src->from, _il->ident);
-            if (_status != PEP_STATUS_OK) {
-                status = PEP_UNKNOWN_DB_ERROR;
-                goto pEp_error;
-            }
-        }
-        else
-            _status = myself(session, _il->ident);
-            
-        if (_status != PEP_STATUS_OK)
-            goto pEp_error;
-    }
-
-    for (_il = src->cc; _il && _il->ident; _il = _il->next) {
-        PEP_STATUS _status = PEP_STATUS_OK;
-        if (!is_me(session, _il->ident)) {
-            // Do this to get saved user data (name, etc), not for keys here
-            _status = update_identity(session, _il->ident);
-            if (_status == PEP_CANNOT_FIND_IDENTITY)
-                _status = PEP_STATUS_OK;
-                        
-            _status = bind_own_ident_with_contact_ident(session, src->from, _il->ident);
-            if (_status != PEP_STATUS_OK) {
-                status = PEP_UNKNOWN_DB_ERROR;
-                goto pEp_error;
-            }
-        }
-        else
-            _status = myself(session, _il->ident);
-            
-        if (_status != PEP_STATUS_OK)
-            goto pEp_error;
-    }
-    // We can do a whole BCC list since this is signing, not encrypting
-    for (_il = src->bcc; _il && _il->ident; _il = _il->next) {
-        PEP_STATUS _status = PEP_STATUS_OK;
-        if (!is_me(session, _il->ident)) {
-            // Do this to get saved user data (name, etc), not for keys here
-            _status = update_identity(session, _il->ident);
-            if (_status == PEP_CANNOT_FIND_IDENTITY)
-                _status = PEP_STATUS_OK;
-                        
-            _status = bind_own_ident_with_contact_ident(session, src->from, _il->ident);
-            if (_status != PEP_STATUS_OK) {
-                status = PEP_UNKNOWN_DB_ERROR;
-                goto pEp_error;
-            }
-        }
-        else
-            _status = myself(session, _il->ident);
-            
-        if (_status != PEP_STATUS_OK)
-            goto pEp_error;
-    }
-
-    msg = clone_to_empty_message(_src);                
-    status = sign_PGP_MIME(session, _src, src->from->fpr, msg);
-    if (status == PEP_STATUS_OK) {                
-        msg->enc_format = PEP_enc_sign_only;
-        *dst = msg;
-        return PEP_SIGNED_ONLY;
-    }
-    else {
-        status = PEP_CANNOT_SIGN;
-        goto pEp_error;
-    }    
-    
-pEp_error:
-    free_message(msg);
-    if (_src && _src != src)
-        free_message(_src);
-    return status;
-}
-
-
 static PEP_STATUS id_list_set_enc_format(PEP_SESSION session, identity_list* id_list, PEP_enc_format enc_format) {
     PEP_STATUS status = PEP_STATUS_OK;
     identity_list* id_list_curr = id_list;
@@ -2254,8 +2044,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             goto pEp_error;
     }
         
-    if (enc_format == PEP_enc_none || enc_format == PEP_enc_sign_only ||
-        !dest_keys_found || 
+    if (enc_format == PEP_enc_none || !dest_keys_found ||
         stringlist_length(keys)  == 0 ||
         _rating(max_comm_type) < PEP_rating_reliable)
     {
@@ -2266,17 +2055,6 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             added_key_to_real_src = true;
         }
         decorate_message(src, PEP_rating_undefined, NULL, true, true);
-        
-        // Now sign it
-        if (!(flags & PEP_encrypt_flag_force_unsigned) 
-            && (enc_format != PEP_enc_none) && !EMPTYSTR(src->from->fpr)) {
-            status = message_sign_only(session, src, dst);
-            if (status != PEP_SIGNED_ONLY)
-                goto pEp_error;
-
-            _cleanup_src(src, added_key_to_real_src);
-            return status;
-        }
         return PEP_UNENCRYPTED;
     }
     else {
@@ -4312,6 +4090,7 @@ static PEP_STATUS _decrypt_message(
                             }
                         }
                         else if (is_inner) {
+
                             // THIS is our message
                             // Now, let's make sure we've copied in 
                             // any information sent in by the app if

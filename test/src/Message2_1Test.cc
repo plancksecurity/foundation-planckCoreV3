@@ -6,7 +6,6 @@
 #include <string>
 
 #include "test_util.h"
-#include "mime.h"
 #include "TestConstants.h"
 
 #include "pEpEngine.h"
@@ -277,11 +276,6 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_1) {
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status , PEP_STATUS_OK);
 
-    char* testme = NULL;
-    
-    mime_encode_message(enc_msg, false, &testme, false);
-    output_stream << testme << endl;
-    
     // ensure sent message is in 2.0 format
     unsigned int major = 2;
     unsigned int minor = 1;

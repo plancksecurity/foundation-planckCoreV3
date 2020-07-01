@@ -116,7 +116,7 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
     message* enc_msg = NULL;
     
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, flags);
-    ASSERT_EQ(status, PEP_SIGNED_ONLY);
+    ASSERT_EQ(status, PEP_UNENCRYPTED);
     ASSERT_TRUE(is_pEpmsg(msg));
     
     // char* outmsg = NULL;
@@ -165,7 +165,7 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
     char* encmsg = NULL;
         
     status = MIME_encrypt_message(session, outmsg, strlen(outmsg), NULL, &encmsg, PEP_enc_PGP_MIME, 0);
-    ASSERT_EQ(status, PEP_SIGNED_ONLY);
+    ASSERT_EQ(status, PEP_UNENCRYPTED);
     ASSERT_NE(encmsg, nullptr);
     
     const char* contains = NULL;

@@ -113,21 +113,24 @@ TEST_F(Engine514Test, check_engine514_unencrypted) {
     
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
-    ASSERT_EQ(status, PEP_SIGNED_ONLY);
-    ASSERT_NE(enc_msg, nullptr);
-    ASSERT_NE(strstr(enc_msg->longmsg, "message/rfc822"), nullptr);
+    ASSERT_EQ(status, PEP_UNENCRYPTED);
+    ASSERT_EQ(enc_msg, nullptr);
+    ASSERT_STREQ(msg->attachments->mime_type, "message/rfc822");
+    ASSERT_NE(msg->attachments->next, nullptr);
     
     // Funny, it's not reproduceable here.
     char* output_str = NULL;
     mime_encode_message(msg, false, &output_str, false);
-    cout << output_str << endl;    
     char* find_the_mimetype = strstr(output_str, "message/rfc822");
     ASSERT_NE(find_the_mimetype, nullptr);
     find_the_mimetype = strstr(output_str, "text/rfc822");
     ASSERT_EQ(find_the_mimetype, nullptr);            
 }
 
-TEST_F(Engine514Test, check_engine514_unencrypted_second_position) {    
+TEST_F(Engine514Test, check_engine514_unencrypted_second_position) {
+    // Next time, provide a sample for reproduction so I don't have to do crap like this. 
+    // A text file will do just fine.
+    
     // Create sample internal message attachment 
     
     message* not_the_msg = new_message(PEP_dir_outgoing);
@@ -163,7 +166,7 @@ TEST_F(Engine514Test, check_engine514_unencrypted_second_position) {
     
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
-    ASSERT_EQ(status, PEP_SIGNED_ONLY);
+    ASSERT_EQ(status, PEP_UNENCRYPTED);
     ASSERT_EQ(enc_msg, nullptr);
     ASSERT_STREQ(msg->attachments->next->mime_type, "message/rfc822");
     ASSERT_NE(msg->attachments->next->next, nullptr);

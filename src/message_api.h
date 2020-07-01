@@ -60,27 +60,6 @@ typedef enum _message_wrap_type {
     PEP_message_key_reset   // for wrapped key reset information
 } message_wrap_type;
 
-// message_sign_only() - sign message and return generated signature as well as encoded signed text
-//
-//  parameters:
-//      session (in)        session handle
-//      src (in)            message to sign
-//      dst (out)           pointer to new signed message or NULL if no
-//                          encryption could take place
-//
-//  return value:
-//      PEP_SIGNED_ONLY                 on success
-//      PEP_CANNOT_SIGN                 on failure
-//
-//  caveat:
-//      the ownership of src remains with the caller
-//      the ownership of dst goes to the caller
-DYNAMIC_API PEP_STATUS message_sign_only(
-        PEP_SESSION session,
-        message *src,
-        message **dst
-    );
-
 // encrypt_message() - encrypt message in memory
 //
 //  parameters:
@@ -98,13 +77,9 @@ DYNAMIC_API PEP_STATUS message_sign_only(
 //      PEP_STATUS_OK                   on success
 //      PEP_KEY_HAS_AMBIG_NAME          at least one of the receipient keys has
 //                                      an ambiguous name
-//      PEP_SIGNED_ONLY                 when no recipients have usable key
-//                                      and we are not forced to not sign the message,
-//                                      a signed-only result is returned with this status 
 //      PEP_UNENCRYPTED                 on demand or no recipients with usable
 //                                      key, is left unencrypted, and key is
 //                                      attached to it
-//      PEP_CANNOT_SIGN                 An attempt was made to sign-only and failed.
 //
 //  caveat:
 //      the ownership of src remains with the caller

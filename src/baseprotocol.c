@@ -54,7 +54,7 @@ PEP_STATUS base_decorate_message(
     if (fpr && fpr[0] != '\0') {
         char *sign;
         size_t sign_size;
-        status = sign_only(session,  payload, size, fpr, &sign, &sign_size, NULL);
+        status = sign_only(session,  payload, size, fpr, &sign, &sign_size);
         if (status)
             goto error;
 

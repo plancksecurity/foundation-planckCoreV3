@@ -342,15 +342,3 @@ stringlist_t* string_to_stringlist(const char* str) {
     }
     return retval;
 }
-
-stringlist_t** advance_to_end(stringlist_t** head_pp) {
-    if (!head_pp)
-        return NULL;
-    
-    stringlist_t** retval = head_pp;
-    
-    while (*retval) {
-        retval = &((*retval)->next);
-    }    
-    return retval;
-}

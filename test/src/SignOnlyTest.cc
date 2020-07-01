@@ -7,7 +7,6 @@
 #include <fstream>
 
 #include "pEpEngine.h"
-#include "mime.h"
 
 #include "test_util.h"
 #include "TestConstants.h"
@@ -98,7 +97,7 @@ TEST_F(SignOnlyTest, check_sign_only) {
 
     stringlist_t* keylist = NULL;
 
-    PEP_STATUS status = sign_only(session, msg_text.c_str(), msg_text.size(), alice_fpr, &signed_text, &signed_text_size, NULL);
+    PEP_STATUS status = sign_only(session, msg_text.c_str(), msg_text.size(), alice_fpr, &signed_text, &signed_text_size);
     ASSERT_EQ(status , PEP_STATUS_OK);
     output_stream << signed_text << endl;
     test_file.open("tmp/signature.txt");
@@ -119,37 +118,4 @@ TEST_F(SignOnlyTest, check_sign_only) {
 
     // FIXME: free stuff
 
-}
-TEST_F(SignOnlyTest, check_signed_message) {
-    const char* alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
-    PEP_STATUS status = read_file_and_import_key(session,
-                "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");
-    assert(status == PEP_KEY_IMPORTED);
-    pEp_identity* alice = NULL;
-    status = set_up_ident_from_scratch(session,
-                "test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc",
-                "pep.test.alice@pep-project.org", alice_fpr,
-                "ALICE", "Alice in Wonderland", &alice, true);
-    assert(status == PEP_STATUS_OK);            
-    status = set_identity(session, alice);    
-    assert(status == PEP_STATUS_OK);            
-    status = set_own_key(session, alice, alice_fpr);
-    
-    message* msg = new_message(PEP_dir_outgoing);    
-    msg->from = identity_dup(alice);
-    msg->to = new_identity_list(identity_dup(alice));
-    msg->shortmsg = strdup("Sign this, baby");
-    msg->longmsg = strdup("Nah really, sign this.");
-    msg->enc_format = PEP_enc_sign_only;
-    
-    message* enc_msg = NULL;
-    
-    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_sign_only, 0);
-    
-    char* outmsg = NULL;
-    
-    status = mime_encode_message(enc_msg, false, &outmsg, false);
-    
-    cout << outmsg << endl; 
-    
 }

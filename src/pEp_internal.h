@@ -560,38 +560,3 @@ static inline int Sqlite3_step(sqlite3_stmt* stmt)
     } while (rc == SQLITE_BUSY || rc == SQLITE_LOCKED);
     return rc;
 }
-
-static inline const char* get_micalg_string(PEP_HASH_ALGO micalg) {
-    switch (micalg) {
-        case MD5:
-            return "pgp-md5";
-        case SHA1:    
-            return "pgp-sha1";
-        case RMD160:
-            return "pgp-ripemd160";
-        case MD2:    
-            return "pgp-md2";
-        case TIGER:    
-            return "pgp-tiger192";
-        case HAVAL:    
-            return "pgp-haval";
-        case SHA256:    
-            return "pgp-sha256";
-        case SHA384:    
-            return "pgp-sha384";
-        case SHA512:    
-            return "pgp-sha512";
-        case SHA224:    
-            return "pgp-sha224";
-        case MD4:                
-            return "pgp-md4";
-        case CRC32:    
-            return "pgp-crc32";
-        case CRC32_RFC1510:    
-            return "pgp-crc32rfc1510";
-        case CRC32_RFC2440:    
-            return "pgp-crc24rfc2440";
-        default:
-            return NULL;
-    }
-}

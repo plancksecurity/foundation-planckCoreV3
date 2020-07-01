@@ -40,7 +40,7 @@ typedef PEP_STATUS (*encrypt_only_t)(
 
 typedef PEP_STATUS (*sign_only_t)(
         PEP_SESSION session, const char* fpr, const char *ptext,
-        size_t psize, char **stext, size_t *ssize, PEP_HASH_ALGO* micalg
+        size_t psize, char **stext, size_t *ssize
     );
 
 typedef PEP_STATUS (*delete_keypair_t)(PEP_SESSION session, const char *fpr);

@@ -554,8 +554,7 @@ TEST_F(KeyResetMessageTest, check_receive_message_to_revoked_key_from_contact) {
     message* enc_outgoing_msg = nullptr;
     output_stream << "Calling encrypt_message()\n";
     status = encrypt_message(session, outgoing_msg, NULL, &enc_outgoing_msg, PEP_enc_PGP_MIME, 0);
-    ASSERT_EQ(status, PEP_SIGNED_ONLY);
-    ASSERT_EQ(enc_outgoing_msg->enc_format, PEP_enc_sign_only);
+    ASSERT_EQ(status , PEP_UNENCRYPTED);
     //
     output_stream << "Message created." << endl;
 
