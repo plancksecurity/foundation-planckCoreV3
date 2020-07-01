@@ -35,6 +35,11 @@ typedef enum _sync_handshake_signal {
     // forming group
     // SYNC_NOTIFY_FORMING_GROUP = 10,
 
+    // these two notifications must be evaluated by applications, which are
+    // using a Desktop Adapter
+    SYNC_NOTIFY_START = 126,
+    SYNC_NOTIFY_STOP = 127,
+
     // message cannot be sent, need passphrase
     SYNC_PASSPHRASE_REQUIRED = 128,
 
