@@ -1184,7 +1184,6 @@ static PEP_STATUS sign_PGP_MIME(
     _src->attachments = src->attachments;
     _src->enc_format = PEP_enc_none;
     
-    // Wait, what? Shouldn't have pEp message attachment.
     status = mime_encode_message(_src, true, &mimetext, false);
     assert(status == PEP_STATUS_OK);
     if (status != PEP_STATUS_OK)
