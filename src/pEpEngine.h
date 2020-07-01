@@ -1463,6 +1463,22 @@ DYNAMIC_API PEP_STATUS config_passphrase(PEP_SESSION session, const char *passph
 DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys(PEP_SESSION session, 
                                                 bool enable, 
                                                 const char *passphrase);
+// set_ident_enc_format() - set the default encryption format for this identity
+//                          (value only MIGHT be used, and only in the case where the
+//                          message enc_format is PEP_enc_auto. It will be used 
+//                          opportunistically in the case on a first-come, first-serve 
+//                          basis in the order of to_list, cc_list, and bcc_list. We take 
+//                          the first set value we come to)
+//
+//  parameters:
+//      session (in)            session handle
+//      identity (in)           identity->user_id and identity->address must NOT be NULL
+//      format (in)             the desired default encryption format
+//
+DYNAMIC_API PEP_STATUS set_ident_enc_format(PEP_SESSION session,
+                                            pEp_identity *identity,
+                                            PEP_enc_format format);
+
 
 PEP_STATUS _generate_keypair(PEP_SESSION session, 
                              pEp_identity *identity,
@@ -1534,11 +1550,7 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity, bool* exis
 PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr);
 
 PEP_STATUS set_pEp_version(PEP_SESSION session, pEp_identity* ident, unsigned int new_ver_major, unsigned int new_ver_minor);
-        
-PEP_STATUS set_ident_enc_format(PEP_SESSION session,
-                                pEp_identity *identity,
-                                PEP_enc_format format);
-        
+                
 PEP_STATUS clear_trust_info(PEP_SESSION session,
                             const char* user_id,
                             const char* fpr);

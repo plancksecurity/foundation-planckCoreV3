@@ -4021,7 +4021,7 @@ DYNAMIC_API PEP_STATUS unset_identity_flags(
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS set_ident_enc_format(
+DYNAMIC_API PEP_STATUS set_ident_enc_format(
         PEP_SESSION session,
         pEp_identity *identity,
         PEP_enc_format format
