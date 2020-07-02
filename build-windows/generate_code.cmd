@@ -73,8 +73,6 @@ DEL *-sample.c
 CD %pwd%\..
 RD /S/Q pEp
 MKDIR pEp
-XCOPY pEpEngine\src\*.h pEp\
-XCOPY libpEpAdapter\*.hh pEp\
-XCOPY libpEpAdapter\*.hxx pEp\
+XCOPY pEpEngine\src\*.h pEp\ /Y/F/I
 
 POPD
