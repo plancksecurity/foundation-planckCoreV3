@@ -4481,7 +4481,7 @@ PEP_STATUS replace_main_user_fpr_if_equal(PEP_SESSION session, const char* user_
                                           const char* new_fpr, const char* compare_fpr) {
     assert(session);
     assert(user_id);
-    assert(new_fpr);
+    assert(compare_fpr);
     
     if (!session || !user_id || !compare_fpr)
         return PEP_ILLEGAL_VALUE;
