@@ -299,8 +299,18 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
     assert(shortmsg);
     
     unsigned char pEpstr[] = PEP_SUBJ_STRING;
-    assert(strcmp(shortmsg, "pEp") != 0 && _unsigned_signed_strcmp(pEpstr, shortmsg, PEP_SUBJ_BYTELEN) != 0); 
+
+    // assert(strcmp(shortmsg, "pEp") != 0 && _unsigned_signed_strcmp(pEpstr, shortmsg, PEP_SUBJ_BYTELEN) != 0); 
+    // in case encrypt_message() is called twice with a different passphrase this was done already
     
+    if (strcmp(shortmsg, "pEp") == 0 || _unsigned_signed_strcmp(pEpstr, shortmsg, PEP_SUBJ_BYTELEN) == 0) {
+        char *ptext = strdup(longmsg);
+        assert(ptext);
+        if (!ptext)
+            return NULL;
+        return ptext;
+    }
+
     if (!shortmsg || strcmp(shortmsg, "pEp") == 0 || 
                      _unsigned_signed_strcmp(pEpstr, shortmsg, PEP_SUBJ_BYTELEN) == 0) {
         if (!longmsg) {
