@@ -264,13 +264,9 @@ PEP_STATUS try_base_prepare_message(
                 if (!_me)
                     return PEP_OUT_OF_MEMORY;
                 session->notifyHandshake(_me, NULL, SYNC_PASSPHRASE_REQUIRED);
-                break;
             }
         }
-        else {
-            break;
-        }
-    } while (!status);
+    } while (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE);
 
     return status;
 }
