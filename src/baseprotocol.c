@@ -258,8 +258,8 @@ PEP_STATUS try_base_prepare_message(
         // then try passphrases
         status = base_prepare_message(session, me, partner, type, payload, size, fpr, result);
         if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
-            status = session->messageToSend(NULL);
-            if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
+            PEP_STATUS status2 = session->messageToSend(NULL);
+            if (status2 == PEP_PASSPHRASE_REQUIRED || status2 == PEP_WRONG_PASSPHRASE) {
                 pEp_identity *_me = identity_dup(me);
                 if (!_me)
                     return PEP_OUT_OF_MEMORY;
