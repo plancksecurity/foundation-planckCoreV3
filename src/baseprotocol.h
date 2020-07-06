@@ -1,3 +1,4 @@
+// This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
 #pragma once
@@ -104,6 +105,22 @@ PEP_STATUS base_extract_message(
         char **fpr
     );
 
+
+// this is the internal function to be used by asynchronous network protocol
+// implementations
+//
+// this function is calling messageToSend(NULL) in case there is a missing or wrong passphrase
+
+PEP_STATUS try_base_prepare_message(
+        PEP_SESSION session,
+        const pEp_identity *me,
+        const pEp_identity *partner,
+        base_protocol_type type,
+        char *payload,
+        size_t size,
+        const char *fpr,
+        message **result
+    );
 
 #ifdef __cplusplus
 }
