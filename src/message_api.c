@@ -1776,6 +1776,38 @@ static void update_encryption_format(identity_list* id_list, PEP_enc_format* enc
     }
 }
 
+PEP_STATUS probe_encrypt(PEP_SESSION session, const char *fpr)
+{
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    if (EMPTYSTR(fpr))
+        return PEP_KEY_NOT_FOUND;
+
+    stringlist_t *keylist = new_stringlist(fpr);
+    if (!keylist)
+        return PEP_OUT_OF_MEMORY;
+
+    char *ctext = NULL;
+    size_t csize = 0;
+    PEP_STATUS status = encrypt_and_sign(session, keylist, "pEp", 4, &ctext, &csize);
+    free(ctext);
+
+    return status;
+}
+
+static bool failed_test(PEP_STATUS status)
+{
+    if (status == PEP_OUT_OF_MEMORY ||
+            status == PEP_PASSPHRASE_REQUIRED ||
+            status == PEP_WRONG_PASSPHRASE  ||
+            status == PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED)
+        return true;
+
+    return false;
+}
+
 DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_SESSION session,
         message *src,
@@ -1823,6 +1855,11 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     status = myself(session, src->from);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
+
+    // is a passphrase needed?
+    status = probe_encrypt(session, src->from->fpr);
+    if (failed_test(status))
+        return status;
 
     char* send_fpr = strdup(src->from->fpr ? src->from->fpr : "");
     src->_sender_fpr = send_fpr;
@@ -2233,6 +2270,11 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
     if (status != PEP_STATUS_OK)
         goto pEp_free;
 
+    // is a passphrase needed?
+    status = probe_encrypt(session, own_identity->fpr);
+    if (failed_test(status))
+        goto pEp_free;
+
     // Ok, now we know the address is an own address. All good. Then...
     own_private_fpr = own_identity->fpr;
     own_identity->fpr = strdup(to_fpr);
@@ -2415,6 +2457,11 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     if (!target_fpr)
         return PEP_KEY_NOT_FOUND; // FIXME: Error condition
  
+    // is a passphrase needed?
+    status = probe_encrypt(session, target_fpr);
+    if (failed_test(status))
+        return status;
+
     keys = new_stringlist(target_fpr);
     
     stringlist_t *_k = keys;
