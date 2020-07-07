@@ -197,6 +197,11 @@ have found a dastardly bug in the engine, but it can also be a test issue.
   gdb --args ./EngineTests --gtest_filter=TestSuiteName.test_function_name
   ```
 
+N.B. The gtest_filter can be globbed and will run all matching tests; if you
+want to run every test in a test suite, be sure to use TestSuiteName*.
+
+(Different shells will require different quoting styles for this - YMMV.)
+
 When debugging a failing test, use '--gtest_break_on_failure' to have
 gtest automatically break into the debugger where the assertion fails.
 

@@ -412,7 +412,41 @@ tstylesheet {
                 assert(session && fsm > None && message_type > None);
                 if (!(session && fsm > None && message_type > None))
                     return PEP_ILLEGAL_VALUE;
-                
+            ||
+            if "fsm/message[@ratelimit>0]" {
+            ||
+
+                // test if a message with a rate limit was just sent; in case drop
+                time_t now = time(NULL);
+                switch (fsm) {
+            ||
+            for "fsm[message/@ratelimit>0]" {
+            ||
+                    case Sync_PR_«yml:lcase(@name)»:
+                        switch (message_type) {
+            ||
+            for "message[@ratelimit>0]"
+            ||
+                            case «../@name»_PR_«yml:mixedCase(@name)»:
+                                if (now < session->«yml:lcase(../../@name)»_state.own.last_«../@name»_«@name» + «@ratelimit»)
+                                    return PEP_STATUS_OK;
+                                break;
+            ||
+            ||
+                            default:
+                                break;
+                        }
+                        break;
+            ||
+            }
+            ||
+                    default:
+                        break;
+                }
+            ||
+            }
+            ||
+
                 «@name»_t *msg = new_«@name»_message(fsm, message_type);
                 if (!msg)
                     return PEP_OUT_OF_MEMORY;
@@ -534,7 +568,7 @@ tstylesheet {
                     switch (message_type) {
                     `` for "fsm/message[@security='unencrypted' and ../@name!='KeySync']" | #error unencrypted only allowed with KeySync
                     `` for "fsm/message[@security='unencrypted' and ../@name='KeySync']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
-                            status = base_prepare_message(
+                            status = try_base_prepare_message(
                                     session,
                                     li->ident,
                                     li->ident,
@@ -584,7 +618,7 @@ tstylesheet {
                                 goto the_end;
                             }
 
-                            status = encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
+                            status = try_encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
                             if (status) {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 goto the_end;
@@ -765,7 +799,7 @@ tstylesheet {
                             }
                             key_data = NULL;
 
-                            status = encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
+                            status = try_encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
                             if (status) {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 goto the_end;
@@ -871,7 +905,7 @@ tstylesheet {
                             key_data = NULL;
 
                             // we do not support extra keys here and will only encrypt to ourselves
-                            status = encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
+                            status = try_encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
                             if (status) {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 goto the_end;
@@ -897,7 +931,7 @@ tstylesheet {
                                 goto the_end;
                             }
 
-                            status = encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
+                            status = try_encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
                             if (status) {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 goto the_end;
@@ -910,6 +944,37 @@ tstylesheet {
                     status = session->messageToSend(m);
                     m = NULL;
                 }
+            ||
+            if "fsm/message[@ratelimit>0]" {
+            ||
+
+                switch (fsm) {
+            ||
+            for "fsm[message/@ratelimit>0]" {
+            ||
+                    case Sync_PR_«yml:lcase(@name)»:
+                        switch (message_type) {
+            ||
+            for "message[@ratelimit>0]"
+            ||
+                            case «../@name»_PR_«yml:mixedCase(@name)»:
+                                session->«yml:lcase(../../@name)»_state.own.last_«../@name»_«@name» = now;
+                                break;
+            ||
+            ||
+                            default:
+                                break;
+                        }
+                        break;
+            ||
+            }
+            ||
+                    default:
+                        break;
+                }
+            ||
+            }
+            ||
 
             the_end:
                 free_stringlist(extra);

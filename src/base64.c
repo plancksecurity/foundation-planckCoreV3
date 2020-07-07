@@ -85,18 +85,22 @@ bloblist_t* base64_str_to_binary_blob(const char* input, int length) {
         return NULL;
     
     trim_end(input, &length);
-        
+    
+    void* blobby = NULL;
+    
     const char* input_curr;
     input_curr = input;
     const char* input_end = input_curr + length;
     length = subtract_whitespace(input, length);
     size_t final_length = (length / 4) * 3;
 
-    // padded -- FIXME: whitespace in between ==!!!! 
-    if (*(input_end - 1) == '=') {
+    // padded -- FIXME: whitespace in between ==!!!!
+    if (final_length && *(input_end - 1) == '=') {
         final_length -= 1;
         
-        if (*(input_end - 2) == '=')
+        // if final length is now decreased by 1 and greater than 0,
+        // we know there's a char at (input_end - 2).
+        if (final_length && *(input_end - 2) == '=')
             final_length -=1;
     }
     else {
@@ -115,7 +119,11 @@ bloblist_t* base64_str_to_binary_blob(const char* input, int length) {
                 return NULL;
         }
     }
-    void* blobby = calloc(final_length, 1);
+    
+    if (!final_length)
+        goto pEp_error;
+        
+    blobby = calloc(final_length, 1);
     char* blobby_curr = (char*)blobby;
 
     // if the last 1 or 2 bytes are padded, we do those after
@@ -217,4 +225,3 @@ pEp_error:
     free(blobby);
     return NULL;
 }    
-

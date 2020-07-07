@@ -130,7 +130,7 @@ TEST_F(LeastCommonDenomColorTest, check_least_common_denom_color) {
     PEP_rating rating;
     PEP_decrypt_flags_t flags;
 
-    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(msg_ptr, nullptr);
 
@@ -179,7 +179,7 @@ TEST_F(LeastCommonDenomColorTest, check_least_common_denom_color) {
     keylist = nullptr;
     rating = PEP_rating_unreliable;
 
-    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(msg_ptr, nullptr);
     flags = 0;

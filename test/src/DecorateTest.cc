@@ -129,7 +129,7 @@ TEST_F(DecorateTest, check_decorate) {
     ASSERT_NE(encrypted_msg, nullptr);
     output_stream << "message encrypted.\n";
 
-    status = mime_encode_message(encrypted_msg, false, &encoded_text);
+    status = mime_encode_message(encrypted_msg, false, &encoded_text, false);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(encoded_text, nullptr);
 

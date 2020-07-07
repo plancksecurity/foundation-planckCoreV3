@@ -17,7 +17,18 @@ extern "C" {
 #include "labeled_int_list.h"    
 #include "timestamp.h"
 
-#define PEP_VERSION "2.1" // protocol version
+#define PEP_VERSION "2.1" // pEp *protocol* version
+
+// RELEASE version this targets
+// (string: major.minor.patch)
+#define PEP_ENGINE_VERSION "2.1.0"
+
+// Numeric values of above:
+#define PEP_ENGINE_VERSION_MAJOR 2
+#define PEP_ENGINE_VERSION_MINOR 1
+#define PEP_ENGINE_VERSION_PATCH 0
+#define PEP_ENGINE_VERSION_RC    11
+
 
 #define PEP_OWN_USERID "pEp_own_userId"
     
@@ -121,6 +132,10 @@ typedef enum {
     PEP_STATEMACHINE_INHIBITED_EVENT                = 0x0986,
     PEP_STATEMACHINE_CANNOT_SEND                    = 0x0987,
 
+    PEP_PASSPHRASE_REQUIRED                         = 0x0a00,
+    PEP_WRONG_PASSPHRASE                            = 0x0a01,
+    PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED            = 0x0a02,
+
     PEP_DISTRIBUTION_ILLEGAL_MESSAGE                = 0x1002,
 
     PEP_COMMIT_FAILED                               = 0xff01,
@@ -137,6 +152,18 @@ typedef enum {
     
     PEP_VERSION_MISMATCH                            = -7,
 } PEP_STATUS;
+
+typedef enum _PEP_enc_format {
+    PEP_enc_none = 0,                       // message is not encrypted
+    PEP_enc_pieces = 1,                     // inline PGP + PGP extensions, was removed
+    PEP_enc_inline = 1,                     // still there
+    PEP_enc_S_MIME,                         // RFC5751
+    PEP_enc_PGP_MIME,                       // RFC3156
+    PEP_enc_PEP,                            // pEp encryption format
+    PEP_enc_PGP_MIME_Outlook1,              // Message B0rken by Outlook type 1
+    PEP_enc_inline_EA,
+    PEP_enc_auto = 255                      // figure out automatically where possible
+} PEP_enc_format;
 
 
 // messageToSend() - a message needs to be delivered by application
@@ -609,8 +636,9 @@ typedef struct _pEp_identity {
     char lang[3];               // language of conversation
                                 // ISO 639-1 ALPHA-2, last byte is 0
     bool me;                    // if this is the local user herself/himself
-    unsigned int major_ver;              // highest version of pEp message received, if any
-    unsigned int minor_ver;              // highest version of pEp message received, if any
+    unsigned int major_ver;     // highest version of pEp message received, if any
+    unsigned int minor_ver;     // highest version of pEp message received, if any
+    PEP_enc_format enc_format;  // Last specified format we encrypted to for this identity
     identity_flags_t flags;     // identity_flag1 | identity_flag2 | ...
 } pEp_identity;
 
@@ -884,10 +912,11 @@ DYNAMIC_API PEP_STATUS delete_keypair(PEP_SESSION session, const char *fpr);
 // import_key() - import key from data
 //
 //  parameters:
-//      session (in)            session handle
-//      key_data (in)           key data, i.e. ASCII armored OpenPGP key
-//      size (in)               amount of data to handle
-//      private_keys (out)      list of private keys that have been imported
+//      session (in)                session handle
+//      key_data (in)               key data, i.e. ASCII armored OpenPGP key
+//      size (in)                   amount of data to handle
+//      private_keys (out)          list of identities containing the 
+//                                  private keys that have been imported
 //
 //  return value:
 //      PEP_STATUS_OK = 0       key was successfully imported
@@ -902,8 +931,46 @@ DYNAMIC_API PEP_STATUS import_key(
         PEP_SESSION session,
         const char *key_data,
         size_t size,
-        identity_list **private_keys
+        identity_list **private_keys       
     );
+
+// _import_key_with_fpr_return() - 
+//                INTERNAL FUNCTION - import keys from data, return optional list 
+//                of fprs imported
+//
+//  parameters:
+//      session (in)                session handle
+//      key_data (in)               key data, i.e. ASCII armored OpenPGP key
+//      size (in)                   amount of data to handle
+//      private_keys (out)          list of identities containing the 
+//                                  private keys that have been imported
+//      imported_keys (out)         if non-NULL, list of actual keys imported
+//      changed_public_keys (out)   if non-NULL AND imported_keys is non-NULL:
+//                                  bitvector - corresponds to the first 64 keys
+//                                  imported. If nth bit is set, import changed a
+//                                  key corresponding to the nth element in
+//                                  imported keys (i.e. key was in DB and was
+//                                  changed by import)
+//
+//  return value:
+//      PEP_STATUS_OK = 0       key was successfully imported
+//      PEP_OUT_OF_MEMORY       out of memory
+//      PEP_ILLEGAL_VALUE       there is no key data to import, or imported keys was NULL and 
+//                              changed_public_keys was not
+//
+//  caveat:
+//      private_keys and imported_keys goes to the ownership of the caller
+//      private_keys and imported_keys can be left NULL, it is then ignored
+//      *** THIS IS THE ACTUAL FUNCTION IMPLEMENTED BY CRYPTOTECH "import_key" ***
+
+PEP_STATUS _import_key_with_fpr_return(
+        PEP_SESSION session,
+        const char *key_data,
+        size_t size,
+        identity_list** private_keys,
+        stringlist_t** imported_keys,
+        uint64_t* changed_public_keys // use as bit field for the first 64 changed keys
+);
 
 
 // export_key() - export ascii armored key
@@ -1009,6 +1076,24 @@ DYNAMIC_API PEP_STATUS send_key(PEP_SESSION session, const char *pattern);
 //  <http://msdn.microsoft.com/en-us/library/windows/desktop/aa366711(v=vs.85).aspx>
 
 DYNAMIC_API void pEp_free(void *p);
+
+
+// pEp_realloc() - reallocate memory allocated by pEp engine
+//
+//  parameters:
+//      p (in)                  pointer to free
+//      size (in)               new memory size
+//
+//  returns:
+//      pointer to allocated memory
+//
+//  The reason for this function is that heap management can be a pretty
+//  complex task with Windoze. This realloc() version calls the realloc()
+//  implementation of the C runtime library which was used to build pEp engine,
+//  so you're using the correct heap. For more information, see:
+//  <http://msdn.microsoft.com/en-us/library/windows/desktop/aa366711(v=vs.85).aspx>
+
+DYNAMIC_API void *pEp_realloc(void *p, size_t size);
 
 
 // get_trust() - get the trust level a key has for a person
@@ -1321,6 +1406,79 @@ DYNAMIC_API const char *per_user_directory(void);
 
 DYNAMIC_API const char *per_machine_directory(void);
 
+// FIXME: replace in canonical style
+//
+// config_passphrase() - configure a key passphrase for the current session.
+//
+// A passphrase can be configured into a p≡p session. Then it is used whenever a
+// secret key is used which requires a passphrase.
+// 
+// A passphrase is a string between 1 and 1024 bytes and is only ever present in
+// memory. Because strings in the p≡p engine are UTF-8 NFC, the string is
+// restricted to 250 code points in UI.
+// 
+// This function copies the passphrase into the session. It may return
+// PEP_OUT_OF_MEMORY. The behaviour of all functions which use secret keys may
+// change after this is configured.  Error behaviour
+// 
+// For any function which may trigger the use of a secret key, if an attempt
+// to use a secret key which requires a passphrase occurs and no passphrase
+// is configured for the current session, PEP_PASSPHRASE_REQUIRED is
+// returned by this function (and thus, all functions which could trigger
+// such a usage must be prepared to return this value).  For any function
+// which may trigger the use of a secret key, if a passphrase is configured
+// and the configured passphrase is the wrong passphrase for the use of a
+// given passphrase-protected secret key, PEP_WRONG_PASSPHRASE is returned
+// by this function (and thus, all functions which could trigger such a
+// usage must be prepared to return this value).
+
+DYNAMIC_API PEP_STATUS config_passphrase(PEP_SESSION session, const char *passphrase);
+
+// FIXME: replace in canonical style
+//
+// Passphrase enablement for newly-generated secret keys
+// 
+// If it is desired that new p≡p keys are passphrase-protected, the following
+// API call is used to enable the addition of passphrases to new keys during key
+// generation.
+//
+// If enabled and a passphrase for new keys has been configured
+// through this function (NOT the one above - this is a separate passphrase!),
+// then anytime a secret key is generated while enabled, the configured
+// passphrase will be used as the passphrase for any newly-generated secret key.
+//
+// If enabled and a passphrase for new keys has not been configured, then any
+// function which can attempt to generate a secret key will return
+// PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED.  
+//
+// If disabled (i.e. not enabled) and a passphrase for new keys has been
+// configured, no passphrases will be used for newly-generated keys.
+//
+// This function copies the passphrase for new keys into a special field that is
+// specifically for key generation into the session. It may return
+// PEP_OUT_OF_MEMORY. The behaviour of all functions which use secret keys may
+// change after this is configured.
+//
+
+DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys(PEP_SESSION session, 
+                                                bool enable, 
+                                                const char *passphrase);
+// set_ident_enc_format() - set the default encryption format for this identity
+//                          (value only MIGHT be used, and only in the case where the
+//                          message enc_format is PEP_enc_auto. It will be used 
+//                          opportunistically in the case on a first-come, first-serve 
+//                          basis in the order of to_list, cc_list, and bcc_list. We take 
+//                          the first set value we come to)
+//
+//  parameters:
+//      session (in)            session handle
+//      identity (in)           identity->user_id and identity->address must NOT be NULL
+//      format (in)             the desired default encryption format
+//
+DYNAMIC_API PEP_STATUS set_ident_enc_format(PEP_SESSION session,
+                                            pEp_identity *identity,
+                                            PEP_enc_format format);
+
 
 PEP_STATUS _generate_keypair(PEP_SESSION session, 
                              pEp_identity *identity,
@@ -1392,7 +1550,7 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity, bool* exis
 PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr);
 
 PEP_STATUS set_pEp_version(PEP_SESSION session, pEp_identity* ident, unsigned int new_ver_major, unsigned int new_ver_minor);
-
+                
 PEP_STATUS clear_trust_info(PEP_SESSION session,
                             const char* user_id,
                             const char* fpr);
@@ -1442,6 +1600,7 @@ PEP_STATUS set_all_userids_to_own(PEP_SESSION session,
 
 PEP_STATUS has_partner_contacted_address(PEP_SESSION session, const char* partner_id,
                                          const char* own_address, bool* was_contacted);
+                                                                                  
 #ifdef __cplusplus
 }
 #endif

@@ -574,6 +574,7 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     }
     
     transfer_ident_lang_and_flags(return_id, stored_ident);
+    return_id->enc_format = stored_ident->enc_format;    
         
     if (return_id->comm_type == PEP_ct_unknown)
         return_id->comm_type = PEP_ct_key_not_found;
@@ -1061,11 +1062,19 @@ PEP_STATUS _myself(PEP_SESSION session,
     assert(session);
     assert(identity);
     assert(!EMPTYSTR(identity->address));
-    assert(!EMPTYSTR(identity->user_id));
 
-    if (!session || !identity || EMPTYSTR(identity->address) ||
-        EMPTYSTR(identity->user_id))
+    if (!session || EMPTYSTR(identity->address))
         return PEP_ILLEGAL_VALUE;
+
+    // this is leading to crashes otherwise
+
+    if (!(identity->user_id && identity->user_id[0])) {
+        free(identity->user_id);
+        identity->user_id = strdup(PEP_OWN_USERID);
+        assert(identity->user_id);
+        if (!identity->user_id)
+            return PEP_OUT_OF_MEMORY;
+    }
 
     pEp_identity *stored_identity = NULL;
     char* revoked_fpr = NULL; 
@@ -2020,5 +2029,99 @@ PEP_STATUS is_mistrusted_key(PEP_SESSION session, const char* fpr,
     }
 
     sqlite3_reset(session->is_mistrusted_key);
+    return status;
+}
+
+static PEP_STATUS _wipe_default_key_if_invalid(PEP_SESSION session,
+                                         pEp_identity* ident) {
+    
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    if (!ident->user_id)
+        return PEP_ILLEGAL_VALUE;
+        
+    if (!ident->fpr)
+        return status;
+    
+    char* cached_fpr = strdup(ident->fpr);
+    if (!ident->fpr)
+        return PEP_OUT_OF_MEMORY;
+        
+    PEP_STATUS keystatus = validate_fpr(session, ident, true, false);
+    switch (keystatus) {
+        case PEP_STATUS_OK:
+            // Check for non-renewable expiry and 
+            // if so, fallthrough
+            if (ident->comm_type != PEP_ct_key_expired_but_confirmed &&
+                    ident->comm_type != PEP_ct_key_expired) {
+                break;
+            }        
+        case PEP_KEY_UNSUITABLE:
+        case PEP_KEY_BLACKLISTED:
+            // Remove key as default for all identities and users 
+            status = remove_fpr_as_default(session, cached_fpr);
+            break;   
+        default:
+            break;
+    }     
+    free(cached_fpr);
+    
+    if (status == PEP_STATUS_OK)
+        status = myself(session, ident);
+            
+    return status;                                        
+}
+
+PEP_STATUS clean_own_key_defaults(PEP_SESSION session) {
+    identity_list* idents = NULL;
+    PEP_STATUS status = own_identities_retrieve(session, &idents);
+    if (status != PEP_STATUS_OK)
+        return status;
+        
+    if (!idents)
+        return PEP_STATUS_OK;
+
+    if (!idents->ident && !idents->next) {
+        free_identity_list(idents);
+        return PEP_STATUS_OK;
+    } // Kludge: FIX own_identities_retrieve. Should return NULL, not empty list    
+        
+    identity_list* curr = idents;
+    
+    for ( ; curr ; curr = curr->next) {
+        pEp_identity* ident = curr->ident;
+        if (!ident)
+            continue;
+        
+        _wipe_default_key_if_invalid(session, ident);    
+    }   
+    
+    free_identity_list(idents);
+    
+    // Also remove invalid default user key
+    char* own_id = NULL;
+
+    status = get_default_own_userid(session, &own_id);
+
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    if (own_id) {
+        char* user_default_key = NULL;
+        status = get_user_default_key(session, own_id, &user_default_key);
+        if (status != PEP_STATUS_OK) {
+            free(own_id);
+            if (status == PEP_KEY_NOT_FOUND)
+                status = PEP_STATUS_OK;
+            else
+                return status;
+        }
+        else if (user_default_key) {
+            pEp_identity* empty_user = new_identity(NULL, user_default_key, NULL, own_id);
+            _wipe_default_key_if_invalid(session, empty_user);       
+            free(user_default_key);
+        }
+        free(own_id);    
+    }
     return status;
 }

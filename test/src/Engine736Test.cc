@@ -1,27 +1,21 @@
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
-
 #include <stdlib.h>
-#include <cstring>
 #include <string>
-
-#include "test_util.h"
-#include "TestConstants.h"
+#include <cstring>
 
 #include "pEpEngine.h"
-
-#include "mime.h"
-
-
+#include "test_util.h"
+#include "TestConstants.h"
 #include "Engine.h"
+#include <iostream>
+#include <fstream>
 
 #include <gtest/gtest.h>
 
 
 namespace {
 
-	//The fixture for IOS1664Test
-    class IOS1664Test : public ::testing::Test {
+	//The fixture for Engine736Test
+    class Engine736Test : public ::testing::Test {
         public:
             Engine* engine;
             PEP_SESSION session;
@@ -29,14 +23,14 @@ namespace {
         protected:
             // You can remove any or all of the following functions if its body
             // is empty.
-            IOS1664Test() {
+            Engine736Test() {
                 // You can do set-up work for each test here.
                 test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->GTEST_SUITE_SYM();
                 test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
                 test_path = get_main_test_home_dir() + "/" + test_suite_name + "/" + test_name;
             }
 
-            ~IOS1664Test() override {
+            ~Engine736Test() override {
                 // You can do clean-up work that doesn't throw exceptions here.
             }
 
@@ -78,58 +72,49 @@ namespace {
             const char* test_suite_name;
             const char* test_name;
             string test_path;
-            // Objects declared here can be used by all tests in the IOS1664Test suite.
+            // Objects declared here can be used by all tests in the Engine736Test suite.
 
     };
 
 }  // namespace
 
 
-TEST_F(IOS1664Test, check_i_o_s1664) {
-    string email = slurp("test_mails/0.47.eml");
-    ASSERT_FALSE(email.empty());
+TEST_F(Engine736Test, check_engine736) {
+    // This is just a dummy test case. The convention is check_whatever_you_are_checking
+    // so for multiple test cases in a suite, be more explicit ;)
+    
+    pEp_identity* huss1 = new_identity("huss_android@huss.android.cool", NULL, PEP_OWN_USERID, "Huss (Android)");
+    PEP_STATUS status = myself(session, huss1);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(huss1->fpr, nullptr);
+    
+    // This is just so we can look at the keys externally and ensure the userid is OK.
+    char* key = NULL;
+    size_t size = 0;
+    status = export_key(session, huss1->fpr, &key, &size);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(key, nullptr);
+    ofstream outfile;
+    outfile.open("test_keys/736_a.asc");
+    outfile << key;
+    outfile.close();
+    
+    char* bad_uname = strdup("Huss #2 at (Android) with bad control character here ");
+    int ctrlchar_pos = strlen(bad_uname) - 1;
+    bad_uname[ctrlchar_pos] = 7; // bell! :)    
+    pEp_identity* huss2 = new_identity("huss_android2@huss.android.cool", NULL, PEP_OWN_USERID, bad_uname);
+    status = myself(session, huss2);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(huss2->fpr, nullptr);
 
-    message* message_mail = NULL;
-    bool raise_att;
-
-    PEP_STATUS status = _mime_decode_message_internal(email.c_str(), email.size(), &message_mail, &raise_att);
-    ASSERT_EQ(status , PEP_STATUS_OK && message_mail);
-
-    // create own identity here, because we want to reply, before we start.
-    pEp_identity* me = new_identity("android01@peptest.ch", NULL, PEP_OWN_USERID, NULL);
-    status = myself(session, me);
-
-    ASSERT_EQ(status , PEP_STATUS_OK && me->fpr != NULL && me->fpr[0] != '\0');
-
-    // Ok, now read the message
-    message* read_message = NULL;
-    stringlist_t* keylist;
-    PEP_rating rating;
-    PEP_decrypt_flags_t flags = 0;
-
-    status = decrypt_message(session, message_mail, &read_message, &keylist, &rating, &flags);
-    ASSERT_EQ(status , PEP_UNENCRYPTED);
-
-    pEp_identity* you = new_identity("superxat@gmail.com", NULL, NULL, NULL);
-
-    // N.B. while obviously it would be better to write the test expecting us to
-    // accept the key, I'm actually testing that we don't get the wrong status
-    // based on the presumption of rejection
-
-    message* out_msg = new_message(PEP_dir_outgoing);
-    out_msg->from = me;
-    out_msg->to = new_identity_list(you);
-    out_msg->shortmsg = strdup("Hussidente 2020!");
-    out_msg->longmsg = strdup("A Huss in every office!");
-
-    status = identity_rating(session, out_msg->from, &rating);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_EQ(rating , PEP_rating_trusted_and_anonymized);
-    status = identity_rating(session, out_msg->to->ident, &rating);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_EQ(rating , PEP_rating_reliable);
-
-    status = outgoing_message_rating(session, out_msg, &rating);
-    ASSERT_EQ(rating , PEP_rating_reliable);
+    free(key);
+    key = NULL;
+    size = 0;
+    status = export_key(session, huss2->fpr, &key, &size);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(key, nullptr);
+    outfile.open("test_keys/736_b.asc");
+    outfile << key;
+    outfile.close();
 
 }

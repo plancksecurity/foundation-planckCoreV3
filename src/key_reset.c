@@ -728,7 +728,7 @@ PEP_STATUS create_standalone_key_reset_message(PEP_SESSION session,
     message* output_msg = NULL;
     
     status = encrypt_message(session, reset_msg, NULL,
-                             &output_msg, PEP_enc_PGP_MIME,
+                             &output_msg, PEP_enc_auto,
                              PEP_encrypt_flag_key_reset_only);
 
     if (status == PEP_STATUS_OK)
@@ -780,6 +780,16 @@ PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
         
         // Check if it's us - if so, pointless...
         if (is_me(session, curr_id))
+            continue;
+            
+        // Also, don't bother to send it to non-pEp-users 
+        bool pEp_user = false;
+        status = is_pEp_user(session, curr_id, &pEp_user);
+
+        if (status != PEP_STATUS_OK)
+            goto pEp_free;
+
+        if (!pEp_user)
             continue;
             
         // Check if they've already been told - this shouldn't be the case, but...
@@ -964,7 +974,7 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
         
         // encrypt this baby and get out
         // extra keys???
-        status = encrypt_message(session, outmsg, NULL, &enc_msg, PEP_enc_PGP_MIME, PEP_encrypt_flag_key_reset_only);
+        status = encrypt_message(session, outmsg, NULL, &enc_msg, PEP_enc_auto, PEP_encrypt_flag_key_reset_only);
         
         if (status != PEP_STATUS_OK) {
             goto pEp_free;

@@ -173,6 +173,8 @@
 		4378C79223D1AF1700D1AF3F /* ElectGroupKeyResetLeader.c in Sources */ = {isa = PBXBuildFile; fileRef = 4378C79023D1AF1700D1AF3F /* ElectGroupKeyResetLeader.c */; };
 		438C43B52167752C00C7425B /* labeled_int_list.h in Headers */ = {isa = PBXBuildFile; fileRef = 438C43AF2167752C00C7425B /* labeled_int_list.h */; };
 		438C43B62167752C00C7425B /* labeled_int_list.c in Sources */ = {isa = PBXBuildFile; fileRef = 438C43B42167752C00C7425B /* labeled_int_list.c */; };
+		43C3778E246A8C0300962D22 /* internal_format.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C37788246A8C0300962D22 /* internal_format.h */; };
+		43C3778F246A8C0300962D22 /* internal_format.c in Sources */ = {isa = PBXBuildFile; fileRef = 43C3778D246A8C0300962D22 /* internal_format.c */; };
 		43E4FBB22362C05600BC01F4 /* NegotiationRequestGrouped.c in Sources */ = {isa = PBXBuildFile; fileRef = 43E4FBAD2362C05600BC01F4 /* NegotiationRequestGrouped.c */; };
 		43E4FBB42362C29100BC01F4 /* GroupHandshake.c in Sources */ = {isa = PBXBuildFile; fileRef = 43E4FBB32362C29100BC01F4 /* GroupHandshake.c */; };
 		43F6921D1F164A47009418F5 /* resource_id.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F6921C1F164A47009418F5 /* resource_id.c */; };
@@ -426,6 +428,8 @@
 		438C43962167582400C7425B /* sync_api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sync_api.h; path = ../src/sync_api.h; sourceTree = "<group>"; };
 		438C43AF2167752C00C7425B /* labeled_int_list.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = labeled_int_list.h; path = ../src/labeled_int_list.h; sourceTree = "<group>"; };
 		438C43B42167752C00C7425B /* labeled_int_list.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = labeled_int_list.c; path = ../src/labeled_int_list.c; sourceTree = "<group>"; };
+		43C37788246A8C0300962D22 /* internal_format.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = internal_format.h; path = ../src/internal_format.h; sourceTree = "<group>"; };
+		43C3778D246A8C0300962D22 /* internal_format.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = internal_format.c; path = ../src/internal_format.c; sourceTree = "<group>"; };
 		43D47A8A225CC60600E97C5B /* pEpTrustWords-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "pEpTrustWords-Info.plist"; path = "/Users/dirk/projects/pEp/pEpEngine/build-mac/pEpTrustWords-Info.plist"; sourceTree = "<absolute>"; };
 		43E4FBAD2362C05600BC01F4 /* NegotiationRequestGrouped.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = NegotiationRequestGrouped.c; path = ../asn.1/NegotiationRequestGrouped.c; sourceTree = "<group>"; };
 		43E4FBB32362C29100BC01F4 /* GroupHandshake.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupHandshake.c; path = ../asn.1/GroupHandshake.c; sourceTree = "<group>"; };
@@ -728,6 +732,8 @@
 		64A8264B1B455C5600EECAF0 /* srcref */ = {
 			isa = PBXGroup;
 			children = (
+				43C3778D246A8C0300962D22 /* internal_format.c */,
+				43C37788246A8C0300962D22 /* internal_format.h */,
 				43188ABE23C4BBDD008EF79C /* distribution_codec.c */,
 				43188ABF23C4BBDE008EF79C /* distribution_codec.h */,
 				43188AA223C4B4B3008EF79C /* keyreset_command.c */,
@@ -820,6 +826,7 @@
 				159EF42822B6D3E900149C0C /* pgp_sequoia.h in Headers */,
 				15B037E222B2B822002D664C /* per_encoder.h in Headers */,
 				15B0380F22B2B823002D664C /* Sync.h in Headers */,
+				43C3778E246A8C0300962D22 /* internal_format.h in Headers */,
 				15B0380422B2B822002D664C /* constr_SET_OF.h in Headers */,
 				15B0381322B2B823002D664C /* asn_application.h in Headers */,
 				15B0380322B2B822002D664C /* OwnKeysRequester.h in Headers */,
@@ -1172,6 +1179,7 @@
 				64A826811B455D0800EECAF0 /* pEpEngine.c in Sources */,
 				15B037FF22B2B822002D664C /* per_opentype.c in Sources */,
 				43188A9823C4B2DE008EF79C /* KeySync_fsm.c in Sources */,
+				43C3778F246A8C0300962D22 /* internal_format.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

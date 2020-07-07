@@ -408,6 +408,8 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
                             bool* is_address_default,
                             bool check_blacklist);
 
+PEP_STATUS clean_own_key_defaults(PEP_SESSION session);
+
 #ifdef __cplusplus
 }
 #endif

@@ -15,8 +15,10 @@ protocol Sync 1 {
 
         state InitState {
             on Init {
-                if deviceGrouped
+                if deviceGrouped {
+                    send SynchronizeGroupKeys;
                     go Grouped;
+                }
                 go Sole;
             }
         }
@@ -421,12 +423,15 @@ protocol Sync 1 {
 
         state HandshakingToJoinPhase1 {
             on Rollback {
-                if sameNegotiation
+                if sameNegotiation {
+                    do untrustThisKey;
                     go Sole;
+                }
             }
 
             on CommitReject {
                 if sameNegotiation {
+                    do untrustThisKey;
                     do disable;
                     go End;
                 }
@@ -531,13 +536,17 @@ protocol Sync 1 {
             }
 
             on Rollback {
-                if sameNegotiation
+                if sameNegotiation {
+                    do untrustThisKey;
                     go Grouped;
+                }
             }
 
             on CommitReject {
-                if sameNegotiation
+                if sameNegotiation {
+                    do untrustThisKey;
                     go Grouped;
+                }
             }
 
             on CommitAccept {
@@ -574,7 +583,7 @@ protocol Sync 1 {
 
         // beacons are always broadcasted
 
-        message Beacon 2, type=broadcast, security=unencrypted {
+        message Beacon 2, type=broadcast, ratelimit=10, security=unencrypted {
             field TID challenge;
             auto Version version;
         }
@@ -668,7 +677,7 @@ protocol Sync 1 {
             field TID response;
         }
 
-        message SynchronizeGroupKeys 21 {
+        message SynchronizeGroupKeys 21, ratelimit=60 {
         }
     }
 }

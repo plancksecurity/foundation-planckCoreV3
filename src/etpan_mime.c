@@ -324,8 +324,7 @@ struct mailmime * get_file_part(
         const char * mime_type,
         char * data,
         size_t length,
-        bool transport_encode,
-        bool set_attachment_forward_comment
+        bool is_nf_message_attachment // non-forwarded msg as att
     )
 {
     char * disposition_name = NULL;
@@ -373,7 +372,9 @@ struct mailmime * get_file_part(
 
     encoding = NULL;
 
-    if (transport_encode) {
+    bool already_ascii = !(must_chunk_be_encoded(data, length, true));
+    
+    if (!is_nf_message_attachment && !already_ascii) {
         encoding_type = MAILMIME_MECHANISM_BASE64;
         encoding = mailmime_mechanism_new(encoding_type, NULL);
         if (encoding == NULL)
@@ -389,7 +390,7 @@ struct mailmime * get_file_part(
 
     stringpair_list_t* extra_params = NULL;
     
-    if (set_attachment_forward_comment)
+    if (is_nf_message_attachment)
         extra_params = new_stringpair_list(new_stringpair("forwarded", "no"));
     
     mime = part_new_empty(content, mime_fields, extra_params, 1);
@@ -555,20 +556,37 @@ struct mailimf_mailbox * mailbox_from_string(
         const char *address
     )
 {
+    assert(address);
+    if (!address)
+        return NULL;
+
     struct mailimf_mailbox *mb = NULL;
     char *_name = NULL;
     char *_address = NULL;
-
-    assert(address);
 
     _name = name ? strdup(name) : strdup("");
     if (_name == NULL)
         goto enomem;
 
-    _address = strdup(address);
-    if (_address == NULL)
-        goto enomem;
-
+    char* at = strstr(address, "@");
+    if (!at) {
+        // Presumed URI
+        int added_char_len = 6; // " " @URI 
+        int new_addr_len = strlen(address) + added_char_len + 1;
+        _address = calloc(new_addr_len, 1);
+        if (_address == NULL)
+            goto enomem;
+        
+        _address[0] = '"';
+        strlcat(_address, address, new_addr_len);
+        strlcat(_address, "\"@URI", new_addr_len);
+    }
+    else {
+        _address = strdup(address);
+        if (_address == NULL)
+            goto enomem;
+    }
+            
     mb = mailimf_mailbox_new(_name, _address);
     assert(mb);
     if (mb == NULL)
@@ -1005,7 +1023,7 @@ bool must_chunk_be_encoded(const void* value, size_t size, bool ignore_fws) {
 
 static PEP_STATUS interpret_MIME(struct mailmime *mime,
                                  message *msg,
-                                 bool* raise_msg_attachment);
+                                 bool* has_possible_pEp_msg);
 
 // This function was rewritten to use in-memory buffers instead of
 // temporary files when the pgp/mime support was implemented for
@@ -1063,8 +1081,7 @@ pEp_error:
 static PEP_STATUS mime_attachment(
         bloblist_t *blob,
         struct mailmime **result,
-        bool transport_encode,
-        bool set_attachment_forward_comment
+        bool is_nf_message_attachment // non-forwarded msg as att
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -1086,11 +1103,8 @@ static PEP_STATUS mime_attachment(
 
     pEp_rid_list_t* resource = parse_uri(blob->filename);
 
-    bool already_ascii = !(must_chunk_be_encoded(blob->value, blob->size, true));
-
     mime = get_file_part(resource, mime_type, blob->value, blob->size, 
-                          (already_ascii ? false : transport_encode),
-                          set_attachment_forward_comment);
+                         is_nf_message_attachment);
     free_rid_list(resource);
     
     assert(mime);
@@ -1109,12 +1123,23 @@ enomem:
     return status;
 }
 
+
+// This ONLY deals with handling the body 
+// content when html parts are present - thus,
+// text/plain and text/html of the body, and 
+// related inline attachments for the html 
+// part. Non-inline attachments are handled 
+// outside this call!!!!
+//
+// N.B. As a result, this will only touch the 
+// "contained message" of pEp 2.x messages 
+// on the initial encoding where it is turned 
+// into attachment data!!
 static PEP_STATUS mime_html_text(
         const char *plaintext,
         const char *htmltext,
         bloblist_t *attachments,
-        struct mailmime **result,
-        bool transport_encode
+        struct mailmime **result
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -1129,33 +1154,50 @@ static PEP_STATUS mime_html_text(
 
     *result = NULL;
 
-    mime = part_multiple_new("multipart/alternative");
-    assert(mime);
-    if (mime == NULL)
-        goto enomem;
-
     pEp_rid_list_t* resource = NULL;
-    
-    int encoding_type = (transport_encode ? MAILMIME_MECHANISM_QUOTED_PRINTABLE : 0);
-    submime = get_text_part(NULL, "text/plain", plaintext, strlen(plaintext),
-            encoding_type);
-    free_rid_list(resource);
-    resource = NULL;
-    
-    assert(submime);
-    if (submime == NULL)
-        goto enomem;
+        
+    bool already_ascii = false;
+    int encoding_type = 0;    
+    if (*plaintext != '\0') {
+        mime = part_multiple_new("multipart/alternative");
+        assert(mime);
+        if (mime == NULL)
+            goto enomem;
+            
+        // KB: pEpMIME transition comment - if we start getting 
+        // underencoding errors here, the change to checking 
+        // for ASCII and then encoding - or not - is one place 
+        // to start looking.
+        int pt_length = strlen(plaintext);
+        already_ascii = !(must_chunk_be_encoded(plaintext, pt_length, true));                
+        encoding_type = (already_ascii ? 0 : MAILMIME_MECHANISM_QUOTED_PRINTABLE);
+                
+        submime = get_text_part(NULL, "text/plain", plaintext, 
+                                pt_length,
+                                encoding_type);
+        
+        // reset                        
+        already_ascii = false;
+        encoding_type = 0;
+                                    
+        free_rid_list(resource);
+        resource = NULL;
+        
+        assert(submime);
+        if (submime == NULL)
+            goto enomem;
 
-    r = mailmime_smart_add_part(mime, submime);
-    assert(r == MAILIMF_NO_ERROR);
-    if (r == MAILIMF_ERROR_MEMORY) {
-        goto enomem;
+        r = mailmime_smart_add_part(mime, submime);
+        assert(r == MAILIMF_NO_ERROR);
+        if (r == MAILIMF_ERROR_MEMORY) {
+            goto enomem;
+        }
+        else {
+            // mailmime_smart_add_part() takes ownership of submime
+            submime = NULL;
+        }
     }
-    else {
-        // mailmime_smart_add_part() takes ownership of submime
-        submime = NULL;
-    }
-
+    
     bool inlined_attachments = false;
     
     bloblist_t* traversal_ptr = attachments;
@@ -1175,60 +1217,88 @@ static PEP_STATUS mime_html_text(
         if (submime == NULL)
             goto enomem;
 
+        // This is where all of the html MIME stuff will go
         top_level_html_mime = submime;
         
-        r = mailmime_smart_add_part(mime, top_level_html_mime);
-        assert(r == MAILIMF_NO_ERROR);
-        if (r == MAILIMF_ERROR_MEMORY) {
-            goto enomem;
-        }
-        else {
-            // mailmime_smart_add_part() takes ownership of submime
-            submime = NULL;
-        }
+        if (!mime)
+            mime = top_level_html_mime;
+        else {    
+            r = mailmime_smart_add_part(mime, top_level_html_mime);
+            assert(r == MAILIMF_NO_ERROR);
+            if (r == MAILIMF_ERROR_MEMORY) {
+                goto enomem;
+            }
+            else {
+                // mailmime_smart_add_part() takes ownership of submime
+                submime = NULL;
+            }
+        }    
     }
     else {
+        // Otherwise, html MIME stuff gets added to the top node 
+        // - may be NULL if there's no multipart!
         top_level_html_mime = mime;
     }
 
 //    resource = new_rid_node(PEP_RID_FILENAME, "msg.html");
-    submime = get_text_part(NULL, "text/html", htmltext, strlen(htmltext),
-            encoding_type);
+    int ht_length = strlen(htmltext);
+    already_ascii = !(must_chunk_be_encoded(htmltext, ht_length, true));                
+    encoding_type = (already_ascii ? 0 : MAILMIME_MECHANISM_QUOTED_PRINTABLE);
+            
+    submime = get_text_part(NULL, "text/html", htmltext, 
+                            ht_length,
+                            encoding_type);
+
     free_rid_list(resource);
     resource = NULL;
     
     assert(submime);
     if (submime == NULL)
         goto enomem;
+        
+    // IF there are no inlined attachments AND mime is NULL, then 
+    // we just have an HTML body here and won't need to 
+    // process inlined attachments - submime will actually be 
+    // the mime root of from this function, at least.    
 
-    r = mailmime_smart_add_part(top_level_html_mime, submime);
-    assert(r == MAILIMF_NO_ERROR);
-    if (r == MAILIMF_ERROR_MEMORY)
-        goto enomem;
-    else {
-        // mailmime_smart_add_part() takes ownership of submime
+    if (!top_level_html_mime) {
+        mime = submime;
         submime = NULL;
     }
-
-    bloblist_t *_a;
-    for (_a = attachments; _a != NULL; _a = _a->next) {
-        if (_a->disposition != PEP_CONTENT_DISP_INLINE)
-            continue;
-        status = mime_attachment(_a, &submime, transport_encode, false);
-        if (status != PEP_STATUS_OK)
-            return PEP_UNKNOWN_ERROR; // FIXME
-
+    else {    
         r = mailmime_smart_add_part(top_level_html_mime, submime);
         assert(r == MAILIMF_NO_ERROR);
-        if (r == MAILIMF_ERROR_MEMORY) {
+        if (r == MAILIMF_ERROR_MEMORY)
             goto enomem;
-        }
         else {
             // mailmime_smart_add_part() takes ownership of submime
             submime = NULL;
         }
-    }
 
+        bloblist_t *_a;
+
+        // This will never have an embedded pEp message attachment 
+        // sent for encoding here, so we don't need to pass down 
+        // "(don't) transport encode this" info. If it's here and 
+        // it's not an ASCII "text/*" attachment, it'll get encoded
+        for (_a = attachments; _a != NULL; _a = _a->next) {
+            if (_a->disposition != PEP_CONTENT_DISP_INLINE)
+                continue;
+            status = mime_attachment(_a, &submime, false);
+            if (status != PEP_STATUS_OK)
+                return PEP_UNKNOWN_ERROR; // FIXME
+
+            r = mailmime_smart_add_part(top_level_html_mime, submime);
+            assert(r == MAILIMF_NO_ERROR);
+            if (r == MAILIMF_ERROR_MEMORY) {
+                goto enomem;
+            }
+            else {
+                // mailmime_smart_add_part() takes ownership of submime
+                submime = NULL;
+            }
+        }
+    }    
     *result = mime;
     return PEP_STATUS_OK;
 
@@ -1245,7 +1315,6 @@ enomem:
 }
 
 
-// FIXME: maybe need to add transport_encode field here
 static struct mailimf_mailbox * identity_to_mailbox(const pEp_identity *ident)
 {
     char *_username = NULL;
@@ -1363,6 +1432,9 @@ enomem:
     return NULL;
 }
 
+// KB: This seems to be always called with "true",
+//     but there was probably a reason for this. So 
+//     leave it for now.
 static clist * stringlist_to_clist(stringlist_t *sl, bool transport_encode)
 {
     clist * cl = clist_new();
@@ -1691,8 +1763,7 @@ static PEP_STATUS mime_encode_message_plain(
         const message *msg,
         bool omit_fields,
         struct mailmime **result,
-        bool transport_encode,
-        bool set_attachment_forward_comment
+        bool has_pEp_msg_attachment
     )
 {
     struct mailmime * mime = NULL;
@@ -1700,13 +1771,13 @@ static PEP_STATUS mime_encode_message_plain(
     int r;
     PEP_STATUS status;
     //char *subject;
-    char *plaintext;
+    const char *plaintext;
     char *htmltext;
 
     assert(msg);
     assert(result);
-    
-    //subject = (msg->shortmsg) ? msg->shortmsg : "pEp";  // not used, yet.
+
+    // * Process body content, including html's inlined attachments *
     plaintext = (msg->longmsg) ? msg->longmsg : "";
     htmltext = msg->longmsg_formatted;
 
@@ -1714,23 +1785,37 @@ static PEP_STATUS mime_encode_message_plain(
         /* first, we need to strip out the inlined attachments to ensure this
            gets set up correctly */
            
-        status = mime_html_text(plaintext, htmltext, msg->attachments, &mime,
-                                transport_encode);
+        // Note: this only, regardless of whether this is being done 
+        // for the to-be-embedded message attachment generation or 
+        // an encapsulating message which contains this, touches 
+        // the body text of this input message. So transport encoding 
+        // only refers to the body content here and inlined-attachments, and 
+        // is decided WITHIN this function, not as an argument. 
+        status = mime_html_text(plaintext, htmltext, msg->attachments, &mime);
                 
         if (status != PEP_STATUS_OK)
             goto pEp_error;
     }
-    else {
+    else { /* body content only consists of a plaintext block */
         pEp_rid_list_t* resource = NULL;
+
+        int pt_length = strlen(plaintext);
+
         if (is_PGP_message_text(plaintext)) {
             resource = NULL;
-            int encoding_type = (transport_encode ? MAILMIME_MECHANISM_7BIT : 0);
+            
+            // So... I think we got overencoding here once, which would be a bug 
+            // in libetpan, unless it had to do with whitespace. If removing
+            // transport encoding as a calculation here somehow leads to overencoding,
+            // either we or libetpan are doing something bad.
+//            int encoding_type = (transport_encode ? MAILMIME_MECHANISM_7BIT : 0);
             mime = get_text_part(resource, "application/octet-stream", plaintext,
-                    strlen(plaintext), encoding_type);
+                                 pt_length, MAILMIME_MECHANISM_7BIT);
         }
         else {
             resource = NULL;
-            int encoding_type = (transport_encode ? MAILMIME_MECHANISM_QUOTED_PRINTABLE : 0);
+            bool already_ascii = !(must_chunk_be_encoded(plaintext, pt_length, true));                
+            int encoding_type = (already_ascii ? MAILMIME_MECHANISM_7BIT : MAILMIME_MECHANISM_QUOTED_PRINTABLE);
             mime = get_text_part(resource, "text/plain", plaintext, strlen(plaintext),
                     encoding_type);
         }
@@ -1741,10 +1826,21 @@ static PEP_STATUS mime_encode_message_plain(
             goto enomem;
     }
 
+    /* Body content processed, now process normal attachments */
+    
     bool normal_attachments = false;
     
     bloblist_t* traversal_ptr = msg->attachments;
     
+    // If there were any inline attachments, they should have 
+    // been stripped out in mime_html_text and dealt with. 
+    // I'm not entirely sure what the alternative case 
+    // is here. But basically, if there are any non-inlined 
+    // attachments to deal with, this is designed to 
+    // make sure we process them. So flag it for 
+    // "hey, Bob, you got some regular attachments here"
+    // so Bob (obviously, the MIME engine is called Bob)
+    // can do the right thing in the next block.
     while (traversal_ptr) {
         if (traversal_ptr->disposition != PEP_CONTENT_DISP_INLINE) {
             normal_attachments = true;
@@ -1773,13 +1869,18 @@ static PEP_STATUS mime_encode_message_plain(
         bloblist_t *_a;
         bool first_one = true;
         
+        // Go through the non-inline attachments and add em.
         for (_a = msg->attachments; _a != NULL; _a = _a->next) {
 
             if (_a->disposition == PEP_CONTENT_DISP_INLINE)
                 continue;
 
-            status = mime_attachment(_a, &submime, transport_encode,
-                                     (first_one && set_attachment_forward_comment));                         
+            // solely for readability.
+            bool is_pEp_msg_attachment = (first_one && has_pEp_msg_attachment);
+
+            status = mime_attachment(_a, &submime, 
+                                     is_pEp_msg_attachment);                         
+
             if (status != PEP_STATUS_OK)
                 goto pEp_error;
             
@@ -1891,12 +1992,11 @@ enomem:
     return status;
 }
 
-PEP_STATUS _mime_encode_message_internal(
+DYNAMIC_API PEP_STATUS mime_encode_message(
         const message * msg,
         bool omit_fields,
         char **mimetext,
-        bool transport_encode,
-        bool set_attachment_forward_comment
+        bool has_pEp_msg_attachment
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -1916,12 +2016,12 @@ PEP_STATUS _mime_encode_message_internal(
 
     switch (msg->enc_format) {
         case PEP_enc_none:
-            status = mime_encode_message_plain(msg, omit_fields, &mime, transport_encode, set_attachment_forward_comment);
+            status = mime_encode_message_plain(msg, omit_fields, &mime, has_pEp_msg_attachment);
             break;
 
-        // I'm presuming we should hardcore ignoring set_attachment_forward_comment here...
+        // I'm presuming we should hardcore ignoring has_pEp_msg_attachment here...
         case PEP_enc_inline:
-            status = mime_encode_message_plain(msg, omit_fields, &mime, transport_encode, false);
+            status = mime_encode_message_plain(msg, omit_fields, &mime, false);
             break;
 
         case PEP_enc_S_MIME:
@@ -1988,6 +2088,7 @@ pEp_error:
 static pEp_identity *mailbox_to_identity(const struct mailimf_mailbox * mb)
 {
     char *username = NULL;
+    char *address = NULL;
 
     assert(mb);
     assert(mb->mb_addr_spec);
@@ -2003,14 +2104,30 @@ static pEp_identity *mailbox_to_identity(const struct mailimf_mailbox * mb)
             goto enomem;
     }
 
-    pEp_identity *ident = new_identity(mb->mb_addr_spec, NULL, NULL, username);
+    const char* raw_addr = mb->mb_addr_spec;
+    if (raw_addr && raw_addr[0] == '"') {
+        int addr_len = strlen(raw_addr);
+        if (addr_len >= 6) { // ""@URI
+            const char* endcheck = strstr(raw_addr + 1, "\"@URI");
+            if (endcheck && *(endcheck + 5) == '\0') {
+                int actual_size = addr_len - 6;
+                address = calloc(actual_size + 1, 1);
+                if (!address)
+                    goto enomem;
+                strlcpy(address, raw_addr + 1, actual_size + 1);    
+            }
+        }
+    }
+
+    pEp_identity *ident = new_identity(address ? address : raw_addr, NULL, NULL, username);
     if (ident == NULL)
         goto enomem;
     free(username);
-
+    free(address);
     return ident;
 
 enomem:
+    free(address);
     free(username);
     return NULL;
 }
@@ -2496,10 +2613,30 @@ static PEP_STATUS process_multipart_related(struct mailmime *mime,
     return status;
 }
 
+static bool _is_marked_as_attachment(struct mailmime_fields *fields)
+{
+    if (!(fields && fields->fld_list))
+        return false;
+
+    clistiter *cur;
+    for (cur = clist_begin(fields->fld_list); cur != NULL ; cur = clist_next(cur)) {
+        struct mailmime_field * field = clist_content(cur);
+        if (!(field && field->fld_type == MAILMIME_FIELD_DISPOSITION &&
+                    field->fld_data.fld_disposition &&
+                    field->fld_data.fld_disposition->dsp_type))
+            continue;
+        if (field->fld_data.fld_disposition->dsp_type->dsp_type ==
+                MAILMIME_DISPOSITION_TYPE_ATTACHMENT)
+            return true;
+    }
+
+    return false;
+}
+
 static PEP_STATUS interpret_MIME(
         struct mailmime *mime,
         message *msg,
-        bool* raise_msg_attachment
+        bool* has_possible_pEp_msg
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -2507,6 +2644,7 @@ static PEP_STATUS interpret_MIME(
     assert(mime);
     assert(msg);
 
+    struct mailmime_fields *fields = mime->mm_mime_fields;
     struct mailmime_content *content = mime->mm_content_type;
     if (content) {
         if (_is_multipart(content, "alternative")) {
@@ -2583,21 +2721,22 @@ static PEP_STATUS interpret_MIME(
                 return PEP_ILLEGAL_VALUE;
 
             clistiter *cur;
-            // only add raise_msg_attachment on 2nd part!
+            // only add has_possible_pEp_msg on 2nd part!
             int _att_count = 0;
             for (cur = clist_begin(partlist); cur; cur = clist_next(cur), _att_count++) {
                 struct mailmime *part= clist_content(cur);
                 if (part == NULL)
                     return PEP_ILLEGAL_VALUE;
-                status = interpret_MIME(part, msg, _att_count == 1 ? raise_msg_attachment : NULL);
+                status = interpret_MIME(part, msg, _att_count == 1 ? has_possible_pEp_msg : NULL);
                 if (status != PEP_STATUS_OK)
                     return status;
             }
         }
         else {
             if (_is_text_part(content, "html") &&
-                msg->longmsg_formatted == NULL &&
-                msg->longmsg == NULL) {
+                    !_is_marked_as_attachment(fields) &&
+                    msg->longmsg_formatted == NULL &&
+                    msg->longmsg == NULL) {
                 status = interpret_body(mime, &msg->longmsg_formatted,
                                         NULL);
                 if (status)
@@ -2609,21 +2748,23 @@ static PEP_STATUS interpret_MIME(
                     return status;
             }
             else if (_is_text_part(content, "plain") && 
-                     msg->longmsg == NULL && msg->longmsg_formatted == NULL) {
+                    !_is_marked_as_attachment(fields) &&
+                    msg->longmsg == NULL && msg->longmsg_formatted == NULL) {
                 status = interpret_body(mime, &msg->longmsg, NULL);
                 if (status)
                     return status;
             }            
             else if (_is_text_part(content, NULL) && 
-                     !_is_text_part(content, "plain") &&
-                     msg->longmsg == NULL) {
+                    !_is_marked_as_attachment(fields) &&
+                    !_is_text_part(content, "plain") &&
+                    msg->longmsg == NULL) {
                 status = interpret_body(mime, &msg->longmsg, NULL);
                 if (status)
                     return status;
             }
             else {
                 // Fixme - we need a control on recursion level here - KG: maybe NOT. We only go to depth 1.
-                if (raise_msg_attachment != NULL) {
+                if (has_possible_pEp_msg != NULL) {
                     bool is_msg = (_is_message_part(content, "rfc822") || _is_text_part(content, "rfc822"));
                     if (is_msg) {
                         if (content->ct_parameters) {
@@ -2633,7 +2774,7 @@ static PEP_STATUS interpret_MIME(
                                 struct mailmime_parameter * param = clist_content(cur);
                                 if (param && param->pa_name && strcasecmp(param->pa_name, "forwarded") == 0) {
                                     if (param->pa_value && strcasecmp(param->pa_value, "no") == 0) {
-                                        *raise_msg_attachment = true;
+                                        *has_possible_pEp_msg = true;
                                         break;
                                     }
                                 }
@@ -2727,18 +2868,8 @@ enomem:
 DYNAMIC_API PEP_STATUS mime_decode_message(
         const char *mimetext,
         size_t size,
-        message **msg
-    )
-{
-    return _mime_decode_message_internal(mimetext, size, msg, NULL);
-}        
-
-
-PEP_STATUS _mime_decode_message_internal(
-        const char *mimetext,
-        size_t size,
         message **msg,
-        bool* raise_msg_attachment
+        bool* has_possible_pEp_msg
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -2782,7 +2913,7 @@ PEP_STATUS _mime_decode_message_internal(
 
     if (content) {
         status = interpret_MIME(mime->mm_data.mm_message.mm_msg_mime,
-                _msg, raise_msg_attachment);
+                _msg, has_possible_pEp_msg);
         if (status != PEP_STATUS_OK)
             goto pEp_error;
     }

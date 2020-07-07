@@ -13,9 +13,11 @@ extern "C" {
 #endif
 
 bool import_attached_keys(
-        PEP_SESSION session, 
+        PEP_SESSION session,
         message *msg,
-        identity_list **private_idents
+        identity_list **private_idents, 
+        stringlist_t** imported_keys,
+        uint64_t* changed_keys
     );
 
 void attach_own_key(PEP_SESSION session, message *msg);
@@ -47,7 +49,6 @@ typedef enum _PEP_encrypt_flags {
     // This flag is used to let internal functions know that an encryption 
     // call is being used as part of a reencryption operation
     PEP_encrypt_reencrypt = 0x40
-    
 } PEP_encrypt_flags; 
 
 typedef unsigned int PEP_encrypt_flags_t;
@@ -83,6 +84,13 @@ typedef enum _message_wrap_type {
 //  caveat:
 //      the ownership of src remains with the caller
 //      the ownership of dst goes to the caller
+//
+//      enc_format PEP_enc_inline_EA:
+//          internal format of the encrypted attachments is changing, see
+//          https://dev.pep.foundation/Engine/ElevatedAttachments
+//
+//          Only use this for transports without support for attachments
+//          when attached data must be sent inline
 
 DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_SESSION session,
@@ -169,26 +177,26 @@ typedef enum _PEP_rating {
 
     // no color
 
-    PEP_rating_cannot_decrypt,
-    PEP_rating_have_no_key,
-    PEP_rating_unencrypted,
-    PEP_rating_unencrypted_for_some, // don't use this any more
-    PEP_rating_unreliable,
+    PEP_rating_cannot_decrypt = 1,
+    PEP_rating_have_no_key = 2,
+    PEP_rating_unencrypted = 3,
+    PEP_rating_unreliable = 5,
+
+    PEP_rating_b0rken = -2,
 
     // yellow
 
-    PEP_rating_reliable,
+    PEP_rating_reliable = 6,
 
     // green
 
-    PEP_rating_trusted,
-    PEP_rating_trusted_and_anonymized,
-    PEP_rating_fully_anonymous,   
+    PEP_rating_trusted = 7,
+    PEP_rating_trusted_and_anonymized = 8,
+    PEP_rating_fully_anonymous = 9, 
 
     // red
 
     PEP_rating_mistrust = -1,
-    PEP_rating_b0rken = -2,
     PEP_rating_under_attack = -3
 } PEP_rating;
 
@@ -213,9 +221,10 @@ typedef enum _PEP_decrypt_flags {
     PEP_decrypt_flag_consume = 0x2,
     PEP_decrypt_flag_ignore = 0x4,
     PEP_decrypt_flag_src_modified = 0x8,
+
     // input flags    
     PEP_decrypt_flag_untrusted_server = 0x100,
-    PEP_decrypt_flag_dont_trigger_sync = 0x200,
+    PEP_decrypt_flag_dont_trigger_sync = 0x200
 } PEP_decrypt_flags; 
 
 typedef unsigned int PEP_decrypt_flags_t;
@@ -272,7 +281,10 @@ typedef unsigned int PEP_decrypt_flags_t;
 //      the ownership of dst goes to the caller
 //      the ownership of keylist goes to the caller
 //      if src is unencrypted this function returns PEP_UNENCRYPTED and sets
-//         dst to NULL
+//          dst to NULL
+//      if src->enc_format is PEP_enc_inline_EA on input then elevated attachments
+//          will be expected
+
 DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -534,6 +546,22 @@ DYNAMIC_API PEP_STATUS get_key_rating_for_user(
 
 DYNAMIC_API PEP_rating rating_from_comm_type(PEP_comm_type ct);
 
+
+// this is the internal function to be used by asynchronous network protocol
+// implementations
+//
+// this function is calling messageToSend(NULL) in case there is a missing or wrong passphrase
+//
+// do not use it in adapters
+
+PEP_STATUS try_encrypt_message(
+        PEP_SESSION session,
+        message *src,
+        stringlist_t *extra,
+        message **dst,
+        PEP_enc_format enc_format,
+        PEP_encrypt_flags_t flags
+    );
 
 #ifdef __cplusplus
 }

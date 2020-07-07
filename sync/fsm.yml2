@@ -49,9 +49,10 @@ decl condition @name, if is condition;
 decl else;
 
 // some events have messages on the line signalling the event to the
-// communication partner
+// communication partner; the rate limit is in seconds until such a mesage can
+// be repeated, 0 means off
 
-decl message @name (id, type=anycast, security=trusted);
+decl message @name (id, type=anycast, security=trusted, ratelimit=0);
 
 // messages can have transmitted fields…
 

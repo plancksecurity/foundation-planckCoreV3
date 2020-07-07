@@ -1,8 +1,6 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#define PEP_ENGINE_VERSION "1.1.1"
-
 // maximum attachment size to import as key 1MB, maximum of 20 attachments
 
 #define MAX_KEY_SIZE (1024 * 1024)
@@ -143,7 +141,11 @@ struct _pEpSession {
 
     PEP_cryptotech_t *cryptotech;
     PEP_CIPHER_SUITE cipher_suite;
-
+    
+    char* curr_passphrase;
+    bool new_key_pass_enable;
+    char* generation_passphrase;
+    
     PEP_transport_t *transports;
 
     sqlite3 *db;
@@ -162,7 +164,8 @@ struct _pEpSession {
     sqlite3_stmt *get_main_user_fpr;
     sqlite3_stmt *refresh_userid_default_key;
     sqlite3_stmt *delete_key;
-    sqlite3_stmt *remove_fpr_as_default;
+    sqlite3_stmt *remove_fpr_as_identity_default;
+    sqlite3_stmt *remove_fpr_as_user_default;
     sqlite3_stmt *set_person;
     sqlite3_stmt *update_person;
     sqlite3_stmt *delete_person;
@@ -185,6 +188,7 @@ struct _pEpSession {
     sqlite3_stmt *exists_identity_entry;        
     sqlite3_stmt *set_identity_flags;
     sqlite3_stmt *unset_identity_flags;
+    sqlite3_stmt *set_ident_enc_format;
     sqlite3_stmt *set_pEp_version; 
     sqlite3_stmt *clear_trust_info;   
     sqlite3_stmt *set_trust;
