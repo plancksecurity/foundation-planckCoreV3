@@ -98,7 +98,15 @@ struct message {
 
 
 protocol session {
-    method encrypt_message doc="encrypt message in memory"
+    method encrypt_message 
+    doc="""
+        encrypt message in memory. enc_format PEP_enc_inline_EA:
+        internal format of the encrypted attachments is changing, see
+        https://dev.pep.foundation/Engine/ElevatedAttachments
+
+        Only use this for transports without support for attachments
+        when attached data must be sent inline
+        """;
     {
         // parms
 
