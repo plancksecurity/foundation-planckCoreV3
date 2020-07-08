@@ -252,8 +252,15 @@ PEP_STATUS try_base_prepare_message(
     if (!(status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE))
         return status;
 
+    if (!EMPTYSTR(session->curr_passphrase)) {
+        // try configured passphrase
+        status = base_prepare_message(session, me, partner, type, payload, size, fpr, result);
+        if (!(status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE))
+            return status;
+    }
+
     do {
-        // then try passphrases
+        // then try passphrases from the cache
         status = session->messageToSend(NULL);
         if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
             pEp_identity* _me = identity_dup(me);
@@ -268,4 +275,3 @@ PEP_STATUS try_base_prepare_message(
 
     return status;
 }
-

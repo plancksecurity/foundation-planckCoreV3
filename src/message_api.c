@@ -5440,38 +5440,33 @@ PEP_STATUS try_encrypt_message(
     // https://dev.pep.foundation/Engine/MessageToSendPassphrase
 
     // first try with empty passphrase
-    char *passphrase = session->curr_passphrase;
+    char* passphrase = session->curr_passphrase;
     session->curr_passphrase = NULL;
     status = encrypt_message(session, src, extra, dst, enc_format, flags);
     session->curr_passphrase = passphrase;
-
-    // if that worked then that was it
     if (!(status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE))
         return status;
 
-    // whithout passphrase we cannot do our job
-    do {
+    if (!EMPTYSTR(session->curr_passphrase)) {
         // try configured passphrase
         status = encrypt_message(session, src, extra, dst, enc_format, flags);
+        if (!(status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE))
+            return status;
+    }
 
-        // if the configured passphrase does not work...
+    do {
+        // then try passphrases from the cache
+        status = session->messageToSend(NULL);
         if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
-
-            // ... ask the adapter to configure another one
-            PEP_STATUS status2 = session->messageToSend(NULL);
-
-            // if the adapter has no passphrase...
-            if (status2 == PEP_PASSPHRASE_REQUIRED || status2 == PEP_WRONG_PASSPHRASE) {
-
-                // ask the app to configure another one
-                pEp_identity *me = identity_dup(src->from);
-                if (!me)
-                    return PEP_OUT_OF_MEMORY;
-                session->notifyHandshake(me, NULL, SYNC_PASSPHRASE_REQUIRED);
-            }
+            pEp_identity* _me = identity_dup(src->from);
+            if (!_me)
+                return PEP_OUT_OF_MEMORY;
+            session->notifyHandshake(_me, NULL, SYNC_PASSPHRASE_REQUIRED);
+        }
+        else if (status == PEP_STATUS_OK) {
+            status = encrypt_message(session, src, extra, dst, enc_format, flags);
         }
     } while (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE);
 
     return status;
 }
-
