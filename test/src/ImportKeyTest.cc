@@ -326,3 +326,31 @@ TEST_F(ImportKeyTest, check_non_cleared_list_usage) {
     ASSERT_EQ(changes, 0xEABFF); // (938 << 10 | 1023) -> 11101010101111111111 = 0xEABFF
     free_stringlist(keylist);    
 }
+
+TEST_F(ImportKeyTest, check_770_import_priv_asc) {
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    string pubkey = slurp("test_keys/770_priv.asc");
+    stringlist_t* keylist = NULL;
+    status = _import_key_with_fpr_return(session, pubkey.c_str(), pubkey.size(), NULL, &keylist, NULL);
+    ASSERT_EQ(status, PEP_KEY_IMPORTED);
+    ASSERT_NE(keylist, nullptr);
+    ASSERT_STREQ(keylist->value, "0521111E12084FDEA58A38E880D9FB378DCC789D");
+    ASSERT_EQ(keylist->next, nullptr);
+
+    // FIXME, check key is actually imported
+}
+
+TEST_F(ImportKeyTest, check_770_import_priv_pgp) {
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    string pubkey = slurp("test_keys/770_priv.pgp");
+    stringlist_t* keylist = NULL;
+    status = _import_key_with_fpr_return(session, pubkey.c_str(), pubkey.size(), NULL, &keylist, NULL);
+    ASSERT_EQ(status, PEP_KEY_IMPORTED);
+    ASSERT_NE(keylist, nullptr);
+    ASSERT_STREQ(keylist->value, "0521111E12084FDEA58A38E880D9FB378DCC789D");
+    ASSERT_EQ(keylist->next, nullptr);
+
+    // FIXME, check key is actually imported
+}
