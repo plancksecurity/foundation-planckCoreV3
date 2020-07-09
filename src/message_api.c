@@ -5457,6 +5457,12 @@ PEP_STATUS try_encrypt_message(
     do {
         // then try passphrases from the cache
         status = session->messageToSend(NULL);
+
+        // if there will be no passphrase then exit
+        if (status == PEP_SYNC_NO_CHANNEL)
+            break;
+
+        // if a passphrase is needed ask the app
         if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
             pEp_identity* _me = identity_dup(src->from);
             if (!_me)
