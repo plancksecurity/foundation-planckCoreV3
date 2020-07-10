@@ -3819,6 +3819,11 @@ static PEP_STATUS _decrypt_message(
                                     
         pull_up_attached_main_msg(src);
         
+        if (imported_key_fprs)
+            *imported_key_fprs = _imported_key_list;
+        if (changed_public_keys)
+            *changed_public_keys = _changed_keys;
+        
         return PEP_UNENCRYPTED;
     }
 
