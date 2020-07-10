@@ -3708,6 +3708,16 @@ static PEP_STATUS _decrypt_message(
     // We don't do this for PGP_mime. -- KB: FIXME: I am pretty sure this was 
     // because of our overzealous import/remove process, but What does this do to enigmail messages 
     // if the keys are on the outside?? Are they ever?
+
+    // In case there are header keys, get those - these will be the FIRST keys, and right 
+    // now, this will leadd to the first header key imported being the default key if the from 
+    // identity has no default key. This is intentional, as we're only importing one autocrypt 
+    // header key here, but if this changes, we MUST change this assumption
+    bool header_key_imported = import_header_keys(session, src, 
+                                    (imported_key_fprs ? &_imported_key_list : NULL), 
+                                    (changed_public_keys ? &_changed_keys : NULL));    
+    
+    // Does this need to reflect the above?
     bool keys_were_imported = false;
     
     PEP_cryptotech enc_type = determine_encryption_format(src);
@@ -3717,10 +3727,6 @@ static PEP_STATUS _decrypt_message(
                                                   (imported_key_fprs ? &_imported_key_list : NULL), 
                                                   (changed_public_keys ? &_changed_keys : NULL));
     
-    // In case there are header keys, also get those
-    import_header_keys(session, src, 
-                       (imported_key_fprs ? &_imported_key_list : NULL), 
-                       (changed_public_keys ? &_changed_keys : NULL));
     
     // FIXME: is this really necessary here?
     // if (src->from) {
@@ -3761,6 +3767,45 @@ static PEP_STATUS _decrypt_message(
         //     remove_attached_keys(src);
                                     
         pull_up_attached_main_msg(src);
+
+        // Set default key if there isn't one
+        if (src->from && !is_me(src->from)) {
+            status = update_identity(session, src->from);
+            const char* hk_fpr = (_imported_key_list ? _imported_key_list->value : NULL);
+            
+            // Set a default key if there isn't one and one was imported
+            if (status == PEP_STATUS_OK && EMPTYSTR(src->from->fpr) && !EMPTYSTR(hk_fpr)) {
+                // Either we have a header key, or imported exactly one attached key
+                if (header_key_imported || !(_imported_key_list->next)) {
+                    // According to He Who Decides, autocrypt is a claim that this is 
+                    // the key for this address, so we take it as the default.
+                    if (status == PEP_STATUS_OK && _imported_key_list) { 
+                        // check key validity
+                        if (EMPTYSTR(hk_fpr)) {
+                            // Set default key
+                            free(src->from->fpr); // in case it's ""
+                            src->from->fpr = strdup(hk_fpr);
+                            status = validate_fpr(session, src->from, true, true);
+                            if (status == PEP_STATUS_OK) {
+                                // Ok, key was good, let's put in the default key status 
+                                // and move on.
+                                src->from->comm_type = get_key_rating(session, src->from->fpr, &src->from->ct);
+                                set_identity(session, src->from);
+                            }
+                            else {
+                                free(src->from->fpr); // in case it's ""
+                                src->from->fpr = NULL;                            
+                            }
+                        }
+                    } 
+                }
+            }    
+        }
+            
+        if (imported_key_fprs)
+            *imported_key_fprs = _imported_key_list;
+        if (changed_public_keys)
+            *changed_public_keys = _changed_keys;
         
         return PEP_UNENCRYPTED;
     }
@@ -4446,6 +4491,33 @@ static PEP_STATUS _decrypt_message(
     *dst = msg;
     *keylist = _keylist;
     
+    // Ok, we've imported, decrypted, verified and have results for everything.
+    // Now we need to ensure default fpr is set if we have none for the sender
+    // FIXME: check to see if msg->from->fpr will actually get a value above when 
+    // there is no default key. If it doesn't, axe the update_identity call
+    if (msg->from && !is_me(session, msg->from)) {
+        status = update_identity(msg->from);
+        if (status == PEP_STATUS_OK) {
+            if (EMPTYSTR(msg->from->fpr)) {
+                const char* fpr_to_set = NULL;
+                switch (decrypt_status):
+                    case PEP_DECRYPTED_AND_VERIFIED:
+                    case PEP_VERIFIED:
+                        // 1. check the signer, and see if we have the key
+                        if (!EMPTYSTR(_keylist->value)) {
+                            stringlist_t* have_key = NULL;
+                            status = find_key(session, _keylist->value, have_key);
+                            if (have_key) {
+                                free_stringlist(have_key);
+                                fpr_to_set = _keylist->value;
+                            }
+                        }
+            }
+        }
+        // else, what do we do?
+    }
+        
+    
     // Double-check for message 2.1: (note, we don't do this for already-reencrypted-messages)
     if (!(reencrypt && reenc_signer_key_is_own_key)) { 
         if (major_ver > 2 || (major_ver == 2 && minor_ver > 0)) {
@@ -4458,7 +4530,7 @@ static PEP_STATUS _decrypt_message(
             }
         }
     }
-    
+        
     if (imported_key_fprs)
         *imported_key_fprs = _imported_key_list;
     if (changed_public_keys)

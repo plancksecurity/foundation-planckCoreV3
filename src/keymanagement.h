@@ -408,6 +408,14 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
                             bool* is_address_default,
                             bool check_blacklist);
 
+
+// This is internally exposed, NOT intended for adapter or app use.
+PEP_STATUS validate_fpr(PEP_SESSION session, 
+                        pEp_identity* ident,
+                        bool check_blacklist,
+                        bool own_must_contain_private);
+
+
 PEP_STATUS clean_own_key_defaults(PEP_SESSION session);
 
 #ifdef __cplusplus

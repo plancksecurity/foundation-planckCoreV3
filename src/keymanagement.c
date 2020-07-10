@@ -106,10 +106,10 @@ PEP_STATUS elect_pubkey(
 // own_must_contain_private is usually true when calling;
 // we only set it to false when we have the idea of
 // possibly having an own pubkey that we need to check on its own
-static PEP_STATUS validate_fpr(PEP_SESSION session, 
-                               pEp_identity* ident,
-                               bool check_blacklist,
-                               bool own_must_contain_private) {
+PEP_STATUS validate_fpr(PEP_SESSION session, 
+                        pEp_identity* ident,
+                        bool check_blacklist,
+                        bool own_must_contain_private) {
     
     PEP_STATUS status = PEP_STATUS_OK;
     
