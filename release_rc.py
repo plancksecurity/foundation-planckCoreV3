@@ -29,7 +29,7 @@ if args.version:
     minor = args.version[1]
     patch = args.version[2]
     rc = args.version[3]
-    print(rc)
+    #print(rc)
     if (major < 0) or (minor < 0) or (patch < 0) or (rc < 0):
         raise Exception("Version numbers must all be positive values.")
 elif args.rc:
@@ -46,7 +46,7 @@ elif args.rc:
 cmd = ["grep", "-E", "#define PEP_ENGINE_VERSION_[A-Z]+[ \t]+[0-9]+", "src/pEpEngine.h"]
 result = subprocess.run(cmd, capture_output=True)
 grep_output = result.stdout.decode("utf-8")
-print(grep_output)
+#print(grep_output)
 
 if not args.version:
     src_nums = []
@@ -85,8 +85,9 @@ if not args.version:
         rc_tag = int(tag_nums[3])
         rc_src = int(src_nums[3])
 
-        print("Tagged: " + str(major_tag) + "." + str(minor_tag) + "." + str(patch_tag) + "." + str(rc_tag))
-        print("Source: " + str(major_src) + "." + str(minor_src) + "." + str(patch_src) + "." + str(rc_src))            
+        print("Inferring current/next version info for automatic upgrade:")
+        print("Tagged (should show current):                    " + str(major_tag) + "." + str(minor_tag) + "." + str(patch_tag) + "." + str(rc_tag))
+        print("Source (should show *next* (i.e. this upgrade)): " + str(major_src) + "." + str(minor_src) + "." + str(patch_src) + "." + str(rc_src))            
             
         if (major_tag == major_src):
             major = major_tag
@@ -207,9 +208,11 @@ filedata = filedata.replace(grep_strs[3], "#define PEP_ENGINE_VERSION_RC    " + 
 with open('src/pEpEngine.h', 'w') as file:
     file.write(filedata)     
 
-comment = "Automatically bumped next RC info to version " + version_str + "-RC" + str(rc + 1) 
-print("about to run with this comment:")
+comment = "Automatically bumped RC in source for future release. Next RC after this one will be " + version_str + "-RC" + str(rc + 1) + " **if released**."
+#print("about to run with this comment:")
 print(comment) 
 cmd = ["hg", "commit", "-m", comment]  
 subprocess.run(cmd, capture_output=False)
+
+print("New engine release: " + rev_tag + " Changeset: " + changeset)
                                      
