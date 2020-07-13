@@ -577,6 +577,7 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     }
     
     transfer_ident_lang_and_flags(return_id, stored_ident);
+    return_id->enc_format = stored_ident->enc_format;    
         
     if (return_id->comm_type == PEP_ct_unknown)
         return_id->comm_type = PEP_ct_key_not_found;
@@ -2127,4 +2128,3 @@ PEP_STATUS clean_own_key_defaults(PEP_SESSION session) {
     }
     return status;
 }
-

@@ -234,6 +234,84 @@ int email_cmp(void *cookie, int a_len, const void *a, int b_len, const void *b)
     return result;
 }
 
+static PEP_STATUS _pgp_get_decrypted_key(PEP_SESSION session,
+                                         pgp_cert_valid_key_iter_t iter,
+                                         pgp_key_t* decrypted_key) {
+
+    if (!iter)
+        return PEP_UNKNOWN_ERROR; // ???
+    
+    if (!decrypted_key)
+        return PEP_ILLEGAL_VALUE;
+        
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    pgp_error_t err = NULL;    
+    bool bad_pass = false;
+    bool missing_pass = false;
+    pgp_key_t key = NULL;
+    *decrypted_key = NULL;
+
+    pgp_valid_key_amalgamation_t ka = pgp_cert_valid_key_iter_next (iter, NULL, NULL);
+
+    // FIXME: better error!!!
+    if (! ka)
+        ERROR_OUT (err, PEP_UNKNOWN_ERROR,
+                   "%s has no capable key", fpr);
+
+    // pgp_key_into_key_pair needs to own the key, but here we
+    // only get a reference (which we still need to free).
+    
+    for ( ; ka ; (ka = pgp_cert_valid_key_iter_next(iter, NULL, NULL))) {                       
+        // pgp_key_into_key_pair needs to own the key, but here we
+        // only get a reference (which we still need to free).
+        key = pgp_valid_key_amalgamation_key (ka);
+
+        if (pgp_key_has_unencrypted_secret(key)) 
+            break;
+        else {
+            const char* pass = session->curr_passphrase;
+            if (pass && pass[0]) {
+                pgp_key_t decrypted_key = NULL;
+                decrypted_key = pgp_key_decrypt_secret(&err, pgp_key_clone(key), (uint8_t*)session->curr_passphrase,
+                                                        strlen(session->curr_passphrase));                             
+                pgp_key_free(key);
+                key = NULL;
+                
+                if (!decrypted_key) {                               
+                    bad_pass = true;
+                    continue;
+                }    
+                else {
+                    key = decrypted_key;
+                    break;
+                }
+            }
+            else {
+                pgp_key_free(key);
+                key = NULL;
+                missing_pass = true;
+                continue;
+            }
+        }
+    }
+    if (!key) {
+        if (bad_pass)
+            ERROR_OUT(err, PEP_WRONG_PASSPHRASE, "pgp_key_decrypt_secret");
+        else if (missing_pass)    
+            ERROR_OUT(err, PEP_PASSPHRASE_REQUIRED, "pgp_key_decrypt_secret");
+        else        
+            ERROR_OUT(err, PEP_UNKNOWN_ERROR, "pgp_valid_key_amalgamation_key");            
+    }   
+    
+out:
+    pgp_valid_key_amalgamation_free (ka);
+    *decrypted_key = key;
+
+    T("(%s)-> %s", fpr, pEp_status_to_string(status));
+    return status;                                                 
+}
+
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -1854,10 +1932,7 @@ PEP_STATUS pgp_sign_only(
     pgp_key_pair_t signing_keypair = NULL;
     pgp_signer_t signer = NULL;
     pgp_writer_stack_t ws = NULL;
-
-    bool bad_pass = false;
-    bool missing_pass = false;                    
-
+    
     status = cert_find_by_fpr_hex(session, fpr, true, &signer_cert, NULL);
     ERROR_OUT(NULL, status, "Looking up key '%s'", fpr);
 
@@ -1865,60 +1940,14 @@ PEP_STATUS pgp_sign_only(
     pgp_cert_valid_key_iter_alive(iter);
     pgp_cert_valid_key_iter_revoked(iter, false);
     pgp_cert_valid_key_iter_for_signing (iter);
-//    pgp_cert_valid_key_iter_unencrypted_secret (iter);
 
-    // If there are multiple signing capable subkeys, we just take
-    // the first one, whichever one that happens to be.
-    ka = pgp_cert_valid_key_iter_next (iter, NULL, NULL);
-    if (! ka)
-        ERROR_OUT (err, PEP_UNKNOWN_ERROR,
-                   "%s has no signing capable key", fpr);
-
-    // pgp_key_into_key_pair needs to own the key, but here we
-    // only get a reference (which we still need to free).
-    
     pgp_key_t key = NULL;
-    for ( ; ka ; (ka = pgp_cert_valid_key_iter_next(iter, NULL, NULL))) {                       
-        // pgp_key_into_key_pair needs to own the key, but here we
-        // only get a reference (which we still need to free).
-        key = pgp_valid_key_amalgamation_key (ka);
+    status = _pgp_get_decrypted_key(session, iter, &key);
 
-        if (pgp_key_has_unencrypted_secret(key)) 
-            break;
-        else {
-            const char* pass = session->curr_passphrase;
-            if (pass && pass[0]) {
-                pgp_key_t decrypted_key = NULL;
-                decrypted_key = pgp_key_decrypt_secret(&err, pgp_key_clone(key), (uint8_t*)session->curr_passphrase,
-                                                        strlen(session->curr_passphrase));                             
-                pgp_key_free(key);
-                key = NULL;
-                
-                if (!decrypted_key) {                               
-                    bad_pass = true;
-                    continue;
-                }    
-                else {
-                    key = decrypted_key;
-                    break;
-                }
-            }
-            else {
-                pgp_key_free(key);
-                key = NULL;
-                missing_pass = true;
-                continue;
-            }
-        }
-    }
-    if (!key) {
-        if (bad_pass)
-            ERROR_OUT(err, PEP_WRONG_PASSPHRASE, "pgp_key_decrypt_secret");
-        else if (missing_pass)    
-            ERROR_OUT(err, PEP_PASSPHRASE_REQUIRED, "pgp_key_decrypt_secret");
-        else        
-            ERROR_OUT(err, PEP_UNKNOWN_ERROR, "pgp_valid_key_amalgamation_key");            
-    }    
+    if (!key || status != PEP_STATUS_OK) {
+        ERROR_OUT (err, status,
+                   "%s has no signing capable key", fpr);
+    }               
     
     signing_keypair = pgp_key_into_key_pair (NULL, pgp_key_clone (key));
     pgp_key_free (key);
@@ -2121,68 +2150,20 @@ static PEP_STATUS pgp_encrypt_sign_optional(
     // pgp_encrypt_new consumes the recipients (but not the keys).
     recipient_count = 0;
 
-    bool bad_pass = false;
-    bool missing_pass = false;                
-
     if (sign) {            
         
         iter = pgp_cert_valid_key_iter(signer_cert, session->policy, 0);
         pgp_cert_valid_key_iter_alive(iter);
         pgp_cert_valid_key_iter_revoked(iter, false);
         pgp_cert_valid_key_iter_for_signing (iter);
-//        pgp_cert_valid_key_iter_unencrypted_secret (iter);
-
-        
-        // If there are multiple signing capable subkeys, we just take
-        // the first one, whichever one that happens to be.            
-            
-        ka = pgp_cert_valid_key_iter_next (iter, NULL, NULL);
-        if (! ka)
-            ERROR_OUT (err, PEP_UNKNOWN_ERROR,
-                       "%s has no signing capable key", keylist->value);
 
         pgp_key_t key = NULL;
-        for ( ; ka ; (ka = pgp_cert_valid_key_iter_next(iter, NULL, NULL))) {                       
-            // pgp_key_into_key_pair needs to own the key, but here we
-            // only get a reference (which we still need to free).
-            key = pgp_valid_key_amalgamation_key (ka);
+        status = _pgp_get_decrypted_key(session, iter, &key);
 
-            if (pgp_key_has_unencrypted_secret(key)) 
-                break;
-            else {
-                const char* pass = session->curr_passphrase;
-                if (pass && pass[0]) {
-                    pgp_key_t decrypted_key = NULL;
-                    decrypted_key = pgp_key_decrypt_secret(&err, pgp_key_clone(key), (uint8_t*)session->curr_passphrase,
-                                                            strlen(session->curr_passphrase));                             
-                    pgp_key_free(key);
-                    key = NULL;
-                    
-                    if (!decrypted_key) {                               
-                        bad_pass = true;
-                        continue;
-                    }    
-                    else {
-                        key = decrypted_key;
-                        break;
-                    }
-                }
-                else {
-                    pgp_key_free(key);
-                    key = NULL;
-                    missing_pass = true;
-                    continue;
-                }
-            }
-        }
-        if (!key) {
-            if (bad_pass)
-                ERROR_OUT(err, PEP_WRONG_PASSPHRASE, "pgp_key_decrypt_secret");
-            else if (missing_pass)    
-                ERROR_OUT(err, PEP_PASSPHRASE_REQUIRED, "pgp_key_decrypt_secret");
-            else        
-                ERROR_OUT(err, PEP_UNKNOWN_ERROR, "pgp_valid_key_amalgamation_key");            
-        }
+        if (!key || status != PEP_STATUS_OK) {
+            ERROR_OUT (err, status,
+                       "%s has no signing capable key", fpr);
+        }               
                 
                     
         signing_keypair = pgp_key_into_key_pair (NULL, pgp_key_clone (key));
@@ -3074,19 +3055,18 @@ PEP_STATUS pgp_renew_key(
 
     iter = pgp_cert_valid_key_iter(cert, session->policy, 0);
     pgp_cert_valid_key_iter_for_certification (iter);
-    pgp_cert_valid_key_iter_unencrypted_secret (iter);
     pgp_cert_valid_key_iter_revoked(iter, false);
 
-    // If there are multiple certification capable subkeys, we just
-    // take the first one, whichever one that happens to be.
-    primary = pgp_cert_valid_key_iter_next (iter, NULL, NULL);
-    if (! primary)
-        ERROR_OUT (err, PEP_UNKNOWN_ERROR,
-                   "%s has no usable certification capable key", fpr);
+    pgp_key_t key = NULL;
+    status = _pgp_get_decrypted_key(session, iter, &key);
+
+    if (!key || status != PEP_STATUS_OK) {
+        ERROR_OUT (err, status,
+                   "%s has no signing capable key", fpr);
+    }               
 
     // pgp_key_into_key_pair needs to own the key, but here we
     // only get a reference (which we still need to free).
-    pgp_key_t key = pgp_valid_key_amalgamation_key (primary);
     keypair = pgp_key_into_key_pair (NULL, pgp_key_clone (key));
     pgp_key_free (key);
     if (! keypair)
@@ -3200,18 +3180,17 @@ PEP_STATUS pgp_revoke_key(
     pgp_cert_valid_key_iter_alive(iter);
     pgp_cert_valid_key_iter_revoked(iter, false);
     pgp_cert_valid_key_iter_for_certification (iter);
-    pgp_cert_valid_key_iter_unencrypted_secret (iter);
-
-    // If there are multiple certification capable subkeys, we just
-    // take the first one, whichever one that happens to be.
-    ka = pgp_cert_valid_key_iter_next (iter, NULL, NULL);
-    if (! ka)
-        ERROR_OUT (err, PEP_UNKNOWN_ERROR,
-                   "%s has no usable certification capable key", fpr);
 
     // pgp_key_into_key_pair needs to own the key, but here we
-    // only get a reference (which we still need to free).
-    pgp_key_t key = pgp_valid_key_amalgamation_key (ka);
+    // only get a reference (which we still need to free).    
+    pgp_key_t key = NULL;
+    status = _pgp_get_decrypted_key(session, iter, &key);
+
+    if (!key || status != PEP_STATUS_OK) {
+        ERROR_OUT (err, PEP_UNKNOWN_ERROR,
+                   "%s has no usable certification capable key", fpr);           
+    }               
+                
     keypair = pgp_key_into_key_pair (NULL, pgp_key_clone (key));
     pgp_key_free (key);
     if (! keypair)
