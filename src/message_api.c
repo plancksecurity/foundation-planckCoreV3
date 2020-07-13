@@ -299,8 +299,18 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
     assert(shortmsg);
     
     unsigned char pEpstr[] = PEP_SUBJ_STRING;
-    assert(strcmp(shortmsg, "pEp") != 0 && _unsigned_signed_strcmp(pEpstr, shortmsg, PEP_SUBJ_BYTELEN) != 0); 
+
+    // assert(strcmp(shortmsg, "pEp") != 0 && _unsigned_signed_strcmp(pEpstr, shortmsg, PEP_SUBJ_BYTELEN) != 0); 
+    // in case encrypt_message() is called twice with a different passphrase this was done already
     
+    if (strcmp(shortmsg, "pEp") == 0 || _unsigned_signed_strcmp(pEpstr, shortmsg, PEP_SUBJ_BYTELEN) == 0) {
+        char *ptext = strdup(longmsg);
+        assert(ptext);
+        if (!ptext)
+            return NULL;
+        return ptext;
+    }
+
     if (!shortmsg || strcmp(shortmsg, "pEp") == 0 || 
                      _unsigned_signed_strcmp(pEpstr, shortmsg, PEP_SUBJ_BYTELEN) == 0) {
         if (!longmsg) {
@@ -1766,6 +1776,38 @@ static void update_encryption_format(identity_list* id_list, PEP_enc_format* enc
     }
 }
 
+PEP_STATUS probe_encrypt(PEP_SESSION session, const char *fpr)
+{
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    if (EMPTYSTR(fpr))
+        return PEP_KEY_NOT_FOUND;
+
+    stringlist_t *keylist = new_stringlist(fpr);
+    if (!keylist)
+        return PEP_OUT_OF_MEMORY;
+
+    char *ctext = NULL;
+    size_t csize = 0;
+    PEP_STATUS status = encrypt_and_sign(session, keylist, "pEp", 4, &ctext, &csize);
+    free(ctext);
+
+    return status;
+}
+
+static bool failed_test(PEP_STATUS status)
+{
+    if (status == PEP_OUT_OF_MEMORY ||
+            status == PEP_PASSPHRASE_REQUIRED ||
+            status == PEP_WRONG_PASSPHRASE  ||
+            status == PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED)
+        return true;
+
+    return false;
+}
+
 DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_SESSION session,
         message *src,
@@ -1813,6 +1855,11 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     status = myself(session, src->from);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
+
+    // is a passphrase needed?
+    status = probe_encrypt(session, src->from->fpr);
+    if (failed_test(status))
+        return status;
 
     char* send_fpr = strdup(src->from->fpr ? src->from->fpr : "");
     src->_sender_fpr = send_fpr;
@@ -2223,6 +2270,11 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
     if (status != PEP_STATUS_OK)
         goto pEp_free;
 
+    // is a passphrase needed?
+    status = probe_encrypt(session, own_identity->fpr);
+    if (failed_test(status))
+        goto pEp_free;
+
     // Ok, now we know the address is an own address. All good. Then...
     own_private_fpr = own_identity->fpr;
     own_identity->fpr = strdup(to_fpr);
@@ -2405,6 +2457,11 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     if (!target_fpr)
         return PEP_KEY_NOT_FOUND; // FIXME: Error condition
  
+    // is a passphrase needed?
+    status = probe_encrypt(session, target_fpr);
+    if (failed_test(status))
+        return status;
+
     keys = new_stringlist(target_fpr);
     
     stringlist_t *_k = keys;
@@ -3802,6 +3859,11 @@ static PEP_STATUS _decrypt_message(
             }    
         }
             
+        if (imported_key_fprs)
+            *imported_key_fprs = _imported_key_list;
+        if (changed_public_keys)
+            *changed_public_keys = _changed_keys;
+        
         if (imported_key_fprs)
             *imported_key_fprs = _imported_key_list;
         if (changed_public_keys)
@@ -5454,33 +5516,40 @@ PEP_STATUS try_encrypt_message(
 
     // https://dev.pep.foundation/Engine/MessageToSendPassphrase
 
-    if (session->curr_passphrase) {
-        // first try with empty passphrase
-        char *passphrase = session->curr_passphrase;
-        session->curr_passphrase = NULL;
+    // first try with empty passphrase
+    char* passphrase = session->curr_passphrase;
+    session->curr_passphrase = NULL;
+    status = encrypt_message(session, src, extra, dst, enc_format, flags);
+    session->curr_passphrase = passphrase;
+    if (!(status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE))
+        return status;
+
+    if (!EMPTYSTR(session->curr_passphrase)) {
+        // try configured passphrase
         status = encrypt_message(session, src, extra, dst, enc_format, flags);
-        session->curr_passphrase = passphrase;
         if (!(status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE))
             return status;
     }
 
     do {
-        // then try passphrases
-        status = encrypt_message(session, src, extra, dst, enc_format, flags);
-        if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
-            status = session->messageToSend(NULL);
-            if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
-                pEp_identity *me = identity_dup(src->from);
-                if (!me)
-                    return PEP_OUT_OF_MEMORY;
-                session->notifyHandshake(me, NULL, SYNC_PASSPHRASE_REQUIRED);
-                break;
-            }
-        }
-        else {
+        // then try passphrases from the cache
+        status = session->messageToSend(NULL);
+
+        // if there will be no passphrase then exit
+        if (status == PEP_SYNC_NO_CHANNEL)
             break;
+
+        // if a passphrase is needed ask the app
+        if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
+            pEp_identity* _me = identity_dup(src->from);
+            if (!_me)
+                return PEP_OUT_OF_MEMORY;
+            session->notifyHandshake(_me, NULL, SYNC_PASSPHRASE_REQUIRED);
         }
-    } while (!status);
+        else if (status == PEP_STATUS_OK) {
+            status = encrypt_message(session, src, extra, dst, enc_format, flags);
+        }
+    } while (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE);
 
     return status;
 }

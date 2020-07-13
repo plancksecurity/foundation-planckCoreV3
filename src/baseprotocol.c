@@ -244,34 +244,40 @@ PEP_STATUS try_base_prepare_message(
 
     // https://dev.pep.foundation/Engine/MessageToSendPassphrase
 
-    if (session->curr_passphrase) {
-        // first try with empty passphrase
-        char *passphrase = session->curr_passphrase;
-        session->curr_passphrase = NULL;
+    // first try with empty passphrase
+    char *passphrase = session->curr_passphrase;
+    session->curr_passphrase = NULL;
+    status = base_prepare_message(session, me, partner, type, payload, size, fpr, result);
+    session->curr_passphrase = passphrase;
+    if (!(status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE))
+        return status;
+
+    if (!EMPTYSTR(session->curr_passphrase)) {
+        // try configured passphrase
         status = base_prepare_message(session, me, partner, type, payload, size, fpr, result);
-        session->curr_passphrase = passphrase;
         if (!(status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE))
             return status;
     }
 
     do {
-        // then try passphrases
-        status = base_prepare_message(session, me, partner, type, payload, size, fpr, result);
-        if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
-            status = session->messageToSend(NULL);
-            if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
-                pEp_identity *_me = identity_dup(me);
-                if (!_me)
-                    return PEP_OUT_OF_MEMORY;
-                session->notifyHandshake(_me, NULL, SYNC_PASSPHRASE_REQUIRED);
-                break;
-            }
-        }
-        else {
+        // then try passphrases from the cache
+        status = session->messageToSend(NULL);
+
+        // if there will be no passphrase then exit
+        if (status == PEP_SYNC_NO_CHANNEL)
             break;
+
+        // if a passphrase is needed ask the app
+        if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
+            pEp_identity* _me = identity_dup(me);
+            if (!_me)
+                return PEP_OUT_OF_MEMORY;
+            session->notifyHandshake(_me, NULL, SYNC_PASSPHRASE_REQUIRED);
         }
-    } while (!status);
+        else if (status == PEP_STATUS_OK) {
+            status = base_prepare_message(session, me, partner, type, payload, size, fpr, result);
+        }
+    } while (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE);
 
     return status;
 }
-
