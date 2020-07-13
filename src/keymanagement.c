@@ -2072,7 +2072,7 @@ static PEP_STATUS _wipe_default_key_if_invalid(PEP_SESSION session,
     return status;                                        
 }
 
-PEP_STATUS clean_own_key_defaults(PEP_SESSION session) {
+DYNAMIC_API PEP_STATUS clean_own_key_defaults(PEP_SESSION session) {
     identity_list* idents = NULL;
     PEP_STATUS status = own_identities_retrieve(session, &idents);
     if (status != PEP_STATUS_OK)
