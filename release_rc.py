@@ -198,7 +198,7 @@ grep_output = result.stdout.decode("utf-8")
 #define PEP_ENGINE_VERSION "2.1.0"
 version_str = str(major) + "." + str(minor) + "." + str(patch)
 
-filedata = filedata.replace(grep_output, "#define PEP_ENGINE_VERSION \"" + version_str + "\"")
+filedata = filedata.replace(grep_output, "#define PEP_ENGINE_VERSION \"" + version_str + "\"\n")
 filedata = filedata.replace(grep_strs[0], "#define PEP_ENGINE_VERSION_MAJOR " + str(major))
 filedata = filedata.replace(grep_strs[1], "#define PEP_ENGINE_VERSION_MINOR " + str(minor))
 filedata = filedata.replace(grep_strs[2], "#define PEP_ENGINE_VERSION_PATCH " + str(patch))
