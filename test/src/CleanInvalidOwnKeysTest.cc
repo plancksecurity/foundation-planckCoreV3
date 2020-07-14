@@ -82,10 +82,11 @@ namespace {
 
 
 TEST_F(CleanInvalidOwnKeysTest, check_clean_invalid_own_keys_no_alts_revoked) {
-    // This is just a dummy test case. The convention is check_whatever_you_are_checking
-    // so for multiple test cases in a suite, be more explicit ;)   
+    PEP_STATUS status = clean_own_key_defaults(session);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+
     pEp_identity* alice = NULL;
-    PEP_STATUS status = get_identity(session, "pep.test.alice@pep-project.org", "ALICE", &alice);
+    status = get_identity(session, "pep.test.alice@pep-project.org", "ALICE", &alice);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_STRNE(alice->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
     char* fpr = NULL;
@@ -95,10 +96,11 @@ TEST_F(CleanInvalidOwnKeysTest, check_clean_invalid_own_keys_no_alts_revoked) {
 }
 
 TEST_F(CleanInvalidOwnKeysTest, check_clean_invalid_own_keys_no_alts_mistrusted) {
-    // This is just a dummy test case. The convention is check_whatever_you_are_checking
-    // so for multiple test cases in a suite, be more explicit ;)   
+    PEP_STATUS status = clean_own_key_defaults(session);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+
     pEp_identity* alice = NULL;
-    PEP_STATUS status = get_identity(session, "pep.test.alice@pep-project.org", "ALICE", &alice);
+    status = get_identity(session, "pep.test.alice@pep-project.org", "ALICE", &alice);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_STRNE(alice->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
     char* fpr = NULL;
@@ -108,10 +110,11 @@ TEST_F(CleanInvalidOwnKeysTest, check_clean_invalid_own_keys_no_alts_mistrusted)
 }
 
 TEST_F(CleanInvalidOwnKeysTest, check_clean_invalid_own_keys_no_alts_expired) {
-    // This is just a dummy test case. The convention is check_whatever_you_are_checking
-    // so for multiple test cases in a suite, be more explicit ;)   
+    PEP_STATUS status = clean_own_key_defaults(session);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+
     pEp_identity* bob = NULL;
-    PEP_STATUS status = get_identity(session, "expired_bob_0@darthmama.org", "BOB", &bob);
+    status = get_identity(session, "expired_bob_0@darthmama.org", "BOB", &bob);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_STREQ(bob->fpr, "E4A8CD51C25D0ED5BAD0834BD2FDE305A35FE3F5");
     char* fpr = NULL;

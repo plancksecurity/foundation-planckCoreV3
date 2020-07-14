@@ -381,6 +381,25 @@ DYNAMIC_API PEP_STATUS set_own_key(
        const char *fpr
     );
 
+//
+// clean_own_key_defaults()
+//
+// Remove any broken, unrenewable expired, or revoked 
+// own keys from identity and user defaults in the database.
+//  
+//  parameters:
+//      session (in)          session to use
+//
+//  return value:
+//      PEP_STATUS_OK if all went well
+//      PEP_PASSPHRASE_REQUIRED if a key needs to be renewed 
+//                              but cached passphrase isn't present 
+//      PEP_WRONG_PASSPHRASE if passphrase required for expired key renewal 
+//                           but passphrase is the wrong one
+//      Otherwise, database and keyring errors as appropriate 
+//
+DYNAMIC_API PEP_STATUS clean_own_key_defaults(PEP_SESSION session);
+
 PEP_STATUS get_all_keys_for_user(PEP_SESSION session, 
                                  const char* user_id,
                                  stringlist_t** keys);
@@ -414,9 +433,6 @@ PEP_STATUS validate_fpr(PEP_SESSION session,
                         pEp_identity* ident,
                         bool check_blacklist,
                         bool own_must_contain_private);
-
-
-PEP_STATUS clean_own_key_defaults(PEP_SESSION session);
 
 #ifdef __cplusplus
 }

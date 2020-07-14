@@ -2099,11 +2099,12 @@ DYNAMIC_API PEP_STATUS init(
         goto pEp_error;
 
     // runtime config
-    
-    // clean up invalid keys 
-    status = clean_own_key_defaults(_session);
-    if (status != PEP_STATUS_OK)
-        goto pEp_error;
+
+    // Will now be called by adapter.
+    // // clean up invalid keys 
+    // status = clean_own_key_defaults(_session);
+    // if (status != PEP_STATUS_OK)
+    //     goto pEp_error;
 
     *session = _session;
     
