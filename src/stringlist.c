@@ -116,13 +116,18 @@ DYNAMIC_API stringlist_t *stringlist_add(
 stringlist_t* stringlist_search(stringlist_t* head, const char* value) {
     if (!head || !value || !head->value)
         return NULL;
-    stringlist_t* retval = head;
-    for (; retval ; retval = retval->next) {
-        if (strcmp(retval->value, value) == 0)
+    stringlist_t* retval = NULL;
+    
+    stringlist_t* curr = head;
+    for (; curr ; curr = curr->next) {
+        if (strcmp(curr->value, value) == 0) {
+            retval = curr;
             break;
+        }    
     }
     return retval;
 }
+
 
 DYNAMIC_API stringlist_t *stringlist_add_unique(
         stringlist_t *stringlist,
