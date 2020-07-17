@@ -116,10 +116,14 @@ DYNAMIC_API stringlist_t *stringlist_add(
 stringlist_t* stringlist_search(stringlist_t* head, const char* value) {
     if (!head || !value || !head->value)
         return NULL;
-    stringlist_t* retval = head;
-    for (; retval ; retval = retval->next) {
-        if (strcmp(retval->value, value) == 0)
+    stringlist_t* retval = NULL;
+    
+    stringlist_t* curr = head;
+    for (; curr ; curr = curr->next) {
+        if (strcmp(curr->value, value) == 0) {
+            retval = curr;
             break;
+        }    
     }
     return retval;
 }
@@ -339,6 +343,17 @@ stringlist_t* string_to_stringlist(const char* str) {
     if (!retval->value) {
         free_stringlist(retval);
         retval = NULL;
+    }
+    return retval;
+}
+
+stringlist_t* stringlist_get_tail(stringlist_t* sl) {
+    if (!sl || !sl->value) // empty string is a value, yes?
+        return NULL;
+    
+    stringlist_t* retval = sl;
+    while (sl->next) {
+        sl = sl->next;
     }
     return retval;
 }

@@ -17,7 +17,8 @@ bool import_attached_keys(
         message *msg,
         identity_list **private_idents, 
         stringlist_t** imported_keys,
-        uint64_t* changed_keys
+        uint64_t* changed_keys,
+        char** imported_sender_key_fpr
     );
 
 void attach_own_key(PEP_SESSION session, message *msg);
