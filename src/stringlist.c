@@ -128,6 +128,7 @@ stringlist_t* stringlist_search(stringlist_t* head, const char* value) {
     return retval;
 }
 
+
 DYNAMIC_API stringlist_t *stringlist_add_unique(
         stringlist_t *stringlist,
         const char *value

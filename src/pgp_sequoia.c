@@ -1191,6 +1191,7 @@ decrypt_cb(void *cookie_opaque,
         pgp_key_amalgamation_t ka = NULL;
         pgp_key_t key = NULL;
         pgp_session_key_t sk = NULL;
+        pgp_cert_t cert = NULL;
 
         T("Considering PKESK for %s", keyid_str);
 
@@ -1202,7 +1203,6 @@ decrypt_cb(void *cookie_opaque,
 
         // Collect the recipients.  Note: we must return the primary
         // key's fingerprint.
-        pgp_cert_t cert = NULL;
         int is_tsk = 0;
         if (cert_find_by_keyid(session, keyid, false, &cert, &is_tsk) != PEP_STATUS_OK)
             goto eol;
