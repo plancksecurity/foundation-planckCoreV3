@@ -106,6 +106,7 @@ PEP_STATUS elect_pubkey(
 // own_must_contain_private is usually true when calling;
 // we only set it to false when we have the idea of
 // possibly having an own pubkey that we need to check on its own
+// N.B. Checked for PASSPHRASE errors - will now return them always
 static PEP_STATUS validate_fpr(PEP_SESSION session, 
                                pEp_identity* ident,
                                bool check_blacklist,
@@ -121,6 +122,7 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
     bool has_private = false;
     status = contains_priv_key(session, fpr, &has_private);
     
+    // N.B. Will not contain PEP_PASSPHRASE related returns here
     if (ident->me && own_must_contain_private) {
         if (status != PEP_STATUS_OK || !has_private)
             return PEP_KEY_UNSUITABLE;
@@ -173,6 +175,7 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
     bool revoked, expired;
     bool blacklisted = false;
     
+    // Should not need to decrypt key material
     status = key_revoked(session, fpr, &revoked);    
         
     if (status != PEP_STATUS_OK) {
@@ -182,11 +185,12 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
     if (!revoked) {
         time_t exp_time = (ident->me ? 
                            time(NULL) + (7*24*3600) : time(NULL));
-                           
+
+        // Should not need to decrypt key material                           
         status = key_expired(session, fpr, 
                              exp_time,
                              &expired);
-                             
+        
         assert(status == PEP_STATUS_OK);
         if (status != PEP_STATUS_OK)
             return status;
@@ -210,6 +214,9 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
         status = renew_key(session, fpr, ts);
         free_timestamp(ts);
 
+        if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE)
+            return status;
+            
         if (status == PEP_STATUS_OK) {
             // if key is valid (second check because pEp key might be extended above)
             //      Return fpr        
