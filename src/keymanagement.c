@@ -2149,7 +2149,8 @@ static PEP_STATUS _wipe_default_key_if_invalid(PEP_SESSION session,
     }     
     free(cached_fpr);
     
-    if (status == PEP_STATUS_OK)
+    // This may have been for a user default, not an identity default.
+    if (status == PEP_STATUS_OK && !(EMPTYSTR(ident->address)))
         status = myself(session, ident);
             
     return status;                                        
@@ -2202,7 +2203,7 @@ DYNAMIC_API PEP_STATUS clean_own_key_defaults(PEP_SESSION session) {
                 return status;
         }
         else if (user_default_key) {
-            pEp_identity* empty_user = new_identity(NULL, user_default_key, NULL, own_id);
+            pEp_identity* empty_user = new_identity(NULL, user_default_key, own_id, NULL);
             status = _wipe_default_key_if_invalid(session, empty_user);       
             if (PASS_ERROR(status))
                 return status;
