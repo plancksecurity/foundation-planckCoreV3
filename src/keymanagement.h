@@ -117,6 +117,7 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity);
 PEP_STATUS _myself(PEP_SESSION session, 
                    pEp_identity * identity, 
                    bool do_keygen, 
+                   bool do_renew,
                    bool ignore_flags,
                    bool read_only);
 

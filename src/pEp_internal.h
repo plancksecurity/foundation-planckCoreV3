@@ -528,6 +528,10 @@ static inline void set_max_version(unsigned int first_maj, unsigned int first_mi
 #define EMPTYSTR(STR) ((STR) == NULL || (STR)[0] == '\0')
 #endif
 
+#ifndef PASS_ERROR
+#define PASS_ERROR(ST) (ST == PEP_PASSPHRASE_REQUIRED || ST == PEP_WRONG_PASSPHRASE || ST == PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED)
+#endif
+
 #ifndef IS_PGP_CT
 #define IS_PGP_CT(CT) (((CT) | PEP_ct_confirmed) == PEP_ct_OpenPGP)
 #endif
