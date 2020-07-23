@@ -11,6 +11,7 @@
 
 #include "pEp_internal.h"
 #include "keymanagement.h"
+#include "KeySync_fsm.h"
 
 #include "blacklist.h"
 
@@ -2015,6 +2016,9 @@ DYNAMIC_API PEP_STATUS set_own_key(
 
     me->comm_type = PEP_ct_pEp;
     status = set_identity(session, me);
+    if (status == PEP_STATUS_OK)
+        signal_Sync_event(session, Sync_PR_keysync, SynchronizeGroupKeys, NULL);
+
     return status;
 }
 
