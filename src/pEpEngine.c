@@ -4942,7 +4942,7 @@ PEP_STATUS _generate_keypair(PEP_SESSION session,
     return status;
 }
 
-
+// SHOULD NOT (in implementation) ever return PASSPHRASE errors
 DYNAMIC_API PEP_STATUS get_key_rating(
         PEP_SESSION session,
         const char *fpr,

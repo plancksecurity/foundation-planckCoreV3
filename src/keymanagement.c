@@ -39,6 +39,7 @@ static bool key_matches_address(PEP_SESSION session, const char* address,
     return retval;                             
 }
 
+// Does not return PASSPHRASE errors
 PEP_STATUS elect_pubkey(
         PEP_SESSION session, pEp_identity * identity, bool check_blacklist
     )
@@ -345,6 +346,10 @@ PEP_STATUS get_user_default_key(PEP_SESSION session, const char* user_id,
 // Also, we presume that if the stored_identity was sent in
 // without an fpr, there wasn't one in the trust DB for this
 // identity.
+//
+// If any default key requires a password, it will simply 
+// bounce back and ask for it. If an elected key requires one,
+// it will do the same. Returns PASSPHRASE errors, use with caution.
 PEP_STATUS get_valid_pubkey(PEP_SESSION session,
                          pEp_identity* stored_identity,
                          bool* is_identity_default,
@@ -367,16 +372,25 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
     // Input: stored identity retrieved from database
     // if stored identity contains a default key
     if (!EMPTYSTR(stored_fpr)) {
-        status = validate_fpr(session, stored_identity, check_blacklist, true);    
-        if (status == PEP_STATUS_OK && !EMPTYSTR(stored_identity->fpr)) {
-            *is_identity_default = *is_address_default = true;
-            return status;
-        }
-        else if (status != PEP_KEY_NOT_FOUND) {
-            first_reject_status = status;
-            first_reject_comm_type = stored_identity->comm_type;
-        }
-    }
+        status = validate_fpr(session, stored_identity, check_blacklist, true);
+        switch (status) {
+            case PEP_STATUS_OK:
+                if (!EMPTYSTR(stored_identity->fpr)) {
+                    *is_identity_default = *is_address_default = true;
+                    return status;                    
+                }
+                break;
+            case PEP_KEY_NOT_FOUND:
+                break;
+            case PEP_PASSPHRASE_REQUIRED:
+            case PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED:
+            case PEP_WRONG_PASSPHRASE:
+                return status; // We're not messing around here.
+            default:    
+                first_reject_status = status;
+                first_reject_comm_type = stored_identity->comm_type;            
+        }    
+    } 
     // if no valid default stored identity key found
     free(stored_identity->fpr);
     stored_identity->fpr = NULL;
@@ -388,23 +402,41 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
         // There exists a default key for user, so validate
         stored_identity->fpr = user_fpr;
         status = validate_fpr(session, stored_identity, check_blacklist, true);
-        if (status == PEP_STATUS_OK && stored_identity->fpr) {
-            *is_user_default = true;
-            *is_address_default = key_matches_address(session, 
-                                                      stored_identity->address,
-                                                      stored_identity->fpr);
-            return status;
-        }        
-        else if (status != PEP_KEY_NOT_FOUND && first_reject_status != PEP_KEY_NOT_FOUND) {
-            first_reject_status = status;
-            first_reject_comm_type = stored_identity->comm_type;
-        }
+
+        switch (status) {
+            case PEP_STATUS_OK:
+                if (!EMPTYSTR(stored_identity->fpr)) {
+                    *is_user_default = true;
+                    *is_address_default = key_matches_address(session, 
+                                                              stored_identity->address,
+                                                              stored_identity->fpr);
+                    return status;
+                }
+                break;
+            case PEP_KEY_NOT_FOUND:
+                break;
+            case PEP_PASSPHRASE_REQUIRED:
+            case PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED:
+            case PEP_WRONG_PASSPHRASE:
+                return status; // We're not messing around here.
+            default: 
+                if (first_reject_status != PEP_KEY_NOT_FOUND) {
+                    first_reject_status = status;
+                    first_reject_comm_type = stored_identity->comm_type;            
+                }    
+        }    
     }
     
     status = elect_pubkey(session, stored_identity, check_blacklist);
     if (status == PEP_STATUS_OK) {
-        if (!EMPTYSTR(stored_identity->fpr))
-            validate_fpr(session, stored_identity, false, true); // blacklist already filtered of needed
+        if (!EMPTYSTR(stored_identity->fpr)) {
+            status = validate_fpr(session, stored_identity, false, true); // blacklist already filtered of needed
+            if (status == PEP_PASSPHRASE_REQUIRED ||
+                    status == PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED ||
+                    status == PEP_WRONG_PASSPHRASE) {
+                return status;
+            }
+        }    
     }    
     else if (status != PEP_KEY_NOT_FOUND && first_reject_status != PEP_KEY_NOT_FOUND) {
         first_reject_status = status;
@@ -470,6 +502,11 @@ static void adjust_pEp_trust_status(PEP_SESSION session, pEp_identity* identity)
 }
 
 
+// NEVER called on an own identity. So get_valid_pubkey 
+// and friends should NEVER return with a password error,
+// because its internal validate_fpr will always 
+// be called on a non-own identity.
+// But we'll make sure it gets propagated if we do.
 static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
                                                  pEp_identity* return_id,
                                                  pEp_identity* stored_ident,
@@ -488,28 +525,36 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
                                 &is_user_default,
                                 &is_address_default,
                               false);
-                                
-    if (status == PEP_STATUS_OK && stored_ident->fpr && *(stored_ident->fpr) != '\0') {
-    // set identity comm_type from trust db (user_id, FPR)
-        status = get_trust(session, stored_ident);
-        if (status == PEP_CANNOT_FIND_IDENTITY || stored_ident->comm_type == PEP_ct_unknown) {
-            // This is OK - there is no trust DB entry, but we
-            // found a key. We won't store this, but we'll
-            // use it.
-            PEP_comm_type ct = PEP_ct_unknown;
-            status = get_key_rating(session, stored_ident->fpr, &ct);
-            stored_ident->comm_type = ct;
-        }
+        
+    switch (status) {
+        case PEP_STATUS_OK:
+            if (!EMPTYSTR(stored_ident->fpr)) {
+                // set identity comm_type from trust db (user_id, FPR)
+                status = get_trust(session, stored_ident);
+                if (status == PEP_CANNOT_FIND_IDENTITY || stored_ident->comm_type == PEP_ct_unknown) {
+                    // This is OK - there is no trust DB entry, but we
+                    // found a key. We won't store this, but we'll
+                    // use it.
+                    PEP_comm_type ct = PEP_ct_unknown;
+                    status = get_key_rating(session, stored_ident->fpr, &ct);
+                    stored_ident->comm_type = ct;
+                }
+            }
+            else if (stored_ident->comm_type == PEP_ct_unknown)
+                stored_ident->comm_type = PEP_ct_key_not_found;
+            break;    
+        case PEP_PASSPHRASE_REQUIRED:
+        case PEP_WRONG_PASSPHRASE:
+        case PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED:
+            // These should NEVER happen here. If they do, 
+            // we must bail and return the status.
+            return status;
+        default:    
+            free(stored_ident->fpr);
+            stored_ident->fpr = NULL;
+            stored_ident->comm_type = PEP_ct_key_not_found;        
     }
-    else if (status != PEP_STATUS_OK) {
-        free(stored_ident->fpr);
-        stored_ident->fpr = NULL;
-        stored_ident->comm_type = PEP_ct_key_not_found;        
-    }
-    else { // no key returned, but status ok?
-        if (stored_ident->comm_type == PEP_ct_unknown)
-            stored_ident->comm_type = PEP_ct_key_not_found;
-    }
+
     free(return_id->fpr);
     return_id->fpr = NULL;
     if (status == PEP_STATUS_OK && !EMPTYSTR(stored_ident->fpr))
@@ -589,6 +634,10 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     return status;
 }
 
+// CAN return PASSPHRASE errors by returning myself for 
+// a discovered own identity (i.e. we had no user for it).
+// SHOULD not under other circumstances; if it does,
+// something internal has failed badly and very unexpectedly.
 DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
     )
@@ -1508,6 +1557,12 @@ pEp_free:
     return status;
 }
 
+// Technically speaking, this should not EVER
+// return PASSPHRASE errors, because 
+// this is never for an own identity (enforced), and thus 
+// validate_fpr will not call renew_key.
+// If it ever does, the status gets propagated, but 
+// it is distinctly not OK.
 DYNAMIC_API PEP_STATUS trust_personal_key(
         PEP_SESSION session,
         pEp_identity *ident
@@ -1908,6 +1963,7 @@ DYNAMIC_API PEP_STATUS own_keys_retrieve(PEP_SESSION session, stringlist_t **key
     return _own_keys_retrieve(session, keylist, 0, true);
 }
 
+// Returns PASSPHRASE errors when necessary
 DYNAMIC_API PEP_STATUS set_own_key(
        PEP_SESSION session,
        pEp_identity *me,
