@@ -2335,11 +2335,15 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
         status = encrypt_and_sign(session, keys, priv_key_data, priv_key_size,
                                   &encrypted_key_text, &encrypted_key_size);
     
-    if (!encrypted_key_text) {
+    if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
+        free(encrypted_key_text);        
+        goto pEp_free;
+    }                              
+    else if (!encrypted_key_text) {
         status = PEP_UNKNOWN_ERROR;
         goto pEp_free;
     }
-    else if (status) {
+    else if (status != PEP_STATUS_OK) {
         free(encrypted_key_text);
         goto pEp_free; // FIXME - we need an error return overall
     }
