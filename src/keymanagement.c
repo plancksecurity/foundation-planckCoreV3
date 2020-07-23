@@ -1196,7 +1196,10 @@ PEP_STATUS _myself(PEP_SESSION session,
     // Set usernames - priority is input username > stored name > address
     // If there's an input username, we always patch the username with that
     // input.
-    if (EMPTYSTR(identity->username) || read_only) {
+    // N.B. there was an || read_only here, but why? read_only ONLY means 
+    // we don't write to the DB! So... removed. But how this managed to work 
+    // before I don't know.
+    if (EMPTYSTR(identity->username)) {
         bool stored_uname = (stored_identity && !EMPTYSTR(stored_identity->username));
         char* uname = (stored_uname ? stored_identity->username : identity->address);
         if (uname) {
