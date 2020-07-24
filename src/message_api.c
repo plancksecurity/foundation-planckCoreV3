@@ -3300,10 +3300,10 @@ static PEP_STATUS update_sender_to_pEp_trust(
     free(sender->fpr);
     sender->fpr = NULL;
 
-    PEP_STATUS status = PEP_STATUS_OK;
+    PEP_STATUS status = is_me(session, sender) ? myself(session, sender) : update_identity(session, sender);
 
-    // Seems status doesn't matter
-    is_me(session, sender) ? myself(session, sender) : update_identity(session, sender);
+    if (PASS_ERROR(status))
+        return status;
 
     if (EMPTYSTR(sender->fpr) || strcmp(sender->fpr, keylist->value) != 0) {
         free(sender->fpr);

@@ -448,7 +448,7 @@ static inline char* _pEp_subj_copy() {
 #endif
 }
 
-static inline bool is_me(PEP_SESSION session, pEp_identity* test_ident) {
+static inline bool is_me(PEP_SESSION session, const pEp_identity* test_ident) {
     bool retval = false;
     if (test_ident && test_ident->user_id) {
         char* def_id = NULL;
