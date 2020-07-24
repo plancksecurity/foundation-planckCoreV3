@@ -451,7 +451,7 @@ static inline char* _pEp_subj_copy() {
 #endif
 }
 
-static inline bool is_me(PEP_SESSION session, pEp_identity* test_ident) {
+static inline bool is_me(PEP_SESSION session, const pEp_identity* test_ident) {
     bool retval = false;
     if (test_ident && test_ident->user_id) {
         char* def_id = NULL;
@@ -529,6 +529,10 @@ static inline void set_max_version(unsigned int first_maj, unsigned int first_mi
 
 #ifndef EMPTYSTR
 #define EMPTYSTR(STR) ((STR) == NULL || (STR)[0] == '\0')
+#endif
+
+#ifndef PASS_ERROR
+#define PASS_ERROR(ST) (ST == PEP_PASSPHRASE_REQUIRED || ST == PEP_WRONG_PASSPHRASE || ST == PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED)
 #endif
 
 #ifndef IS_PGP_CT

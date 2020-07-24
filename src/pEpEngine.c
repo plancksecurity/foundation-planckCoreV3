@@ -2102,11 +2102,12 @@ DYNAMIC_API PEP_STATUS init(
         goto pEp_error;
 
     // runtime config
-    
-    // clean up invalid keys 
-    status = clean_own_key_defaults(_session);
-    if (status != PEP_STATUS_OK)
-        goto pEp_error;
+
+    // Will now be called by adapter.
+    // // clean up invalid keys 
+    // status = clean_own_key_defaults(_session);
+    // if (status != PEP_STATUS_OK)
+    //     goto pEp_error;
 
     *session = _session;
     
@@ -4944,7 +4945,7 @@ PEP_STATUS _generate_keypair(PEP_SESSION session,
     return status;
 }
 
-
+// SHOULD NOT (in implementation) ever return PASSPHRASE errors
 DYNAMIC_API PEP_STATUS get_key_rating(
         PEP_SESSION session,
         const char *fpr,
