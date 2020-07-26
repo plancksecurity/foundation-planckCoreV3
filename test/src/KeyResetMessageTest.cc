@@ -49,6 +49,9 @@ class KeyResetMessageTest : public ::testing::Test {
         const string erin_user_id = "ErinErinErin";
         const string fenris_user_id = "BadWolf";
 
+        const char* bob2_filename = "test_keys/bob-primary-with-password-bob-subkey-without.pgp";
+        const char* bob2_fpr = "5C76378A62B04CF3F41BEC8D4940FC9FA1878736";
+
         // You can remove any or all of the following functions if its body
         // is empty.
         KeyResetMessageTest() {
@@ -2478,6 +2481,58 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_keys_one_URI_partner) {
     status = myself(session, me);
     ASSERT_STRNE(me->fpr, copy_fpr);
 }
+
+TEST_F(KeyResetMessageTest, check_reset_key_needs_passphrase) {
+    ASSERT_TRUE(slurp_and_import_key(session, bob2_filename));
+    stringlist_t* found_key = NULL;
+    PEP_STATUS status = find_keys(session, bob2_fpr, &found_key);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(found_key, nullptr);
+    ASSERT_NE(found_key->value, nullptr);
+
+    pEp_identity* bob2 = new_identity("bob@example.org", bob2_fpr, "BOB", "Bob Dog");
+    status = set_own_key(session, bob2, bob2_fpr);
+    
+    status = key_reset_identity(session, bob2, bob2_fpr);
+    ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);
+
+}
+
+TEST_F(KeyResetMessageTest, check_reset_key_wrong_passphrase) {
+    ASSERT_TRUE(slurp_and_import_key(session, bob2_filename));
+    stringlist_t* found_key = NULL;
+    PEP_STATUS status = find_keys(session, bob2_fpr, &found_key);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(found_key, nullptr);
+    ASSERT_NE(found_key->value, nullptr);
+    
+    config_passphrase(session, "julio");
+
+    pEp_identity* bob2 = new_identity("bob@example.org", bob2_fpr, "BOB", "Bob Dog");
+    status = set_own_key(session, bob2, bob2_fpr);
+    
+    status = key_reset_identity(session, bob2, bob2_fpr);
+
+    ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);    
+}
+
+TEST_F(KeyResetMessageTest, check_reset_key_correct_passphrase) {
+    ASSERT_TRUE(slurp_and_import_key(session, bob2_filename));
+    stringlist_t* found_key = NULL;
+    PEP_STATUS status = find_keys(session, bob2_fpr, &found_key);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(found_key, nullptr);
+    ASSERT_NE(found_key->value, nullptr);
+    
+    config_passphrase(session, "bob");
+
+    pEp_identity* bob2 = new_identity("bob@example.org", bob2_fpr, "BOB", "Bob Dog");
+    status = set_own_key(session, bob2, bob2_fpr);
+    
+    status = key_reset_identity(session, bob2, bob2_fpr);
+    ASSERT_EQ(status, PEP_STATUS_OK);        
+}
+
 
 /*
 TEST_F(KeyResetMessageTest, check_reset_own_with_revocations) {
