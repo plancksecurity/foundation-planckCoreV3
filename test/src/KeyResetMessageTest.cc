@@ -52,6 +52,9 @@ class KeyResetMessageTest : public ::testing::Test {
         const char* bob2_filename = "test_keys/bob-primary-with-password-bob-subkey-without.pgp";
         const char* bob2_fpr = "5C76378A62B04CF3F41BEC8D4940FC9FA1878736";
 
+        const char* alice2_filename = "test_keys/alice-no-passwords.pgp";
+        const char* alice2_fpr = "03AF88F728B8E9AADA7F370BD41801C62A649B9F";
+
         // You can remove any or all of the following functions if its body
         // is empty.
         KeyResetMessageTest() {
@@ -2525,7 +2528,7 @@ TEST_F(KeyResetMessageTest, check_reset_key_correct_passphrase) {
     ASSERT_NE(found_key->value, nullptr);
     
     config_passphrase(session, "bob");
-
+    
     pEp_identity* bob2 = new_identity("bob@example.org", bob2_fpr, "BOB", "Bob Dog");
     status = set_own_key(session, bob2, bob2_fpr);
     
@@ -2533,6 +2536,96 @@ TEST_F(KeyResetMessageTest, check_reset_key_correct_passphrase) {
     ASSERT_EQ(status, PEP_STATUS_OK);        
 }
 
+TEST_F(KeyResetMessageTest, check_reset_key_needs_passphrase_gen_key_matches) {
+    ASSERT_TRUE(slurp_and_import_key(session, bob2_filename));
+    stringlist_t* found_key = NULL;
+    PEP_STATUS status = find_keys(session, bob2_fpr, &found_key);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(found_key, nullptr);
+    ASSERT_NE(found_key->value, nullptr);
+
+    config_passphrase_for_new_keys(session, true, "bob");
+    
+    pEp_identity* bob2 = new_identity("bob@example.org", bob2_fpr, "BOB", "Bob Dog");
+    status = set_own_key(session, bob2, bob2_fpr);
+    
+    status = key_reset_identity(session, bob2, bob2_fpr);
+    ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);
+
+}
+
+TEST_F(KeyResetMessageTest, check_reset_key_wrong_passphrase_gen_key_matches) {
+    ASSERT_TRUE(slurp_and_import_key(session, bob2_filename));
+    stringlist_t* found_key = NULL;
+    PEP_STATUS status = find_keys(session, bob2_fpr, &found_key);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(found_key, nullptr);
+    ASSERT_NE(found_key->value, nullptr);
+    
+    config_passphrase(session, "julio");
+    config_passphrase_for_new_keys(session, true, "bob");
+    
+    pEp_identity* bob2 = new_identity("bob@example.org", bob2_fpr, "BOB", "Bob Dog");
+    status = set_own_key(session, bob2, bob2_fpr);
+    
+    status = key_reset_identity(session, bob2, bob2_fpr);
+
+    ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);    
+}
+
+TEST_F(KeyResetMessageTest, check_reset_key_correct_passphrase_gen_key_matches) {
+    ASSERT_TRUE(slurp_and_import_key(session, bob2_filename));
+    stringlist_t* found_key = NULL;
+    PEP_STATUS status = find_keys(session, bob2_fpr, &found_key);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(found_key, nullptr);
+    ASSERT_NE(found_key->value, nullptr);
+    
+    config_passphrase(session, "bob");
+    config_passphrase_for_new_keys(session, true, "bob");
+    
+    pEp_identity* bob2 = new_identity("bob@example.org", bob2_fpr, "BOB", "Bob Dog");
+    status = set_own_key(session, bob2, bob2_fpr);
+    
+    status = key_reset_identity(session, bob2, bob2_fpr);
+    ASSERT_EQ(status, PEP_STATUS_OK);        
+}
+
+TEST_F(KeyResetMessageTest, check_reset_key_no_passphrase_but_has_gen_key) {
+    ASSERT_TRUE(slurp_and_import_key(session, alice2_filename));
+    stringlist_t* found_key = NULL;
+    PEP_STATUS status = find_keys(session, alice2_fpr, &found_key);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(found_key, nullptr);
+    ASSERT_NE(found_key->value, nullptr);
+
+    config_passphrase_for_new_keys(session, true, "alice");
+    
+    pEp_identity* alice2 = new_identity("alice@example.org", alice2_fpr, "ALICE", "Alice");
+    status = set_own_key(session, alice2, alice2_fpr);
+    
+    status = key_reset_identity(session, alice2, alice2_fpr);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+}
+
+TEST_F(KeyResetMessageTest, check_reset_key_gen_key_pass_required) {
+    ASSERT_TRUE(slurp_and_import_key(session, alice2_filename));
+    stringlist_t* found_key = NULL;
+    PEP_STATUS status = find_keys(session, alice2_fpr, &found_key);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(found_key, nullptr);
+    ASSERT_NE(found_key->value, nullptr);
+
+    session->new_key_pass_enable = true;
+    
+    pEp_identity* alice2 = new_identity("alice@example.org", alice2_fpr, "ALICE", "Alice");
+    status = set_own_key(session, alice2, alice2_fpr);
+    
+    status = key_reset_identity(session, alice2, alice2_fpr);
+    ASSERT_EQ(status, PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED);
+
+}
 
 /*
 TEST_F(KeyResetMessageTest, check_reset_own_with_revocations) {
