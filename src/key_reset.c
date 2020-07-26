@@ -623,6 +623,9 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
             status = replace_main_user_fpr_if_equal(session, curr_ident->user_id, 
                                                     new_fpr, old_fpr);                    
 
+            if (status != PEP_STATUS_OK)
+                return status;
+                
             // This only sets as the default, does NOT TRUST IN ANY WAY
             PEP_comm_type new_key_rating = PEP_ct_unknown;
             
@@ -768,8 +771,10 @@ PEP_STATUS create_standalone_key_reset_message(PEP_SESSION session,
     if (!reset_msg)
         return PEP_ILLEGAL_VALUE;
                                                                          
-    if (!reset_msg->attachments)
-        return PEP_UNKNOWN_ERROR;
+    if (!reset_msg->attachments) {
+        status = PEP_UNKNOWN_ERROR;
+        goto pEp_free;
+    }    
     
     message* output_msg = NULL;
     
@@ -779,6 +784,8 @@ PEP_STATUS create_standalone_key_reset_message(PEP_SESSION session,
 
     if (status == PEP_STATUS_OK)
         *dst = output_msg;
+    else if (output_msg) // shouldn't happen, but...
+        free_message(output_msg); 
         
 pEp_free:
         
@@ -965,6 +972,48 @@ static PEP_STATUS _dup_grouped_only(identity_list* idents, identity_list** filte
     return PEP_STATUS_OK;    
 }
 
+static PEP_STATUS _check_own_reset_passphrase_readiness(PEP_SESSION session,
+                                                        const char* key) {
+    // Before we do anything else, make sure the key to sign the 
+    // revocation has the right passphrase set
+    PEP_STATUS status = probe_encrypt(session, key);
+    
+    // We only care if this has signing-related issues; key could 
+    // already be revoked and it will be fine below.
+    if (PASS_ERROR(status))
+        return status;
+    
+    // Because of the above, we CAN support a signing passphrase 
+    // that differs from the generation passphrase. We'll 
+    // just check to make sure everything is in order for 
+    // later use, however
+
+    if (session->new_key_pass_enable) {
+        if (EMPTYSTR(session->generation_passphrase))
+            return PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED;
+
+        if (EMPTYSTR(session->curr_passphrase)) {
+            // We'll need it as the current passphrase to sign 
+            // messages with the generated keys
+            session->curr_passphrase = strdup(session->generation_passphrase);
+        }        
+    } 
+    return PEP_STATUS_OK;                                                       
+}
+
+// This is for ONE specific key, but possibly many identities
+// We could have ONE return for PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED
+// and another for  PEP_PASSPHRASE_REQUIRED/PEP_WRONG_PASSPHRASE
+// State would advance though, it just might need to be called 
+// twice with correct passwords, and more without.
+// (In other words, with multiple passwords, this is not the end of all things)
+//
+// N.B. This function presumes that ALL idents in this group have the
+//      key in question as their main key. That's what this function 
+//      was created for.
+// FIXME:
+// I am not sure this is safe with already-revoked keys.
+//
 static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session, 
                                                          identity_list* key_idents, 
                                                          const char* old_key,
@@ -975,13 +1024,36 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
     
     if (!session || !key_idents || EMPTYSTR(old_key))
         return PEP_ILLEGAL_VALUE;
-        
+            
+    message* enc_msg = NULL;
+    message* outmsg = NULL;
+            
     messageToSend_t send_cb = session->messageToSend;
     if (!send_cb)
         return PEP_SYNC_NO_MESSAGE_SEND_CALLBACK;
-        
+
     PEP_STATUS status = PEP_STATUS_OK;
-        
+
+    // N.B. The mechanism here is that we make the caller, if 
+    //      necessary, keep trying until they give us the 
+    //      right password for the key we're going to reset/revoke. 
+    //      The revocation does not happen until later, but basically,
+    //      if the key is unrevoked and still requires a correct 
+    //      password, we need to stop this before we get there.
+    //      
+    //      This allows us to switch the correct passphrase in 
+    //      and out if there are different generation and old 
+    //      key signing passwords. (Not a concern if already revoked)
+
+    status = _check_own_reset_passphrase_readiness(session, old_key);
+    if (status != PEP_STATUS_OK)
+        return status;
+    
+    // We sometimes have to swap in and out the generation 
+    // passphrase for signing, so we keep a pointer to 
+    // the "curr_passphrase" around to set it back consistently
+    char* cached_passphrase = session->curr_passphrase;        
+    
     // if we only want grouped identities, we do this:
     if (grouped_only) {
         identity_list* new_list = NULL;        
@@ -1007,42 +1079,65 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
         
     // Ok, everyone's got a new keypair. Hoorah! 
     // generate, sign, and push messages into queue
-    message* outmsg = NULL;
+    //
+    
+    // Because we have to export the NEW secret keys,
+    // we have to switch in the passgen key 
+    // as the configured key. We'll switch it back
+    // afterward (no revocation, decrypt, or signing 
+    // with the old key happens in here)
+    session->curr_passphrase = session->generation_passphrase;
+    
     status = _generate_own_commandlist_msg(session,
                                            key_idents,
                                            old_key,
                                            &outmsg);
-                                           
+
+    session->curr_passphrase = cached_passphrase;
+    
+    // Key-based errors here shouldn't happen.
+    if (status != PEP_STATUS_OK)
+        return status;
+        
     // Following will only be true if some idents were grouped,
-    // and will only include grouped idents!                                       
+    // and will only include grouped idents!   
+    // Will be signed with old signing key.
+    // (Again, see the FIXME - we need to figure oout what 
+    //  happens if it got revoked externally)                                    
     if (outmsg) {    
-        message* enc_msg = NULL;
         
         // encrypt this baby and get out
         // extra keys???
         status = encrypt_message(session, outmsg, NULL, &enc_msg, PEP_enc_auto, PEP_encrypt_flag_key_reset_only);
         
-        if (status != PEP_STATUS_OK) {
-            goto pEp_free;
-        }
+        if (status != PEP_STATUS_OK)
+            goto pEp_error;
+    
         _add_auto_consume(enc_msg);
         
         // insert into queue
         status = send_cb(enc_msg);
 
-        if (status != PEP_STATUS_OK) {
-            free(enc_msg);
-            goto pEp_free;            
-        }                         
+        if (status != PEP_STATUS_OK)
+            goto pEp_error;                                     
     }
     
     // Ok, we've signed everything we need to with the old key,
     // Revoke that baby.
     status = revoke_key(session, old_key, NULL);
 
+    // again, we should not have key-related issues here,
+    // as we tested for the correct password earlier
     if (status != PEP_STATUS_OK)
-        goto pEp_free;
+        return status;
         
+    // Ok, NOW - the current password needs to be swapped out 
+    // because we're going to sign with keys using.
+    //
+    // All new keys have the same passphrase, if any
+    //
+    session->curr_passphrase = session->generation_passphrase;
+    
     for (curr_ident = key_idents; curr_ident && curr_ident->ident; curr_ident = curr_ident->next) {
         if (curr_ident->ident->flags & PEP_idf_devicegroup) {
             pEp_identity* ident = curr_ident->ident;
@@ -1052,10 +1147,10 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
             char* new_key = ident->fpr;
             ident->fpr = NULL;
             status = set_own_key(session, ident, new_key);
-            if (status != PEP_STATUS_OK) {
+            if (status != PEP_STATUS_OK)
                 // scream loudly and cry, then hang head in shame
-                return status;
-            }
+                goto pEp_error;
+
             free(ident->fpr);
 
             // release ownership to the struct again
@@ -1067,7 +1162,7 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
                 status = set_revoked(session, old_key, new_key, time(NULL));            
 
             if (status != PEP_STATUS_OK)
-                goto pEp_free;
+                goto pEp_error;
 
             // Whether new_key is NULL or not, if this key is equal to the current user default, we 
             // replace it.
@@ -1077,12 +1172,12 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
                                                     old_key);                    
             
             if (status != PEP_STATUS_OK)
-                goto pEp_free;
+                goto pEp_error;
                 
             pEp_identity* tmp_ident = identity_dup(ident);
             if (!tmp_ident) {
                 status = PEP_OUT_OF_MEMORY;
-                goto pEp_free;
+                goto pEp_error;
             }    
             free(tmp_ident->fpr);    
             
@@ -1091,24 +1186,50 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
             tmp_ident->fpr = strdup(old_key); // freed in free_identity
             if (status == PEP_STATUS_OK)
                 status = send_key_reset_to_recents(session, tmp_ident, old_key, ident->fpr);        
+
+            if (status != PEP_STATUS_OK)
+                goto pEp_error;
+                
             free_identity(tmp_ident);
         }    
     }    
     
+    session->curr_passphrase = cached_passphrase;    
+    
     if (status == PEP_STATUS_OK)
         // cascade that mistrust for anyone using this key
-        status = mark_as_compromised(session, old_key);
-        
+        status = mark_as_compromised(session, old_key);        
     if (status == PEP_STATUS_OK)
         status = remove_fpr_as_default(session, old_key);
     if (status == PEP_STATUS_OK)
         status = add_mistrusted_key(session, old_key);
     
-pEp_free:
+    return status;
+    
+pEp_error:
+
+    // Just in case
+    session->curr_passphrase = cached_passphrase;
+    free_message(outmsg);
+    free_message(enc_msg);
     return status;
 }
 
+static PEP_STATUS probe_signing_for_keylist(PEP_SESSION session,
+                                            stringlist_t* keylist) {
+    for ( ; keylist ; keylist = keylist->next) {
+        char* key = keylist->value;
+        if (!EMPTYSTR(key)) {
+            PEP_STATUS status = probe_encrypt(session, key);
+            if (PASS_ERROR(status))
+                return status;
+        }     
+    }                         
+    return PEP_STATUS_OK;               
+}
 
+// This is simply NOT SAFE for multiple passwords on the extant 
+// keys. Cannot be called with multiple passwords for that purpose.
 DYNAMIC_API PEP_STATUS key_reset_own_grouped_keys(PEP_SESSION session) {
     assert(session);
     
@@ -1127,6 +1248,11 @@ DYNAMIC_API PEP_STATUS key_reset_own_grouped_keys(PEP_SESSION session) {
 
     // TODO: free
     if (status == PEP_STATUS_OK) {
+        status = probe_signing_for_keylist(session, keys);
+        
+        if (PASS_ERROR(status))
+            goto pEp_free;
+            
         stringlist_t* curr_key;
         
         for (curr_key = keys; curr_key && curr_key->value; curr_key = curr_key->next) {
@@ -1143,6 +1269,13 @@ DYNAMIC_API PEP_STATUS key_reset_own_grouped_keys(PEP_SESSION session) {
             else 
                 goto pEp_free;
             
+            // Because of the key check above, this should not happen unless we were 
+            // UNLESS we required a passphrase for keygen and it's not set.
+            if (PASS_ERROR(status))
+                goto pEp_free;
+                
+            // FIXME: what about other statuses, though???
+                
             free_identity_list(key_idents);    
         }
     }
@@ -1154,8 +1287,6 @@ pEp_free:
     return status;
 }
 
-// Notes to integrate into header:
-// IF there is an ident, it must have a user_id.
 PEP_STATUS key_reset(
         PEP_SESSION session,
         const char* key_id,
@@ -1174,6 +1305,8 @@ PEP_STATUS key_reset(
     pEp_identity* tmp_ident = NULL;
     identity_list* key_idents = NULL;
     stringlist_t* keys = NULL;
+    
+    char* cached_passphrase = session->curr_passphrase;
     
     if (!EMPTYSTR(key_id)) {
         fpr_copy = strdup(key_id);
@@ -1206,6 +1339,12 @@ PEP_STATUS key_reset(
         // TODO: free
         if (status == PEP_STATUS_OK) {
             stringlist_t* curr_key;
+
+            // Before we go ANY further, we're going to bail with passphrase errors 
+            // if need be.
+            status = probe_signing_for_keylist(session, keys);
+            if (PASS_ERROR(status))
+                goto pEp_free;
             
             for (curr_key = keys; curr_key && curr_key->value; curr_key = curr_key->next) {
                 // FIXME: Is the ident really necessary?
@@ -1275,6 +1414,14 @@ PEP_STATUS key_reset(
         
         if (is_own_private) {
             
+            // Make sure we can even progress - if there are passphrase issues,
+            // bounce back to the caller now.
+            status = _check_own_reset_passphrase_readiness(session, fpr_copy);
+
+            // These will always be passphrase errors.
+            if (status != PEP_STATUS_OK)
+                return status;
+            
             // This is now the "is_own" base case - we don't do this 
             // per-identity, because all identities using this key will 
             // need new ones. That said, this is really only a problem 
@@ -1310,6 +1457,10 @@ PEP_STATUS key_reset(
                         // key for all idents for this user.
                         status = revoke_key(session, fpr_copy, NULL);
                         
+                        // Should never happen, we checked this, but STILL.
+                        if (PASS_ERROR(status))
+                            goto pEp_free;
+                            
                         // If we have a full identity, we have some cleanup and generation tasks here
                         if (!EMPTYSTR(this_ident->address)) {
                             // generate new key
@@ -1354,10 +1505,14 @@ PEP_STATUS key_reset(
                             // for all active communication partners:
                             //      active_send revocation
                             
+                            session->curr_passphrase = session->generation_passphrase;
                             tmp_ident->fpr = fpr_copy;
                             if (status == PEP_STATUS_OK)
                                 status = send_key_reset_to_recents(session, this_ident, fpr_copy, new_key);        
+                            session->curr_passphrase = cached_passphrase;    
                             tmp_ident->fpr = NULL;    
+                            if (PASS_ERROR(status))
+                                goto pEp_free; // should NOT happen
                         }
                         
                         // Whether new_key is NULL or not, if this key is equal to the current user default, we 
@@ -1369,8 +1524,10 @@ PEP_STATUS key_reset(
                 // we got an error and want to bail anyway.
                 goto pEp_free;
             }
-            else 
-                return PEP_CANNOT_FIND_IDENTITY;
+            else {
+                status = PEP_CANNOT_FIND_IDENTITY;
+                goto pEp_free;
+            }    
         } // end is_own_private
         else {
             // if it's mistrusted, make it not be so.
@@ -1412,7 +1569,8 @@ pEp_free:
     free(own_id);
     free_identity_list(key_idents);
     free_stringlist(keys);
-    free(new_key);    
+    free(new_key);   
+    session->curr_passphrase = cached_passphrase; 
     return status;
 }
 
