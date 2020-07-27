@@ -12,11 +12,16 @@
 #include "aux_mime_msg.h"
 #include "mime.h"
 
+#include <gtest/gtest.h>
+
 void test_init();
 
 bool file_exists(std::string filename);
 bool is_pEpmsg(const message *msg); // duplicates static func in message_api.c, fyi
 
+#ifndef ASSERT_OK
+#define ASSERT_OK ASSERT_EQ(status, PEP_STATUS_OK)
+#endif
 
 extern std::string _main_test_home_dir;
 
