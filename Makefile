@@ -54,6 +54,7 @@ clean:
 	$(MAKE) -C db clean
 	$(MAKE) -C asn.1 clean
 	$(MAKE) -C sync clean
+	$(MAKE) -C build-android clean
 
 tags:
 	$(MAKE) -C asn.1 tags
