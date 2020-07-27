@@ -22,6 +22,17 @@
 
 #include <gtest/gtest.h>
 
+class Sync_Adapter;
+
+// wrappers for static callbacks. Don't ask me about this mess.
+PEP_STATUS ST_message_send_callback(message* msg);
+int ST_inject_sync_event_callback(SYNC_EVENT ev, void *management);
+Sync_event_t* ST_retrieve_next_sync_event_callback(void *management, unsigned threshold);
+void ST_sync_thread_callback(PEP_SESSION session, Sync_Adapter *adapter);
+PEP_STATUS ST_notifyHandshake_callback(pEp_identity *me, pEp_identity *partner, sync_handshake_signal signal);
+
+static void* ST_fake_this;
+
 class Sync_Adapter {
 public:
     utility::locked_queue< Sync_event_t * > q;
@@ -59,6 +70,14 @@ PEP_STATUS Sync_Adapter::notifyHandshake(
     return PEP_STATUS_OK;
 }
 
+PEP_STATUS ST_notifyHandshake_callback(
+        pEp_identity*me,
+        pEp_identity *partner,
+        sync_handshake_signal signal
+    ) {
+    return ((Sync_Adapter*)ST_fake_this)->notifyHandshake(me, partner, signal);    
+}
+    
 int Sync_Adapter::inject_sync_event(SYNC_EVENT ev, void *management)
 {
     Sync_event_t *_ev = ev;
@@ -75,8 +94,13 @@ int Sync_Adapter::inject_sync_event(SYNC_EVENT ev, void *management)
     return 0;
 }
 
+int ST_inject_sync_event_callback(SYNC_EVENT ev, void *management) {
+    return ((Sync_Adapter*)ST_fake_this)->inject_sync_event(ev, management);    
+}
+    
 Sync_event_t *Sync_Adapter::retrieve_next_sync_event(void *management, unsigned threshold)
 {
+    // N.B. I think it's too late by the time you get here.
     auto adapter = static_cast< Sync_Adapter *>(management);
     time_t started = time(nullptr);
     bool timeout = false;
@@ -116,6 +140,12 @@ Sync_event_t *Sync_Adapter::retrieve_next_sync_event(void *management, unsigned 
     return ev;
 }
 
+Sync_event_t* ST_retrieve_next_sync_event_callback(void *management, 
+                                                   unsigned threshold) {
+                                                       
+    return ((Sync_Adapter*)ST_fake_this)->retrieve_next_sync_event(management, threshold);
+}
+
 PEP_STATUS Sync_Adapter::messageToSend(struct _message *msg)
 {
     assert(msg && msg->attachments);
@@ -138,6 +168,11 @@ PEP_STATUS Sync_Adapter::messageToSend(struct _message *msg)
     return PEP_STATUS_OK;
 }
 
+PEP_STATUS ST_message_send_callback(message* msg) {
+    return ((Sync_Adapter*)ST_fake_this)->messageToSend(msg);
+}
+
+
 void Sync_Adapter::sync_thread(PEP_SESSION session, Sync_Adapter *adapter)
 {
     output_stream << "sync_thread: startup\n";
@@ -145,6 +180,9 @@ void Sync_Adapter::sync_thread(PEP_SESSION session, Sync_Adapter *adapter)
     output_stream << "sync_thread: shutdown\n";
 }
 
+void ST_sync_thread_callback(PEP_SESSION session, Sync_Adapter *adapter) {
+    ((Sync_Adapter*)ST_fake_this)->sync_thread(session, adapter);
+}
 
 namespace {
 
@@ -205,8 +243,10 @@ namespace {
                 assert(self->fpr);
                 output_stream << "fpr: " << self->fpr << "\n";
                 free_identity(self);
+                
+                ST_fake_this = (void*)(&adapter);
 
-                status = init(&sync, Sync_Adapter::messageToSend, Sync_Adapter::inject_sync_event);
+                status = init(&sync, ST_message_send_callback, ST_inject_sync_event_callback);
                 if (status != PEP_STATUS_OK)
                     throw std::runtime_error((string("init returned ") + tl_status_string(status)).c_str());
 
@@ -214,8 +254,8 @@ namespace {
                 status = register_sync_callbacks(
                     sync,
                     (void *) &adapter.q,
-                    Sync_Adapter::notifyHandshake,
-                    Sync_Adapter::retrieve_next_sync_event
+                    ST_notifyHandshake_callback,
+                    ST_retrieve_next_sync_event_callback
                 );
                 if (status != PEP_STATUS_OK)
                     throw std::runtime_error((string("register sync status returned ") + tl_status_string(status)).c_str());
@@ -223,7 +263,7 @@ namespace {
                     throw std::runtime_error((string("keysync.state was supposed to be ") + to_string((int)Sole) + " but was " + to_string((int)(sync->sync_state.keysync.state))).c_str());
 
                 output_stream << "creating thread for sync\n";
-                sync_thread = new thread(Sync_Adapter::sync_thread, sync, &adapter);
+                sync_thread = new thread(ST_sync_thread_callback, sync, &adapter);
 
             }
 
@@ -266,7 +306,7 @@ TEST_F(SyncTest, check_sync)
     signal_Sync_event(sync, Sync_PR_keysync, CannotDecrypt, NULL);
 }
 
-/*
+
 TEST_F(SyncTest, check_sync_enable)
 {
     pEp_identity* julio = new_identity("julio.iglesias@truhan.senor.es", NULL, PEP_OWN_USERID, "Julio Iglesias");
@@ -278,17 +318,16 @@ TEST_F(SyncTest, check_sync_enable)
 
 // Passes if you step through and ignore the send_key_to_recents part of key reset, because the attempt to pass the static class vars above doesn't work.
 // FIXME: KB, reimplement according to now-standard method used in key reset tests
-   // disable_identity_for_sync(session, julio);
-   // adapter.processing();
-   // myself(session, julio);
-   // ASSERT_EQ(julio->flags, PEP_idf_not_for_sync);
-   // ASSERT_STRNE(current_fpr.c_str(), julio->fpr);
-   // 
-   // pEp_identity* juan = new_identity("juan.valdez@columbian.coffee.co", NULL, PEP_OWN_USERID, "Juan Valdez");
-   // disable_identity_for_sync(session, juan);
-   // adapter.processing();
-   // myself(session, juan);
-   // ASSERT_EQ(juan->flags, PEP_idf_not_for_sync);
-   // ASSERT_FALSE(EMPTYSTR(juan->fpr));
+   disable_identity_for_sync(session, julio);
+   adapter.processing();
+   myself(session, julio);
+   ASSERT_EQ(julio->flags, PEP_idf_not_for_sync);
+   ASSERT_STRNE(current_fpr.c_str(), julio->fpr);
+   
+   pEp_identity* juan = new_identity("juan.valdez@columbian.coffee.co", NULL, PEP_OWN_USERID, "Juan Valdez");
+   disable_identity_for_sync(session, juan);
+   adapter.processing();
+   myself(session, juan);
+   ASSERT_EQ(juan->flags, PEP_idf_not_for_sync);
+   ASSERT_FALSE(EMPTYSTR(juan->fpr));
 }
-*/
