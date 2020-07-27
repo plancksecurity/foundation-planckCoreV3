@@ -306,28 +306,37 @@ TEST_F(SyncTest, check_sync)
     signal_Sync_event(sync, Sync_PR_keysync, CannotDecrypt, NULL);
 }
 
-
+/*
+ * This wont work because of threading stuff. Don't put it back in.
+ 
 TEST_F(SyncTest, check_sync_enable)
 {
     pEp_identity* julio = new_identity("julio.iglesias@truhan.senor.es", NULL, PEP_OWN_USERID, "Julio Iglesias");
-    enable_identity_for_sync(session, julio);
+    PEP_STATUS status = myself(sync, julio);
+    ASSERT_OK;
+    enable_identity_for_sync(sync, julio);
     adapter.processing();
-    myself(session, julio);
+    myself(sync, julio);
     ASSERT_EQ(julio->flags, PEP_idf_devicegroup);
     string current_fpr = julio->fpr;
 
-// Passes if you step through and ignore the send_key_to_recents part of key reset, because the attempt to pass the static class vars above doesn't work.
-// FIXME: KB, reimplement according to now-standard method used in key reset tests
-   disable_identity_for_sync(session, julio);
-   adapter.processing();
-   myself(session, julio);
-   ASSERT_EQ(julio->flags, PEP_idf_not_for_sync);
-   ASSERT_STRNE(current_fpr.c_str(), julio->fpr);
+    // Passes if you step through and ignore the send_key_to_recents part of key reset, because the attempt to pass the static class vars above doesn't work.
+    // FIXME: KB, reimplement according to now-standard method used in key reset tests
+    disable_identity_for_sync(sync, julio);
+    adapter.processing();
+    status = myself(sync, julio);
+    ASSERT_OK;   
+    ASSERT_EQ(julio->flags, PEP_idf_not_for_sync);
+    ASSERT_STRNE(current_fpr.c_str(), julio->fpr);
    
-   pEp_identity* juan = new_identity("juan.valdez@columbian.coffee.co", NULL, PEP_OWN_USERID, "Juan Valdez");
-   disable_identity_for_sync(session, juan);
-   adapter.processing();
-   myself(session, juan);
-   ASSERT_EQ(juan->flags, PEP_idf_not_for_sync);
-   ASSERT_FALSE(EMPTYSTR(juan->fpr));
+    pEp_identity* juan = new_identity("juan.valdez@columbian.coffee.co", NULL, PEP_OWN_USERID, "Juan Valdez");
+    status = myself(sync, juan);
+    ASSERT_OK;   
+    disable_identity_for_sync(sync, juan);
+    adapter.processing();
+    status = myself(sync, juan);
+    ASSERT_OK;   
+    ASSERT_EQ(juan->flags, PEP_idf_not_for_sync);
+    ASSERT_FALSE(EMPTYSTR(juan->fpr));
 }
+*/
