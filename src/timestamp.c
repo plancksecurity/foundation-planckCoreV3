@@ -9,6 +9,17 @@
 #include <string.h>
 #include <assert.h>
 
+
+DYNAMIC_API time_t timegm_with_gmtoff(timestamp* ts)
+{
+    const time_t raw_time = timegm(ts);
+    if(raw_time==-1)
+        return -1;
+    
+    return raw_time - ts->tm_gmtoff;
+}
+
+
 DYNAMIC_API timestamp * new_timestamp(time_t clock)
 {
     timestamp *ts = calloc(1, sizeof(timestamp));
