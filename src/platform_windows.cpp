@@ -410,7 +410,7 @@ DYNAMIC_API time_t timegm(timestamp *timeptr)
     if (result == -1)
         return -1;
 
-    return (result - timeptr->tm_gmtoff);
+    return result;
 }
 
 void uuid_generate_random(pEpUUID out)
