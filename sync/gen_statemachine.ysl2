@@ -291,7 +291,9 @@ tstylesheet {
                    return PEP_«yml:ucase(@name)»_NO_INJECT_CALLBACK;
 
                 if (event < Extra) {
-                    msg = new_«@name»_message(fsm, event);
+                    // FIXME: there should be a mapping between event and message type
+                    //        with current implementation they've got an offset of 1
+                    msg = new_«@name»_message(fsm, event - 1);
                     if (!msg) {
                         status = PEP_OUT_OF_MEMORY;
                         goto the_end;
