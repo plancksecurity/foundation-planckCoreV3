@@ -548,6 +548,10 @@ timestamp * etpantime_to_timestamp(const struct mailimf_date_time *et)
     result->tm_mon = et->dt_month - 1;
     result->tm_year = et->dt_year - 1900;
     result->tm_gmtoff = 36L * (long) et->dt_zone;
+
+    time_t t = timegm_with_gmtoff(result);
+    gmtime_r(&t, result);
+
     return result;
 }
 
