@@ -16,7 +16,7 @@ SRCS:=$(wildcard src/*.cc) $(wildcard src/*/*.cc)
 OBJS:=$(addsuffix .o,$(basename $(SRCS)))
 DEPS:=$(OBJS:.o=.d)
 
-LDFLAGS+= -L../asn.1 -L../src $(ETPAN_LIB) $(CPPUNIT_LIB)
+LDFLAGS+= -L../asn.1 -L../src $(ETPAN_LIB) $(CPPUNIT_LIB) $(GTEST_LDFLAGS)
 
 TARGET:=EngineTests
 
