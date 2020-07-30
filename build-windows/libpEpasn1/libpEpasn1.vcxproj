@@ -60,10 +60,6 @@
     <Link>
       <SubSystem>Windows</SubSystem>
     </Link>
-    <PreBuildEvent>
-      <Command>cd "$(ProjectDir)..\.." &amp;&amp; "$(ProjectDir)..\generate_code.cmd"</Command>
-      <Message>Generating Code for pEp Sync</Message>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -81,10 +77,6 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
-    <PreBuildEvent>
-      <Command>cd "$(ProjectDir)..\.." &amp;&amp; "$(ProjectDir)..\generate_code.cmd"</Command>
-      <Message>Generating Code for pEp Sync</Message>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -227,4 +219,8 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
+  <Target Name="BeforeRebuild">
+    <Message Text="Generating Code for pEp Sync" />
+    <Exec Command="CD &quot;$(ProjectDir)..\..&quot; &amp;&amp; &quot;$(ProjectDir)..\generate_code.cmd&quot;" />
+  </Target>
 </Project>
