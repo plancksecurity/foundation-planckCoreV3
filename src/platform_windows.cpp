@@ -406,6 +406,7 @@ DYNAMIC_API time_t timegm(timestamp *timeptr)
     if (!timeptr)
         return -1;
 
+    timeptr->tm_gmtoff = 0;
     time_t result = _mkgmtime((struct tm *) timeptr);
     if (result == -1)
         return -1;
