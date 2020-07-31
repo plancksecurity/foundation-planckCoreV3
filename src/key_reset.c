@@ -1014,7 +1014,7 @@ static PEP_STATUS _check_own_reset_passphrase_readiness(PEP_SESSION session,
     if (EMPTYSTR(session->curr_passphrase) && !EMPTYSTR(session->generation_passphrase)) {
         // We'll need it as the current passphrase to sign 
         // messages with the generated keys
-        session->curr_passphrase = strdup(session->generation_passphrase);
+        config_passphrase(session, session->generation_passphrase);
     }        
                                                           
     return PEP_STATUS_OK;                                                       
@@ -1062,17 +1062,14 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
     if (status != PEP_STATUS_OK)
         return status;
     
-    // We sometimes have to swap in and out the generation 
-    // passphrase for signing, so we keep a pointer to 
-    // the "curr_passphrase" around to set it back consistently
-    char* cached_passphrase = session->curr_passphrase;        
+    char* cached_passphrase = EMPTYSTR(session->curr_passphrase) ? NULL : strdup(session->curr_passphrase);        
     
     // if we only want grouped identities, we do this:
     if (grouped_only) {
         identity_list* new_list = NULL;        
         status = _dup_grouped_only(key_idents, &new_list);
         if (status != PEP_STATUS_OK)
-            return status;
+            goto pEp_error;
         key_idents = new_list; // local var change, won't impact caller    
     }
     
@@ -1087,7 +1084,7 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
         ident->fpr = NULL;
         status = _generate_keypair(session, ident, true);
         if (status != PEP_STATUS_OK)
-            return status;            
+            goto pEp_error;            
     }
         
     // Ok, everyone's got a new keypair. Hoorah! 
@@ -1099,18 +1096,18 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
     // as the configured key. We'll switch it back
     // afterward (no revocation, decrypt, or signing 
     // with the old key happens in here)
-    session->curr_passphrase = session->generation_passphrase;
+    config_passphrase(session, session->generation_passphrase);
     
     status = _generate_own_commandlist_msg(session,
                                            key_idents,
                                            old_key,
                                            &outmsg);
 
-    session->curr_passphrase = cached_passphrase;
+    config_passphrase(session, cached_passphrase);
     
     // Key-based errors here shouldn't happen.
     if (status != PEP_STATUS_OK)
-        return status;
+        goto pEp_error;
         
     // Following will only be true if some idents were grouped,
     // and will only include grouped idents!   
@@ -1142,14 +1139,14 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
     // again, we should not have key-related issues here,
     // as we ensured the correct password earlier
     if (status != PEP_STATUS_OK)
-        return status;
+        goto pEp_error;
         
     // Ok, NOW - the current password needs to be swapped out 
     // because we're going to sign with keys using it.
     //
     // All new keys have the same passphrase, if any
     //
-    session->curr_passphrase = session->generation_passphrase;
+    config_passphrase(session, session->generation_passphrase);
     
     for (curr_ident = key_idents; curr_ident && curr_ident->ident; curr_ident = curr_ident->next) {
         if (curr_ident->ident->flags & PEP_idf_devicegroup) {
@@ -1207,7 +1204,7 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
         }    
     }    
     
-    session->curr_passphrase = cached_passphrase;    
+    config_passphrase(session, cached_passphrase);    
     
     if (status == PEP_STATUS_OK)
         // cascade that mistrust for anyone using this key
@@ -1221,24 +1218,12 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
     
 pEp_error:
     // Just in case
-    session->curr_passphrase = cached_passphrase;
+    config_passphrase(session, cached_passphrase);
     free_stringlist(test_key);
     free_message(outmsg);
     free_message(enc_msg);
+    free(cached_passphrase);
     return status;
-}
-
-static PEP_STATUS probe_signing_for_keylist(PEP_SESSION session,
-                                            stringlist_t* keylist) {
-    for ( ; keylist ; keylist = keylist->next) {
-        char* key = keylist->value;
-        if (!EMPTYSTR(key)) {
-            PEP_STATUS status = probe_encrypt(session, key);
-            if (PASS_ERROR(status))
-                return status;
-        }     
-    }                         
-    return PEP_STATUS_OK;               
 }
 
 DYNAMIC_API PEP_STATUS key_reset_own_grouped_keys(PEP_SESSION session) {
@@ -1315,7 +1300,7 @@ PEP_STATUS key_reset(
     identity_list* key_idents = NULL;
     stringlist_t* keys = NULL;
     
-    char* cached_passphrase = session->curr_passphrase;
+    char* cached_passphrase = EMPTYSTR(session->curr_passphrase) ? NULL : strdup(session->curr_passphrase);
     
     if (!EMPTYSTR(key_id)) {
         fpr_copy = strdup(key_id);
@@ -1348,12 +1333,6 @@ PEP_STATUS key_reset(
         // TODO: free
         if (status == PEP_STATUS_OK) {
             stringlist_t* curr_key;
-
-            // Before we go ANY further, we're going to bail with passphrase errors 
-            // if need be.
-            status = probe_signing_for_keylist(session, keys);
-            if (PASS_ERROR(status))
-                goto pEp_free;
             
             for (curr_key = keys; curr_key && curr_key->value; curr_key = curr_key->next) {
                 // FIXME: Is the ident really necessary?
@@ -1514,11 +1493,11 @@ PEP_STATUS key_reset(
                             // for all active communication partners:
                             //      active_send revocation
                             
-                            session->curr_passphrase = session->generation_passphrase;
+                            config_passphrase(session, session->generation_passphrase);
                             tmp_ident->fpr = fpr_copy;
                             if (status == PEP_STATUS_OK)
                                 status = send_key_reset_to_recents(session, this_ident, fpr_copy, new_key);        
-                            session->curr_passphrase = cached_passphrase;    
+                            config_passphrase(session, cached_passphrase);    
                             tmp_ident->fpr = NULL;    
                             if (PASS_ERROR(status))
                                 goto pEp_free; // should NOT happen
@@ -1579,7 +1558,8 @@ pEp_free:
     free_identity_list(key_idents);
     free_stringlist(keys);
     free(new_key);   
-    session->curr_passphrase = cached_passphrase; 
+    config_passphrase(session, cached_passphrase); 
+    free(cached_passphrase);
     return status;
 }
 

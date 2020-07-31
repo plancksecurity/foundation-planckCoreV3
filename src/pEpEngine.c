@@ -999,7 +999,7 @@ DYNAMIC_API PEP_STATUS init(
     _session->messageToSend = messageToSend;
     _session->inject_sync_event = inject_sync_event;
     _session->ensure_passphrase = ensure_passphrase;
-
+    
 #ifdef DEBUG_ERRORSTACK
     _session->errorstack = new_stringlist("init()");
 #endif
