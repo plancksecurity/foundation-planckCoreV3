@@ -24,6 +24,7 @@
 #include <gtest/gtest.h>
 
 PEP_STATUS KRMT_message_send_callback(message* msg);
+PEP_STATUS KRMT_ensure_passphrase_callback(PEP_SESSION session, const char* key);
 
 static void* KRMT_fake_this;
 
@@ -34,6 +35,7 @@ class KeyResetMessageTest : public ::testing::Test {
         PEP_SESSION session;
 
         vector<message*> m_queue;
+        vector<string> pass_list;
 
     protected:
 
@@ -87,7 +89,7 @@ class KeyResetMessageTest : public ::testing::Test {
             ASSERT_NE(engine, nullptr);
 
             // Ok, let's initialize test directories etc.
-            engine->prep(&KRMT_message_send_callback, NULL, init_files);
+            engine->prep(&KRMT_message_send_callback, NULL, &KRMT_ensure_passphrase_callback, init_files);
 
             // Ok, try to start this bugger.
             engine->start();
@@ -245,6 +247,9 @@ PEP_STATUS KRMT_message_send_callback(message* msg) {
     return PEP_STATUS_OK;
 }
 
+PEP_STATUS KRMT_ensure_passphrase_callback(PEP_SESSION session, const char* fpr) {
+    return config_valid_passphrase(session, fpr, ((KeyResetMessageTest*)KRMT_fake_this)->pass_list);
+}
 
 TEST_F(KeyResetMessageTest, check_reset_key_and_notify) {
     send_setup();

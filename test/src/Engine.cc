@@ -32,17 +32,19 @@ Engine::Engine(string engine_home_dir) {
     real_home = getenv("HOME");
     cached_messageToSend = NULL;
     cached_inject_sync_event = NULL;
+    cached_ensure_passphrase = NULL;
 }
 
 Engine::~Engine() {}
 
-void Engine::prep(messageToSend_t mts, inject_sync_event_t ise, 
+void Engine::prep(messageToSend_t mts, inject_sync_event_t ise, ensure_passphrase_t ep,
                   std::vector<std::pair<std::string, std::string>> init_files) {
     if (engine_home.empty())
         throw std::runtime_error("Engine setup: BAD INITIALISATION. No test home.");
     
     cached_messageToSend = mts;
     cached_inject_sync_event = ise;
+    cached_ensure_passphrase = ep;
 
     int success = 0;
     struct stat dirchk;
@@ -90,7 +92,7 @@ void Engine::start() {
             
     unix_local_db(true);
             
-    PEP_STATUS status = init(&session, cached_messageToSend, cached_inject_sync_event, NULL);
+    PEP_STATUS status = init(&session, cached_messageToSend, cached_inject_sync_event, cached_ensure_passphrase);
     assert(status == PEP_STATUS_OK);
     assert(session);
 
