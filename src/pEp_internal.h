@@ -250,6 +250,7 @@ struct _pEpSession {
     notifyHandshake_t notifyHandshake;
     inject_sync_event_t inject_sync_event;
     retrieve_next_sync_event_t retrieve_next_sync_event;
+    ensure_decrypt_key_t ensure_decrypt_key;
 
     // pEp Sync
     void *sync_management;
