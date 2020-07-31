@@ -205,7 +205,7 @@ DYNAMIC_API void free_Sync_event(SYNC_EVENT ev);
 
 typedef int (*inject_sync_event_t)(SYNC_EVENT ev, void *management);
 
-// ensure_decrypt_key() - callee ensures correct password for (signing) key is configured in the session on
+// ensure_passphrase() - callee ensures correct password for (signing) key is configured in the session on
 //                        return, or returns error when it is not found
 //  parameters:
 //.     session (in)      session for which the guarantee is made
@@ -221,7 +221,7 @@ typedef int (*inject_sync_event_t)(SYNC_EVENT ev, void *management);
 //      The callee is responsible for iterating through passwords
 //      to ensure signing/encryption can occur successfully. 
 //
-typedef PEP_STATUS (*ensure_decrypt_key_t)(PEP_SESSION session, const char* fpr);
+typedef PEP_STATUS (*ensure_passphrase_t)(PEP_SESSION session, const char* fpr);
 
 // INIT_STATUS init() - initialize pEpEngine for a thread
 //
@@ -231,7 +231,7 @@ typedef PEP_STATUS (*ensure_decrypt_key_t)(PEP_SESSION session, const char* fpr)
 //      messageToSend (in)                  callback for sending message by the
 //                                          application
 //      inject_sync_event (in)              callback for injecting a sync event
-//      ensure_decrypt_key (in)             callback for ensuring correct password for key is set
+//      ensure_passphrase (in)             callback for ensuring correct password for key is set
 //
 //  return value:
 //      PEP_STATUS_OK = 0                   if init() succeeds
@@ -266,7 +266,7 @@ DYNAMIC_API PEP_STATUS init(
         PEP_SESSION *session,
         messageToSend_t messageToSend,
         inject_sync_event_t inject_sync_event,
-        ensure_decrypt_key_t ensure_decrypt_key
+        ensure_passphrase_t ensure_passphrase
     );
 
 

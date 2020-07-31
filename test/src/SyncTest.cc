@@ -246,7 +246,7 @@ namespace {
                 
                 ST_fake_this = (void*)(&adapter);
 
-                status = init(&sync, ST_message_send_callback, ST_inject_sync_event_callback);
+                status = init(&sync, ST_message_send_callback, ST_inject_sync_event_callback, NULL);
                 if (status != PEP_STATUS_OK)
                     throw std::runtime_error((string("init returned ") + tl_status_string(status)).c_str());
 

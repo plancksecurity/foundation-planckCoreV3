@@ -1358,7 +1358,8 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
 {
     PEP_SESSION session;
     pEp_identity *identity;
-    PEP_STATUS status = init(&session, NULL, NULL);
+    // FIXME_NOW: ensure_decrypt callback???
+    PEP_STATUS status = init(&session, NULL, NULL, NULL);
     assert(!status);
     if (status)
         return status;

@@ -90,7 +90,7 @@ void Engine::start() {
             
     unix_local_db(true);
             
-    PEP_STATUS status = init(&session, cached_messageToSend, cached_inject_sync_event);
+    PEP_STATUS status = init(&session, cached_messageToSend, cached_inject_sync_event, NULL);
     assert(status == PEP_STATUS_OK);
     assert(session);
 
