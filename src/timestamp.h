@@ -34,11 +34,11 @@ typedef struct tm timestamp;
 // timegm_with_gmtoff() - convert the broken-out time into time_t, and respect tm_gmtoff
 //
 //  parameters:
-//      timeptr(inout)     broken-out time; members will be "normalized" by this function.
+//      timeptr(in)     broken-out time
 //
 //  return value:
 //      time_t that holds the usual "seconds since epoch"
-DYNAMIC_API time_t timegm_with_gmtoff(timestamp* ts);
+DYNAMIC_API time_t timegm_with_gmtoff(const timestamp* ts);
 
 
 // new_timestamp() - allocate a new timestamp
