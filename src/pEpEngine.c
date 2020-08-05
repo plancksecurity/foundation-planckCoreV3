@@ -944,7 +944,8 @@ static PEP_STATUS upgrade_revoc_contact_to_13(PEP_SESSION session) {
 DYNAMIC_API PEP_STATUS init(
         PEP_SESSION *session,
         messageToSend_t messageToSend,
-        inject_sync_event_t inject_sync_event
+        inject_sync_event_t inject_sync_event,
+        ensure_passphrase_t ensure_passphrase
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -993,7 +994,8 @@ DYNAMIC_API PEP_STATUS init(
     _session->version = PEP_ENGINE_VERSION;
     _session->messageToSend = messageToSend;
     _session->inject_sync_event = inject_sync_event;
-
+    _session->ensure_passphrase = ensure_passphrase;
+    
     assert(LOCAL_DB);
     if (LOCAL_DB == NULL) {
         status = PEP_INIT_CANNOT_OPEN_DB;
