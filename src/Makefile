@@ -28,7 +28,7 @@ endif
 ifeq ($(BUILD_ON),Darwin)
     ifeq ($(BUILD_FOR),Darwin)
         CFLAGS+= -DSQLITE_THREADSAFE=1
-        LDLIBS+= -lz -liconv
+        LDLIBS+= -lz -liconv -mmacosx-version-min=10.10
     else
         $(error I do not know how to make for $(BUILD_FOR) on $(BUILD_ON))
     endif

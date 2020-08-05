@@ -253,6 +253,7 @@ struct _pEpSession {
     notifyHandshake_t notifyHandshake;
     inject_sync_event_t inject_sync_event;
     retrieve_next_sync_event_t retrieve_next_sync_event;
+    ensure_passphrase_t ensure_passphrase;
 
     // pEp Sync
     void *sync_management;
@@ -271,9 +272,6 @@ struct _pEpSession {
     bool service_log;
     
 #ifndef NDEBUG
-#   ifdef DEBUG_ERRORSTACK
-    stringlist_t* errorstack;
-#   endif
     int debug_color;
 #endif
 };

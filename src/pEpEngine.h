@@ -28,7 +28,7 @@ extern "C" {
 #define PEP_ENGINE_VERSION_MAJOR 2
 #define PEP_ENGINE_VERSION_MINOR 1
 #define PEP_ENGINE_VERSION_PATCH 0
-#define PEP_ENGINE_VERSION_RC    21
+#define PEP_ENGINE_VERSION_RC    25
 
 
 #define PEP_OWN_USERID "pEp_own_userId"
@@ -208,6 +208,23 @@ DYNAMIC_API void free_Sync_event(SYNC_EVENT ev);
 
 typedef int (*inject_sync_event_t)(SYNC_EVENT ev, void *management);
 
+// ensure_passphrase() - callee ensures correct password for (signing) key is configured in the session on
+//                        return, or returns error when it is not found
+//  parameters:
+//.     session (in)      session for which the guarantee is made
+//      fpr (in)          fpr to check
+//
+//  return value:
+//      PEP_STATUS_OK passphrase is configured and ready to use
+//      If the caller runs out of passphrases to try, PEP_*PASSWORD* errors 
+//      are acceptable.
+//.     Other errors if, e.g., the key is not found
+//
+//  caveat:
+//      The callee is responsible for iterating through passwords
+//      to ensure signing/encryption can occur successfully. 
+//
+typedef PEP_STATUS (*ensure_passphrase_t)(PEP_SESSION session, const char* fpr);
 
 // INIT_STATUS init() - initialize pEpEngine for a thread
 //
@@ -217,13 +234,14 @@ typedef int (*inject_sync_event_t)(SYNC_EVENT ev, void *management);
 //      messageToSend (in)                  callback for sending message by the
 //                                          application
 //      inject_sync_event (in)              callback for injecting a sync event
+//      ensure_passphrase (in)             callback for ensuring correct password for key is set
 //
 //  return value:
 //      PEP_STATUS_OK = 0                   if init() succeeds
 //      PEP_INIT_SQLITE3_WITHOUT_MUTEX      if SQLite3 was compiled with
 //                                          SQLITE_THREADSAFE 0
 //      PEP_INIT_CANNOT_LOAD_CRYPTO_LIB     if crypto lin cannot be found
-//      PEP_INIT_CRYPTO_LIB_INIT_FAILED          if CRYPTO_LIB init fails
+//      PEP_INIT_CRYPTO_LIB_INIT_FAILED     if CRYPTO_LIB init fails
 //      PEP_INIT_CANNOT_OPEN_DB             if user's management db cannot be
 //                                          opened
 //      PEP_INIT_CANNOT_OPEN_SYSTEM_DB      if system's management db cannot be
@@ -242,12 +260,18 @@ typedef int (*inject_sync_event_t)(SYNC_EVENT ev, void *management);
 //
 //      messageToSend can only be null if no transport is application based
 //      if transport system is not used it must not be NULL
+//
+//      ensure_refresh_key should only be NULL if the 
+//      caller can guarantee that there is only one single or zero passphrases 
+//      used in the whole of the keys database
 
 DYNAMIC_API PEP_STATUS init(
         PEP_SESSION *session,
         messageToSend_t messageToSend,
-        inject_sync_event_t inject_sync_event
+        inject_sync_event_t inject_sync_event,
+        ensure_passphrase_t ensure_passphrase
     );
+
 
 
 // void release() - release thread session handle
@@ -263,26 +287,6 @@ DYNAMIC_API PEP_STATUS init(
 //        are done
 
 DYNAMIC_API void release(PEP_SESSION session);
-
-
-// const stringlist_t* get_errorstack(PEP_SESSION) - get the error stack for that session, if any
-//
-//  parameters:
-//        session (in)    session handle
-//
-//    caveat:
-//        To get a useful error stack you have to compile with -DDEBUG_ERRORSTACK
-//        The error stack belongs to the session. Do no not change it!
-DYNAMIC_API const stringlist_t* get_errorstack(PEP_SESSION session);
-
-
-// void clear_errorstack(PEP_SESSION) - clear the error stack for that session, if any
-//
-//  parameters:
-//        session (in)    session handle
-//
-DYNAMIC_API void clear_errorstack(PEP_SESSION session);
-
 
 // config_passive_mode() - enable passive mode
 //

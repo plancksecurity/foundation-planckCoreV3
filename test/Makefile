@@ -16,7 +16,7 @@ SRCS:=$(wildcard src/*.cc) $(wildcard src/*/*.cc)
 OBJS:=$(addsuffix .o,$(basename $(SRCS)))
 DEPS:=$(OBJS:.o=.d)
 
-LDFLAGS+= -L../asn.1 -L../src $(ETPAN_LIB) $(CPPUNIT_LIB)
+LDFLAGS+= -L../asn.1 -L../src $(ETPAN_LIB) $(GTEST_LDFLAGS)
 
 TARGET:=EngineTests
 
@@ -63,7 +63,7 @@ endif
 CXXFLAGS:=-I$(GTEST_INC_DIR) $(filter-out -DNDEBUG,$(CXXFLAGS))
 
 # FIXME Possibly missing incdirs: ASN1C_INC
-CXXFLAGS+= -I./src -I../sync $(CPPUNIT_INC) $(INC_FLAGS) -Wno-deprecated -Wno-unused-variable
+CXXFLAGS+= -I./src -I../sync $(INC_FLAGS) -Wno-deprecated -Wno-unused-variable
 
 ifeq ($(OPENPGP),GPG)
     CXXFLAGS+= -DUSE_GPG $(GPGME_INC)
@@ -80,9 +80,6 @@ ifdef GPGME_LIB
 endif
 ifdef NETPGP_LIB
     EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(NETPGP_LIB)):
-endif
-ifdef CPPUNIT_LIB
-    EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(CPPUNIT_LIB)):
 endif
 
 # Remove trailing ':'

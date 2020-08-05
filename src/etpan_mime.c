@@ -551,6 +551,12 @@ timestamp * etpantime_to_timestamp(const struct mailimf_date_time *et)
     result->tm_mon = et->dt_month - 1;
     result->tm_year = et->dt_year - 1900;
     result->tm_gmtoff = 36L * (long) et->dt_zone;
+
+    // Normalize to UTC and then forget the offset.
+    time_t t = timegm_with_gmtoff(result);
+    gmtime_r(&t, result);
+    result->tm_gmtoff = 0;
+
     return result;
 }
 

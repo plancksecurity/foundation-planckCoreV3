@@ -3187,7 +3187,7 @@ PEP_STATUS pgp_revoke_key(
     status = _pgp_get_decrypted_key(session, iter, &key);
 
     if (!key || status != PEP_STATUS_OK) {
-        ERROR_OUT (err, PEP_UNKNOWN_ERROR,
+        ERROR_OUT (err, (status != PEP_STATUS_OK ? status : PEP_UNKNOWN_ERROR),
                    "%s has no usable certification capable key", fpr);           
     }               
                 
