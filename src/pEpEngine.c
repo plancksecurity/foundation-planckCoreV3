@@ -538,9 +538,6 @@ static const char *sql_get_last_contacted =
         
 static int user_version(void *_version, int count, char **text, char **name)
 {
-    assert(_version);
-    assert(count == 1);
-    assert(text && text[0]);
     if (!(_version && count == 1 && text && text[0]))
         return -1;
 
@@ -983,7 +980,6 @@ DYNAMIC_API PEP_STATUS init(
     // client session, or by using synchronization primitive to protect
     // creation/deletion of first/last session from the app.
 
-    assert(session);
     if (session == NULL)
         return PEP_ILLEGAL_VALUE;
 
@@ -2124,10 +2120,7 @@ DYNAMIC_API void release(PEP_SESSION session)
     bool out_last = false;
     int _count = --init_count;
     
-    assert(_count >= -1);
-    assert(session);
-
-    if (!((_count >= -1) && session))
+    if ((_count < -1) || !session)
         return;
 
     // a small race condition but still a race condition
@@ -2394,11 +2387,7 @@ DYNAMIC_API PEP_STATUS log_event(
     session->service_log = true;
 
     int result;
-    
-    assert(session);
-    assert(title);
-    assert(entity);
-    
+        
     if (!(session && title && entity))
         return PEP_ILLEGAL_VALUE;
     
@@ -2428,7 +2417,6 @@ DYNAMIC_API PEP_STATUS log_service(
         const char *comment
     )
 {
-    assert(session);
     if (!session)
         return PEP_ILLEGAL_VALUE;
 
@@ -2445,10 +2433,6 @@ DYNAMIC_API PEP_STATUS trustword(
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
-    assert(session);
-    assert(word);
-    assert(wsize);
-
     if (!(session && word && wsize))
         return PEP_ILLEGAL_VALUE;
 
@@ -2458,6 +2442,7 @@ DYNAMIC_API PEP_STATUS trustword(
     if (lang == NULL)
         lang = "en";
 
+    // FIXME: should this not be an actual check???
     assert((lang[0] >= 'A' && lang[0] <= 'Z')
             || (lang[0] >= 'a' && lang[0] <= 'z'));
     assert((lang[1] >= 'A' && lang[1] <= 'Z')
@@ -2490,12 +2475,6 @@ DYNAMIC_API PEP_STATUS trustwords(
 {
     const char *source = fingerprint;
 
-    assert(session);
-    assert(fingerprint);
-    assert(words);
-    assert(wsize);
-    assert(max_words >= 0);
-
     if (!(session && fingerprint && words && wsize && max_words >= 0))
         return PEP_ILLEGAL_VALUE;
 
@@ -2513,6 +2492,7 @@ DYNAMIC_API PEP_STATUS trustwords(
     if (!lang || !lang[0])
         lang = "en";
 
+    // FIXME: Should this not be an actual check?
     assert((lang[0] >= 'A' && lang[0] <= 'Z')
             || (lang[0] >= 'a' && lang[0] <= 'z'));
     assert((lang[1] >= 'A' && lang[1] <= 'Z')
@@ -2578,7 +2558,6 @@ pEp_identity *new_identity(
     )
 {
     pEp_identity *result = calloc(1, sizeof(pEp_identity));
-    assert(result);
     if (result) {
         if (address) {
             result->address = strdup(address);
@@ -2618,23 +2597,23 @@ pEp_identity *new_identity(
 
 pEp_identity *identity_dup(const pEp_identity *src)
 {
-    assert(src);
-
-    pEp_identity *dup = new_identity(src->address, src->fpr, src->user_id,
-            src->username);
-    assert(dup);
-    if (dup == NULL)
-        return NULL;
-    
-    dup->comm_type = src->comm_type;
-    dup->lang[0] = src->lang[0];
-    dup->lang[1] = src->lang[1];
-    dup->lang[2] = 0;
-    dup->flags = src->flags;
-    dup->me = src->me;
-    dup->major_ver = src->major_ver;
-    dup->minor_ver = src->minor_ver;
-    
+    pEp_identity* dup = NULL;
+    if (src) {
+        dup = new_identity(src->address, src->fpr, src->user_id,
+                src->username);
+        assert(dup);
+        if (dup == NULL)
+            return NULL;
+        
+        dup->comm_type = src->comm_type;
+        dup->lang[0] = src->lang[0];
+        dup->lang[1] = src->lang[1];
+        dup->lang[2] = 0;
+        dup->flags = src->flags;
+        dup->me = src->me;
+        dup->major_ver = src->major_ver;
+        dup->minor_ver = src->minor_ver;
+    }    
     return dup;
 }
 
@@ -2654,8 +2633,6 @@ DYNAMIC_API PEP_STATUS get_default_own_userid(
         char** userid
     )
 {
-    assert(session);
-    assert(userid);
     
     if (!session || !userid)
         return PEP_ILLEGAL_VALUE;
@@ -2698,11 +2675,6 @@ DYNAMIC_API PEP_STATUS get_userid_alias_default(
         const char* alias_id,
         char** default_id) {
             
-    assert(session);
-    assert(alias_id);
-    assert(alias_id[0]);
-    assert(default_id);
-
     if (!(session && alias_id && alias_id[0] && default_id))
         return PEP_ILLEGAL_VALUE;
 
@@ -2743,10 +2715,6 @@ DYNAMIC_API PEP_STATUS set_userid_alias (
             
     int result;
 
-    assert(session);
-    assert(default_id);
-    assert(alias_id);
-
     if (!(session && default_id && alias_id && 
           default_id[0] != '\0' && alias_id[0] != '\0'))
         return PEP_ILLEGAL_VALUE;
@@ -2781,11 +2749,6 @@ DYNAMIC_API PEP_STATUS get_identity(
 {
     PEP_STATUS status = PEP_STATUS_OK;
     pEp_identity *_identity = NULL;
-
-    assert(session);
-    assert(address);
-    assert(address[0]);
-    assert(identity);
 
     if (!(session && address && address[0] && identity))
         return PEP_ILLEGAL_VALUE;
@@ -3011,11 +2974,6 @@ PEP_STATUS get_identity_without_trust_check(
     PEP_STATUS status = PEP_STATUS_OK;
     pEp_identity *_identity = NULL;
 
-    assert(session);
-    assert(address);
-    assert(address[0]);
-    assert(identity);
-
     if (!(session && address && address[0] && identity))
         return PEP_ILLEGAL_VALUE;
 
@@ -3080,10 +3038,6 @@ PEP_STATUS get_identities_by_address(
         identity_list** id_list
     )
 {
-    assert(session);
-    assert(address);
-    assert(address[0]);
-    assert(id_list);
 
     if (!(session && address && address[0] && id_list))
         return PEP_ILLEGAL_VALUE;
@@ -3151,11 +3105,7 @@ PEP_STATUS get_identities_by_address(
 
 PEP_STATUS exists_identity_entry(PEP_SESSION session, pEp_identity* identity,
                                  bool* exists) {
-    assert(session);
-    assert(identity);
-    assert(!EMPTYSTR(identity->user_id));        
-    assert(!EMPTYSTR(identity->address));
-    if (!session || !exists || EMPTYSTR(identity->user_id) || EMPTYSTR(identity->address))
+    if (!session || !exists || !identity || EMPTYSTR(identity->user_id) || EMPTYSTR(identity->address))
         return PEP_ILLEGAL_VALUE;
     
     *exists = false;
@@ -3186,11 +3136,7 @@ PEP_STATUS exists_identity_entry(PEP_SESSION session, pEp_identity* identity,
 
 PEP_STATUS exists_trust_entry(PEP_SESSION session, pEp_identity* identity,
                               bool* exists) {
-    assert(session);
-    assert(identity);
-    assert(!EMPTYSTR(identity->user_id));        
-    assert(!EMPTYSTR(identity->fpr));
-    if (!session || !exists || EMPTYSTR(identity->user_id) || EMPTYSTR(identity->fpr))
+    if (!session || !exists || !identity || EMPTYSTR(identity->user_id) || EMPTYSTR(identity->fpr))
         return PEP_ILLEGAL_VALUE;
     
     *exists = false;
@@ -3261,11 +3207,6 @@ PEP_STATUS clear_trust_info(PEP_SESSION session,
 static PEP_STATUS _set_or_update_trust(PEP_SESSION session,
                                        pEp_identity* identity,
                                        sqlite3_stmt* set_or_update) {
-
-    assert(session);
-    assert(identity);
-    assert(identity->user_id);
-    assert(identity->fpr);
     
     if (!session || !identity || EMPTYSTR(identity->user_id) || EMPTYSTR(identity->fpr))
         return PEP_ILLEGAL_VALUE;
@@ -3294,9 +3235,6 @@ static PEP_STATUS _set_or_update_trust(PEP_SESSION session,
 static PEP_STATUS _set_or_update_identity_entry(PEP_SESSION session,
                                                 pEp_identity* identity,
                                                 sqlite3_stmt* set_or_update) {
-    assert(session);
-    assert(identity);
-    assert(set_or_update);
                       
     if (!session || !identity || !identity->user_id || !identity->address)
         return PEP_ILLEGAL_VALUE;
@@ -3324,9 +3262,6 @@ static PEP_STATUS _set_or_update_identity_entry(PEP_SESSION session,
 static PEP_STATUS _set_or_update_person(PEP_SESSION session, 
                                         pEp_identity* identity,
                                         sqlite3_stmt* set_or_update) {
-    assert(session);
-    assert(identity);
-    assert(set_or_update);
                         
     if (!session || !identity || !identity->user_id || !identity->username)
         return PEP_ILLEGAL_VALUE;
@@ -3433,12 +3368,6 @@ DYNAMIC_API PEP_STATUS set_identity(
 {
     int result;
 
-    assert(session);
-    assert(identity);
-    assert(identity->address);
-    assert(identity->user_id);
-    assert(identity->username);
-
     if (!(session && identity && identity->address &&
                 identity->user_id && identity->username))
         return PEP_ILLEGAL_VALUE;
@@ -3531,10 +3460,6 @@ PEP_STATUS update_pEp_user_trust_vals(PEP_SESSION session,
 
 // This ONLY sets the user flag. Must be called outside of a transaction.
 DYNAMIC_API PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user) {
-
-    assert(session);
-    assert(user);
-    assert(!EMPTYSTR(user->user_id));
         
     if (!session || !user || EMPTYSTR(user->user_id))
         return PEP_ILLEGAL_VALUE;
@@ -3568,10 +3493,10 @@ DYNAMIC_API PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user) 
 
 // This ONLY sets the version flag. Must be called outside of a transaction.
 PEP_STATUS set_pEp_version(PEP_SESSION session, pEp_identity* ident, unsigned int new_ver_major, unsigned int new_ver_minor) {
-    assert(session);
-    assert(!EMPTYSTR(ident->user_id));
-    assert(!EMPTYSTR(ident->address));
-    
+
+    if (!session || !ident || EMPTYSTR(ident->user_id) || EMPTYSTR(ident->address))
+        return PEP_ILLEGAL_VALUE;
+
     sqlite3_reset(session->set_pEp_version);
     sqlite3_bind_double(session->set_pEp_version, 1, new_ver_major);
     sqlite3_bind_double(session->set_pEp_version, 2, new_ver_minor);    
@@ -3596,8 +3521,9 @@ PEP_STATUS upgrade_pEp_version_by_user_id(PEP_SESSION session,
         unsigned int new_ver_minor
     ) 
 {
-    assert(session);
-    assert(!EMPTYSTR(ident->user_id));
+
+    if (!session || !ident || EMPTYSTR(ident->user_id))
+        return PEP_ILLEGAL_VALUE;
     
     sqlite3_reset(session->upgrade_pEp_version_by_user_id);
     sqlite3_bind_int(session->upgrade_pEp_version_by_user_id, 1, new_ver_major);
@@ -3616,14 +3542,7 @@ PEP_STATUS upgrade_pEp_version_by_user_id(PEP_SESSION session,
 
 PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity,
                          bool* exists) {            
-    
-    // const char* user_id,
-    //                      char** default_id, bool* exists) {
-    assert(session);
-    assert(exists);
-    assert(identity);
-    assert(!EMPTYSTR(identity->user_id));
-        
+            
     if (!session || !exists || !identity || EMPTYSTR(identity->user_id))
         return PEP_ILLEGAL_VALUE;
     
@@ -3665,8 +3584,7 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity,
 }
 
 PEP_STATUS delete_person(PEP_SESSION session, const char* user_id) {
-    assert(session);
-    assert(!EMPTYSTR(user_id));        
+
     if (!session || EMPTYSTR(user_id))
         return PEP_ILLEGAL_VALUE;
         
@@ -3687,10 +3605,6 @@ PEP_STATUS delete_person(PEP_SESSION session, const char* user_id) {
 
 DYNAMIC_API PEP_STATUS is_pEp_user(PEP_SESSION session, pEp_identity *identity, bool* is_pEp)
 {
-    assert(session);
-    assert(is_pEp);
-    assert(identity);
-    assert(!EMPTYSTR(identity->user_id));
 
     if (!session || !is_pEp || !identity || EMPTYSTR(identity->user_id))
         return PEP_ILLEGAL_VALUE;
@@ -3732,9 +3646,6 @@ DYNAMIC_API PEP_STATUS is_pEp_user(PEP_SESSION session, pEp_identity *identity, 
 
 PEP_STATUS is_own_address(PEP_SESSION session, const char* address, bool* is_own_addr)
 {
-    assert(session);
-    assert(is_own_addr);
-    assert(!EMPTYSTR(address));
 
     if (!session || !is_own_addr || EMPTYSTR(address))
         return PEP_ILLEGAL_VALUE;
@@ -3792,12 +3703,7 @@ PEP_STATUS bind_own_ident_with_contact_ident(PEP_SESSION session,
 // since this could be either way
 PEP_STATUS has_partner_contacted_address(PEP_SESSION session, const char* partner_id,
                                          const char* own_address, bool* was_contacted) {            
-    
-    assert(session);
-    assert(!EMPTYSTR(partner_id));
-    assert(!EMPTYSTR(own_address));    
-    assert(was_contacted);
-    
+        
     if (!session || !was_contacted || EMPTYSTR(partner_id) || EMPTYSTR(own_address))
         return PEP_ILLEGAL_VALUE;
     
@@ -3875,7 +3781,6 @@ PEP_STATUS get_own_ident_for_contact_id(PEP_SESSION session,
 PEP_STATUS remove_fpr_as_default(PEP_SESSION session, 
                                  const char* fpr) 
 {
-    assert(fpr);
     
     if (!session || !fpr)
         return PEP_ILLEGAL_VALUE;
@@ -3908,8 +3813,6 @@ PEP_STATUS replace_identities_fpr(PEP_SESSION session,
                                  const char* old_fpr, 
                                  const char* new_fpr) 
 {
-    assert(old_fpr);
-    assert(new_fpr);
     
     if (!old_fpr || !new_fpr)
         return PEP_ILLEGAL_VALUE;
@@ -3957,11 +3860,6 @@ DYNAMIC_API PEP_STATUS set_identity_flags(
 {
     int result;
 
-    assert(session);
-    assert(identity);
-    assert(identity->address);
-    assert(identity->user_id);
-
     if (!(session && identity && identity->address && identity->user_id))
         return PEP_ILLEGAL_VALUE;
 
@@ -3990,11 +3888,6 @@ DYNAMIC_API PEP_STATUS unset_identity_flags(
 {
     int result;
 
-    assert(session);
-    assert(identity);
-    assert(identity->address);
-    assert(identity->user_id);
-
     if (!(session && identity && identity->address && identity->user_id))
         return PEP_ILLEGAL_VALUE;
 
@@ -4021,11 +3914,6 @@ DYNAMIC_API PEP_STATUS set_ident_enc_format(
     )
 {
     int result;
-
-    assert(session);
-    assert(identity);
-    assert(identity->address);
-    assert(identity->user_id);
 
     if (!(session && identity && identity->address && identity->user_id))
         return PEP_ILLEGAL_VALUE;
@@ -4367,9 +4255,6 @@ pEp_free:
 
 PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
                           const char* new_uid) {
-    assert(session);
-    assert(old_uid);
-    assert(new_uid);
     
     if (!session || !old_uid || !new_uid)
         return PEP_ILLEGAL_VALUE;
@@ -4406,8 +4291,6 @@ PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
 }
 
 PEP_STATUS remove_key(PEP_SESSION session, const char* fpr) {
-    assert(session);
-    assert(fpr);
     
     if (!session || EMPTYSTR(fpr))
         return PEP_ILLEGAL_VALUE;
@@ -4427,8 +4310,6 @@ PEP_STATUS remove_key(PEP_SESSION session, const char* fpr) {
 
 
 PEP_STATUS refresh_userid_default_key(PEP_SESSION session, const char* user_id) {
-    assert(session);
-    assert(user_id);
     
     if (!session || !user_id)
         return PEP_ILLEGAL_VALUE;
@@ -4448,9 +4329,6 @@ PEP_STATUS refresh_userid_default_key(PEP_SESSION session, const char* user_id) 
 
 PEP_STATUS replace_main_user_fpr(PEP_SESSION session, const char* user_id,
                                  const char* new_fpr) {
-    assert(session);
-    assert(user_id);
-    assert(new_fpr);
     
     if (!session || !user_id || !new_fpr)
         return PEP_ILLEGAL_VALUE;
@@ -4472,9 +4350,6 @@ PEP_STATUS replace_main_user_fpr(PEP_SESSION session, const char* user_id,
 
 PEP_STATUS replace_main_user_fpr_if_equal(PEP_SESSION session, const char* user_id,
                                           const char* new_fpr, const char* compare_fpr) {
-    assert(session);
-    assert(user_id);
-    assert(compare_fpr);
     
     if (!session || !user_id || !compare_fpr)
         return PEP_ILLEGAL_VALUE;
@@ -4505,11 +4380,7 @@ PEP_STATUS get_main_user_fpr(PEP_SESSION session,
 {
     PEP_STATUS status = PEP_STATUS_OK;
     int result;
-    
-    assert(session);
-    assert(user_id);
-    assert(main_fpr);
-    
+        
     if (!(session && user_id && user_id[0] && main_fpr))
         return PEP_ILLEGAL_VALUE;
         
@@ -4557,9 +4428,6 @@ DYNAMIC_API PEP_STATUS mark_as_compromised(
 {
     int result;
 
-    assert(session);
-    assert(fpr && fpr[0]);
-
     if (!(session && fpr && fpr[0]))
         return PEP_ILLEGAL_VALUE;
 
@@ -4589,15 +4457,6 @@ DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity)
 {
     PEP_STATUS status = PEP_STATUS_OK;
     int result;
-
-    // We need to be able to test that we break correctly without shutting
-    // asserts off everywhere.
-    // assert(session);
-    // assert(identity);
-    // assert(identity->user_id);
-    // assert(identity->user_id[0]);
-    // assert(identity->fpr);
-    // assert(identity->fpr[0]);
 
     if (!(session && identity && identity->user_id && identity->user_id[0] &&
                 identity->fpr && identity->fpr[0]))
@@ -4636,10 +4495,6 @@ DYNAMIC_API PEP_STATUS least_trust(
 {
     PEP_STATUS status = PEP_STATUS_OK;
     int result;
-
-    assert(session);
-    assert(fpr);
-    assert(comm_type);
 
     if (!(session && fpr && comm_type))
         return PEP_ILLEGAL_VALUE;
@@ -4692,12 +4547,6 @@ DYNAMIC_API PEP_STATUS decrypt_and_verify(
     char** filename_ptr
     )
 {
-    assert(session);
-    assert(ctext);
-    assert(csize);
-    assert(ptext);
-    assert(psize);
-    assert(keylist);
 
     if (!(session && ctext && csize && ptext && psize && keylist))
         return PEP_ILLEGAL_VALUE;
@@ -4720,12 +4569,6 @@ DYNAMIC_API PEP_STATUS encrypt_and_sign(
     size_t psize, char **ctext, size_t *csize
     )
 {
-    assert(session);
-    assert(keylist);
-    assert(ptext);
-    assert(psize);
-    assert(ctext);
-    assert(csize);
 
     if (!(session && keylist && ptext && psize && ctext && csize))
         return PEP_ILLEGAL_VALUE;
@@ -4739,12 +4582,6 @@ PEP_STATUS encrypt_only(
     size_t psize, char **ctext, size_t *csize
     )
 {
-    assert(session);
-    assert(keylist);
-    assert(ptext);
-    assert(psize);
-    assert(ctext);
-    assert(csize);
 
     if (!(session && keylist && ptext && psize && ctext && csize))
         return PEP_ILLEGAL_VALUE;
@@ -4759,12 +4596,6 @@ PEP_STATUS sign_only(PEP_SESSION session,
                      const char *fpr, 
                      char **sign, 
                      size_t *sign_size) {
-    assert(session);
-    assert(fpr);
-    assert(data);
-    assert(data_size);
-    assert(sign);
-    assert(sign_size);
 
     if (!(session && fpr && data && data_size && sign && sign_size))
         return PEP_ILLEGAL_VALUE;
@@ -4781,12 +4612,6 @@ DYNAMIC_API PEP_STATUS verify_text(
     const char *signature, size_t sig_size, stringlist_t **keylist
     )
 {
-    assert(session);
-    assert(text);
-    assert(size);
-    assert(signature);
-    assert(sig_size);
-    assert(keylist);
 
     if (!(session && text && size && signature && sig_size && keylist))
         return PEP_ILLEGAL_VALUE;
@@ -4797,8 +4622,6 @@ DYNAMIC_API PEP_STATUS verify_text(
 
 DYNAMIC_API PEP_STATUS delete_keypair(PEP_SESSION session, const char *fpr)
 {
-    assert(session);
-    assert(fpr);
 
     if (!(session && fpr))
         return PEP_ILLEGAL_VALUE;
@@ -4810,10 +4633,6 @@ DYNAMIC_API PEP_STATUS export_key(
         PEP_SESSION session, const char *fpr, char **key_data, size_t *size
     )
 {
-    assert(session);
-    assert(fpr);
-    assert(key_data);
-    assert(size);
 
     if (!(session && fpr && key_data && size))
         return PEP_ILLEGAL_VALUE;
@@ -4826,11 +4645,6 @@ DYNAMIC_API PEP_STATUS export_secret_key(
         PEP_SESSION session, const char *fpr, char **key_data, size_t *size
     )
 {
-    assert(session);
-    assert(fpr);
-    assert(key_data);
-    assert(size);
-
     if (!(session && fpr && key_data && size))
         return PEP_ILLEGAL_VALUE;
 
@@ -4854,10 +4668,6 @@ DYNAMIC_API PEP_STATUS find_keys(
         PEP_SESSION session, const char *pattern, stringlist_t **keylist
     )
 {
-    assert(session);
-    assert(pattern);
-    assert(keylist);
-
     if (!(session && pattern && keylist))
         return PEP_ILLEGAL_VALUE;
 
@@ -4878,11 +4688,6 @@ PEP_STATUS _generate_keypair(PEP_SESSION session,
                              bool suppress_event
     )
 {
-    assert(session);
-    assert(identity);
-    assert(identity->address);
-    assert(identity->fpr == NULL || identity->fpr[0] == 0);
-//    assert(identity->username);
     // N.B. We now allow empty usernames, so the underlying layer for 
     // non-sequoia crypto implementations will have to deal with this.
 
@@ -4941,10 +4746,6 @@ DYNAMIC_API PEP_STATUS get_key_rating(
         PEP_comm_type *comm_type
     )
 {
-    assert(session);
-    assert(fpr);
-    assert(comm_type);
-
     if (!(session && fpr && comm_type))
         return PEP_ILLEGAL_VALUE;
 
@@ -4970,9 +4771,6 @@ PEP_STATUS _import_key_with_fpr_return(
         uint64_t* changed_public_keys        
     )
 {
-    assert(session);
-    assert(key_data);
-
     if (!(session && key_data))
         return PEP_ILLEGAL_VALUE;
         
@@ -4984,10 +4782,7 @@ PEP_STATUS _import_key_with_fpr_return(
 }
 
 DYNAMIC_API PEP_STATUS recv_key(PEP_SESSION session, const char *pattern)
-{
-    assert(session);
-    assert(pattern);
-
+{   
     if (!(session && pattern))
         return PEP_ILLEGAL_VALUE;
 
@@ -4996,9 +4791,6 @@ DYNAMIC_API PEP_STATUS recv_key(PEP_SESSION session, const char *pattern)
 
 DYNAMIC_API PEP_STATUS send_key(PEP_SESSION session, const char *pattern)
 {
-    assert(session);
-    assert(pattern);
-
     if (!(session && pattern))
         return PEP_ILLEGAL_VALUE;
 
@@ -5011,9 +4803,6 @@ DYNAMIC_API PEP_STATUS renew_key(
         const timestamp *ts
     )
 {
-    assert(session);
-    assert(fpr);
-
     if (!(session && fpr))
         return PEP_ILLEGAL_VALUE;
 
@@ -5026,9 +4815,6 @@ DYNAMIC_API PEP_STATUS revoke_key(
         const char *reason
     )
 {
-    assert(session);
-    assert(fpr);
-
     if (!(session && fpr))
         return PEP_ILLEGAL_VALUE;
 
@@ -5052,10 +4838,6 @@ DYNAMIC_API PEP_STATUS key_expired(
         bool *expired
     )
 {
-    assert(session);
-    assert(fpr);
-    assert(expired);
-
     if (!(session && fpr && expired))
         return PEP_ILLEGAL_VALUE;
 
@@ -5068,11 +4850,7 @@ DYNAMIC_API PEP_STATUS key_revoked(
        const char *fpr,
        bool *revoked
    )
-{
-    assert(session);
-    assert(fpr);
-    assert(revoked);
-    
+{    
     if (!(session && fpr && revoked))
         return PEP_ILLEGAL_VALUE;
     
@@ -5083,7 +4861,6 @@ DYNAMIC_API PEP_STATUS key_revoked(
 DYNAMIC_API PEP_STATUS config_cipher_suite(PEP_SESSION session,
         PEP_CIPHER_SUITE suite)
 {
-    assert(session);
     if (!session)
         return PEP_ILLEGAL_VALUE;
 
@@ -5132,10 +4909,6 @@ DYNAMIC_API PEP_STATUS get_crashdump_log(
 {
     PEP_STATUS status = PEP_STATUS_OK;
     char *_logdata= NULL;
-
-    assert(session);
-    assert(maxlines >= 0 && maxlines <= CRASHDUMP_MAX_LINES);
-    assert(logdata);
 
     if (!(session && logdata && maxlines >= 0 && maxlines <=
             CRASHDUMP_MAX_LINES))
@@ -5231,9 +5004,6 @@ DYNAMIC_API PEP_STATUS get_languagelist(
     PEP_STATUS status = PEP_STATUS_OK;
     char *_languages= NULL;
 
-    assert(session);
-    assert(languages);
-
     if (!(session && languages))
         return PEP_ILLEGAL_VALUE;
 
@@ -5303,7 +5073,6 @@ DYNAMIC_API PEP_STATUS get_phrase(
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
-    assert(session && lang && lang[0] && lang[1] && lang[2] == 0 && phrase);
     if (!(session && lang && lang[0] && lang[1] && lang[2] == 0 && phrase))
         return PEP_ILLEGAL_VALUE;
 
@@ -5349,7 +5118,6 @@ the_end:
 static PEP_STATUS _get_sequence_value(PEP_SESSION session, const char *name,
         int32_t *value)
 {
-    assert(session && name && value);
     if (!(session && name && value))
         return PEP_ILLEGAL_VALUE;
 
@@ -5380,7 +5148,6 @@ static PEP_STATUS _get_sequence_value(PEP_SESSION session, const char *name,
 static PEP_STATUS _increment_sequence_value(PEP_SESSION session,
         const char *name)
 {
-    assert(session && name);
     if (!(session && name))
         return PEP_ILLEGAL_VALUE;
 
@@ -5402,9 +5169,6 @@ DYNAMIC_API PEP_STATUS sequence_value(
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
-
-    assert(session);
-    assert(name && value);
 
     if (!(session && name && name[0] && value))
         return PEP_ILLEGAL_VALUE;
@@ -5468,12 +5232,7 @@ DYNAMIC_API PEP_STATUS set_revoked(
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    
-    assert(session &&
-           revoked_fpr && revoked_fpr[0] &&
-           replacement_fpr && replacement_fpr[0]
-          );
-    
+        
     if (!(session &&
           revoked_fpr && revoked_fpr[0] &&
           replacement_fpr && replacement_fpr[0]
@@ -5510,16 +5269,8 @@ DYNAMIC_API PEP_STATUS get_revoked(
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
-
-    assert(session &&
-           revoked_fpr &&
-           fpr && fpr[0]
-          );
-    
-    if (!(session &&
-           revoked_fpr &&
-           fpr && fpr[0]
-          ))
+   
+    if (!(session && revoked_fpr && fpr && fpr[0]))
         return PEP_ILLEGAL_VALUE;
 
     *revoked_fpr = NULL;
@@ -5560,8 +5311,6 @@ DYNAMIC_API PEP_STATUS get_replacement_fpr(
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
-
-    assert(session && revoked_fpr && !EMPTYSTR(fpr) && revocation_date);
     
     if (!session || !revoked_fpr || EMPTYSTR(fpr) || !revocation_date)
         return PEP_ILLEGAL_VALUE;
@@ -5601,9 +5350,6 @@ PEP_STATUS get_last_contacted(
         identity_list** id_list
     )
 {
-    assert(session);
-    assert(id_list);
-
     if (!(session && id_list))
         return PEP_ILLEGAL_VALUE;
 
@@ -5649,7 +5395,6 @@ PEP_STATUS key_created(
         time_t *created
     )
 {
-    assert(session && fpr && created);
     if (!(session && fpr && created))
         return PEP_ILLEGAL_VALUE;
 
@@ -5659,7 +5404,6 @@ PEP_STATUS key_created(
 
 PEP_STATUS find_private_keys(PEP_SESSION session, const char* pattern,
                              stringlist_t **keylist) {
-    assert(session && keylist);
     if (!(session && keylist))
         return PEP_ILLEGAL_VALUE;
     
@@ -5678,7 +5422,6 @@ DYNAMIC_API const char* get_protocol_version() {
 
 DYNAMIC_API PEP_STATUS reset_pEptest_hack(PEP_SESSION session)
 {
-    assert(session);
 
     if (!session)
         return PEP_ILLEGAL_VALUE;
