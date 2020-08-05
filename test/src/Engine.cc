@@ -95,13 +95,6 @@ void Engine::start() {
     PEP_STATUS status = init(&session, cached_messageToSend, cached_inject_sync_event, cached_ensure_passphrase);
     assert(status == PEP_STATUS_OK);
     assert(session);
-
-#ifdef USE_GPG
-    success = system("gpgconf --create-socketdir");
-    if (success != 0)
-        throw std::runtime_error("RESTORE: Error when executing 'gpgconf --create-socketdir'.");        
-    system("gpg-connect-agent /bye 2>/dev/null");   // Just in case - otherwise, we die on MacOS sometimes. Is this enough??
-#endif
 }
 
 void Engine::copy_conf_file_to_test_dir(const char* dest_path, const char* conf_orig_path, const char* conf_dest_name) {
