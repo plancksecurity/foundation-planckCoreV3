@@ -97,8 +97,44 @@ set_revoked()
 get_revoked()
 
 ***/
+TEST_F(KeyManipulationTest, check_generate_keypair) {
 
-TEST_F(KeyManipulationTest, check_key_manipulation) {
-    // This is just a dummy test case. The convention is check_whatever_you_are_checking
-    // so for multiple test cases in a suite, be more explicit ;)
+    stringlist_t* keylist = NULL;
+    pEp_identity* id = new_identity(
+        "leon.schumacher@digitalekho.com",
+        NULL,
+        "23",
+        "Leon Schumacher"
+    );
+
+    //PEP_STATUS status = set_identity(session, id);
+    //ASSERT_EQ(status, PEP_STATUS_OK);
+    
+    PEP_STATUS status = generate_keypair(session, id);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    // Is it there?
+    status = find_keys(session, id->address, &keylist);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_TRUE(keylist && keylist->value);
+    free_stringlist(keylist);
+}
+
+TEST_F(KeyManipulationTest, check_generate_keypair_no_valid_session) {
+
+    stringlist_t* keylist = NULL;
+    pEp_identity* id = new_identity(
+        "leon.schumacher@digitalekho.com",
+        NULL,
+        "23",
+        "Leon Schumacher"
+    );
+
+    PEP_STATUS status = generate_keypair(NULL, id);
+    ASSERT_NE(status, PEP_STATUS_OK);
+
+    status = find_keys(session, id->address, &keylist);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_FALSE(keylist && keylist->value);
+    free_stringlist(keylist);
 }

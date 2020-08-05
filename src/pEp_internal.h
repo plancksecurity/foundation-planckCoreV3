@@ -268,9 +268,6 @@ struct _pEpSession {
     bool service_log;
     
 #ifndef NDEBUG
-#   ifdef DEBUG_ERRORSTACK
-    stringlist_t* errorstack;
-#   endif
     int debug_color;
 #endif
 };
