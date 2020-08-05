@@ -2298,7 +2298,6 @@ DYNAMIC_API void release(PEP_SESSION session)
 
         release_transport_system(session, out_last);
         release_cryptotech(session, out_last);
-
         free(session);
     }
 }
