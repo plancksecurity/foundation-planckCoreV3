@@ -2333,16 +2333,16 @@ DYNAMIC_API PEP_STATUS config_passphrase(PEP_SESSION session, const char *passph
 }
 
 DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys(PEP_SESSION session, bool enable, const char *passphrase) {
-    if (enable && EMPTYSTR(passphrase))
-        return PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED;
-        
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
     session->new_key_pass_enable = enable;
     PEP_STATUS status = PEP_STATUS_OK;
 
     free(session->generation_passphrase);
-    if (!passphrase)
+    if (EMPTYSTR(passphrase)) {
         session->generation_passphrase = NULL;
-    else {
+    } else {
         session->generation_passphrase = strdup(passphrase);
         if (!session->generation_passphrase)
             status = PEP_OUT_OF_MEMORY;
