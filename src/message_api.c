@@ -3799,6 +3799,8 @@ static PEP_STATUS _decrypt_message(
     bool myself_read_only = (src->dir == PEP_dir_incoming);
     unsigned int major_ver = 0;
     unsigned int minor_ver = 0;
+    unsigned int msg_major_ver = 0;
+    unsigned int msg_minor_ver = 0;
     
     if (imported_key_fprs)
         *imported_key_fprs = NULL;
@@ -4724,7 +4726,7 @@ static PEP_STATUS _decrypt_message(
     *dst = msg;
     *keylist = _keylist;        
     
-    // Double-check for message 2.1: (note, we don't do this for already-reencrypted-messages)
+    // Double-check for message 2.1+: (note, we don't do this for already-reencrypted-messages)
     if (!(reencrypt && reenc_signer_key_is_own_key)) { 
         if (major_ver > 2 || (major_ver == 2 && minor_ver > 0)) {
             if (EMPTYSTR((*dst)->_sender_fpr) || 
