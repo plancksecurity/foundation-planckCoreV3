@@ -563,7 +563,7 @@ PEP_STATUS try_encrypt_message(
         PEP_encrypt_flags_t flags
     );
 
-PEP_STATUS probe_encrypt(PEP_SESSION session, const char *fpr);
+DYNAMIC_API PEP_STATUS probe_encrypt(PEP_SESSION session, const char *fpr);
 
 #ifdef __cplusplus
 }
