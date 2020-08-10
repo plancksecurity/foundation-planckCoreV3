@@ -14,6 +14,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <algorithm>
+#include <vector>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <errno.h>
@@ -483,6 +484,21 @@ int util_delete_filepath(const char *filepath,
     return retval;
 }
 
+PEP_STATUS config_valid_passphrase(PEP_SESSION session, const char* fpr, std::vector<std::string> passphrases) {
+    // Check to see if it currently works
+    PEP_STATUS status = probe_encrypt(session, fpr);
+    if (status == PEP_STATUS_OK || passphrases.empty())
+        return status;
+        
+    for (auto && pass : passphrases) {
+        config_passphrase(session, pass.c_str());
+        status = probe_encrypt(session, fpr);
+        if (status == PEP_STATUS_OK)
+            break;
+    }
+    return status;
+}
+
 #ifndef ENIGMAIL_MAY_USE_THIS
 
 static PEP_STATUS update_identity_recip_list(PEP_SESSION session,
@@ -509,7 +525,7 @@ static PEP_STATUS update_identity_recip_list(PEP_SESSION session,
                 }
             }
             else
-                status = _myself(session, curr_identity, false, false, true);
+                status = _myself(session, curr_identity, false, false, false, true);
         if (status == PEP_ILLEGAL_VALUE || status == PEP_OUT_OF_MEMORY)
             return status;
         }
@@ -556,7 +572,7 @@ PEP_STATUS MIME_decrypt_message(
         if (!is_me(session, tmp_msg->from))
             status = update_identity(session, (tmp_msg->from));
         else
-            status = _myself(session, tmp_msg->from, false, false, true);
+            status = _myself(session, tmp_msg->from, false, true, false, true);
 
         if (status == PEP_ILLEGAL_VALUE || status == PEP_OUT_OF_MEMORY)
             goto pEp_error;

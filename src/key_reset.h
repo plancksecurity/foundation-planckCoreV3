@@ -90,6 +90,8 @@ DYNAMIC_API PEP_STATUS key_reset_user(
 DYNAMIC_API PEP_STATUS key_reset_all_own_keys(PEP_SESSION session);
 
 // FIXME: Doc
+// This is simply NOT SAFE for multiple passwords on the extant 
+// keys. Cannot be called with multiple passwords for that purpose.
 DYNAMIC_API PEP_STATUS key_reset_own_grouped_keys(PEP_SESSION session);
 
 // key_reset() - reset the database status for a key, removing all trust information
@@ -116,6 +118,7 @@ DYNAMIC_API PEP_STATUS key_reset_own_grouped_keys(PEP_SESSION session);
 //                              if NULL and fpr is non-NULL, we'll reset the key for all
 //                              associated identities. If both ident and fpr are NULL, see 
 //                              the fpr arg documentation.
+//                              ***IF there is an ident, it must have a user_id.***
 //
 //      Note: ident->fpr is always ignored
 //

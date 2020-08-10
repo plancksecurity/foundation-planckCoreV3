@@ -117,6 +117,7 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity);
 PEP_STATUS _myself(PEP_SESSION session, 
                    pEp_identity * identity, 
                    bool do_keygen, 
+                   bool do_renew,
                    bool ignore_flags,
                    bool read_only);
 
@@ -432,8 +433,9 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
 PEP_STATUS validate_fpr(PEP_SESSION session, 
                         pEp_identity* ident,
                         bool check_blacklist,
-                        bool own_must_contain_private);
-
+                        bool own_must_contain_private,
+                        bool renew_private);
+                        
 #ifdef __cplusplus
 }
 #endif

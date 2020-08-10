@@ -13,6 +13,7 @@
 #include "base64.h"
 #include "resource_id.h"
 #include "internal_format.h"
+#include "keymanagement.h"
 
 #include <assert.h>
 #include <string.h>
@@ -1375,18 +1376,24 @@ static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist, cha
     return rating;
 }
 
+// KB: Fixme - the first statement below is probably unnecessary now.
 // Internal function WARNING:
-// Only call this on an ident that might have its FPR set from retrieval!
+// Should be called on ident that might have its FPR set from retrieval!
 // (or on one without an fpr)
 // We do not want myself() setting the fpr here.
+//
+// Cannot return passphrase statuses. No keygen or renewal allowed here.
 static PEP_comm_type _get_comm_type(
     PEP_SESSION session,
     PEP_comm_type max_comm_type,
     pEp_identity *ident
     )
 {
+    if (!ident)
+        return PEP_ILLEGAL_VALUE;
+            
     PEP_STATUS status = PEP_STATUS_OK;
-
+            
     if (max_comm_type == PEP_ct_compromised)
         return PEP_ct_compromised;
 
@@ -1397,7 +1404,7 @@ static PEP_comm_type _get_comm_type(
         status = update_identity(session, ident);
     }
     else {
-        status = _myself(session, ident, false, false, true);
+        status = _myself(session, ident, false, false, false, true);
     }
 
     if (status == PEP_STATUS_OK) {
@@ -1410,7 +1417,7 @@ static PEP_comm_type _get_comm_type(
     }
     else {
         return PEP_ct_unknown;
-    }
+    }                    
 }
 
 static PEP_comm_type _get_comm_type_preview(
@@ -1859,6 +1866,105 @@ static bool failed_test(PEP_STATUS status)
     return false;
 }
 
+// CANNOT return PASSPHRASE errors, as no gen or renew allowed below
+static PEP_STATUS _update_state_for_ident_list(
+        PEP_SESSION session,
+        pEp_identity* from_ident,
+        identity_list* ident_list,
+        stringlist_t** keylist,
+        PEP_comm_type* max_comm_type,
+        unsigned int* max_version_major,
+        unsigned int* max_version_minor,
+        bool* has_pEp_user,
+        bool* dest_keys_found,
+        bool suppress_update_for_bcc
+    )
+{
+    if (!ident_list || !max_version_major || !max_version_minor
+                    || !has_pEp_user || !dest_keys_found
+                    || !keylist)
+        return PEP_ILLEGAL_VALUE;
+        
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    identity_list* _il = ident_list;
+    
+    for ( ; _il && _il->ident; _il = _il->next) {
+
+        PEP_STATUS status = PEP_STATUS_OK;
+        
+        if (!is_me(session, _il->ident)) {
+            status = update_identity(session, _il->ident);
+            
+            if (status == PEP_CANNOT_FIND_IDENTITY) {
+                _il->ident->comm_type = PEP_ct_key_not_found;
+                status = PEP_STATUS_OK;
+            }
+            // 0 unless set, so safe.
+            
+            if (!suppress_update_for_bcc) {
+                set_min_version( _il->ident->major_ver, _il->ident->minor_ver, 
+                                 *max_version_major, *max_version_minor,
+                                 max_version_major, max_version_minor);
+            }
+            
+            bool is_blacklisted = false;
+            if (_il->ident->fpr && IS_PGP_CT(_il->ident->comm_type)) {
+                status = blacklist_is_listed(session, _il->ident->fpr, &is_blacklisted);
+                if (status != PEP_STATUS_OK) {
+                    // DB error
+                    status = PEP_UNENCRYPTED;
+                    goto pEp_done;
+                }
+                if (is_blacklisted) {
+                    bool user_default, ident_default, address_default; 
+                    status = get_valid_pubkey(session, _il->ident,
+                                               &ident_default, &user_default,
+                                               &address_default,
+                                               true);
+                                               
+                    if (status != PEP_STATUS_OK || _il->ident->fpr == NULL) {
+                        _il->ident->comm_type = PEP_ct_key_not_found;
+                        status = PEP_STATUS_OK;                        
+                    }
+                }    
+            }
+            if (!(*has_pEp_user) && !EMPTYSTR(_il->ident->user_id))
+                is_pEp_user(session, _il->ident, has_pEp_user);
+            
+            if (!suppress_update_for_bcc && from_ident) {
+                status = bind_own_ident_with_contact_ident(session, from_ident, _il->ident);
+                if (status != PEP_STATUS_OK) {
+                    status = PEP_UNKNOWN_DB_ERROR;
+                    goto pEp_done;
+                }
+            }        
+        }
+        else // myself, but don't gen or renew
+            status = _myself(session, _il->ident, false, false, false, true);
+        
+        if (status != PEP_STATUS_OK)
+            goto pEp_done;
+
+        if (!EMPTYSTR(_il->ident->fpr)) {
+            *keylist = stringlist_add(*keylist, _il->ident->fpr);
+            if (*keylist == NULL) {
+                status = PEP_OUT_OF_MEMORY;
+                goto pEp_done;
+            }
+            *max_comm_type = _get_comm_type(session, *max_comm_type,
+                                            _il->ident);
+        }
+        else {
+            *dest_keys_found = false;
+// ?           status = PEP_KEY_NOT_FOUND;
+        }
+    }
+
+pEp_done:
+    return status;
+}
+
 DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_SESSION session,
         message *src,
@@ -1937,6 +2043,10 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     
     identity_list * _il = NULL;
 
+    //
+    // Update the identities and gather key and version information 
+    // for sending 
+    //
     if (enc_format != PEP_enc_none && (_il = src->bcc) && _il->ident)
     // BCC limited support:
     {
@@ -1948,181 +2058,85 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             return PEP_ILLEGAL_VALUE;
         }
 
-        PEP_STATUS _status = PEP_STATUS_OK;
-        if (!is_me(session, _il->ident)) {
-            _status = update_identity(session, _il->ident);
-            if (_status == PEP_CANNOT_FIND_IDENTITY) {
-                _il->ident->comm_type = PEP_ct_key_not_found;
-                _status = PEP_STATUS_OK;
-            }
-            // 0 unless set, so safe.
-            
-            set_min_version( _il->ident->major_ver, _il->ident->minor_ver, 
-                             max_version_major, max_version_minor,
-                             &max_version_major, &max_version_minor);
-
-            bool is_blacklisted = false;
-            if (_il->ident->fpr && IS_PGP_CT(_il->ident->comm_type)) {
-                _status = blacklist_is_listed(session, _il->ident->fpr, &is_blacklisted);
-                if (_status != PEP_STATUS_OK) {
-                    // DB error
-                    status = PEP_UNENCRYPTED;
-                    goto pEp_error;
-                }
-                if (is_blacklisted) {
-                    bool user_default, ident_default, address_default; 
-                    _status = get_valid_pubkey(session, _il->ident,
-                                               &ident_default, &user_default,
-                                               &address_default,
-                                               true);
-                    if (_status != PEP_STATUS_OK || _il->ident->fpr == NULL) {
-                        _il->ident->comm_type = PEP_ct_key_not_found;
-                        _status = PEP_STATUS_OK;                        
-                    }
-                }    
-            }
-            if (!has_pEp_user && !EMPTYSTR(_il->ident->user_id))
-                is_pEp_user(session, _il->ident, &has_pEp_user);
-        }
-        else
-            _status = myself(session, _il->ident);
-        
-        if (_status != PEP_STATUS_OK) {
-            status = PEP_UNENCRYPTED;
-            goto pEp_error;
-        }
-
-        if (_il->ident->fpr && _il->ident->fpr[0]) {
-            _k = stringlist_add(_k, _il->ident->fpr);
-            if (_k == NULL)
-                goto enomem;
-            max_comm_type = _get_comm_type(session, max_comm_type,
-                                           _il->ident);
-        }
-        else {
-            dest_keys_found = false;
-            status = PEP_KEY_NOT_FOUND;
+        // If you think this call is a beast, try the cut-and-pasted code 3 x
+        PEP_STATUS _status = _update_state_for_ident_list(
+                                session, src->from, _il,
+                                &_k,
+                                &max_comm_type,
+                                &max_version_major,
+                                &max_version_minor,
+                                &has_pEp_user,
+                                &dest_keys_found,
+                                true);
+                                        
+        switch (_status) {
+            case PEP_PASSPHRASE_REQUIRED:
+            case PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED:
+            case PEP_WRONG_PASSPHRASE:
+                status = _status;
+                goto pEp_error;
+            case PEP_STATUS_OK:
+                break;
+            default:
+                status = PEP_UNENCRYPTED;
+                goto pEp_error;
         }
     }
     else // Non BCC
     {
-        for (_il = src->to; _il && _il->ident; _il = _il->next) {
-            PEP_STATUS _status = PEP_STATUS_OK;
-            if (!is_me(session, _il->ident)) {
-                _status = update_identity(session, _il->ident);
-                if (_status == PEP_CANNOT_FIND_IDENTITY) {
-                    _il->ident->comm_type = PEP_ct_key_not_found;
-                    _status = PEP_STATUS_OK;
-                }
-                // 0 unless set, so safe.
-                set_min_version( _il->ident->major_ver, _il->ident->minor_ver, 
-                                 max_version_major, max_version_minor,
-                                 &max_version_major, &max_version_minor);
-                
-                bool is_blacklisted = false;
-                if (_il->ident->fpr && IS_PGP_CT(_il->ident->comm_type)) {
-                    _status = blacklist_is_listed(session, _il->ident->fpr, &is_blacklisted);
-                    if (_status != PEP_STATUS_OK) {
-                        // DB error
-                        status = PEP_UNENCRYPTED;
-                        goto pEp_error;
-                    }
-                    if (is_blacklisted) {
-                        bool user_default, ident_default, address_default; 
-                        _status = get_valid_pubkey(session, _il->ident,
-                                                   &ident_default, &user_default,
-                                                   &address_default,
-                                                   true);
-                        if (_status != PEP_STATUS_OK || _il->ident->fpr == NULL) {
-                            _il->ident->comm_type = PEP_ct_key_not_found;
-                            _status = PEP_STATUS_OK;                        
-                        }
-                    }    
-                }
-                if (!has_pEp_user && !EMPTYSTR(_il->ident->user_id))
-                    is_pEp_user(session, _il->ident, &has_pEp_user);
-                
-                _status = bind_own_ident_with_contact_ident(session, src->from, _il->ident);
-                if (_status != PEP_STATUS_OK) {
-                    status = PEP_UNKNOWN_DB_ERROR;
+
+        // If you think this call is a beast, try the cut-and-pasted code 3 x
+        PEP_STATUS _status = PEP_STATUS_OK;
+        
+        if (src->to) {
+            _status = _update_state_for_ident_list(
+                            session, src->from, src->to,
+                            &_k,
+                            &max_comm_type,
+                            &max_version_major,
+                            &max_version_minor,
+                            &has_pEp_user,
+                            &dest_keys_found,
+                            false
+                        );
+            switch (_status) {
+                case PEP_PASSPHRASE_REQUIRED:
+                case PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED:
+                case PEP_WRONG_PASSPHRASE:
                     goto pEp_error;
-                }
-    
-            }
-            else
-                _status = myself(session, _il->ident);
-                
-            if (_status != PEP_STATUS_OK) {
-                status = PEP_UNENCRYPTED;
-                goto pEp_error;
-            }
-
-            if (_il->ident->fpr && _il->ident->fpr[0]) {
-                _k = stringlist_add(_k, _il->ident->fpr);
-                if (_k == NULL)
-                    goto enomem;
-                max_comm_type = _get_comm_type(session, max_comm_type,
-                                               _il->ident);
-            }
-            else {
-                dest_keys_found = false;
-                status = PEP_KEY_NOT_FOUND;
-            }
+                case PEP_STATUS_OK:
+                    break;
+                default:
+                    status = PEP_UNENCRYPTED;
+                    goto pEp_error;
+            }                        
         }
-
-        for (_il = src->cc; _il && _il->ident; _il = _il->next) {
-            PEP_STATUS _status = PEP_STATUS_OK;
-            if (!is_me(session, _il->ident)) {
-                _status = update_identity(session, _il->ident);
-                if (_status == PEP_CANNOT_FIND_IDENTITY) {
-                    _il->ident->comm_type = PEP_ct_key_not_found;
-                    _status = PEP_STATUS_OK;
-                }
-                bool is_blacklisted = false;
-                if (_il->ident->fpr && IS_PGP_CT(_il->ident->comm_type)) {
-                    _status = blacklist_is_listed(session, _il->ident->fpr, &is_blacklisted);
-                    if (_status != PEP_STATUS_OK) {
-                        // DB error
-                        status = PEP_UNENCRYPTED;
-                        goto pEp_error;
-                    }
-                    if (is_blacklisted) {
-                        bool user_default, ident_default, address_default; 
-                        _status = get_valid_pubkey(session, _il->ident,
-                                                   &ident_default, &user_default,
-                                                   &address_default,
-                                                   true);
-                        if (_status != PEP_STATUS_OK || _il->ident->fpr == NULL) {
-                            _il->ident->comm_type = PEP_ct_key_not_found;
-                            _status = PEP_STATUS_OK;                        
-                        }
-                    }    
-                }
-                if (!has_pEp_user && !EMPTYSTR(_il->ident->user_id))
-                    is_pEp_user(session, _il->ident, &has_pEp_user);
-            }
-            else
-                _status = myself(session, _il->ident);
-            if (_status != PEP_STATUS_OK)
-            {
-                status = PEP_UNENCRYPTED;
-                goto pEp_error;
-            }
-
-            if (_il->ident->fpr && _il->ident->fpr[0]) {
-                _k = stringlist_add(_k, _il->ident->fpr);
-                if (_k == NULL)
-                    goto enomem;
-                max_comm_type = _get_comm_type(session, max_comm_type,
-                                               _il->ident);
-            }
-            else {
-                dest_keys_found = false;
-            }
-        }
+        if (src->cc) {
+            _status = _update_state_for_ident_list(
+                            session, src->from, src->cc,
+                            &_k,
+                            &max_comm_type,
+                            &max_version_major,
+                            &max_version_minor,
+                            &has_pEp_user,
+                            &dest_keys_found,
+                            false
+                        );
+            switch (_status) {
+                case PEP_PASSPHRASE_REQUIRED:
+                case PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED:
+                case PEP_WRONG_PASSPHRASE:
+                    goto pEp_error;
+                case PEP_STATUS_OK:
+                    break;
+                default:
+                    status = PEP_UNENCRYPTED;
+                    goto pEp_error;
+            }                        
+        }        
     }
     
-    if (max_version_major == 1)
+    if (max_version_major < 2)
         force_v_1 = true;
 
     if (enc_format == PEP_enc_auto) {
@@ -2377,11 +2391,15 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
         status = encrypt_and_sign(session, keys, priv_key_data, priv_key_size,
                                   &encrypted_key_text, &encrypted_key_size);
     
-    if (!encrypted_key_text) {
+    if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
+        free(encrypted_key_text);        
+        goto pEp_free;
+    }                              
+    else if (!encrypted_key_text) {
         status = PEP_UNKNOWN_ERROR;
         goto pEp_free;
     }
-    else if (status) {
+    else if (status != PEP_STATUS_OK) {
         free(encrypted_key_text);
         goto pEp_free; // FIXME - we need an error return overall
     }
@@ -3337,10 +3355,10 @@ static PEP_STATUS update_sender_to_pEp_trust(
     free(sender->fpr);
     sender->fpr = NULL;
 
-    PEP_STATUS status = PEP_STATUS_OK;
+    PEP_STATUS status = is_me(session, sender) ? myself(session, sender) : update_identity(session, sender);
 
-    // Seems status doesn't matter
-    is_me(session, sender) ? myself(session, sender) : update_identity(session, sender);
+    if (PASS_ERROR(status))
+        return status;
 
     if (EMPTYSTR(sender->fpr) || strcmp(sender->fpr, keylist->value) != 0) {
         free(sender->fpr);
@@ -3734,6 +3752,7 @@ static void get_protocol_version_from_headers(
         pEp_version_major_minor(pEp_protocol_version->value->value, major_ver, minor_ver);           
 }
 
+// CAN return PASS errors
 static PEP_STATUS set_default_key_fpr_if_valid(
             PEP_SESSION session,
             pEp_identity* ident,
@@ -3749,7 +3768,7 @@ static PEP_STATUS set_default_key_fpr_if_valid(
         return PEP_OUT_OF_MEMORY;
         
     // this will check to see that the key is usable as well as get its comm_type    
-    PEP_STATUS status = validate_fpr(session, ident, true, true);
+    PEP_STATUS status = validate_fpr(session, ident, true, true, true);
     if (status == PEP_STATUS_OK)
         status = set_identity(session, ident);            
     else { 
@@ -4034,10 +4053,10 @@ static PEP_STATUS _decrypt_message(
                     // pEp key or no, we only take this key if it's the only one.
                     if (*start && !((*start)->next)) {
                         const char* check_key = (*start)->value;
-                        status = update_identity(session, msg->from);
+                        status = update_identity(session, src->from);
                         
-                        if (status == PEP_STATUS_OK && EMPTYSTR(msg->from->fpr) && !EMPTYSTR(check_key)) {
-                            status = set_default_key_fpr_if_valid(session, msg->from, check_key);
+                        if (status == PEP_STATUS_OK && EMPTYSTR(src->from->fpr) && !EMPTYSTR(check_key)) {
+                            status = set_default_key_fpr_if_valid(session, src->from, check_key);
                             if (status != PEP_OUT_OF_MEMORY)
                                 status = PEP_STATUS_OK;
                         }
@@ -4138,8 +4157,8 @@ static PEP_STATUS _decrypt_message(
                         const char* check_key = (*start)->value;
                         status = update_identity(session, msg->from);
                         
-                        if (status == PEP_STATUS_OK && EMPTYSTR(msg->from->fpr) && !EMPTYSTR(check_key)) {
-                            status = set_default_key_fpr_if_valid(session, msg->from, check_key);
+                        if (status == PEP_STATUS_OK && EMPTYSTR(src->from->fpr) && !EMPTYSTR(check_key)) {
+                            status = set_default_key_fpr_if_valid(session, src->from, check_key);
                             if (status != PEP_OUT_OF_MEMORY)
                                 status = PEP_STATUS_OK;
                         }
@@ -4427,7 +4446,12 @@ static PEP_STATUS _decrypt_message(
                     if (!cached_ownname)
                         cached_ownname = strdup(msg_from->address);
                     msg_from->username = NULL;
-                    status = _myself(session, msg_from, false, false, myself_read_only);
+                    
+                    // Don't renew for now: FIXME, SWIFT ticket coming with one To: etc...
+                    status = _myself(session, msg_from, false, false, false, myself_read_only);
+                    if (PASS_ERROR(status))
+                        goto pEp_error;
+                        
                     free(msg_from->username);
                     msg_from->username = cached_ownname;
                 }    
@@ -4883,6 +4907,7 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
 // Note: if comm_type_determine is false, it generally means that
 // we were unable to get key information for anyone in the list,
 // likely because a key is missing.
+// Cannot propagate PASSPHRASE errors.
 static void _max_comm_type_from_identity_list(
         identity_list *identities,
         PEP_SESSION session,
@@ -4890,6 +4915,7 @@ static void _max_comm_type_from_identity_list(
         bool *comm_type_determined
     )
 {
+
     identity_list * il;
     for (il = identities; il != NULL; il = il->next)
     {
@@ -4897,7 +4923,7 @@ static void _max_comm_type_from_identity_list(
         {   
             PEP_STATUS status = PEP_STATUS_OK;
             *max_comm_type = _get_comm_type(session, *max_comm_type,
-                il->ident);
+                il->ident);            
             *comm_type_determined = true;
             
             bool is_blacklisted = false;
@@ -4909,7 +4935,8 @@ static void _max_comm_type_from_identity_list(
                                               &ident_default, &user_default,
                                               &address_default,
                                               true);
-                    if (status != PEP_STATUS_OK || il->ident->fpr == NULL) {
+                    
+                    if (status != PEP_STATUS_OK || il->ident->fpr == NULL) {                            
                         il->ident->comm_type = PEP_ct_key_not_found;
                         if (*max_comm_type > PEP_ct_no_encryption)
                             *max_comm_type = PEP_ct_no_encryption;
@@ -4955,6 +4982,7 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
     )
 {
     PEP_comm_type max_comm_type = PEP_ct_pEp;
+    
     bool comm_type_determined = false;
 
     assert(session);
@@ -5025,6 +5053,12 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating_preview(
     return PEP_STATUS_OK;
 }
 
+// CAN return PASSPHRASE errors on own keys because 
+// of myself. Will not, however, return PASSPHRASE 
+// errors if the incoming ident isn't marked as an own 
+// identity.
+// FIXME: document at top level - we RELY on knowing 
+//        if this is an own identity in the input
 DYNAMIC_API PEP_STATUS identity_rating(
         PEP_SESSION session,
         pEp_identity *ident,
@@ -5043,28 +5077,29 @@ DYNAMIC_API PEP_STATUS identity_rating(
     *rating = PEP_rating_undefined;
 
     if (ident->me)
-        status = _myself(session, ident, false, true, true);
-    else
+        status = _myself(session, ident, false, true, true, true);
+    else { // Since we don't blacklist own keys, we only check it in here
         status = update_identity(session, ident);
 
-    bool is_blacklisted = false;
-    
-    if (ident->fpr && IS_PGP_CT(ident->comm_type)) {
-        status = blacklist_is_listed(session, ident->fpr, &is_blacklisted);
-        if (status != PEP_STATUS_OK) {
-            return status; // DB ERROR
-        }
-        if (is_blacklisted) {
-            bool user_default, ident_default, address_default; 
-            status = get_valid_pubkey(session, ident,
-                                       &ident_default, &user_default,
-                                       &address_default,
-                                       true);
-            if (status != PEP_STATUS_OK || ident->fpr == NULL) {
-                ident->comm_type = PEP_ct_key_not_found;
-                status = PEP_STATUS_OK;                        
+        bool is_blacklisted = false;
+        
+        if (ident->fpr && IS_PGP_CT(ident->comm_type)) {
+            status = blacklist_is_listed(session, ident->fpr, &is_blacklisted);
+            if (status != PEP_STATUS_OK) {
+                return status; // DB ERROR
             }
-        }    
+            if (is_blacklisted) {
+                bool user_default, ident_default, address_default; 
+                status = get_valid_pubkey(session, ident,
+                                           &ident_default, &user_default,
+                                           &address_default,
+                                           true);
+                if (status != PEP_STATUS_OK || ident->fpr == NULL) {
+                    ident->comm_type = PEP_ct_key_not_found;
+                    status = PEP_STATUS_OK;                        
+                }
+            }    
+        }
     }
 
     if (status == PEP_STATUS_OK)
@@ -5519,6 +5554,7 @@ enomem:
     return PEP_OUT_OF_MEMORY;
 }
 
+// CAN return PASSPHRASE errors
 DYNAMIC_API PEP_STATUS re_evaluate_message_rating(
     PEP_SESSION session,
     message *msg,
@@ -5579,7 +5615,7 @@ got_keylist:
     if (!is_me(session, msg->from))
         status = update_identity(session, msg->from);
     else
-        status = _myself(session, msg->from, false, false, true);
+        status = _myself(session, msg->from, false, true, false, true);
 
     switch (status) {
         case PEP_KEY_NOT_FOUND:
@@ -5595,7 +5631,7 @@ got_keylist:
     }
 
     status = amend_rating_according_to_sender_and_recipients(session, &_rating,
-            msg->from, _keylist);
+             msg->from, _keylist);
     if (status == PEP_STATUS_OK)
         *rating = _rating;
     

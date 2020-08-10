@@ -54,6 +54,8 @@ int dlclose(void *handle);
 void *dlsym(void *handle, const char *symbol);
 int mkstemp(char *templ);
 
+// Nota bene: It does _not_ respect timeptr->tm_gmtoff, so it behaves the same as its POSIX original.
+//            Use timegm_with_gmtoff() from <pEp/timestamp.h> or that.
 DYNAMIC_API time_t timegm(timestamp *timeptr);
 
 #ifndef strdup
