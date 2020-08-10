@@ -1785,11 +1785,8 @@ static void update_encryption_format(identity_list* id_list, PEP_enc_format* enc
 DYNAMIC_API PEP_STATUS probe_encrypt(PEP_SESSION session, const char *fpr)
 {
     assert(session);
-    if (!session)
+    if (!session || EMPTYSTR(fpr))
         return PEP_ILLEGAL_VALUE;
-
-    if (EMPTYSTR(fpr))
-        return PEP_KEY_NOT_FOUND;
 
     stringlist_t *keylist = new_stringlist(fpr);
     if (!keylist)
