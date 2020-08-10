@@ -353,8 +353,8 @@ protocol Sync 1 {
 
             on LeaveDeviceGroup {
                 send InitUnledGroupKeyReset;
-                do resetOwnKeysUngrouped;
                 do disable;
+                do resetOwnKeysUngrouped;
             }
 
             on InitUnledGroupKeyReset {
