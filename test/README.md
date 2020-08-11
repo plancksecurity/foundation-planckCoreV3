@@ -165,7 +165,7 @@ have found a dastardly bug in the engine, but it can also be a test issue.
   ```
   For example, for `DeleteKeyTest`:
   ```
-  ./EngineTests DeleteKeyTest*
+  ./EngineTests --gtest_filter="DeleteKeyTest*"
   ```
 
   2. To debug the same with lldb:
@@ -184,7 +184,7 @@ have found a dastardly bug in the engine, but it can also be a test issue.
   ```
   For example, for `check_delete_single_pubkey` in `DeleteKeyTest`:
   ```
-  ./EngineTests DeleteKeyTest.check_delete_single_pubkey
+  ./EngineTests --gtest_filter="DeleteKeyTest.check_delete_single_pubkey"
   ```
 
   2. To debug the same with lldb:
@@ -212,7 +212,71 @@ in the tests run directly from ./EngineTests (with or without filter)
 
 # Creating new tests
 
-Script next on the agenda...
+## Background, Engine.h/cc
+
+In test/src there is an Engine.h/cc, which represents an instance of the engine for the test suite. It’s called automatically in every (generated) test (script) during the initialization phase of the setup. No direct interaction with the file is required.
+
+Engine.h has a ‘Session’ associated with it.
+
+Most engine calls take a session. The test instance that is initiated in the test suite during the setup both sets this session up and makes it available to all tests under the variable “session”.
+
+We test with one Session thread in the test suite. 
+
+start() initiates the engine environment (home directories etc) and the engine/session itself, and shut_down() shuts them down.
+
+Internally they call the init() and release() engine functions.
+
+## Genrating a test shell
+
+In the test directory there is a script called gen_test_skel.py It takes an argument which is the test name.
+
+    python3 ./gen_test_skel.py KeyManipulationTest 
+
+will create KeyManipulationTest.cc in the test/src directory
+
+## Tests
+
+The constructor is mostly just test-internal information and some stuff to send to the initialization function to set up separate test directories for each test.
+
+When we look at the generated text at the bottom of the file we have test fixtures, and they are where the actual test code is run.
+
+    TEST_F(KeyManipulationTest, check_key_manipulation) { // This is just a dummy test case. The convention is check_whatever_you_are_checking // so for multiple test cases in a suite, be more explicit ;)
+
+Each test case within a suite of tests look like this. So if I’ve got a group of key manipulation tests, and my classname is KeyManipultionTest, I’d have a bunch of stuff like this:
+
+    TEST_F(KeyManipulationTest, check_key_manipulation_generate_keypair) { // test stuff here }
+    TEST_F(KeyManipulationTest, check_key_manipulation_delete_keypair) { // test stuff here }
+    TEST_F(KeyManipulationTest, check_key_manipulation_import_key) { // test stuff here }
+
+SetUp() and TearDown(), along with the constructor, are called anew for every test fixture in the suite SetUp() is run before the test, and is supposed to set up the whole environment before each test is run. TearDown() is run afterwards and should release any resources allocated in the setup.
+
+In most cases it’s not necessary to change them.
+
+SetUp() calls engine->start(), which initializes the engine and engine session. TearDown calls engine->shutdown(), which finalizes engine stuff and calls release() on the engine session
+
+## Setup
+
+    std::vector<std::pair<std::string, std::string>> init_files = std::vector<std::pair<std::string, std::string>>();
+
+Above is a vector of filename pairs. It is used to copy an existing management or key database into the home directory for the test case before the engine starts.
+
+When needed it is used like this: init_files.push_back(std::pair(std::string(“test_files/Engine709_3/keys.db”), std::string(“keys.db”))); or init_files.push_back(std::pair(std::string(“test_files/Engine709_3/pep_mgmt.db”), std::string(“management.db”)));
+
+The first argument is always the name/path of the file you want copied in. The second is just the filename the engine will expect in its home directory. Afterwards, the script takes care of it itself.
+
+After all of this is in order, SetUp calls:
+
+    engine->prep(NULL, NULL, init_files); 
+
+The “init_files” argument is the vector of pairs from above. The first two arguments are callbacks for the engine - one is for sync, and one is for message sending. They are not actually used at the moment.
+
+So with everything in that shell right now, without doing anything, you have the capacity to setup, start, and shutdown the engine before and after each test without worrying about anything. By the time you start the test case, you have a running, blank system with an empty database and keyring, ready to go.
+
+## Test home
+
+There is a directory that gets made called 'pEp_test_home' in the test directory. For each test, a new directory is created - so here, there would be, for the text fixture, pEp_test_home/KeyManipulationTest/check_key_manipulation and in that directory, which is set as the home for that test, there will be a .pEp directory with a keys.db and management.db so if you ever need to step through with gdb/lldb, you can always pause debugging and use sqlite3 to see the state of the relevant database which is often super useful.
+
+These DBs get cleaned up after the tests, so if you need to capture them before shutting down a test for some reason, you need to break before the engine shuts down and copy them out.
 
 # Known Problems
 
