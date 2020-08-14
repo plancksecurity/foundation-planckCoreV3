@@ -4625,7 +4625,7 @@ DYNAMIC_API PEP_STATUS verify_text(
 DYNAMIC_API PEP_STATUS delete_keypair(PEP_SESSION session, const char *fpr)
 {
 
-    if (!(session && fpr))
+    if (!(session && check_fpr_format(fpr)))
         return PEP_ILLEGAL_VALUE;
 
     return session->cryptotech[PEP_crypt_OpenPGP].delete_keypair(session, fpr);
