@@ -123,7 +123,7 @@ get_revoked()
 ***/
 
 // generate_keypair
-// also check for PEP_OWN_USERID?
+
 TEST_F(KeyManipulationTest, check_generate_keypair) {
 
     stringlist_t* keylist = NULL;
@@ -219,15 +219,7 @@ TEST_F(KeyManipulationTest, check_generate_keypair_seccond_key_for_same_adress) 
 }
 
 // delete_keypair()
-// parameter                      return value        
-//  missing/not valid session       PEP_ILLEGAL_VALUE             
-//  missing fpr/id                  PEP_KEY_NOT_FOUND
-//  existing key id                 PEP_STATUS_OK
-//  existing fpr                    PEP_STATUS_OK
-//  illegal value for key id        PEP_ILLEGAL_VALUE
-//  illegal value for fpr           PEP_ILLEGAL_VALUE
-//  ?                               PEP_OUT_OF_MEMORY
-//  ?                               PEP_KEY_HAS_AMBIG_NAME
+// only parameter testing as full test are done in in DeleteKeyTest.cc        
 
 TEST_F(KeyManipulationTest, check_delete_keypair_no_session) {
     import_test_keys();
@@ -247,21 +239,21 @@ TEST_F(KeyManipulationTest, check_delete_keypair_no_fpr) {
     free_stringlist(keylist);
 }
 
-TEST_F(KeyManipulationTest, check_delete_keypair_own) {
-    import_test_keys();
-    stringlist_t* keylist = NULL;
+TEST_F(KeyManipulationTest, check_delete_invalid_fpr) {
+    const char* alice_to_long_fpr = "586500A9411D176FF00E974ABE3AAF59AC32CFE4F86500A9411D176FF00E974ABE3AAF59AC32CFE4F86500A9411D176FF00E974ABE3AAF59AC32CFE4F86500AA9";
+    const char* bob_to_short_fpr = "BFCDB7F301DEEEB";
+    
+    const char* alice_not_hex_fpr = "6500A9411D176FF00E974ABE3AAF59AC32CFE4F86500A9411D176FF00E974ABE3AAF59AC32CFE4F86500A9411D176FF00E974ABE3AAF59AC32CFE4F8XXXXXXXX";
+    const char* bob_not_hex_fpr = "ZZZCDB7F301DEEEB";
 
-    PEP_STATUS status = find_keys(session, alice_fpr, &keylist);
-    ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_TRUE(keylist && keylist->value);
-    ASSERT_STREQ(keylist->value, alice_fpr);
-    free_stringlist(keylist);
-    
-    status = delete_keypair(session, alice_fpr);
-    ASSERT_EQ(status, PEP_STATUS_OK);
-    
-    status = find_keys(session, alice_fpr, &keylist);
-    ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_FALSE(keylist && keylist->value);
-    free_stringlist(keylist);
+    PEP_STATUS status = delete_keypair(session, alice_to_long_fpr);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+    status = delete_keypair(session, bob_to_short_fpr);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+    status = delete_keypair(session, alice_not_hex_fpr);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+    status = delete_keypair(session, bob_to_short_fpr);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
 }
+
+
