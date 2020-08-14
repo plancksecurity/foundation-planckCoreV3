@@ -3828,6 +3828,38 @@ static PEP_STATUS set_default_key_fpr_if_valid(
     return status;
 }
 
+static PEP_STATUS _check_and_set_default_key(
+        PEP_SESSION session,
+        pEp_identity* src_ident,
+        const char* sender_key
+    )
+{
+    if (!session || !src_ident)
+        return PEP_ILLEGAL_VALUE;
+
+    if (src_ident->address || EMPTYSTR(sender_key))
+        return PEP_STATUS_OK; // DOH, we're not setting anything here
+
+    char* default_from_fpr = NULL;
+
+    PEP_STATUS status = update_identity(session, src_ident);
+
+    if (status == PEP_STATUS_OK && !is_me(session, src_ident)) {
+        // Right now, we just want to know if there's a DB default, NOT 
+        // if it matches what update_identity gives us (there are good reasons it might not)
+        status = get_default_identity_fpr(session, src_ident->address, src_ident->user_id, &default_from_fpr);
+        if (status == PEP_KEY_NOT_FOUND || status == PEP_CANNOT_FIND_IDENTITY) {
+            if (!EMPTYSTR(sender_key))
+                status = set_default_key_fpr_if_valid(session, src_ident, sender_key);
+        }
+    }
+
+    if (status == PEP_OUT_OF_MEMORY)    
+        return status;
+
+    free(default_from_fpr);
+    return PEP_STATUS_OK;  // We don't care about other errors here.    
+}
 
 static PEP_STATUS _decrypt_message(
         PEP_SESSION session,
@@ -4003,32 +4035,27 @@ static PEP_STATUS _decrypt_message(
         pull_up_attached_main_msg(src);
 
         // Set default key if there isn't one
-        if (src->from && !is_me(session, src->from)) {
-            status = update_identity(session, src->from);
-            const char* hk_fpr = (_imported_key_list ? _imported_key_list->value : NULL);
-            
-            // Set a default key if there isn't one, if we have one
-            if (status == PEP_STATUS_OK && EMPTYSTR(src->from->fpr) && !EMPTYSTR(hk_fpr)) {
-                const char* check_key = NULL;
-                if (imported_sender_key_fpr) // pEp message version 2.2 or greater
-                    check_key = imported_sender_key_fpr;
-                else if (header_key_imported) // autocrypt
-                    check_key = _imported_key_list->value;
-                else {
-                    // We do this only with pEp messages 2.1 or less, or OpenPGP messages
-                    if (!is_pEp_msg || (major_ver == 2 && minor_ver < 2) || major_ver < 2) {
-                        if (_imported_key_list && !(_imported_key_list->next))
-                            check_key = _imported_key_list->value;
-                    }
-                } // Otherwise, too bad.
-                if (EMPTYSTR(hk_fpr) && !EMPTYSTR(check_key)) {
-                    status = set_default_key_fpr_if_valid(session, src->from, check_key);
-                    if (status != PEP_OUT_OF_MEMORY)
-                        status = PEP_STATUS_OK;
-                    
-                    free(imported_sender_key_fpr);    
+        // This is the case ONLY for unencrypted messages and differs from the 1.0 and 2.x cases,
+        // in case you are led to think this is pure code duplication.
+        if (src->from && src->from->address && !is_me(session, src->from)) {
+            const char* sender_key = NULL;
+            if (imported_sender_key_fpr) // pEp message version 2.2 or greater
+                sender_key = imported_sender_key_fpr;
+            else if (header_key_imported) // autocrypt
+                sender_key = _imported_key_list->value;
+            else {
+                // We do this only with pEp messages 2.1 or less, or OpenPGP messages
+                if (!is_pEp_msg || (major_ver == 2 && minor_ver < 2) || major_ver < 2) {
+                    if (_imported_key_list && !(_imported_key_list->next))
+                        sender_key = _imported_key_list->value;
                 }
-            }    
+            } // Otherwise, too bad.
+
+            status = _check_and_set_default_key(session, src->from, sender_key);
+
+            if (status == PEP_OUT_OF_MEMORY)
+                goto enomem;
+
         }
             
         if (imported_key_fprs)
@@ -4109,28 +4136,18 @@ static PEP_STATUS _decrypt_message(
                     if (status == PEP_STATUS_OK && !has_inner) {
                         // If we're claiming to have a pEp version 2.2 or greater, we only take it
                         // if it had the right name during the import and if it was the ONLY key on the message?
-                        // (This was Volker's first assertion, but then it may have been walked back.
-                        //  FIXME: verify)
-                        // pEp key or no, we only take this key if it's the only one.
-                        if (*start && !((*start)->next)) {
-                            const char* check_key = NULL;
-                            status = update_identity(session, src->from);
-                            // In case we're claiming 2.2 or greater, though, the following must hold
-                            if ((major_ver == 2 && minor_ver > 1) || major_ver > 2) {
-                                if (imported_sender_key_fpr)
-                                    check_key = imported_sender_key_fpr;
-                            }             
-                            else
-                                check_key = (*start)->value;
-                                
-                            if (status == PEP_STATUS_OK && EMPTYSTR(src->from->fpr) && !EMPTYSTR(check_key)) {
-                                status = set_default_key_fpr_if_valid(session, src->from, check_key);
-                                if (status != PEP_OUT_OF_MEMORY)
-                                    status = PEP_STATUS_OK;
-                            }
-                            free(imported_sender_key_fpr);    
-                            imported_sender_key_fpr = NULL;
-                        }
+                        const char* sender_key = NULL;
+                        if ((major_ver == 2 && minor_ver > 1) || major_ver > 2) {
+                            if (imported_sender_key_fpr)
+                                sender_key = imported_sender_key_fpr;
+                        }             
+                        else if (*start && !((*start)->next))
+                            sender_key = (*start)->value; // signer if sent from < 2.1
+
+                        status = _check_and_set_default_key(session, src->from, sender_key);
+
+                        if (status == PEP_OUT_OF_MEMORY)
+                            goto enomem;    
                     }    
                 } // else, it needs to get set from INNER keys.
 
@@ -4223,28 +4240,15 @@ static PEP_STATUS _decrypt_message(
                 if (status == PEP_STATUS_OK && src->from && !is_me(session, src->from)) {
                     // If we're claiming to have a pEp version 2.2 or greater, we only take it
                     // if it had the right name during the import and if it was the ONLY key on the message?
-                    // (This was Volker's first assertion, but then it may have been walked back.
-                    //  FIXME: verify)
-                    // pEp key or no, we only take this key if it's the only one.
-                    if (*start && !((*start)->next)) {
-                        const char* check_key = NULL;
-                        status = update_identity(session, src->from);
-                        // In case we're claiming 2.2 or greater, though, the following must hold
-                        if ((major_ver == 2 && minor_ver > 1) || major_ver > 2) {
-                            if (imported_sender_key_fpr)
-                                check_key = imported_sender_key_fpr;
-                        }             
-                        else
-                            check_key = (*start)->value;
-                           
-                        if (status == PEP_STATUS_OK && EMPTYSTR(src->from->fpr) && !EMPTYSTR(check_key)) {
-                            status = set_default_key_fpr_if_valid(session, src->from, check_key);
-                            if (status != PEP_OUT_OF_MEMORY)
-                                status = PEP_STATUS_OK;
-                        }
-                        free(imported_sender_key_fpr);    
-                        imported_sender_key_fpr = NULL;
-                    }
+                    const char* sender_key = NULL;
+                    if ((major_ver == 2 && minor_ver > 1) || major_ver > 2) {
+                        if (imported_sender_key_fpr)
+                            sender_key = imported_sender_key_fpr;
+                    }             
+                    else if (*start && !((*start)->next))
+                        sender_key = (*start)->value; // signer if sent from < 2.1
+
+                    status = _check_and_set_default_key(session, src->from, sender_key);
                 } 
                 break;
 
@@ -4454,27 +4458,22 @@ static PEP_STATUS _decrypt_message(
                             if (status != PEP_STATUS_OK)
                                 goto pEp_error;            
 
-                            if (!breaks_protocol) {                                         
-                                // Set default key if there isn't one
-                                if (inner_message->from && !is_me(session, inner_message->from)) {
-                                    status = update_identity(session, inner_message->from);
-                                    if (status == PEP_STATUS_OK && EMPTYSTR(inner_message->from->fpr)) {
-                                        const char* check_key = NULL;    
-                                        if ((msg_major_ver == 2 && msg_minor_ver > 0) || msg_major_ver > 2)
-                                            check_key = inner_message->_sender_fpr;
-                                        else if (msg_major_ver == 2 && msg_minor_ver == 0 && _keylist && _keylist->value)
-                                            check_key = _keylist->value;
-                                                                            
-                                        // Set a default key if there isn't one, if we have one
-                                        if (!EMPTYSTR(check_key)) {
-                                            status = set_default_key_fpr_if_valid(session, src->from, check_key);
-                                            free(imported_sender_key_fpr);    
-                                        }
-                                    } 
-                                    if (status == PEP_OUT_OF_MEMORY)
-                                        goto enomem;                                   
+                            if (!breaks_protocol && inner_message->from && !is_me(session, inner_message->from)) {                                         
+                                const char* sender_key = NULL;
+                                if ((msg_major_ver == 2 && msg_minor_ver > 0) || msg_major_ver > 2)
+                                    sender_key = inner_message->_sender_fpr;
+                                else { // !breaks_protocol is true, so this is a 2.0 message
+                                    if ((major_ver == 2 && minor_ver > 1)|| major_ver > 2) {
+                                        sender_key = imported_sender_key_fpr; // can be empty
+                                    }
+                                    else if (_keylist) { // signer key, 2.0 sent from 2.0 client
+                                        sender_key = _keylist->value; // can be empty
+                                    }
                                 }
-                            }    
+                                status = _check_and_set_default_key(session, inner_message->from, sender_key);
+                                if (status == PEP_OUT_OF_MEMORY)
+                                    goto enomem;
+                            }   
                         }
                         if (is_key_reset) {
                             if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {

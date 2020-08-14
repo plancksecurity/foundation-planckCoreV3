@@ -1527,6 +1527,11 @@ PEP_STATUS get_main_user_fpr(PEP_SESSION session,
                              const char* user_id,
                              char** main_fpr);
 
+PEP_STATUS get_default_identity_fpr(PEP_SESSION session, 
+                                    const char* address,                            
+                                    const char* user_id,
+                                    char** main_fpr);
+
 PEP_STATUS replace_main_user_fpr(PEP_SESSION session, const char* user_id,
                               const char* new_fpr);
 
