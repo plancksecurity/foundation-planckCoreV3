@@ -24,6 +24,7 @@
 #include <gtest/gtest.h>
 
 PEP_STATUS KRMT_message_send_callback(message* msg);
+PEP_STATUS KRMT_ensure_passphrase_callback(PEP_SESSION session, const char* key);
 
 static void* KRMT_fake_this;
 
@@ -34,6 +35,7 @@ class KeyResetMessageTest : public ::testing::Test {
         PEP_SESSION session;
 
         vector<message*> m_queue;
+        vector<string> pass_list;
 
     protected:
 
@@ -55,8 +57,8 @@ class KeyResetMessageTest : public ::testing::Test {
         const char* alice2_filename = "test_keys/alice-no-passwords.pgp";
         const char* alice2_fpr = "03AF88F728B8E9AADA7F370BD41801C62A649B9F";
 
-        const char* erwin_filename = "test_keys/erwin-primary-encrypted-erwin-subkey-unencrypted.pgp";
-        const char* erwin_fpr = "A34048189F0067DF0006FB28CBD7CFBCC0FA7F97";
+        const char* erwin_filename = "test_keys/erwin_normal_encrypted.pgp";
+        const char* erwin_fpr = "CBA968BC01FCEB89F04CCF155C5E9E3F0420A570";
 
         // You can remove any or all of the following functions if its body
         // is empty.
@@ -87,7 +89,7 @@ class KeyResetMessageTest : public ::testing::Test {
             ASSERT_NE(engine, nullptr);
 
             // Ok, let's initialize test directories etc.
-            engine->prep(&KRMT_message_send_callback, NULL, init_files);
+            engine->prep(&KRMT_message_send_callback, NULL, &KRMT_ensure_passphrase_callback, init_files);
 
             // Ok, try to start this bugger.
             engine->start();
@@ -96,6 +98,7 @@ class KeyResetMessageTest : public ::testing::Test {
 
             // Engine is up. Keep on truckin'
             m_queue.clear();
+            pass_list.clear();
         }
 
         void TearDown() override {
@@ -245,6 +248,9 @@ PEP_STATUS KRMT_message_send_callback(message* msg) {
     return PEP_STATUS_OK;
 }
 
+PEP_STATUS KRMT_ensure_passphrase_callback(PEP_SESSION session, const char* fpr) {
+    return config_valid_passphrase(session, fpr, ((KeyResetMessageTest*)KRMT_fake_this)->pass_list);
+}
 
 TEST_F(KeyResetMessageTest, check_reset_key_and_notify) {
     send_setup();
@@ -2626,6 +2632,148 @@ TEST_F(KeyResetMessageTest, check_reset_key_user_multi_passphrase_second_wrong) 
     status = key_reset_all_own_keys(session);
     ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);        
 }
+
+TEST_F(KeyResetMessageTest, check_reset_key_user_multi_passphrase_with_passlist) {
+    ASSERT_TRUE(slurp_and_import_key(session, bob2_filename));
+    ASSERT_TRUE(slurp_and_import_key(session, erwin_filename));    
+
+    PEP_STATUS status;
+
+    pass_list.push_back("erwin");
+    pass_list.push_back("cathy");
+    pass_list.push_back("bob");
+
+    pEp_identity* bob2 = new_identity("bob@example.org", bob2_fpr, "BOB", "Bob Dog");
+    status = set_own_key(session, bob2, bob2_fpr);
+    
+    pEp_identity* erwin = new_identity("erwin@example.org", erwin_fpr, "BOB", "Bob is Erwin");
+    status = set_own_key(session, erwin, erwin_fpr);
+    
+    status = key_reset_all_own_keys(session);
+    ASSERT_EQ(status, PEP_STATUS_OK);        
+}
+
+TEST_F(KeyResetMessageTest, check_reset_key_user_multi_passphrase_with_passlist_first_configured) {
+    ASSERT_TRUE(slurp_and_import_key(session, bob2_filename));
+    ASSERT_TRUE(slurp_and_import_key(session, erwin_filename));    
+
+    PEP_STATUS status;
+
+    config_passphrase(session, "bob");
+    pass_list.push_back("erwin");
+    pass_list.push_back("cathy");
+    pass_list.push_back("bob");
+
+    pEp_identity* bob2 = new_identity("bob@example.org", bob2_fpr, "BOB", "Bob Dog");
+    status = set_own_key(session, bob2, bob2_fpr);
+    
+    pEp_identity* erwin = new_identity("erwin@example.org", erwin_fpr, "BOB", "Bob is Erwin");
+    status = set_own_key(session, erwin, erwin_fpr);
+    
+    status = key_reset_all_own_keys(session);
+    ASSERT_EQ(status, PEP_STATUS_OK);        
+}
+
+TEST_F(KeyResetMessageTest, check_reset_key_user_multi_passphrase_with_passlist_second_configured) {
+    ASSERT_TRUE(slurp_and_import_key(session, bob2_filename));
+    ASSERT_TRUE(slurp_and_import_key(session, erwin_filename));    
+
+    PEP_STATUS status;
+
+    config_passphrase(session, "erwin");
+    pass_list.push_back("cathy");
+    pass_list.push_back("bob");
+    pass_list.push_back("erwin");
+
+    pEp_identity* bob2 = new_identity("bob@example.org", bob2_fpr, "BOB", "Bob Dog");
+    status = set_own_key(session, bob2, bob2_fpr);
+    
+    pEp_identity* erwin = new_identity("erwin@example.org", erwin_fpr, "BOB", "Bob is Erwin");
+    status = set_own_key(session, erwin, erwin_fpr);
+    
+    status = key_reset_all_own_keys(session);
+    ASSERT_EQ(status, PEP_STATUS_OK);        
+}
+
+TEST_F(KeyResetMessageTest, check_reset_key_user_multi_passphrase_with_passlist_first_missing) {
+    ASSERT_TRUE(slurp_and_import_key(session, bob2_filename));
+    ASSERT_TRUE(slurp_and_import_key(session, erwin_filename));    
+
+    PEP_STATUS status;
+
+    pass_list.push_back("cathy");
+    pass_list.push_back("erwin");
+
+    pEp_identity* bob2 = new_identity("bob@example.org", bob2_fpr, "BOB", "Bob Dog");
+    status = set_own_key(session, bob2, bob2_fpr);
+    
+    pEp_identity* erwin = new_identity("erwin@example.org", erwin_fpr, "BOB", "Bob is Erwin");
+    status = set_own_key(session, erwin, erwin_fpr);
+    
+    status = key_reset_all_own_keys(session);
+    ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);        
+}
+
+TEST_F(KeyResetMessageTest, check_reset_key_user_multi_passphrase_with_passlist_second_missing) {
+    ASSERT_TRUE(slurp_and_import_key(session, bob2_filename));
+    ASSERT_TRUE(slurp_and_import_key(session, erwin_filename));    
+
+    PEP_STATUS status;
+
+    pass_list.push_back("cathy");
+    pass_list.push_back("bob");
+ 
+    pEp_identity* bob2 = new_identity("bob@example.org", bob2_fpr, "BOB", "Bob Dog");
+    status = set_own_key(session, bob2, bob2_fpr);
+    
+    pEp_identity* erwin = new_identity("erwin@example.org", erwin_fpr, "BOB", "Bob is Erwin");
+    status = set_own_key(session, erwin, erwin_fpr);
+    
+    status = key_reset_all_own_keys(session);
+    ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);        
+}
+
+TEST_F(KeyResetMessageTest, check_reset_key_user_multi_passphrase_with_passlist_config_all_missing) {
+    ASSERT_TRUE(slurp_and_import_key(session, bob2_filename));
+    ASSERT_TRUE(slurp_and_import_key(session, erwin_filename));    
+
+    PEP_STATUS status;
+
+    config_passphrase(session, "cathy");
+    pass_list.push_back("dragons!");
+    pass_list.push_back("cheez whiz is gross");
+    pass_list.push_back("Vashedan!");
+
+    pEp_identity* bob2 = new_identity("bob@example.org", bob2_fpr, "BOB", "Bob Dog");
+    status = set_own_key(session, bob2, bob2_fpr);
+    
+    pEp_identity* erwin = new_identity("erwin@example.org", erwin_fpr, "BOB", "Bob is Erwin");
+    status = set_own_key(session, erwin, erwin_fpr);
+    
+    status = key_reset_all_own_keys(session);
+    ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);        
+}
+
+TEST_F(KeyResetMessageTest, check_reset_key_user_multi_passphrase_with_passlist_empty_config_all_missing) {
+    ASSERT_TRUE(slurp_and_import_key(session, bob2_filename));
+    ASSERT_TRUE(slurp_and_import_key(session, erwin_filename));    
+
+    PEP_STATUS status;
+
+    pass_list.push_back("dragons!");
+    pass_list.push_back("cheez whiz is gross");
+    pass_list.push_back("Vashedan!");
+
+    pEp_identity* bob2 = new_identity("bob@example.org", bob2_fpr, "BOB", "Bob Dog");
+    status = set_own_key(session, bob2, bob2_fpr);
+    
+    pEp_identity* erwin = new_identity("erwin@example.org", erwin_fpr, "BOB", "Bob is Erwin");
+    status = set_own_key(session, erwin, erwin_fpr);
+    
+    status = key_reset_all_own_keys(session);
+    ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);        
+}
+
 //
 
 TEST_F(KeyResetMessageTest, check_reset_key_needs_passphrase_gen_key_matches) {
@@ -2646,6 +2794,24 @@ TEST_F(KeyResetMessageTest, check_reset_key_needs_passphrase_gen_key_matches) {
 
 }
 
+TEST_F(KeyResetMessageTest, check_reset_key_needs_passphrase_gen_key_matches_has_passlist) {
+    ASSERT_TRUE(slurp_and_import_key(session, bob2_filename));
+    stringlist_t* found_key = NULL;
+    PEP_STATUS status = find_keys(session, bob2_fpr, &found_key);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(found_key, nullptr);
+    ASSERT_NE(found_key->value, nullptr);
+
+    config_passphrase_for_new_keys(session, true, "bob");
+    pass_list.push_back("bob");
+
+    pEp_identity* bob2 = new_identity("bob@example.org", bob2_fpr, "BOB", "Bob Dog");
+    status = set_own_key(session, bob2, bob2_fpr);
+    
+    status = key_reset_identity(session, bob2, bob2_fpr);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+}
+
 TEST_F(KeyResetMessageTest, check_reset_key_wrong_passphrase_gen_key_matches) {
     ASSERT_TRUE(slurp_and_import_key(session, bob2_filename));
     stringlist_t* found_key = NULL;
@@ -2664,6 +2830,28 @@ TEST_F(KeyResetMessageTest, check_reset_key_wrong_passphrase_gen_key_matches) {
 
     ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);    
 }
+
+TEST_F(KeyResetMessageTest, check_reset_key_wrong_passphrase_gen_key_matches_has_passlist) {
+    ASSERT_TRUE(slurp_and_import_key(session, bob2_filename));
+    stringlist_t* found_key = NULL;
+    PEP_STATUS status = find_keys(session, bob2_fpr, &found_key);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(found_key, nullptr);
+    ASSERT_NE(found_key->value, nullptr);
+    
+    config_passphrase(session, "julio");
+    config_passphrase_for_new_keys(session, true, "bob");
+    pass_list.push_back("april");
+    pass_list.push_back("bob");
+
+    pEp_identity* bob2 = new_identity("bob@example.org", bob2_fpr, "BOB", "Bob Dog");
+    status = set_own_key(session, bob2, bob2_fpr);
+    
+    status = key_reset_identity(session, bob2, bob2_fpr);
+
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+}
+
 
 TEST_F(KeyResetMessageTest, check_reset_key_correct_passphrase_gen_key_matches) {
     ASSERT_TRUE(slurp_and_import_key(session, bob2_filename));
@@ -2701,6 +2889,29 @@ TEST_F(KeyResetMessageTest, check_reset_key_correct_passphrase_gen_key_differs) 
     ASSERT_EQ(status, PEP_STATUS_OK);        
 }
 
+TEST_F(KeyResetMessageTest, check_reset_key_wrong_passphrase_gen_key_differs_has_passlist) {
+    ASSERT_TRUE(slurp_and_import_key(session, bob2_filename));
+    stringlist_t* found_key = NULL;
+    PEP_STATUS status = find_keys(session, bob2_fpr, &found_key);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(found_key, nullptr);
+    ASSERT_NE(found_key->value, nullptr);
+    
+    pass_list.push_back("amy");
+    pass_list.push_back("Spurius Tettius");
+    pass_list.push_back("bob");
+    pass_list.push_back("Correct Horse Battery Staple");
+
+    config_passphrase(session, "julio");
+    config_passphrase_for_new_keys(session, true, "juan");
+    
+    pEp_identity* bob2 = new_identity("bob@example.org", bob2_fpr, "BOB", "Bob Dog");
+    status = set_own_key(session, bob2, bob2_fpr);
+    
+    status = key_reset_identity(session, bob2, bob2_fpr);
+    ASSERT_EQ(status, PEP_STATUS_OK);        
+}
+
 TEST_F(KeyResetMessageTest, check_reset_key_no_passphrase_but_has_gen_key) {
     ASSERT_TRUE(slurp_and_import_key(session, alice2_filename));
     stringlist_t* found_key = NULL;
@@ -2718,6 +2929,28 @@ TEST_F(KeyResetMessageTest, check_reset_key_no_passphrase_but_has_gen_key) {
     ASSERT_EQ(status, PEP_STATUS_OK);
 
 }
+
+TEST_F(KeyResetMessageTest, check_reset_key_no_passphrase_needed_but_has_gen_key_and_passlist) {
+    ASSERT_TRUE(slurp_and_import_key(session, alice2_filename));
+    stringlist_t* found_key = NULL;
+    PEP_STATUS status = find_keys(session, alice2_fpr, &found_key);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(found_key, nullptr);
+    ASSERT_NE(found_key->value, nullptr);
+
+    pass_list.push_back("julio");
+    pass_list.push_back("juan");
+
+    config_passphrase_for_new_keys(session, true, "alice");
+    
+    pEp_identity* alice2 = new_identity("alice@example.org", alice2_fpr, "ALICE", "Alice");
+    status = set_own_key(session, alice2, alice2_fpr);
+    
+    status = key_reset_identity(session, alice2, alice2_fpr);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+}
+
 
 TEST_F(KeyResetMessageTest, check_reset_key_gen_key_pass_required) {
     ASSERT_TRUE(slurp_and_import_key(session, alice2_filename));

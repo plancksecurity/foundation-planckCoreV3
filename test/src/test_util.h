@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <ftw.h>
 #include <iostream>
+#include <vector>
 
 #include "pEpEngine.h"
 #include "message_api.h"
@@ -122,6 +123,8 @@ class NullBuffer : public std::streambuf {
         int overflow(int c);
 };                         
                          
+PEP_STATUS config_valid_passphrase(PEP_SESSION session, const char* fpr, std::vector<std::string> passphrases);
+
 #ifndef ENIGMAIL_MAY_USE_THIS
 
 // MIME_decrypt_message() - decrypt a MIME message, with MIME output

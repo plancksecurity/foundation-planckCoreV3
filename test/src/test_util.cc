@@ -14,6 +14,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <algorithm>
+#include <vector>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <errno.h>
@@ -481,6 +482,21 @@ int util_delete_filepath(const char *filepath,
     }
 
     return retval;
+}
+
+PEP_STATUS config_valid_passphrase(PEP_SESSION session, const char* fpr, std::vector<std::string> passphrases) {
+    // Check to see if it currently works
+    PEP_STATUS status = probe_encrypt(session, fpr);
+    if (status == PEP_STATUS_OK || passphrases.empty())
+        return status;
+        
+    for (auto && pass : passphrases) {
+        config_passphrase(session, pass.c_str());
+        status = probe_encrypt(session, fpr);
+        if (status == PEP_STATUS_OK)
+            break;
+    }
+    return status;
 }
 
 #ifndef ENIGMAIL_MAY_USE_THIS

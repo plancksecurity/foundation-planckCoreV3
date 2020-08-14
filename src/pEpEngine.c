@@ -944,7 +944,8 @@ static PEP_STATUS upgrade_revoc_contact_to_13(PEP_SESSION session) {
 DYNAMIC_API PEP_STATUS init(
         PEP_SESSION *session,
         messageToSend_t messageToSend,
-        inject_sync_event_t inject_sync_event
+        inject_sync_event_t inject_sync_event,
+        ensure_passphrase_t ensure_passphrase
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -993,7 +994,8 @@ DYNAMIC_API PEP_STATUS init(
     _session->version = PEP_ENGINE_VERSION;
     _session->messageToSend = messageToSend;
     _session->inject_sync_event = inject_sync_event;
-
+    _session->ensure_passphrase = ensure_passphrase;
+    
     assert(LOCAL_DB);
     if (LOCAL_DB == NULL) {
         status = PEP_INIT_CANNOT_OPEN_DB;
@@ -2331,16 +2333,16 @@ DYNAMIC_API PEP_STATUS config_passphrase(PEP_SESSION session, const char *passph
 }
 
 DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys(PEP_SESSION session, bool enable, const char *passphrase) {
-    if (enable && EMPTYSTR(passphrase))
-        return PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED;
-        
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
     session->new_key_pass_enable = enable;
     PEP_STATUS status = PEP_STATUS_OK;
 
     free(session->generation_passphrase);
-    if (!passphrase)
+    if (EMPTYSTR(passphrase)) {
         session->generation_passphrase = NULL;
-    else {
+    } else {
         session->generation_passphrase = strdup(passphrase);
         if (!session->generation_passphrase)
             status = PEP_OUT_OF_MEMORY;
@@ -4623,7 +4625,7 @@ DYNAMIC_API PEP_STATUS verify_text(
 DYNAMIC_API PEP_STATUS delete_keypair(PEP_SESSION session, const char *fpr)
 {
 
-    if (!(session && fpr))
+    if (!(session && check_fpr_format(fpr)))
         return PEP_ILLEGAL_VALUE;
 
     return session->cryptotech[PEP_crypt_OpenPGP].delete_keypair(session, fpr);
@@ -5474,4 +5476,17 @@ PEP_STATUS set_all_userids_to_own(PEP_SESSION session, identity_list* id_list) {
         }
     }
     return status;    
+}
+
+bool check_fpr_format(const char* fpr) {
+    int fpr_len = strlen(fpr);
+    if (fpr_len > 128 || fpr_len < 16)
+        return false;
+
+    for(int i=0; i < fpr_len; i++){
+        char fprc = fpr[i];
+        if (_normalize_hex(&fprc) != accept_hex)
+            return false;
+    }
+    return true;
 }
