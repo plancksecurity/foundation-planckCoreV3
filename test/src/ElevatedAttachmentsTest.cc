@@ -255,8 +255,9 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message) {
     // attached key is encrypted
     ASSERT_TRUE(is_PGP_message_text(ad->value));
     ASSERT_STREQ(ad->mime_type, "application/octet-stream");
-    ASSERT_STREQ(ad->filename, "file://pEpkey.asc.pgp");
-
+//    ASSERT_STREQ(ad->filename, "file://pEpkey.asc.pgp");
+    // As of ENGINE-633:
+    ASSERT_STREQ(ad->filename, "file://sender_key.asc.pgp");
     // decrypt this message
     
     message *dec_msg = NULL;
@@ -346,7 +347,10 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message_elevated) {
     // attached key is encrypted
     ASSERT_TRUE(is_PGP_message_text(ad->value));
     ASSERT_STREQ(ad->mime_type, "application/octet-stream");
-    ASSERT_STREQ(ad->filename, "file://pEpkey.asc.pgp");
+//    ASSERT_STREQ(ad->filename, "file://pEpkey.asc.pgp");
+    // As of ENGINE-633:
+    ASSERT_STREQ(ad->filename, "file://sender_key.asc.pgp");
+    // decrypt this message
 
     char *ct = strdup(ad->value);
 

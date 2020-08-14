@@ -849,13 +849,15 @@ enomem:
     return NULL;
 }
 
-static message* wrap_message_as_attachment(message* envelope, 
-    message* attachment, message_wrap_type wrap_type, 
+static PEP_STATUS wrap_message_as_attachment(message* envelope, 
+    message* attachment, message** new_message, message_wrap_type wrap_type, 
     bool keep_orig_subject, stringlist_t* extra_keys,
     unsigned int max_major, unsigned int max_minor) {
     
+    *new_message = NULL;
+
     if (!attachment)
-        return NULL;
+        return PEP_ILLEGAL_VALUE;
     
     message* _envelope = envelope;
 
@@ -874,7 +876,7 @@ static message* wrap_message_as_attachment(message* envelope,
         status = generate_message_id(_envelope);
         
         if (status != PEP_STATUS_OK)
-            goto enomem;
+            goto pEp_error;
         
         const char* inner_type_string = "";
         switch (wrap_type) {
@@ -895,6 +897,26 @@ static message* wrap_message_as_attachment(message* envelope,
                 "to view it, or better yet, consider using p≡p!\n"
             );
         }
+
+        if (max_major <= 0 || max_minor < 0) {
+            max_major = 1;
+            max_minor = 0;
+        }
+
+        // // I hate this. Wish it were extensible.
+        // // 2 to cover logs, one for period, one for null termination = + 4
+        // int buf_size = floor(log10(max_major)) + (max_minor == 0 ? 0 : floor(log10(max_minor))) + 4;
+//        char* msg_ver = (char*)calloc(buf_size, 1);
+        int buf_size = 100;
+        char msg_ver[100];
+        // if (!msg_ver)
+        //     goto enomem;
+        snprintf(msg_ver, buf_size, "%d%s%d", max_major, ".", max_minor);
+
+        replace_opt_field(attachment, X_PEP_MSG_VER_KEY, msg_ver, true);
+//        free(msg_ver);
+        
+        
         // 2.1, to replace the above
         add_opt_field(attachment, X_PEP_MSG_WRAP_KEY, inner_type_string); 
     }
@@ -902,17 +924,18 @@ static message* wrap_message_as_attachment(message* envelope,
         // 2.1 - how do we peel this particular union when we get there?
         _envelope->longmsg = encapsulate_message_wrap_info("TRANSPORT", _envelope->longmsg);
     }
-    else {
-        return NULL;
-    }
-    
+    else { 
+        status = PEP_UNKNOWN_ERROR;
+        goto pEp_error;
+    }   
+
     if (!attachment->id || attachment->id[0] == '\0') {
         free(attachment->id);
         if (!_envelope->id) {
             status = generate_message_id(_envelope);
         
             if (status != PEP_STATUS_OK)
-                goto enomem;
+                goto pEp_error;
         }
             
         attachment->id = strdup(_envelope->id);
@@ -938,23 +961,31 @@ static message* wrap_message_as_attachment(message* envelope,
     status = mime_encode_message(attachment, false, &message_text, false);
         
     if (status != PEP_STATUS_OK)
-        goto enomem;
+        goto pEp_error;
     
     size_t message_len = strlen(message_text);
     
     bloblist_t* message_blob = new_bloblist(message_text, message_len,
                                             "message/rfc822", NULL);
     
+    if (!message_blob)
+        goto enomem;
+
     _envelope->attachments = message_blob;
     if (keep_orig_subject && attachment->shortmsg)
         _envelope->shortmsg = strdup(attachment->shortmsg);
-    return _envelope;
+    *new_message = _envelope;
+    return status;
     
 enomem:
+    status = PEP_OUT_OF_MEMORY;  
+
+pEp_error:
     if (!envelope) {
         free_message(_envelope);
     }
-    return NULL;    
+    *new_message = NULL;
+    return status;
 }
 
 static PEP_STATUS encrypt_PGP_inline(
@@ -975,7 +1006,7 @@ static PEP_STATUS encrypt_PGP_inline(
 
     dst->enc_format = src->enc_format;
 
-    // shortmsg is being copied
+    // shortmsg is copied
     if (src->shortmsg) {
         dst->shortmsg = strdup(src->shortmsg);
         assert(dst->shortmsg);
@@ -983,7 +1014,7 @@ static PEP_STATUS encrypt_PGP_inline(
             return PEP_OUT_OF_MEMORY;
     }
 
-    // id is staying the same
+    // id stays the same
     if (src->id) {
         dst->id = strdup(src->id);
         assert(dst->id);
@@ -2175,9 +2206,13 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         message_wrap_type wrap_type = PEP_message_unwrapped;
         if ((enc_format != PEP_enc_inline) && (enc_format != PEP_enc_inline_EA) && (!force_v_1) && ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp)) {
             wrap_type = ((flags & PEP_encrypt_flag_key_reset_only) ? PEP_message_key_reset : PEP_message_default);
-            _src = wrap_message_as_attachment(NULL, src, wrap_type, false, extra, max_version_major, max_version_minor);
-            if (!_src)
+            status = wrap_message_as_attachment(NULL, src, &_src, wrap_type, false, extra, max_version_major, max_version_minor);
+            if (status != PEP_STATUS_OK)
                 goto pEp_error;
+            else if (!_src) {
+                status = PEP_UNKNOWN_ERROR;
+                goto pEp_error;
+            }
         }
         else {
             // hide subject
@@ -2544,9 +2579,13 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
 
     unsigned int major_ver, minor_ver;
     pEp_version_major_minor(PEP_VERSION, &major_ver, &minor_ver);
-    _src = wrap_message_as_attachment(NULL, src, PEP_message_default, false, extra, major_ver, minor_ver);
-    if (!_src)
+    status = wrap_message_as_attachment(NULL, src, &_src, PEP_message_default, false, extra, major_ver, minor_ver);
+    if (status != PEP_STATUS_OK)
         goto pEp_error;
+    else if (!_src) {
+        status = PEP_UNKNOWN_ERROR;
+        goto pEp_error;
+    }
 
     msg = clone_to_empty_message(_src);
     if (msg == NULL)
@@ -3749,6 +3788,20 @@ static void get_protocol_version_from_headers(
         pEp_version_major_minor(pEp_protocol_version->value->value, major_ver, minor_ver);           
 }
 
+static void get_message_version_from_headers(
+        stringpair_list_t* field_list,
+        unsigned int* major_ver,
+        unsigned int* minor_ver
+    ) 
+{
+    *major_ver = 0;
+    *minor_ver = 0;
+    const stringpair_list_t* pEp_protocol_version = stringpair_list_find(field_list, X_PEP_MSG_VER_KEY);
+                        
+    if (pEp_protocol_version && pEp_protocol_version->value)
+        pEp_version_major_minor(pEp_protocol_version->value->value, major_ver, minor_ver);           
+}
+
 // CAN return PASS errors
 static PEP_STATUS set_default_key_fpr_if_valid(
             PEP_SESSION session,
@@ -3813,6 +3866,7 @@ static PEP_STATUS _decrypt_message(
     stringlist_t *_keylist = NULL;
     bool is_pEp_msg = is_a_pEpmessage(src);
     bool myself_read_only = (src->dir == PEP_dir_incoming);
+    bool breaks_protocol = false;
     unsigned int major_ver = 0;
     unsigned int minor_ver = 0;
     unsigned int msg_major_ver = 0;
@@ -3933,6 +3987,10 @@ static PEP_STATUS _decrypt_message(
     // it is fully manipulable on-the-wire. It'll be recalculated if we have inner headers.
     get_protocol_version_from_headers(src->opt_fields, &major_ver, &minor_ver);
 
+    if (major_ver == 0) {
+        msg_major_ver = 1;
+        msg_minor_ver = 0;
+    }
     // Check for and deal with unencrypted messages
     if (src->enc_format == PEP_enc_none) {
 
@@ -3952,16 +4010,17 @@ static PEP_STATUS _decrypt_message(
             // Set a default key if there isn't one, if we have one
             if (status == PEP_STATUS_OK && EMPTYSTR(src->from->fpr) && !EMPTYSTR(hk_fpr)) {
                 const char* check_key = NULL;
-                if (imported_sender_key_fpr)
+                if (imported_sender_key_fpr) // pEp message version 2.2 or greater
                     check_key = imported_sender_key_fpr;
-                else if (header_key_imported)
+                else if (header_key_imported) // autocrypt
                     check_key = _imported_key_list->value;
                 else {
+                    // We do this only with pEp messages 2.1 or less, or OpenPGP messages
                     if (!is_pEp_msg || (major_ver == 2 && minor_ver < 2) || major_ver < 2) {
                         if (_imported_key_list && !(_imported_key_list->next))
                             check_key = _imported_key_list->value;
                     }
-                }    
+                } // Otherwise, too bad.
                 if (EMPTYSTR(hk_fpr) && !EMPTYSTR(check_key)) {
                     status = set_default_key_fpr_if_valid(session, src->from, check_key);
                     if (status != PEP_OUT_OF_MEMORY)
@@ -4046,20 +4105,33 @@ static PEP_STATUS _decrypt_message(
                                                         &_changed_keys,
                                                         &imported_sender_key_fpr);
 
-                if (status == PEP_STATUS_OK && major_ver < 2) {
-                    // pEp key or no, we only take this key if it's the only one.
-                    if (*start && !((*start)->next)) {
-                        const char* check_key = (*start)->value;
-                        status = update_identity(session, src->from);
-                        
-                        if (status == PEP_STATUS_OK && EMPTYSTR(src->from->fpr) && !EMPTYSTR(check_key)) {
-                            status = set_default_key_fpr_if_valid(session, src->from, check_key);
-                            if (status != PEP_OUT_OF_MEMORY)
-                                status = PEP_STATUS_OK;
+                if (src->from && !is_me(session, src->from)) {
+                    if (status == PEP_STATUS_OK && !has_inner) {
+                        // If we're claiming to have a pEp version 2.2 or greater, we only take it
+                        // if it had the right name during the import and if it was the ONLY key on the message?
+                        // (This was Volker's first assertion, but then it may have been walked back.
+                        //  FIXME: verify)
+                        // pEp key or no, we only take this key if it's the only one.
+                        if (*start && !((*start)->next)) {
+                            const char* check_key = NULL;
+                            status = update_identity(session, src->from);
+                            // In case we're claiming 2.2 or greater, though, the following must hold
+                            if ((major_ver == 2 && minor_ver > 1) || major_ver > 2) {
+                                if (imported_sender_key_fpr)
+                                    check_key = imported_sender_key_fpr;
+                            }             
+                            else
+                                check_key = (*start)->value;
+                                
+                            if (status == PEP_STATUS_OK && EMPTYSTR(src->from->fpr) && !EMPTYSTR(check_key)) {
+                                status = set_default_key_fpr_if_valid(session, src->from, check_key);
+                                if (status != PEP_OUT_OF_MEMORY)
+                                    status = PEP_STATUS_OK;
+                            }
+                            free(imported_sender_key_fpr);    
+                            imported_sender_key_fpr = NULL;
                         }
-                        free(imported_sender_key_fpr);    
-                        imported_sender_key_fpr = NULL;
-                    }
+                    }    
                 } // else, it needs to get set from INNER keys.
 
                 if (status != PEP_STATUS_OK)
@@ -4148,12 +4220,23 @@ static PEP_STATUS _decrypt_message(
                                                         &_changed_keys,
                                                         &imported_sender_key_fpr);
 
-                if (status == PEP_STATUS_OK && major_ver < 2) {
+                if (status == PEP_STATUS_OK && src->from && !is_me(session, src->from)) {
+                    // If we're claiming to have a pEp version 2.2 or greater, we only take it
+                    // if it had the right name during the import and if it was the ONLY key on the message?
+                    // (This was Volker's first assertion, but then it may have been walked back.
+                    //  FIXME: verify)
                     // pEp key or no, we only take this key if it's the only one.
                     if (*start && !((*start)->next)) {
-                        const char* check_key = (*start)->value;
-                        status = update_identity(session, msg->from);
-                        
+                        const char* check_key = NULL;
+                        status = update_identity(session, src->from);
+                        // In case we're claiming 2.2 or greater, though, the following must hold
+                        if ((major_ver == 2 && minor_ver > 1) || major_ver > 2) {
+                            if (imported_sender_key_fpr)
+                                check_key = imported_sender_key_fpr;
+                        }             
+                        else
+                            check_key = (*start)->value;
+                           
                         if (status == PEP_STATUS_OK && EMPTYSTR(src->from->fpr) && !EMPTYSTR(check_key)) {
                             status = set_default_key_fpr_if_valid(session, src->from, check_key);
                             if (status != PEP_OUT_OF_MEMORY)
@@ -4162,8 +4245,7 @@ static PEP_STATUS _decrypt_message(
                         free(imported_sender_key_fpr);    
                         imported_sender_key_fpr = NULL;
                     }
-                } // else, it needs to get set from INNER keys.
-    
+                } 
                 break;
 
             default:
@@ -4258,17 +4340,20 @@ static PEP_STATUS _decrypt_message(
                         wrap_info = NULL;
                         inner_message->enc_format = src->enc_format;
 
-                        const stringpair_list_t* pEp_protocol_version = NULL;
-                        pEp_protocol_version = stringpair_list_find(inner_message->opt_fields, "X-pEp-Version");
+                        // const stringpair_list_t* pEp_protocol_version = NULL;
+                        // pEp_protocol_version = stringpair_list_find(inner_message->opt_fields, "X-pEp-Version");
                         
-                        if (pEp_protocol_version && pEp_protocol_version->value)
-                            pEp_version_major_minor(pEp_protocol_version->value->value, &major_ver, &minor_ver);
-
+                        // if (pEp_protocol_version && pEp_protocol_version->value)
+                        //     pEp_version_major_minor(pEp_protocol_version->value->value, &major_ver, &minor_ver);
+                        get_protocol_version_from_headers(inner_message->opt_fields, &major_ver, &minor_ver);   
+                        if (major_ver > 2 || (major_ver == 2 && minor_ver > 1)) 
+                            get_message_version_from_headers(inner_message->opt_fields, &msg_major_ver, &msg_minor_ver);
+                            
                         // Sort out pEp user status and version number based on INNER message.
                         
                         bool is_inner = false;
 
-                        // Deal with plaintext modification in 1.0 and 2.0 messages
+                        // Deal with plaintext modification in 2.0 messages
                         status = unencapsulate_hidden_fields(inner_message, NULL, &wrap_info);   
                         
                         if (status == PEP_OUT_OF_MEMORY)
@@ -4276,7 +4361,27 @@ static PEP_STATUS _decrypt_message(
                         if (status != PEP_STATUS_OK)
                             goto pEp_error;                                         
                             
-                        if (major_ver > 2 || (major_ver == 2 && minor_ver > 0)) {
+                        // Crap - this is broken. Ok. Work this through.
+                        // Any client 2.1 or above could send a 2.0 or 2.1 message.
+                        // A 2.0 client can only send a 2.0 message here.
+                        // So first off: if not 2.2 or greater, infer version:
+                        if (major_ver == 2 && minor_ver < 2) {
+                            stringpair_list_t* searched = stringpair_list_find(inner_message->opt_fields, X_PEP_MSG_WRAP_KEY);
+                            if (searched) {
+                                // 2.1 message
+                                msg_major_ver = 2;
+                                msg_minor_ver = 1;
+                            }
+                            else if (wrap_info) {
+                                msg_major_ver = 2;
+                                msg_minor_ver = 0;
+                            }
+                            else {
+                                breaks_protocol = true;
+                            }
+                        } // else msg_major/minor_ver must have been set.
+                        
+                        if (msg_major_ver > 2 || (msg_major_ver == 2 && msg_minor_ver > 0)) {
                             stringpair_list_t* searched = stringpair_list_find(inner_message->opt_fields, "X-pEp-Sender-FPR");                             
                             inner_message->_sender_fpr = ((searched && searched->value && searched->value->value) ? strdup(searched->value->value) : NULL);
                             searched = stringpair_list_find(inner_message->opt_fields, X_PEP_MSG_WRAP_KEY);
@@ -4288,18 +4393,18 @@ static PEP_STATUS _decrypt_message(
                                     inner_message->opt_fields = stringpair_list_delete_by_key(inner_message->opt_fields, X_PEP_MSG_WRAP_KEY);
                             }
                         }
-                        else {
+                        else if (msg_major_ver == 2 && msg_minor_ver == 0) {
                             is_inner = (strcmp(wrap_info, "INNER") == 0);
                             if (!is_inner)
                                 is_key_reset = (strcmp(wrap_info, "KEY_RESET") == 0);
-                        }                        
-                            
+                        }                      
+
                         // check for private key in decrypted message attachment while importing
                         // N.B. Apparently, we always import private keys into the keyring; however,
                         // we do NOT always allow those to be used for encryption. THAT is controlled
                         // by setting it as an own identity associated with the key in the DB.
                         
-                        // If we have a message 2.0 message, we are ONLY going to be ok with keys
+                        // If we have a message 2.x message, we are ONLY going to act on keys
                         // we imported from THIS part of the message.
                                                         
                         bool ignore_msg = false;
@@ -4335,10 +4440,10 @@ static PEP_STATUS _decrypt_message(
                             
                             free(imported_sender_key_fpr);
                             imported_sender_key_fpr = NULL;
-                            
+
 
                             // import keys from decrypted INNER source
-                            status = import_keys_from_decrypted_msg(session, msg,
+                            status = import_keys_from_decrypted_msg(session, inner_message,
                                                                     &keys_were_imported,
                                                                     &imported_private_key_address,
                                                                     private_il,
@@ -4348,45 +4453,44 @@ static PEP_STATUS _decrypt_message(
 
                             if (status != PEP_STATUS_OK)
                                 goto pEp_error;            
-                                                                                                
-                            // Set default key if there isn't one
-                            if (inner_message->from && !is_me(session, inner_message->from)) {
-                                status = update_identity(session, inner_message->from);
-                                if (status == PEP_STATUS_OK && EMPTYSTR(inner_message->from->fpr)) {
-                                    const char* check_key = NULL;    
-                                    if ((major_ver == 2 && minor_ver > 0) || major_ver > 2)
-                                        check_key = inner_message->_sender_fpr;
-                                    else if (major_ver == 2 && minor_ver == 0 && _keylist && _keylist->value)
-                                        check_key = _keylist->value;
-                                                                        
-                                    // Set a default key if there isn't one, if we have one
-                                    if (!EMPTYSTR(check_key)) {
-                                        status = set_default_key_fpr_if_valid(session, src->from, check_key);
-                                        free(imported_sender_key_fpr);    
-                                    }
-                                } 
-                                if (status == PEP_OUT_OF_MEMORY)
-                                    goto enomem;                                   
-                            }
-                        }
-                        else {
-                            // Simply put, we bail. We should not be returning ANYTHERE here.
-                            status = decrypt_status;    
-                            goto pEp_error;
+
+                            if (!breaks_protocol) {                                         
+                                // Set default key if there isn't one
+                                if (inner_message->from && !is_me(session, inner_message->from)) {
+                                    status = update_identity(session, inner_message->from);
+                                    if (status == PEP_STATUS_OK && EMPTYSTR(inner_message->from->fpr)) {
+                                        const char* check_key = NULL;    
+                                        if ((msg_major_ver == 2 && msg_minor_ver > 0) || msg_major_ver > 2)
+                                            check_key = inner_message->_sender_fpr;
+                                        else if (msg_major_ver == 2 && msg_minor_ver == 0 && _keylist && _keylist->value)
+                                            check_key = _keylist->value;
+                                                                            
+                                        // Set a default key if there isn't one, if we have one
+                                        if (!EMPTYSTR(check_key)) {
+                                            status = set_default_key_fpr_if_valid(session, src->from, check_key);
+                                            free(imported_sender_key_fpr);    
+                                        }
+                                    } 
+                                    if (status == PEP_OUT_OF_MEMORY)
+                                        goto enomem;                                   
+                                }
+                            }    
                         }
                         if (is_key_reset) {
                             if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
-                                status = receive_key_reset(session,
-                                                           inner_message);
-                                if (status != PEP_STATUS_OK) {
-                                    free_message(inner_message);
-                                    goto pEp_error;
-                                }
+                                if (!ignore_msg) {  
+                                    status = receive_key_reset(session,
+                                                            inner_message);
+                                    if (status != PEP_STATUS_OK) {
+                                        free_message(inner_message);
+                                        goto pEp_error;
+                                    }
+                                }    
                                 *flags |= PEP_decrypt_flag_consume;
                                 calculated_src = msg = inner_message;                                    
                             }
                         }
-                        else if (is_inner) {
+                        else if (is_inner || breaks_protocol) {
 
                             // THIS is our message
                             // Now, let's make sure we've copied in 
@@ -4473,7 +4577,13 @@ static PEP_STATUS _decrypt_message(
             if (status != PEP_STATUS_OK)
                 goto pEp_error;
          
-        }             
+        }
+
+        // Ok, one last thing - if the message didn't follow the protocol, amend rating again.  
+        if (breaks_protocol) {
+            if (*rating > PEP_rating_b0rken)
+                *rating = PEP_rating_b0rken;
+        }           
         
         /* We decrypted ok, hallelujah. */
         msg->enc_format = PEP_enc_none;    
@@ -4750,12 +4860,14 @@ static PEP_STATUS _decrypt_message(
     // Double-check for message 2.1+: (note, we don't do this for already-reencrypted-messages)
     if (!(reencrypt && reenc_signer_key_is_own_key)) { 
         if (major_ver > 2 || (major_ver == 2 && minor_ver > 0)) {
-            if (EMPTYSTR((*dst)->_sender_fpr) || 
-               (!EMPTYSTR(_keylist->value) && (strcasecmp((*dst)->_sender_fpr, _keylist->value) != 0))) {
-                if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
-                    decrypt_status = PEP_DECRYPTED;
-                if (*rating > PEP_rating_unreliable)
-                    *rating = PEP_rating_unreliable;
+            if (msg_major_ver > 2 || (msg_major_ver == 2 && msg_minor_ver > 0)) {
+                if (EMPTYSTR((*dst)->_sender_fpr) || 
+                (!EMPTYSTR(_keylist->value) && (strcasecmp((*dst)->_sender_fpr, _keylist->value) != 0))) {
+                    if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
+                        decrypt_status = PEP_DECRYPTED;
+                    if (*rating > PEP_rating_unreliable)
+                        *rating = PEP_rating_unreliable;
+                }
             }
         }
     }

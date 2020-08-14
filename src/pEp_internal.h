@@ -54,6 +54,14 @@
 #define X_PEP_SNDR_FPR_KEY "X-pEp-Sender-FPR"
 #endif
  
+#ifndef X_PEP_MSG_VER_KEY
+#define X_PEP_MSG_VER_KEY "X-pEp-Message-Version"
+#endif
+
+#define VER_1_0 "1.0"
+#define VER_2_0 "2.0"
+#define VER_2_1 "2.1"
+
 #include "platform.h"
 
 #ifdef WIN32
