@@ -106,7 +106,7 @@ protocol session {
 
         Only use this for transports without support for attachments
         when attached data must be sent inline
-        """;
+        """
     {
         // parms
 
