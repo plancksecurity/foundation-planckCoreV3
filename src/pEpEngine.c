@@ -5477,3 +5477,16 @@ PEP_STATUS set_all_userids_to_own(PEP_SESSION session, identity_list* id_list) {
     }
     return status;    
 }
+
+bool check_fpr_format(const char* fpr) {
+    int fpr_len = strlen(fpr);
+    if (fpr_len > 128 || fpr_len < 16)
+        return false;
+
+    for(int i=0; i < fpr_len; i++){
+        char fprc = fpr[i];
+        if (_normalize_hex(&fprc) != accept_hex)
+            return false;
+    }
+    return true;
+}

@@ -424,6 +424,9 @@ static inline int _same_fpr(
     return comparison == 0;
 }
 
+// Check if fpr is hex and has between 16 and 128 characters inclusive 
+bool check_fpr_format(const char* fpr); 
+
 // size is the length of the bytestr that's coming in. This is really only intended
 // for comparing two full strings. If charstr's length is different from bytestr_size,
 // we'll return a non-zero value.
