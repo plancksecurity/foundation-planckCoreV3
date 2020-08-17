@@ -24,6 +24,14 @@ bool is_pEpmsg(const message *msg); // duplicates static func in message_api.c, 
 #define ASSERT_OK ASSERT_EQ(status, PEP_STATUS_OK)
 #endif
 
+#ifndef ASSERT_NOTNULL
+#define ASSERT_NOTNULL(X) ASSERT_NE((X), nullptr)
+#endif
+
+#ifndef ASSERT_NULL
+#define ASSERT_NULL(X) ASSERT_EQ((X), nullptr)
+#endif
+
 extern std::string _main_test_home_dir;
 
 #ifndef DEBUG_OUTPUT

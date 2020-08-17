@@ -3837,7 +3837,7 @@ static PEP_STATUS _check_and_set_default_key(
     if (!session || !src_ident)
         return PEP_ILLEGAL_VALUE;
 
-    if (src_ident->address || EMPTYSTR(sender_key))
+    if (EMPTYSTR(src_ident->address) || EMPTYSTR(sender_key))
         return PEP_STATUS_OK; // DOH, we're not setting anything here
 
     char* default_from_fpr = NULL;
