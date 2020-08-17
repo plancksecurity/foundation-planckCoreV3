@@ -61,6 +61,7 @@
 #define VER_1_0 "1.0"
 #define VER_2_0 "2.0"
 #define VER_2_1 "2.1"
+#define VER_2_2 "2.2"
 
 #include "platform.h"
 

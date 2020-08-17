@@ -21,6 +21,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <ftw.h>
+#include <fstream>
+#include <iostream>
 
 using namespace std;
 
@@ -1021,3 +1023,11 @@ int NullBuffer::overflow(int c) {
 #ifndef DEBUG_OUTPUT
 std::ostream output_stream(new NullBuffer());
 #endif
+
+void print_mail(message* msg) {
+    char* outmsg = NULL;
+    mime_encode_message(msg, false, &outmsg, false);
+ //   output_stream << outmsg << endl;
+    cout << outmsg << endl;
+    free(outmsg);
+}

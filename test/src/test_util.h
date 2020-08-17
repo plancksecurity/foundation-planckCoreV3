@@ -133,6 +133,8 @@ class NullBuffer : public std::streambuf {
                          
 PEP_STATUS config_valid_passphrase(PEP_SESSION session, const char* fpr, std::vector<std::string> passphrases);
 
+void print_mail(message* msg);
+
 #ifndef ENIGMAIL_MAY_USE_THIS
 
 // MIME_decrypt_message() - decrypt a MIME message, with MIME output
