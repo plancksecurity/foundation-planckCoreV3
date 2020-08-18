@@ -96,7 +96,7 @@ namespace {
 
                 message* retval = new_message(PEP_dir_outgoing);
                 const char* shortmsg = "Exciting subject!";
-                const char* longmsg = "¡Feliz Navidad!\n\n¡Feliz Navidad!\n\n¡Feliz Navidad, prospero año y felicidad!";
+                const char* longmsg = "¡Feliz Navidad!\n\n¡Feliz Navidad!\n\n¡Feliz Navidad, prospero año y felicidad!\n";
                 retval->from = from;
                 retval->to = new_identity_list(to);
                 retval->shortmsg = strdup(shortmsg);
@@ -152,7 +152,7 @@ TEST_F(DefaultFromEmailTest, check_encrypt_to_pEp_1_0_simple_key) {
 
     message* unenc_msg = NULL;
     message* enc_msg = NULL;
-    create_base_test_msg(&unenc_msg, 1, 0, false);
+    create_base_test_msg(&unenc_msg, 1, 0, true);
 
     status = encrypt_message(session, unenc_msg, NULL, &enc_msg, PEP_enc_PEP, 0);
     ASSERT_OK;
@@ -176,7 +176,7 @@ TEST_F(DefaultFromEmailTest, check_encrypt_to_pEp_2_0_simple_key) {
 
     message* unenc_msg = NULL;
     message* enc_msg = NULL;
-    create_base_test_msg(&unenc_msg, 2, 0, false);
+    create_base_test_msg(&unenc_msg, 2, 0, true);
 
     status = encrypt_message(session, unenc_msg, NULL, &enc_msg, PEP_enc_PEP, 0);
     ASSERT_OK;
@@ -200,7 +200,7 @@ TEST_F(DefaultFromEmailTest, check_encrypt_to_pEp_2_1_simple_key) {
 
     message* unenc_msg = NULL;
     message* enc_msg = NULL;
-    create_base_test_msg(&unenc_msg, 2, 1, false);
+    create_base_test_msg(&unenc_msg, 2, 1, true);
 
     status = encrypt_message(session, unenc_msg, NULL, &enc_msg, PEP_enc_PEP, 0);
     ASSERT_OK;
@@ -224,7 +224,7 @@ TEST_F(DefaultFromEmailTest, check_encrypt_to_pEp_2_2_simple_key) {
 
     message* unenc_msg = NULL;
     message* enc_msg = NULL;
-    create_base_test_msg(&unenc_msg, 2, 2, false);
+    create_base_test_msg(&unenc_msg, 2, 2, true);
 
     status = encrypt_message(session, unenc_msg, NULL, &enc_msg, PEP_enc_PEP, 0);
     ASSERT_OK;
@@ -248,7 +248,7 @@ TEST_F(DefaultFromEmailTest, check_encrypt_to_pEp_10_111_simple_key) {
 
     message* unenc_msg = NULL;
     message* enc_msg = NULL;
-    create_base_test_msg(&unenc_msg, 10, 111, false);
+    create_base_test_msg(&unenc_msg, 10, 111, true);
 
     status = encrypt_message(session, unenc_msg, NULL, &enc_msg, PEP_enc_PEP, 0);
     ASSERT_OK;
@@ -610,7 +610,7 @@ TEST_F(DefaultFromEmailTest, check_pEp_v2_1_import_default_alternate_available) 
 }
 
 TEST_F(DefaultFromEmailTest, check_pEp_v2_2_import_bare_default) {
-    string email = slurp(v2_0_file);
+    string email = slurp(v2_2_file);
     // We shouldn't rely on MIME_encrypt/decrypt (and should fix other tests) -
     // otherwise, we're also testing the parser driver.
     message* enc_msg = NULL;
