@@ -108,13 +108,17 @@ TEST_F(AppleMailTest, check_apple_mail_text_signed_encrypted) {
     me->me = true;
     PEP_STATUS status = set_own_key(session, me, "93D19F24AD6F4C4BA9134AAF84D9217908DB0AEE");
 
-    pEp_identity * you = new_identity("pep.test.apple@pep-project.org", NULL, "pep.test.apple@pep-project.org", "pEp Apple Test");
+    // Key election removal: Key must be set as default explicitly or through mail
+    pEp_identity * you = new_identity("pep.test.apple@pep-project.org", "3D8D9423D03DDF61B60161150313D94A1CCBC7D7", "pep.test.apple@pep-project.org", "pEp Apple Test");
     you->me = false;
+    status = set_identity(session, you);
+    ASSERT_OK;
     status = update_identity(session, you);
-
-    trust_personal_key(session, you);
-
+    ASSERT_OK;
+    status = trust_personal_key(session, you);
+    ASSERT_OK;
     status = update_identity(session, you);
+    ASSERT_OK;
 
     message* msg_ptr = nullptr;
     message* dest_msg = nullptr;
@@ -165,13 +169,17 @@ TEST_F(AppleMailTest, check_apple_mail_html_signed_encrypted) {
     me->me = true;
     PEP_STATUS status = set_own_key(session, me, "93D19F24AD6F4C4BA9134AAF84D9217908DB0AEE");
 
-    pEp_identity * you = new_identity("pep.test.apple@pep-project.org", NULL, "pep.test.apple@pep-project.org", "pEp Apple Test");
+    // Key election removal: Key must be set as default explicitly or through mail
+    pEp_identity * you = new_identity("pep.test.apple@pep-project.org", "3D8D9423D03DDF61B60161150313D94A1CCBC7D7", "pep.test.apple@pep-project.org", "pEp Apple Test");
     you->me = false;
+    status = set_identity(session, you);
+    ASSERT_OK;
     status = update_identity(session, you);
-
-    trust_personal_key(session, you);
-
+    ASSERT_OK;
+    status = trust_personal_key(session, you);
+    ASSERT_OK;
     status = update_identity(session, you);
+    ASSERT_OK;
 
     // End state copy
 
