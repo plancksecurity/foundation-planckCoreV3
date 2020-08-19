@@ -32,6 +32,11 @@ bool is_pEpmsg(const message *msg); // duplicates static func in message_api.c, 
 #define ASSERT_NULL(X) ASSERT_EQ((X), nullptr)
 #endif
 
+// Makefile actually handles this - this is just to please IDE error indicators tbh
+#ifndef GTEST_SUITE_SYM
+#define GTEST_SUITE_SYM test_suite_name
+#endif
+
 extern std::string _main_test_home_dir;
 
 #ifndef DEBUG_OUTPUT

@@ -17,12 +17,9 @@
 #include "test_util.h" // for slurp()
 #include "TestConstants.h"
 
-
-
 #include "Engine.h"
 
 #include <gtest/gtest.h>
-
 
 namespace {
 
