@@ -89,6 +89,7 @@ namespace {
 
 
 TEST_F(BlacklistAcceptNewKeyTest, check_blacklist_accept_new_key) {
+    PEP_STATUS status = PEP_STATUS_OK;
 
     // blacklist test code
 
@@ -100,27 +101,37 @@ TEST_F(BlacklistAcceptNewKeyTest, check_blacklist_accept_new_key) {
     const string keytext = slurp("test_keys/pub/blacklisted_pub.asc");
 
     /* import it into pep */
-    PEP_STATUS status7 = import_key(session, keytext.c_str(), keytext.length(), NULL);
+    status = import_key(session, keytext.c_str(), keytext.length(), NULL);
+    ASSERT_EQ(status, PEP_KEY_IMPORTED);
 
     const char* bl_fpr_1 = "279765A2FEB5B7C731B861D93E4CEFD9F7AF4684";
     bool is_blacklisted = false;
 
     pEp_identity* blacklisted_identity = new_identity("blacklistedkeys@kgrothoff.org",
                                                       bl_fpr_1,
-                                                      NULL,
+                                                      "TOFU_blacklistedkeys@kgrothoff.org",
                                                       "Blacklist Keypair");
-    PEP_STATUS status8 = update_identity(session, blacklisted_identity);
-    PEP_STATUS status9 = blacklist_add(session, bl_fpr_1);
-    PEP_STATUS status10 = blacklist_is_listed(session, bl_fpr_1, &is_blacklisted);
+    
+    // Explicitly set identity, since we need the key in there
+    status = set_identity(session, blacklisted_identity);
+    ASSERT_OK;
+    
+    status = update_identity(session, blacklisted_identity);
+    ASSERT_OK;
+    status = blacklist_add(session, bl_fpr_1);
+    ASSERT_OK;
+    status = blacklist_is_listed(session, bl_fpr_1, &is_blacklisted);
+    ASSERT_OK;
     ASSERT_TRUE(is_blacklisted);
-    PEP_STATUS status11 = update_identity(session, blacklisted_identity);
-    ASSERT_EQ(status11 , PEP_STATUS_OK);
+    status = update_identity(session, blacklisted_identity);
+    ASSERT_OK;
     ASSERT_STREQ(bl_fpr_1, blacklisted_identity->fpr);
 
     bool id_def, us_def, addr_def;
-    status11 = get_valid_pubkey(session, blacklisted_identity,
+    status = get_valid_pubkey(session, blacklisted_identity,
                                 &id_def, &us_def, &addr_def, true);
-    ASSERT_EQ(blacklisted_identity->comm_type , PEP_ct_unknown);
+    ASSERT_EQ(status, PEP_KEY_BLACKLISTED);
+    ASSERT_EQ(blacklisted_identity->comm_type , PEP_ct_key_not_found);
 
     if (!(blacklisted_identity->fpr))
         output_stream << "OK! blacklisted_identity->fpr is empty. Yay!" << endl;
@@ -133,9 +144,9 @@ TEST_F(BlacklistAcceptNewKeyTest, check_blacklist_accept_new_key) {
 
     const char* new_key = "634FAC4417E9B2A5DC2BD4AAC4AEEBBE7E62701B";
     const string mailtext = slurp("test_mails/blacklist_new_key_attached.eml");
-    pEp_identity * me1 = new_identity("blacklist_test@kgrothoff.org", NULL, PEP_OWN_USERID, "Blacklisted Key Message Recipient");
+    pEp_identity * me1 = new_identity("blacklist_test@kgrothoff.org", "634FAC4417E9B2A5DC2BD4AAC4AEEBBE7E62701B", PEP_OWN_USERID, "Blacklisted Key Message Recipient");
 
-    PEP_STATUS status = update_identity(session, me1);
+    status = update_identity(session, me1);
     message* msg_ptr = nullptr;
     message* dest_msg = nullptr;
     stringlist_t* keylist = nullptr;
@@ -146,13 +157,18 @@ TEST_F(BlacklistAcceptNewKeyTest, check_blacklist_accept_new_key) {
     ASSERT_EQ(status , PEP_STATUS_OK);
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
 
-    PEP_STATUS status12 = get_valid_pubkey(session, blacklisted_identity,
-                                           &id_def, &us_def, &addr_def, true);
+    // Key election is gone, but getting it via mail should set a default!
+    status = get_valid_pubkey(session, blacklisted_identity,
+                              &id_def, &us_def, &addr_def, true);
 
     ASSERT_STRCASEEQ(blacklisted_identity->fpr, new_key);
 
-    PEP_STATUS status13 = blacklist_delete(session, bl_fpr_1);
-    PEP_STATUS status14 = update_identity(session, blacklisted_identity);
+    // Now, that
+
+    status = blacklist_delete(session, bl_fpr_1);
+    ASSERT_OK;
+    status = update_identity(session, blacklisted_identity);
+    ASSERT_OK;
 
     free_message(msg_ptr);
     free_message(dest_msg);

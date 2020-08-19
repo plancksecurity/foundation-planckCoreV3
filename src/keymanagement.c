@@ -780,9 +780,9 @@ DYNAMIC_API PEP_STATUS update_identity(
                                 break;                                
                             }
                         }
-                        else if (!input_is_TOFU) { // can only be true when has_user_id is true
+                        else if (!input_is_TOFU) { 
                             bool name_unset = false;
-                            name_unset = EMPTYSTR(db_list_id->address) || strcasecmp(db_list_id->username, db_list_id->address) == 0;
+                            name_unset = EMPTYSTR(db_list_id->username) || strcasecmp(db_list_id->username, db_list_id->address) == 0;
                             if (name_unset || names_match) {
                                 // Ok, we have a temp ID. We have to replace this
                                 // with the real ID in the DB.
