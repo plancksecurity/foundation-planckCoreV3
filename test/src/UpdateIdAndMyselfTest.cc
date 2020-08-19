@@ -67,7 +67,10 @@ namespace {
                 ASSERT_NE(engine->session, nullptr);
                 session = engine->session;
 
-                // Engine is up. Keep on truckin'
+                // Engine is up. Keep on truckin'    
+                start_username = strdup("Unser Testkandidat");
+                myself_name = strdup("stupid_random_address@darthmama.cool");
+            
             }
 
             void TearDown() override {
@@ -82,6 +85,20 @@ namespace {
             const char* testy_filename = "test_keys/testy_expired.pgp"; // pub/private keypair 
             const char* testy_fpr = "D1AEA592B78BEF2BE8D93C78DD835B271075DA7E";
 
+            char* start_username = NULL;
+            char* myself_name = NULL;
+            const char* own_user_id = "Own_Beavis";
+            char* generated_fpr = NULL;
+            char* default_own_id = NULL;
+            const char* alias_id = "Huss Es El Mejor Presidente Del Mundo!";
+            char* new_fpr = NULL;
+            const char* new_username = NULL;
+            const char* alex_address = "pep.test.alexander@peptest.ch";
+            const char* alex_fpr = "3AD9F60FAEB22675DB873A1362D6981326B54E4E";
+            const char* alex_userid = "Alex";
+            const char* alex_username = "SuperDuperAlex";
+
+
         private:
             const char* test_suite_name;
             const char* test_name;
@@ -92,58 +109,34 @@ namespace {
 
 }  // namespace
 
-TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
-
-    // SetUp
-    char* uniqname;
-    char* own_user_id;
-    char* start_username;
-    char* generated_fpr;
-    char* default_own_id;
-    char* alias_id;
-    char* new_fpr;
-    const char* alex_address;
-    const char* alex_fpr;
-    const char* alex_userid;
-    const char* alex_username;
-    const char* new_username;
-
-    uniqname = strdup("AAAAtestuser@testdomain.org");
-    srandom(time(NULL));
-    for(int i=0; i < 4;i++)
-    uniqname[i] += random() & 0xf;
-
-    own_user_id = get_new_uuid();
-    start_username = strdup("Unser Testkandidat");
-    generated_fpr = NULL;
-    default_own_id = NULL;
-    alias_id = NULL;
-    new_fpr = NULL;
-
-    // 1.   myself_no_record_no_input_fpr
-    alex_address = "pep.test.alexander@peptest.ch";
-    alex_fpr = "3AD9F60FAEB22675DB873A1362D6981326B54E4E";
-    alex_userid = "Alex";
-    alex_username = "SuperDuperAlex";
+TEST_F(UpdateIdAndMyselfTest, check_myself_no_record_no_input_fpr) {
 
     PEP_STATUS status = PEP_STATUS_OK;
 
-    pEp_identity * new_me = new_identity(uniqname, NULL, own_user_id, start_username);
+    pEp_identity * new_me = new_identity(myself_name, NULL, own_user_id, start_username);
+
+    status = myself(session, new_me);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(new_me->fpr, nullptr);
+    ASSERT_EQ(new_me->comm_type, PEP_ct_pEp);
+
+    free_identity(new_me);
+}
+
+TEST_F(UpdateIdAndMyselfTest, check_myself_no_input_fpr_w_record) {
+
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    pEp_identity * new_me = new_identity(myself_name, NULL, own_user_id, start_username);
 
     status = myself(session, new_me);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NE(new_me->fpr, nullptr);
 
     generated_fpr = strdup(new_me->fpr);
-
-    ASSERT_EQ(new_me->comm_type, PEP_ct_pEp);
-
     free_identity(new_me);
 
-    // 2. myself_no_input_fpr_w_record()
-    status = PEP_STATUS_OK;
-
-    new_me = new_identity(uniqname, NULL, own_user_id, NULL);
+    new_me = new_identity(myself_name, NULL, own_user_id, NULL);
     status = myself(session, new_me);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
@@ -157,22 +150,27 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     default_own_id = NULL;
     status = get_userid_alias_default(session, own_user_id, &default_own_id);
     if (status == PEP_CANNOT_FIND_ALIAS) {
-        // Ok, we presume our own id above is the default (should be true if there was no existing DB as in test env)
         default_own_id = strdup(own_user_id);
     }
 
     ASSERT_STREQ(new_me->user_id, default_own_id);
+    free_identity(new_me);
+}
 
-    output_stream << "PASS: myself() retrieved the correct fpr, username and default user id" << endl << endl;
+TEST_F(UpdateIdAndMyselfTest, check_myself_no_input_fpr_diff_user_id_w_record) {
+    PEP_STATUS status = PEP_STATUS_OK;
 
+    pEp_identity * new_me = new_identity(myself_name, NULL, own_user_id, start_username);
+
+    status = myself(session, new_me);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(new_me->fpr, nullptr);
+    generated_fpr = strdup(new_me->fpr);
     free_identity(new_me);
     new_me = NULL;
 
-    // 3. myself_no_input_fpr_diff_user_id_w_record() {
     status = PEP_STATUS_OK;
-    alias_id = strdup("Huss Es El Mejor Presidente Del Mundo!");
-
-    new_me = new_identity(uniqname, NULL, alias_id, NULL);
+    new_me = new_identity(myself_name, NULL, alias_id, NULL);
     status = myself(session, new_me);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
@@ -181,26 +179,37 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     ASSERT_NE(new_me->username, nullptr);
     ASSERT_STREQ(new_me->username, start_username);
     ASSERT_NE(new_me->user_id, nullptr);
-    ASSERT_STREQ(new_me->user_id, default_own_id);
+    ASSERT_STREQ(new_me->user_id, own_user_id);
     ASSERT_EQ(new_me->comm_type, PEP_ct_pEp);
 
     char* tmp_def = NULL;
 
     status = get_userid_alias_default(session, alias_id, &tmp_def);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_STREQ(tmp_def, default_own_id);
+    ASSERT_STREQ(tmp_def, own_user_id);
 
-    output_stream << "PASS: myself() retrieved the correct fpr, username and default user id, and put the right alias in for the default";
-    output_stream << endl << endl;
+//    output_stream << "PASS: myself() retrieved the correct fpr, username and default user id, and put the right alias in for the default";
+//    output_stream << endl << endl;
 
     free(tmp_def);
     tmp_def = NULL;
     free_identity(new_me);
+}
+
+TEST_F(UpdateIdAndMyselfTest, check_myself_replace_fpr) {
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    pEp_identity * new_me = new_identity(myself_name, NULL, own_user_id, start_username);
+
+    status = myself(session, new_me);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(new_me->fpr, nullptr);
+    generated_fpr = strdup(new_me->fpr);
+    free_identity(new_me);
     new_me = NULL;
 
-    // 4. myself_replace_fpr() {
     status = PEP_STATUS_OK;
-    new_me = new_identity(uniqname, NULL, alias_id, start_username);
+    new_me = new_identity(myself_name, NULL, alias_id, start_username);
     status = generate_keypair(session, new_me);
     ASSERT_NE(new_me->fpr, nullptr);
 
@@ -217,7 +226,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     ASSERT_NE(new_me->username, nullptr);
     ASSERT_STREQ(new_me->username, start_username);
     ASSERT_NE(new_me->user_id, nullptr);
-    ASSERT_STREQ(new_me->user_id, default_own_id);
+    ASSERT_STREQ(new_me->user_id, own_user_id);
     ASSERT_TRUE(new_me->me);
     ASSERT_EQ(new_me->comm_type, PEP_ct_pEp);
 
@@ -234,13 +243,35 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     ASSERT_EQ(new_me->comm_type, PEP_ct_pEp);
     free_identity(new_me);
     new_me = NULL;
+}
 
-    // 5. myself_replace_fpr_revoke_key() {
+TEST_F(UpdateIdAndMyselfTest, check_myself_replace_fpr_revoke_key) {
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    pEp_identity * new_me = new_identity(myself_name, NULL, own_user_id, start_username);
+
+    status = myself(session, new_me);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(new_me->fpr, nullptr);
+    generated_fpr = strdup(new_me->fpr);
+    free_identity(new_me);
+    new_me = NULL;
+
+    status = PEP_STATUS_OK;
+    new_me = new_identity(myself_name, NULL, alias_id, start_username);
+    status = generate_keypair(session, new_me);
+    ASSERT_NE(new_me->fpr, nullptr);
+
+    output_stream << "Generated fingerprint ";
+    output_stream << new_me->fpr << "\n";
+
+    new_fpr = strdup(new_me->fpr);
+    
     status = PEP_STATUS_OK;
     status = revoke_key(session, generated_fpr, "Because it's fun");
     ASSERT_EQ(status, PEP_STATUS_OK);
 
-    new_me = new_identity(uniqname, NULL, alias_id, start_username);
+    new_me = new_identity(myself_name, NULL, alias_id, start_username);
 
     status = set_own_key(session, new_me, new_fpr);
     ASSERT_EQ(status, PEP_STATUS_OK);
@@ -249,14 +280,330 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     ASSERT_NE(new_me->username, nullptr);
     ASSERT_STREQ(new_me->username, start_username);
     ASSERT_NE(new_me->user_id, nullptr);
-    ASSERT_STREQ(new_me->user_id, default_own_id);
+    ASSERT_STREQ(new_me->user_id, own_user_id);
+    ASSERT_TRUE(new_me->me);
+    ASSERT_EQ(new_me->comm_type, PEP_ct_pEp);
+
+    status = myself(session, new_me);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(new_me->fpr, nullptr);
+    ASSERT_STRNE(new_me->fpr, generated_fpr);
+    ASSERT_NE(new_me->username, nullptr);
+    ASSERT_STREQ(new_me->username, start_username);
+    ASSERT_NE(new_me->user_id, nullptr);
+    ASSERT_STREQ(new_me->user_id, own_user_id);
     ASSERT_TRUE(new_me->me);
     ASSERT_EQ(new_me->comm_type, PEP_ct_pEp);
 
     output_stream << "PASS: myself() retrieved the new fpr, username and default user id, and put the right alias in for the default";
     output_stream << endl << endl;
     free_identity(new_me);
-    new_me = NULL;
+}
+
+TEST_F(UpdateIdAndMyselfTest, check_update_identity_w_matching_address_user_id_username) {
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    // 6. update_identity_w_matching_address_user_id_username() {
+    // 1. create original identity
+    const string alex_pub_key = slurp("test_keys/pub/pep.test.alexander-0x26B54E4E_pub.asc");
+
+    PEP_STATUS statuspub = import_key(session, alex_pub_key.c_str(), alex_pub_key.length(), NULL);
+    ASSERT_EQ(statuspub, PEP_TEST_KEY_IMPORT_SUCCESS);
+
+    pEp_identity* alex = new_identity(alex_address, alex_fpr, alex_userid, alex_username);
+
+    // 2. set identity
+    status = set_identity(session, alex);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    free_identity(alex);
+
+    alex = new_identity(alex_address, NULL, alex_userid, alex_username);
+    ASSERT_NE(alex, nullptr);
+    status = update_identity(session, alex);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(alex->fpr, nullptr);
+    ASSERT_STREQ(alex->fpr, alex_fpr);
+    ASSERT_NE(alex->username, nullptr);
+    ASSERT_STREQ(alex->username, alex_username);
+    ASSERT_NE(alex->user_id, nullptr);
+    ASSERT_STREQ(alex->user_id, alex_userid);
+    ASSERT_FALSE(alex->me);
+    ASSERT_EQ(alex->comm_type, PEP_ct_OpenPGP_unconfirmed);
+    ASSERT_STREQ(alex->address, alex_address);
+
+    output_stream << "PASS: update_identity() correctly retrieved extant record with matching address, id, and username" << endl << endl;
+    free_identity(alex);
+    alex = NULL;
+
+    free(myself_name);
+    free(start_username);
+    free(generated_fpr);
+    free(default_own_id);
+    free(new_fpr);    
+}
+
+TEST_F(UpdateIdAndMyselfTest, check_update_identity_w_matching_address_user_id_new_username) {
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    // 6. update_identity_w_matching_address_user_id_username() {
+    // 1. create original identity
+    const string alex_pub_key = slurp("test_keys/pub/pep.test.alexander-0x26B54E4E_pub.asc");
+
+    PEP_STATUS statuspub = import_key(session, alex_pub_key.c_str(), alex_pub_key.length(), NULL);
+    ASSERT_EQ(statuspub, PEP_TEST_KEY_IMPORT_SUCCESS);
+
+    pEp_identity* alex = new_identity(alex_address, alex_fpr, alex_userid, alex_username);
+
+    // 2. set identity
+    status = set_identity(session, alex);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    free_identity(alex);
+
+    alex = new_identity(alex_address, NULL, alex_userid, alex_username);
+    ASSERT_NE(alex, nullptr);
+    status = update_identity(session, alex);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(alex->fpr, nullptr);
+    ASSERT_STREQ(alex->fpr, alex_fpr);
+    ASSERT_NE(alex->username, nullptr);
+    ASSERT_STREQ(alex->username, alex_username);
+    ASSERT_NE(alex->user_id, nullptr);
+    ASSERT_STREQ(alex->user_id, alex_userid);
+    ASSERT_FALSE(alex->me);
+    ASSERT_EQ(alex->comm_type, PEP_ct_OpenPGP_unconfirmed);
+    ASSERT_STREQ(alex->address, alex_address);
+
+    output_stream << "PASS: update_identity() correctly retrieved extant record with matching address, id, and username" << endl << endl;
+    free_identity(alex);
+    alex = NULL;
+
+    // 7. update_identity_w_matching_address_user_id_new_username() {
+    status = PEP_STATUS_OK;
+
+    alex = new_identity(alex_address, alex_fpr, alex_userid, alex_username);
+    status = set_identity(session, alex);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    free_identity(alex);
+
+    alex = new_identity(alex_address, NULL, alex_userid, alex_username);
+    status = update_identity(session, alex);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(alex->fpr, nullptr);
+    ASSERT_STREQ(alex->fpr, alex_fpr);
+    ASSERT_NE(alex->username, nullptr);
+    ASSERT_STREQ(alex->username, alex_username);
+    ASSERT_NE(alex->user_id, nullptr);
+    ASSERT_STREQ(alex->user_id, alex_userid);
+    ASSERT_FALSE(alex->me);
+    ASSERT_EQ(alex->comm_type, PEP_ct_OpenPGP_unconfirmed);
+    ASSERT_STREQ(alex->address, alex_address);
+
+    output_stream << "PASS: update_identity() correctly retrieved extant record with matching address, id, and username" << endl << endl;
+    free_identity(alex);
+    alex = NULL;
+
+    free(myself_name);
+    free(start_username);
+    free(generated_fpr);
+    free(default_own_id);
+    free(new_fpr);    
+}
+
+TEST_F(UpdateIdAndMyselfTest, check_update_identity_w_matching_address_user_id_only) {
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    // 6. update_identity_w_matching_address_user_id_username() {
+    // 1. create original identity
+    const string alex_pub_key = slurp("test_keys/pub/pep.test.alexander-0x26B54E4E_pub.asc");
+
+    PEP_STATUS statuspub = import_key(session, alex_pub_key.c_str(), alex_pub_key.length(), NULL);
+    ASSERT_EQ(statuspub, PEP_TEST_KEY_IMPORT_SUCCESS);
+
+    pEp_identity* alex = new_identity(alex_address, alex_fpr, alex_userid, alex_username);
+
+    // 2. set identity
+    status = set_identity(session, alex);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    free_identity(alex);
+
+    alex = new_identity(alex_address, NULL, alex_userid, alex_username);
+    ASSERT_NE(alex, nullptr);
+    status = update_identity(session, alex);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(alex->fpr, nullptr);
+    ASSERT_STREQ(alex->fpr, alex_fpr);
+    ASSERT_NE(alex->username, nullptr);
+    ASSERT_STREQ(alex->username, alex_username);
+    ASSERT_NE(alex->user_id, nullptr);
+    ASSERT_STREQ(alex->user_id, alex_userid);
+    ASSERT_FALSE(alex->me);
+    ASSERT_EQ(alex->comm_type, PEP_ct_OpenPGP_unconfirmed);
+    ASSERT_STREQ(alex->address, alex_address);
+
+    output_stream << "PASS: update_identity() correctly retrieved extant record with matching address, id, and username" << endl << endl;
+    free_identity(alex);
+    alex = NULL;
+
+    // 7. update_identity_w_matching_address_user_id_new_username() {
+    status = PEP_STATUS_OK;
+
+    alex = new_identity(alex_address, alex_fpr, alex_userid, alex_username);
+    status = set_identity(session, alex);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    free_identity(alex);
+
+    alex = new_identity(alex_address, NULL, alex_userid, alex_username);
+    status = update_identity(session, alex);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(alex->fpr, nullptr);
+    ASSERT_STREQ(alex->fpr, alex_fpr);
+    ASSERT_NE(alex->username, nullptr);
+    ASSERT_STREQ(alex->username, alex_username);
+    ASSERT_NE(alex->user_id, nullptr);
+    ASSERT_STREQ(alex->user_id, alex_userid);
+    ASSERT_FALSE(alex->me);
+    ASSERT_EQ(alex->comm_type, PEP_ct_OpenPGP_unconfirmed);
+    ASSERT_STREQ(alex->address, alex_address);
+
+    output_stream << "PASS: update_identity() correctly retrieved extant record with matching address, id, and username" << endl << endl;
+    free_identity(alex);
+    alex = NULL;
+
+    // 8. update_identity_w_matching_address_user_id_only() {
+    status = PEP_STATUS_OK;
+    new_username = "Test Patchy";
+
+    alex = new_identity(alex_address, NULL, alex_userid, new_username);
+    status = update_identity(session, alex);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(alex->fpr, nullptr);
+    ASSERT_STREQ(alex->fpr, alex_fpr);
+    ASSERT_NE(alex->username, nullptr);
+    ASSERT_STREQ(alex->username, new_username);
+    ASSERT_NE(alex->user_id, nullptr);
+    ASSERT_STREQ(alex->user_id, alex_userid);
+    ASSERT_FALSE(alex->me);
+    ASSERT_EQ(alex->comm_type, PEP_ct_OpenPGP_unconfirmed);
+    ASSERT_STREQ(alex->address, alex_address);
+
+    free_identity(alex);
+    alex = NULL;
+
+    free(myself_name);
+    free(start_username);
+    free(generated_fpr);
+    free(default_own_id);
+    free(new_fpr);    
+}
+
+
+TEST_F(UpdateIdAndMyselfTest, check_update_identity_use_address_username_only) {
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    // 6. update_identity_w_matching_address_user_id_username() {
+    // 1. create original identity
+    const string alex_pub_key = slurp("test_keys/pub/pep.test.alexander-0x26B54E4E_pub.asc");
+
+    PEP_STATUS statuspub = import_key(session, alex_pub_key.c_str(), alex_pub_key.length(), NULL);
+    ASSERT_EQ(statuspub, PEP_TEST_KEY_IMPORT_SUCCESS);
+
+    pEp_identity* alex = new_identity(alex_address, alex_fpr, alex_userid, alex_username);
+
+    // 2. set identity
+    status = set_identity(session, alex);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    free_identity(alex);
+
+    alex = new_identity(alex_address, NULL, alex_userid, alex_username);
+    ASSERT_NE(alex, nullptr);
+    status = update_identity(session, alex);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(alex->fpr, nullptr);
+    ASSERT_STREQ(alex->fpr, alex_fpr);
+    ASSERT_NE(alex->username, nullptr);
+    ASSERT_STREQ(alex->username, alex_username);
+    ASSERT_NE(alex->user_id, nullptr);
+    ASSERT_STREQ(alex->user_id, alex_userid);
+    ASSERT_FALSE(alex->me);
+    ASSERT_EQ(alex->comm_type, PEP_ct_OpenPGP_unconfirmed);
+    ASSERT_STREQ(alex->address, alex_address);
+
+    output_stream << "PASS: update_identity() correctly retrieved extant record with matching address, id, and username" << endl << endl;
+    free_identity(alex);
+    alex = NULL;
+
+    // 7. update_identity_w_matching_address_user_id_new_username() {
+    status = PEP_STATUS_OK;
+
+    alex = new_identity(alex_address, alex_fpr, alex_userid, alex_username);
+    status = set_identity(session, alex);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    free_identity(alex);
+
+    alex = new_identity(alex_address, NULL, alex_userid, alex_username);
+    status = update_identity(session, alex);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(alex->fpr, nullptr);
+    ASSERT_STREQ(alex->fpr, alex_fpr);
+    ASSERT_NE(alex->username, nullptr);
+    ASSERT_STREQ(alex->username, alex_username);
+    ASSERT_NE(alex->user_id, nullptr);
+    ASSERT_STREQ(alex->user_id, alex_userid);
+    ASSERT_FALSE(alex->me);
+    ASSERT_EQ(alex->comm_type, PEP_ct_OpenPGP_unconfirmed);
+    ASSERT_STREQ(alex->address, alex_address);
+
+    output_stream << "PASS: update_identity() correctly retrieved extant record with matching address, id, and username" << endl << endl;
+    free_identity(alex);
+    alex = NULL;
+
+    // 8. update_identity_w_matching_address_user_id_only() {
+    status = PEP_STATUS_OK;
+    new_username = "Test Patchy";
+
+    alex = new_identity(alex_address, NULL, alex_userid, new_username);
+    status = update_identity(session, alex);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(alex->fpr, nullptr);
+    ASSERT_STREQ(alex->fpr, alex_fpr);
+    ASSERT_NE(alex->username, nullptr);
+    ASSERT_STREQ(alex->username, new_username);
+    ASSERT_NE(alex->user_id, nullptr);
+    ASSERT_STREQ(alex->user_id, alex_userid);
+    ASSERT_FALSE(alex->me);
+    ASSERT_EQ(alex->comm_type, PEP_ct_OpenPGP_unconfirmed);
+    ASSERT_STREQ(alex->address, alex_address);
+
+    free_identity(alex);
+    alex = NULL;
+
+    // 9. UpdateIdAndMyselfTests::update_identity_use_address_username_only() {
+    alex = new_identity(alex_address, NULL, NULL, new_username);
+    status = update_identity(session, alex);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(alex->fpr, nullptr);
+    ASSERT_STREQ(alex->fpr, alex_fpr);
+    ASSERT_NE(alex->username, nullptr);
+    ASSERT_STREQ(alex->username, new_username);
+    ASSERT_NE(alex->user_id, nullptr);
+    ASSERT_STREQ(alex->user_id, alex_userid);
+    ASSERT_FALSE(alex->me);
+    ASSERT_EQ(alex->comm_type, PEP_ct_OpenPGP_unconfirmed);
+    ASSERT_STREQ(alex->address, alex_address);
+
+    output_stream << "PASS: update_identity() correctly retrieved extant record with matching address and username" << endl << endl;
+    free_identity(alex);
+    alex = NULL;
+
+    free(myself_name);
+    free(start_username);
+    free(generated_fpr);
+    free(default_own_id);
+    free(new_fpr);    
+}
+
+TEST_F(UpdateIdAndMyselfTest, check_update_identity_use_address_only) {
+    PEP_STATUS status = PEP_STATUS_OK;
 
     // 6. update_identity_w_matching_address_user_id_username() {
     // 1. create original identity
@@ -371,20 +718,42 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     free_identity(alex);
     alex = NULL;
 
+    free(myself_name);
+    free(start_username);
+    free(generated_fpr);
+    free(default_own_id);
+    free(new_fpr);    
+}
+
+TEST_F(UpdateIdAndMyselfTest, check_update_identity_use_address_only_on_own_ident) {
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    pEp_identity * new_me = new_identity(myself_name, NULL, own_user_id, start_username);
+
+    status = myself(session, new_me);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(new_me->fpr, nullptr);
+
+    generated_fpr = strdup(new_me->fpr);
+
+    ASSERT_EQ(new_me->comm_type, PEP_ct_pEp);
+
+    free_identity(new_me);
+
     // 11. update_identity_use_address_only_on_own_ident() {
-    pEp_identity* somebody = new_identity(uniqname, NULL, NULL, NULL);
+    pEp_identity* somebody = new_identity(myself_name, NULL, NULL, NULL);
     status = update_identity(session, somebody);
     ASSERT_EQ(status, PEP_STATUS_OK);
     myself(session, somebody);
     ASSERT_NE(somebody->fpr, nullptr);
-    ASSERT_STREQ(somebody->fpr, new_fpr);
+    ASSERT_STREQ(somebody->fpr, generated_fpr);
     ASSERT_NE(somebody->username, nullptr);
     ASSERT_STREQ(somebody->username, start_username);
     ASSERT_NE(somebody->user_id, nullptr);
-    ASSERT_STREQ(somebody->user_id, default_own_id);
+    ASSERT_STREQ(somebody->user_id, own_user_id);
     ASSERT_TRUE(somebody->me); // true in this case, as it was an own identity
     ASSERT_EQ(somebody->comm_type, PEP_ct_pEp);
-    ASSERT_STREQ(somebody->address, uniqname);
+    ASSERT_STREQ(somebody->address, myself_name);
 
     output_stream << "PASS: update_identity() retrieved the right identity information given just an address";
     output_stream << endl << endl;
@@ -392,8 +761,16 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     free_identity(somebody);
     somebody = NULL;
 
-    // 12. update_identity_non_existent_user_id_address() {
-    somebody = new_identity("nope@nope.nope", NULL, "some_user_id", NULL);
+    free(myself_name);
+    free(start_username);
+    free(generated_fpr);
+    free(default_own_id);
+    free(new_fpr);    
+}
+
+TEST_F(UpdateIdAndMyselfTest, check_update_identity_non_existent_user_id_address) {
+    PEP_STATUS status = PEP_STATUS_OK;
+    pEp_identity* somebody = new_identity("nope@nope.nope", NULL, "some_user_id", NULL);
     status= update_identity(session, somebody);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_EQ(somebody->fpr, nullptr);
@@ -404,11 +781,19 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     free_identity(somebody);
     somebody = NULL;
 
-    // 13. update_identity_address_username_userid_no_record() {
+    free(myself_name);
+    free(start_username);
+    free(generated_fpr);
+    free(default_own_id);
+    free(new_fpr);    
+}
+
+TEST_F(UpdateIdAndMyselfTest, check_update_identity_address_username_userid_no_record) {
+    PEP_STATUS status = PEP_STATUS_OK;    
     const char* rando_name = "Pickley BoofBoof";
     const char* rando_userid = "Boofy";
     const char* rando_address = "boof@pickles.org";
-    somebody = new_identity(rando_address, NULL, rando_userid, rando_name);
+    pEp_identity* somebody = new_identity(rando_address, NULL, rando_userid, rando_name);
     status = update_identity(session, somebody);
 
     ASSERT_EQ(status, PEP_STATUS_OK);
@@ -423,12 +808,13 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
 
     output_stream << "PASS: update_identity() correctly created record with no key" << endl << endl;
     free_identity(somebody);
-    somebody = NULL;
+}
 
-    // 14. update_identity_address_username_no_record() {
+TEST_F(UpdateIdAndMyselfTest, check_update_identity_address_username_no_record) {
+    PEP_STATUS status = PEP_STATUS_OK;    
     const char* rando2_name = "Pickles BoofyBoof";
     const char* rando2_address = "boof2@pickles.org";
-    somebody = new_identity(rando2_address, NULL, NULL, rando2_name);
+    pEp_identity* somebody = new_identity(rando2_address, NULL, NULL, rando2_name);
     status = update_identity(session, somebody);
     const char* expected_rando2_userid = "TOFU_boof2@pickles.org";
 
@@ -444,10 +830,11 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
 
     output_stream << "PASS: update_identity() correctly created record with no key" << endl << endl;
     free_identity(somebody);
-    somebody = NULL;
+}
 
-    // 15. update_identity_address_only_multiple_records() {
-    status= PEP_STATUS_OK;
+TEST_F(UpdateIdAndMyselfTest, check_update_identity_address_only_multiple_records) {
+    PEP_STATUS status = PEP_STATUS_OK;    
+
     // 1. create identity
     const char* bella_address = "pep.test.bella@peptest.ch";
     const char* bella_fpr = "5631BF1357326A02AA470EEEB815EF7FA4516AAE";
@@ -455,7 +842,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     const char* bella_username = "Annabella the Great";
     const string bella_pub_key = slurp("test_keys/pub/pep.test.bella-0xAF516AAE_pub.asc");
 
-    statuspub = import_key(session, bella_pub_key.c_str(), bella_pub_key.length(), NULL);
+    PEP_STATUS statuspub = import_key(session, bella_pub_key.c_str(), bella_pub_key.length(), NULL);
     ASSERT_EQ(statuspub, PEP_TEST_KEY_IMPORT_SUCCESS);
 
     pEp_identity* bella = new_identity(bella_address, bella_fpr, bella_userid, bella_username);
@@ -495,6 +882,10 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     ASSERT_EQ(status, PEP_STATUS_OK);
     free_identity(bella);
     bella = NULL;
+}
+
+TEST_F(UpdateIdAndMyselfTest, check_key_elect_expired_key) {
+    PEP_STATUS status = PEP_STATUS_OK;   
 
     // 16. key_elect_expired_key() {
     // 1. create identity
@@ -504,7 +895,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     const char* bernd_username = "Bernd das Brot der Ultimative Testkandidat";
     const string bernd_pub_key = slurp("test_keys/pub/bernd.das.brot-0xCAFAA422_pub.asc");
 
-    statuspub = import_key(session, bernd_pub_key.c_str(), bernd_pub_key.length(), NULL);
+    PEP_STATUS statuspub = import_key(session, bernd_pub_key.c_str(), bernd_pub_key.length(), NULL);
     ASSERT_EQ(statuspub, PEP_TEST_KEY_IMPORT_SUCCESS);
 
     pEp_identity* bernd = new_identity(bernd_address, bernd_fpr, bernd_userid, bernd_username);
@@ -528,22 +919,25 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
 
     output_stream << "PASS: update_identity() correctly rejected expired key with PEP_KEY_UNSUITABLE and PEP_ct_key_not_found" << endl << endl;
     free_identity(bernd);
-    bernd = NULL;
+}
 
+// Should fail
+TEST_F(UpdateIdAndMyselfTest, check_key_elect_only_revoked_mistrusted) {
+    PEP_STATUS status = PEP_STATUS_OK;       
     // 17. key_elect_only_revoked_mistrusted() {
     // Create id with no key
     output_stream << "Creating new id with no key for : ";
-    char *uniqname_10000 = strdup("AAAAtestfool@testdomain.org");
+    char *myself_name_10000 = strdup("AAAAtestfool@testdomain.org");
     for(int i=0; i < 4;i++)
-        uniqname_10000[i] += random() & 0xf;
+        myself_name_10000[i] += random() & 0xf;
 
-    output_stream << uniqname_10000 << "\n";
+    output_stream << myself_name_10000 << "\n";
 
     char* revoke_uuid = get_new_uuid();
 
-    pEp_identity * revokemaster_3000 = new_identity(uniqname_10000, NULL, revoke_uuid, start_username);
+    pEp_identity * revokemaster_3000 = new_identity(myself_name_10000, NULL, revoke_uuid, start_username);
 
-    output_stream << "Generate three keys for "  << uniqname_10000 << " who has user_id " << revoke_uuid << endl;
+    output_stream << "Generate three keys for "  << myself_name_10000 << " who has user_id " << revoke_uuid << endl;
 
     char* revoke_fpr_arr[3];
 
@@ -670,12 +1064,10 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     output_stream << "Success! No key found. The comm_status error was " << revokemaster_3000->comm_type << "and the return status was " << tl_status_string(status) << endl;
 
     free_identity(revokemaster_3000);
-    free(uniqname);
-    free(own_user_id);
+    free(myself_name);
     free(start_username);
     free(generated_fpr);
     free(default_own_id);
-    free(alias_id);
     free(new_fpr);    
 }
 
