@@ -987,8 +987,10 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
         return PEP_OUT_OF_MEMORY;
 
     // honestly probably happens anyway
-    if (set_ident && status == PEP_STATUS_OK)
+    if (set_ident && status == PEP_STATUS_OK) {
+        retval->fpr = strdup(fpr);
         status = set_identity(session, retval);
+    }
 
     if (set_own) {
         retval->me = true;

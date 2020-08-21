@@ -274,6 +274,9 @@ TEST_F(URIAddressTest, check_uri_address_encrypt) {
     // We don't check for anything here??? FIXME! WTF!
 }
 
+// FIXME:
+// KB: I'm not really sure what we're now testing here, since key election is now gone.
+//
 TEST_F(URIAddressTest, check_uri_address_tofu_1) {
     const char* sys_a_addr = "payto://BIC/SYSTEMA";
     const char* sys_b_addr = "payto://BIC/SYSTEMB";
@@ -292,7 +295,13 @@ TEST_F(URIAddressTest, check_uri_address_tofu_1) {
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_TRUE(me->fpr && me->fpr[0] != '\0');
 
+    // No more key election.
     pEp_identity* you = new_identity(sys_b_addr, NULL, "SYSTEM_B", NULL);
+    status = update_identity(session, you);
+    you->fpr = strdup(sys_b_fpr);
+    status = set_identity(session, you);
+    ASSERT_OK;
+
 
 /*
     stringlist_t* keylist = NULL;
@@ -309,7 +318,7 @@ TEST_F(URIAddressTest, check_uri_address_tofu_1) {
 
     message* enc_msg = NULL;
     
-    // We are doing key election here on purpose.
+    // We were doing key election here on purpose. Too bad now...
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
@@ -348,6 +357,10 @@ TEST_F(URIAddressTest, check_uri_address_tofu_2) {
     
     pEp_identity* you = new_identity(sys_b_addr, NULL, "SYSTEM_B", NULL);
     status = update_identity(session, you);
+    // No more key election.
+    you->fpr = strdup(sys_b_fpr);
+    status = set_identity(session, you);
+    ASSERT_OK;
         
     string msg_txt = slurp("test_mails/system_a_to_b_755_part_1.eml");
     message* msg = NULL;

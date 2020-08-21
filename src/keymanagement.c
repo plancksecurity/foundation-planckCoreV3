@@ -657,7 +657,7 @@ DYNAMIC_API PEP_STATUS update_identity(
     // evaluating it
     bool is_own_user = identity->me;    
     bool input_has_user_id = !EMPTYSTR(identity->user_id);
-    bool input_has_username = !EMPTYSTR(identity->user_id);
+    bool input_has_username = !EMPTYSTR(identity->username);
     bool input_has_real_id = input_has_user_id ? (strstr(identity->user_id, "TOFU_") != identity->user_id) : false;
 
     char* default_own_id = NULL;
