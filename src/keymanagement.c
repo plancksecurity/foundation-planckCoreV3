@@ -856,19 +856,21 @@ DYNAMIC_API PEP_STATUS update_identity(
             }
         }
     }        
+
+    //
+    // Either update the identity (and possibly DB to reflect stored ident information, or
+    // create a new identity and store it.
+    //
     if (status == PEP_STATUS_OK && stored_ident) { 
-        //  * if identity available
-        //      * patch it with username
-        //          (note: this will happen when 
-        //           setting automatically below...)
-        //      * get a valid default key (for ident or user)
-        //    * if valid key exists
-        //        * set return value's fpr
+        //  An identity was available.
+        //  Call will patch the username where needed and 
+        //  get a valid default key (for ident or user)
         status = prepare_updated_identity(session,
                                           identity,
                                           stored_ident, true);
     }
     else { // No stored ident. We're done.
+        // If we needed TOFU, we've taken care of the ID above.
         if (EMPTYSTR(identity->username)) { // currently, not after messing around
             free(identity->username);
             identity->username = strdup(identity->address);
@@ -883,8 +885,8 @@ DYNAMIC_API PEP_STATUS update_identity(
         status = set_identity(session, identity);
     }
     
-    // FIXME: This is legacy. I presume it's a notification for the caller...
-    // Revisit once I can talk to Volker
+    // VB says, and I quote, "that is not implemented and no one is using it right now"
+    // about this bit. So, um, you're forewarned.
     if (identity->comm_type != PEP_ct_compromised &&
         identity->comm_type < PEP_ct_strong_but_unconfirmed)
         if (session->examine_identity)
