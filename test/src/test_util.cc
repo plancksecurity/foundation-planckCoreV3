@@ -766,6 +766,19 @@ pEp_error:
 
 #endif
 
+PEP_STATUS set_valid_default_fpr(PEP_SESSION session, pEp_identity* ident) {
+    if (EMPTYSTR(ident->fpr))
+        return PEP_ILLEGAL_VALUE;
+    PEP_STATUS status = validate_fpr(session, ident, true, true, true);
+    if (status == PEP_STATUS_OK)
+        status = set_identity(session, ident);            
+    else { 
+        free(ident->fpr);
+        ident->fpr = NULL;                            
+    }
+    return status;
+}
+
 PEP_STATUS set_up_preset(PEP_SESSION session,
                          pEp_test_ident_preset preset_name,
                          bool set_ident,

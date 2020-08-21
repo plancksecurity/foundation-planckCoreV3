@@ -11,6 +11,7 @@
 #include "TestConstants.h"
 
 #include "pEpEngine.h"
+#include "pEp_internal.h"
 
 
 
@@ -206,6 +207,16 @@ TEST_F(URIAddressTest, check_uri_address_encrypt_2_keys_no_uname) {
     pEp_identity* you = new_identity(uri_addr_b, NULL, NULL, NULL);
     status = update_identity(session, you);
     ASSERT_EQ(status, PEP_STATUS_OK);
+    // Post-key-election: has to be set
+    ASSERT_NULL(you->fpr);
+    you->fpr = strdup(fpr_b);
+    status = set_valid_default_fpr(session, you);
+    ASSERT_OK;
+    free_identity(you);
+    you = new_identity(uri_addr_b, NULL, NULL, NULL);
+    status = update_identity(session, you);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
     ASSERT_NE(you->fpr, nullptr);
     ASSERT_NE(you->username, nullptr);    
     ASSERT_STREQ(you->fpr, fpr_b);
@@ -257,9 +268,15 @@ TEST_F(URIAddressTest, check_uri_address_encrypt) {
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_TRUE(keylist && keylist->value);
 
+    // Ah, but now there is no key election, so we have to set it explicitly.
+    you->fpr = strdup(keylist->value);
+    set_valid_default_fpr(session, you);
+    free(you->fpr);
+    you->fpr = NULL;
+
     status = update_identity(session, you);
     ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_TRUE(you->fpr && you->fpr[0] != '\0');
+    ASSERT_FALSE(EMPTYSTR(you->fpr));
 
     message* msg = new_message(PEP_dir_outgoing);
 
