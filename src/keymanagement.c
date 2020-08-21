@@ -655,10 +655,13 @@ DYNAMIC_API PEP_STATUS update_identity(
     //
     // Record some information about the input identity so that we don't keep 
     // evaluating it
+    //
     bool is_own_user = identity->me;    
     bool input_has_user_id = !EMPTYSTR(identity->user_id);
     bool input_has_username = !EMPTYSTR(identity->username);
     bool input_has_real_id = input_has_user_id ? (strstr(identity->user_id, "TOFU_") != identity->user_id) : false;
+    bool input_name_is_addr = input_has_username ? strcmp(identity->username, identity->address) == 0 : false;
+    bool weak_input_name = input_name_is_addr || !input_has_username;
 
     char* default_own_id = NULL;
     pEp_identity* stored_ident = NULL;
@@ -787,9 +790,13 @@ DYNAMIC_API PEP_STATUS update_identity(
                     // grab some information about the stored identity
                     bool candidate_has_real_id = strstr(candidate_id, "TOFU_") != candidate_id;
                     bool candidate_has_username = !EMPTYSTR(candidate->username);
-                    bool names_match = (input_has_username && candidate_has_username) && 
-                                            (strcmp(identity->username, candidate->username) == 0);
+                    bool candidate_name_is_addr = candidate_has_username ? strcmp(candidate->address, candidate->username) == 0 : false;
+                    bool weak_candidate_name = !candidate_has_username || candidate_name_is_addr;
 
+                    bool names_match = (weak_candidate_name && weak_input_name) ||
+                                           ((input_has_username && candidate_has_username) && 
+                                           (strcmp(identity->username, candidate->username) == 0));
+                        
                     // This is where the optimisation gets a little weird:
                     //
                     // Decide whether to accept and patch the database and stored id from the input,
@@ -801,8 +808,7 @@ DYNAMIC_API PEP_STATUS update_identity(
                     bool input_addr_only = !input_has_username && !input_has_user_id;
                     bool candidate_id_best = candidate_has_real_id && !input_has_real_id;
                     bool input_id_best = input_has_real_id && !candidate_has_real_id;
-                    bool patch_input_id_conditions = input_has_user_id || names_match || !candidate_has_username;
-
+                    bool patch_input_id_conditions = input_has_user_id || names_match || weak_candidate_name;
                     if (input_addr_only || (candidate_id_best && patch_input_id_conditions)) {
                         identity->user_id = strdup(candidate_id);
                         assert(identity->user_id);
@@ -812,7 +818,7 @@ DYNAMIC_API PEP_STATUS update_identity(
                         stored_ident = identity_dup(candidate);
                         break;
                     }
-                    else if (input_id_best && (names_match || (input_has_username && !candidate_has_username))) {
+                    else if (input_id_best && (names_match || (input_has_username && weak_candidate_name))) {
                         // Replace the TOFU db in the database with the input ID globally
                         status = replace_userid(session, 
                                                 candidate_id, 
@@ -823,16 +829,13 @@ DYNAMIC_API PEP_STATUS update_identity(
                             return status;
                         }
 
-                        free(candidate_id);
-                        candidate_id = NULL;
-
                         // Reflect the change we just made to the DB
                         free(candidate->user_id);
                         candidate->user_id = strdup(identity->user_id);
                         stored_ident = identity_dup(candidate);
 
                         break;
-                    }
+                    } // End else if
                     // Else, we reject this candidate and try the next one, if there is one.
                     stored_curr = stored_curr->next;
                 }
