@@ -127,16 +127,18 @@ TEST_F(KeyringImportTest, check_import1) {
         const char *fpr = entries[i].fingerprint;
 
         output_stream << "Looking up: " << address << ", should have fingerprint: " << fpr << endl;
-        pEp_identity *id = new_identity(address, NULL, NULL, NULL);
-        PEP_STATUS status = update_identity(session, id);
+        // pEp_identity *id = new_identity(address, NULL, NULL, NULL);
+        // PEP_STATUS status = update_identity(session, id);
+        stringlist_t* keylist = NULL;
+        PEP_STATUS status = find_keys(session, address, &keylist);
         ASSERT_EQ(status , PEP_STATUS_OK);
-        output_stream << "Got: " << (id->fpr ? id->fpr : "NULL") << " -> " << (id->address ? id->address : "NULL") << endl;
+        ASSERT_NOTNULL(keylist);
+        output_stream << "Got: " << (keylist->value ? keylist->value : "NULL") << " -> " << (address ? address : "NULL") << endl;
 
         // We should always get the same fingerprint.
-        ASSERT_NE(id->fpr, nullptr);
-        ASSERT_STREQ(id->fpr, fpr);
-
-        free_identity(id);
+        ASSERT_NOTNULL(keylist->value);
+        ASSERT_STREQ(keylist->value, fpr);
+        free_stringlist(keylist);
     }
 #endif
 }
@@ -194,16 +196,18 @@ TEST_F(KeyringImportTest, check_import2) {
         const char *fpr = entries[i].fingerprint;
 
         output_stream << "Looking up: " << address << ", should have fingerprint: " << fpr << endl;
-        pEp_identity *id = new_identity(address, NULL, NULL, NULL);
-        PEP_STATUS status = update_identity(session, id);
+        // pEp_identity *id = new_identity(address, NULL, NULL, NULL);
+        // PEP_STATUS status = update_identity(session, id);
+        stringlist_t* keylist = NULL;
+        PEP_STATUS status = find_keys(session, address, &keylist);
         ASSERT_EQ(status , PEP_STATUS_OK);
-        output_stream << "Got: " << (id->fpr ? id->fpr : "NULL") << " (expected: " << fpr << ") -> " << (id->address ? id->address : "NULL") << endl;
+        ASSERT_NOTNULL(keylist);
+        output_stream << "Got: " << (keylist->value ? keylist->value : "NULL") << " -> " << (address ? address : "NULL") << endl;
 
         // We should always get the same fingerprint.
-        ASSERT_NE(id->fpr, nullptr);
-        ASSERT_STREQ(id->fpr, fpr);
-
-        free_identity(id);
+        ASSERT_NOTNULL(keylist->value);
+        ASSERT_STREQ(keylist->value, fpr);
+        free_stringlist(keylist);
     }
 #endif
 }

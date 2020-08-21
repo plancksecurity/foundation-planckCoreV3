@@ -41,6 +41,10 @@ class KeyResetMessageTest : public ::testing::Test {
 
         const char* alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
         const char* bob_fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
+        const char* carol_fpr = "8DD4F5827B45839E9ACCA94687BDDFFB42A85A42";
+        const char* dave_fpr = "E8AC9779A2D13A15D8D55C84B049F489BB5BCCF6";
+        const char* erin_fpr = "1B0E197E8AE66277B8A024B9AEA69F509F8D7CBA";
+        const char* fenris_fpr = "0969FA229DF21C832A64A04711B1B9804F3D2900";
 
         const char* alice_receive_reset_fpr = "9B3CC93A689B1167082A90C80766A463E439CB71";
 
@@ -125,35 +129,35 @@ class KeyResetMessageTest : public ::testing::Test {
 
             status = set_up_ident_from_scratch(session,
                         "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc",
-                        "pep.test.bob@pep-project.org", NULL, bob_user_id.c_str(), "Bob's Burgers",
+                        "pep.test.bob@pep-project.org", bob_fpr, bob_user_id.c_str(), "Bob's Burgers",
                         NULL, false
                     );
             ASSERT_EQ(status, PEP_STATUS_OK);
 
             status = set_up_ident_from_scratch(session,
                         "test_keys/pub/pep-test-carol-0x42A85A42_pub.asc",
-                        "pep-test-carol@pep-project.org", NULL, carol_user_id.c_str(), "Carol Burnett",
+                        "pep-test-carol@pep-project.org", carol_fpr, carol_user_id.c_str(), "Carol Burnett",
                         NULL, false
                     );
             ASSERT_EQ(status, PEP_STATUS_OK);
 
             status = set_up_ident_from_scratch(session,
                         "test_keys/pub/pep-test-dave-0xBB5BCCF6_pub.asc",
-                        "pep-test-dave@pep-project.org", NULL, dave_user_id.c_str(),
+                        "pep-test-dave@pep-project.org", dave_fpr, dave_user_id.c_str(),
                         "David Hasselhoff (Germans Love Me)", NULL, false
                     );
             ASSERT_EQ(status, PEP_STATUS_OK);
 
             status = set_up_ident_from_scratch(session,
                         "test_keys/pub/pep-test-erin-0x9F8D7CBA_pub.asc",
-                        "pep-test-erin@pep-project.org", NULL, erin_user_id.c_str(),
+                        "pep-test-erin@pep-project.org", erin_fpr, erin_user_id.c_str(),
                         "Éirinn go Brách", NULL, false
                     );
             ASSERT_EQ(status, PEP_STATUS_OK);
 
             status = set_up_ident_from_scratch(session,
                         "test_keys/pub/pep.test.fenris-0x4F3D2900_pub.asc",
-                        "pep.test.fenris@thisstilldoesntwork.lu", NULL, fenris_user_id.c_str(),
+                        "pep.test.fenris@thisstilldoesntwork.lu", fenris_fpr, fenris_user_id.c_str(),
                         "Fenris Leto Hawke", NULL, false
                     );
             ASSERT_EQ(status, PEP_STATUS_OK);
@@ -2358,7 +2362,7 @@ TEST_F(KeyResetMessageTest, not_a_test) {
     slurp_and_import_key(session, "test_keys/pub/pep-test-carol-0x42A85A42_pub.asc");
 
     pEp_identity* carol = new_identity("pep-test-carol@pep-project.org", carol_fpr, carol_user_id.c_str(), "Christmas Carol");
-    status = update_identity(session, carol);
+    status = set_identity(session, carol);
 
     message* bob_msg = new_message(PEP_dir_outgoing);
     bob_msg->from = identity_dup(bob);

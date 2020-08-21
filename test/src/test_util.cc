@@ -100,7 +100,7 @@ PEP_STATUS set_up_ident_from_scratch(PEP_SESSION session,
             status = myself(session, ident);
     }
     else
-        status = update_identity(session, ident);
+        status = set_identity(session, ident);
 
     if (status != PEP_STATUS_OK)
         goto pep_free;
@@ -776,6 +776,16 @@ PEP_STATUS set_valid_default_fpr(PEP_SESSION session, pEp_identity* ident) {
         free(ident->fpr);
         ident->fpr = NULL;                            
     }
+    return status;
+}
+
+PEP_STATUS set_fpr_preserve_ident(PEP_SESSION session, const pEp_identity* ident, const char* fpr) {
+    if (!ident || EMPTYSTR(fpr))
+        return PEP_ILLEGAL_VALUE;
+    pEp_identity* clone = identity_dup(ident);
+    clone->fpr = strdup(fpr);
+    PEP_STATUS status = set_valid_default_fpr(session, clone);
+    free_identity(clone);
     return status;
 }
 
