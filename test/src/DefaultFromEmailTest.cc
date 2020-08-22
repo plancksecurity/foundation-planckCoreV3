@@ -45,14 +45,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -132,7 +132,7 @@ TEST_F(DefaultFromEmailTest, check_encrypt_to_OpenPGP_simple_key) {
 
     status = encrypt_message(session, unenc_msg, NULL, &enc_msg, PEP_enc_PEP, 0);
     ASSERT_OK;
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
 
     // N.B. Actual check happens on decrypt later. But we can check that the encryption path doesn't fail, anyway.
     if (DEFAULT_FROM_TEST_GEN) {
@@ -156,7 +156,7 @@ TEST_F(DefaultFromEmailTest, check_encrypt_to_pEp_1_0_simple_key) {
 
     status = encrypt_message(session, unenc_msg, NULL, &enc_msg, PEP_enc_PEP, 0);
     ASSERT_OK;
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
 
     // N.B. Actual check happens on decrypt later. But we can check that the encryption path doesn't fail, anyway.
     if (DEFAULT_FROM_TEST_GEN) {
@@ -180,7 +180,7 @@ TEST_F(DefaultFromEmailTest, check_encrypt_to_pEp_2_0_simple_key) {
 
     status = encrypt_message(session, unenc_msg, NULL, &enc_msg, PEP_enc_PEP, 0);
     ASSERT_OK;
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
 
     // N.B. Actual check happens on decrypt later. But we can check that the encryption path doesn't fail, anyway.
     if (DEFAULT_FROM_TEST_GEN) {
@@ -204,7 +204,7 @@ TEST_F(DefaultFromEmailTest, check_encrypt_to_pEp_2_1_simple_key) {
 
     status = encrypt_message(session, unenc_msg, NULL, &enc_msg, PEP_enc_PEP, 0);
     ASSERT_OK;
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
 
     // N.B. Actual check happens on decrypt later. But we can check that the encryption path doesn't fail, anyway.
     if (DEFAULT_FROM_TEST_GEN) {
@@ -228,7 +228,7 @@ TEST_F(DefaultFromEmailTest, check_encrypt_to_pEp_2_2_simple_key) {
 
     status = encrypt_message(session, unenc_msg, NULL, &enc_msg, PEP_enc_PEP, 0);
     ASSERT_OK;
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
 
     // N.B. Actual check happens on decrypt later. But we can check that the encryption path doesn't fail, anyway.
     if (DEFAULT_FROM_TEST_GEN) {
@@ -252,7 +252,7 @@ TEST_F(DefaultFromEmailTest, check_encrypt_to_pEp_10_111_simple_key) {
 
     status = encrypt_message(session, unenc_msg, NULL, &enc_msg, PEP_enc_PEP, 0);
     ASSERT_OK;
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
 
     // N.B. Actual check happens on decrypt later. But we can check that the encryption path doesn't fail, anyway.
     if (DEFAULT_FROM_TEST_GEN) {

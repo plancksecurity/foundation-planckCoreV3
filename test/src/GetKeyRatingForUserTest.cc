@@ -51,14 +51,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -91,7 +91,7 @@ TEST_F(GetKeyRatingForUserTest, check_get_key_rating_for_user) {
     const char* fpr_save = alice->fpr;
     alice->fpr = NULL;
     status = get_identity(session, alice->address, alice->user_id, &test_null);
-    ASSERT_EQ(test_null, nullptr);
+    ASSERT_NULL(test_null);
     ASSERT_EQ(status , PEP_CANNOT_FIND_IDENTITY);
     ASSERT_EQ(alice->comm_type , PEP_ct_unknown);
 
@@ -99,10 +99,10 @@ TEST_F(GetKeyRatingForUserTest, check_get_key_rating_for_user) {
     status = set_identity(session, alice);
 
     status = update_identity(session, alice);
-    ASSERT_NE(alice->fpr, nullptr);
+    ASSERT_NOTNULL(alice->fpr);
 
     PEP_rating rating;
     status = get_key_rating_for_user(session, alice->user_id, alice->fpr, &rating);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     output_stream << tl_rating_string(rating) << endl;
 }

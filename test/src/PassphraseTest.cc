@@ -46,14 +46,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -96,10 +96,10 @@ TEST_F(PassphraseTest, check_alice_no_passphrase_nopass_import) {
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, alice_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, alice_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     free_stringlist(found_key);
     
 #if PPTEST_DUMP
@@ -116,10 +116,10 @@ TEST_F(PassphraseTest, check_bob_primary_pass_subkey_no_passphrase_nopass_import
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, bob_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, bob_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     free_stringlist(found_key);
 }
 
@@ -128,10 +128,10 @@ TEST_F(PassphraseTest, check_carol_primary_unenc_subkeys_passphrase_nopass_impor
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, carol_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, carol_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     free_stringlist(found_key);
 
 #if PPTEST_DUMP
@@ -150,10 +150,10 @@ TEST_F(PassphraseTest, check_david_primary_unenc_sign_and_encrypt_diff_pass_two_
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, david_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, david_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     free_stringlist(found_key);
 }
 
@@ -162,10 +162,10 @@ TEST_F(PassphraseTest, check_erwin_primary_enc_subkey_encrypted_plus_unenc_sign_
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, erwin_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, erwin_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     free_stringlist(found_key);
 }
 
@@ -174,10 +174,10 @@ TEST_F(PassphraseTest, check_alice_no_passphrase_nopass_sign_encrypt) {
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, alice_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, alice_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     
     const char* my_fpr = alice_fpr;
     const char* my_name = "Alice Malice";
@@ -202,7 +202,7 @@ TEST_F(PassphraseTest, check_alice_no_passphrase_nopass_sign_encrypt) {
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
     
     free_message(msg);
     free_message(enc_msg);
@@ -214,10 +214,10 @@ TEST_F(PassphraseTest, check_alice_no_passphrase_nopass_sign_encrypt_to_carol) {
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, alice_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, alice_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     
     const char* my_fpr = alice_fpr;
     const char* my_name = "Alice Malice";
@@ -243,7 +243,7 @@ TEST_F(PassphraseTest, check_alice_no_passphrase_nopass_sign_encrypt_to_carol) {
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
     
     free_message(msg);
     free_message(enc_msg);
@@ -255,10 +255,10 @@ TEST_F(PassphraseTest, check_bob_primary_pass_subkey_no_passphrase_nopass_sign) 
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, bob_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, bob_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
 
     const char* my_fpr = bob_fpr;
     const char* my_name = "Bob Mob";
@@ -285,7 +285,7 @@ TEST_F(PassphraseTest, check_bob_primary_pass_subkey_no_passphrase_nopass_sign) 
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);
-    ASSERT_EQ(enc_msg, nullptr);
+    ASSERT_NULL(enc_msg);
     
     free_message(msg);
     free_message(enc_msg);
@@ -297,10 +297,10 @@ TEST_F(PassphraseTest, check_carol_primary_unenc_subkeys_passphrase_nopass_sign)
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, carol_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, carol_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     
     const char* my_fpr = carol_fpr;
     const char* my_name = "Carol Peril";
@@ -327,7 +327,7 @@ TEST_F(PassphraseTest, check_carol_primary_unenc_subkeys_passphrase_nopass_sign)
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
     
     free_message(msg);
     free_message(enc_msg);    
@@ -339,10 +339,10 @@ TEST_F(PassphraseTest, check_david_primary_unenc_sign_and_encrypt_diff_pass_two_
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, david_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, david_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     
     const char* my_fpr = david_fpr;
     const char* my_name = "Dave Rave";
@@ -369,7 +369,7 @@ TEST_F(PassphraseTest, check_david_primary_unenc_sign_and_encrypt_diff_pass_two_
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
     
     free_message(msg);
     free_message(enc_msg);        
@@ -381,10 +381,10 @@ TEST_F(PassphraseTest, check_erwin_primary_enc_subkey_encrypted_plus_unenc_sign_
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, erwin_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, erwin_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     
     const char* my_fpr = erwin_fpr;
     const char* my_name = "Irv Nerve";
@@ -411,7 +411,7 @@ TEST_F(PassphraseTest, check_erwin_primary_enc_subkey_encrypted_plus_unenc_sign_
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
     
     free_message(msg);
     free_message(enc_msg);            
@@ -423,10 +423,10 @@ TEST_F(PassphraseTest, check_bob_primary_pass_subkey_no_passphrase_nopass_encryp
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, alice_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, alice_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     
     const char* my_fpr = alice_fpr;
     const char* my_name = "Alice Malice";
@@ -452,7 +452,7 @@ TEST_F(PassphraseTest, check_bob_primary_pass_subkey_no_passphrase_nopass_encryp
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
     
 #if PPTEST_DUMP   
     char* outdata = NULL;
@@ -471,10 +471,10 @@ TEST_F(PassphraseTest, check_carol_primary_unenc_subkeys_passphrase_nopass_encry
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, alice_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, alice_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     
     const char* my_fpr = alice_fpr;
     const char* my_name = "Alice Malice";
@@ -500,7 +500,7 @@ TEST_F(PassphraseTest, check_carol_primary_unenc_subkeys_passphrase_nopass_encry
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
 
 #if PPTEST_DUMP   
     char* outdata = NULL;
@@ -519,10 +519,10 @@ TEST_F(PassphraseTest, check_david_primary_unenc_sign_and_encrypt_diff_pass_two_
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, alice_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, alice_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     
     const char* my_fpr = alice_fpr;
     const char* my_name = "Alice Malice";
@@ -548,7 +548,7 @@ TEST_F(PassphraseTest, check_david_primary_unenc_sign_and_encrypt_diff_pass_two_
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
     
 #if PPTEST_DUMP   
     char* outdata = NULL;
@@ -567,10 +567,10 @@ TEST_F(PassphraseTest, check_erwin_primary_enc_subkey_encrypted_plus_unenc_sign_
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, alice_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, alice_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     
     const char* my_fpr = alice_fpr;
     const char* my_name = "Alice Malice";
@@ -596,7 +596,7 @@ TEST_F(PassphraseTest, check_erwin_primary_enc_subkey_encrypted_plus_unenc_sign_
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
 
 #if PPTEST_DUMP   
     char* outdata = NULL;
@@ -615,10 +615,10 @@ TEST_F(PassphraseTest, check_bob_primary_pass_subkey_no_passphrase_nopass_decryp
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, bob_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, bob_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
 
     const char* my_fpr = bob_fpr;
     const char* my_name = "Bob Mob";
@@ -644,7 +644,7 @@ TEST_F(PassphraseTest, check_bob_primary_pass_subkey_no_passphrase_nopass_decryp
     PEP_decrypt_flags_t flags = 0;
     status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(decrypted_msg, nullptr);
+    ASSERT_NOTNULL(decrypted_msg);
     
     free(decrypted_msg);
     free(modified_src);
@@ -656,10 +656,10 @@ TEST_F(PassphraseTest, check_carol_primary_unenc_subkeys_passphrase_nopass_decry
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, carol_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, carol_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     
     const char* my_fpr = carol_fpr;
     const char* my_name = "Carol Peril";
@@ -685,7 +685,7 @@ TEST_F(PassphraseTest, check_carol_primary_unenc_subkeys_passphrase_nopass_decry
     PEP_decrypt_flags_t flags = 0;
     status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
     ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);
-    ASSERT_EQ(decrypted_msg, nullptr);
+    ASSERT_NULL(decrypted_msg);
     
     free(decrypted_msg);
     free(modified_src);
@@ -697,10 +697,10 @@ TEST_F(PassphraseTest, check_alice_no_passphrase_withpass_sign_encrypt) {
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, alice_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, alice_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     
     const char* my_fpr = alice_fpr;
     const char* my_name = "Alice Malice";
@@ -731,7 +731,7 @@ TEST_F(PassphraseTest, check_alice_no_passphrase_withpass_sign_encrypt) {
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
     
     free_message(msg);
     free_message(enc_msg);
@@ -743,10 +743,10 @@ TEST_F(PassphraseTest, check_bob_primary_pass_subkey_no_passphrase_withpass_sign
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, bob_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, bob_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
 
     const char* my_fpr = bob_fpr;
     const char* my_name = "Bob Mob";
@@ -778,7 +778,7 @@ TEST_F(PassphraseTest, check_bob_primary_pass_subkey_no_passphrase_withpass_sign
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
     
 #if PPTEST_DUMP   
     char* outdata = NULL;
@@ -797,10 +797,10 @@ TEST_F(PassphraseTest, check_carol_primary_unenc_subkeys_passphrase_withpass_sig
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, carol_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, carol_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     
     const char* my_fpr = carol_fpr;
     const char* my_name = "Carol Peril";
@@ -831,7 +831,7 @@ TEST_F(PassphraseTest, check_carol_primary_unenc_subkeys_passphrase_withpass_sig
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
     
     free_message(msg);
     free_message(enc_msg);    
@@ -843,10 +843,10 @@ TEST_F(PassphraseTest, check_david_primary_unenc_sign_and_encrypt_diff_pass_two_
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, david_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, david_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     
     const char* my_fpr = david_fpr;
     const char* my_name = "Dave Rave";
@@ -878,7 +878,7 @@ TEST_F(PassphraseTest, check_david_primary_unenc_sign_and_encrypt_diff_pass_two_
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
     
     free_message(msg);
     free_message(enc_msg);        
@@ -890,10 +890,10 @@ TEST_F(PassphraseTest, check_erwin_primary_enc_subkey_encrypted_plus_unenc_sign_
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, erwin_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, erwin_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     
     const char* my_fpr = erwin_fpr;
     const char* my_name = "Irv Nerve";
@@ -924,7 +924,7 @@ TEST_F(PassphraseTest, check_erwin_primary_enc_subkey_encrypted_plus_unenc_sign_
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
     
     free_message(msg);
     free_message(enc_msg);            
@@ -936,10 +936,10 @@ TEST_F(PassphraseTest, check_carol_primary_unenc_subkeys_passphrase_withpass_dec
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, carol_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, carol_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     
     const char* my_fpr = carol_fpr;
     const char* my_name = "Carol Peril";
@@ -969,7 +969,7 @@ TEST_F(PassphraseTest, check_carol_primary_unenc_subkeys_passphrase_withpass_dec
     PEP_decrypt_flags_t flags = 0;
     status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(decrypted_msg, nullptr);
+    ASSERT_NOTNULL(decrypted_msg);
     
     free(decrypted_msg);
     free(modified_src);
@@ -981,10 +981,10 @@ TEST_F(PassphraseTest, check_carol_primary_unenc_subkeys_passphrase_wrongpass_de
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, carol_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, carol_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     
     const char* my_fpr = carol_fpr;
     const char* my_name = "Carol Peril";
@@ -1014,7 +1014,7 @@ TEST_F(PassphraseTest, check_carol_primary_unenc_subkeys_passphrase_wrongpass_de
     PEP_decrypt_flags_t flags = 0;
     status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
     ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);
-    ASSERT_EQ(decrypted_msg, nullptr);
+    ASSERT_NULL(decrypted_msg);
     
     free(decrypted_msg);
     free(modified_src);
@@ -1026,10 +1026,10 @@ TEST_F(PassphraseTest, check_bob_primary_pass_subkey_no_passphrase_wrongpass_sig
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, bob_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, bob_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
 
     const char* my_fpr = bob_fpr;
     const char* my_name = "Bob Mob";
@@ -1060,7 +1060,7 @@ TEST_F(PassphraseTest, check_bob_primary_pass_subkey_no_passphrase_wrongpass_sig
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);
-    ASSERT_EQ(enc_msg, nullptr);
+    ASSERT_NULL(enc_msg);
     
     free_message(msg);
     free_message(enc_msg);
@@ -1074,7 +1074,7 @@ TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase) {
     pEp_identity* my_ident = new_identity("fenris@darthmama.org", NULL, "FENRIS", "Fenris Hawke");    
     status = myself(session, my_ident);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(my_ident->fpr, nullptr);
+    ASSERT_NOTNULL(my_ident->fpr);
     
     // Set up "to"
     ASSERT_TRUE(slurp_and_import_key(session, alice_pub_filename));    
@@ -1097,7 +1097,7 @@ TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase) {
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
     
     free_message(msg);
     free_message(enc_msg);
@@ -1109,7 +1109,7 @@ TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase_decry
     pEp_identity* my_ident = new_identity("fenris@darthmama.org", NULL, "FENRIS", "Fenris Hawke");    
     status = myself(session, my_ident);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(my_ident->fpr, nullptr);
+    ASSERT_NOTNULL(my_ident->fpr);
     
     // Set up "to"
     ASSERT_TRUE(slurp_and_import_key(session, alice_pub_filename));    
@@ -1129,7 +1129,7 @@ TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase_decry
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);
-    ASSERT_EQ(enc_msg, nullptr);
+    ASSERT_NULL(enc_msg);
     
     free_message(msg);
 }
@@ -1141,7 +1141,7 @@ TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase_decry
     pEp_identity* my_ident = new_identity("fenris@darthmama.org", NULL, "FENRIS", "Fenris Hawke");    
     status = myself(session, my_ident);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(my_ident->fpr, nullptr);
+    ASSERT_NOTNULL(my_ident->fpr);
     
     // Set up "to"
     ASSERT_TRUE(slurp_and_import_key(session, alice_pub_filename));    
@@ -1164,7 +1164,7 @@ TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase_decry
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
     
     free_message(msg);
     msg = NULL;
@@ -1173,7 +1173,7 @@ TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase_decry
     PEP_decrypt_flags_t flags = 0;
     status = decrypt_message(session, enc_msg, &msg, &keylist_used, &rating, &flags);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(msg, nullptr);
+    ASSERT_NOTNULL(msg);
 
     free_message(msg);    
     free_message(enc_msg);    
@@ -1186,7 +1186,7 @@ TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase_decry
     pEp_identity* my_ident = new_identity("fenris@darthmama.org", NULL, "FENRIS", "Fenris Hawke");    
     status = myself(session, my_ident);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(my_ident->fpr, nullptr);
+    ASSERT_NOTNULL(my_ident->fpr);
     
     // Set up "to"
     ASSERT_TRUE(slurp_and_import_key(session, alice_pub_filename));    
@@ -1209,7 +1209,7 @@ TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase_decry
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
 
     pass = "bob";
     status = config_passphrase(session, pass);    
@@ -1222,7 +1222,7 @@ TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase_decry
     PEP_decrypt_flags_t flags = 0;
     status = decrypt_message(session, enc_msg, &msg, &keylist_used, &rating, &flags);
     ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);
-    ASSERT_EQ(msg, nullptr);
+    ASSERT_NULL(msg);
 
     free_message(enc_msg);    
 }
@@ -1232,10 +1232,10 @@ TEST_F(PassphraseTest, check_sign_only_nopass) {
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, bob_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, bob_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     free_stringlist(found_key);
     
     const char* my_fpr = bob_fpr;
@@ -1267,10 +1267,10 @@ TEST_F(PassphraseTest, check_sign_only_withpass) {
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, bob_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, bob_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     free_stringlist(found_key);
     
     const char* my_fpr = bob_fpr;
@@ -1305,8 +1305,8 @@ TEST_F(PassphraseTest, check_sign_only_withpass) {
                          signed_text, signed_text_size, &keylist);
 
     ASSERT_EQ(status , PEP_VERIFIED);
-    ASSERT_NE(keylist, nullptr);
-    ASSERT_NE(keylist->value, nullptr);
+    ASSERT_NOTNULL(keylist);
+    ASSERT_NOTNULL(keylist->value);
     ASSERT_STREQ(keylist->value, bob_fpr);
 
     // FIXME: free stuff

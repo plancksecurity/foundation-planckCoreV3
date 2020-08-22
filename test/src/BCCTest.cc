@@ -52,14 +52,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -118,7 +118,7 @@ TEST_F(BCCTest, check_single_BCC) {
     ASSERT_OK;
 
     message *msg = new_message(PEP_dir_outgoing);
-    ASSERT_NE(msg, nullptr);
+    ASSERT_NOTNULL(msg);
     msg->from = sender;
 //    msg->to = new_identity_list(open_recip); FYI, this is supposed to fail for now. Unfortunately.
     msg->bcc = new_identity_list(bcc_recip);

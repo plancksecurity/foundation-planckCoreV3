@@ -50,14 +50,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -101,8 +101,8 @@ TEST_F(Engine703Test, check_engine703_expired_imported) {
     identity_list* id_list = NULL;
     PEP_STATUS status = own_identities_retrieve(session, &id_list);
     ASSERT_EQ(status, PEP_STATUS_OK);    
-    ASSERT_NE(id_list->ident, nullptr);
-    ASSERT_EQ(id_list->next, nullptr);
+    ASSERT_NOTNULL(id_list->ident);
+    ASSERT_NULL(id_list->next);
     
     pEp_identity* me = id_list->ident;
     status = myself(session, me);
@@ -137,8 +137,8 @@ TEST_F(Engine703Test, check_engine703_valid_renew) {
     identity_list* id_list = NULL;
     PEP_STATUS status = own_identities_retrieve(session, &id_list);
     ASSERT_EQ(status, PEP_STATUS_OK);    
-    ASSERT_NE(id_list->ident, nullptr);
-    ASSERT_EQ(id_list->next, nullptr);
+    ASSERT_NOTNULL(id_list->ident);
+    ASSERT_NULL(id_list->next);
     
     pEp_identity* me = id_list->ident;
     status = myself(session, me);

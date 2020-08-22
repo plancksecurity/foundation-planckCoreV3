@@ -48,14 +48,14 @@ namespace {
                 init_files.push_back(std::pair<std::string, std::string>(std::string("test_files/DDL_11_Sequoia/.pEp_management.db"), std::string("management.db")));
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -86,6 +86,6 @@ TEST_F(Quick11to12Test, check_if_init_succeeds) {
     identity_list* ids = NULL;
     PEP_STATUS status = own_identities_retrieve(session, &ids);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(ids, nullptr);
+    ASSERT_NOTNULL(ids);
 }
 

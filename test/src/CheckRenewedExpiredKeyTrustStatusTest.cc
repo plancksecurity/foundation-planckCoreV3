@@ -50,14 +50,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -96,7 +96,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     pEp_identity* alice_from = new_identity("pep.test.alice@pep-project.org", alice_fpr, PEP_OWN_USERID, "Alice Cooper");
 
     PEP_STATUS status = set_own_key(session, alice_from, alice_fpr);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // Ok, so I want to make sure we make an entry, so I'll try to decrypt the message WITH
     // the expired key:
@@ -127,7 +127,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     msg2->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
 
     status = outgoing_message_rating(session, msg2, &rating);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(rating , PEP_rating_reliable);
 
     status = get_trust(session, expired_inquisitor);
@@ -148,7 +148,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     pEp_identity* alice_from = new_identity("pep.test.alice@pep-project.org", alice_fpr, PEP_OWN_USERID, "Alice Cooper");
 
     PEP_STATUS status = set_own_key(session, alice_from, alice_fpr);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     const char* inquisitor_fpr = "8E8D2381AE066ABE1FEE509821BA977CA4728718";
     pEp_identity* expired_inquisitor = new_identity("inquisitor@darthmama.org", "8E8D2381AE066ABE1FEE509821BA977CA4728718", "TOFU_inquisitor@darthmama.org", "Lady Claire Trevelyan");
@@ -159,10 +159,10 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     ASSERT_EQ(key_ct, PEP_ct_key_expired);
 
     status = set_identity(session, expired_inquisitor);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     expired_inquisitor->comm_type = PEP_ct_OpenPGP; // confirmed
     status = set_trust(session, expired_inquisitor);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     status = get_trust(session, expired_inquisitor);
     ASSERT_EQ(expired_inquisitor->comm_type , PEP_ct_OpenPGP);
 
@@ -171,12 +171,12 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     ASSERT_EQ(status , PEP_KEY_UNSUITABLE);
     PEP_comm_type ct = expired_inquisitor->comm_type;
     ASSERT_EQ(ct , PEP_ct_key_not_found);
-    ASSERT_EQ(expired_inquisitor->fpr, nullptr);
+    ASSERT_NULL(expired_inquisitor->fpr);
 
     expired_inquisitor->fpr = strdup(inquisitor_fpr);
     status = get_trust(session, expired_inquisitor);
     ct = expired_inquisitor->comm_type;
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(ct , PEP_ct_key_expired_but_confirmed);
 
     // Ok, so I want to make sure we make an entry, so I'll try to decrypt the message WITH
@@ -201,7 +201,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     pEp_identity* expired_inquisitor1 = new_identity("inquisitor@darthmama.org", NULL, NULL, "Lady Claire Trevelyan");
 
     status = update_identity(session, expired_inquisitor1);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     status = get_trust(session, expired_inquisitor1);
     ASSERT_EQ(expired_inquisitor1->comm_type , PEP_ct_OpenPGP);
 
@@ -214,7 +214,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     msg2->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
 
     status = outgoing_message_rating(session, msg2, &rating);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_GE(rating, PEP_rating_trusted);
 
     free_message(msg2);
@@ -233,15 +233,15 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     pEp_identity* alice_from = new_identity("pep.test.alice@pep-project.org", alice_fpr, PEP_OWN_USERID, "Alice Cooper");
 
     PEP_STATUS status = set_own_key(session, alice_from, alice_fpr);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     const char* inquisitor_fpr = "8E8D2381AE066ABE1FEE509821BA977CA4728718";
     pEp_identity* expired_inquisitor = new_identity("inquisitor@darthmama.org", "8E8D2381AE066ABE1FEE509821BA977CA4728718", "TOFU_inquisitor@darthmama.org", "Lady Claire Trevelyan");
     status = set_identity(session, expired_inquisitor);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     expired_inquisitor->comm_type = PEP_ct_pEp_unconfirmed;
     status = set_trust(session, expired_inquisitor);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     bool pEp_user = false;
     status = is_pEp_user(session, expired_inquisitor, &pEp_user);
@@ -277,7 +277,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     msg2->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
 
     status = outgoing_message_rating(session, msg2, &rating);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(rating , PEP_rating_reliable);
 
     status = get_trust(session, expired_inquisitor);
@@ -298,21 +298,21 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     pEp_identity* alice_from = new_identity("pep.test.alice@pep-project.org", alice_fpr, PEP_OWN_USERID, "Alice Cooper");
 
     PEP_STATUS status = set_own_key(session, alice_from, alice_fpr);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     const char* inquisitor_fpr = "8E8D2381AE066ABE1FEE509821BA977CA4728718";
     pEp_identity* expired_inquisitor = new_identity("inquisitor@darthmama.org", "8E8D2381AE066ABE1FEE509821BA977CA4728718", "TOFU_inquisitor@darthmama.org", "Lady Claire Trevelyan");
     status = set_identity(session, expired_inquisitor);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     expired_inquisitor->comm_type = PEP_ct_pEp; // confirmed
     status = set_trust(session, expired_inquisitor);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     status = get_trust(session, expired_inquisitor);
     ASSERT_EQ(expired_inquisitor->comm_type , PEP_ct_pEp);
 
     bool pEp_user = false;
     status = is_pEp_user(session, expired_inquisitor, &pEp_user);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_TRUE(pEp_user);
 
     // Ok, now update_identity - we'll discover it's expired
@@ -320,7 +320,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     ASSERT_EQ(status , PEP_KEY_UNSUITABLE);
     PEP_comm_type ct = expired_inquisitor->comm_type;
     ASSERT_EQ(ct, PEP_ct_key_not_found);
-    ASSERT_EQ(expired_inquisitor->fpr, nullptr);
+    ASSERT_NULL(expired_inquisitor->fpr);
 
     expired_inquisitor->fpr = strdup(inquisitor_fpr);
     status = get_trust(session, expired_inquisitor);
@@ -350,7 +350,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     pEp_identity* expired_inquisitor1 = new_identity("inquisitor@darthmama.org", NULL, NULL, "Lady Claire Trevelyan");
 
     status = update_identity(session, expired_inquisitor1);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     status = get_trust(session, expired_inquisitor1);
     ASSERT_EQ(expired_inquisitor1->comm_type, PEP_ct_pEp);
 
@@ -363,7 +363,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     msg2->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
 
     status = outgoing_message_rating(session, msg2, &rating);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_GE(rating, PEP_rating_trusted);
 
     free_message(msg2);

@@ -55,14 +55,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -131,7 +131,7 @@ TEST_F(KeyringImportTest, check_import1) {
         // PEP_STATUS status = update_identity(session, id);
         stringlist_t* keylist = NULL;
         PEP_STATUS status = find_keys(session, address, &keylist);
-        ASSERT_EQ(status , PEP_STATUS_OK);
+        ASSERT_OK;
         ASSERT_NOTNULL(keylist);
         output_stream << "Got: " << (keylist->value ? keylist->value : "NULL") << " -> " << (address ? address : "NULL") << endl;
 
@@ -200,7 +200,7 @@ TEST_F(KeyringImportTest, check_import2) {
         // PEP_STATUS status = update_identity(session, id);
         stringlist_t* keylist = NULL;
         PEP_STATUS status = find_keys(session, address, &keylist);
-        ASSERT_EQ(status , PEP_STATUS_OK);
+        ASSERT_OK;
         ASSERT_NOTNULL(keylist);
         output_stream << "Got: " << (keylist->value ? keylist->value : "NULL") << " -> " << (address ? address : "NULL") << endl;
 

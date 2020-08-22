@@ -44,14 +44,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -92,10 +92,10 @@ TEST_F(IdentEncFormatTest, check_ident_enc_format_unspecified) {
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, carol_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, carol_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     
     const char* my_fpr = carol_fpr;
     const char* my_name = "Carol Peril";
@@ -122,7 +122,7 @@ TEST_F(IdentEncFormatTest, check_ident_enc_format_unspecified) {
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_auto, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
     
     // FIXME: This is fine for now, but needs to change when they are implemented separately
     ASSERT_TRUE(enc_msg->enc_format == PEP_enc_PEP || enc_msg->enc_format == PEP_enc_PGP_MIME);
@@ -136,10 +136,10 @@ TEST_F(IdentEncFormatTest, check_ident_enc_format_specified) {
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, carol_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, carol_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     
     const char* my_fpr = carol_fpr;
     const char* my_name = "Carol Peril";
@@ -166,7 +166,7 @@ TEST_F(IdentEncFormatTest, check_ident_enc_format_specified) {
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_inline, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
     
     ASSERT_EQ(enc_msg->enc_format, PEP_enc_inline);
     free_message(msg);
@@ -180,10 +180,10 @@ TEST_F(IdentEncFormatTest, check_ident_enc_format_one_to_nospec) {
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, carol_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, carol_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     
     const char* my_fpr = carol_fpr;
     const char* my_name = "Carol Peril";
@@ -215,7 +215,7 @@ TEST_F(IdentEncFormatTest, check_ident_enc_format_one_to_nospec) {
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_auto, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
     
     ASSERT_EQ(enc_msg->enc_format, PEP_enc_inline_EA);
     free_message(msg);
@@ -228,10 +228,10 @@ TEST_F(IdentEncFormatTest, check_ident_enc_format_multi_to_middle_nospec) {
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, carol_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, carol_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     
     const char* my_fpr = carol_fpr;
     const char* my_name = "Carol Peril";
@@ -283,7 +283,7 @@ TEST_F(IdentEncFormatTest, check_ident_enc_format_multi_to_middle_nospec) {
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_auto, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
     
     ASSERT_EQ(enc_msg->enc_format, PEP_enc_inline);
     free_message(msg);
@@ -296,10 +296,10 @@ TEST_F(IdentEncFormatTest, check_ident_enc_format_multi_cc_nospec) {
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, carol_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, carol_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     
     const char* my_fpr = carol_fpr;
     const char* my_name = "Carol Peril";
@@ -358,7 +358,7 @@ TEST_F(IdentEncFormatTest, check_ident_enc_format_multi_cc_nospec) {
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_auto, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
     
     ASSERT_EQ(enc_msg->enc_format, PEP_enc_inline_EA);
     free_message(msg);
@@ -371,10 +371,10 @@ TEST_F(IdentEncFormatTest, check_ident_enc_format_multi_bcc_nospec) {
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, carol_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, carol_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     
     const char* my_fpr = carol_fpr;
     const char* my_name = "Carol Peril";
@@ -407,7 +407,7 @@ TEST_F(IdentEncFormatTest, check_ident_enc_format_multi_bcc_nospec) {
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_auto, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
     
     ASSERT_EQ(enc_msg->enc_format, PEP_enc_inline_EA);
     free_message(msg);
@@ -420,10 +420,10 @@ TEST_F(IdentEncFormatTest, check_ident_enc_format_multi_cc_specified) {
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, carol_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     ASSERT_STREQ(found_key->value, carol_fpr);
-    ASSERT_EQ(found_key->next, nullptr);
+    ASSERT_NULL(found_key->next);
     
     const char* my_fpr = carol_fpr;
     const char* my_name = "Carol Peril";
@@ -482,7 +482,7 @@ TEST_F(IdentEncFormatTest, check_ident_enc_format_multi_cc_specified) {
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_inline_EA, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
     
     ASSERT_EQ(enc_msg->enc_format, PEP_enc_inline_EA);
     free_message(msg);

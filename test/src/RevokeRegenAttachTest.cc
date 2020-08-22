@@ -58,14 +58,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -121,10 +121,10 @@ TEST_F(RevokeRegenAttachTest, check_revoke_regen_attach) {
     free(me->fpr);
     me->fpr = NULL;
     status = myself(session, me);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     output_stream << me->fpr << "\n";
 
-    ASSERT_NE(me->fpr, nullptr);
+    ASSERT_NOTNULL(me->fpr);
     ASSERT_STRNE(me->fpr, prev_fpr);
     output_stream << "New fpr is: " << me->fpr;
 
@@ -134,7 +134,7 @@ TEST_F(RevokeRegenAttachTest, check_revoke_regen_attach) {
 
     identity_list *to = new_identity_list(new_identity("pep.test.alice@pep-project.org", NULL, "42", "pEp Test Alice (test key don't use)"));
     message *msg = new_message(PEP_dir_outgoing);
-    ASSERT_NE(msg, nullptr);
+    ASSERT_NOTNULL(msg);
     msg->from = me;
     msg->to = to;
     msg->shortmsg = strdup("hello, world");
@@ -144,8 +144,8 @@ TEST_F(RevokeRegenAttachTest, check_revoke_regen_attach) {
     message *enc_msg;
     output_stream << "calling encrypt_message()\n";
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(enc_msg);
     output_stream << "message encrypted.\n";
 
     // output_stream << msg->attachments->filename;

@@ -51,14 +51,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -116,8 +116,8 @@ TEST_F(ExportKeyTest, check_export_key_pubkey) {
 
     status = export_key(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39",
                                    &keydata, &keysize);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(keydata, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(keydata);
     ASSERT_GT(keysize, 0);
 
     free(keydata);
@@ -141,8 +141,8 @@ TEST_F(ExportKeyTest, check_export_key_secret_key) {
 
     status = export_key(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39",
                                    &keydata, &keysize);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(keydata, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(keydata);
     ASSERT_GT(keysize, 0);
 
     free(keydata);
@@ -150,7 +150,7 @@ TEST_F(ExportKeyTest, check_export_key_secret_key) {
     keysize = 0;
     status = export_secret_key(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39",
                                    &keydata, &keysize);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     free(keydata);
 }
@@ -169,7 +169,7 @@ TEST_F(ExportKeyTest, check_export_key_no_secret_key) {
 
     status = export_key(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39",
                                    &keydata, &keysize);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     free(keydata);
     keydata = NULL;
     keysize = 0;

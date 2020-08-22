@@ -53,14 +53,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -111,7 +111,7 @@ TEST_F(UserIDAliasTest, check_userid_aliases) {
 
     output_stream << "First, set up an identity with PEP_OWN_USERID as user_id." << endl;
     status = myself(session, alice);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     output_stream << "After myself, user_id is " << alice->user_id << endl;
     ASSERT_STREQ(alice->user_id, own_id);
 
@@ -120,7 +120,7 @@ TEST_F(UserIDAliasTest, check_userid_aliases) {
 
     alice->user_id = strdup(alias1);
     status = myself(session, alice);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     output_stream << "After myself, user_id is " << alice->user_id << endl;
     ASSERT_STREQ(alice->user_id, own_id);
 
@@ -129,20 +129,20 @@ TEST_F(UserIDAliasTest, check_userid_aliases) {
 
     alice->user_id = strdup(alias2);
     status = myself(session, alice);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     output_stream << "After myself, user_id is " << alice->user_id << endl;
     ASSERT_STREQ(alice->user_id, own_id);
 
     char* default_id = NULL;
     status = get_userid_alias_default(session, alias1, &default_id);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     output_stream << "Default user_id for " << alias1 << " is " << default_id << endl;
     ASSERT_STREQ(default_id, own_id);
 
     free(default_id);
     default_id = NULL;
     status = get_userid_alias_default(session, alias2, &default_id);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     output_stream << "Default user_id for " << alias2 << " is " << default_id << endl;
     ASSERT_STREQ(default_id, own_id);
 

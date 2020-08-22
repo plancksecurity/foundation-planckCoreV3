@@ -44,14 +44,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -84,9 +84,9 @@ TEST_F(ImportKeyTest, check_import_fpr_pub_new) {
     stringlist_t* keylist = NULL;
     status = _import_key_with_fpr_return(session, pubkey.c_str(), pubkey.size(), NULL, &keylist, NULL);
     ASSERT_EQ(status, PEP_KEY_IMPORTED);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_NOTNULL(keylist);
     ASSERT_STREQ(keylist->value, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
-    ASSERT_EQ(keylist->next, nullptr);
+    ASSERT_NULL(keylist->next);
     
     // FIXME, check key is actually imported
 }
@@ -99,9 +99,9 @@ TEST_F(ImportKeyTest, check_import_change_pub_new) {
     uint64_t changes = 0;
     status = _import_key_with_fpr_return(session, pubkey.c_str(), pubkey.size(), NULL, &keylist, &changes);
     ASSERT_EQ(status, PEP_KEY_IMPORTED);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_NOTNULL(keylist);
     ASSERT_STREQ(keylist->value, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
-    ASSERT_EQ(keylist->next, nullptr);
+    ASSERT_NULL(keylist->next);
     ASSERT_EQ(changes, 1);
     // FIXME, check key is actually imported
 }
@@ -113,9 +113,9 @@ TEST_F(ImportKeyTest, check_import_fpr_priv_new) {
     stringlist_t* keylist = NULL;
     status = _import_key_with_fpr_return(session, pubkey.c_str(), pubkey.size(), NULL, &keylist, NULL);
     ASSERT_EQ(status, PEP_KEY_IMPORTED);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_NOTNULL(keylist);
     ASSERT_STREQ(keylist->value, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
-    ASSERT_EQ(keylist->next, nullptr);
+    ASSERT_NULL(keylist->next);
     
     // FIXME, check key is actually imported
 }
@@ -128,9 +128,9 @@ TEST_F(ImportKeyTest, check_import_change_pub_nochange) {
     uint64_t changes = 0;
     status = _import_key_with_fpr_return(session, pubkey.c_str(), pubkey.size(), NULL, &keylist, &changes);
     ASSERT_EQ(status, PEP_KEY_IMPORTED);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_NOTNULL(keylist);
     ASSERT_STREQ(keylist->value, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
-    ASSERT_EQ(keylist->next, nullptr);
+    ASSERT_NULL(keylist->next);
     ASSERT_EQ(changes, 1);
 
     // import again!
@@ -139,9 +139,9 @@ TEST_F(ImportKeyTest, check_import_change_pub_nochange) {
     changes = 0;
     status = _import_key_with_fpr_return(session, pubkey.c_str(), pubkey.size(), NULL, &keylist, &changes);
     ASSERT_EQ(status, PEP_KEY_IMPORTED);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_NOTNULL(keylist);
     ASSERT_STREQ(keylist->value, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
-    ASSERT_EQ(keylist->next, nullptr);
+    ASSERT_NULL(keylist->next);
     ASSERT_EQ(changes, 0);
 }
 
@@ -161,7 +161,7 @@ TEST_F(ImportKeyTest, check_import_fpr_list_pub_concat) {
     uint64_t changes = 0;
     PEP_STATUS status = _import_key_with_fpr_return(session, pubkey_material.c_str(), pubkey_material.size(), NULL, &keylist, &changes);
     ASSERT_EQ(status, PEP_KEY_IMPORTED);
-    ASSERT_NE(keylist, nullptr);    
+    ASSERT_NOTNULL(keylist);    
     ASSERT_EQ(stringlist_length(keylist), 10);
     ASSERT_EQ(changes, 1023); // 2^10 - 1
 }
@@ -173,7 +173,7 @@ TEST_F(ImportKeyTest, check_import_fpr_list_priv_concat) {
     uint64_t changes = 0;
     PEP_STATUS status = _import_key_with_fpr_return(session, privkey_material.c_str(), privkey_material.size(), NULL, &keylist, &changes);
     ASSERT_EQ(status, PEP_KEY_IMPORTED);
-    ASSERT_NE(keylist, nullptr);    
+    ASSERT_NOTNULL(keylist);    
     ASSERT_EQ(stringlist_length(keylist), 10);
     ASSERT_EQ(changes, 1023);  // The answer to this might be implementation dependent and we don't care.
 }
@@ -185,7 +185,7 @@ TEST_F(ImportKeyTest, check_import_fpr_list_priv_then_pub) {
     uint64_t changes = 0;
     PEP_STATUS status = _import_key_with_fpr_return(session, privkey_material.c_str(), privkey_material.size(), NULL, &keylist, &changes);
     ASSERT_EQ(status, PEP_KEY_IMPORTED);
-    ASSERT_NE(keylist, nullptr);    
+    ASSERT_NOTNULL(keylist);    
     ASSERT_EQ(stringlist_length(keylist), 10);
     ASSERT_EQ(changes, 1023); 
     free_stringlist(keylist);
@@ -194,7 +194,7 @@ TEST_F(ImportKeyTest, check_import_fpr_list_priv_then_pub) {
     string pubkey_material = slurp("test_keys/pub/import_keys_multi_pub_concat.asc");
     status = _import_key_with_fpr_return(session, pubkey_material.c_str(), pubkey_material.size(), NULL, &keylist, &changes);
     ASSERT_EQ(status, PEP_KEY_IMPORTED);
-    ASSERT_NE(keylist, nullptr);    
+    ASSERT_NOTNULL(keylist);    
     ASSERT_EQ(stringlist_length(keylist), 10);
     // ASSERT_EQ(changes, 0); Answer may be implementation dependent. Ignore.
 }
@@ -206,7 +206,7 @@ TEST_F(ImportKeyTest, check_import_fpr_list_pub_then_priv) {
     uint64_t changes = 0;
     PEP_STATUS status = _import_key_with_fpr_return(session, pubkey_material.c_str(), pubkey_material.size(), NULL, &keylist, &changes);
     ASSERT_EQ(status, PEP_KEY_IMPORTED);
-    ASSERT_NE(keylist, nullptr);    
+    ASSERT_NOTNULL(keylist);    
     ASSERT_EQ(stringlist_length(keylist), 10);
     ASSERT_EQ(changes, 1023); 
     free_stringlist(keylist);
@@ -215,7 +215,7 @@ TEST_F(ImportKeyTest, check_import_fpr_list_pub_then_priv) {
     string privkey_material = slurp("test_keys/priv/import_keys_multi_priv_concat.asc");
     status = _import_key_with_fpr_return(session, privkey_material.c_str(), privkey_material.size(), NULL, &keylist, &changes);
     ASSERT_EQ(status, PEP_KEY_IMPORTED);
-    ASSERT_NE(keylist, nullptr);    
+    ASSERT_NOTNULL(keylist);    
     ASSERT_EQ(stringlist_length(keylist), 10);
     // ASSERT_EQ(changes, 1023);  // The answer to this might be implementation dependent and we don't care.
     free_stringlist(keylist);
@@ -228,7 +228,7 @@ TEST_F(ImportKeyTest, check_import_fpr_list_pub_blob) {
     uint64_t changes = 0;
     PEP_STATUS status = _import_key_with_fpr_return(session, pubkey_material.c_str(), pubkey_material.size(), NULL, &keylist, &changes);
     ASSERT_EQ(status, PEP_KEY_IMPORTED);
-    ASSERT_NE(keylist, nullptr);    
+    ASSERT_NOTNULL(keylist);    
     ASSERT_EQ(stringlist_length(keylist), 10);
     ASSERT_EQ(changes, 1023); // 2^10 - 1
 }
@@ -240,7 +240,7 @@ TEST_F(ImportKeyTest, check_import_fpr_list_priv_blob) {
     uint64_t changes = 0;
     PEP_STATUS status = _import_key_with_fpr_return(session, privkey_material.c_str(), privkey_material.size(), NULL, &keylist, &changes);
     ASSERT_EQ(status, PEP_KEY_IMPORTED);
-    ASSERT_NE(keylist, nullptr);    
+    ASSERT_NOTNULL(keylist);    
     ASSERT_EQ(stringlist_length(keylist), 10);
     // ASSERT_EQ(changes, 1023);  // The answer to this might be implementation dependent and we don't care.
 }
@@ -253,9 +253,9 @@ TEST_F(ImportKeyTest, check_import_added_subkey_then_revoke_subkey) {
     uint64_t changes = 0;
     status = _import_key_with_fpr_return(session, pubkey.c_str(), pubkey.size(), NULL, &keylist, &changes);
     ASSERT_EQ(status, PEP_KEY_IMPORTED);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_NOTNULL(keylist);
     ASSERT_STREQ(keylist->value, "25D08DAFD15F21F6A9492FB00A958FA5045134F0");
-    ASSERT_EQ(keylist->next, nullptr);
+    ASSERT_NULL(keylist->next);
     ASSERT_EQ(changes, 1);
     pubkey = slurp("test_keys/pub/import_keys_multi_9_add_rsa-0x045134F0_pub.asc");
     // import again!
@@ -264,9 +264,9 @@ TEST_F(ImportKeyTest, check_import_added_subkey_then_revoke_subkey) {
     changes = 0;
     status = _import_key_with_fpr_return(session, pubkey.c_str(), pubkey.size(), NULL, &keylist, &changes);
     ASSERT_EQ(status, PEP_KEY_IMPORTED);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_NOTNULL(keylist);
     ASSERT_STREQ(keylist->value, "25D08DAFD15F21F6A9492FB00A958FA5045134F0");
-    ASSERT_EQ(keylist->next, nullptr);
+    ASSERT_NULL(keylist->next);
     ASSERT_EQ(changes, 1);        
     pubkey = slurp("test_keys/pub/import_keys_multi_9_add_rsa_rev_sub-0x045134F0_pub.asc");
     // import again!
@@ -275,9 +275,9 @@ TEST_F(ImportKeyTest, check_import_added_subkey_then_revoke_subkey) {
     changes = 0;
     status = _import_key_with_fpr_return(session, pubkey.c_str(), pubkey.size(), NULL, &keylist, &changes);
     ASSERT_EQ(status, PEP_KEY_IMPORTED);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_NOTNULL(keylist);
     ASSERT_STREQ(keylist->value, "25D08DAFD15F21F6A9492FB00A958FA5045134F0");
-    ASSERT_EQ(keylist->next, nullptr);
+    ASSERT_NULL(keylist->next);
     ASSERT_EQ(changes, 1);        
 
 }
@@ -292,7 +292,7 @@ TEST_F(ImportKeyTest, check_import_huge_concat_then_change) {
     uint64_t changes = 0;
     PEP_STATUS status = _import_key_with_fpr_return(session, pubkey_material.c_str(), pubkey_material.size(), NULL, &keylist, &changes);
     ASSERT_EQ(status, PEP_KEY_IMPORTED);
-    ASSERT_NE(keylist, nullptr);    
+    ASSERT_NOTNULL(keylist);    
     ASSERT_EQ(stringlist_length(keylist), 10);
     ASSERT_EQ(changes, 1023); 
     free_stringlist(keylist);
@@ -301,7 +301,7 @@ TEST_F(ImportKeyTest, check_import_huge_concat_then_change) {
     string some_changed_material = slurp("test_keys/pub/import_keys_multi_with_mult_changes_concat.asc");
     status = _import_key_with_fpr_return(session, some_changed_material.c_str(), some_changed_material.size(), NULL, &keylist, &changes);
     ASSERT_EQ(status, PEP_KEY_IMPORTED);
-    ASSERT_NE(keylist, nullptr);    
+    ASSERT_NOTNULL(keylist);    
     ASSERT_EQ(stringlist_length(keylist), 10);
     ASSERT_EQ(changes, 938); // 1, 3, 5, 7, 8, 9 = 1110101010 = 938
     free_stringlist(keylist);    
@@ -314,14 +314,14 @@ TEST_F(ImportKeyTest, check_non_cleared_list_usage) {
     uint64_t changes = 0;
     PEP_STATUS status = _import_key_with_fpr_return(session, pubkey_material.c_str(), pubkey_material.size(), NULL, &keylist, &changes);
     ASSERT_EQ(status, PEP_KEY_IMPORTED);
-    ASSERT_NE(keylist, nullptr);    
+    ASSERT_NOTNULL(keylist);    
     ASSERT_EQ(stringlist_length(keylist), 10);
     ASSERT_EQ(changes, 1023); 
 
     string some_changed_material = slurp("test_keys/pub/import_keys_multi_with_mult_changes_concat.asc");
     status = _import_key_with_fpr_return(session, some_changed_material.c_str(), some_changed_material.size(), NULL, &keylist, &changes);
     ASSERT_EQ(status, PEP_KEY_IMPORTED);
-    ASSERT_NE(keylist, nullptr);    
+    ASSERT_NOTNULL(keylist);    
     ASSERT_EQ(stringlist_length(keylist), 20);
     ASSERT_EQ(changes, 0xEABFF); // (938 << 10 | 1023) -> 11101010101111111111 = 0xEABFF
     free_stringlist(keylist);    
@@ -334,9 +334,9 @@ TEST_F(ImportKeyTest, check_770_import_priv_asc) {
     stringlist_t* keylist = NULL;
     status = _import_key_with_fpr_return(session, pubkey.c_str(), pubkey.size(), NULL, &keylist, NULL);
     ASSERT_EQ(status, PEP_KEY_IMPORTED);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_NOTNULL(keylist);
     ASSERT_STREQ(keylist->value, "0521111E12084FDEA58A38E880D9FB378DCC789D");
-    ASSERT_EQ(keylist->next, nullptr);
+    ASSERT_NULL(keylist->next);
 
     // FIXME, check key is actually imported
 }
@@ -348,9 +348,9 @@ TEST_F(ImportKeyTest, check_770_import_priv_pgp) {
     stringlist_t* keylist = NULL;
     status = _import_key_with_fpr_return(session, pubkey.c_str(), pubkey.size(), NULL, &keylist, NULL);
     ASSERT_EQ(status, PEP_KEY_IMPORTED);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_NOTNULL(keylist);
     ASSERT_STREQ(keylist->value, "0521111E12084FDEA58A38E880D9FB378DCC789D");
-    ASSERT_EQ(keylist->next, nullptr);
+    ASSERT_NULL(keylist->next);
 
     // FIXME, check key is actually imported
 }

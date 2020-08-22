@@ -137,8 +137,8 @@ class NullBuffer : public std::streambuf {
 };                         
                          
 PEP_STATUS config_valid_passphrase(PEP_SESSION session, const char* fpr, std::vector<std::string> passphrases);
-PEP_STATUS set_valid_default_fpr(PEP_SESSION session, pEp_identity* ident);
-PEP_STATUS set_fpr_preserve_ident(PEP_SESSION session, const pEp_identity* ident, const char* fpr);
+PEP_STATUS set_default_fpr_for_test(PEP_SESSION session, pEp_identity* ident, bool unconditional);
+PEP_STATUS set_fpr_preserve_ident(PEP_SESSION session, const pEp_identity* ident, const char* fpr, bool valid_only);
 
 void print_mail(message* msg);
 

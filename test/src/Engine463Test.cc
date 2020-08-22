@@ -51,14 +51,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -104,7 +104,7 @@ TEST_F(Engine463Test, check_engine_463_no_own_key) {
     PEP_decrypt_flags_t flags = 0;
 
     status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 }
 
 TEST_F(Engine463Test, check_engine_463_own_key) {
@@ -118,7 +118,7 @@ TEST_F(Engine463Test, check_engine_463_own_key) {
 
     pEp_identity* own_ident = new_identity("claudio+engine-463@pep.foundation", "A039BC60E43E0DFDDC9DE8663B48C38325210C88", PEP_OWN_USERID, "Not Actually Claudio");
     status = set_own_key(session, own_ident, "A039BC60E43E0DFDDC9DE8663B48C38325210C88");
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // Ok, bring in message, decrypt, and see what happens.
     const string msg = slurp("test_mails/notfound-alt.msg");
@@ -131,7 +131,7 @@ TEST_F(Engine463Test, check_engine_463_own_key) {
     PEP_decrypt_flags_t flags = 0;
 
     status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 }
 
 TEST_F(Engine463Test, check_engine_463_sender_expired_and_renewed) {
@@ -165,14 +165,14 @@ TEST_F(Engine463Test, check_engine_463_sender_expired_and_renewed) {
     pEp_identity* expired_inquisitor = new_identity("inquisitor@darthmama.org", NULL, NULL, "Lady Claire Trevelyan");
 
     status = identity_rating(session, expired_inquisitor, &rating);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(rating , PEP_rating_reliable);
 
     flags = 0;
 
     status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
-    ASSERT_NE(decrypted_msg, nullptr);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_NOTNULL(decrypted_msg);
+    ASSERT_OK;
     ASSERT_EQ(rating , PEP_rating_reliable);
 
     free_identity(expired_inquisitor);
@@ -192,7 +192,7 @@ TEST_F(Engine463Test, check_engine_463_sender_expired_and_renewed) {
     pEp_identity* alice_from = new_identity("pep.test.alice@pep-project.org", alice_fpr, PEP_OWN_USERID, "Alice Cooper");
 
     PEP_STATUS status = set_own_key(session, alice_from, alice_fpr);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // Ok, so I want to make sure we make an entry, so I'll try to decrypt the message WITH
     // the expired key:
@@ -223,7 +223,7 @@ TEST_F(Engine463Test, check_engine_463_sender_expired_and_renewed) {
     msg2->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
 
     status = outgoing_message_rating(session, msg2, &rating);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(rating , PEP_rating_reliable);
 
     free_message(msg2);

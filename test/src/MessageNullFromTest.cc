@@ -67,14 +67,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -154,7 +154,7 @@ TEST_F(MessageNullFromTest, check_message_null_from_encrypted_not_signed) {
                                              &flags,
                                              &modified_src);
     ASSERT_EQ(status , PEP_DECRYPTED);
-    ASSERT_NE(mime_plaintext, nullptr);
+    ASSERT_NOTNULL(mime_plaintext);
 }
 
 TEST_F(MessageNullFromTest, check_message_null_from_encrypted_and_signed) {
@@ -173,6 +173,6 @@ TEST_F(MessageNullFromTest, check_message_null_from_encrypted_and_signed) {
                                              &rating,
                                              &flags,
                                              &modified_src);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(mime_plaintext, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(mime_plaintext);
 }

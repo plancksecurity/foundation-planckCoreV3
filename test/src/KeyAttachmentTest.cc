@@ -57,14 +57,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -101,21 +101,21 @@ TEST_F(KeyAttachmentTest, check_key_attach_inline) {
     message* dec_msg = NULL;
 
     PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
 #if KEYS_STAY_ATTACHED
-    ASSERT_NE(dec_msg->attachments , nullptr);
-    ASSERT_EQ(dec_msg->attachments->next, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments );
+    ASSERT_NULL(dec_msg->attachments->next);
     ASSERT_EQ(strncmp(dec_msg->attachments->value, "-----BEGIN PGP PUBLIC KEY BLOCK-----", strlen("-----BEGIN PGP PUBLIC KEY BLOCK-----")), 0);
     ASSERT_STREQ(dec_msg->attachments->mime_type, "application/octet-stream");
 #else
-    ASSERT_NE(dec_msg, nullptr);
-    ASSERT_EQ(dec_msg->attachments , nullptr);
+    ASSERT_NOTNULL(dec_msg);
+    ASSERT_NULL(dec_msg->attachments );
 #endif    
     free_message(enc_msg);
     free_message(dec_msg);
@@ -128,28 +128,28 @@ TEST_F(KeyAttachmentTest, check_key_plus_encr_att_inline) {
     message* dec_msg = NULL;
 
     PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
-    ASSERT_NE(dec_msg, nullptr);
+    ASSERT_NOTNULL(dec_msg);
 #if KEYS_STAY_ATTACHED
-    ASSERT_NE(dec_msg->attachments, nullptr);
-    ASSERT_NE(dec_msg->attachments->next , nullptr);
-    ASSERT_NE(dec_msg->attachments->next->filename, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments);
+    ASSERT_NOTNULL(dec_msg->attachments->next );
+    ASSERT_NOTNULL(dec_msg->attachments->next->filename);
     ASSERT_STREQ(dec_msg->attachments->next->filename, "file://cheese.txt.gpg");
-    ASSERT_NE(dec_msg->attachments->next->mime_type, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments->next->mime_type);
     ASSERT_STREQ(dec_msg->attachments->next->mime_type, "application/octet-stream");
 #else
-    ASSERT_NE(dec_msg->attachments, nullptr);
-    ASSERT_EQ(dec_msg->attachments->next , nullptr);
-    ASSERT_NE(dec_msg->attachments->filename, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments);
+    ASSERT_NULL(dec_msg->attachments->next );
+    ASSERT_NOTNULL(dec_msg->attachments->filename);
     // TODO: is there a missing update to resource IDs in decrypt in parts?
     ASSERT_STREQ(dec_msg->attachments->filename, "file://cheese.txt.gpg");
-    ASSERT_NE(dec_msg->attachments->mime_type, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments->mime_type);
     ASSERT_STREQ(dec_msg->attachments->mime_type, "application/octet-stream");
 #endif    
     free_message(enc_msg);
@@ -163,30 +163,30 @@ TEST_F(KeyAttachmentTest, check_encr_att_plus_key_inline) {
     message* dec_msg = NULL;
 
     PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(dec_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(dec_msg);
  #if KEYS_STAY_ATTACHED
-    ASSERT_NE(dec_msg->attachments, nullptr);
-    ASSERT_NE(dec_msg->attachments->next, nullptr);
-    ASSERT_EQ(dec_msg->attachments->next->next , nullptr);
-    ASSERT_NE(dec_msg->attachments->filename, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments);
+    ASSERT_NOTNULL(dec_msg->attachments->next);
+    ASSERT_NULL(dec_msg->attachments->next->next );
+    ASSERT_NOTNULL(dec_msg->attachments->filename);
     // TODO: is there a missing update to resource IDs in decrypt in parts?
     ASSERT_STREQ(dec_msg->attachments->filename, "file://cheese.txt.gpg");
-    ASSERT_NE(dec_msg->attachments->mime_type, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments->mime_type);
     ASSERT_STREQ(dec_msg->attachments->mime_type, "application/octet-stream");
  #else   
-    ASSERT_NE(dec_msg->attachments, nullptr);
-    ASSERT_EQ(dec_msg->attachments->next , nullptr);
-    ASSERT_NE(dec_msg->attachments->filename, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments);
+    ASSERT_NULL(dec_msg->attachments->next );
+    ASSERT_NOTNULL(dec_msg->attachments->filename);
     // TODO: is there a missing update to resource IDs in decrypt in parts?
     ASSERT_STREQ(dec_msg->attachments->filename, "file://cheese.txt.gpg");
-    ASSERT_NE(dec_msg->attachments->mime_type, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments->mime_type);
     ASSERT_STREQ(dec_msg->attachments->mime_type, "application/octet-stream");
 #endif    
     free_message(enc_msg);
@@ -200,30 +200,30 @@ TEST_F(KeyAttachmentTest, check_key_plus_unencr_att_inline) {
     message* dec_msg = NULL;
 
     PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
-    ASSERT_NE(dec_msg, nullptr);
+    ASSERT_NOTNULL(dec_msg);
  #if KEYS_STAY_ATTACHED
-    ASSERT_NE(dec_msg->attachments, nullptr);
-    ASSERT_NE(dec_msg->attachments->next , nullptr);    
-    ASSERT_EQ(dec_msg->attachments->next->next , nullptr);
-    ASSERT_NE(dec_msg->attachments->next->filename, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments);
+    ASSERT_NOTNULL(dec_msg->attachments->next );    
+    ASSERT_NULL(dec_msg->attachments->next->next );
+    ASSERT_NOTNULL(dec_msg->attachments->next->filename);
     // TODO: is there a missing update to resource IDs in decrypt in parts?
     ASSERT_STREQ(dec_msg->attachments->next->filename, "file://cheese.txt");
-    ASSERT_NE(dec_msg->attachments->next->mime_type, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments->next->mime_type);
     ASSERT_STREQ(dec_msg->attachments->next->mime_type, "application/octet-stream");
  #else    
-    ASSERT_NE(dec_msg->attachments, nullptr);
-    ASSERT_EQ(dec_msg->attachments->next , nullptr);
-    ASSERT_NE(dec_msg->attachments->filename, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments);
+    ASSERT_NULL(dec_msg->attachments->next );
+    ASSERT_NOTNULL(dec_msg->attachments->filename);
     // TODO: is there a missing update to resource IDs in decrypt in parts?
     ASSERT_STREQ(dec_msg->attachments->filename, "file://cheese.txt");
-    ASSERT_NE(dec_msg->attachments->mime_type, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments->mime_type);
     ASSERT_STREQ(dec_msg->attachments->mime_type, "application/octet-stream");
 #endif    
     free_message(enc_msg);
@@ -237,25 +237,25 @@ TEST_F(KeyAttachmentTest, check_unencr_att_plus_key_inline) {
     message* dec_msg = NULL;
 
     PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(dec_msg, nullptr);
-    ASSERT_NE(dec_msg->attachments, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(dec_msg);
+    ASSERT_NOTNULL(dec_msg->attachments);
 #if KEYS_STAY_ATTACHED
-    ASSERT_NE(dec_msg->attachments->next , nullptr);
-    ASSERT_EQ(dec_msg->attachments->next->next , nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments->next );
+    ASSERT_NULL(dec_msg->attachments->next->next );
 #else    
-    ASSERT_EQ(dec_msg->attachments->next , nullptr);
+    ASSERT_NULL(dec_msg->attachments->next );
 #endif    
-    ASSERT_NE(dec_msg->attachments->filename, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments->filename);
     // TODO: is there a missing update to resource IDs in decrypt in parts?
     ASSERT_STREQ(dec_msg->attachments->filename, "file://cheese.txt");
-    ASSERT_NE(dec_msg->attachments->mime_type, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments->mime_type);
     ASSERT_STREQ(dec_msg->attachments->mime_type, "application/octet-stream");
     free_message(enc_msg);
     free_message(dec_msg);
@@ -272,18 +272,18 @@ TEST_F(KeyAttachmentTest, check_many_keys_inline) {
     message* dec_msg = NULL;
 
     PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
-    ASSERT_NE(dec_msg, nullptr);
+    ASSERT_NOTNULL(dec_msg);
 #if KEYS_STAY_ATTACHED
-    ASSERT_NE(dec_msg->attachments, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments);
 #else    
-    ASSERT_EQ(dec_msg->attachments , nullptr);
+    ASSERT_NULL(dec_msg->attachments );
 #endif    
     free_message(enc_msg);
     free_message(dec_msg);
@@ -296,27 +296,27 @@ TEST_F(KeyAttachmentTest, check_many_keys_w_encr_file_inline) {
     message* dec_msg = NULL;
 
     PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(dec_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(dec_msg);
 #if KEYS_STAY_ATTACHED
     // Ok, this is a little ridiculous, so FIXME, but if we're even going to bother 
     // until we decide to delete keys again, we need to check these are all intact.
     // This is a placeholder so we can keep moving.
-    ASSERT_NE(dec_msg->attachments, nullptr);
-    ASSERT_NE(dec_msg->attachments->next , nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments);
+    ASSERT_NOTNULL(dec_msg->attachments->next );
 #else
-    ASSERT_NE(dec_msg->attachments, nullptr);
-    ASSERT_EQ(dec_msg->attachments->next , nullptr);
-    ASSERT_NE(dec_msg->attachments->filename, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments);
+    ASSERT_NULL(dec_msg->attachments->next );
+    ASSERT_NOTNULL(dec_msg->attachments->filename);
     // TODO: is there a missing update to resource IDs in decrypt in parts?
     ASSERT_STREQ(dec_msg->attachments->filename, "file://cheese.txt.gpg");
-    ASSERT_NE(dec_msg->attachments->mime_type, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments->mime_type);
     ASSERT_STREQ(dec_msg->attachments->mime_type, "application/octet-stream");
 #endif    
     free_message(enc_msg);
@@ -330,27 +330,27 @@ TEST_F(KeyAttachmentTest, check_many_keys_w_unencr_file_inline) {
     message* dec_msg = NULL;
 
     PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(dec_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(dec_msg);
 #if KEYS_STAY_ATTACHED
     // Ok, this is a little ridiculous, so FIXME, but if we're even going to bother 
     // until we decide to delete keys again, we need to check these are all intact.
     // This is a placeholder so we can keep moving.
-    ASSERT_NE(dec_msg->attachments, nullptr);
-    ASSERT_NE(dec_msg->attachments->next , nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments);
+    ASSERT_NOTNULL(dec_msg->attachments->next );
 #else
-    ASSERT_NE(dec_msg->attachments, nullptr);
-    ASSERT_EQ(dec_msg->attachments->next , nullptr);
-    ASSERT_NE(dec_msg->attachments->filename, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments);
+    ASSERT_NULL(dec_msg->attachments->next );
+    ASSERT_NOTNULL(dec_msg->attachments->filename);
     // TODO: is there a missing update to resource IDs in decrypt in parts?
     ASSERT_STREQ(dec_msg->attachments->filename, "file://barky.txt");
-    ASSERT_NE(dec_msg->attachments->mime_type, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments->mime_type);
     ASSERT_STREQ(dec_msg->attachments->mime_type, "application/octet-stream");
 #endif    
     free_message(enc_msg);
@@ -364,14 +364,14 @@ TEST_F(KeyAttachmentTest, check_many_keys_with_many_files_inline) {
     message* dec_msg = NULL;
 
     PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(dec_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(dec_msg);
 
     // FIXME: I think this was part of something that didn't translate to google test.
     const char* not_pres = "Encrypted attachment not preserved.";
@@ -399,9 +399,9 @@ TEST_F(KeyAttachmentTest, check_many_keys_with_many_files_inline) {
     output_stream << "Don't believe the hype, KeyAttachmentTests aren't going much until trustsync is in" << endl;
 #else
     while (it != v.end()) {
-        ASSERT_NE(curr_att, nullptr);
-        ASSERT_NE(curr_att->filename, nullptr);
-        ASSERT_NE(curr_att->mime_type, nullptr);
+        ASSERT_NOTNULL(curr_att);
+        ASSERT_NOTNULL(curr_att->filename);
+        ASSERT_NOTNULL(curr_att->mime_type);
         output_stream << (*it).first << endl;
         ASSERT_STREQ(curr_att->filename, (*it).first.c_str());
         ASSERT_STREQ(curr_att->mime_type, (*it).second.c_str());
@@ -420,22 +420,22 @@ TEST_F(KeyAttachmentTest, check_key_attach_OpenPGP) {
     message* dec_msg = NULL;
 
     PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(dec_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(dec_msg);
 #if KEYS_STAY_ATTACHED
     // Ok, this is a little ridiculous, so FIXME, but if we're even going to bother 
     // until we decide to delete keys again, we need to check these are all intact.
     // This is a placeholder so we can keep moving.
-    ASSERT_NE(dec_msg->attachments, nullptr);
-    ASSERT_EQ(dec_msg->attachments->next , nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments);
+    ASSERT_NULL(dec_msg->attachments->next );
 #else
-    ASSERT_EQ(dec_msg->attachments , nullptr);
+    ASSERT_NULL(dec_msg->attachments );
 #endif
     free_message(enc_msg);
     free_message(dec_msg);
@@ -448,27 +448,27 @@ TEST_F(KeyAttachmentTest, check_key_plus_encr_att_OpenPGP) {
     message* dec_msg = NULL;
 
     PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
-    ASSERT_NE(dec_msg, nullptr);
+    ASSERT_NOTNULL(dec_msg);
 #if KEYS_STAY_ATTACHED
-    ASSERT_NE(dec_msg->attachments, nullptr);
-    ASSERT_NE(dec_msg->attachments->next , nullptr);
-    ASSERT_NE(dec_msg->attachments->next->filename, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments);
+    ASSERT_NOTNULL(dec_msg->attachments->next );
+    ASSERT_NOTNULL(dec_msg->attachments->next->filename);
     ASSERT_STREQ(dec_msg->attachments->next->filename, "file://cheese.txt.gpg");
-    ASSERT_NE(dec_msg->attachments->next->mime_type, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments->next->mime_type);
     ASSERT_STREQ(dec_msg->attachments->next->mime_type, "application/octet-stream");
 #else
-    ASSERT_NE(dec_msg->attachments, nullptr);
-    ASSERT_EQ(dec_msg->attachments->next , nullptr);
-    ASSERT_NE(dec_msg->attachments->filename, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments);
+    ASSERT_NULL(dec_msg->attachments->next );
+    ASSERT_NOTNULL(dec_msg->attachments->filename);
     ASSERT_STREQ(dec_msg->attachments->filename, "file://cheese.txt.gpg");
-    ASSERT_NE(dec_msg->attachments->mime_type, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments->mime_type);
     ASSERT_STREQ(dec_msg->attachments->mime_type, "application/octet-stream");
 #endif    
     free_message(enc_msg);
@@ -482,29 +482,29 @@ TEST_F(KeyAttachmentTest, check_encr_att_plus_key_OpenPGP) {
     message* dec_msg = NULL;
 
     PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
-    ASSERT_NE(dec_msg, nullptr);
+    ASSERT_NOTNULL(dec_msg);
  #if KEYS_STAY_ATTACHED
-    ASSERT_NE(dec_msg->attachments, nullptr);
-    ASSERT_NE(dec_msg->attachments->next, nullptr);
-    ASSERT_EQ(dec_msg->attachments->next->next , nullptr);
-    ASSERT_NE(dec_msg->attachments->filename, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments);
+    ASSERT_NOTNULL(dec_msg->attachments->next);
+    ASSERT_NULL(dec_msg->attachments->next->next );
+    ASSERT_NOTNULL(dec_msg->attachments->filename);
     // TODO: is there a missing update to resource IDs in decrypt in parts?
     ASSERT_STREQ(dec_msg->attachments->filename, "file://cheese.txt.gpg");
-    ASSERT_NE(dec_msg->attachments->mime_type, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments->mime_type);
     ASSERT_STREQ(dec_msg->attachments->mime_type, "application/octet-stream");
  #else   
-    ASSERT_NE(dec_msg->attachments, nullptr);
-    ASSERT_EQ(dec_msg->attachments->next , nullptr);
-    ASSERT_NE(dec_msg->attachments->filename, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments);
+    ASSERT_NULL(dec_msg->attachments->next );
+    ASSERT_NOTNULL(dec_msg->attachments->filename);
     ASSERT_STREQ(dec_msg->attachments->filename, "file://cheese.txt.gpg");
-    ASSERT_NE(dec_msg->attachments->mime_type, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments->mime_type);
     ASSERT_STREQ(dec_msg->attachments->mime_type, "application/octet-stream");
 #endif    
     free_message(enc_msg);
@@ -519,29 +519,29 @@ TEST_F(KeyAttachmentTest, check_key_plus_unencr_att_OpenPGP) {
     message* dec_msg = NULL;
 
     PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(dec_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(dec_msg);
  #if KEYS_STAY_ATTACHED
-    ASSERT_NE(dec_msg->attachments, nullptr);
-    ASSERT_NE(dec_msg->attachments->next , nullptr);    
-    ASSERT_EQ(dec_msg->attachments->next->next , nullptr);
-    ASSERT_NE(dec_msg->attachments->next->filename, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments);
+    ASSERT_NOTNULL(dec_msg->attachments->next );    
+    ASSERT_NULL(dec_msg->attachments->next->next );
+    ASSERT_NOTNULL(dec_msg->attachments->next->filename);
     // TODO: is there a missing update to resource IDs in decrypt in parts?
     ASSERT_STREQ(dec_msg->attachments->next->filename, "file://cheese.txt");
-    ASSERT_NE(dec_msg->attachments->next->mime_type, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments->next->mime_type);
     ASSERT_STREQ(dec_msg->attachments->next->mime_type, "text/plain");
  #else    
-    ASSERT_NE(dec_msg->attachments, nullptr);
-    ASSERT_EQ(dec_msg->attachments->next , nullptr);
-    ASSERT_NE(dec_msg->attachments->filename, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments);
+    ASSERT_NULL(dec_msg->attachments->next );
+    ASSERT_NOTNULL(dec_msg->attachments->filename);
     ASSERT_STREQ(dec_msg->attachments->filename, "file://cheese.txt");
-    ASSERT_NE(dec_msg->attachments->mime_type, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments->mime_type);
     ASSERT_STREQ(dec_msg->attachments->mime_type, "text/plain");
 #endif    
     free_message(enc_msg);
@@ -555,24 +555,24 @@ TEST_F(KeyAttachmentTest, check_unencr_att_plus_key_OpenPGP) {
     message* dec_msg = NULL;
 
     PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
-    ASSERT_NE(dec_msg, nullptr);    
-    ASSERT_NE(dec_msg->attachments, nullptr);
+    ASSERT_NOTNULL(dec_msg);    
+    ASSERT_NOTNULL(dec_msg->attachments);
 #if KEYS_STAY_ATTACHED
-    ASSERT_NE(dec_msg->attachments->next , nullptr);
-    ASSERT_EQ(dec_msg->attachments->next->next , nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments->next );
+    ASSERT_NULL(dec_msg->attachments->next->next );
 #else    
-    ASSERT_EQ(dec_msg->attachments->next , nullptr);
+    ASSERT_NULL(dec_msg->attachments->next );
 #endif    
-    ASSERT_NE(dec_msg->attachments->filename, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments->filename);
     ASSERT_STREQ(dec_msg->attachments->filename, "file://cheese.txt");
-    ASSERT_NE(dec_msg->attachments->mime_type, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments->mime_type);
     ASSERT_STREQ(dec_msg->attachments->mime_type, "text/plain");
     free_message(enc_msg);
     free_message(dec_msg);
@@ -585,18 +585,18 @@ TEST_F(KeyAttachmentTest, check_many_keys_OpenPGP) {
     message* dec_msg = NULL;
 
     PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
-    ASSERT_NE(dec_msg, nullptr);
+    ASSERT_NOTNULL(dec_msg);
 #if KEYS_STAY_ATTACHED
-    ASSERT_NE(dec_msg->attachments, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments);
 #else    
-    ASSERT_EQ(dec_msg->attachments , nullptr);
+    ASSERT_NULL(dec_msg->attachments );
 #endif    
     free_message(enc_msg);
     free_message(dec_msg);
@@ -609,25 +609,25 @@ TEST_F(KeyAttachmentTest, check_many_keys_w_encr_file_OpenPGP) {
     message* dec_msg = NULL;
 
     PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
-    ASSERT_NE(dec_msg, nullptr);
-    ASSERT_NE(dec_msg->attachments, nullptr);
+    ASSERT_NOTNULL(dec_msg);
+    ASSERT_NOTNULL(dec_msg->attachments);
 #if KEYS_STAY_ATTACHED
     // Ok, this is a little ridiculous, so FIXME, but if we're even going to bother 
     // until we decide to delete keys again, we need to check these are all intact.
     // This is a placeholder so we can keep moving.
-    ASSERT_NE(dec_msg->attachments->next , nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments->next );
 #else
-    ASSERT_EQ(dec_msg->attachments->next , nullptr);
-    ASSERT_NE(dec_msg->attachments->filename, nullptr);
+    ASSERT_NULL(dec_msg->attachments->next );
+    ASSERT_NOTNULL(dec_msg->attachments->filename);
     ASSERT_STREQ(dec_msg->attachments->filename, "file://cheese.txt.gpg");
-    ASSERT_NE(dec_msg->attachments->mime_type, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments->mime_type);
     ASSERT_STREQ(dec_msg->attachments->mime_type, "application/octet-stream");
 #endif    
     free_message(enc_msg);
@@ -641,25 +641,25 @@ TEST_F(KeyAttachmentTest, check_many_keys_w_unencr_file_OpenPGP) {
     message* dec_msg = NULL;
 
     PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
-    ASSERT_NE(dec_msg, nullptr);
-    ASSERT_NE(dec_msg->attachments, nullptr);
+    ASSERT_NOTNULL(dec_msg);
+    ASSERT_NOTNULL(dec_msg->attachments);
 #if KEYS_STAY_ATTACHED
     // Ok, this is a little ridiculous, so FIXME, but if we're even going to bother 
     // until we decide to delete keys again, we need to check these are all intact.
     // This is a placeholder so we can keep moving.
-    ASSERT_NE(dec_msg->attachments->next , nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments->next );
 #else
-    ASSERT_EQ(dec_msg->attachments->next , nullptr);
-    ASSERT_NE(dec_msg->attachments->filename, nullptr);
+    ASSERT_NULL(dec_msg->attachments->next );
+    ASSERT_NOTNULL(dec_msg->attachments->filename);
     ASSERT_STREQ(dec_msg->attachments->filename, "file://cheese.txt");
-    ASSERT_NE(dec_msg->attachments->mime_type, nullptr);
+    ASSERT_NOTNULL(dec_msg->attachments->mime_type);
     ASSERT_STREQ(dec_msg->attachments->mime_type, "text/plain");
 #endif
     free_message(enc_msg);
@@ -673,14 +673,14 @@ TEST_F(KeyAttachmentTest, check_many_keys_w_many_files_OpenPGP) {
     message* dec_msg = NULL;
 
     PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(dec_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(dec_msg);
 
     const char* not_pres = "Encrypted attachment not preserved.";
     const char* left_att = "Decryption left attachments it should have deleted.";
@@ -707,9 +707,9 @@ TEST_F(KeyAttachmentTest, check_many_keys_w_many_files_OpenPGP) {
     output_stream << "Don't believe the hype, KeyAttachmentTests aren't going much until trustsync is in" << endl;
 #else
     while (it != v.end()) {
-        ASSERT_NE(curr_att, nullptr);
-        ASSERT_NE(curr_att->filename, nullptr);
-        ASSERT_NE(curr_att->mime_type, nullptr);
+        ASSERT_NOTNULL(curr_att);
+        ASSERT_NOTNULL(curr_att->filename);
+        ASSERT_NOTNULL(curr_att->mime_type);
         ASSERT_STREQ(curr_att->filename, (*it).first.c_str());
         ASSERT_STREQ(curr_att->mime_type, (*it).second.c_str());
         it++;

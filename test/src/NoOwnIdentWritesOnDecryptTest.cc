@@ -54,14 +54,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -118,7 +118,7 @@ TEST_F(NoOwnIdentWritesOnDecryptTest, check_no_own_ident_writes_on_decrypt) {
     message* enc_msg = NULL;
 
     PEP_STATUS status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     free_message(msg);
     enc_msg->dir = PEP_dir_incoming;
     _to_decrypt = enc_msg;
@@ -128,18 +128,18 @@ TEST_F(NoOwnIdentWritesOnDecryptTest, check_no_own_ident_writes_on_decrypt) {
 
     // New Engine, new test case:
     engine = new Engine(test_path);
-    ASSERT_NE(engine, nullptr);
+    ASSERT_NOTNULL(engine);
 
     // Ok, let's initialize test directories etc.
     engine->prep(NULL, NULL, NULL, init_files);
 
     // Ok, try to start this bugger.
     engine->start();
-    ASSERT_NE(engine->session, nullptr);
+    ASSERT_NOTNULL(engine->session);
     session = engine->session;
 
     // Next test: check_address_only_no_overwrite) {
-    ASSERT_NE(_to_decrypt, nullptr);
+    ASSERT_NOTNULL(_to_decrypt);
     message* copy = message_dup(_to_decrypt);
 
     free_identity(copy->from);
@@ -153,9 +153,9 @@ TEST_F(NoOwnIdentWritesOnDecryptTest, check_no_own_ident_writes_on_decrypt) {
     const char* bob_fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
     pEp_identity* me = new_identity("pep.test.bob@pep-project.org", NULL, PEP_OWN_USERID, bob_name);
     status = set_own_key(session, me, bob_fpr);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     status = myself(session, me);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     free_identity(me);
     me = NULL;
 
@@ -174,13 +174,13 @@ TEST_F(NoOwnIdentWritesOnDecryptTest, check_no_own_ident_writes_on_decrypt) {
     PEP_rating rating = PEP_rating_undefined;
 
     status = decrypt_message(session, copy, &dec_msg, &keylist, &rating, &flags);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_STREQ(dec_msg->to->next->ident->username, "Hot Bob");
 
     // Make sure Alice calling Bob hot doesn't infiltrate his DB
     status = get_identity(session, "pep.test.bob@pep-project.org", PEP_OWN_USERID, &me);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(me, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(me);
     ASSERT_STREQ(me->username, bob_name);
     ASSERT_STREQ(me->fpr, bob_fpr);
     free_identity(me);
@@ -193,18 +193,18 @@ TEST_F(NoOwnIdentWritesOnDecryptTest, check_no_own_ident_writes_on_decrypt) {
 
     // New Engine, new test case:
     engine = new Engine(test_path);
-    ASSERT_NE(engine, nullptr);
+    ASSERT_NOTNULL(engine);
 
     // Ok, let's initialize test directories etc.
     engine->prep(NULL, NULL, NULL, init_files);
 
     // Ok, try to start this bugger.
     engine->start();
-    ASSERT_NE(engine->session, nullptr);
+    ASSERT_NOTNULL(engine->session);
     session = engine->session;
 
     // Next test case: check_full_info_no_overwrite) {
-    ASSERT_NE(_to_decrypt, nullptr);
+    ASSERT_NOTNULL(_to_decrypt);
     copy = message_dup(_to_decrypt);
 
     free_identity(copy->from);
@@ -216,9 +216,9 @@ TEST_F(NoOwnIdentWritesOnDecryptTest, check_no_own_ident_writes_on_decrypt) {
 
     me = new_identity("pep.test.bob@pep-project.org", NULL, PEP_OWN_USERID, bob_name);
     status = set_own_key(session, me, bob_fpr);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     status = myself(session, me);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     free_identity(me);
     me = NULL;
 
@@ -235,13 +235,13 @@ TEST_F(NoOwnIdentWritesOnDecryptTest, check_no_own_ident_writes_on_decrypt) {
     rating = PEP_rating_undefined;
 
     status = decrypt_message(session, copy, &dec_msg, &keylist, &rating, &flags);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_STREQ(dec_msg->to->next->ident->username, "Hot Bob");
 
     // Make sure Alice calling Bob hot doesn't infiltrate his DB
     status = get_identity(session, "pep.test.bob@pep-project.org", PEP_OWN_USERID, &me);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(me, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(me);
     ASSERT_STREQ(me->username, bob_name);
     ASSERT_STREQ(me->fpr, bob_fpr);
     free_identity(me);

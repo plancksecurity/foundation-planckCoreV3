@@ -165,14 +165,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -215,7 +215,7 @@ TEST_F(LotsOfKeysTest, check) {
 
     status = config_cipher_suite(session, PEP_CIPHER_SUITE_CV25519);
     PEP_STATUS expected_value = PEP_STATUS_OK;
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     for (int key = 0; key < N; key ++) {
         // Create key
@@ -224,7 +224,7 @@ TEST_F(LotsOfKeysTest, check) {
 
         ids[key] = new_identity(strdup(email), NULL, NULL, "Test User");
         status = update_identity(session, ids[key]);
-        ASSERT_EQ(status , PEP_STATUS_OK);
+        ASSERT_OK;
 
         if (key == 0) {
             printf("\nRaw identity:\n");
@@ -235,7 +235,7 @@ TEST_F(LotsOfKeysTest, check) {
         }
 
         status = generate_keypair(session, ids[key]);
-        ASSERT_EQ(status , PEP_STATUS_OK);
+        ASSERT_OK;
 
         if (key == 0) {
             printf("\nAfter generating a key:\n");
@@ -246,7 +246,7 @@ TEST_F(LotsOfKeysTest, check) {
         }
 
         status = set_identity(session, ids[key]);
-        ASSERT_EQ(status , PEP_STATUS_OK);
+        ASSERT_OK;
 
         if (key == 0) {
             printf("\nSetting identity:\n");
@@ -315,7 +315,7 @@ TEST_F(LotsOfKeysTest, check) {
                 status = get_identity(session, ids[i]->address,
                                       ids[i]->user_id, &id);
                 ASSERT_EQ(status, PEP_STATUS_OK);
-                ASSERT_NE(id->fpr, nullptr);
+                ASSERT_NOTNULL(id->fpr);
                 ASSERT_STREQ(ids[i]->fpr, id->fpr);
                 free_identity(id);
 

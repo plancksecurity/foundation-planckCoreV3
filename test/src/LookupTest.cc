@@ -54,14 +54,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -102,7 +102,7 @@ TEST_F(LookupTest, check_lookup) {
     pEp_identity* hans = new_identity(expected_address, NULL, userid, username);
 
     PEP_STATUS status = set_identity(session, hans);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     free_identity(hans);
 
     // Lookup using different spellings of the email address.
@@ -126,10 +126,10 @@ TEST_F(LookupTest, check_lookup) {
 
         pEp_identity *hans = new_identity(address, NULL, NULL, NULL);
         PEP_STATUS status = update_identity(session, hans);
-        ASSERT_EQ(status , PEP_STATUS_OK);
+        ASSERT_OK;
 
         // We should always get the same fingerprint.
-        ASSERT_NE(hans->fpr, nullptr);
+        ASSERT_NOTNULL(hans->fpr);
         // Doublecheck FIXME (autogen)
         ASSERT_STREQ(hans->fpr, fpr);
 
@@ -137,8 +137,8 @@ TEST_F(LookupTest, check_lookup) {
         // the engine doesn't have the same concept of equality (as of
         // 2019.5, this is the case: pgp_sequoia.c does puny code
         // normalization, but the engine doesn't).
-        ASSERT_NE((hans->username), nullptr);
-        ASSERT_NE((hans->user_id), nullptr);
+        ASSERT_NOTNULL((hans->username));
+        ASSERT_NOTNULL((hans->user_id));
 
         // We should get the address that we looked up; no
         // normalization is done.

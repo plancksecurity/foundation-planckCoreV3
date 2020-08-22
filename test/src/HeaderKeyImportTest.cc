@@ -53,14 +53,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -732,12 +732,12 @@ TEST_F(HeaderKeyImportTest, check_header_key_import) {
     char* modified_src = NULL;
     PEP_STATUS status = MIME_decrypt_message(session, message.c_str(), message.size(), &dec_msg, &keylist, &rating, &flags, &modified_src);
     ASSERT_EQ(rating , PEP_rating_reliable);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     pEp_identity* alice_check = new_identity("pep.test.alice@pep-project.org", NULL, NULL, "pEp Test Alice");
     status = update_identity(session, alice_check);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(alice_check->fpr, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(alice_check->fpr);
     ASSERT_STREQ(alice_check->fpr, alice_fpr);
     free(dec_msg);
     free(modified_src);

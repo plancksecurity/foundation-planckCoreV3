@@ -55,14 +55,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -154,7 +154,7 @@ TEST_F(BlacklistAcceptNewKeyTest, check_blacklist_accept_new_key) {
     PEP_decrypt_flags_t flags = 0;
 
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
 
     // Key election is gone, but getting it via mail should set a default!

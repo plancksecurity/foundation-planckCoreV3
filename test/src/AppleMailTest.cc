@@ -55,14 +55,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -125,8 +125,8 @@ TEST_F(AppleMailTest, check_apple_mail_text_signed_encrypted) {
 
     message* final_ptr = nullptr;
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(msg_ptr, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(msg_ptr);
 
     update_identity(session, msg_ptr->from);
     update_identity(session, msg_ptr->to->ident);
@@ -192,7 +192,7 @@ TEST_F(AppleMailTest, check_apple_mail_html_signed_encrypted) {
 
     status = mime_decode_message(mailtext2.c_str(), mailtext2.length(), &msg_ptr, NULL);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(msg_ptr, nullptr);
+    ASSERT_NOTNULL(msg_ptr);
     final_ptr = msg_ptr;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;

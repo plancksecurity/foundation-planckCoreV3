@@ -55,14 +55,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -132,8 +132,8 @@ TEST_F(LeastColorGroupTest, check_least_color_group) {
     PEP_decrypt_flags_t flags;
 
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(msg_ptr, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(msg_ptr);
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);

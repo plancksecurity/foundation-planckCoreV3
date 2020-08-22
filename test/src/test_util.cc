@@ -766,10 +766,12 @@ pEp_error:
 
 #endif
 
-PEP_STATUS set_valid_default_fpr(PEP_SESSION session, pEp_identity* ident) {
+PEP_STATUS set_default_fpr_for_test(PEP_SESSION session, pEp_identity* ident,  bool unconditional) {
     if (EMPTYSTR(ident->fpr))
         return PEP_ILLEGAL_VALUE;
-    PEP_STATUS status = validate_fpr(session, ident, true, true, true);
+    PEP_STATUS status = PEP_STATUS_OK;
+    if (!unconditional)
+        validate_fpr(session, ident, true, true, true);
     if (status == PEP_STATUS_OK)
         status = set_identity(session, ident);            
     else { 
@@ -779,12 +781,12 @@ PEP_STATUS set_valid_default_fpr(PEP_SESSION session, pEp_identity* ident) {
     return status;
 }
 
-PEP_STATUS set_fpr_preserve_ident(PEP_SESSION session, const pEp_identity* ident, const char* fpr) {
+PEP_STATUS set_fpr_preserve_ident(PEP_SESSION session, const pEp_identity* ident, const char* fpr, bool valid_only) {
     if (!ident || EMPTYSTR(fpr))
         return PEP_ILLEGAL_VALUE;
     pEp_identity* clone = identity_dup(ident);
     clone->fpr = strdup(fpr);
-    PEP_STATUS status = set_valid_default_fpr(session, clone);
+    PEP_STATUS status = set_default_fpr_for_test(session, clone, !valid_only);
     free_identity(clone);
     return status;
 }

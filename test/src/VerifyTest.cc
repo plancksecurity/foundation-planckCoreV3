@@ -50,14 +50,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -101,14 +101,14 @@ TEST_F(VerifyTest, check_revoked_tpk) {
                                            &keylist, NULL);
 
     ASSERT_EQ(status , PEP_DECRYPTED_AND_VERIFIED);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_NOTNULL(keylist);
     // Signer is mary.
-    ASSERT_NE(keylist->value, nullptr);
+    ASSERT_NOTNULL(keylist->value);
     output_stream << "fpr: " << mary_fpr << "; got: " << keylist->value << endl;
     ASSERT_STREQ(mary_fpr, keylist->value);
     // Recipient is mary.
-    ASSERT_NE(keylist->next, nullptr);
-    ASSERT_NE(keylist->next->value, nullptr);
+    ASSERT_NOTNULL(keylist->next);
+    ASSERT_NOTNULL(keylist->next->value);
     ASSERT_STREQ(mary_fpr, keylist->next->value);
     // Content is returned.
     ASSERT_STREQ(plaintext, "tu was!\n");
@@ -127,12 +127,12 @@ TEST_F(VerifyTest, check_revoked_tpk) {
 
     // Now it should fail.
     ASSERT_EQ(status , PEP_VERIFY_SIGNER_KEY_REVOKED);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_NOTNULL(keylist);
     // No signer.
     ASSERT_STREQ(keylist->value, "");
     // Recipient is mary.
-    ASSERT_NE(keylist->next, nullptr);
-    ASSERT_NE(keylist->next->value, nullptr);
+    ASSERT_NOTNULL(keylist->next);
+    ASSERT_NOTNULL(keylist->next->value);
     ASSERT_STREQ(mary_fpr, keylist->next->value);
     // Content is returned.
     ASSERT_STREQ(plaintext, "tu was!\n");
@@ -151,10 +151,10 @@ TEST_F(VerifyTest, check_revoked_tpk) {
 
     // Now it should fail.
     ASSERT_EQ(status , PEP_VERIFY_SIGNER_KEY_REVOKED);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_NOTNULL(keylist);
     // No signer.
     ASSERT_STREQ(keylist->value, "");
-    ASSERT_EQ(keylist->next, nullptr);
+    ASSERT_NULL(keylist->next);
 }
 
 TEST_F(VerifyTest, check_revoked_signing_key) {
@@ -176,12 +176,12 @@ TEST_F(VerifyTest, check_revoked_signing_key) {
 
     // It should fail.
     ASSERT_EQ(status , PEP_VERIFY_SIGNER_KEY_REVOKED);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_NOTNULL(keylist);
     // No signer.
     ASSERT_STREQ(keylist->value, "");
     // Recipient is mary.
-    ASSERT_NE(keylist->next, nullptr);
-    ASSERT_NE(keylist->next->value, nullptr);
+    ASSERT_NOTNULL(keylist->next);
+    ASSERT_NOTNULL(keylist->next->value);
     ASSERT_STREQ(mary_fpr, keylist->next->value);
     // Content is returned.
     ASSERT_STREQ(plaintext, "tu was!\n");
@@ -200,10 +200,10 @@ TEST_F(VerifyTest, check_revoked_signing_key) {
 
     // Now it should fail.
     ASSERT_EQ(status , PEP_VERIFY_SIGNER_KEY_REVOKED);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_NOTNULL(keylist);
     // No signer.
     ASSERT_STREQ(keylist->value, "");
-    ASSERT_EQ(keylist->next, nullptr);
+    ASSERT_NULL(keylist->next);
 }
 
 // Not REALLY sure what the difference here is btw this and the next one, but OK..
@@ -227,12 +227,12 @@ TEST_F(VerifyTest, check_expired_tpk) {
 
     // It should not fail.
     ASSERT_EQ(status , PEP_DECRYPTED_AND_VERIFIED);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_NOTNULL(keylist);
     // No signer.
     ASSERT_STREQ(keylist->value, "599B3D67800DB37E2DCE05C07F59F03CD04A226E");
     // Recipient is mary.
-    ASSERT_NE(keylist->next, nullptr);
-    ASSERT_NE(keylist->next->value, nullptr);
+    ASSERT_NOTNULL(keylist->next);
+    ASSERT_NOTNULL(keylist->next->value);
     ASSERT_STREQ(mary_fpr, keylist->next->value);
     // Content is returned.
     ASSERT_STREQ(plaintext, "tu was!\n");
@@ -251,10 +251,10 @@ TEST_F(VerifyTest, check_expired_tpk) {
 
     // Now it should fail.
     ASSERT_EQ(status , PEP_VERIFIED);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_NOTNULL(keylist);
     // Signer.
     ASSERT_STREQ(keylist->value, "599B3D67800DB37E2DCE05C07F59F03CD04A226E");
-    ASSERT_EQ(keylist->next, nullptr);
+    ASSERT_NULL(keylist->next);
 
     free(plaintext);
     free_stringlist(keylist);
@@ -279,12 +279,12 @@ TEST_F(VerifyTest, check_expired_signing_key) {
 
     // It should not fail.
     ASSERT_EQ(status , PEP_DECRYPTED_AND_VERIFIED);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_NOTNULL(keylist);
     // Yes, signer.
     ASSERT_STREQ(keylist->value, "599B3D67800DB37E2DCE05C07F59F03CD04A226E");
     // Recipient is mary.
-    ASSERT_NE(keylist->next, nullptr);
-    ASSERT_NE(keylist->next->value, nullptr);
+    ASSERT_NOTNULL(keylist->next);
+    ASSERT_NOTNULL(keylist->next->value);
     ASSERT_STREQ(mary_fpr, keylist->next->value);
     // Content is returned.
     ASSERT_STREQ(plaintext, "tu was!\n");
@@ -315,10 +315,10 @@ TEST_F(VerifyTest, check_expired_signing_key) {
 
     // Shouldn't fail
     ASSERT_EQ(status , PEP_VERIFIED);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_NOTNULL(keylist);
     // Signer exists.
     ASSERT_STREQ(keylist->value, "599B3D67800DB37E2DCE05C07F59F03CD04A226E");
-    ASSERT_EQ(keylist->next, nullptr);
+    ASSERT_NULL(keylist->next);
     
     free(plaintext);
     free_stringlist(keylist);

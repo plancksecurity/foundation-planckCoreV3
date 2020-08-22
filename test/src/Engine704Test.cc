@@ -44,14 +44,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -82,14 +82,14 @@ TEST_F(Engine704Test, check_engine704) {
     pEp_identity* alice = NULL;
     status = set_up_preset(session, ALICE, true, true, true, true, true, &alice);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(alice, nullptr);
+    ASSERT_NOTNULL(alice);
     status = myself(session, alice);
     char* alicename = strdup(alice->username);
     
     pEp_identity* alice_is_bob = NULL;
     status = set_up_preset(session, BOB, false, true, true, false, true, &alice_is_bob);        
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(alice_is_bob, nullptr);
+    ASSERT_NOTNULL(alice_is_bob);
     alice_is_bob->user_id = strdup(alice->user_id);
     alice_is_bob->me = true;
     char* bob_key_copy = strdup(alice_is_bob->fpr);

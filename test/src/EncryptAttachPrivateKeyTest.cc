@@ -54,14 +54,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -170,7 +170,7 @@ TEST_F(EncryptAttachPrivateKeyTest, check_encrypt_attach_private_key) {
     // Identity with same address and different user_id
     output_stream << "#2: same address, different user_id - address: " << main_addr << ", user_id: " << diff_uid_0 << ", fpr: " << fpr_same_addr_diff_uid << endl;
     same_addr_diff_uid = new_identity(main_addr, fpr_same_addr_diff_uid, diff_uid_0, "PrivateKey Import Test");
-    ASSERT_NE(same_addr_diff_uid, nullptr);
+    ASSERT_NOTNULL(same_addr_diff_uid);
     status = key_reset_trust(session, same_addr_diff_uid);
     ASSERT_TRUE(status == PEP_STATUS_OK || status == PEP_CANNOT_FIND_IDENTITY);
     ASSERT_STREQ(same_addr_diff_uid->fpr, fpr_same_addr_diff_uid);
@@ -178,7 +178,7 @@ TEST_F(EncryptAttachPrivateKeyTest, check_encrypt_attach_private_key) {
     // Identity with diff address and same user_id
     output_stream << "#3: different address, same user_id - address: " << diff_addr_0 << ", user_id: " << own_uid << ", fpr: " << fpr_diff_addr_same_uid << endl;
     diff_addr_same_uid = new_identity(diff_addr_0, fpr_diff_addr_same_uid, own_uid, "PrivateKey Import Test");
-    ASSERT_NE(diff_addr_same_uid, nullptr);
+    ASSERT_NOTNULL(diff_addr_same_uid);
     status = key_reset_trust(session, diff_addr_same_uid);
     ASSERT_TRUE(status == PEP_STATUS_OK || status == PEP_CANNOT_FIND_IDENTITY);
     ASSERT_STREQ(diff_addr_same_uid->fpr, fpr_diff_addr_same_uid);
@@ -186,7 +186,7 @@ TEST_F(EncryptAttachPrivateKeyTest, check_encrypt_attach_private_key) {
     // Identity with different address and different user_id
     output_stream << "#4: different address, different user_id - address: " << diff_addr_1 << ", user_id: " << diff_uid_1 << ", fpr: " << fpr_diff_addr_diff_uid << endl;
     diff_addr_diff_uid = new_identity(diff_addr_1, fpr_diff_addr_diff_uid, diff_uid_1, "PrivateKey Import Test");
-    ASSERT_NE(diff_addr_diff_uid, nullptr);
+    ASSERT_NOTNULL(diff_addr_diff_uid);
     status = key_reset_trust(session, diff_addr_diff_uid);
     ASSERT_TRUE(status == PEP_STATUS_OK || status == PEP_CANNOT_FIND_IDENTITY);
     ASSERT_STREQ(diff_addr_diff_uid->fpr, fpr_diff_addr_diff_uid);
@@ -206,7 +206,7 @@ TEST_F(EncryptAttachPrivateKeyTest, check_encrypt_attach_private_key) {
     // Case 1:
     // Same address, same user_id, untrusted
     output_stream << "Case 1: Same address, same user_id, untrusted" << endl;
-    ASSERT_NE(msg_same_addr_same_uid, nullptr);
+    ASSERT_NOTNULL(msg_same_addr_same_uid);
     identity_list* to_list = new_identity_list(same_addr_same_uid);
     msg_same_addr_same_uid->to = to_list;
     message* enc_same_addr_same_uid_untrusted = NULL;
@@ -242,7 +242,7 @@ TEST_F(EncryptAttachPrivateKeyTest, check_encrypt_attach_private_key) {
     // Case 3:
     // Different address, same user_id, untrusted
     output_stream << "Case 3: Different address, same user_id, untrusted" << endl;
-    ASSERT_NE(msg_diff_addr_same_uid, nullptr);
+    ASSERT_NOTNULL(msg_diff_addr_same_uid);
     identity_list* to_list_1 = new_identity_list(diff_addr_same_uid);
     msg_diff_addr_same_uid->to = to_list_1;
     message* enc_diff_addr_same_uid_untrusted = NULL;
@@ -277,7 +277,7 @@ TEST_F(EncryptAttachPrivateKeyTest, check_encrypt_attach_private_key) {
     // Case 5:
     // Same address, different user_id, untrusted
     output_stream << "Case 5: Same address, different user_id, untrusted" << endl;
-    ASSERT_NE(msg_same_addr_diff_uid, nullptr);
+    ASSERT_NOTNULL(msg_same_addr_diff_uid);
     identity_list* to_list_2 = new_identity_list(same_addr_diff_uid);
     msg_same_addr_diff_uid->to = to_list_2;
     message* enc_same_addr_diff_uid_untrusted = NULL;
@@ -312,7 +312,7 @@ TEST_F(EncryptAttachPrivateKeyTest, check_encrypt_attach_private_key) {
     // Case 7:
     // Different address, different user_id, untrusted
     output_stream << "Case 7: Different address, different user_id, untrusted" << endl;
-    ASSERT_NE(msg_diff_addr_diff_uid, nullptr);
+    ASSERT_NOTNULL(msg_diff_addr_diff_uid);
     identity_list* to_list_3 = new_identity_list(diff_addr_diff_uid);
     msg_diff_addr_diff_uid->to = to_list_3;
     message* enc_diff_addr_diff_uid_untrusted = NULL;

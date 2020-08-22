@@ -55,14 +55,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -124,8 +124,8 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     PEP_decrypt_flags_t flags;
 
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(msg_ptr, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(msg_ptr);
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
@@ -158,8 +158,8 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     rating = PEP_rating_unreliable;
 
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(msg_ptr, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(msg_ptr);
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
@@ -192,8 +192,8 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     mailtext = slurp("test_mails/pEp_subject_normal_signed_2a.eml");
 
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(msg_ptr, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(msg_ptr);
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -225,8 +225,8 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     mailtext = slurp("test_mails/p3p_subject_normal_signed_2b.eml");
 
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(msg_ptr, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(msg_ptr);
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -259,8 +259,8 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     mailtext = slurp("test_mails/pEp_encrypted_subject_IS_pEp_3a.eml");
 
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(msg_ptr, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(msg_ptr);
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
@@ -293,8 +293,8 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     mailtext = slurp("test_mails/p3p_encrypted_subject_IS_pEp_3b.eml");
 
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(msg_ptr, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(msg_ptr);
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
@@ -328,8 +328,8 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     mailtext = slurp("test_mails/pEp_subject_pEp_replaced_w_pEp_4a.eml");
 
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(msg_ptr, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(msg_ptr);
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
@@ -362,8 +362,8 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     mailtext = slurp("test_mails/pEp_subject_pEp_replaced_w_p3p_4b.eml");
 
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(msg_ptr, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(msg_ptr);
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
@@ -396,8 +396,8 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     mailtext = slurp("test_mails/pEp_subject_p3p_replaced_w_pEp_4c.eml");
 
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(msg_ptr, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(msg_ptr);
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
@@ -430,8 +430,8 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     mailtext = slurp("test_mails/pEp_subject_p3p_replaced_w_p3p_4d.eml");
 
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(msg_ptr, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(msg_ptr);
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
@@ -465,8 +465,8 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     mailtext = slurp("test_mails/pEp_unencrypted_pEp_subject_5a.eml");
 
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(msg_ptr, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(msg_ptr);
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
@@ -500,8 +500,8 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     mailtext = slurp("test_mails/pEp_unencrypted_p3p_subject_5b.eml");
 
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(msg_ptr, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(msg_ptr);
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
@@ -534,8 +534,8 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     mailtext = slurp("test_mails/pEp_subject_normal_unencrypted_6.eml");
 
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(msg_ptr, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(msg_ptr);
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;

@@ -49,14 +49,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -92,16 +92,16 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_single_private) {
                 "pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97",
                 PEP_OWN_USERID, "Alice in Wonderland", NULL, true
             );
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // Ok, see if we get it back.
     stringlist_t* keylist = NULL;
 
     status = _own_keys_retrieve(session, &keylist, 0, true);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(keylist, nullptr);
-    ASSERT_NE(keylist->value, nullptr);
-    ASSERT_EQ(keylist->next, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(keylist);
+    ASSERT_NOTNULL(keylist->value);
+    ASSERT_NULL(keylist->next);
 
     ASSERT_STREQ(keylist->value, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
 }
@@ -113,21 +113,21 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_single_private_single_pub) {
                 "pep.test.bob@pep-project.org", NULL, PEP_OWN_USERID, "Bob's Burgers",
                 NULL, false
             );
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // Make it an own identity in the DB
     pEp_identity* me_bob = new_identity("pep.test.bob@pep-project.org", NULL, PEP_OWN_USERID, NULL);
     status = update_identity(session, me_bob);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_STREQ(me_bob->fpr, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39");
     status = trust_personal_key(session, me_bob);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     me_bob->me = true;
     status = set_identity(session, me_bob);
     free_identity(me_bob);
     me_bob = NULL;
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // Setup own identity
     status = read_file_and_import_key(session,
@@ -138,16 +138,16 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_single_private_single_pub) {
                 "pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97",
                 PEP_OWN_USERID, "Alice in Wonderland", NULL, true
             );
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // Ok, see if we get it back.
     stringlist_t* keylist = NULL;
 
     status = _own_keys_retrieve(session, &keylist, 0, true);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(keylist, nullptr);
-    ASSERT_NE(keylist->value, nullptr);
-    ASSERT_EQ(keylist->next, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(keylist);
+    ASSERT_NOTNULL(keylist->value);
+    ASSERT_NULL(keylist->next);
 
     ASSERT_STREQ(keylist->value, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
 }
@@ -162,7 +162,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multiple_private) {
                 "pep.test.xander@pep-project.org", "F4598A17D4690EB3B5B0F6A344F04E963B7302DB",
                 PEP_OWN_USERID, "Xander in Wonderland", NULL, true
             );
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // Setup own identity
     status = read_file_and_import_key(session,
@@ -173,7 +173,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multiple_private) {
                 "pep.test.xander@pep-project.org", "59AF4C51492283522F6904531C09730A541260F6",
                 PEP_OWN_USERID, "Xander2", NULL, true
             );
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // Setup own identity
     status = read_file_and_import_key(session,
@@ -184,7 +184,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multiple_private) {
                 "pep.test.xander.work@pep-project.org", "46A994F19077C05610870273C4B8AB0BA6512F30",
                 PEP_OWN_USERID, "Xander3", NULL, true
             );
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // Setup own identity
     status = read_file_and_import_key(session,
@@ -195,7 +195,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multiple_private) {
                 "pep.test.xander@pep-project.org", "5F7076BBD92E14EA49F0DF7C2CE49419724B3975",
                 PEP_OWN_USERID, "Xander4", NULL, true
             );
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // Setup own identity
     status = read_file_and_import_key(session,
@@ -206,14 +206,14 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multiple_private) {
                 "pep.test.xander.home@pep-project.org", "E95FFF95B8E2FDD4A12C3374395F1485844B9DCF",
                 PEP_OWN_USERID, "Xander in Wonderland Again", NULL, true
             );
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // Ok, see if we get it back.
     stringlist_t* keylist = NULL;
 
     status = _own_keys_retrieve(session, &keylist, 0, true);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(keylist);
 
     int fpr_count = 0;
 
@@ -227,7 +227,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multiple_private) {
     fpr_list[4] = "E95FFF95B8E2FDD4A12C3374395F1485844B9DCF";
 
     for (stringlist_t* _kl = keylist; _kl; _kl = _kl->next) {
-        ASSERT_NE(_kl->value, nullptr);
+        ASSERT_NOTNULL(_kl->value);
         fpr_count++;
 
         for (int j = 0; j < 5; j++) {
@@ -255,7 +255,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multiple_private_and_pub) {
                 "pep.test.xander@pep-project.org", "F4598A17D4690EB3B5B0F6A344F04E963B7302DB",
                 PEP_OWN_USERID, "Xander in Wonderland", NULL, true
             );
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // Own pub key
     ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/pep.test.alexander5-0x0773CD29_pub.asc"));
@@ -264,7 +264,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multiple_private_and_pub) {
     pEp_identity* me_pub = new_identity("pep.test.xander@pep-project.org", "58BCC2BF2AE1E3C4FBEAB89AD7838ACA0773CD29", PEP_OWN_USERID, NULL);
     me_pub->comm_type = PEP_ct_pEp;
     status = set_trust(session, me_pub);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     free_identity(me_pub);
     me_pub = NULL;
 
@@ -277,7 +277,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multiple_private_and_pub) {
                 "pep.test.xander@pep-project.org", "59AF4C51492283522F6904531C09730A541260F6",
                 PEP_OWN_USERID, "Xander2", NULL, true
             );
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // Own pub key
     ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc"));
@@ -286,7 +286,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multiple_private_and_pub) {
     me_pub = new_identity("pep.test.xander@pep-project.org", "74D79B4496E289BD8A71B70BA8E2C4530019697D", PEP_OWN_USERID, NULL);
     me_pub->comm_type = PEP_ct_pEp;
     status = set_trust(session, me_pub);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     free_identity(me_pub);
     me_pub = NULL;
 
@@ -300,7 +300,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multiple_private_and_pub) {
                 "pep.test.xander.work@pep-project.org", "46A994F19077C05610870273C4B8AB0BA6512F30",
                 PEP_OWN_USERID, "Xander3", NULL, true
             );
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // Own pub key
     ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x503B14D8_pub.asc"));
@@ -309,7 +309,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multiple_private_and_pub) {
     me_pub = new_identity("pep.test.xander@pep-project.org", "2E21325D202A44BFD9C607FCF095B202503B14D8", PEP_OWN_USERID, NULL);
     me_pub->comm_type = PEP_ct_pEp;
     status = set_trust(session, me_pub);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     free_identity(me_pub);
     me_pub = NULL;
 
@@ -323,7 +323,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multiple_private_and_pub) {
                 "pep.test.xander@pep-project.org", "5F7076BBD92E14EA49F0DF7C2CE49419724B3975",
                 PEP_OWN_USERID, "Xander4", NULL, true
             );
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // Own pub key
     ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/pep.test.alexander6-0xA216E95A_pub.asc"));
@@ -332,7 +332,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multiple_private_and_pub) {
     me_pub = new_identity("pep.test.xander@pep-project.org", "3C1E713D8519D7F907E3142D179EAA24A216E95A", PEP_OWN_USERID, NULL);
     me_pub->comm_type = PEP_ct_pEp;
     status = set_trust(session, me_pub);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     free_identity(me_pub);
     me_pub = NULL;
 
@@ -345,14 +345,14 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multiple_private_and_pub) {
                 "pep.test.xander.home@pep-project.org", "E95FFF95B8E2FDD4A12C3374395F1485844B9DCF",
                 PEP_OWN_USERID, "Xander in Wonderland Again", NULL, true
             );
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // Ok, see if we get it back.
     stringlist_t* keylist = NULL;
 
     status = _own_keys_retrieve(session, &keylist, 0, true);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(keylist);
 
     int fpr_count = 0;
 
@@ -366,7 +366,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multiple_private_and_pub) {
     fpr_list[4] = "E95FFF95B8E2FDD4A12C3374395F1485844B9DCF";
 
     for (stringlist_t* _kl = keylist; _kl; _kl = _kl->next) {
-        ASSERT_NE(_kl->value, nullptr);
+        ASSERT_NOTNULL(_kl->value);
         fpr_count++;
 
         for (int j = 0; j < 5; j++) {
@@ -391,20 +391,20 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multi_pub_only) {
                 "pep.test.alexander0@darthmama.org", "F4598A17D4690EB3B5B0F6A344F04E963B7302DB",
                 PEP_OWN_USERID, "Xander in Wonderland", NULL, false
             );
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     // Make it an own identity in the DB
     pEp_identity* me_pub = new_identity("pep.test.alexander0@darthmama.org", NULL, PEP_OWN_USERID, NULL);
     status = update_identity(session, me_pub);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_STREQ(me_pub->fpr, "F4598A17D4690EB3B5B0F6A344F04E963B7302DB");
     status = trust_personal_key(session, me_pub);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     me_pub->me = true;
     status = set_identity(session, me_pub);
     free_identity(me_pub);
     me_pub = NULL;
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
 
     // Own pub key
@@ -414,7 +414,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multi_pub_only) {
     me_pub = new_identity("pep.test.alexander0@darthmama.org", "58BCC2BF2AE1E3C4FBEAB89AD7838ACA0773CD29", PEP_OWN_USERID, NULL);
     me_pub->comm_type = PEP_ct_pEp;
     status = set_trust(session, me_pub);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     free_identity(me_pub);
     me_pub = NULL;
 
@@ -425,7 +425,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multi_pub_only) {
     me_pub = new_identity("pep.test.alexander0@darthmama.org", "74D79B4496E289BD8A71B70BA8E2C4530019697D", PEP_OWN_USERID, NULL);
     me_pub->comm_type = PEP_ct_pEp;
     status = set_trust(session, me_pub);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     free_identity(me_pub);
     me_pub = NULL;
 
@@ -436,7 +436,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multi_pub_only) {
     me_pub = new_identity("pep.test.alexander0@darthmama.org", "2E21325D202A44BFD9C607FCF095B202503B14D8", PEP_OWN_USERID, NULL);
     me_pub->comm_type = PEP_ct_pEp;
     status = set_trust(session, me_pub);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     free_identity(me_pub);
     me_pub = NULL;
 
@@ -447,7 +447,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multi_pub_only) {
     me_pub = new_identity("pep.test.alexander0@darthmama.org", "3C1E713D8519D7F907E3142D179EAA24A216E95A", PEP_OWN_USERID, NULL);
     me_pub->comm_type = PEP_ct_pEp;
     status = set_trust(session, me_pub);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     free_identity(me_pub);
     me_pub = NULL;
 
@@ -455,8 +455,8 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multi_pub_only) {
     stringlist_t* keylist = NULL;
 
     status = _own_keys_retrieve(session, &keylist, 0, true);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_EQ(keylist, nullptr);
+    ASSERT_OK;
+    ASSERT_NULL(keylist);
 
     free_stringlist(keylist);
 }
@@ -467,14 +467,14 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_no_own) {
                 "pep.test.alexander0@darthmama.org", "F4598A17D4690EB3B5B0F6A344F04E963B7302DB",
                 "NotMe", "Xander in Wonderland", NULL, false
             );
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     pEp_identity* a_pub = new_identity("pep.test.alexander0@darthmama.org", NULL, "NotMe", NULL);
     status = update_identity(session, a_pub);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_STREQ(a_pub->fpr, "F4598A17D4690EB3B5B0F6A344F04E963B7302DB");
     status = trust_personal_key(session, a_pub);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     free_identity(a_pub);
     a_pub = NULL;
 
@@ -483,7 +483,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_no_own) {
     a_pub = new_identity("pep.test.alexander0@darthmama.org", "58BCC2BF2AE1E3C4FBEAB89AD7838ACA0773CD29", "NotMe", NULL);
     a_pub->comm_type = PEP_ct_pEp;
     status = set_trust(session, a_pub);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     free_identity(a_pub);
     a_pub = NULL;
 
@@ -492,7 +492,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_no_own) {
     a_pub = new_identity("pep.test.alexander0@darthmama.org", "74D79B4496E289BD8A71B70BA8E2C4530019697D", "NotMe", NULL);
     a_pub->comm_type = PEP_ct_pEp;
     status = set_trust(session, a_pub);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     free_identity(a_pub);
     a_pub = NULL;
 
@@ -501,7 +501,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_no_own) {
     a_pub = new_identity("pep.test.alexander0@darthmama.org", "2E21325D202A44BFD9C607FCF095B202503B14D8", "NotMe", NULL);
     a_pub->comm_type = PEP_ct_pEp;
     status = set_trust(session, a_pub);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     free_identity(a_pub);
     a_pub = NULL;
 
@@ -510,7 +510,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_no_own) {
     a_pub = new_identity("pep.test.alexander0@darthmama.org", "3C1E713D8519D7F907E3142D179EAA24A216E95A", "NotMe", NULL);
     a_pub->comm_type = PEP_ct_pEp;
     status = set_trust(session, a_pub);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     free_identity(a_pub);
     a_pub = NULL;
 
@@ -518,8 +518,8 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_no_own) {
     stringlist_t* keylist = NULL;
 
     status = _own_keys_retrieve(session, &keylist, 0, true);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_EQ(keylist, nullptr);
+    ASSERT_OK;
+    ASSERT_NULL(keylist);
 
     free_stringlist(keylist);
 }
@@ -534,7 +534,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multi_idents_one_key) {
                 "pep.test.xander@pep-project.org", "F4598A17D4690EB3B5B0F6A344F04E963B7302DB",
                 PEP_OWN_USERID, "Xander in Wonderland", NULL, true
             );
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // Setup own identity
     status = read_file_and_import_key(session,
@@ -545,7 +545,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multi_idents_one_key) {
                 "pep.test.xander1@pep-project.org", "F4598A17D4690EB3B5B0F6A344F04E963B7302DB",
                 PEP_OWN_USERID, "Xander in Wonderland", NULL, true
             );
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // Setup own identity
     status = read_file_and_import_key(session,
@@ -556,16 +556,16 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multi_idents_one_key) {
                 "pep.test.xander2@pep-project.org", "F4598A17D4690EB3B5B0F6A344F04E963B7302DB",
                 PEP_OWN_USERID, "Xander in Wonderland", NULL, true
             );
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // Ok, see if we get one back.
     stringlist_t* keylist = NULL;
 
     status = _own_keys_retrieve(session, &keylist, 0, true);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(keylist, nullptr);
-    ASSERT_NE(keylist->value, nullptr);
-    ASSERT_EQ(keylist->next, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(keylist);
+    ASSERT_NOTNULL(keylist->value);
+    ASSERT_NULL(keylist->next);
 
     ASSERT_STREQ(keylist->value, "F4598A17D4690EB3B5B0F6A344F04E963B7302DB");
 
@@ -577,20 +577,20 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multi_idents_one_priv_key_mu
                 "pep.test.alexander5@darthmama.org", "58BCC2BF2AE1E3C4FBEAB89AD7838ACA0773CD29",
                 PEP_OWN_USERID, "Xander in Wonderland", NULL, false
             );
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     // Make it an own identity in the DB
     pEp_identity* me_pub = new_identity("pep.test.alexander5@darthmama.org", NULL, PEP_OWN_USERID, NULL);
     status = update_identity(session, me_pub);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_STREQ(me_pub->fpr, "58BCC2BF2AE1E3C4FBEAB89AD7838ACA0773CD29");
     status = trust_personal_key(session, me_pub);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     me_pub->me = true;
     status = set_identity(session, me_pub);
     free_identity(me_pub);
     me_pub = NULL;
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // Own pub key
     ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc"));
@@ -599,7 +599,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multi_idents_one_priv_key_mu
     me_pub = new_identity("pep.test.alexander5@darthmama.org", "74D79B4496E289BD8A71B70BA8E2C4530019697D", PEP_OWN_USERID, NULL);
     me_pub->comm_type = PEP_ct_pEp;
     status = set_trust(session, me_pub);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     free_identity(me_pub);
     me_pub = NULL;
 
@@ -610,7 +610,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multi_idents_one_priv_key_mu
     me_pub = new_identity("pep.test.alexander5@darthmama.org", "2E21325D202A44BFD9C607FCF095B202503B14D8", PEP_OWN_USERID, NULL);
     me_pub->comm_type = PEP_ct_pEp;
     status = set_trust(session, me_pub);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     free_identity(me_pub);
     me_pub = NULL;
 
@@ -621,7 +621,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multi_idents_one_priv_key_mu
     me_pub = new_identity("pep.test.alexander5@darthmama.org", "3C1E713D8519D7F907E3142D179EAA24A216E95A", PEP_OWN_USERID, NULL);
     me_pub->comm_type = PEP_ct_pEp;
     status = set_trust(session, me_pub);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     free_identity(me_pub);
     me_pub = NULL;
 
@@ -634,7 +634,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multi_idents_one_priv_key_mu
                 "pep.test.xander@pep-project.org", "F4598A17D4690EB3B5B0F6A344F04E963B7302DB",
                 PEP_OWN_USERID, "Xander in Wonderland", NULL, true
             );
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // Setup own identity
     status = read_file_and_import_key(session,
@@ -645,7 +645,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multi_idents_one_priv_key_mu
                 "pep.test.xander1@pep-project.org", "F4598A17D4690EB3B5B0F6A344F04E963B7302DB",
                 PEP_OWN_USERID, "Xander in Wonderland", NULL, true
             );
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // Setup own identity
     status = read_file_and_import_key(session,
@@ -656,16 +656,16 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multi_idents_one_priv_key_mu
                 "pep.test.xander2@pep-project.org", "F4598A17D4690EB3B5B0F6A344F04E963B7302DB",
                 PEP_OWN_USERID, "Xander in Wonderland", NULL, true
             );
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // Ok, see if we get one back.
     stringlist_t* keylist = NULL;
 
     status = _own_keys_retrieve(session, &keylist, 0, true);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(keylist, nullptr);
-    ASSERT_NE(keylist->value, nullptr);
-    ASSERT_EQ(keylist->next, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(keylist);
+    ASSERT_NOTNULL(keylist->value);
+    ASSERT_NULL(keylist->next);
 
     ASSERT_STREQ(keylist->value, "F4598A17D4690EB3B5B0F6A344F04E963B7302DB");
 }

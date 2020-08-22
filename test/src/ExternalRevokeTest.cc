@@ -56,14 +56,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -154,7 +154,7 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
     output_stream << "Creating message…\n";
     identity_list* to_list = new_identity_list(identity_dup(recip1)); // to bob
     message* outgoing_msg = new_message(PEP_dir_outgoing);
-    ASSERT_NE(outgoing_msg, nullptr);
+    ASSERT_NOTNULL(outgoing_msg);
     outgoing_msg->from = identity_dup(me);
     outgoing_msg->to = to_list;
     outgoing_msg->shortmsg = strdup("Greetings, humans!");
@@ -168,8 +168,8 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
     status = encrypt_message(session, outgoing_msg, NULL, &encrypted_outgoing_msg, PEP_enc_PGP_MIME, 0);
     output_stream << "Encrypted message with status " << tl_status_string(status) << endl;
     // check status
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(encrypted_outgoing_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(encrypted_outgoing_msg);
 
     output_stream << "Checking message recipient comm_type from message." << endl;
     // check comm_type
@@ -197,7 +197,7 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
     output_stream << "Decrypting message." << endl;
     status = decrypt_message(session, encrypted_outgoing_msg, &outgoing_msg, &keylist, &rating, &flags);
     output_stream << "Decrypted message with status " << tl_status_string(status) << endl;
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(rating , PEP_rating_trusted);
 
     // check rating
@@ -231,7 +231,7 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
     output_stream << "creating message…\n";
     to_list = new_identity_list(identity_dup(recip1)); // to bob
     outgoing_msg = new_message(PEP_dir_outgoing);
-    ASSERT_NE(outgoing_msg, nullptr);
+    ASSERT_NOTNULL(outgoing_msg);
     outgoing_msg->from = identity_dup(me);
     outgoing_msg->to = to_list;
     outgoing_msg->shortmsg = strdup("Greetings, humans!");
@@ -250,7 +250,7 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
     status = encrypt_message(session, outgoing_msg, NULL, &encrypted_outgoing_msg, PEP_enc_PGP_MIME, 0);
     output_stream << "Encryption returns with status " << tl_status_string(status) << endl;
     ASSERT_EQ(status, PEP_UNENCRYPTED);
-    ASSERT_EQ(encrypted_outgoing_msg, nullptr);
+    ASSERT_NULL(encrypted_outgoing_msg);
     status = update_identity(session, recip1);
     ASSERT_EQ(recip1->comm_type, PEP_ct_key_not_found);
 
@@ -258,7 +258,7 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
     output_stream << "2c. Check trust of recip, whose only key has been revoked, once an encryption attempt has been made." << endl;
     output_stream << "---------------------------------------------------------" << endl << endl;
 
-    ASSERT_EQ(recip1->fpr, nullptr);
+    ASSERT_NULL(recip1->fpr);
     recip1->fpr = fprs[0];
     status = get_trust(session, recip1);
     recip1->fpr = NULL;
@@ -296,7 +296,7 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
     // status = update_identity(session, recip1);
     to_list = new_identity_list(identity_dup(recip1)); // to bob
     outgoing_msg = new_message(PEP_dir_outgoing);
-    ASSERT_NE(outgoing_msg, nullptr);
+    ASSERT_NOTNULL(outgoing_msg);
     outgoing_msg->from = identity_dup(me);
     outgoing_msg->to = to_list;
     outgoing_msg->shortmsg = strdup("Greetings, humans!");
@@ -334,7 +334,7 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
     status = decrypt_message(session, encrypted_outgoing_msg, &decrypted_msg, &keylist, &rating, &flags);
     output_stream << "Decryption returns with status " << tl_status_string(status) << endl;
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(decrypted_msg, nullptr);
+    ASSERT_NOTNULL(decrypted_msg);
 
     // check rating
     output_stream << "Rating of decrypted message to trusted recip: " << tl_rating_string(rating) << endl;

@@ -54,14 +54,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -110,7 +110,7 @@ TEST_F(RevocationTest, check_revocation) {
 
     pEp_identity* pre = new_identity("linda@example.org", NULL, NULL, NULL);
     status = update_identity(session, pre);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(pre->comm_type , PEP_ct_OpenPGP_unconfirmed);
 
     // Read in the revocation certificate.
@@ -126,7 +126,7 @@ TEST_F(RevocationTest, check_revocation) {
     stringlist_t* keylist = NULL;
 
     status = find_keys(session, "linda@example.org", &keylist);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     status = update_identity(session, post);
     // PEP_KEY_UNSUITABLE => revoked (or something similar).
@@ -135,7 +135,7 @@ TEST_F(RevocationTest, check_revocation) {
     free(post->fpr);
     post->fpr = strdup(keylist->value);
     status = get_trust(session, post);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(post->comm_type , PEP_ct_key_revoked);
     free_identity(pre);
     free_identity(post);
@@ -148,8 +148,8 @@ TEST_F(RevocationTest, check_revoke_key_needs_passphrase) {
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, bob_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
 
     // Key imported.
     // Now: revoke it.
@@ -163,8 +163,8 @@ TEST_F(RevocationTest, check_revoke_key_wrong_passphrase) {
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, bob_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     
     config_passphrase(session, "julio");
 
@@ -179,8 +179,8 @@ TEST_F(RevocationTest, check_revoke_key_correct_passphrase) {
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, bob_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     
     config_passphrase(session, "bob");
 
