@@ -3848,7 +3848,11 @@ static PEP_STATUS _check_and_set_default_key(
         // Right now, we just want to know if there's a DB default, NOT 
         // if it matches what update_identity gives us (there are good reasons it might not)
         status = get_default_identity_fpr(session, src_ident->address, src_ident->user_id, &default_from_fpr);
-        if (status == PEP_KEY_NOT_FOUND || status == PEP_CANNOT_FIND_IDENTITY) {
+        bool on_blacklist = false;
+        if (!EMPTYSTR(default_from_fpr)) {
+            blacklist_is_listed(session, default_from_fpr, &on_blacklist);
+        }
+        if (on_blacklist || status == PEP_KEY_NOT_FOUND || status == PEP_CANNOT_FIND_IDENTITY) {
             if (!EMPTYSTR(sender_key))
                 status = set_default_key_fpr_if_valid(session, src_ident, sender_key);
         }

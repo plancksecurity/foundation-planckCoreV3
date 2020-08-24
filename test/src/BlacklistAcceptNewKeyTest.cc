@@ -9,6 +9,7 @@
 #include "TestConstants.h"
 
 #include "pEpEngine.h"
+#include "pEp_internal.h"
 #include "blacklist.h"
 #include "keymanagement.h"
 #include "message_api.h"
@@ -123,28 +124,33 @@ TEST_F(BlacklistAcceptNewKeyTest, check_blacklist_accept_new_key) {
     status = blacklist_is_listed(session, bl_fpr_1, &is_blacklisted);
     ASSERT_OK;
     ASSERT_TRUE(is_blacklisted);
+
+    // We should NOT return a blacklisted key here.
+    // FIXME: for EB - what to do when unblacklisting?
     status = update_identity(session, blacklisted_identity);
     ASSERT_OK;
     ASSERT_STREQ(bl_fpr_1, blacklisted_identity->fpr);
 
+    // post key election this should be obvious.
     bool id_def, us_def, addr_def;
     status = get_valid_pubkey(session, blacklisted_identity,
                                 &id_def, &us_def, &addr_def, true);
     ASSERT_EQ(status, PEP_KEY_BLACKLISTED);
     ASSERT_EQ(blacklisted_identity->comm_type , PEP_ct_key_not_found);
 
+
     if (!(blacklisted_identity->fpr))
         output_stream << "OK! blacklisted_identity->fpr is empty. Yay!" << endl;
     else
         output_stream << "Not OK. blacklisted_identity->fpr is " << blacklisted_identity->fpr << "." << endl
              << "Expected it to be empty." << endl;
-    ASSERT_TRUE(blacklisted_identity->fpr == NULL || blacklisted_identity->fpr[0] == '\0');
+    ASSERT_TRUE(EMPTYSTR(blacklisted_identity->fpr));
 
     /* identity is blacklisted. Now let's read in a message which contains a new key for that ID. */
-
+    // This SHOULD work with key election removal!
     const char* new_key = "634FAC4417E9B2A5DC2BD4AAC4AEEBBE7E62701B";
     const string mailtext = slurp("test_mails/blacklist_new_key_attached.eml");
-    pEp_identity * me1 = new_identity("blacklist_test@kgrothoff.org", "634FAC4417E9B2A5DC2BD4AAC4AEEBBE7E62701B", PEP_OWN_USERID, "Blacklisted Key Message Recipient");
+    pEp_identity * me1 = new_identity("blacklistedkeys@kgrothoff.org", new_key, "TOFU_blacklistedkeys@kgrothoff.org", "Blacklisted Key Message Recipient");
 
     status = update_identity(session, me1);
     message* msg_ptr = nullptr;
@@ -158,15 +164,13 @@ TEST_F(BlacklistAcceptNewKeyTest, check_blacklist_accept_new_key) {
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
 
     // Key election is gone, but getting it via mail should set a default!
-    status = get_valid_pubkey(session, blacklisted_identity,
-                              &id_def, &us_def, &addr_def, true);
-
-    ASSERT_STRCASEEQ(blacklisted_identity->fpr, new_key);
-
-    // Now, that
+    status = update_identity(session, me1);
+    ASSERT_STRCASEEQ(me1->fpr, new_key);
 
     status = blacklist_delete(session, bl_fpr_1);
     ASSERT_OK;
+    // Key election removal note: THIS WILL NOT SET IT BACK TO THE OLD KEY AS A DEFAULT. YOU WOULD NEED TO RESET OR BLACKLIST THE NEW KEY AND
+    // RESET/REIMPORT THE OLD KEY AS A DEFAULT.
     status = update_identity(session, blacklisted_identity);
     ASSERT_OK;
 
