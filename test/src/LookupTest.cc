@@ -99,7 +99,7 @@ TEST_F(LookupTest, check_lookup) {
     PEP_STATUS statuspub = import_key(session, pub_key.c_str(), pub_key.length(), NULL);
     ASSERT_EQ(statuspub , PEP_TEST_KEY_IMPORT_SUCCESS);
 
-    pEp_identity* hans = new_identity(expected_address, NULL, userid, username);
+    pEp_identity* hans = new_identity(expected_address, fpr, userid, username);
 
     PEP_STATUS status = set_identity(session, hans);
     ASSERT_OK;
@@ -124,30 +124,22 @@ TEST_F(LookupTest, check_lookup) {
     for (int i = 0; i < sizeof(addresses) / sizeof(addresses[0]); i ++) {
         const char *address = addresses[i];
 
-        pEp_identity *hans = new_identity(address, NULL, NULL, NULL);
-        PEP_STATUS status = update_identity(session, hans);
+        // Actually, all this was ever really doing was testing sequoia's version of find_keys lookup to find the key
+        // and return it to update_identity in key election given various variations of the address. pgp_sequoia.c does puny code
+        // normalization, but the engine doesn't.
+
+        // So now we test find_keys directly.
+        stringlist_t* keylist = NULL;
+        PEP_STATUS status = find_keys(session, address, &keylist);
         ASSERT_OK;
-
+        ASSERT_NOTNULL(keylist);
         // We should always get the same fingerprint.
-        ASSERT_NOTNULL(hans->fpr);
+        ASSERT_NOTNULL(keylist->value);
         // Doublecheck FIXME (autogen)
-        ASSERT_STREQ(hans->fpr, fpr);
+        ASSERT_STREQ(keylist->value, fpr);
+        ASSERT_NULL(keylist->next);
 
-        // We don't compare hans->username or hans->user_id in case
-        // the engine doesn't have the same concept of equality (as of
-        // 2019.5, this is the case: pgp_sequoia.c does puny code
-        // normalization, but the engine doesn't).
-        ASSERT_NOTNULL((hans->username));
-        ASSERT_NOTNULL((hans->user_id));
+        free_stringlist(keylist);
 
-        // We should get the address that we looked up; no
-        // normalization is done.
-        ASSERT_STREQ(hans->address, address);
-
-        ASSERT_FALSE(hans->me);
-        ASSERT_EQ(hans->comm_type , PEP_ct_OpenPGP_unconfirmed);
-
-        output_stream << "PASS: update_identity() correctly retrieved OpenPGP key for '" << expected_address << "' using '" << address << "'" << endl << endl;
-        free_identity(hans);
     }
 }
