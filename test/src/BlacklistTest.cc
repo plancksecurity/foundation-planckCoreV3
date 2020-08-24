@@ -167,8 +167,11 @@ TEST_F(BlacklistTest, check_blacklist) {
 
     pEp_identity* blacklisted_identity = new_identity("blacklistedkeys@kgrothoff.org",
                                                       bl_fpr_1,
-                                                      NULL,
+                                                      "TOFU_blacklistedkeys@kgrothoff.org",
                                                       "Blacklist Keypair");
+
+    PEP_STATUS status = set_fpr_preserve_ident(session, blacklisted_identity, bl_fpr_1, false);
+    ASSERT_OK;
 
     PEP_STATUS status8 = update_identity(session, blacklisted_identity);
 
@@ -190,7 +193,7 @@ TEST_F(BlacklistTest, check_blacklist) {
     /* new!!! */
     ASSERT_TRUE(is_blacklisted);
     ASSERT_EQ(status11 , PEP_STATUS_OK);
-    ASSERT_STREQ(bl_fpr_1, blacklisted_identity->fpr);
+    ASSERT_STREQ(bl_fpr_1, blacklisted_identity->fpr); // I don't think this should be true, but...
 
     bool id_def, us_def, addr_def;
     status11 = get_valid_pubkey(session, blacklisted_identity,
