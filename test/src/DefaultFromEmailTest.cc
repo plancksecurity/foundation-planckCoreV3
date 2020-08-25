@@ -428,7 +428,7 @@ TEST_F(DefaultFromEmailTest, check_unencrypted_pEp_v2_2_import_bare_default) {
 TEST_F(DefaultFromEmailTest, check_unencrypted_pEp_v2_2_import_default_alternate_available) {
 }
 
-TEST_F(DefaultFromEmailTest, check_OpenPGP_import_bare_default) {
+TEST_F(DefaultFromEmailTest, check_to_to_OpenPGP_import_bare_default) {
     string email = slurp(OpenPGP_file);
     // We shouldn't rely on MIME_encrypt/decrypt (and should fix other tests) -
     // otherwise, we're also testing the parser driver.
@@ -474,7 +474,7 @@ TEST_F(DefaultFromEmailTest, check_OpenPGP_import_bare_default) {
 TEST_F(DefaultFromEmailTest, check_OpenPGP_import_default_alternate_available) {
 }
 
-TEST_F(DefaultFromEmailTest, check_pEp_v1_import_bare_default) {
+TEST_F(DefaultFromEmailTest, check_to_pEp_v1_import_bare_default) {
     string email = slurp(v1_0_file);
     // We shouldn't rely on MIME_encrypt/decrypt (and should fix other tests) -
     // otherwise, we're also testing the parser driver.
@@ -519,7 +519,7 @@ TEST_F(DefaultFromEmailTest, check_pEp_v1_import_bare_default) {
 TEST_F(DefaultFromEmailTest, check_pEp_v1_import_default_alternate_available) {
 }
 
-TEST_F(DefaultFromEmailTest, check_pEp_v2_0_import_bare_default) {
+TEST_F(DefaultFromEmailTest, check_to_pEp_v2_0_import_bare_default) {
     string email = slurp(v2_0_file);
     // We shouldn't rely on MIME_encrypt/decrypt (and should fix other tests) -
     // otherwise, we're also testing the parser driver.
@@ -564,7 +564,7 @@ TEST_F(DefaultFromEmailTest, check_pEp_v2_0_import_bare_default) {
 TEST_F(DefaultFromEmailTest, check_pEp_v2_0_import_default_alternate_available) {
 }
 
-TEST_F(DefaultFromEmailTest, check_pEp_v2_1_import_bare_default) {
+TEST_F(DefaultFromEmailTest, check_to_pEp_v2_1_import_bare_default) {
     string email = slurp(v2_1_file);
     // We shouldn't rely on MIME_encrypt/decrypt (and should fix other tests) -
     // otherwise, we're also testing the parser driver.
@@ -609,7 +609,7 @@ TEST_F(DefaultFromEmailTest, check_pEp_v2_1_import_bare_default) {
 TEST_F(DefaultFromEmailTest, check_pEp_v2_1_import_default_alternate_available) {
 }
 
-TEST_F(DefaultFromEmailTest, check_pEp_v2_2_import_bare_default) {
+TEST_F(DefaultFromEmailTest, check_to_pEp_v2_2_import_bare_default) {
     string email = slurp(v2_2_file);
     // We shouldn't rely on MIME_encrypt/decrypt (and should fix other tests) -
     // otherwise, we're also testing the parser driver.
@@ -654,7 +654,7 @@ TEST_F(DefaultFromEmailTest, check_pEp_v2_2_import_bare_default) {
 TEST_F(DefaultFromEmailTest, check_pEp_v2_2_import_default_alternate_available) {
 }
 
-TEST_F(DefaultFromEmailTest, check_pEp_v10_111_import_bare_default) {
+TEST_F(DefaultFromEmailTest, check_to_pEp_v10_111_import_bare_default) {
     string email = slurp(v10_111_file);
     // We shouldn't rely on MIME_encrypt/decrypt (and should fix other tests) -
     // otherwise, we're also testing the parser driver.

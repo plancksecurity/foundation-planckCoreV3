@@ -91,7 +91,8 @@ namespace {
 TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
 
     const char* keytexts[3];
-
+    const char* alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
+ 
     const string keytextkey1 = slurp("test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");
     const string keytextkey2 = slurp("test_keys/priv/pep-test-recip-0x08DB0AEE_priv.asc");
     const string keytextkey3 = slurp("test_keys/pub/pep-test-recip-0x08DB0AEE_pub.asc");
@@ -105,11 +106,18 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
 
     pEp_identity * you = new_identity("pep.test.alice@pep-project.org", NULL, "TOFU_pep.test.alice@pep-project.org", "Alice Test");
     you->me = false;
+    status = set_fpr_preserve_ident(session, you, alice_fpr, false);
+    ASSERT_OK;
 
     status = update_identity(session, you);
-    trust_personal_key(session, you);
+    ASSERT_OK;  
+    status = trust_personal_key(session, you);
+    ASSERT_OK;
     status = update_identity(session, you);
-
+    ASSERT_OK;
+    ASSERT_STREQ(you->fpr, alice_fpr);
+    ASSERT_EQ(you->comm_type, PEP_ct_OpenPGP);
+        
     output_stream << "------------------------------------------------------------------------------------------" << endl;
     output_stream << "Test 1a: Normal encrypted mail, pEp as substitute subject, regular subject in crypto text." << endl;
     output_stream << "------------------------------------------------------------------------------------------" << endl;

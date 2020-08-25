@@ -141,9 +141,14 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
     recip1->me = false;
     // Trust it
     status = update_identity(session, recip1);
+    ASSERT_OK;
+    status = set_fpr_preserve_ident(session, recip1, fprs[0], true);
+    ASSERT_OK;
     status = trust_personal_key(session, recip1);
+    ASSERT_OK;
     status = update_identity(session, recip1);
-
+    ASSERT_OK;
+    
     // TODO: Check trust?
     output_stream << "Done! Trusted personal key with fpr " << recip1->fpr << " for " << uniqname << endl;
 

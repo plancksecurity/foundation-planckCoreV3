@@ -1562,9 +1562,12 @@ static bool compare_first_n_bytes(const char* first, const char* second, size_t 
     return true;
 }
 
+// is_pEp_msg isn't available on the message yet usually when we get it here,
+// so we need it as a parameter
 bool import_attached_keys(
         PEP_SESSION session,
         message *msg,
+        bool is_pEp_msg,
         identity_list **private_idents, 
         stringlist_t** imported_key_list,
         uint64_t* changed_keys,
@@ -1592,8 +1595,6 @@ bool import_attached_keys(
     // Hate my magic numbers at your peril, but I don't want a strlen each time
     const size_t PUBKEY_HSIZE = 36;
     const size_t PRIVKEY_HSIZE = 37;
-
-    bool is_pEp_msg = is_a_pEpmessage(msg);
 
     bool pEp_sender_key_found = false;
     stringlist_t* last_fpr_ptr = _keylist ? stringlist_get_tail(_keylist) : NULL;
@@ -3292,6 +3293,7 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
 
 static PEP_STATUS import_keys_from_decrypted_msg(PEP_SESSION session,
                                                       message* msg,
+                                                      bool is_pEp_msg,
                                                       bool* keys_were_imported,
                                                       bool* imported_private,
                                                       identity_list** private_il,
@@ -3313,7 +3315,7 @@ static PEP_STATUS import_keys_from_decrypted_msg(PEP_SESSION session,
     // check for private key in decrypted message attachment while importing
     identity_list *_private_il = NULL;
 
-    bool _keys_were_imported = import_attached_keys(session, msg, 
+    bool _keys_were_imported = import_attached_keys(session, msg, is_pEp_msg,
                                                     &_private_il, keylist, 
                                                     changed_keys, pEp_sender_key);
     bool _imported_private = false;
@@ -3984,7 +3986,7 @@ static PEP_STATUS _decrypt_message(
     PEP_cryptotech enc_type = determine_encryption_format(src);
     if (enc_type != PEP_crypt_OpenPGP || !(src->enc_format == PEP_enc_PGP_MIME || src->enc_format == PEP_enc_PGP_MIME_Outlook1)) {
         keys_were_imported = import_attached_keys(session, 
-                                                  src, NULL, 
+                                                  src, is_pEp_msg, NULL, 
                                                   &_imported_key_list, 
                                                   &_changed_keys,
                                                   &imported_sender_key_fpr);
@@ -4128,7 +4130,7 @@ static PEP_STATUS _decrypt_message(
                 // if this is a non-pEp message or a 1.0 message, we'll need to do some default-setting here. 
                 // otherwise, we don't ask for a sender import fpr because for pEp 2.0+ any legit default key attachments should 
                 // be INSIDE the message 
-                status = import_keys_from_decrypted_msg(session, msg,
+                status = import_keys_from_decrypted_msg(session, msg, is_pEp_msg,
                                                         &keys_were_imported,
                                                         &imported_private_key_address,
                                                         private_il,
@@ -4234,7 +4236,7 @@ static PEP_STATUS _decrypt_message(
                 // otherwise, we don't ask for a sender import fpr because for pEp 2.0+ any legit default key attachments should 
                 // be INSIDE the message 
                 status = import_keys_from_decrypted_msg(session, msg,
-                                                        &keys_were_imported,
+                                                        &keys_were_imported, is_pEp_msg,
                                                         &imported_private_key_address,
                                                         private_il,
                                                         &_imported_key_list, 
@@ -4451,7 +4453,7 @@ static PEP_STATUS _decrypt_message(
 
 
                             // import keys from decrypted INNER source
-                            status = import_keys_from_decrypted_msg(session, inner_message,
+                            status = import_keys_from_decrypted_msg(session, inner_message, is_pEp_msg,
                                                                     &keys_were_imported,
                                                                     &imported_private_key_address,
                                                                     private_il,

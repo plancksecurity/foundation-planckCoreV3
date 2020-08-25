@@ -404,8 +404,9 @@ TEST_F(KeyResetMessageTest, check_non_reset_receive_revoked) {
     receive_setup();
     pEp_identity* alice_ident = new_identity("pep.test.alice@pep-project.org", NULL,
                                             alice_user_id.c_str(), NULL);
-
-    PEP_STATUS status = update_identity(session, alice_ident);
+    PEP_STATUS status = set_fpr_preserve_ident(session, alice_ident, alice_fpr, true);
+    ASSERT_OK;
+    status = update_identity(session, alice_ident);
     ASSERT_OK;
     ASSERT_STREQ(alice_fpr, alice_ident->fpr);
 
@@ -2425,9 +2426,12 @@ TEST_F(KeyResetMessageTest, check_reset_mistrust_next_msg_have_not_mailed) {
 
     slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");
     pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", bob_fpr, NULL, "Bob's Burgers");
+    status = set_fpr_preserve_ident(session, bob, bob_fpr, true);
+    ASSERT_OK;
     status = update_identity(session, bob);
-
+    ASSERT_OK;
     status = key_mistrusted(session, bob);
+    ASSERT_OK;
     ASSERT_EQ(status, PEP_STATUS_OK);
 //    ASSERT_NULL(bob->fpr);
 
@@ -2488,8 +2492,10 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_keys_one_URI_partner) {
     // I don't think this is relevant.
     pEp_identity* you = new_identity("payto://BIC/SYSTEMB", NULL, "SystemB", NULL); 
     ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/SYSTEMB-0xD47A817B3_pub.asc"));
+    status = set_fpr_preserve_ident(session, you, "E53175090D2C520DF51E4C73258ACC4D47A817B3", true);
+    ASSERT_OK;
     status = update_identity(session, you);
-    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_NOTNULL(you->fpr);  
     
     status = key_reset_all_own_keys(session);    

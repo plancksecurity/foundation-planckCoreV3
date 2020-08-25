@@ -87,6 +87,7 @@ namespace {
 
 
 TEST_F(CaseAndDotAddressTest, check_case_and_dot_address) {
+    PEP_STATUS status = PEP_STATUS_OK;
     output_stream << "\n*** case_and_dot_address_test.cc ***\n\n";
 
     char* user_id = get_new_uuid();
@@ -103,8 +104,11 @@ TEST_F(CaseAndDotAddressTest, check_case_and_dot_address) {
 
     pEp_identity * alice_id = new_identity("pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", user_id, "Alice Test");
 
-    PEP_STATUS status = trust_personal_key(session, alice_id);
-
+    status = set_fpr_preserve_ident(session, alice_id, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", true);
+    ASSERT_OK;
+    status = trust_personal_key(session, alice_id);
+    ASSERT_OK;
+    
     pEp_identity * new_alice_id = new_identity("pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", user_id, "Alice Test");
     status = update_identity(session, new_alice_id);
     ASSERT_NOTNULL(new_alice_id->fpr);

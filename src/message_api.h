@@ -15,6 +15,7 @@ extern "C" {
 bool import_attached_keys(
         PEP_SESSION session,
         message *msg,
+        bool is_pEp_msg,
         identity_list **private_idents, 
         stringlist_t** imported_keys,
         uint64_t* changed_keys,

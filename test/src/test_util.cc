@@ -770,14 +770,20 @@ PEP_STATUS set_default_fpr_for_test(PEP_SESSION session, pEp_identity* ident,  b
     if (EMPTYSTR(ident->fpr))
         return PEP_ILLEGAL_VALUE;
     PEP_STATUS status = PEP_STATUS_OK;
+    if (EMPTYSTR(ident->user_id)) {
+        char* cache_fpr = ident->fpr;
+        ident->fpr = NULL;
+        status = update_identity(session, ident);
+        ident->fpr = cache_fpr;
+        if (status != PEP_STATUS_OK)
+            return status;
+        if (EMPTYSTR(ident->user_id)) 
+            return PEP_UNKNOWN_ERROR;
+    }
     if (!unconditional)
-        validate_fpr(session, ident, true, true, true);
+        status = validate_fpr(session, ident, true, true, true);
     if (status == PEP_STATUS_OK)
         status = set_identity(session, ident);            
-    else { 
-        free(ident->fpr);
-        ident->fpr = NULL;                            
-    }
     return status;
 }
 
