@@ -528,13 +528,15 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     
     bool is_identity_default, is_user_default, is_address_default;
     bool no_stored_default = EMPTYSTR(stored_ident->fpr);
-    
+
     status = get_valid_pubkey(session, stored_ident,
                                 &is_identity_default,
                                 &is_user_default,
                                 &is_address_default,
                                 false);
-        
+
+    bool is_pEp = false;
+
     switch (status) {
         case PEP_STATUS_OK:
             if (!EMPTYSTR(stored_ident->fpr)) {
@@ -553,6 +555,18 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
                 stored_ident->comm_type = PEP_ct_key_not_found;
             break;    
         default:    
+            is_pEp_user(session, stored_ident, &is_pEp);
+            if (is_pEp) {
+                switch (stored_ident->comm_type) {
+                    case PEP_ct_key_expired:
+                    case PEP_ct_key_expired_but_confirmed:
+                        store = false;
+                        break;
+                    default:
+                        break;
+                }
+            }
+
             free(stored_ident->fpr);
             stored_ident->fpr = NULL;
             stored_ident->comm_type = PEP_ct_key_not_found;        
@@ -597,14 +611,14 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     adjust_pEp_trust_status(session, return_id);
    
     // Call set_identity() to store
-    if ((is_identity_default || is_user_default) &&
+    if (store && (is_identity_default || is_user_default) &&
          is_address_default) {                 
          // if we got an fpr which is default for either user
          // or identity AND is valid for this address, set in DB
          // as default
          status = set_identity(session, return_id);
     } 
-    else if (no_stored_default && !EMPTYSTR(return_id->fpr) 
+    else if (store && no_stored_default && !EMPTYSTR(return_id->fpr) 
              && return_id->comm_type != PEP_ct_key_revoked
              && return_id->comm_type != PEP_ct_key_expired
              && return_id->comm_type != PEP_ct_key_expired_but_confirmed
@@ -620,10 +634,12 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
         PEP_comm_type save_ct = return_id->comm_type;
         return_id->fpr = NULL;
         return_id->comm_type = PEP_ct_unknown;
-        PEP_STATUS save_status = status;
-        status = set_identity(session, return_id);
-        if (save_status != PEP_STATUS_OK)
-            status = save_status;
+        if (store) {
+            PEP_STATUS save_status = status;
+            status = set_identity(session, return_id);
+            if (save_status != PEP_STATUS_OK)
+                status = save_status;
+        }        
         return_id->fpr = save_fpr;
         return_id->comm_type = save_ct;
     }
@@ -770,6 +786,7 @@ DYNAMIC_API PEP_STATUS update_identity(
     // came in in the input, TOFU user_ids created when needed, and a new record placed in the DB
     // accordingly.
     //
+
     if (!stored_ident) {
         identity_list* id_list = NULL;
         status = get_identities_by_address(session, identity->address, &id_list);

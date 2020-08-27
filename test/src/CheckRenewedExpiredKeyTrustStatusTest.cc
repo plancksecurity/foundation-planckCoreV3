@@ -98,6 +98,11 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     PEP_STATUS status = set_own_key(session, alice_from, alice_fpr);
     ASSERT_OK;
 
+    const char* inq_fpr =  "8E8D2381AE066ABE1FEE509821BA977CA4728718";
+    pEp_identity* expired_inquisitor = new_identity("inquisitor@darthmama.org", NULL, NULL, "Lady Claire Trevelyan");
+    status = set_fpr_preserve_ident(session, expired_inquisitor, inq_fpr, false);
+    ASSERT_OK;
+
     // Ok, so I want to make sure we make an entry, so I'll try to decrypt the message WITH
     // the expired key:
     const string msg = slurp("test_mails/ENGINE-463-attempt-numero-dos.eml");
@@ -117,7 +122,6 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     ok = slurp_and_import_key(session, "test_keys/pub/inquisitor-0xA4728718_renewed_pub.asc");
     ASSERT_TRUE(ok);
 
-    pEp_identity* expired_inquisitor = new_identity("inquisitor@darthmama.org", NULL, NULL, "Lady Claire Trevelyan");
     message* msg2 = new_message(PEP_dir_outgoing);
 
     msg2->from = alice_from;
@@ -152,6 +156,11 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
 
     const char* inquisitor_fpr = "8E8D2381AE066ABE1FEE509821BA977CA4728718";
     pEp_identity* expired_inquisitor = new_identity("inquisitor@darthmama.org", "8E8D2381AE066ABE1FEE509821BA977CA4728718", "TOFU_inquisitor@darthmama.org", "Lady Claire Trevelyan");
+
+    status = set_fpr_preserve_ident(session, expired_inquisitor, inquisitor_fpr, false);
+    ASSERT_OK;
+
+
 
     PEP_comm_type key_ct;
     status = get_key_rating(session, inquisitor_fpr, &key_ct);
