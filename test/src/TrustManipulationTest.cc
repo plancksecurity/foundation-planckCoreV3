@@ -149,7 +149,16 @@ TEST_F(TrustManipulationTest, check_trust_manipulation) {
     ASSERT_STREQ(user->fpr, keypair2);
     ASSERT_EQ(user->comm_type , PEP_ct_mistrusted);
     output_stream << "Hoorah, we now do not trust key 2. (We never liked key 2 anyway.)" << endl;
-    output_stream << "Now we call update_identity to see what gifts it gives us (should be key 1 with key 1's initial trust.)" << endl;
+
+    // Ok, here's where the test breaks when we remove key election. Update identity won't be giving us anything because there's no default.
+
+//    output_stream << "Now we call update_identity to see what gifts it gives us (should be key 1 with key 1's initial trust.)" << endl;
+    output_stream << "Now we call update_identity to see what gifts it gives us (should be NOTHING.)" << endl;
+    status = update_identity(session, user);
+    ASSERT_NULL(user->fpr);
+    // Now set key 1 as the default again
+    status = set_fpr_preserve_ident(session, user, keypair1, true);
+    ASSERT_OK;
     status = update_identity(session, user);
     ASSERT_NOTNULL(user->fpr);
     ASSERT_STREQ(user->fpr, keypair1);

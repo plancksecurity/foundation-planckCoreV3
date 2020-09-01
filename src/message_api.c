@@ -4236,7 +4236,7 @@ static PEP_STATUS _decrypt_message(
                 // otherwise, we don't ask for a sender import fpr because for pEp 2.0+ any legit default key attachments should 
                 // be INSIDE the message 
                 status = import_keys_from_decrypted_msg(session, msg,
-                                                        &keys_were_imported, is_pEp_msg,
+                                                        is_pEp_msg, &keys_were_imported, 
                                                         &imported_private_key_address,
                                                         private_il,
                                                         &_imported_key_list, 

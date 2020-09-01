@@ -97,7 +97,10 @@ TEST_F(GetKeyRatingForUserTest, check_get_key_rating_for_user) {
 
     // Ok, so we have no info really, let's set it.
     status = set_identity(session, alice);
-
+    ASSERT_OK;
+    status = set_fpr_preserve_ident(session, alice, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", false);
+    ASSERT_OK;
+    
     status = update_identity(session, alice);
     ASSERT_NOTNULL(alice->fpr);
 

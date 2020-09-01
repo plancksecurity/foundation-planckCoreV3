@@ -134,6 +134,8 @@ PEP_STATUS validate_fpr(PEP_SESSION session,
     else if (status != PEP_STATUS_OK && has_private) // should never happen
         has_private = false;
     
+    ident->comm_type = PEP_ct_unknown;
+    
     status = get_trust(session, ident);
     if (status != PEP_STATUS_OK)
         ident->comm_type = PEP_ct_unknown;
