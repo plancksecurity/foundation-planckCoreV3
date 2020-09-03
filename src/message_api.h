@@ -566,7 +566,16 @@ PEP_STATUS try_encrypt_message(
         PEP_encrypt_flags_t flags
     );
 
-PEP_STATUS probe_encrypt(PEP_SESSION session, const char *fpr);
+// probe_encrypt() - test if passphrase for a key is working in current session
+//
+//  parameters:
+//      session (in)            session handle
+//      fpr (in)                fingerprint of key to test
+//
+//  returns:
+//      PEP_STATUS_OK           in case passphrase works or any error if not
+
+DYNAMIC_API PEP_STATUS probe_encrypt(PEP_SESSION session, const char *fpr);
 
 #ifdef __cplusplus
 }
