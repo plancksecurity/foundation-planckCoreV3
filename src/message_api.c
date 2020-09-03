@@ -4391,10 +4391,22 @@ static PEP_STATUS _decrypt_message(
                             }
                         } // else msg_major/minor_ver must have been set.
                         
-                        if (msg_major_ver > 2 || (msg_major_ver == 2 && msg_minor_ver > 0)) {
+                        // Ok, this is actually tricky. Normally, we want to look at the message version. But because
+                        // We are here, allegedly, on a 2.0+ message, if it was issued by a 2.1+ partner, it will still have 
+                        // X-pEp-Sender-FPR on it and we should take that! So we need to do this carefully and distinguish between 
+                        // things that vary here based on the SENDER'S client information (with the caveat that the format they are
+                        // producing is 2.0 or greater because we're in this logical branch) and the things that vary based upon 
+                        // what version of the client the sender thinks we have here.
+
+                        // So first, let's grab a sender fpr if we have one. That depends on the sender'd CLIENT version.
+                        if (major_ver > 2 || (major_ver == 2 && minor_ver > 0)) {
                             stringpair_list_t* searched = stringpair_list_find(inner_message->opt_fields, "X-pEp-Sender-FPR");                             
                             inner_message->_sender_fpr = ((searched && searched->value && searched->value->value) ? strdup(searched->value->value) : NULL);
-                            searched = stringpair_list_find(inner_message->opt_fields, X_PEP_MSG_WRAP_KEY);
+                        }
+
+                        // Ok, now get the message wrapping info
+                        if (msg_major_ver > 2 || (msg_major_ver == 2 && msg_minor_ver > 0)) {
+                            stringpair_list_t* searched = stringpair_list_find(inner_message->opt_fields, X_PEP_MSG_WRAP_KEY);
                             if (searched && searched->value && searched->value->value) {
                                 is_inner = (strcmp(searched->value->value, "INNER") == 0);
                                 if (!is_inner)
@@ -4403,7 +4415,7 @@ static PEP_STATUS _decrypt_message(
                                     inner_message->opt_fields = stringpair_list_delete_by_key(inner_message->opt_fields, X_PEP_MSG_WRAP_KEY);
                             }
                         }
-                        else if (msg_major_ver == 2 && msg_minor_ver == 0) {
+                        else if (wrap_info && msg_major_ver == 2 && msg_minor_ver == 0) {
                             is_inner = (strcmp(wrap_info, "INNER") == 0);
                             if (!is_inner)
                                 is_key_reset = (strcmp(wrap_info, "KEY_RESET") == 0);
@@ -4466,13 +4478,12 @@ static PEP_STATUS _decrypt_message(
 
                             if (!breaks_protocol && inner_message->from && !is_me(session, inner_message->from)) {                                         
                                 const char* sender_key = NULL;
-                                if ((msg_major_ver == 2 && msg_minor_ver > 0) || msg_major_ver > 2)
+
+                                // Messages from clients 2.1 or greater should ALWAYS have sender_fpr on the inside. So...
+                                if (!EMPTYSTR(inner_message->_sender_fpr))
                                     sender_key = inner_message->_sender_fpr;
-                                else { // !breaks_protocol is true, so this is a 2.0 message
-                                    if ((major_ver == 2 && minor_ver > 1)|| major_ver > 2) {
-                                        sender_key = imported_sender_key_fpr; // can be empty
-                                    }
-                                    else if (_keylist) { // signer key, 2.0 sent from 2.0 client
+                                else { // !breaks_protocol is true, so this is a 2.0 message FROM a 2.0 client
+                                    if (_keylist) { // signer key, 2.0 sent from 2.0 client
                                         sender_key = _keylist->value; // can be empty
                                     }
                                 }

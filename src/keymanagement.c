@@ -259,12 +259,17 @@ PEP_STATUS validate_fpr(PEP_SESSION session,
     }
     
     switch (ct) {
-        case PEP_ct_key_expired:
-        case PEP_ct_key_expired_but_confirmed:
         case PEP_ct_key_revoked:
         case PEP_ct_key_b0rken:
             // delete key from being default key for all users/identities
             status = remove_fpr_as_default(session, fpr);
+            // fallthrough intentional!
+        case PEP_ct_key_expired:
+        case PEP_ct_key_expired_but_confirmed:
+            // Note: we no longer remove expired keys as defaults; pEp users 
+            // will either send us an updated key or a key reset, and OpenPGP
+            // users can either do the same or request a manual key reset.
+            // We don't want to upset the automated updating of expired keys.
             status = update_trust_for_fpr(session, 
                                           fpr, 
                                           ct);

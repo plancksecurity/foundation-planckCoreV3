@@ -100,9 +100,11 @@ PEP_STATUS set_up_ident_from_scratch(PEP_SESSION session,
             status = myself(session, ident);
     }
     else {
-        status = set_fpr_preserve_ident(session, ident, fpr, false);
-        if (status != PEP_STATUS_OK)
-            goto pep_free;
+        if (!EMPTYSTR(fpr)) {
+            status = set_fpr_preserve_ident(session, ident, fpr, false);
+            if (status != PEP_STATUS_OK)
+                goto pep_free;
+        }        
         status = update_identity(session, ident);
     }    
     if (status != PEP_STATUS_OK)

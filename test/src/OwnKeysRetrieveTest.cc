@@ -110,7 +110,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_single_private_single_pub) {
     // Set up an own idea that only has a public key
     PEP_STATUS status = set_up_ident_from_scratch(session,
                 "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc",
-                "pep.test.bob@pep-project.org", NULL, PEP_OWN_USERID, "Bob's Burgers",
+                "pep.test.bob@pep-project.org", "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39", PEP_OWN_USERID, "Bob's Burgers",
                 NULL, false
             );
     ASSERT_OK;

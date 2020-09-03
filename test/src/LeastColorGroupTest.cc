@@ -120,10 +120,16 @@ TEST_F(LeastColorGroupTest, check_least_color_group) {
     pEp_identity * sender1 = new_identity("pep.color.test.V@kgrothoff.org",
                                           NULL, "TOFU_pep.color.test.V@kgrothoff.org",
                                           "Pep Color Test V (sender)");
-    status = update_identity(session, sender1);
-    trust_personal_key(session, sender1);
-    status = update_identity(session, sender1);
 
+    status = set_fpr_preserve_ident(session, sender1, "AFC019B22E2CC61F13F285BF179B9DF271FC6D28", false);
+    ASSERT_OK;
+    status = update_identity(session, sender1);
+    ASSERT_OK;
+    status = trust_personal_key(session, sender1);
+    ASSERT_OK;
+    status = update_identity(session, sender1);
+    ASSERT_OK;
+    
     message* msg_ptr = nullptr;
     message* dest_msg = nullptr;
     message* final_ptr = nullptr;
