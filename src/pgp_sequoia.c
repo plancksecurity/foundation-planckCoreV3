@@ -1007,7 +1007,7 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
     // Insert the "userids".
     stmt = session->sq_sql.cert_save_insert_userids;
     ua_iter = pgp_cert_valid_user_id_iter(cert, session->policy, 0);
-    int first = 1;
+
     while ((ua = pgp_cert_valid_user_id_iter_next(ua_iter))) {
         user_id = pgp_valid_user_id_amalgamation_user_id(ua);
 
@@ -1046,19 +1046,18 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
                 ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
                           "Updating userids: %s", sqlite3_errmsg(session->key_db));
             }
-        }
 
-        if (first && private_idents && is_tsk) {
-            first = 0;
+            if (private_idents && is_tsk) {
+                // Create an identity for the primary user id.
+                pEp_identity *ident = new_identity(email, fpr, NULL, name);
+                if (ident == NULL)
+                    ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "new_identity");
 
-            // Create an identity for the primary user id.
-            pEp_identity *ident = new_identity(email, fpr, NULL, name);
-            if (ident == NULL)
-                ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "new_identity");
-
-            *private_idents = identity_list_add(*private_idents, ident);
-            if (*private_idents == NULL)
-                ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "identity_list_add");
+                if (!*private_idents)
+                    *private_idents = new_identity_list(ident);
+                else
+                    identity_list_add(*private_idents, ident);
+            }
         }
 
         pgp_packet_free (user_id);
