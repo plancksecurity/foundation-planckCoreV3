@@ -1,8 +1,8 @@
 /** 
- * @file       openpgp_compat.h 
- * @brief      Exposes functions that provide non-generic PGP-specific functionality (largely related to PGP
- *             keyrings) to adapters that need them without polluting the engine interface.
- * @copyright  GNU General Public License 3.0 - see LICENSE.txt
+ * @file     openpgp_compat.h 
+ * @brief    Exposes functions that provide non-generic PGP-specific functionality (largely related to PGP
+ *           keyrings) to adapters that need them without polluting the engine interface.
+ * @license  GNU General Public License 3.0 - see LICENSE.txt
  */
 
 #pragma once
