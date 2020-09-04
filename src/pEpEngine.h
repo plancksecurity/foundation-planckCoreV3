@@ -1,5 +1,5 @@
 /** @file */
-/** @brief File description for doxygen missing. FIXME */
+/** @brief pEp Engine API, as well as exposed internal functions and structures. (The latter should probably be factored out at some point) */
 
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
@@ -226,7 +226,7 @@ typedef int (*inject_sync_event_t)(SYNC_EVENT ev, void *management);
 //
 typedef PEP_STATUS (*ensure_passphrase_t)(PEP_SESSION session, const char* fpr);
 
-// INIT_STATUS init() - initialize pEpEngine for a thread
+// init() - initialize pEpEngine for a thread
 //
 //  parameters:
 //      session (out)                       init() allocates session memory and
@@ -274,7 +274,7 @@ DYNAMIC_API PEP_STATUS init(
 
 
 
-// void release() - release thread session handle
+// release() - release thread session handle
 //
 //  parameters:
 //        session (in)    session handle to release
@@ -750,7 +750,7 @@ DYNAMIC_API PEP_STATUS set_identity(
         PEP_SESSION session, const pEp_identity *identity
     );
 
-// get_default own_userid() - get the user_id of the own user
+// get_default_own_userid() - get the user_id of the own user
 //
 //    parameters:
 //        session (in)        session handle
