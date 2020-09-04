@@ -1,14 +1,10 @@
-/** @file */
-/** @brief File description for doxygen missing. FIXME */
+/** 
+ * @file       openpgp_compat.h 
+ * @brief      Exposes functions that provide non-generic PGP-specific functionality (largely related to PGP
+ *             keyrings) to adapters that need them without polluting the engine interface.
+ * @copyright  GNU General Public License 3.0 - see LICENSE.txt
+ */
 
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
-
-// openpgp_compat.h
-//
-// These functions are the exposure of non-generic PGP-specific functionality (largely related to PGP
-// keyrings) to adapters that need them without polluting the engine interface.
-//
 #pragma once
 
 #ifdef __cplusplus
@@ -26,17 +22,20 @@ extern "C" {
 #include "pgp_sequoia.h"
 #endif
     
-//  OpenPGP_list_keyinfo() - get a key/UID list for pattern matches in keyring (NULL or ""
-//                           to return entire keyring), filtering out revoked keys in the results
-//
-//  parameters:
-//      session (in)          session handle
-//      search_pattern (in)   search pattern - either an fpr, or something within the UID, or NULL / "" for
-//                            all keys
-//      keyinfo_list (out)    a key/value pair list for each key / UID combination
-//
-//  caveat:
-//      keyinfo_list must be freed by the caller.
+/**
+ *  <!--       OpenPGP_list_keyinfo()       -->
+ *  
+ *  @brief get a key/UID list for pattern matches in keyring (NULL or ""
+ *         to return entire keyring), filtering out revoked keys in the results
+ *  
+ *  @param[in]     session           session handle
+ *  @param[in]     search_pattern    search pattern - either an fpr, or something within the UID, or NULL / "" for
+ *                                   all keys
+ *  @param[out]    keyinfo_list      a key/value pair list for each key / UID combination
+ *  
+ *  @warning keyinfo_list must be freed by the caller.
+ *  
+ */
 DYNAMIC_API PEP_STATUS OpenPGP_list_keyinfo (
         PEP_SESSION session, const char* search_pattern, stringpair_list_t** keyinfo_list
     );
