@@ -19,15 +19,15 @@ protocol Sync 1 {
                     send SynchronizeGroupKeys;
                     go Grouped;
                 }
+                do newChallengeAndNegotiationBase;
+                debug > initial Beacon
+                send Beacon;
                 go Sole;
             }
         }
 
         state Sole timeout=off {
             on Init {
-                do newChallengeAndNegotiationBase;
-                debug > initial Beacon
-                send Beacon;
                 do showBeingSole;
             }
 
