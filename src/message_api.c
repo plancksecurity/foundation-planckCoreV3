@@ -3905,6 +3905,15 @@ static PEP_STATUS _decrypt_message(
         return PEP_UNENCRYPTED;
     }
 
+    // if there is an own identity defined via this message is coming in
+    // retrieve the details; in case there's no usuable own key make it
+    // functional
+    if (src->recv_by) {
+        status = myself(session, src->recv_by);
+        if (status)
+            return status;
+    }
+
     status = get_crypto_text(src, &ctext, &csize);
     if (status != PEP_STATUS_OK)
         return status;
