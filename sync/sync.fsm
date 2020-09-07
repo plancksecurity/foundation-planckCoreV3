@@ -680,6 +680,11 @@ protocol Sync 1 {
         message SynchronizeGroupKeys 21, ratelimit=60 {
         }
 
+        // This could be part of TrustSync, but actually it does not matter.
+        // This message will not be sent by the Sync thread. It is used by
+        // decrypt_message() to mark a previously computed rating. It is only
+        // valid when signed with an own key.
+
         message ReceiverRating 22, security=unencrypted {
             field Rating rating;
         }
