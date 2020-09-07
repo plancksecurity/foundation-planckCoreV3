@@ -94,7 +94,7 @@ PEP_STATUS base_prepare_message(
 //
 //  caveat:
 //      payload may point to msg attachment, the ownership does not change
-//      if fpr != NULL the ownership goes to the caller
+//      the ownership of fpr goes to the caller
 
 PEP_STATUS base_extract_message(
         PEP_SESSION session,

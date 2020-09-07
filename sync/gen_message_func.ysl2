@@ -296,7 +296,7 @@ template "field", mode=update_message {
     const "state" > «yml:lcase(ancestor::protocol/@name)»_state.«yml:lcase(ancestor::fsm/@name)»
 
     choose {
-        when "func:basicType()" // copyable
+        when "func:basicType() or @type='Rating'" // copyable
         ||
         msg->choice.«yml:lcase(../../@name)».choice.«$message_name».«@name»
                  = session->«$state».«@name»;
@@ -380,7 +380,7 @@ template "message", mode=update_state {
 template "field", mode=update_state {
     param "message_name";
     choose {
-        when "func:basicType()" // copyable
+        when "func:basicType() or @type='Rating'" // copyable
         ||
         session->«yml:lcase(../../../@name)»_state.«yml:lcase(../../@name)».«@name» = msg->choice.«yml:lcase(../../@name)»
                 .choice.«$message_name».«@name»;
