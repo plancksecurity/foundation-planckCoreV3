@@ -4297,7 +4297,7 @@ static PEP_STATUS _decrypt_message(
             dedup_stringlist(_keylist->next);
             
         /* add pEp-related status flags to header */
-        decorate_message(msg, *rating, _keylist, false, false);
+        decorate_message(msg, *rating, _keylist, false, true);
 
         // Maybe unnecessary
         // if (keys_were_imported)
