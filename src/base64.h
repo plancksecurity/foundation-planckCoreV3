@@ -1,8 +1,8 @@
-/** @file */
-/** @brief File description for doxygen missing. FIXME */
-
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    base64.h
+ * @brief   Convert base64 to a binary blob
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #pragma once
 

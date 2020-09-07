@@ -1,8 +1,8 @@
-/** @file */
-/** @brief pEp Engine API, as well as exposed internal functions and structures. (The latter should probably be factored out at some point) */
-
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/** 
+ * @file    pEpEngine.h
+ * @brief   pEp Engine API, as well as exposed internal functions and structures. (The latter should probably be factored out at some point) 
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #pragma once
 
@@ -170,7 +170,7 @@ typedef enum _PEP_enc_format {
 /**
  *  <!--       messageToSend()       -->
  *  
- *  @brief a message needs to be delivered by application
+ *  @brief A message needs to be delivered by application
  *  
  *  @param[in]     msg    message struct with message to send
  *  
@@ -190,7 +190,7 @@ typedef struct Sync_event *SYNC_EVENT;
 /**
  *  <!--       free_Sync_event()       -->
  *  
- *  @brief free memory occupied by sync protocol message
+ *  @brief Free memory occupied by sync protocol message
  *  
  *  @param[in]     ev    event to free
  *  
@@ -203,7 +203,7 @@ DYNAMIC_API void free_Sync_event(SYNC_EVENT ev);
 /**
  *  <!--       inject_sync_event()       -->
  *  
- *  @brief inject sync protocol message
+ *  @brief Inject sync protocol message
  *  
  *  @param[in]     ev            event to inject
  *  @param[in]     management    application defined; usually a locked queue
@@ -221,7 +221,7 @@ typedef int (*inject_sync_event_t)(SYNC_EVENT ev, void *management);
 /**
  *  <!--       ensure_passphrase()       -->
  *  
- *  @brief callee ensures correct password for (signing) key is configured in the session on
+ *  @brief Callee ensures correct password for (signing) key is configured in the session on
  *         return, or returns error when it is not found
  *  
  *  @param[in]     fpr    fpr to check
@@ -239,7 +239,7 @@ typedef PEP_STATUS (*ensure_passphrase_t)(PEP_SESSION session, const char* fpr);
 /**
  *  <!--       init()       -->
  *  
- *  @brief initialize pEpEngine for a thread
+ *  @brief Initialize pEpEngine for a thread
  *  
  *  @param[out]    session              init() allocates session memory and
  *                                      returns a pointer as a handle
@@ -288,7 +288,7 @@ DYNAMIC_API PEP_STATUS init(
 /**
  *  <!--       release()       -->
  *  
- *  @brief release thread session handle
+ *  @brief Release thread session handle
  *  
  *  @param[in]     session    session handle to release
  *  
@@ -305,7 +305,7 @@ DYNAMIC_API void release(PEP_SESSION session);
 /**
  *  <!--       config_passive_mode()       -->
  *  
- *  @brief enable passive mode
+ *  @brief Enable passive mode
  *  
  *  @param[in]     session    session handle
  *  @param[in]     enable     flag if enabled or disabled
@@ -319,7 +319,7 @@ DYNAMIC_API void config_passive_mode(PEP_SESSION session, bool enable);
 /**
  *  <!--       config_unencrypted_subject()       -->
  *  
- *  @brief disable subject encryption
+ *  @brief Disable subject encryption
  *  
  *  @param[in]     session    session handle
  *  @param[in]     enable     flag if enabled or disabled
@@ -333,7 +333,7 @@ DYNAMIC_API void config_unencrypted_subject(PEP_SESSION session, bool enable);
 /**
  *  <!--       config_use_only_own_private_keys()       -->
  *  
- *  @brief enable passive mode
+ *  @brief Enable passive mode
  *  
  *  @param[in]     session    session handle
  *  @param[in]     enable     flag if enabled or disabled
@@ -347,7 +347,7 @@ DYNAMIC_API void config_use_only_own_private_keys(PEP_SESSION session, bool enab
 /**
  *  <!--       config_service_log()       -->
  *  
- *  @brief log more for service purposes
+ *  @brief Log more for service purposes
  *  
  *  session (in)    session handle
  *  enable (in)     flag if enabled or disabled
@@ -373,7 +373,7 @@ typedef enum {
 /**
  *  <!--       config_cipher_suite()       -->
  *  
- *  @brief cipher suite being used when encrypting
+ *  @brief Cipher suite being used when encrypting
  *  
  *  @param[in]     session         session handle
  *  @param[in]     cipher_suite    cipher suite to use
@@ -392,7 +392,7 @@ DYNAMIC_API PEP_STATUS config_cipher_suite(PEP_SESSION session,
 /**
  *  <!--       decrypt_and_verify()       -->
  *  
- *  @brief decrypt and/or verify a message
+ *  @brief Decrypt and/or verify a message
  *  
  *  @param[in]     session         session handle
  *  @param[in]     ctext           cipher text to decrypt and/or verify
@@ -421,7 +421,7 @@ DYNAMIC_API PEP_STATUS config_cipher_suite(PEP_SESSION session,
  *           the caller must use free() (or an Windoze pEp_free()) and
  *           free_stringlist() to free them
  * 
- *  @note if this function failes an error message may be the first element of
+ *  @note if this function fails an error message may be the first element of
  *        keylist and the other elements may be the keys used for encryption
  *  
  */
@@ -437,7 +437,7 @@ DYNAMIC_API PEP_STATUS decrypt_and_verify(
 /**
  *  <!--       verify_text()       -->
  *  
- *  @brief verfy plain text with a digital signature
+ *  @brief Verfy plain text with a digital signature
  *  
  *  @param[in]     session      session handle
  *  @param[in]     text         text to verify
@@ -463,7 +463,7 @@ DYNAMIC_API PEP_STATUS verify_text(
 /**
  *  <!--       encrypt_and_sign()       -->
  *  
- *  @brief encrypt and sign a message
+ *  @brief Encrypt and sign a message
  *  
  *  @param[in]     session    session handle
  *  @param[in]     keylist    list of key ids to encrypt with as C strings
@@ -497,7 +497,7 @@ DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color);
 /**
  *  <!--       log_event()       -->
  *  
- *  @brief log a user defined event defined by UTF-8 encoded strings into
+ *  @brief Log a user defined event defined by UTF-8 encoded strings into
  *         management log
  *  
  *  @param[in]     session        session handle
@@ -541,7 +541,7 @@ DYNAMIC_API void _service_error_log(PEP_SESSION session, const char *entity,
 /**
  *  <!--       trustword()       -->
  *  
- *  @brief get the corresponding trustword for a 16 bit value
+ *  @brief Get the corresponding trustword for a 16 bit value
  *  
  *  @param[in]     session    session handle
  *  @param[in]     value      value to find a trustword for
@@ -568,7 +568,7 @@ DYNAMIC_API PEP_STATUS trustword(
 /**
  *  <!--       trustwords()       -->
  *  
- *  @brief get trustwords for a string of hex values of a fingerprint
+ *  @brief Get trustwords for a string of hex values of a fingerprint
  *  
  *  @param[in]     session        session handle
  *  @param[in]     fingerprint    C string with hex values to find trustwords for
@@ -709,7 +709,7 @@ typedef struct _identity_list {
 /**
  *  <!--       new_identity()       -->
  *  
- *  @brief allocate memory and set the string and size fields
+ *  @brief Allocate memory and set the string and size fields
  *  
  *  @param[in]     address     UTF-8 string or NULL 
  *  @param[in]     fpr         UTF-8 string or NULL 
@@ -733,7 +733,7 @@ DYNAMIC_API pEp_identity *new_identity(
 /**
  *  <!--       identity_dup()       -->
  *  
- *  @brief allocate memory and duplicate
+ *  @brief Allocate memory and duplicate
  *  
  *  @param[in]     src    identity to duplicate
  *  
@@ -751,7 +751,7 @@ DYNAMIC_API pEp_identity *identity_dup(const pEp_identity *src);
 /**
  *  <!--       free_identity()       -->
  *  
- *  @brief free all memory being occupied by a pEp_identity struct
+ *  @brief Free all memory being occupied by a pEp_identity struct
  *  
  *  @param[in]     identity    struct to release
  *  
@@ -766,7 +766,7 @@ DYNAMIC_API void free_identity(pEp_identity *identity);
 /**
  *  <!--       get_identity()       -->
  *  
- *  @brief get identity information
+ *  @brief Get identity information
  *  
  *  @param[in]     session     session handle
  *  @param[in]     address     C string with communication address, UTF-8 encoded
@@ -798,7 +798,7 @@ PEP_STATUS replace_identities_fpr(PEP_SESSION session,
 /**
  *  <!--       set_identity()       -->
  *  
- *  @brief set identity information
+ *  @brief Set identity information
  *  
  *  @param[in]     session     session handle
  *  @param[in]     identity    pointer to pEp_identity structure
@@ -820,7 +820,7 @@ DYNAMIC_API PEP_STATUS set_identity(
 /**
  *  <!--       get_default_own_userid()       -->
  *  
- *  @brief get the user_id of the own user
+ *  @brief Get the user_id of the own user
  *  
  *  @param[in]     session    session handle
  *  @param[out]    userid     own user id (if it exists)
@@ -844,7 +844,7 @@ DYNAMIC_API PEP_STATUS get_default_own_userid(
 /**
  *  <!--       get_userid_alias_default()       -->
  *  
- *  @brief get the default user_id which corresponds
+ *  @brief Get the default user_id which corresponds
  *         to an alias
  *  
  *  @param[in]     session       session handle
@@ -874,7 +874,7 @@ DYNAMIC_API PEP_STATUS get_userid_alias_default(
 /**
  *  <!--       set_userid_alias()       -->
  *  
- *  @brief set an alias to correspond to a default id
+ *  @brief Set an alias to correspond to a default id
  *  
  *  @param[in]     session       session handle
  *  @param[in]     default_id    the default id for this alias. This must
@@ -896,7 +896,7 @@ DYNAMIC_API PEP_STATUS set_userid_alias (
 /**
  *  <!--       set_identity_flags()       -->
  *  
- *  @brief update identity flags on existing identity
+ *  @brief Update identity flags on existing identity
  *  
  *  @param[in]     session    session handle
  *                            identity (in,out)   pointer to pEp_identity structure
@@ -918,7 +918,7 @@ DYNAMIC_API PEP_STATUS set_identity_flags(
 /**
  *  <!--       unset_identity_flags()       -->
  *  
- *  @brief update identity flags on existing identity
+ *  @brief Update identity flags on existing identity
  *  
  *  @param[in]     session    session handle
  *                            identity (in,out)   pointer to pEp_identity structure
@@ -940,7 +940,7 @@ DYNAMIC_API PEP_STATUS unset_identity_flags(
 /**
  *  <!--       mark_as_compromised()       -->
  *  
- *  @brief mark key in trust db as compromised
+ *  @brief Mark key in trust db as compromised
  *  
  *  @param[in]     session    session handle
  *  @param[in]     fpr        fingerprint of key to mark
@@ -957,7 +957,7 @@ DYNAMIC_API PEP_STATUS mark_as_compromised(
 /**
  *  <!--       mark_as_compromized()       -->
  *  
- *  @brief deprecated to fix misspelling. Please move to
+ *  @brief Deprecated to fix misspelling. Please move to
  *         mark_as_compromised();
  *  
  *  
@@ -972,7 +972,7 @@ DYNAMIC_API PEP_STATUS mark_as_compromized(
 /**
  *  <!--       generate_keypair()       -->
  *  
- *  @brief generate a new key pair and add it to the key ring
+ *  @brief Generate a new key pair and add it to the key ring
  *  
  *  @param[in]     session     session handle
  *  @param[in,out] identity    pointer to pEp_identity structure
@@ -1000,7 +1000,7 @@ DYNAMIC_API PEP_STATUS generate_keypair(
 /**
  *  <!--       delete_keypair()       -->
  *  
- *  @brief delete a public key or a key pair from the key ring
+ *  @brief Delete a public key or a key pair from the key ring
  *  
  *  @param[in]     session    session handle
  *  @param[in]     fpr        C string with key id or fingerprint of the
@@ -1021,7 +1021,7 @@ DYNAMIC_API PEP_STATUS delete_keypair(PEP_SESSION session, const char *fpr);
 /**
  *  <!--       import_key()       -->
  *  
- *  @brief import key from data
+ *  @brief Import key from data
  *  
  *  @param[in]     session         session handle
  *  @param[in]     key_data        key data, i.e. ASCII armored OpenPGP key
@@ -1088,7 +1088,7 @@ PEP_STATUS _import_key_with_fpr_return(
 /**
  *  <!--       export_key()       -->
  *  
- *  @brief export ascii armored key
+ *  @brief Export ascii armored key
  *  
  *  @param[in]     session     session handle
  *  @param[in]     fpr         key id or fingerprint of key
@@ -1112,7 +1112,7 @@ DYNAMIC_API PEP_STATUS export_key(
 /**
  *  <!--       export_secret_key()       -->
  *  
- *  @brief export secret key ascii armored
+ *  @brief Export secret key ascii armored
  *  
  *  @param[in]     session     session handle
  *  @param[in]     fpr         fingerprint of key, at least 16 hex digits
@@ -1138,7 +1138,7 @@ DYNAMIC_API PEP_STATUS export_secret_key(
 /**
  *  <!--       export_secrect_key()       -->
  *  
- *  @brief deprecated misspelled function. Please replace with
+ *  @brief Deprecated misspelled function. Please replace with
  *         export_secret_key
  *  
  *  @deprecated
@@ -1152,7 +1152,7 @@ DYNAMIC_API PEP_STATUS export_secrect_key(
 /**
  *  <!--       recv_key()       -->
  *  
- *  @brief update key(s) from keyserver
+ *  @brief Update key(s) from keyserver
  *  
  *  @param[in]     session    session handle
  *  @param[in]     pattern    key id, user id or address to search for as
@@ -1167,7 +1167,7 @@ DYNAMIC_API PEP_STATUS recv_key(PEP_SESSION session, const char *pattern);
 /**
  *  <!--       find_keys()       -->
  *  
- *  @brief find keys in keyring
+ *  @brief Find keys in keyring
  *  
  *  @param[in]     session    session handle
  *  @param[in]     pattern    key id, user id or address to search for as
@@ -1187,7 +1187,7 @@ DYNAMIC_API PEP_STATUS find_keys(
 /**
  *  <!--       send_key()       -->
  *  
- *  @brief send key(s) to keyserver
+ *  @brief Send key(s) to keyserver
  *  
  *  @param[in]     session    session handle
  *  @param[in]     pattern    key id, user id or address to search for as
@@ -1202,7 +1202,7 @@ DYNAMIC_API PEP_STATUS send_key(PEP_SESSION session, const char *pattern);
 /**
  *  <!--       pEp_free()       -->
  *  
- *  @brief free memory allocated by pEp engine
+ *  @brief Free memory allocated by pEp engine
  *  
  *  @param[in]     p    pointer to free <br>
  *                      The reason for this function is that heap management can be a pretty
@@ -1220,7 +1220,7 @@ DYNAMIC_API void pEp_free(void *p);
 /**
  *  <!--       pEp_realloc()       -->
  *  
- *  @brief reallocate memory allocated by pEp engine
+ *  @brief Reallocate memory allocated by pEp engine
  *  
  *  @param[in]     p       pointer to free
  *  @param[in]     size    new memory size
@@ -1242,7 +1242,7 @@ DYNAMIC_API void *pEp_realloc(void *p, size_t size);
 /**
  *  <!--       get_trust()       -->
  *  
- *  @brief get the trust level a key has for a person
+ *  @brief Get the trust level a key has for a person
  *  
  *  @param[in]     session     session handle
  *  @param[in,out] identity    user_id and fpr to check as UTF-8 strings (in)
@@ -1268,7 +1268,7 @@ PEP_STATUS update_trust_for_fpr(PEP_SESSION session,
 /**
  *  <!--       least_trust()       -->
  *  
- *  @brief get the least known trust level for a key in the database
+ *  @brief Get the least known trust level for a key in the database
  *  
  *  @param[in]     session      session handle
  *  @param[in]     fpr          fingerprint of key to check
@@ -1288,7 +1288,7 @@ DYNAMIC_API PEP_STATUS least_trust(
 /**
  *  <!--       get_key_rating()       -->
  *  
- *  @brief get the rating a bare key has
+ *  @brief Get the rating a bare key has
  *  
  *  @param[in]     session      session handle
  *  @param[in]     fpr          unique identifyer for key as UTF-8 string
@@ -1309,7 +1309,7 @@ DYNAMIC_API PEP_STATUS get_key_rating(
 /**
  *  <!--       renew_key()       -->
  *  
- *  @brief renew an expired key
+ *  @brief Renew an expired key
  *  
  *  @param[in]     session    session handle
  *  @param[in]     fpr        ID of key to renew as UTF-8 string
@@ -1329,7 +1329,7 @@ DYNAMIC_API PEP_STATUS renew_key(
 /**
  *  <!--       revoke_key()       -->
  *  
- *  @brief revoke a key
+ *  @brief Revoke a key
  *  
  *  @param[in]     session    session handle
  *  @param[in]     fpr        ID of key to revoke as UTF-8 string
@@ -1352,7 +1352,7 @@ DYNAMIC_API PEP_STATUS revoke_key(
 /**
  *  <!--       key_expired()       -->
  *  
- *  @brief flags if a key is already expired
+ *  @brief Flags if a key is already expired
  *  
  *  @param[in]     session    session handle
  *  @param[in]     fpr        ID of key to check as UTF-8 string
@@ -1373,7 +1373,7 @@ DYNAMIC_API PEP_STATUS key_expired(
 /**
  *  <!--       key_revoked()       -->
  *  
- *  @brief flags if a key is already revoked
+ *  @brief Flags if a key is already revoked
  *  
  *  @param[in]     session    session handle
  *  @param[in]     fpr        ID of key to check as UTF-8 string
@@ -1398,7 +1398,7 @@ PEP_STATUS get_key_userids(
 /**
  *  <!--       get_crashdump_log()       -->
  *  
- *  @brief get the last log messages out
+ *  @brief Get the last log messages out
  *  
  *  @param[in]     session     session handle
  *  @param[in]     maxlines    maximum number of lines (0 for default)
@@ -1422,7 +1422,7 @@ DYNAMIC_API PEP_STATUS get_crashdump_log(
 /**
  *  <!--       get_languagelist()       -->
  *  
- *  @brief get the list of languages
+ *  @brief Get the list of languages
  *  
  *  @param[in]     session      session handle
  *  @param[out]    languages    languages as string in double quoted CSV format
@@ -1442,7 +1442,7 @@ DYNAMIC_API PEP_STATUS get_languagelist(
 /**
  *  <!--       get_phrase()       -->
  *  
- *  @brief get phrase in a dedicated language through i18n
+ *  @brief Get phrase in a dedicated language through i18n
  *  
  *  @param[in]     session      session handle
  *  @param[in]     lang         C string with ISO 639-1 language code
@@ -1464,7 +1464,7 @@ DYNAMIC_API PEP_STATUS get_phrase(
 /**
  *  <!--       sequence_value()       -->
  *  
- *  @brief raise the value of a named sequence and retrieve it
+ *  @brief Raise the value of a named sequence and retrieve it
  *  
  *  @param[in]     session    session handle
  *  @param[in]     name       name of sequence
@@ -1488,7 +1488,7 @@ DYNAMIC_API PEP_STATUS sequence_value(
 /**
  *  <!--       set_revoked()       -->
  *  
- *  @brief records relation between a revoked key and its replacement
+ *  @brief Records relation between a revoked key and its replacement
  *  
  *  @param[in]     session            session handle
  *  @param[in]     revoked_fpr        revoked fingerprint
@@ -1509,7 +1509,7 @@ DYNAMIC_API PEP_STATUS set_revoked(
 /**
  *  <!--       get_revoked()       -->
  *  
- *  @brief find revoked key that may have been replaced by given key, if any
+ *  @brief Find revoked key that may have been replaced by given key, if any
  *  
  *  @param[in]     session            session handle
  *  @param[in]     fpr                given fingerprint
@@ -1529,7 +1529,7 @@ DYNAMIC_API PEP_STATUS get_revoked(
 /**
  *  <!--       key_created()       -->
  *  
- *  @brief get creation date of a key
+ *  @brief Get creation date of a key
  *  
  *  @param[in]     session    session handle
  *  @param[in]     fpr        fingerprint of key
@@ -1548,7 +1548,7 @@ PEP_STATUS key_created(
 /**
  *  <!--       find_private_keys()       -->
  *  
- *  @brief find keys in keyring
+ *  @brief Find keys in keyring
  *  
  *  @param[in]     session    session handle
  *  @param[in]     pattern    key id, user id or address to search for as
@@ -1565,7 +1565,7 @@ PEP_STATUS find_private_keys(PEP_SESSION session, const char* pattern,
 /**
  *  <!--       get_engine_version()       -->
  *  
- *  @brief returns the current version of pEpEngine (this is different
+ *  @brief Returns the current version of pEpEngine (this is different
  *         from the pEp protocol version!)
  *  
  *  
@@ -1575,7 +1575,7 @@ DYNAMIC_API const char* get_engine_version();
 /**
  *  <!--       get_protocol_version()       -->
  *  
- *  @brief returns the pEp protocol version
+ *  @brief Returns the pEp protocol version
  *  
  *  
  */
@@ -1585,7 +1585,7 @@ DYNAMIC_API const char *get_protocol_version();
 /**
  *  <!--       is_pEp_user()       -->
  *  
- *  @brief returns true if the USER corresponding to this identity 
+ *  @brief Returns true if the USER corresponding to this identity 
  *         has been listed in the *person* table as a pEp user. 
  *  
  *  @param[in]     identity    identity containing the user_id to check (this is
@@ -1607,7 +1607,7 @@ DYNAMIC_API PEP_STATUS is_pEp_user(PEP_SESSION session,
 /**
  *  <!--       per_user_directory()       -->
  *  
- *  @brief returns the directory for pEp management db
+ *  @brief Returns the directory for pEp management db
  *  
  *  @retval char*   path to actual per user directory
  *  @retval NULL    on failure
@@ -1621,7 +1621,7 @@ DYNAMIC_API const char *per_user_directory(void);
 /**
  *  <!--       per_machine_directory()       -->
  *  
- *  @brief returns the directory for pEp system db
+ *  @brief Returns the directory for pEp system db
  *  
  *  @retval char*   path to actual per machine directory
  *  @retval NULL    on failure
@@ -1704,7 +1704,7 @@ DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys(PEP_SESSION session,
 /**
  *  <!--       set_ident_enc_format()       -->
  *  
- *  @brief set the default encryption format for this identity
+ *  @brief Set the default encryption format for this identity
  *         (value only MIGHT be used, and only in the case where the
  *         message enc_format is PEP_enc_auto. It will be used 
  *         opportunistically in the case on a first-come, first-serve 

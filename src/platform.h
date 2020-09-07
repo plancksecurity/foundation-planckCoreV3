@@ -1,8 +1,8 @@
-/** @file */
-/** @brief File description for doxygen missing. FIXME */
-
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file     platform.h
+ * @brief    Checks platform values and causes the appropriate platform-specific header to be included
+ * @license  GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #pragma once
 

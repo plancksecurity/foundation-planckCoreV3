@@ -25,7 +25,7 @@ extern "C" {
 /**
  *  <!--       OpenPGP_list_keyinfo()       -->
  *  
- *  @brief get a key/UID list for pattern matches in keyring (NULL or ""
+ *  @brief Get a key/UID list for pattern matches in keyring (NULL or ""
  *         to return entire keyring), filtering out revoked keys in the results
  *  
  *  @param[in]     session           session handle

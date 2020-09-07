@@ -1,8 +1,8 @@
-/** @file */
-/** @brief File description for doxygen missing. FIXME */
-
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    etpan_mime.h
+ * @brief   Driver for the libetpan MIME implementation (@see mime.h for the general API)
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #pragma once
 

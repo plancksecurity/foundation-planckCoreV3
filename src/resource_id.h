@@ -1,8 +1,8 @@
-/** @file */
-/** @brief File description for doxygen missing. FIXME */
-
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    resource_id.h
+ * @brief   resource id (filenames, uids) structs and access/generation/manipulation functions
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #pragma once
 

@@ -1,8 +1,8 @@
-/** @file */
-/** @brief File description for doxygen missing. FIXME */
-
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    pEp_internal.h
+ * @brief   pEp internal structs, functions, defines, and values
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 // maximum attachment size to import as key 1MB, maximum of 20 attachments
 

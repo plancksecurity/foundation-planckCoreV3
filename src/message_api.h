@@ -1,8 +1,9 @@
-/** @file */
-/** @brief File description for doxygen missing. FIXME */
+/** 
+ * @file     message_api.h
+ * @brief    pEp engine API for message handling and evaluation and related functions
+ * @license  GNU General Public License 3.0 - see LICENSE.txt
+ */
 
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
 
 #pragma once
 
@@ -66,7 +67,7 @@ typedef enum _message_wrap_type {
 /**
  *  <!--       encrypt_message()       -->
  *  
- *  @brief encrypt message in memory
+ *  @brief Encrypt message in memory
  *  
  *  @param[in]     session       session handle
  *  @param[in,out] src           message to encrypt - usually in-only, but can be 
@@ -110,7 +111,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 /**
  *  <!--       encrypt_message_and_add_priv_key()       -->
  *  
- *  @brief encrypt message in memory, adding an encrypted private
+ *  @brief Encrypt message in memory, adding an encrypted private
  *         key (encrypted separately and sent within the inner message)
  *  
  *  @param[in]     session       session handle
@@ -146,7 +147,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
 /**
  *  <!--       encrypt_message_for_self()       -->
  *  
- *  @brief encrypt message in memory for user's identity only,
+ *  @brief Encrypt message in memory for user's identity only,
  *         ignoring recipients and other identities from
  *         the message
  *  
@@ -221,7 +222,7 @@ typedef enum _PEP_color {
 /**
  *  <!--       color_from_rating()       -->
  *  
- *  @brief calculate color from rating
+ *  @brief Calculate color from rating
  *  
  *  @param[in]     rating    rating
  *  
@@ -246,7 +247,7 @@ typedef unsigned int PEP_decrypt_flags_t;
 /**
  *  <!--       decrypt_message()       -->
  *  
- *  @brief decrypt message in memory
+ *  @brief Decrypt message in memory
  *  
  *  @param[in]     session    session handle
  *  @param[in,out] src        message to decrypt
@@ -260,31 +261,41 @@ typedef unsigned int PEP_decrypt_flags_t;
  *  @param[out]    rating     rating for the message
  *  @param[in,out] flags      flags to signal special decryption features
  *  
- *  @retval ***error***             error status 
+ *  @retval <ERROR>                 any error status 
  *  @retval PEP_DECRYPTED           if message decrypted but not verified
  *  @retval PEP_CANNOT_REENCRYPT    if message was decrypted (and possibly
  *                                  verified) but a reencryption operation is expected by the caller
  *                                  and failed
  *  @retval PEP_STATUS_OK           on success
- *  @retval flag values:
- *  @retval in:
- *  @retval PEP_decrypt_flag_untrusted_server
- *  @retval used to signal that decrypt function should engage in behaviour
- *  @retval specified for when the server storing the source is untrusted
- *  @retval out:
- *  @retval PEP_decrypt_flag_own_private_key
- *  @retval private key was imported for one of our addresses (NOT trusted
- *  @retval or set to be used - handshake/trust is required for that)
- *  @retval PEP_decrypt_flag_src_modified
- *  @retval indicates that the src object has been modified. At the moment,
- *  @retval this is always as a direct result of the behaviour driven
- *  @retval by the input flags. This flag is the ONLY value that should be
- *  @retval relied upon to see if such changes have taken place.
- *  @retval PEP_decrypt_flag_consume
- *  @retval used by sync 
- *  @retval PEP_decrypt_flag_ignore
- *  @retval used by sync 
- *  
+ *
+ *  @note Flags above are as follows:
+ *  @verbatim
+ *  ---------------------------------------------------------------------------------------------|
+ *  Incoming flags                                                                               |
+ *  ---------------------------------------------------------------------------------------------|
+ *  Flag                                  | Description                                          |                     
+ *  --------------------------------------|------------------------------------------------------|
+ *  PEP_decrypt_flag_untrusted_server     | used to signal that decrypt function should engage   |
+ *                                        | in behaviour specified for when the server storing   |
+ *                                        | the source is untrusted.                             |
+ *  ---------------------------------------------------------------------------------------------|
+ *  Outgoing flags                                                                               |
+ *  ---------------------------------------------------------------------------------------------|
+ *  PEP_decrypt_flag_own_private_key      | private key was imported for one of our addresses    |
+ *                                        | (NOT trusted or set to be used - handshake/trust is  |
+ *                                        | required for that)                                   |
+ *                                        |                                                      |
+ *  PEP_decrypt_flag_src_modified         | indicates that the modified_src field should contain | 
+ *                                        | a modified version of the source, at the moment      | 
+ *                                        | always as a result of the input flags.               |
+ *                                        |                                                      |
+ *  PEP_decrypt_flag_consume              | used by sync to indicate this was a pEp internal     |
+ *                                        | message and should be consumed externally without    |
+ *                                        | showing it as a normal message to the user           |
+ *                                        |                                                      |
+ *  PEP_decrypt_flag_ignore               | used by sync                                         |
+ *  ---------------------------------------------------------------------------------------------| @endverbatim
+ * 
  *  @warning the ownership of src remains with the caller - however, the contents 
  *               might be modified (strings freed and allocated anew or set to NULL,
  *               etc) intentionally; when this happens, PEP_decrypt_flag_src_modified
@@ -310,7 +321,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 /**
  *  <!--       own_message_private_key_details()       -->
  *  
- *  @brief details on own key in own message
+ *  @brief Details on own key in own message
  *  
  *  @param[in]     session    session handle
  *  @param[in]     msg        message to decrypt
@@ -338,7 +349,7 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
 /**
  *  <!--       outgoing_message_rating()       -->
  *  
- *  @brief get rating for an outgoing message
+ *  @brief Get rating for an outgoing message
  *  
  *  @param[in]     session    session handle
  *  @param[in]     msg        message to get the rating for
@@ -361,7 +372,7 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
 /**
  *  <!--       outgoing_message_rating_preview()       -->
  *  
- *  @brief get rating preview
+ *  @brief Get rating preview
  *  
  *  @param[in]     session    session handle
  *  @param[in]     msg        message to get the rating for
@@ -383,7 +394,7 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating_preview(
 /**
  *  <!--       identity_rating()       -->
  *  
- *  @brief get rating for a single identity
+ *  @brief Get rating for a single identity
  *  
  *  @param[in]     session    session handle
  *  @param[in]     ident      identity to get the rating for
@@ -404,7 +415,7 @@ DYNAMIC_API PEP_STATUS identity_rating(
 /**
  *  <!--       get_binary_path()       -->
  *  
- *  @brief retrieve path of cryptotech binary if available
+ *  @brief Retrieve path of cryptotech binary if available
  *  
  *  @param[in]     tech    cryptotech to get the binary for
  *  @param[out]    path    path to cryptotech binary or NULL if not available
@@ -418,7 +429,7 @@ DYNAMIC_API PEP_STATUS get_binary_path(PEP_cryptotech tech, const char **path);
 /**
  *  <!--       get_trustwords()       -->
  *  
- *  @brief get full trustwords string for a *pair* of identities
+ *  @brief Get full trustwords string for a *pair* of identities
  *  
  *  @param[in]     session    session handle
  *  @param[in]     id1        identity of first party in communication - fpr can't be NULL  
@@ -450,7 +461,7 @@ DYNAMIC_API PEP_STATUS get_trustwords(
 /**
  *  <!--       get_message_trustwords()       -->
  *  
- *  @brief get full trustwords string for message sender and reciever identities 
+ *  @brief Get full trustwords string for message sender and reciever identities 
  *  
  *  @param[in]     session        session handle
  *  @param[in]     msg            message to get sender identity from
@@ -486,7 +497,7 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
 /**
  *  <!--       get_trustwords_for_fprs()       -->
  *  
- *  @brief get full trustwords string for a pair of fingerprints
+ *  @brief Get full trustwords string for a pair of fingerprints
  *  
  *  @param[in]     session    session handle
  *  @param[in]     fpr1       fingerprint 1
@@ -517,7 +528,7 @@ DYNAMIC_API PEP_STATUS get_trustwords_for_fprs(
 /**
  *  <!--       re_evaluate_message_rating()       -->
  *  
- *  @brief re-evaluate already decrypted message rating
+ *  @brief Re-evaluate already decrypted message rating
  *  
  *  @param[in]     session         session handle
  *  @param[in]     msg             message to get the rating for
@@ -549,7 +560,7 @@ DYNAMIC_API PEP_STATUS re_evaluate_message_rating(
 /**
  *  <!--       get_key_rating_for_user()       -->
  *  
- *  @brief get the rating of a certain key for a certain user
+ *  @brief Get the rating of a certain key for a certain user
  *  
  *  @param[in]     session    session handle
  *  @param[in]     user_id    string with user ID
@@ -572,7 +583,7 @@ DYNAMIC_API PEP_STATUS get_key_rating_for_user(
 /**
  *  <!--       rating_from_comm_type()       -->
  *  
- *  @brief get the rating for a comm type
+ *  @brief Get the rating for a comm type
  *  
  *  @param[in]     ct    the comm type to deliver the rating for
  *  
@@ -603,7 +614,7 @@ PEP_STATUS try_encrypt_message(
 /**
  *  <!--       probe_encrypt()       -->
  *  
- *  @brief test if passphrase for a key is working in current session
+ *  @brief Test if passphrase for a key is working in current session
  *  
  *  @param[in]     session    session handle
  *  @param[in]     fpr        fingerprint of key to test

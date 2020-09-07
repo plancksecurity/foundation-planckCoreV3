@@ -1,12 +1,13 @@
-/** @file */
-/** @brief File description for doxygen missing. FIXME */
-
-#pragma once
-
+/**
+ * @file    status_to_string.h
+ * @brief   status to string (FIXME: derived from filename)
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include "pEpEngine.h"
 #ifndef PEP_STATUS_TO_STRING
 #define PEP_STATUS_TO_STRING
 #endif
