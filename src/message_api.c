@@ -13,6 +13,7 @@
 #include "base64.h"
 #include "resource_id.h"
 #include "internal_format.h"
+#include "sync_codec.h"
 
 #include <assert.h>
 #include <string.h>
@@ -186,7 +187,68 @@ void replace_opt_field(message *msg,
     }
 }
 
+PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rating)
+{
+    if (!(session && msg && rating))
+        return PEP_ILLEGAL_VALUE;
+
+    if (!(msg->recv_by && msg->recv_by->fpr && msg->recv_by->fpr[0]))
+        return PEP_SYNC_NO_CHANNEL;
+
+    Sync_t *res = new_Sync_message(Sync_PR_keysync, KeySync_PR_receiverRating);
+    if (!res)
+        return PEP_OUT_OF_MEMORY;
+
+    res->choice.keysync.choice.receiverRating.rating = (Rating_t) rating;
+
+    char *payload;
+    size_t size;
+    PEP_STATUS status = encode_Sync_message(res, &payload, &size);
+    free_Sync_message(res);
+    if (status)
+        return status;
+
+    return base_decorate_message(session, msg, BASE_SYNC, payload, size, msg->recv_by->fpr);
+}
+
+PEP_STATUS get_receiverRating(PEP_SESSION session, message *msg, PEP_rating *rating)
+{
+    if (!(session && msg && rating))
+        return PEP_ILLEGAL_VALUE;
+
+    *rating = PEP_rating_undefined;
+
+    size_t size;
+    const char *payload;
+    char *fpr;
+    PEP_STATUS status = base_extract_message(session, msg, BASE_SYNC, &size, &payload, &fpr);
+    if (status)
+        return status;
+    if (!fpr)
+        return PEP_SYNC_NO_CHANNEL;
+
+    bool own_key;
+    status = is_own_key(session, fpr, &own_key);
+    free(fpr);
+    if (!own_key)
+        return PEP_SYNC_NO_CHANNEL;
+
+    Sync_t *res;
+    status = decode_Sync_message(payload, size, &res);
+    if (status)
+        return status;
+
+    if (!(res->present == Sync_PR_keysync && res->choice.keysync.present == KeySync_PR_receiverRating)) {
+        free_Sync_message(res);
+        return PEP_SYNC_NO_CHANNEL;
+    }
+
+    *rating = res->choice.keysync.choice.receiverRating.rating;
+    return PEP_STATUS_OK;
+}
+
 void decorate_message(
+    PEP_SESSION session,
     message *msg,
     PEP_rating rating,
     stringlist_t *keylist,
@@ -199,8 +261,10 @@ void decorate_message(
     if (add_version)
         replace_opt_field(msg, "X-pEp-Version", PEP_VERSION, clobber);
 
-    if (rating != PEP_rating_undefined)
+    if (rating != PEP_rating_undefined) {
         replace_opt_field(msg, "X-EncStatus", rating_to_string(rating), clobber);
+        set_receiverRating(session, msg, rating);
+    }
 
     if (keylist) {
         char *_keylist = keylist_to_string(keylist);
@@ -2111,7 +2175,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             attach_own_key(session, src);
             added_key_to_real_src = true;
         }
-        decorate_message(src, PEP_rating_undefined, NULL, true, true);
+        decorate_message(session, src, PEP_rating_undefined, NULL, true, true);
         return PEP_UNENCRYPTED;
     }
     else {
@@ -2179,7 +2243,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
 
     if (msg) {
-        decorate_message(msg, PEP_rating_undefined, NULL, true, true);
+        decorate_message(session, msg, PEP_rating_undefined, NULL, true, true);
         if (_src->id) {
             msg->id = strdup(_src->id);
             assert(msg->id);
@@ -2547,7 +2611,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
             if (msg->id == NULL)
                 goto enomem;
         }
-        decorate_message(msg, PEP_rating_undefined, NULL, true, true);
+        decorate_message(session, msg, PEP_rating_undefined, NULL, true, true);
     }
 
     *dst = msg;
@@ -4294,7 +4358,7 @@ static PEP_STATUS _decrypt_message(
             dedup_stringlist(_keylist->next);
             
         /* add pEp-related status flags to header */
-        decorate_message(msg, *rating, _keylist, false, true);
+        decorate_message(session, msg, *rating, _keylist, false, true);
 
         // Maybe unnecessary
         // if (keys_were_imported)
