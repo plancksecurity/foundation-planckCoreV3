@@ -1,7 +1,7 @@
 -- This file is under BSD License 2.0
 
 -- Sync protocol for p≡p
--- Copyright (c) 2016, 2017 p≡p foundation
+-- Copyright (c) 2016, 2010 p≡p foundation
 
 -- Written by Volker Birk
 
@@ -12,7 +12,7 @@ DEFINITIONS AUTOMATIC TAGS EXTENSIBILITY IMPLIED ::=
 
 BEGIN
 
-EXPORTS Identity, IdentityList, TID, Hash, Version;
+EXPORTS Identity, IdentityList, TID, Hash, Version, Rating;
 
 ISO639-1 ::= PrintableString(FROM ("a".."z")) (SIZE(2))
 Hex ::= PrintableString(FROM ("A".."F") | FROM ("0".."9"))

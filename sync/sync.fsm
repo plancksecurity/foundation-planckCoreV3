@@ -679,5 +679,9 @@ protocol Sync 1 {
 
         message SynchronizeGroupKeys 21, ratelimit=60 {
         }
+
+        message ReceiverRating 22, security=unencrypted {
+            field Rating rating;
+        }
     }
 }
