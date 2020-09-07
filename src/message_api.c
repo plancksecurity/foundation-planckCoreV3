@@ -3910,13 +3910,17 @@ static PEP_STATUS _decrypt_message(
     // functional
     if (src->recv_by) {
         status = myself(session, src->recv_by);
-        if (status)
+        if (status) {
+            free_stringlist(_imported_key_list);
             return status;
+        }
     }
 
     status = get_crypto_text(src, &ctext, &csize);
-    if (status != PEP_STATUS_OK)
+    if (status) {
+        free_stringlist(_imported_key_list);
         return status;
+    }
         
     /** Ok, we should be ready to decrypt. Try decrypt and verify first! **/
     status = decrypt_and_verify(session, ctext, csize, dsig_text, dsig_size,
