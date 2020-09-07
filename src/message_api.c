@@ -4378,6 +4378,12 @@ static PEP_STATUS _decrypt_message(
             dedup_stringlist(_keylist->next);
             
         /* add pEp-related status flags to header */
+        if (src->recv_by) {
+            free_identity(msg->recv_by);
+            msg->recv_by = identity_dup(src->recv_by);
+            if (!msg->recv_by)
+                goto enomem;
+        }
         decorate_message(session, msg, *rating, _keylist, false, true);
 
         // Maybe unnecessary
