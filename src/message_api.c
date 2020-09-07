@@ -3888,8 +3888,15 @@ static PEP_STATUS _decrypt_message(
 
     // Check for and deal with unencrypted messages
     if (src->enc_format == PEP_enc_none) {
+        // if there is a valid receiverRating then return this rating else
+        // return unencrypted
 
-        *rating = PEP_rating_unencrypted;
+        PEP_rating _rating = PEP_rating_undefined;
+        status = get_receiverRating(session, src, &_rating);
+        if (status == PEP_STATUS_OK && _rating)
+            *rating = _rating;
+        else
+            *rating = PEP_rating_unencrypted;
 
         // We remove these from the outermost source message
         // if (keys_were_imported)
