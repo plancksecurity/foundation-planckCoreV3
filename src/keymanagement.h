@@ -122,6 +122,19 @@ DYNAMIC_API PEP_STATUS update_identity(
 
 DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity);
 
+/**
+ *  <!--       _myself()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*identity		pEp_identity
+ *  @param[in]	do_keygen		bool
+ *  @param[in]	do_renew		bool
+ *  @param[in]	ignore_flags		bool
+ *  @param[in]	read_only		bool
+ *  
+ */
 PEP_STATUS _myself(PEP_SESSION session, 
                    pEp_identity * identity, 
                    bool do_keygen, 
@@ -367,6 +380,16 @@ DYNAMIC_API PEP_STATUS own_identities_retrieve(
         identity_list **own_identities
     );
 
+/**
+ *  <!--       contains_priv_key()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*fpr		constchar
+ *  @param[in]	*has_private		bool
+ *  
+ */
 PEP_STATUS contains_priv_key(PEP_SESSION session, const char *fpr,
                              bool *has_private);
 
@@ -462,6 +485,16 @@ DYNAMIC_API PEP_STATUS set_own_key(
  */
 DYNAMIC_API PEP_STATUS clean_own_key_defaults(PEP_SESSION session);
 
+/**
+ *  <!--       get_all_keys_for_user()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*user_id		constchar
+ *  @param[in]	**keys		stringlist_t
+ *  
+ */
 PEP_STATUS get_all_keys_for_user(PEP_SESSION session, 
                                  const char* user_id,
                                  stringlist_t** keys);
@@ -469,9 +502,47 @@ PEP_STATUS get_all_keys_for_user(PEP_SESSION session,
 
 //PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen, bool ignore_flags);
 
+/**
+ *  <!--       add_mistrusted_key()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*fpr		constchar
+ *  
+ */
 PEP_STATUS add_mistrusted_key(PEP_SESSION session, const char* fpr);
+/**
+ *  <!--       delete_mistrusted_key()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*fpr		constchar
+ *  
+ */
 PEP_STATUS delete_mistrusted_key(PEP_SESSION session, const char* fpr);
+/**
+ *  <!--       is_mistrusted_key()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*fpr		constchar
+ *  @param[in]	*mistrusted		bool
+ *  
+ */
 PEP_STATUS is_mistrusted_key(PEP_SESSION session, const char* fpr, bool* mistrusted);
+/**
+ *  <!--       get_user_default_key()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*user_id		constchar
+ *  @param[in]	**default_key		char
+ *  
+ */
 PEP_STATUS get_user_default_key(PEP_SESSION session, const char* user_id,
                                 char** default_key);
 
@@ -482,6 +553,19 @@ PEP_STATUS get_user_default_key(PEP_SESSION session, const char* user_id,
 // Also, we presume that if the stored_identity was sent in
 // without an fpr, there wasn't one in the trust DB for this
 // identity.
+/**
+ *  <!--       get_valid_pubkey()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*stored_identity		pEp_identity
+ *  @param[in]	*is_identity_default		bool
+ *  @param[in]	*is_user_default		bool
+ *  @param[in]	*is_address_default		bool
+ *  @param[in]	check_blacklist		bool
+ *  
+ */
 PEP_STATUS get_valid_pubkey(PEP_SESSION session,
                             pEp_identity* stored_identity,
                             bool* is_identity_default,

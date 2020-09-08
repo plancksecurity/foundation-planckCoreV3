@@ -13,6 +13,15 @@
 #include <stdio.h>
 #include <fcntl.h>
 
+/**
+ *  <!--       Fopen()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*filename		constchar
+ *  @param[in]	*mode		constchar
+ *  
+ */
 static inline FILE * Fopen(const char *filename, const char *mode)
 {
     FILE * f;
@@ -24,6 +33,15 @@ static inline FILE * Fopen(const char *filename, const char *mode)
     return f;
 }
 
+/**
+ *  <!--       Fdopen()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	fildes		int
+ *  @param[in]	*mode		constchar
+ *  
+ */
 static inline FILE * Fdopen(int fildes, const char *mode)
 {
     FILE * f;
@@ -35,6 +53,16 @@ static inline FILE * Fdopen(int fildes, const char *mode)
     return f;
 }
 
+/**
+ *  <!--       Fgets()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*str		char
+ *  @param[in]	size		int
+ *  @param[in]	*stream		FILE
+ *  
+ */
 static inline char *Fgets(char * str, int size, FILE * stream)
 {
     char * s;
@@ -46,6 +74,15 @@ static inline char *Fgets(char * str, int size, FILE * stream)
     return s;
 }
 
+/**
+ *  <!--       Fputs()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*str		constchar
+ *  @param[in]	*stream		FILE
+ *  
+ */
 static inline int Fputs(const char *str, FILE * stream)
 {
     int r;
@@ -57,6 +94,14 @@ static inline int Fputs(const char *str, FILE * stream)
     return r;
 }
 
+/**
+ *  <!--       Fclose()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*stream		FILE
+ *  
+ */
 static inline int Fclose(FILE *stream)
 {
     int r;
@@ -68,6 +113,16 @@ static inline int Fclose(FILE *stream)
     return r;
 }
 
+/**
+ *  <!--       Freopen()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*filename		constchar
+ *  @param[in]	*mode		constchar
+ *  @param[in]	*stream		FILE
+ *  
+ */
 static inline FILE * Freopen(
         const char *filename,
         const char *mode,
@@ -99,6 +154,17 @@ static inline int Fprintf(FILE * stream, const char * format, ...)
     return n;
 }
 
+/**
+ *  <!--       Fwrite()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*ptr		constvoid
+ *  @param[in]	size		size_t
+ *  @param[in]	nitems		size_t
+ *  @param[in]	*stream		FILE
+ *  
+ */
 static inline size_t Fwrite(const void *ptr, size_t size, size_t nitems, FILE *stream)
 {
     size_t r = 0;
@@ -113,6 +179,17 @@ static inline size_t Fwrite(const void *ptr, size_t size, size_t nitems, FILE *s
     return r;
 }
 
+/**
+ *  <!--       Fread()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*ptr		void
+ *  @param[in]	size		size_t
+ *  @param[in]	nitems		size_t
+ *  @param[in]	*stream		FILE
+ *  
+ */
 static inline size_t Fread(void *ptr, size_t size, size_t nitems, FILE *stream)
 {
     size_t r = 0;
@@ -127,6 +204,14 @@ static inline size_t Fread(void *ptr, size_t size, size_t nitems, FILE *stream)
     return r;
 }
 
+/**
+ *  <!--       Fflush()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*stream		FILE
+ *  
+ */
 static inline int Fflush(FILE *stream)
 {
     int r;
@@ -138,6 +223,14 @@ static inline int Fflush(FILE *stream)
     return r;
 }
 
+/**
+ *  <!--       Mkstemp()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*template		char
+ *  
+ */
 static inline int Mkstemp(char *template)
 {
     int fd;

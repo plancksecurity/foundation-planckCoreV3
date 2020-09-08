@@ -159,6 +159,18 @@ PEP_STATUS key_reset_own_and_deliver_revocations(PEP_SESSION session,
                                                  stringlist_t** keys);
 */
 
+/**
+ *  <!--       has_key_reset_been_sent()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*from_addr		constchar
+ *  @param[in]	*user_id		constchar
+ *  @param[in]	*revoked_fpr		constchar
+ *  @param[in]	*contacted		bool
+ *  
+ */
 PEP_STATUS has_key_reset_been_sent(
         PEP_SESSION session, 
         const char* from_addr,
@@ -166,6 +178,17 @@ PEP_STATUS has_key_reset_been_sent(
         const char* revoked_fpr,
         bool* contacted);
 
+/**
+ *  <!--       set_reset_contact_notified()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*own_address		constchar
+ *  @param[in]	*revoke_fpr		constchar
+ *  @param[in]	*contact_id		constchar
+ *  
+ */
 PEP_STATUS set_reset_contact_notified(
         PEP_SESSION session,
         const char* own_address,
@@ -173,9 +196,31 @@ PEP_STATUS set_reset_contact_notified(
         const char* contact_id
     );
 
+/**
+ *  <!--       receive_key_reset()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*reset_msg		message
+ *  
+ */
 PEP_STATUS receive_key_reset(PEP_SESSION session,
                              message* reset_msg);
 
+/**
+ *  <!--       create_standalone_key_reset_message()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	**dst		message
+ *  @param[in]	*own_identity		pEp_identity
+ *  @param[in]	*recip		pEp_identity
+ *  @param[in]	*old_fpr		constchar
+ *  @param[in]	*new_fpr		constchar
+ *  
+ */
 PEP_STATUS create_standalone_key_reset_message(PEP_SESSION session,
                                                message** dst, 
                                                pEp_identity* own_identity,
@@ -184,12 +229,43 @@ PEP_STATUS create_standalone_key_reset_message(PEP_SESSION session,
                                                const char* new_fpr);
 
                                                
+/**
+ *  <!--       send_key_reset_to_recents()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*from_ident		pEp_identity
+ *  @param[in]	*old_fpr		constchar
+ *  @param[in]	*new_fpr		constchar
+ *  
+ */
 PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
                                      pEp_identity* from_ident,
                                      const char* old_fpr, 
                                      const char* new_fpr);
  
+/**
+ *  <!--       key_reset_commands_to_PER()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*command_list		constkeyreset_command_list
+ *  @param[in]	**cmds		char
+ *  @param[in]	*size		size_t
+ *  
+ */
 PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, char **cmds, size_t *size);
+/**
+ *  <!--       PER_to_key_reset_commands()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*cmds		constchar
+ *  @param[in]	size		size_t
+ *  @param[in]	**command_list		keyreset_command_list
+ *  
+ */
 PEP_STATUS PER_to_key_reset_commands(const char *cmds, size_t size, keyreset_command_list **command_list);
 
 #ifdef __cplusplus

@@ -106,6 +106,15 @@ DYNAMIC_API identity_list *identity_list_join(identity_list *first_list, identit
 DYNAMIC_API int identity_list_length(const identity_list *id_list);
 
 // Internal
+/**
+ *  <!--       set_all_userids_in_list()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*id_list		identity_list
+ *  @param[in]	*user_id		constchar
+ *  
+ */
 PEP_STATUS set_all_userids_in_list(identity_list* id_list, const char* user_id);
 
 #ifdef __cplusplus

@@ -87,8 +87,38 @@ const char *android_system_db(void);
 #endif
 
 #if !defined(BSD) && !defined(__APPLE__)
+/**
+ *  <!--       strlcpy()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*dst		char
+ *  @param[in]	*src		constchar
+ *  @param[in]	size		size_t
+ *  
+ */
 size_t strlcpy(char* dst, const	char* src, size_t size);
+/**
+ *  <!--       strlcat()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*dst		char
+ *  @param[in]	*src		constchar
+ *  @param[in]	size		size_t
+ *  
+ */
 size_t strlcat(char* dst, const	char* src, size_t size);
+/**
+ *  <!--       strnstr()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*big		constchar
+ *  @param[in]	*little		constchar
+ *  @param[in]	len		size_t
+ *  
+ */
 char *strnstr(const char *big, const char *little, size_t len);
 
 // N.B. This is ifdef'd out because NDK users sometimes have trouble finding regex functions in

@@ -52,13 +52,55 @@ extern "C" {
 #define MAX(A, B) ((A)>(B) ? (A) : (B))
 #endif
 
+/**
+ *  <!--       dlopen()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*filename		constchar
+ *  @param[in]	flag		int
+ *  
+ */
 void *dlopen(const char *filename, int flag);
+/**
+ *  <!--       dlclose()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*handle		void
+ *  
+ */
 int dlclose(void *handle);
+/**
+ *  <!--       dlsym()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*handle		void
+ *  @param[in]	*symbol		constchar
+ *  
+ */
 void *dlsym(void *handle, const char *symbol);
+/**
+ *  <!--       mkstemp()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*templ		char
+ *  
+ */
 int mkstemp(char *templ);
 
 // Nota bene: It does _not_ respect timeptr->tm_gmtoff, so it behaves the same as its POSIX original.
 //            Use timegm_with_gmtoff() from <pEp/timestamp.h> or that.
+/**
+ *  <!--       timegm()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*timeptr		timestamp
+ *  
+ */
 DYNAMIC_API time_t timegm(timestamp *timeptr);
 
 #ifndef strdup
@@ -89,10 +131,49 @@ DYNAMIC_API time_t timegm(timestamp *timeptr);
 #endif
 
 char *strndup(const char *s1, size_t n);
+/**
+ *  <!--       stpcpy()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*dst		char
+ *  @param[in]	*src		constchar
+ *  
+ */
 char *stpcpy(char *dst, const char *src);
 
+/**
+ *  <!--       strlcpy()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*dst		char
+ *  @param[in]	*src		constchar
+ *  @param[in]	size		size_t
+ *  
+ */
 size_t strlcpy(char* dst, const	char* src, size_t size);
+/**
+ *  <!--       strlcat()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*dst		char
+ *  @param[in]	*src		constchar
+ *  @param[in]	size		size_t
+ *  
+ */
 size_t strlcat(char* dst, const	char* src, size_t size);
+/**
+ *  <!--       strnstr()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*big		constchar
+ *  @param[in]	*little		constchar
+ *  @param[in]	len		size_t
+ *  
+ */
 char *strnstr(const char *big, const char *little, size_t len);
 
 
@@ -121,6 +202,17 @@ const char *windoze_local_db(void);
  */
 const char *windoze_system_db(void);
 
+/**
+ *  <!--       log_output_debug()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*title		constchar
+ *  @param[in]	*entity		constchar
+ *  @param[in]	*description		constchar
+ *  @param[in]	*comment		constchar
+ *  
+ */
 void log_output_debug(const char *title, const char *entity, const char *description, const char *comment);
 
 /**
@@ -146,6 +238,15 @@ typedef char uuid_string_t[37];
  *  
  */
 void uuid_generate_random(pEpUUID out);
+/**
+ *  <!--       uuid_parse()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*in		char
+ *  @param[in]	uu		pEpUUID
+ *  
+ */
 int uuid_parse(char *in, pEpUUID uu);
 /**
  *  <!--       uuid_unparse_upper()       -->

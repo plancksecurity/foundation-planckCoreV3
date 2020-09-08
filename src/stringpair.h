@@ -209,6 +209,15 @@ DYNAMIC_API stringpair_list_t *stringpair_list_find(
     );
 
 // ONLY DELETES ONE.
+/**
+ *  <!--       stringpair_list_delete_by_key()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*sp_list		stringpair_list_t
+ *  @param[in]	*key		constchar
+ *  
+ */
 DYNAMIC_API stringpair_list_t *stringpair_list_delete_by_key(
         stringpair_list_t *sp_list,
         const char *key

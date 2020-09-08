@@ -24,10 +24,37 @@ bool import_attached_keys(
         uint64_t* changed_keys
     );
 
+/**
+ *  <!--       attach_own_key()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*msg		message
+ *  
+ */
 void attach_own_key(PEP_SESSION session, message *msg);
 
+/**
+ *  <!--       determine_encryption_format()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*msg		message
+ *  
+ */
 PEP_cryptotech determine_encryption_format(message *msg);
 
+/**
+ *  <!--       add_opt_field()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*msg		message
+ *  @param[in]	*name		constchar
+ *  @param[in]	*value		constchar
+ *  
+ */
 void add_opt_field(message *msg, const char *name, const char *value);
 
 typedef enum _PEP_encrypt_flags {
@@ -602,6 +629,19 @@ DYNAMIC_API PEP_rating rating_from_comm_type(PEP_comm_type ct);
 //
 // do not use it in adapters
 
+/**
+ *  <!--       try_encrypt_message()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*src		message
+ *  @param[in]	*extra		stringlist_t
+ *  @param[in]	**dst		message
+ *  @param[in]	enc_format		PEP_enc_format
+ *  @param[in]	flags		PEP_encrypt_flags_t
+ *  
+ */
 PEP_STATUS try_encrypt_message(
         PEP_SESSION session,
         message *src,

@@ -531,6 +531,18 @@ DYNAMIC_API PEP_STATUS log_event(
     );
 
 
+/**
+ *  <!--       log_service()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*title		constchar
+ *  @param[in]	*entity		constchar
+ *  @param[in]	*description		constchar
+ *  @param[in]	*comment		constchar
+ *  
+ */
 DYNAMIC_API PEP_STATUS log_service(PEP_SESSION session, const char *title,
         const char *entity, const char *description, const char *comment);
 
@@ -541,6 +553,17 @@ DYNAMIC_API PEP_STATUS log_service(PEP_SESSION session, const char *title,
 #define SERVICE_LOG(session, title, entity, desc) \
     log_service((session), (title), (entity), (desc), "service " __FILE__ ":" S_LINE)
 
+/**
+ *  <!--       _service_error_log()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*entity		constchar
+ *  @param[in]	status		PEP_STATUS
+ *  @param[in]	*where		constchar
+ *  
+ */
 DYNAMIC_API void _service_error_log(PEP_SESSION session, const char *entity,
         PEP_STATUS status, const char *where);
 
@@ -811,6 +834,16 @@ DYNAMIC_API PEP_STATUS get_identity(
         pEp_identity **identity
     );
 
+/**
+ *  <!--       replace_identities_fpr()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*old_fpr		constchar
+ *  @param[in]	*new_fpr		constchar
+ *  
+ */
 PEP_STATUS replace_identities_fpr(PEP_SESSION session, 
                                  const char* old_fpr, 
                                  const char* new_fpr); 
@@ -1279,9 +1312,28 @@ DYNAMIC_API void *pEp_realloc(void *p, size_t size);
 DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity);
 
 
+/**
+ *  <!--       set_trust()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*identity		pEp_identity
+ *  
+ */
 PEP_STATUS set_trust(PEP_SESSION session, 
                      pEp_identity* identity);
                             
+/**
+ *  <!--       update_trust_for_fpr()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*fpr		constchar
+ *  @param[in]	comm_type		PEP_comm_type
+ *  
+ */
 PEP_STATUS update_trust_for_fpr(PEP_SESSION session, 
                                 const char* fpr, 
                                 PEP_comm_type comm_type);
@@ -1409,6 +1461,16 @@ DYNAMIC_API PEP_STATUS key_revoked(
         bool *revoked
     );
 
+/**
+ *  <!--       get_key_userids()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*fpr		constchar
+ *  @param[in]	**keylist		stringlist_t
+ *  
+ */
 PEP_STATUS get_key_userids(
         PEP_SESSION session,
         const char* fpr,
@@ -1744,6 +1806,16 @@ DYNAMIC_API PEP_STATUS set_ident_enc_format(PEP_SESSION session,
                                             PEP_enc_format format);
 
 
+/**
+ *  <!--       _generate_keypair()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*identity		pEp_identity
+ *  @param[in]	suppress_event		bool
+ *  
+ */
 PEP_STATUS _generate_keypair(PEP_SESSION session, 
                              pEp_identity *identity,
                              bool suppress_event);
@@ -1761,6 +1833,17 @@ DYNAMIC_API PEP_STATUS reset_pEptest_hack(PEP_SESSION session);
 // This is used internally when there is a temporary identity to be retrieved
 // that may not yet have an FPR attached. See get_identity() for functionality,
 // params and caveats.
+/**
+ *  <!--       get_identity_without_trust_check()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*address		constchar
+ *  @param[in]	*user_id		constchar
+ *  @param[in]	**identity		pEp_identity
+ *  
+ */
 PEP_STATUS get_identity_without_trust_check(
         PEP_SESSION session,
         const char *address,
@@ -1768,38 +1851,127 @@ PEP_STATUS get_identity_without_trust_check(
         pEp_identity **identity
     );
     
+/**
+ *  <!--       get_identities_by_address()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*address		constchar
+ *  @param[in]	**id_list		identity_list
+ *  
+ */
 PEP_STATUS get_identities_by_address(
         PEP_SESSION session,
         const char *address,
         identity_list** id_list
     );
     
+/**
+ *  <!--       get_identities_by_userid()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*user_id		constchar
+ *  @param[in]	**identities		identity_list
+ *  
+ */
 PEP_STATUS get_identities_by_userid(
         PEP_SESSION session,
         const char *user_id,
         identity_list **identities
     );    
         
+/**
+ *  <!--       is_own_address()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*address		constchar
+ *  @param[in]	*is_own_addr		bool
+ *  
+ */
 PEP_STATUS is_own_address(PEP_SESSION session, 
                           const char* address, 
                           bool* is_own_addr);
 
+/**
+ *  <!--       replace_userid()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*old_uid		constchar
+ *  @param[in]	*new_uid		constchar
+ *  
+ */
 PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
                               const char* new_uid);
                               
+/**
+ *  <!--       remove_key()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*fpr		constchar
+ *  
+ */
 PEP_STATUS remove_key(PEP_SESSION session, const char* fpr);
                               
+/**
+ *  <!--       remove_fpr_as_default()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*fpr		constchar
+ *  
+ */
 PEP_STATUS remove_fpr_as_default(PEP_SESSION session, 
                                     const char* fpr);
                               
                                     
+/**
+ *  <!--       get_main_user_fpr()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*user_id		constchar
+ *  @param[in]	**main_fpr		char
+ *  
+ */
 PEP_STATUS get_main_user_fpr(PEP_SESSION session, 
                              const char* user_id,
                              char** main_fpr);
 
+/**
+ *  <!--       replace_main_user_fpr()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*user_id		constchar
+ *  @param[in]	*new_fpr		constchar
+ *  
+ */
 PEP_STATUS replace_main_user_fpr(PEP_SESSION session, const char* user_id,
                               const char* new_fpr);
 
+/**
+ *  <!--       replace_main_user_fpr_if_equal()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*user_id		constchar
+ *  @param[in]	*new_fpr		constchar
+ *  @param[in]	*compare_fpr		constchar
+ *  
+ */
 PEP_STATUS replace_main_user_fpr_if_equal(PEP_SESSION session, const char* user_id,
                                           const char* new_fpr, const char* compare_fpr);
     
@@ -1810,24 +1982,93 @@ DYNAMIC_API PEP_STATUS get_replacement_fpr(
         uint64_t *revocation_date
     );
     
+/**
+ *  <!--       refresh_userid_default_key()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*user_id		constchar
+ *  
+ */
 PEP_STATUS refresh_userid_default_key(PEP_SESSION session, const char* user_id);
 
 // This ONLY sets the *user* flag, and creates a shell identity if necessary.
+/**
+ *  <!--       set_as_pEp_user()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*user		pEp_identity
+ *  
+ */
 DYNAMIC_API PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user);
 
 // returns true (by reference) if a person with this user_id exists; 
 // Also replaces aliased user_ids by defaults in identity.
+/**
+ *  <!--       exists_person()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*identity		pEp_identity
+ *  @param[in]	*exists		bool
+ *  
+ */
 PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity, bool* exists);
 
+/**
+ *  <!--       set_pgp_keypair()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*fpr		constchar
+ *  
+ */
 PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr);
 
+/**
+ *  <!--       set_pEp_version()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*ident		pEp_identity
+ *  @param[in]	new_ver_major		unsignedint
+ *  @param[in]	new_ver_minor		unsignedint
+ *  
+ */
 PEP_STATUS set_pEp_version(PEP_SESSION session, pEp_identity* ident, unsigned int new_ver_major, unsigned int new_ver_minor);
                 
+/**
+ *  <!--       clear_trust_info()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*user_id		constchar
+ *  @param[in]	*fpr		constchar
+ *  
+ */
 PEP_STATUS clear_trust_info(PEP_SESSION session,
                             const char* user_id,
                             const char* fpr);
                             
 // Generally ONLY called by set_as_pEp_user, and ONLY from < 2.0 to 2.0.
+/**
+ *  <!--       upgrade_pEp_version_by_user_id()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*ident		pEp_identity
+ *  @param[in]	new_ver_major		unsignedint
+ *  @param[in]	new_ver_minor		unsignedint
+ *  
+ */
 PEP_STATUS upgrade_pEp_version_by_user_id(PEP_SESSION session, 
         pEp_identity* ident, 
         unsigned int new_ver_major,
@@ -1835,31 +2076,113 @@ PEP_STATUS upgrade_pEp_version_by_user_id(PEP_SESSION session,
     );
      
 // exposed for testing
+/**
+ *  <!--       set_person()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*identity		pEp_identity
+ *  @param[in]	guard_transaction		bool
+ *  
+ */
 PEP_STATUS set_person(PEP_SESSION session, pEp_identity* identity,
                       bool guard_transaction);
+/**
+ *  <!--       bind_own_ident_with_contact_ident()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*own_ident		pEp_identity
+ *  @param[in]	*contact_ident		pEp_identity
+ *  
+ */
 PEP_STATUS bind_own_ident_with_contact_ident(PEP_SESSION session,
                                              pEp_identity* own_ident, 
                                              pEp_identity* contact_ident);
 
+/**
+ *  <!--       get_last_contacted()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	**id_list		identity_list
+ *  
+ */
 PEP_STATUS get_last_contacted(
         PEP_SESSION session,
         identity_list** id_list
     );
 
+/**
+ *  <!--       get_own_ident_for_contact_id()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*contact		constpEp_identity
+ *  @param[in]	**own_ident		pEp_identity
+ *  
+ */
 PEP_STATUS get_own_ident_for_contact_id(PEP_SESSION session,
                                           const pEp_identity* contact,
                                           pEp_identity** own_ident);
 
+/**
+ *  <!--       exists_trust_entry()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*identity		pEp_identity
+ *  @param[in]	*exists		bool
+ *  
+ */
 PEP_STATUS exists_trust_entry(PEP_SESSION session, pEp_identity* identity,
                               bool* exists);
 
+/**
+ *  <!--       is_own_key()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*fpr		constchar
+ *  @param[in]	*own_key		bool
+ *  
+ */
 PEP_STATUS is_own_key(PEP_SESSION session, const char* fpr, bool* own_key);
 
+/**
+ *  <!--       get_identities_by_main_key_id()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*fpr		constchar
+ *  @param[in]	**identities		identity_list
+ *  
+ */
 PEP_STATUS get_identities_by_main_key_id(
         PEP_SESSION session,
         const char *fpr,
         identity_list **identities);
         
+/**
+ *  <!--       sign_only()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*data		constchar
+ *  @param[in]	data_size		size_t
+ *  @param[in]	*fpr		constchar
+ *  @param[in]	**sign		char
+ *  @param[in]	*sign_size		size_t
+ *  
+ */
 PEP_STATUS sign_only(PEP_SESSION session, 
                      const char *data, 
                      size_t data_size, 
@@ -1867,9 +2190,29 @@ PEP_STATUS sign_only(PEP_SESSION session,
                      char **sign, 
                      size_t *sign_size);
                      
+/**
+ *  <!--       set_all_userids_to_own()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*id_list		identity_list
+ *  
+ */
 PEP_STATUS set_all_userids_to_own(PEP_SESSION session, 
                                   identity_list* id_list);
 
+/**
+ *  <!--       has_partner_contacted_address()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*partner_id		constchar
+ *  @param[in]	*own_address		constchar
+ *  @param[in]	*was_contacted		bool
+ *  
+ */
 PEP_STATUS has_partner_contacted_address(PEP_SESSION session, const char* partner_id,
                                          const char* own_address, bool* was_contacted);
                                                                                   

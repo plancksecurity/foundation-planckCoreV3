@@ -167,12 +167,45 @@ DYNAMIC_API stringlist_t *stringlist_delete(
 
 DYNAMIC_API void free_stringlist(stringlist_t *stringlist);
 
+/**
+ *  <!--       stringlist_search()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*head		stringlist_t
+ *  @param[in]	*value		constchar
+ *  
+ */
 stringlist_t* stringlist_search(stringlist_t* head, const char* value);
 
 // create comma-separated string
+/**
+ *  <!--       stringlist_to_string()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*list		stringlist_t
+ *  
+ */
 char* stringlist_to_string(stringlist_t* list);
+/**
+ *  <!--       string_to_stringlist()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*str		constchar
+ *  
+ */
 stringlist_t* string_to_stringlist(const char* str);
 
+/**
+ *  <!--       dedup_stringlist()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*stringlist		stringlist_t
+ *  
+ */
 void dedup_stringlist(stringlist_t* stringlist);
 
 #ifdef __cplusplus

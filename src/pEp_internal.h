@@ -305,11 +305,36 @@ PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first);
 void release_transport_system(PEP_SESSION session, bool out_last);
 
 /* NOT to be exposed to the outside!!! */
+/**
+ *  <!--       encrypt_only()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*keylist		conststringlist_t
+ *  @param[in]	*ptext		constchar
+ *  @param[in]	psize		size_t
+ *  @param[in]	**ctext		char
+ *  @param[in]	*csize		size_t
+ *  
+ */
 PEP_STATUS encrypt_only(
         PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
         size_t psize, char **ctext, size_t *csize
 );
 
+/**
+ *  <!--       decorate_message()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*msg		message
+ *  @param[in]	rating		PEP_rating
+ *  @param[in]	*keylist		stringlist_t
+ *  @param[in]	add_version		bool
+ *  @param[in]	clobber		bool
+ *  
+ */
 void decorate_message(
     message *msg,
     PEP_rating rating,
@@ -339,6 +364,14 @@ typedef enum _normalize_hex_rest_t {
     reject_hex
 } normalize_hex_res_t;
 
+/**
+ *  <!--       _normalize_hex()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*hex		char
+ *  
+ */
 static inline normalize_hex_res_t _normalize_hex(char *hex) 
 {
     if (*hex >= '0' && *hex <= '9')
@@ -359,6 +392,18 @@ static inline normalize_hex_res_t _normalize_hex(char *hex)
 }
 
 // Space tolerant and case insensitive fingerprint string compare
+/**
+ *  <!--       _compare_fprs()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*fpra		constchar
+ *  @param[in]	fpras		size_t
+ *  @param[in]	*fprb		constchar
+ *  @param[in]	fprbs		size_t
+ *  @param[in]	*comparison		int
+ *  
+ */
 static inline PEP_STATUS _compare_fprs(
         const char* fpra,
         size_t fpras,
@@ -436,6 +481,17 @@ static inline PEP_STATUS _compare_fprs(
     return PEP_STATUS_OK;
 }
 
+/**
+ *  <!--       _same_fpr()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*fpra		constchar
+ *  @param[in]	fpras		size_t
+ *  @param[in]	*fprb		constchar
+ *  @param[in]	fprbs		size_t
+ *  
+ */
 static inline int _same_fpr(
         const char* fpra,
         size_t fpras,
@@ -454,6 +510,16 @@ static inline int _same_fpr(
 // size is the length of the bytestr that's coming in. This is really only intended
 // for comparing two full strings. If charstr's length is different from bytestr_size,
 // we'll return a non-zero value.
+/**
+ *  <!--       _unsigned_signed_strcmp()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*bytestr		constunsignedchar
+ *  @param[in]	*charstr		constchar
+ *  @param[in]	bytestr_size		int
+ *  
+ */
 static inline int _unsigned_signed_strcmp(const unsigned char* bytestr, const char* charstr, int bytestr_size) {
     int charstr_len = strlen(charstr);
     if (charstr_len != bytestr_size)
@@ -473,6 +539,15 @@ static inline char* _pEp_subj_copy() {
 #endif
 }
 
+/**
+ *  <!--       is_me()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*test_ident		constpEp_identity
+ *  
+ */
 static inline bool is_me(PEP_SESSION session, const pEp_identity* test_ident) {
     bool retval = false;
     if (test_ident && test_ident->user_id) {
@@ -487,6 +562,14 @@ static inline bool is_me(PEP_SESSION session, const pEp_identity* test_ident) {
     return retval;
 }
 
+/**
+ *  <!--       pEp_version_numeric()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*version_str		constchar
+ *  
+ */
 static inline float pEp_version_numeric(const char* version_str) {
     float retval = 0;    
         
@@ -496,6 +579,16 @@ static inline float pEp_version_numeric(const char* version_str) {
     return retval;    
 }
 
+/**
+ *  <!--       pEp_version_major_minor()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*version_str		constchar
+ *  @param[in]	*major		unsignedint
+ *  @param[in]	*minor		unsignedint
+ *  
+ */
 static inline void pEp_version_major_minor(const char* version_str, unsigned int* major, unsigned int* minor) {
     if (!major || !minor)
         return;
@@ -532,6 +625,19 @@ static inline int compare_versions(unsigned int first_maj, unsigned int first_mi
     return 0;    
 }
 
+/**
+ *  <!--       set_min_version()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	first_maj		unsignedint
+ *  @param[in]	first_minor		unsignedint
+ *  @param[in]	second_maj		unsignedint
+ *  @param[in]	second_minor		unsignedint
+ *  @param[in]	*result_maj		unsignedint
+ *  @param[in]	*result_minor		unsignedint
+ *  
+ */
 static inline void set_min_version(unsigned int first_maj, unsigned int first_minor,
                                    unsigned int second_maj, unsigned int second_minor,
                                    unsigned int* result_maj, unsigned int* result_minor) {
@@ -546,6 +652,19 @@ static inline void set_min_version(unsigned int first_maj, unsigned int first_mi
     }    
 }
 
+/**
+ *  <!--       set_max_version()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	first_maj		unsignedint
+ *  @param[in]	first_minor		unsignedint
+ *  @param[in]	second_maj		unsignedint
+ *  @param[in]	second_minor		unsignedint
+ *  @param[in]	*result_maj		unsignedint
+ *  @param[in]	*result_minor		unsignedint
+ *  
+ */
 static inline void set_max_version(unsigned int first_maj, unsigned int first_minor,
                                    unsigned int second_maj, unsigned int second_minor,
                                    unsigned int* result_maj, unsigned int* result_minor) {
