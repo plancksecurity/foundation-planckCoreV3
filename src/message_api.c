@@ -244,6 +244,7 @@ PEP_STATUS get_receiverRating(PEP_SESSION session, message *msg, PEP_rating *rat
     }
 
     *rating = res->choice.keysync.choice.receiverRating.rating;
+    replace_opt_field(msg, "X-EncStatus", rating_to_string(*rating), true);
     return PEP_STATUS_OK;
 }
 
