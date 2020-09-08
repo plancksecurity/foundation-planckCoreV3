@@ -293,6 +293,7 @@ struct _pEpSession {
  *  
  */
 PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first);
+
 /**
  *  <!--       release_transport_system()       -->
  *  
@@ -304,8 +305,9 @@ PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first);
  */
 void release_transport_system(PEP_SESSION session, bool out_last);
 
-/* NOT to be exposed to the outside!!! */
 /**
+ *  @internal
+ * 
  *  <!--       encrypt_only()       -->
  *  
  *  @brief			TODO
@@ -317,6 +319,7 @@ void release_transport_system(PEP_SESSION session, bool out_last);
  *  @param[in]	**ctext		char
  *  @param[in]	*csize		size_t
  *  
+ *  @warning    NOT to be exposed to the outside!!!!!
  */
 PEP_STATUS encrypt_only(
         PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
@@ -358,6 +361,12 @@ void decorate_message(
 }
 #endif
 
+/**
+ *  @enum	normalize_hex_res_t
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef enum _normalize_hex_rest_t {
     accept_hex,
     ignore_hex,
@@ -511,13 +520,21 @@ static inline int _same_fpr(
 // for comparing two full strings. If charstr's length is different from bytestr_size,
 // we'll return a non-zero value.
 /**
+ *  @internal
+ * 
  *  <!--       _unsigned_signed_strcmp()       -->
  *  
- *  @brief			TODO
- *  
- *  @param[in]	*bytestr		constunsignedchar
- *  @param[in]	*charstr		constchar
- *  @param[in]	bytestr_size		int
+ *  @brief      Compare an unsigned sequence of bytes with the input string.
+ *              This is really only intended for comparing two full strings. 
+ *              If charstr's length is different from bytestr_size,
+ *              we'll return a non-zero value.
+ * 
+ *  @param[in]	bytestr		    byte string (unsigned char data)
+ *  @param[in]	charstr		    character string (NUL-terminated)
+ *  @param[in]	bytestr_size    length of byte string passed in
+ * 
+ *  @retval     0           if equal
+ *  @retval     non-zero    if not equal
  *  
  */
 static inline int _unsigned_signed_strcmp(const unsigned char* bytestr, const char* charstr, int bytestr_size) {

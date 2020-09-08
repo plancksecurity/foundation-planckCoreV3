@@ -13,6 +13,12 @@ extern "C" {
 #endif
 
 
+/**
+ *  @enum	base_protocol_type
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef enum _base_protocol_type {
     BASE_SIGN = 0,
 

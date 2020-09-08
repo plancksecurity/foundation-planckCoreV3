@@ -13,6 +13,12 @@
 extern "C" {
 #endif
 
+/**
+ *  @enum	PEP_transports
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef enum _PEP_transports {
     // auto transport chooses transport per message automatically
     PEP_trans_auto = 0,

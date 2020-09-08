@@ -15,6 +15,12 @@ extern "C" {
 #endif
 
 
+/**
+ *  @enum	sync_handshake_signal
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef enum _sync_handshake_signal {
     SYNC_NOTIFY_UNDEFINED = 0,
 
@@ -74,6 +80,12 @@ typedef PEP_STATUS (*notifyHandshake_t)(
         sync_handshake_signal signal
     );
 
+/**
+ *  @enum	sync_handshake_result
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef enum _sync_handshake_result {
     SYNC_HANDSHAKE_CANCEL = -1,
     SYNC_HANDSHAKE_ACCEPTED = 0,

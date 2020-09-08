@@ -7,6 +7,12 @@
 #pragma once
 
 /* structs to contain info about parsed resource ids (filenames, uids) */
+/**
+ *  @enum	pEp_resource_id_type
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef enum _resource_id_type {
     PEP_RID_FILENAME,
     PEP_RID_CID

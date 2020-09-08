@@ -57,6 +57,12 @@ PEP_cryptotech determine_encryption_format(message *msg);
  */
 void add_opt_field(message *msg, const char *name, const char *value);
 
+/**
+ *  @enum	PEP_encrypt_flags
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef enum _PEP_encrypt_flags {
     // "default" means whatever the default behaviour for the function is.
     PEP_encrypt_flag_default = 0x0,
@@ -84,6 +90,12 @@ typedef enum _PEP_encrypt_flags {
 
 typedef unsigned int PEP_encrypt_flags_t;
 
+/**
+ *  @enum	message_wrap_type
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef enum _message_wrap_type {
     PEP_message_unwrapped,  // 1.0 or anything we don't wrap    
     PEP_message_default,    // typical inner/outer message 2.0
@@ -145,7 +157,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
  *  @param[in]     src           message to encrypt
  *  @param[out]    dst           pointer to new encrypted message or NULL if no
  *                               encryption could take place
- *                               to_fpr              fingerprint of the recipient key to which the private key
+ *  @param[in]     to_fpr        fingerprint of the recipient key to which the private key
  *                               should be encrypted
  *  @param[in]     enc_format    encrypted format
  *  @param[in]     flags         flags to set special encryption features
@@ -210,6 +222,12 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         PEP_encrypt_flags_t flags
     );
 
+/**
+ *  @enum	PEP_rating
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef enum _PEP_rating {
     PEP_rating_undefined = 0,
 
@@ -238,6 +256,12 @@ typedef enum _PEP_rating {
     PEP_rating_under_attack = -3
 } PEP_rating;
 
+/**
+ *  @enum	PEP_color
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef enum _PEP_color {
     PEP_color_no_color = 0,
     PEP_color_yellow,
@@ -257,6 +281,12 @@ typedef enum _PEP_color {
  */
 DYNAMIC_API PEP_color color_from_rating(PEP_rating rating);
 
+/**
+ *  @enum	PEP_decrypt_flags
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef enum _PEP_decrypt_flags {
     PEP_decrypt_flag_own_private_key = 0x1,
     PEP_decrypt_flag_consume = 0x2,
@@ -621,18 +651,15 @@ DYNAMIC_API PEP_STATUS get_key_rating_for_user(
 
 DYNAMIC_API PEP_rating rating_from_comm_type(PEP_comm_type ct);
 
-
-// this is the internal function to be used by asynchronous network protocol
-// implementations
-//
-// this function is calling messageToSend(NULL) in case there is a missing or wrong passphrase
-//
-// do not use it in adapters
-
 /**
+ *  @internal
+ * 
  *  <!--       try_encrypt_message()       -->
  *  
- *  @brief			TODO
+ *  @brief This is the internal version of encrypt_message() 
+ *         to be used by asynchronous network protocol
+ *         implementations. This function is calls messageToSend(NULL) 
+ *         in case there is a missing or wrong passphrase.
  *  
  *  @param[in]	session		PEP_SESSION
  *  @param[in]	*src		message
@@ -641,6 +668,9 @@ DYNAMIC_API PEP_rating rating_from_comm_type(PEP_comm_type ct);
  *  @param[in]	enc_format		PEP_enc_format
  *  @param[in]	flags		PEP_encrypt_flags_t
  *  
+ *  @warning    Do NOT use this function in adapters.
+ * 
+ *  @todo KB: line up with the try_base_blahblah docs
  */
 PEP_STATUS try_encrypt_message(
         PEP_SESSION session,

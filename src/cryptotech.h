@@ -10,6 +10,12 @@
 #include "pEpEngine.h"
 #include "bloblist.h"
 
+/**
+ *  @enum	PEP_cryptotech
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef enum _PEP_cryptotech {
     PEP_crypt_none = 0,
     PEP_crypt_OpenPGP,

@@ -43,6 +43,12 @@ extern "C" {
 struct _pEpSession;
 typedef struct _pEpSession * PEP_SESSION;
 
+/**
+ *  @enum	PEP_STATUS
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef enum {
     PEP_STATUS_OK                                   = 0,
 
@@ -154,6 +160,12 @@ typedef enum {
     PEP_VERSION_MISMATCH                            = -7,
 } PEP_STATUS;
 
+/**
+ *  @enum	PEP_enc_format
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef enum _PEP_enc_format {
     PEP_enc_none = 0,                       // message is not encrypted
     PEP_enc_pieces = 1,                     // inline PGP + PGP extensions, was removed
@@ -358,6 +370,12 @@ DYNAMIC_API void config_use_only_own_private_keys(PEP_SESSION session, bool enab
 DYNAMIC_API void config_service_log(PEP_SESSION session, bool enable);
 
 
+/**
+ *  @enum	PEP_CIPHER_SUITE
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef enum {
     PEP_CIPHER_SUITE_DEFAULT = 0,
     PEP_CIPHER_SUITE_CV25519 = 1,
@@ -636,6 +654,12 @@ DYNAMIC_API PEP_STATUS trustwords(
 
 // TODO: increase versions in pEp.asn1 if rating changes
 
+/**
+ *  @enum	PEP_comm_type
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef enum _PEP_comm_type {
     PEP_ct_unknown = 0,
 
@@ -698,6 +722,12 @@ typedef enum _PEP_comm_type {
     PEP_ct_pEp = 0xff
 } PEP_comm_type;
 
+/**
+ *  @enum	identity_flags
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef enum _identity_flags {
     // the first octet flags are app defined settings
     PEP_idf_not_for_sync = 0x0001,   // don't use this identity for sync

@@ -22,12 +22,24 @@ extern "C" {
 #endif
 
 
+/**
+ *  @enum	PEP_text_format
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef enum _PEP_text_format {
     PEP_text_format_plain = 0,
     PEP_text_format_html,
     PEP_text_format_other = 0xff
 } PEP_text_format;
 
+/**
+ *  @enum	PEP_msg_direction
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef enum _PEP_msg_direction {
     PEP_dir_incoming = 0,
     PEP_dir_outgoing

@@ -14,6 +14,12 @@ extern "C" {
 
 // error values
 
+/**
+ *  @enum	fsm_error
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef enum _fsm_error {
     // these error values are corresponding to
     // PEP_SYNC_STATEMACHINE_ERROR - value

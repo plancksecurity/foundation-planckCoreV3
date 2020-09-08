@@ -16,6 +16,12 @@
 extern "C" {
 #endif
 
+/**
+ *  @enum	content_disposition_type
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef enum {
     PEP_CONTENT_DISP_ATTACHMENT = 0,
     PEP_CONTENT_DISP_INLINE = 1,
