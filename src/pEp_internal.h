@@ -743,6 +743,14 @@ static inline void _init_globals() {
 
 // spinlock implementation
 
+/**
+ *  <!--       Sqlite3_step()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*stmt		sqlite3_stmt 
+ *  
+ */
 static inline int Sqlite3_step(sqlite3_stmt* stmt)
 {
     int rc;

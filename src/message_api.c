@@ -246,6 +246,16 @@ void replace_opt_field(message *msg,
     }
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       sync_message_attached()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*msg		message 
+ *  
+ */
 bool sync_message_attached(message *msg)
 {
     if (!(msg && msg->attachments))
@@ -259,6 +269,18 @@ bool sync_message_attached(message *msg)
     return false;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       set_receiverRating()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION 
+ *  @param[in]	*msg		message 
+ *  @param[in]	rating		PEP_rating 
+ *  
+ */
 PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rating)
 {
     if (!(session && msg && rating))
@@ -287,6 +309,18 @@ PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rati
     return base_decorate_message(session, msg, BASE_SYNC, payload, size, msg->recv_by->fpr);
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       get_receiverRating()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION 
+ *  @param[in]	*msg		message 
+ *  @param[in]	*rating		PEP_rating 
+ *  
+ */
 PEP_STATUS get_receiverRating(PEP_SESSION session, message *msg, PEP_rating *rating)
 {
     if (!(session && msg && rating))
