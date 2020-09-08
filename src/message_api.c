@@ -187,6 +187,19 @@ void replace_opt_field(message *msg,
     }
 }
 
+bool sync_message_attached(message *msg)
+{
+    if (!(msg && msg->attachments))
+        return false;
+
+    for (bloblist_t *a = msg->attachments; a && a->value ; a = a->next) {
+        if (a->mime_type && strcasecmp(a->mime_type, "application/pEp.sync") == 0)
+            return true;
+    }
+
+    return false;
+}
+
 PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rating)
 {
     if (!(session && msg && rating))
@@ -194,6 +207,10 @@ PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rati
 
     if (!(msg->recv_by && msg->recv_by->fpr && msg->recv_by->fpr[0]))
         return PEP_SYNC_NO_CHANNEL;
+
+    // don't add a second sync message
+    if (sync_message_attached(msg))
+        return PEP_STATUS_OK;
 
     Sync_t *res = new_Sync_message(Sync_PR_keysync, KeySync_PR_receiverRating);
     if (!res)
