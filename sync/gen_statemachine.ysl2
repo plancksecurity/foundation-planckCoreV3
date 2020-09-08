@@ -1349,7 +1349,7 @@ tstylesheet {
                 case Init:
                     return "Init";
         ||
-        for "func:distinctName(state/event[not(@name='Init')])" {
+        for "func:distinctName(state/event[not(@name='Init')]|message)" {
             |>> case «@name»:
             |>>> return "«@name»";
         }
