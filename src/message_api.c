@@ -286,6 +286,17 @@ static char* _get_resource_ptr_noown(char* uri) {
         return uri + 3;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       string_equality()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*s1		const char 
+ *  @param[in]	*s2		const char 
+ *  
+ */
 static bool string_equality(const char *s1, const char *s2)
 {
     if (s1 == NULL || s2 == NULL)
@@ -513,6 +524,17 @@ unsigned long long get_bitmask(int num_bits) {
     return bitmask;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       get_base_36_rep()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	value		unsigned long long 
+ *  @param[in]	num_sig_bits		int 
+ *  
+ */
 static char* get_base_36_rep(unsigned long long value, int num_sig_bits) {
         
     int bufsize = ((int) ceil((double) num_sig_bits / _pEp_log2_36)) + 1;
@@ -1662,6 +1684,17 @@ static PEP_rating key_rating(PEP_SESSION session, const char *fpr)
     return _rating(resulting_comm_type);
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       worst_rating()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	rating1		PEP_rating 
+ *  @param[in]	rating2		PEP_rating 
+ *  
+ */
 static PEP_rating worst_rating(PEP_rating rating1, PEP_rating rating2) {
     return ((rating1 < rating2) ? rating1 : rating2);
 }
@@ -1906,6 +1939,20 @@ static bool compare_first_n_bytes(const char* first, const char* second, size_t 
     return true;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       import_attached_keys()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION 
+ *  @param[in]	*msg		message 
+ *  @param[in]	**private_idents		identity_list 
+ *  @param[in]	**imported_key_list		stringlist_t 
+ *  @param[in]	*changed_keys		uint64_t 
+ *  
+ */
 bool import_attached_keys(
         PEP_SESSION session,
         message *msg,
@@ -3766,6 +3813,22 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
 }
 
 // This is misleading - this imports ALL the keys!
+/**
+ *  @internal
+ *  
+ *  <!--       import_keys_from_decrypted_msg()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION 
+ *  @param[in]	*msg		message 
+ *  @param[in]	*keys_were_imported		bool 
+ *  @param[in]	*imported_private		bool 
+ *  @param[in]	**private_il		identity_list 
+ *  @param[in]	**keylist		stringlist_t 
+ *  @param[in]	*changed_keys		uint64_t 
+ *  
+ */
 static PEP_STATUS import_keys_from_decrypted_msg(PEP_SESSION session,
                                                       message* msg,
                                                       bool* keys_were_imported,
@@ -4193,6 +4256,19 @@ static char* seek_good_trusted_private_fpr(PEP_SESSION session, char* own_id,
     return NULL;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       import_header_keys()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION 
+ *  @param[in]	*src		message 
+ *  @param[in]	**imported_key_list		stringlist_t 
+ *  @param[in]	*changed_keys		uint64_t 
+ *  
+ */
 static bool import_header_keys(PEP_SESSION session, message* src, stringlist_t** imported_key_list, uint64_t* changed_keys) {
     stringpair_list_t* header_keys = stringpair_list_find(src->opt_fields, "Autocrypt"); 
     if (!header_keys || !header_keys->value)
@@ -5789,6 +5865,18 @@ DYNAMIC_API PEP_STATUS get_trustwords(
             wsize, full);
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       remove_separators()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*str1		const char 
+ *  @param[in]	*str2		char 
+ *  @param[in]	str1len		int 
+ *  
+ */
 static void remove_separators(const char* str1, char* str2, int str1len) {
     int i = 0;
     char* curr_write = str2;

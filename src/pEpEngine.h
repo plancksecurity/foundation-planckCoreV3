@@ -2005,6 +2005,17 @@ PEP_STATUS replace_main_user_fpr(PEP_SESSION session, const char* user_id,
 PEP_STATUS replace_main_user_fpr_if_equal(PEP_SESSION session, const char* user_id,
                                           const char* new_fpr, const char* compare_fpr);
     
+/**
+ *  <!--       get_replacement_fpr()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION 
+ *  @param[in]	*fpr		const char 
+ *  @param[in]	**revoked_fpr		char 
+ *  @param[in]	*revocation_date		uint64_t 
+ *  
+ */
 DYNAMIC_API PEP_STATUS get_replacement_fpr(
         PEP_SESSION session,
         const char *fpr,

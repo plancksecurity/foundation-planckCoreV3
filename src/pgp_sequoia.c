@@ -106,6 +106,19 @@
 } while(0)
 
 #ifdef _PEP_SQLITE_DEBUG
+/**
+ *  @internal
+ *  
+ *  <!--       sq_sql_trace_callback()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	trace_constant		unsigned 
+ *  @param[in]	*context_ptr		void 
+ *  @param[in]	*P		void 
+ *  @param[in]	*X		void 
+ *  
+ */
 int sq_sql_trace_callback (unsigned trace_constant,
                         void* context_ptr,
                         void* P,
@@ -697,6 +710,19 @@ static char *pgp_fingerprint_canonicalize(const char *fpr)
 // step statement and load the certificate and secret.
 
 
+/**
+ *  @internal
+ *  
+ *  <!--       key_load()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	PEP_SESSION		PEP_SESSION
+ *  @param[in]	*		sqlite3_stmt 
+ *  @param[in]	*		pgp_cert_t 
+ *  @param[in]	*		int 
+ *  
+ */
 static PEP_STATUS key_load(PEP_SESSION, sqlite3_stmt *, pgp_cert_t *, int *)
     __attribute__((nonnull(1, 2)));
 static PEP_STATUS key_load(PEP_SESSION session, sqlite3_stmt *stmt,
@@ -737,6 +763,19 @@ static PEP_STATUS key_load(PEP_SESSION session, sqlite3_stmt *stmt,
 // step statement until exhausted and load the certificates.
 
 
+/**
+ *  @internal
+ *  
+ *  <!--       key_loadn()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	PEP_SESSION		PEP_SESSION
+ *  @param[in]	*		sqlite3_stmt 
+ *  @param[in]	**		pgp_cert_t 
+ *  @param[in]	*		int 
+ *  
+ */
 static PEP_STATUS key_loadn(PEP_SESSION, sqlite3_stmt *, pgp_cert_t **, int *)
     __attribute__((nonnull));
 static PEP_STATUS key_loadn(PEP_SESSION session, sqlite3_stmt *stmt,
@@ -1386,6 +1425,24 @@ get_public_keys_cb(void *cookie_raw,
     return PGP_STATUS_SUCCESS;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       decrypt_cb()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*cookie_opaque		void 
+ *  @param[in]	*pkesks		pgp_pkesk_t 
+ *  @param[in]	pkesk_count		size_t 
+ *  @param[in]	*skesks		pgp_skesk_t 
+ *  @param[in]	skesk_count		size_t 
+ *  @param[in]	symmetric_algo		uint8_t 
+ *  @param[in]	*decrypt		pgp_decryptor_do_decrypt_cb_t 
+ *  @param[in]	*decrypt_cookie		void 
+ *  @param[in]	*identity_out		pgp_fingerprint_t 
+ *  
+ */
 static pgp_status_t
 decrypt_cb(void *cookie_opaque,
            pgp_pkesk_t *pkesks, size_t pkesk_count,
@@ -2795,6 +2852,21 @@ static unsigned int count_keydata_parts(const char* key_data, size_t size) {
 // This is for single keys, which is why we're using a boolean here.
 
 
+/**
+ *  @internal
+ *  
+ *  <!--       _pgp_import_keydata()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION 
+ *  @param[in]	*key_data		const char 
+ *  @param[in]	size		size_t 
+ *  @param[in]	**private_idents		identity_list 
+ *  @param[in]	**imported_keys		stringlist_t 
+ *  @param[in]	*changed_bitvec		uint64_t 
+ *  
+ */
 PEP_STATUS _pgp_import_keydata(PEP_SESSION session, const char *key_data,
                                size_t size, identity_list **private_idents,
                                stringlist_t** imported_keys,
@@ -3143,6 +3215,16 @@ PEP_STATUS pgp_export_keydata(
  *  
  *  @ownership  ownership of the retval goes to the calle
  */
+/**
+ *  @internal
+ *  
+ *  <!--       _undot_address()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*address		const char 
+ *  
+ */
 static char *_undot_address(const char* address) {
     if (!address)
         return NULL;
@@ -3193,6 +3275,20 @@ static char *_undot_address(const char* address) {
  *  @retval     tail of keyinfo_list
  *  
  *  @todo   do we need null checks here? I think we do.
+ */
+/**
+ *  @internal
+ *  
+ *  <!--       add_key()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION 
+ *  @param[in]	*keyinfo_list		stringpair_list_t 
+ *  @param[in]	*keylist		stringlist_t 
+ *  @param[in]	cert		pgp_cert_t 
+ *  @param[in]	fpr		pgp_fingerprint_t 
+ *  
  */
 static stringpair_list_t *add_key(PEP_SESSION session,
                                   stringpair_list_t *keyinfo_list,
@@ -3257,6 +3353,20 @@ static stringpair_list_t *add_key(PEP_SESSION session,
  *                                  information from matching keys should be added 
  * 
  *  @todo           what if both output params are NULL? What does it mean?
+ *  
+ */
+/**
+ *  @internal
+ *  
+ *  <!--       list_keys()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION 
+ *  @param[in]	*pattern		const char 
+ *  @param[in]	private_only		int 
+ *  @param[in]	**keyinfo_list		stringpair_list_t 
+ *  @param[in]	**keylist		stringlist_t 
  *  
  */
 static PEP_STATUS list_keys(PEP_SESSION session,
@@ -3383,17 +3493,11 @@ PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern)
     return PEP_UNKNOWN_ERROR;
 }
 
-// Unlike pgp_list_keyinfo, this function returns revoked keys.
-
-
 PEP_STATUS pgp_find_keys(
     PEP_SESSION session, const char *pattern, stringlist_t **keylist)
 {
     return list_keys(session, pattern, false, NULL, keylist);
 }
-
-// Unlike pgp_list_keyinfo, this function returns revoked keys.
-
 
 PEP_STATUS pgp_find_private_keys(
     PEP_SESSION session, const char *pattern, stringlist_t **keylist)
@@ -3612,14 +3716,30 @@ PEP_STATUS pgp_revoke_key(
  *  
  *  <!--       _pgp_contains_encryption_subkey()       -->
  *  
- *  @brief            TODO
+ *  @brief  Returns true if the input cert contains an encryption subkey
  *  
  *  @param[in]      session        PEP_SESSION
- *  @param[in]      cert           pgp_cert_t
- *  @param[out]     has_subkey     bool
+ *  @param[in]      cert           cert to check
+ *  @param[out]     has_subkey     true if there's an encryption subkey, else false
  *  
  *  @note   Doesn't check the *validity* of these subkeys. 
  *          Just checks to see if they exist.
+ * 
+ *  @todo   If this doesn't check the validity, why is it using valid_key_iter???
+ *          I am probably just confused, but check with neal. What does valid mean
+ *          in this respect?
+ */
+/**
+ *  @internal
+ *  
+ *  <!--       _pgp_contains_encryption_subkey()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION 
+ *  @param[in]	cert		pgp_cert_t 
+ *  @param[in]	*has_subkey		bool 
+ *  
  */
 static void _pgp_contains_encryption_subkey(PEP_SESSION session, pgp_cert_t cert, bool* has_subkey) {
     pgp_cert_valid_key_iter_t key_iter
@@ -3641,14 +3761,30 @@ static void _pgp_contains_encryption_subkey(PEP_SESSION session, pgp_cert_t cert
  *  
  *  <!--       _pgp_contains_sig_subkey()       -->
  *  
- *  @brief            TODO
+ *  @brief  Returns true if the input cert contains an encryption subkey
  *  
  *  @param[in]      session        PEP_SESSION
- *  @param[in]      cert           pgp_cert_t
- *  @param[out]     has_subkey     bool
+ *  @param[in]      cert           cert to check
+ *  @param[out]     has_subkey     true if there's a signing subkey, else false
  *  
  *  @note   Doesn't check the *validity* of these subkeys. 
  *          Just checks to see if they exist.
+ * 
+ *  @todo   If this doesn't check the validity, why is it using valid_key_iter???
+ *          I am probably just confused, but check with neal. What does valid mean
+ *          in this respect?
+ */
+/**
+ *  @internal
+ *  
+ *  <!--       _pgp_contains_sig_subkey()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION 
+ *  @param[in]	cert		pgp_cert_t 
+ *  @param[in]	*has_subkey		bool 
+ *  
  */
 static void _pgp_contains_sig_subkey(PEP_SESSION session, pgp_cert_t cert, bool* has_subkey) {
     pgp_cert_valid_key_iter_t key_iter
@@ -3668,11 +3804,30 @@ static void _pgp_contains_sig_subkey(PEP_SESSION session, pgp_cert_t cert, bool*
  *  
  *  <!--       _pgp_key_broken()       -->
  *  
- *  @brief  Check to see that key, at a minimum, even contains encryption or signing subkeys
+ *  @brief  Check to see that key, at a minimum, even contains encryption and signing subkeys;
+ *          if not, return false
  *  
  *  @param[in]    session        PEP_SESSION
- *  @param[in]    cert        pgp_cert_t
- *  @param[in]    *is_broken        bool
+ *  @param[in]    cert           cert to check
+ *  @param[out]   is_broken      false if both encryption and signing subkeys exist for this key,
+ *                               else true
+ *  @note   Doesn't check the *validity* of these subkeys. 
+ *          Just checks to see if they exist.
+ * 
+ *  @todo   If this doesn't check the validity, why do the check functions use valid_key_iter???
+ *          I am probably just confused, but check with neal. What does valid mean
+ *          in this respect?
+ */
+/**
+ *  @internal
+ *  
+ *  <!--       _pgp_key_broken()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION 
+ *  @param[in]	cert		pgp_cert_t 
+ *  @param[in]	*is_broken		bool 
  *  
  */
 static void _pgp_key_broken(PEP_SESSION session, pgp_cert_t cert, bool* is_broken) {
@@ -3699,6 +3854,19 @@ static void _pgp_key_broken(PEP_SESSION session, pgp_cert_t cert, bool* is_broke
  *  @param[in]    cert           pgp_cert_t
  *  @param[in]    when           consttime_t
  *  @param[out]   expired        contains true if key expired, else false
+ *  
+ */
+/**
+ *  @internal
+ *  
+ *  <!--       _pgp_key_expired()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION 
+ *  @param[in]	cert		pgp_cert_t 
+ *  @param[in]	when		const time_t 
+ *  @param[in]	*expired		bool 
  *  
  */
 static void _pgp_key_expired(PEP_SESSION session, pgp_cert_t cert, const time_t when, bool* expired)
@@ -3813,6 +3981,18 @@ PEP_STATUS pgp_key_expired(PEP_SESSION session, const char *fpr,
  *  @param[in]    session        PEP_SESSION
  *  @param[in]    cert        pgp_cert_t
  *  @param[in]    *revoked        bool
+ *  
+ */
+/**
+ *  @internal
+ *  
+ *  <!--       _pgp_key_revoked()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION 
+ *  @param[in]	cert		pgp_cert_t 
+ *  @param[in]	*revoked		bool 
  *  
  */
 static void _pgp_key_revoked(PEP_SESSION session, pgp_cert_t cert, bool* revoked) {

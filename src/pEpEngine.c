@@ -21,6 +21,18 @@
 static volatile int init_count = -1;
 
 // sql overloaded functions - modified from sqlite3.c
+/**
+ *  @internal
+ *  
+ *  <!--       _sql_lower()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*ctx		sqlite3_context 
+ *  @param[in]	argc		int 
+ *  @param[in]	**argv		sqlite3_value 
+ *  
+ */
 static void _sql_lower(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
     const char *z2;
     int n;
@@ -45,6 +57,19 @@ static void _sql_lower(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
 }
 
 #ifdef _PEP_SQLITE_DEBUG
+/**
+ *  @internal
+ *  
+ *  <!--       sql_trace_callback()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	trace_constant		unsigned 
+ *  @param[in]	*context_ptr		void 
+ *  @param[in]	*P		void 
+ *  @param[in]	*X		void 
+ *  
+ */
 int sql_trace_callback (unsigned trace_constant, 
                         void* context_ptr,
                         void* P,
@@ -884,6 +909,16 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg){
   fprintf(stderr, "(%d) %s\n", iErrCode, zMsg);
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       upgrade_revoc_contact_to_13()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION 
+ *  
+ */
 static PEP_STATUS upgrade_revoc_contact_to_13(PEP_SESSION session) {
     // I HATE SQLITE.
     PEP_STATUS status = PEP_STATUS_OK;
@@ -3279,6 +3314,18 @@ PEP_STATUS clear_trust_info(PEP_SESSION session,
     return PEP_STATUS_OK;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       _set_or_update_trust()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION 
+ *  @param[in]	*identity		pEp_identity 
+ *  @param[in]	*set_or_update		sqlite3_stmt 
+ *  
+ */
 static PEP_STATUS _set_or_update_trust(PEP_SESSION session,
                                        pEp_identity* identity,
                                        sqlite3_stmt* set_or_update) {
@@ -3307,6 +3354,18 @@ static PEP_STATUS _set_or_update_trust(PEP_SESSION session,
     return PEP_STATUS_OK;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       _set_or_update_identity_entry()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION 
+ *  @param[in]	*identity		pEp_identity 
+ *  @param[in]	*set_or_update		sqlite3_stmt 
+ *  
+ */
 static PEP_STATUS _set_or_update_identity_entry(PEP_SESSION session,
                                                 pEp_identity* identity,
                                                 sqlite3_stmt* set_or_update) {
@@ -3334,6 +3393,18 @@ static PEP_STATUS _set_or_update_identity_entry(PEP_SESSION session,
     return PEP_STATUS_OK;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       _set_or_update_person()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION 
+ *  @param[in]	*identity		pEp_identity 
+ *  @param[in]	*set_or_update		sqlite3_stmt 
+ *  
+ */
 static PEP_STATUS _set_or_update_person(PEP_SESSION session, 
                                         pEp_identity* identity,
                                         sqlite3_stmt* set_or_update) {
@@ -5102,6 +5173,18 @@ static void _clean_log_value(char *text)
     }
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       _concat_string()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*str1		char 
+ *  @param[in]	*str2		const char 
+ *  @param[in]	delim		char 
+ *  
+ */
 static char *_concat_string(char *str1, const char *str2, char delim)
 {
     str2 = str2 ? str2 : "";
@@ -5338,6 +5421,18 @@ the_end:
     return status;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       _get_sequence_value()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION 
+ *  @param[in]	*name		const char 
+ *  @param[in]	*value		int32_t 
+ *  
+ */
 static PEP_STATUS _get_sequence_value(PEP_SESSION session, const char *name,
         int32_t *value)
 {
@@ -5537,6 +5632,19 @@ DYNAMIC_API PEP_STATUS get_revoked(
     return status;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       get_replacement_fpr()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION 
+ *  @param[in]	*fpr		const char 
+ *  @param[in]	**revoked_fpr		char 
+ *  @param[in]	*revocation_date		uint64_t 
+ *  
+ */
 DYNAMIC_API PEP_STATUS get_replacement_fpr(
         PEP_SESSION session,
         const char *fpr,

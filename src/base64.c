@@ -126,6 +126,17 @@ char next_char(const char** input_ptr, const char* end) {
 }
 
 // 4 chars = 3 output bytes
+/**
+ *  @internal
+ *  
+ *  <!--       base64_str_to_binary_blob()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*input		const char 
+ *  @param[in]	length		int 
+ *  
+ */
 bloblist_t* base64_str_to_binary_blob(const char* input, int length) {
     if (length == 0)
         return NULL;

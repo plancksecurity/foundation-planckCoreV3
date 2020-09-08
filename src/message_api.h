@@ -16,6 +16,18 @@
 extern "C" {
 #endif
 
+/**
+ *  <!--       import_attached_keys()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION 
+ *  @param[in]	*msg		message 
+ *  @param[in]	**private_idents		identity_list 
+ *  @param[in]	**imported_keys		stringlist_t 
+ *  @param[in]	*changed_keys		uint64_t 
+ *  
+ */
 bool import_attached_keys(
         PEP_SESSION session,
         message *msg,

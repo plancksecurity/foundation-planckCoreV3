@@ -545,6 +545,13 @@ static inline int _unsigned_signed_strcmp(const unsigned char* bytestr, const ch
 }
 
 // This is just a horrible example of C type madness. UTF-8 made me do it.
+/**
+ *  <!--       _pEp_subj_copy()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  
+ */
 static inline char* _pEp_subj_copy() {
 #ifndef WIN32
     unsigned char pEpstr[] = PEP_SUBJ_STRING;
@@ -721,6 +728,13 @@ static inline void set_max_version(unsigned int first_maj, unsigned int first_mi
 extern int _pEp_rand_max_bits;
 extern double _pEp_log2_36;
 
+/**
+ *  <!--       _init_globals()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  
+ */
 static inline void _init_globals() {
     _pEp_rand_max_bits = (int) ceil(log2((double) RAND_MAX));
     _pEp_log2_36 = log2(36);

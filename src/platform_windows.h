@@ -130,6 +130,15 @@ DYNAMIC_API time_t timegm(timestamp *timeptr);
 #define ftello(A) ((off_t) _ftelli64(A))
 #endif
 
+/**
+ *  <!--       strndup()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*s1		const char 
+ *  @param[in]	n		size_t 
+ *  
+ */
 char *strndup(const char *s1, size_t n);
 /**
  *  <!--       stpcpy()       -->
