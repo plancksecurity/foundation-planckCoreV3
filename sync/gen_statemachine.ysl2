@@ -585,7 +585,7 @@ tstylesheet {
                                 goto the_end;
                             }
                             attach_own_key(session, _m);
-                            decorate_message(_m, PEP_rating_undefined, NULL, true, true);
+                            decorate_message(session, _m, PEP_rating_undefined, NULL, true, true);
                             m = _m;
                             break;
 
@@ -1349,7 +1349,7 @@ tstylesheet {
                 case Init:
                     return "Init";
         ||
-        for "func:distinctName(state/event[not(@name='Init')])" {
+        for "func:distinctName(state/event[not(@name='Init')]|message)" {
             |>> case «@name»:
             |>>> return "«@name»";
         }
