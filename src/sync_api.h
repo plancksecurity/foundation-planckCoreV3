@@ -153,6 +153,14 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
         retrieve_next_sync_event_t retrieve_next_sync_event
     );
 
+/**
+ *  <!--       unregister_sync_callbacks()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  
+ */
 DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session);
 
 

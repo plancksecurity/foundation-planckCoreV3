@@ -214,6 +214,12 @@ typedef PEP_STATUS (*config_cipher_suite_t)(PEP_SESSION session,
         PEP_CIPHER_SUITE suite);
 
 
+/**
+ *  @struct	PEP_cryptotech_t
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef struct _PEP_cryptotech_t {
     uint8_t id;
     // the following are default values; comm_type may vary with key length or b0rken crypto
@@ -247,5 +253,23 @@ extern PEP_cryptotech_t cryptotech[PEP_crypt__count];
 
 typedef uint64_t cryptotech_mask;
 
+/**
+ *  <!--       init_cryptotech()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	in_first		bool
+ *  
+ */
 PEP_STATUS init_cryptotech(PEP_SESSION session, bool in_first);
+/**
+ *  <!--       release_cryptotech()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	out_last		bool
+ *  
+ */
 void release_cryptotech(PEP_SESSION session, bool out_last);

@@ -492,6 +492,15 @@ DYNAMIC_API PEP_STATUS encrypt_and_sign(
     );
 
 
+/**
+ *  <!--       set_debug_color()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	ansi_color		int
+ *  
+ */
 DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color);
 
 /**
@@ -681,6 +690,12 @@ typedef unsigned int identity_flags_t;
 
 typedef unsigned int keypair_flags_t;
 
+/**
+ *  @struct	pEp_identity
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef struct _pEp_identity {
     char *address;              // C string with address UTF-8 encoded
     char *fpr;                  // C string with fingerprint UTF-8 encoded
@@ -700,6 +715,12 @@ typedef struct _pEp_identity {
     identity_flags_t flags;     // identity_flag1 | identity_flag2 | ...
 } pEp_identity;
 
+/**
+ *  @struct	identity_list
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef struct _identity_list {
     pEp_identity *ident;
     struct _identity_list *next;
@@ -1727,6 +1748,14 @@ PEP_STATUS _generate_keypair(PEP_SESSION session,
                              pEp_identity *identity,
                              bool suppress_event);
 
+/**
+ *  <!--       reset_pEptest_hack()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  
+ */
 DYNAMIC_API PEP_STATUS reset_pEptest_hack(PEP_SESSION session);
 
 // This is used internally when there is a temporary identity to be retrieved

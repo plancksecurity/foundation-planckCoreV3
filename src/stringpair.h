@@ -13,6 +13,12 @@ extern "C" {
 #endif
 
 
+/**
+ *  @struct	stringpair_t
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef struct _stringpair_t {
     char * key;   // may point to "" but must not be NULL!
     char * value; // may point to "" but must not be NULL!
@@ -64,6 +70,12 @@ DYNAMIC_API void free_stringpair(stringpair_t * pair);
 DYNAMIC_API stringpair_t * stringpair_dup(const stringpair_t *src);
 
 
+/**
+ *  @struct	stringpair_list_t
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef struct _stringpair_list_t {
     stringpair_t *value;
     struct _stringpair_list_t *next;

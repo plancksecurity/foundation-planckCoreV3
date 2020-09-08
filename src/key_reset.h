@@ -102,6 +102,14 @@ DYNAMIC_API PEP_STATUS key_reset_all_own_keys(PEP_SESSION session);
 // FIXME: Doc
 // This is simply NOT SAFE for multiple passwords on the extant 
 // keys. Cannot be called with multiple passwords for that purpose.
+/**
+ *  <!--       key_reset_own_grouped_keys()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  
+ */
 DYNAMIC_API PEP_STATUS key_reset_own_grouped_keys(PEP_SESSION session);
 
 /**

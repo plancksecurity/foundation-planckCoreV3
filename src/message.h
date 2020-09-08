@@ -35,6 +35,12 @@ typedef enum _PEP_msg_direction {
 
 struct _message_ref_list;
 
+/**
+ *  @struct	message
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef struct _message {
     PEP_msg_direction dir;
     char *id;                               // UTF-8 string of message ID
@@ -70,6 +76,12 @@ typedef struct _message {
                                             // (read_only to the outside)
 } message;
 
+/**
+ *  @struct	message_ref_list
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef struct _message_ref_list {
     message *msg_ref;                       // reference to message
     struct _message_ref_list *next;

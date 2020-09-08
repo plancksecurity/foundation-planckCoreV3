@@ -13,6 +13,12 @@
 extern "C" {
 #endif
 
+/**
+ *  @struct	labeled_int_list_t
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef struct _labeled_int_list_t {
     int value;
     char* label;                                // UTF-8 string, null-terminated

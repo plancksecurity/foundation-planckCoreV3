@@ -12,6 +12,14 @@ extern "C" {
 #define PEP_STATUS_TO_STRING
 #endif
 
+/**
+ *  <!--       pEp_status_to_string()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	status		PEP_STATUS
+ *  
+ */
 static inline const char *pEp_status_to_string(PEP_STATUS status) {
     switch (status) {
     case PEP_STATUS_OK: return "PEP_STATUS_OK";
@@ -118,6 +126,14 @@ static inline const char *pEp_status_to_string(PEP_STATUS status) {
     }
 }
 
+/**
+ *  <!--       pEp_comm_type_to_string()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	ct		PEP_comm_type
+ *  
+ */
 static inline const char *pEp_comm_type_to_string(PEP_comm_type ct) {
     switch (ct) {
     case PEP_ct_unknown: return "unknown";

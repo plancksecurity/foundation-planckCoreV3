@@ -41,8 +41,23 @@ extern "C" {
 #ifdef NDEBUG
 const char *unix_local_db(void);
 #else
+/**
+ *  <!--       unix_local_db()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	reset		int
+ *  
+ */
 const char *unix_local_db(int reset);
 #endif
+/**
+ *  <!--       unix_system_db()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  
+ */
 const char *unix_system_db(void);
 
 

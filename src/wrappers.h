@@ -149,6 +149,14 @@ static inline int Mkstemp(char *template)
     return fd;
 }
 
+/**
+ *  <!--       Close()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	fildes		int
+ *  
+ */
 static inline int Close(int fildes)
 {
     int r;

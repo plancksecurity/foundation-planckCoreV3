@@ -28,6 +28,12 @@ typedef PEP_STATUS (*sendto_t)(PEP_SESSION session, const message *msg);
 typedef PEP_STATUS (*readnext_t)(PEP_SESSION session, message **msg,
         PEP_transport_t **via);
 
+/**
+ *  @struct	_PEP_transport_t
+ *  
+ *  @brief	TODO
+ *  
+ */
 struct _PEP_transport_t {
     uint8_t id;                             // transport ID
     sendto_t sendto;                        // sendto function

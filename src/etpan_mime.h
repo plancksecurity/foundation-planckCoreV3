@@ -23,6 +23,13 @@ struct mailmime * part_new_empty(
         int force_single
     );
 
+/**
+ *  <!--       get_pgp_encrypted_part()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  
+ */
 struct mailmime * get_pgp_encrypted_part(void);
 
 struct mailmime * get_text_part(

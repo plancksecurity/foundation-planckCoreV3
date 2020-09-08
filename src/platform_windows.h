@@ -96,12 +96,40 @@ size_t strlcat(char* dst, const	char* src, size_t size);
 char *strnstr(const char *big, const char *little, size_t len);
 
 
+/**
+ *  <!--       windoze_keys_db()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  
+ */
 const char *windoze_keys_db(void);
+/**
+ *  <!--       windoze_local_db()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  
+ */
 const char *windoze_local_db(void);
+/**
+ *  <!--       windoze_system_db()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  
+ */
 const char *windoze_system_db(void);
 
 void log_output_debug(const char *title, const char *entity, const char *description, const char *comment);
 
+/**
+ *  <!--       random()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  
+ */
 long random(void);
 
 // on Windoze, uuid_t needs pointer semantics
@@ -109,8 +137,25 @@ typedef UUID pEpUUID[1];
 #define _UUID_STRING_T
 typedef char uuid_string_t[37];
 
+/**
+ *  <!--       uuid_generate_random()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	out		pEpUUID
+ *  
+ */
 void uuid_generate_random(pEpUUID out);
 int uuid_parse(char *in, pEpUUID uu);
+/**
+ *  <!--       uuid_unparse_upper()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	uu		pEpUUID
+ *  @param[in]	out		uuid_string_t
+ *  
+ */
 void uuid_unparse_upper(pEpUUID uu, uuid_string_t out);
 
 #ifndef __cplusplus

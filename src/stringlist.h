@@ -13,6 +13,12 @@ extern "C" {
 #endif
 
 
+/**
+ *  @struct	stringlist_t
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef struct _stringlist_t {
     char *value;
     struct _stringlist_t *next;

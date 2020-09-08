@@ -19,6 +19,12 @@ extern "C" {
 // this is a growing buffer, which is needed by the ASN.1 implementation
 // i.e. for encoding to XER
 
+/**
+ *  @struct	growing_buf_t
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef struct growing_buf {
     char *data;
     size_t size;

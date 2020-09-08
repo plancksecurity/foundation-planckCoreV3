@@ -452,6 +452,14 @@ DYNAMIC_API PEP_STATUS set_own_key(
 //                           but passphrase is the wrong one
 //      Otherwise, database and keyring errors as appropriate 
 //
+/**
+ *  <!--       clean_own_key_defaults()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  
+ */
 DYNAMIC_API PEP_STATUS clean_own_key_defaults(PEP_SESSION session);
 
 PEP_STATUS get_all_keys_for_user(PEP_SESSION session, 

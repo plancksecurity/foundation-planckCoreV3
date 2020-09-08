@@ -22,6 +22,12 @@ typedef enum {
     PEP_CONTENT_DISP_OTHER = -1      // must be affirmatively set
 } content_disposition_type;
 
+/**
+ *  @struct	bloblist_t
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef struct _bloblist_t {
     char *value;                        // blob
     size_t size;                        // size of blob

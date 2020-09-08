@@ -14,6 +14,12 @@ typedef enum _resource_id_type {
 
 typedef struct pEp_rid_list_t pEp_rid_list_t;
 
+/**
+ *  @struct	pEp_rid_list_t
+ *  
+ *  @brief	TODO
+ *  
+ */
 struct pEp_rid_list_t {
     pEp_resource_id_type rid_type;
     char* rid;

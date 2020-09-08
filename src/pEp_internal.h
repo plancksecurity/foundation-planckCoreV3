@@ -115,6 +115,12 @@
 
 struct _pEpSession;
 typedef struct _pEpSession pEpSession;
+/**
+ *  @struct	_pEpSession
+ *  
+ *  @brief	TODO
+ *  
+ */
 struct _pEpSession {
     const char *version;
     messageToSend_t messageToSend;
@@ -277,7 +283,25 @@ struct _pEpSession {
 };
 
 
+/**
+ *  <!--       init_transport_system()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	in_first		bool
+ *  
+ */
 PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first);
+/**
+ *  <!--       release_transport_system()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	out_last		bool
+ *  
+ */
 void release_transport_system(PEP_SESSION session, bool out_last);
 
 /* NOT to be exposed to the outside!!! */
@@ -484,6 +508,17 @@ static inline void pEp_version_major_minor(const char* version_str, unsigned int
     return;    
 }
 
+/**
+ *  <!--       compare_versions()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	first_maj		unsignedint
+ *  @param[in]	first_min		unsignedint
+ *  @param[in]	second_maj		unsignedint
+ *  @param[in]	second_min		unsignedint
+ *  
+ */
 static inline int compare_versions(unsigned int first_maj, unsigned int first_min,
                                    unsigned int second_maj, unsigned int second_min) {
     if (first_maj > second_maj)

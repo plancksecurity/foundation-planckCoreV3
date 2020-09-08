@@ -13,6 +13,12 @@
 extern "C" {
 #endif
 
+/**
+ *  @struct	keyreset_command
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef struct _keyreset_command {
     pEp_identity * ident;
     char * new_key;
@@ -63,6 +69,12 @@ DYNAMIC_API void free_keyreset_command(keyreset_command * command);
 DYNAMIC_API keyreset_command * keyreset_command_dup(const keyreset_command * src);
 
 
+/**
+ *  @struct	keyreset_command_list
+ *  
+ *  @brief	TODO
+ *  
+ */
 typedef struct _keyreset_command_list {
     keyreset_command * command;
     struct _keyreset_command_list * next;

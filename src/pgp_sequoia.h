@@ -8,7 +8,25 @@
 
 #include "pEpEngine.h"
 
+/**
+ *  <!--       pgp_init()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	in_first		bool
+ *  
+ */
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first);
+/**
+ *  <!--       pgp_release()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	out_last		bool
+ *  
+ */
 void pgp_release(PEP_SESSION session, bool out_last);
 
 PEP_STATUS pgp_decrypt_and_verify(
@@ -117,6 +135,15 @@ PEP_STATUS pgp_find_private_keys(
 
 PEP_STATUS pgp_binary(const char **path);
 
+/**
+ *  <!--       pgp_config_cipher_suite()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	suite		PEP_CIPHER_SUITE
+ *  
+ */
 PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
         PEP_CIPHER_SUITE suite);
 
