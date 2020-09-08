@@ -28,6 +28,16 @@ static char translate_char_to_bits(char input) {
     return -1;    
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       _is_whitespace()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	in		constchar
+ *  
+ */
 static bool _is_whitespace(const char in) {
     switch (in) {
         case ' ':
@@ -40,6 +50,17 @@ static bool _is_whitespace(const char in) {
     }        
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       subtract_whitespace()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*input		constchar
+ *  @param[in]	length		int
+ *  
+ */
 static size_t subtract_whitespace(const char* input, int length) {
     size_t actual_size = length;
     int i;
@@ -51,6 +72,17 @@ static size_t subtract_whitespace(const char* input, int length) {
     return actual_size;
 }
     
+/**
+ *  @internal
+ *  
+ *  <!--       trim_end()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*input		constchar
+ *  @param[in]	*length		int
+ *  
+ */
 static void trim_end(const char* input, int* length) {
     const char* end = input + *length;
     
@@ -65,6 +97,17 @@ static void trim_end(const char* input, int* length) {
     }
 }    
     
+/**
+ *  @internal
+ *  
+ *  <!--       next_char()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	**input_ptr		constchar
+ *  @param[in]	*end		constchar
+ *  
+ */
 char next_char(const char** input_ptr, const char* end) {
     const char* input = *input_ptr;
     char this_ch = 0;

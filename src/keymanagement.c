@@ -44,6 +44,18 @@ static bool key_matches_address(PEP_SESSION session, const char* address,
 }
 
 // Does not return PASSPHRASE errors
+/**
+ *  @internal
+ *  
+ *  <!--       elect_pubkey()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*identity		pEp_identity
+ *  @param[in]	check_blacklist		bool
+ *  
+ */
 PEP_STATUS elect_pubkey(
         PEP_SESSION session, pEp_identity * identity, bool check_blacklist
     )
@@ -113,6 +125,20 @@ PEP_STATUS elect_pubkey(
 // possibly having an own pubkey that we need to check on its own
 // N.B. Checked for PASSPHRASE errors - will now return them always
 // False value of "renew_private" prevents their possibility, though.
+/**
+ *  @internal
+ *  
+ *  <!--       validate_fpr()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*ident		pEp_identity
+ *  @param[in]	check_blacklist		bool
+ *  @param[in]	own_must_contain_private		bool
+ *  @param[in]	renew_private		bool
+ *  
+ */
 static PEP_STATUS validate_fpr(PEP_SESSION session, 
                                pEp_identity* ident,
                                bool check_blacklist,
@@ -477,6 +503,17 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
     return status;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       transfer_ident_lang_and_flags()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*new_ident		pEp_identity
+ *  @param[in]	*stored_ident		pEp_identity
+ *  
+ */
 static void transfer_ident_lang_and_flags(pEp_identity* new_ident,
                                           pEp_identity* stored_ident) {
     if (new_ident->lang[0] == 0) {
@@ -489,6 +526,17 @@ static void transfer_ident_lang_and_flags(pEp_identity* new_ident,
     new_ident->me = new_ident->me || stored_ident->me;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       adjust_pEp_trust_status()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*identity		pEp_identity
+ *  
+ */
 static void adjust_pEp_trust_status(PEP_SESSION session, pEp_identity* identity) {
     assert(session);
     assert(identity);
@@ -517,6 +565,19 @@ static void adjust_pEp_trust_status(PEP_SESSION session, pEp_identity* identity)
 // and friends NEVER return with a password error.
 // (get_valid_pubkey tells validate_fpr not to try renewal)
 // Will not return PASSPHRASE errors.
+/**
+ *  @internal
+ *  
+ *  <!--       prepare_updated_identity()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*return_id		pEp_identity
+ *  @param[in]	*stored_ident		pEp_identity
+ *  @param[in]	store		bool
+ *  
+ */
 static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
                                                  pEp_identity* return_id,
                                                  pEp_identity* stored_ident,
@@ -1028,6 +1089,17 @@ pEp_free:
     return status;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       elect_ownkey()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*identity		pEp_identity
+ *  
+ */
 PEP_STATUS elect_ownkey(
         PEP_SESSION session, pEp_identity * identity
     )
@@ -1098,6 +1170,18 @@ PEP_STATUS elect_ownkey(
     return PEP_STATUS_OK;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       _has_usable_priv_key()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*fpr		char
+ *  @param[in]	*is_usable		bool
+ *  
+ */
 PEP_STATUS _has_usable_priv_key(PEP_SESSION session, char* fpr,
                                 bool* is_usable) {
     
@@ -2119,6 +2203,17 @@ PEP_STATUS is_mistrusted_key(PEP_SESSION session, const char* fpr,
     return status;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       _wipe_default_key_if_invalid()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*ident		pEp_identity
+ *  
+ */
 static PEP_STATUS _wipe_default_key_if_invalid(PEP_SESSION session,
                                          pEp_identity* ident) {
     

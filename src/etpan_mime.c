@@ -22,6 +22,15 @@
 
 #define MAX_MESSAGE_ID 128
 
+/**
+ *  @internal
+ *  
+ *  <!--       generate_boundary()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  
+ */
 static char * generate_boundary(void)
 {
     char id[MAX_MESSAGE_ID];
@@ -804,6 +813,18 @@ char * _get_filename_or_cid(struct mailmime *mime)
     return _temp_filename_ptr;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       parameter_has_value()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*content		structmailmime_content
+ *  @param[in]	*name		constchar
+ *  @param[in]	*value		constchar
+ *  
+ */
 static bool parameter_has_value(
         struct mailmime_content *content,       
         const char *name,
@@ -880,6 +901,17 @@ bool _is_text_part(struct mailmime_content *content, const char *subtype)
     return false;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       _is_message_part()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*content		structmailmime_content
+ *  @param[in]	*subtype		constchar
+ *  
+ */
 bool _is_message_part(struct mailmime_content *content, const char* subtype) {
     assert(content);
     if (content->ct_type && content->ct_type->tp_type == MAILMIME_TYPE_COMPOSITE_TYPE &&
@@ -1038,6 +1070,17 @@ static PEP_STATUS interpret_MIME(struct mailmime *mime,
 // temporary files when the pgp/mime support was implemented for
 // outlook, as the existing code did not work well on windows.
 
+/**
+ *  @internal
+ *  
+ *  <!--       render_mime()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*mime		structmailmime
+ *  @param[in]	**mimetext		char
+ *  
+ */
 static PEP_STATUS render_mime(struct mailmime *mime, char **mimetext)
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -1087,6 +1130,18 @@ pEp_error:
     return status;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       mime_attachment()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*blob		bloblist_t
+ *  @param[in]	**result		structmailmime
+ *  @param[in]	is_nf_message_attachment		bool
+ *  
+ */
 static PEP_STATUS mime_attachment(
         bloblist_t *blob,
         struct mailmime **result,
@@ -1144,6 +1199,19 @@ enomem:
 // "contained message" of pEp 2.x messages 
 // on the initial encoding where it is turned 
 // into attachment data!!
+/**
+ *  @internal
+ *  
+ *  <!--       mime_html_text()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*plaintext		constchar
+ *  @param[in]	*htmltext		constchar
+ *  @param[in]	*attachments		bloblist_t
+ *  @param[in]	**result		structmailmime
+ *  
+ */
 static PEP_STATUS mime_html_text(
         const char *plaintext,
         const char *htmltext,
@@ -1324,6 +1392,16 @@ enomem:
 }
 
 
+/**
+ *  @internal
+ *  
+ *  <!--       identity_to_mailbox()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*ident		constpEp_identity
+ *  
+ */
 static struct mailimf_mailbox * identity_to_mailbox(const pEp_identity *ident)
 {
     char *_username = NULL;
@@ -1354,6 +1432,16 @@ enomem:
     return NULL;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       identity_to_mbl()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*ident		constpEp_identity
+ *  
+ */
 static struct mailimf_mailbox_list * identity_to_mbl(
         const pEp_identity *ident)
 {
@@ -1392,6 +1480,16 @@ enomem:
     return NULL;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       identity_list_to_mal()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*il		identity_list
+ *  
+ */
 static struct mailimf_address_list * identity_list_to_mal(identity_list *il)
 {
     struct mailimf_address_list *mal = NULL;
@@ -1444,6 +1542,17 @@ enomem:
 // KB: This seems to be always called with "true",
 //     but there was probably a reason for this. So 
 //     leave it for now.
+/**
+ *  @internal
+ *  
+ *  <!--       stringlist_to_clist()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*sl		stringlist_t
+ *  @param[in]	transport_encode		bool
+ *  
+ */
 static clist * stringlist_to_clist(stringlist_t *sl, bool transport_encode)
 {
     clist * cl = clist_new();
@@ -1477,6 +1586,17 @@ static clist * stringlist_to_clist(stringlist_t *sl, bool transport_encode)
     return cl;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       build_fields()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*msg		constmessage
+ *  @param[in]	**result		structmailimf_fields
+ *  
+ */
 static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **result)
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -1706,6 +1826,16 @@ enomem:
     return status;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       has_exceptional_extension()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*filename		char
+ *  
+ */
 static bool has_exceptional_extension(char* filename) {
     if (!filename)
         return false;
@@ -1719,6 +1849,16 @@ static bool has_exceptional_extension(char* filename) {
     return false;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       choose_resource_id()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*rid_list		pEp_rid_list_t
+ *  
+ */
 static pEp_rid_list_t* choose_resource_id(pEp_rid_list_t* rid_list) {
     pEp_rid_list_t* retval = rid_list;
     
@@ -1768,6 +1908,19 @@ static pEp_rid_list_t* choose_resource_id(pEp_rid_list_t* rid_list) {
 // }
 
 
+/**
+ *  @internal
+ *  
+ *  <!--       mime_encode_message_plain()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*msg		constmessage
+ *  @param[in]	omit_fields		bool
+ *  @param[in]	**result		structmailmime
+ *  @param[in]	has_pEp_msg_attachment		bool
+ *  
+ */
 static PEP_STATUS mime_encode_message_plain(
         const message *msg,
         bool omit_fields,
@@ -1923,6 +2076,18 @@ pEp_error:
     return status;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       mime_encode_message_PGP_MIME()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*msg		constmessage
+ *  @param[in]	omit_fields		bool
+ *  @param[in]	**result		structmailmime
+ *  
+ */
 static PEP_STATUS mime_encode_message_PGP_MIME(
         const message * msg,
         bool omit_fields,
@@ -2094,6 +2259,16 @@ pEp_error:
     return status;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       mailbox_to_identity()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*mb		conststructmailimf_mailbox
+ *  
+ */
 static pEp_identity *mailbox_to_identity(const struct mailimf_mailbox * mb)
 {
     char *username = NULL;
@@ -2141,12 +2316,32 @@ enomem:
     return NULL;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       mbl_to_identity()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*mbl		conststructmailimf_mailbox_list
+ *  
+ */
 static pEp_identity * mbl_to_identity(const struct mailimf_mailbox_list * mbl)
 {
     struct mailimf_mailbox * mb = clist_content(clist_begin(mbl->mb_list));
     return mailbox_to_identity(mb);
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       mal_to_identity_list()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*mal		conststructmailimf_address_list
+ *  
+ */
 static identity_list * mal_to_identity_list(
         const struct mailimf_address_list *mal
     )
@@ -2205,6 +2400,16 @@ enomem:
     return NULL;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       clist_to_stringlist()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*list		constclist
+ *  
+ */
 static stringlist_t * clist_to_stringlist(const clist *list)
 {
     char *text = NULL;;
@@ -2239,6 +2444,17 @@ enomem:
     return NULL;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       read_fields()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*msg		message
+ *  @param[in]	*fieldlist		clist
+ *  
+ */
 static PEP_STATUS read_fields(message *msg, clist *fieldlist)
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -2449,6 +2665,18 @@ pEp_error:
     return status;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       interpret_body()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*part		structmailmime
+ *  @param[in]	**longmsg		char
+ *  @param[in]	*size		size_t
+ *  
+ */
 static PEP_STATUS interpret_body(struct mailmime *part, char **longmsg, size_t *size)
 {
     const char *text;
@@ -2526,6 +2754,17 @@ static PEP_STATUS interpret_body(struct mailmime *part, char **longmsg, size_t *
 
 // THIS IS A BEST-EFFORT ONLY FUNCTION, AND WE ARE NOT DOING MORE THAN THE
 // SUBJECT FOR NOW.
+/**
+ *  @internal
+ *  
+ *  <!--       interpret_protected_headers()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*mime		structmailmime
+ *  @param[in]	*msg		message
+ *  
+ */
 static PEP_STATUS interpret_protected_headers(
         struct mailmime* mime, 
         message* msg
@@ -2566,6 +2805,17 @@ static PEP_STATUS interpret_protected_headers(
 }
 
 // ONLY for main part!!!
+/**
+ *  @internal
+ *  
+ *  <!--       process_multipart_related()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*mime		structmailmime
+ *  @param[in]	*msg		message
+ *  
+ */
 static PEP_STATUS process_multipart_related(struct mailmime *mime,
                                             message *msg) {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -2622,6 +2872,16 @@ static PEP_STATUS process_multipart_related(struct mailmime *mime,
     return status;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       _is_marked_as_attachment()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*fields		structmailmime_fields
+ *  
+ */
 static bool _is_marked_as_attachment(struct mailmime_fields *fields)
 {
     if (!(fields && fields->fld_list))
@@ -2642,6 +2902,18 @@ static bool _is_marked_as_attachment(struct mailmime_fields *fields)
     return false;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       interpret_MIME()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*mime		structmailmime
+ *  @param[in]	*msg		message
+ *  @param[in]	*has_possible_pEp_msg		bool
+ *  
+ */
 static PEP_STATUS interpret_MIME(
         struct mailmime *mime,
         message *msg,

@@ -539,6 +539,19 @@ static const char *sql_has_id_contacted_address =
 static const char *sql_get_last_contacted =
     "select user_id, address from identity where datetime('now') < datetime(timestamp, '+14 days') ; ";
         
+/**
+ *  @internal
+ *  
+ *  <!--       user_version()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*_version		void
+ *  @param[in]	count		int
+ *  @param[in]	**text		char
+ *  @param[in]	**name		char
+ *  
+ */
 static int user_version(void *_version, int count, char **text, char **name)
 {
     if (!(_version && count == 1 && text && text[0]))
@@ -550,6 +563,17 @@ static int user_version(void *_version, int count, char **text, char **name)
 }
 
 // TODO: refactor and generalise these two functions if possible.
+/**
+ *  @internal
+ *  
+ *  <!--       db_contains_table()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*table_name		constchar
+ *  
+ */
 static int db_contains_table(PEP_SESSION session, const char* table_name) {
     if (!session || !table_name)
         return -1;
@@ -594,6 +618,18 @@ static int db_contains_table(PEP_SESSION session, const char* table_name) {
         
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       table_contains_column()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*table_name		constchar
+ *  @param[in]	*col_name		constchar
+ *  
+ */
 static int table_contains_column(PEP_SESSION session, const char* table_name,
                                                       const char* col_name) {
 
@@ -644,6 +680,16 @@ static int table_contains_column(PEP_SESSION session, const char* table_name,
     return retval;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       repair_altered_tables()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  
+ */
 PEP_STATUS repair_altered_tables(PEP_SESSION session) {
     PEP_STATUS status = PEP_STATUS_OK;
     
@@ -822,6 +868,18 @@ pEp_free:
     free(table_names);
     return status;
 }
+/**
+ *  @internal
+ *  
+ *  <!--       errorLogCallback()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*pArg		void
+ *  @param[in]	iErrCode		int
+ *  @param[in]	*zMsg		constchar
+ *  
+ */
 void errorLogCallback(void *pArg, int iErrCode, const char *zMsg){
   fprintf(stderr, "(%d) %s\n", iErrCode, zMsg);
 }
@@ -3108,6 +3166,18 @@ PEP_STATUS get_identities_by_address(
     return PEP_STATUS_OK;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       exists_identity_entry()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*identity		pEp_identity
+ *  @param[in]	*exists		bool
+ *  
+ */
 PEP_STATUS exists_identity_entry(PEP_SESSION session, pEp_identity* identity,
                                  bool* exists) {
     if (!session || !exists || !identity || EMPTYSTR(identity->user_id) || EMPTYSTR(identity->address))
@@ -3323,6 +3393,18 @@ PEP_STATUS set_or_update_with_identity(PEP_SESSION session,
     return status;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       _set_trust_internal()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*identity		pEp_identity
+ *  @param[in]	guard_transaction		bool
+ *  
+ */
 PEP_STATUS _set_trust_internal(PEP_SESSION session, pEp_identity* identity,
                                bool guard_transaction) {
     return set_or_update_with_identity(session, identity,
@@ -3356,6 +3438,18 @@ PEP_STATUS set_person(PEP_SESSION session, pEp_identity* identity,
                                        guard_transaction);
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       set_identity_entry()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*identity		pEp_identity
+ *  @param[in]	guard_transaction		bool
+ *  
+ */
 PEP_STATUS set_identity_entry(PEP_SESSION session, pEp_identity* identity,
                               bool guard_transaction) {
     return set_or_update_with_identity(session, identity,
@@ -3444,6 +3538,17 @@ pEp_free:
     return status;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       update_pEp_user_trust_vals()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*user		pEp_identity
+ *  
+ */
 PEP_STATUS update_pEp_user_trust_vals(PEP_SESSION session,
                                       pEp_identity* user) {
     if (!user->user_id)
@@ -3588,6 +3693,17 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity,
     return status;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       delete_person()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*user_id		constchar
+ *  
+ */
 PEP_STATUS delete_person(PEP_SESSION session, const char* user_id) {
 
     if (!session || EMPTYSTR(user_id))
@@ -3939,6 +4055,18 @@ DYNAMIC_API PEP_STATUS set_ident_enc_format(
     return PEP_STATUS_OK;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       get_trust_by_userid()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*user_id		constchar
+ *  @param[in]	**trust_list		labeled_int_list_t
+ *  
+ */
 PEP_STATUS get_trust_by_userid(PEP_SESSION session, const char* user_id,
                                            labeled_int_list_t** trust_list)
 {
@@ -3969,6 +4097,17 @@ PEP_STATUS get_trust_by_userid(PEP_SESSION session, const char* user_id,
     return PEP_STATUS_OK;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       reconcile_trust()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	t_old		PEP_comm_type
+ *  @param[in]	t_new		PEP_comm_type
+ *  
+ */
 PEP_comm_type reconcile_trust(PEP_comm_type t_old, PEP_comm_type t_new) {
     switch (t_new) {
         case PEP_ct_mistrusted:
@@ -3998,6 +4137,18 @@ PEP_comm_type reconcile_trust(PEP_comm_type t_old, PEP_comm_type t_new) {
     return result;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       reconcile_pEp_status()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*old_uid		constchar
+ *  @param[in]	*new_uid		constchar
+ *  
+ */
 PEP_STATUS reconcile_pEp_status(PEP_SESSION session, const char* old_uid, 
                                 const char* new_uid) {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -4020,6 +4171,18 @@ pEp_free:
     return status;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       reconcile_usernames()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*old_name		constchar
+ *  @param[in]	*new_name		constchar
+ *  @param[in]	*address		constchar
+ *  
+ */
 const char* reconcile_usernames(const char* old_name, const char* new_name, 
                                 const char* address) {
     if (EMPTYSTR(old_name)) {
@@ -4035,6 +4198,18 @@ const char* reconcile_usernames(const char* old_name, const char* new_name,
     return new_name;        
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       reconcile_default_keys()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*old_ident		pEp_identity
+ *  @param[in]	*new_ident		pEp_identity
+ *  
+ */
 PEP_STATUS reconcile_default_keys(PEP_SESSION session, pEp_identity* old_ident,
                                   pEp_identity* new_ident) {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -4087,6 +4262,17 @@ PEP_STATUS reconcile_default_keys(PEP_SESSION session, pEp_identity* old_ident,
     return status;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       reconcile_language()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*old_ident		pEp_identity
+ *  @param[in]	*new_ident		pEp_identity
+ *  
+ */
 void reconcile_language(pEp_identity* old_ident,
                         pEp_identity* new_ident) {
     if (new_ident->lang[0] == 0) {
@@ -4099,6 +4285,18 @@ void reconcile_language(pEp_identity* old_ident,
 }
 
 // ONLY CALL THIS IF BOTH IDs ARE IN THE PERSON DB, FOOL! </Mr_T>
+/**
+ *  @internal
+ *  
+ *  <!--       merge_records()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*old_uid		constchar
+ *  @param[in]	*new_uid		constchar
+ *  
+ */
 PEP_STATUS merge_records(PEP_SESSION session, const char* old_uid,
                          const char* new_uid) {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -4525,6 +4723,16 @@ DYNAMIC_API PEP_STATUS least_trust(
     return status;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       sanitize_pgp_filename()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*filename		char
+ *  
+ */
 static void sanitize_pgp_filename(char *filename)
 {
     for (int i=0; filename[i]; ++i) {
@@ -4872,6 +5080,16 @@ DYNAMIC_API PEP_STATUS config_cipher_suite(PEP_SESSION session,
     return session->cryptotech[PEP_crypt_OpenPGP].config_cipher_suite(session, suite);
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       _clean_log_value()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*text		char
+ *  
+ */
 static void _clean_log_value(char *text)
 {
     if (text) {
@@ -5150,6 +5368,17 @@ static PEP_STATUS _get_sequence_value(PEP_SESSION session, const char *name,
     return status;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       _increment_sequence_value()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*name		constchar
+ *  
+ */
 static PEP_STATUS _increment_sequence_value(PEP_SESSION session,
         const char *name)
 {
