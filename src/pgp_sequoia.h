@@ -1,7 +1,13 @@
 /**
  * @file    src/pgp_sequoia.h
- * @brief   pgp sequoia (FIXME: derived from filename)
+ * 
+ * @brief   Sequoia PGP driver - implements required cryptotech 
+ *          functions for the engine using sequoia-pgp
+ * 
  * @license GNU General Public License 3.0 - see LICENSE.txt
+ * 
+ * @see     https://sequoia-pgp.org/
+ * @see     https://docs.sequoia-pgp.org/sequoia_ffi/index.html
  */
 
 #pragma once
@@ -170,12 +176,16 @@ PEP_STATUS pgp_find_keys(
 /**
  *  <!--       pgp_list_keyinfo()       -->
  *  
- *  @brief			TODO
+ *  @brief  Find all keys (in <fpr, OpenPGP uid> pairs which match this fpr
+ *          or other OpenPGP userid pattern
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*pattern		constchar
- *  @param[in]	**keyinfo_list		stringpair_list_t
- *  
+ *  @param[in]	    session		        PEP_SESSION
+ *  @param[in]	    pattern	            Pattern to search for; could be empty, 
+ *                                      an fpr, or a mailbox (email, URI, etc).
+ *  @param[in,out]	keyinfo_list		A list of <fpr, OpenPGP userid> tuples for the
+ *                                      matching keys.
+ *   
+ *  @note       This function filters out revoked keys, but NOT expired keys.
  */
 PEP_STATUS pgp_list_keyinfo(
         PEP_SESSION session, const char* pattern, stringpair_list_t** keyinfo_list

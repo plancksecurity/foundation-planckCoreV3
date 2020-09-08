@@ -1,8 +1,15 @@
-/** @file */
-/** @brief File description for doxygen missing. FIXME */
+/**
+ * @file    src/pgp_sequoia.c
+ * 
+ * @brief   Sequoia PGP driver - implements required cryptotech 
+ *          functions for the engine using sequoia-pgp
+ * 
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ * 
+ * @see     https://sequoia-pgp.org/
+ * @see     https://docs.sequoia-pgp.org/sequoia_ffi/index.html
+ */
 
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
 
 #pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 
@@ -126,24 +133,30 @@ int sq_sql_trace_callback (unsigned trace_constant,
 }
 #endif
 
-/* This is reallocarray taken from OpenBSD. See README.md for licensing. */
-/* Symbols are renamed for clashes, not to hide source. */
 /*
  * This is sqrt(SIZE_MAX+1), as s1*s2 <= SIZE_MAX
  * if both s1 < MUL_NO_OVERFLOW and s2 < MUL_NO_OVERFLOW
  */
 #define PEP_MUL_NO_OVERFLOW ((size_t)1 << (sizeof(size_t) * 4))
+
 /**
  *  @internal
  *  
  *  <!--       _pEp_reallocarray()       -->
  *  
- *  @brief			TODO
+ *  @brief      This is reallocarray taken from OpenBSD. See README.md for licensing.
  *  
- *  @param[in]	*optr		void
- *  @param[in]	nmemb		size_t
- *  @param[in]	size		size_t
+ *  @param[in,out]   optr       pointer to memory block whose
+ *                              size must change. If optr is NULL,
+ *                              a new block is allocated
+ *  @param[in]       nmemb      number of total members there should be room for
+ *                              in the updated array
+ *  @param[in]       size       Size of an array member
  *  
+ *  @note       Symbols are renamed for clashes, not to hide source.
+ * 
+ *  @see        README.md
+ *  @see        https://man7.org/linux/man-pages/man3/reallocarray.3.html
  */
 static void* _pEp_reallocarray(void *optr, size_t nmemb, size_t size)
 {
@@ -186,10 +199,14 @@ PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
  *  
  *  <!--       cipher_suite()       -->
  *  
- *  @brief			TODO
+ *  @brief      Given the pEp cipher suite indicator enum, return the
+ *              equivalent sequoia cipher suite enum value
  *  
- *  @param[in]	suite		PEP_CIPHER_SUITE
+ *  @param[in]  suite        pEp-internal cipher suite enum value
+ * 
+ *  @retval     sequoia-internal cipher suite enum value
  *  
+ *  @see        pgp_cert_cipher_suite_t
  */
 static pgp_cert_cipher_suite_t cipher_suite(PEP_CIPHER_SUITE suite)
 {
@@ -217,14 +234,23 @@ static pgp_cert_cipher_suite_t cipher_suite(PEP_CIPHER_SUITE suite)
  *  
  *  <!--       email_cmp()       -->
  *  
- *  @brief			TODO
+ *  @brief    Compare the input strings as normalised addresses, somehow,
+ *          and return an integer that is negative, zero, or positive if the
+ *          first string is less than, equal to, or greater than the
+ *          second, respectively.
  *  
- *  @param[in]	*cookie		void
- *  @param[in]	a_len		int
- *  @param[in]	*a		constvoid
- *  @param[in]	b_len		int
- *  @param[in]	*b		constvoid
+ *  @param[in]    *cookie       void
+ *  @param[in]    a_len         int
+ *  @param[in]    *a            const void
+ *  @param[in]    b_len         int
+ *  @param[in]    *b            const void
  *  
+ *  @retval     0           if a == b
+ *  @retval     >0          if a > b
+ *  @retval     <0          if a < b
+ * 
+ *  @todo   fix brief, figure out what kind of normalisation is going
+ *          on here and the use case
  */
 int email_cmp(void *cookie, int a_len, const void *a, int b_len, const void *b)
 {
@@ -275,11 +301,11 @@ int email_cmp(void *cookie, int a_len, const void *a, int b_len, const void *b)
  *  
  *  <!--       _pgp_get_decrypted_key()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	iter		pgp_cert_valid_key_iter_t
- *  @param[in]	*decrypted_key		pgp_key_t
+ *  @param[in]    session            PEP_SESSION
+ *  @param[in]    iter               pgp_cert_valid_key_iter_t
+ *  @param[in]    *decrypted_key     pgp_key_t
  *  
  */
 static PEP_STATUS _pgp_get_decrypted_key(PEP_SESSION session,
@@ -365,14 +391,14 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     PEP_STATUS status = PEP_STATUS_OK;
 
 #ifdef _WIN32
-	int sqlite_result;
-	sqlite_result = sqlite3_open_v2(KEYS_DB,
-		&session->key_db,
-		SQLITE_OPEN_READWRITE
-		| SQLITE_OPEN_CREATE
-		| SQLITE_OPEN_FULLMUTEX
-		| SQLITE_OPEN_PRIVATECACHE,
-		NULL);
+    int sqlite_result;
+    sqlite_result = sqlite3_open_v2(KEYS_DB,
+        &session->key_db,
+        SQLITE_OPEN_READWRITE
+        | SQLITE_OPEN_CREATE
+        | SQLITE_OPEN_FULLMUTEX
+        | SQLITE_OPEN_PRIVATECACHE,
+        NULL);
 #else
     // Create the home directory.
     char *home_env = NULL;
@@ -395,7 +421,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     if (!path)
         ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
 
-	int r = snprintf(path, path_size, "%s" PEP_KEYS_PATH, home_env);
+    int r = snprintf(path, path_size, "%s" PEP_KEYS_PATH, home_env);
     assert(r >= 0 && r < path_size);
     if (r < 0) {
         free(path);
@@ -646,19 +672,17 @@ void pgp_release(PEP_SESSION session, bool out_last)
     }
 }
 
-// Ensures that a fingerprint is in canonical form.  A canonical
-// fingerprint doesn't contain any white space.
-//
-// This function does *not* consume fpr.
 /**
  *  @internal
  *  
  *  <!--       pgp_fingerprint_canonicalize()       -->
  *  
- *  @brief			TODO
+ *  @brief Ensures that a fingerprint is in canonical form.  A canonical
+ *         fingerprint doesn't contain any white space.
  *  
- *  @param[in]	*		constchar
+ *  @param[in]  fpr        fingerprint to strip whitespace from
  *  
+ *  @ownership  fpr remains with the caller
  */
 static char *pgp_fingerprint_canonicalize(const char *) __attribute__((nonnull));
 static char *pgp_fingerprint_canonicalize(const char *fpr)
@@ -671,6 +695,8 @@ static char *pgp_fingerprint_canonicalize(const char *fpr)
 }
 
 // step statement and load the certificate and secret.
+
+
 static PEP_STATUS key_load(PEP_SESSION, sqlite3_stmt *, pgp_cert_t *, int *)
     __attribute__((nonnull(1, 2)));
 static PEP_STATUS key_load(PEP_SESSION session, sqlite3_stmt *stmt,
@@ -709,6 +735,8 @@ static PEP_STATUS key_load(PEP_SESSION session, sqlite3_stmt *stmt,
 }
 
 // step statement until exhausted and load the certificates.
+
+
 static PEP_STATUS key_loadn(PEP_SESSION, sqlite3_stmt *, pgp_cert_t **, int *)
     __attribute__((nonnull));
 static PEP_STATUS key_loadn(PEP_SESSION session, sqlite3_stmt *stmt,
@@ -753,22 +781,24 @@ static PEP_STATUS key_loadn(PEP_SESSION session, sqlite3_stmt *stmt,
     return status;
 }
 
-// Returns the certificate identified by the provided fingerprint.
-//
-// This function only matches on the primary key!
+
 /**
  *  @internal
  *  
  *  <!--       cert_find()       -->
  *  
- *  @brief			TODO
+ *  @brief Returns the certificate identified by the provided fingerprint.
  *  
- *  @param[in]	PEP_SESSION		PEP_SESSION
- *  @param[in]	pgp_fingerprint_t		pgp_fingerprint_t
- *  @param[in]	int		int
- *  @param[in]	*		pgp_cert_t
- *  @param[in]	*		int
+ *  @param[in]        session       PEP_SESSION
+ *  @param[in]        fpr           pgp_fingerprint_t fingerprint
+ *  @param[in]        private_only  Only return the private key cert? 
+ *                                  (Or only return the cert IF there is one?)
+ *  @param[out]        cert         desired cert
+ *  @param[out]        secret       ??? true if it contained a secret key, I guess?
  *  
+ *  @warning    This function only matches on the primary key! 
+ * 
+ *  @todo       Resolve the above
  */
 static PEP_STATUS cert_find(PEP_SESSION, pgp_fingerprint_t, int, pgp_cert_t *, int *)
     __attribute__((nonnull(1, 2)));
@@ -795,30 +825,28 @@ static PEP_STATUS cert_find(PEP_SESSION session,
     return status;
 }
 
-// Returns the certificate identified by the provided keyid.
-//
-// This function matches on both primary keys and subkeys!
-//
-// Note: There can be multiple certificates for a given keyid.  This can
-// occur, because an encryption subkey can be bound to multiple certificates.
-// Also, it is possible to collide key ids.  If there are multiple key
-// ids for a given key, this just returns one of them.
-//
-// If private_only is set, this will only consider certificates with some
-// secret key material.
 /**
  *  @internal
  *  
  *  <!--       cert_find_by_keyid_hex()       -->
  *  
- *  @brief			TODO
+ *  @brief  Returns the certificate identified by the provided keyid.
  *  
- *  @param[in]	PEP_SESSION		PEP_SESSION
- *  @param[in]	*		constchar
- *  @param[in]	int		int
- *  @param[in]	*		pgp_cert_t
- *  @param[in]	*		int
+ *  @param[in]        session         PEP_SESSION
+ *  @param[in]        keyid_hex       the hex key id of the key to retrieve
+ *                                    (can be primary or subkey)
+ *  @param[in]        private_only    if true, only consider certificates with
+ *                                    some secret key material
+ *  @param[out]       certp           desired cert, if found
+ *  @param[out]       secretp         ???
+ * 
+ *  @warning    This function matches on both primary keys and subkeys!
  *  
+ *  @note       There can be multiple certificates for a given keyid.  This can
+ *              occur, because an encryption subkey can be bound to multiple certificates.
+ *              Also, it is possible to collide key ids.  If there are multiple key
+ *              ids for a given key, this just returns one of them.
+ * 
  */
 static PEP_STATUS cert_find_by_keyid_hex(PEP_SESSION, const char *, int, pgp_cert_t *, int *)
   __attribute__((nonnull(1, 2)));
@@ -842,20 +870,23 @@ static PEP_STATUS cert_find_by_keyid_hex(
     return status;
 }
 
-// See cert_find_by_keyid_hex.
 /**
  *  @internal
  *  
  *  <!--       cert_find_by_keyid()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	PEP_SESSION		PEP_SESSION
- *  @param[in]	pgp_keyid_t		pgp_keyid_t
- *  @param[in]	int		int
- *  @param[in]	*		pgp_cert_t
- *  @param[in]	*		int
+ *  @brief  Returns the certificate identified by the provided keyid.
  *  
+ *  @param[in]        session         PEP_SESSION
+ *  @param[in]        keyid           pgp_keyid_t form of the desired key id     
+ *  @param[in]        private_only    if true, only consider certificates with
+ *                                    some secret key material
+ *  @param[out]       certp           desired cert, if found
+ *  @param[out]       secretp         ???
+ *  
+ *  @see        cert_find_by_keyid_hex()
  */
 PEP_STATUS cert_find_by_keyid(PEP_SESSION, pgp_keyid_t, int, pgp_cert_t *, int *)
     __attribute__((nonnull(1, 2)));
@@ -872,20 +903,23 @@ PEP_STATUS cert_find_by_keyid(PEP_SESSION session,
     return status;
 }
 
-// See cert_find_by_keyid_hex.
 /**
  *  @internal
  *  
  *  <!--       cert_find_by_fpr()       -->
  *  
- *  @brief			TODO
+ *  @brief  Returns the certificate identified by the provided keyid.
  *  
- *  @param[in]	PEP_SESSION		PEP_SESSION
- *  @param[in]	pgp_fingerprint_t		pgp_fingerprint_t
- *  @param[in]	int		int
- *  @param[in]	*		pgp_cert_t
- *  @param[in]	*		int
+ *  @param[in]        session         PEP_SESSION
+ *  @param[in]        fpr             the pgp_fingerprint_t fingerprint 
+ *                                    of the key to retrieve
+ *                                    (can be primary or subkey)
+ *  @param[in]        private_only    if true, only consider certificates with
+ *                                    some secret key material
+ *  @param[out]       certp           desired cert, if found
+ *  @param[out]       secretp         ???
  *  
+ *  @see        cert_find_by_keyid_hex()
  */
 static PEP_STATUS cert_find_by_fpr(PEP_SESSION, pgp_fingerprint_t, int,
                                   pgp_cert_t *, int *)
@@ -903,7 +937,26 @@ static PEP_STATUS cert_find_by_fpr(
     return status;
 }
 
-// See cert_find_by_keyid_hex.
+/**
+ *  @internal
+ *  
+ *  <!--       cert_find_by_fpr_hex()       -->
+ *  
+ *  @brief  Returns the certificate identified by the provided keyid.
+ *  
+ *  @param[in]        session       PEP_SESSION
+ *  @param[in]        pgp_fpr       the fingerprint hex (???)
+ *                                  of the key to retrieve
+ *                                  (can be primary or subkey)
+ *  @param[in]        private_only  if true, only consider certificates with
+ *                                  some secret key material
+ *  @param[out]       certp         desired cert, if found
+ *  @param[out]       secretp       ???
+ * 
+ *  @todo       resolve the above
+ *  
+ *  @see        cert_find_by_keyid_hex()
+ */
 static PEP_STATUS cert_find_by_fpr_hex(PEP_SESSION, const char *, int, pgp_cert_t *, int *secret)
     __attribute__((nonnull(1, 2)));
 static PEP_STATUS cert_find_by_fpr_hex(
@@ -919,18 +972,21 @@ static PEP_STATUS cert_find_by_fpr_hex(
     return status;
 }
 
-// Returns all known certificates.
 /**
  *  @internal
  *  
  *  <!--       cert_all()       -->
  *  
- *  @brief			TODO
+ *  @brief  Returns all known certificates.
  *  
- *  @param[in]	PEP_SESSION		PEP_SESSION
- *  @param[in]	int		int
- *  @param[in]	**		pgp_cert_t
- *  @param[in]	*		int
+ *  @param[in]        session         PEP_SESSION
+ *  @param[in]        private_only    if true, only return keys which 
+ *                                    contain secret keys (???)
+ *  @param[out]       certsp          Returns the array of found certs
+ *  @param[out]       certs_countsp   Returns the count of found certs
+ * 
+ *  @pre    certsp is non-NULL
+ *  @pre    certs_countsp is non-NULL
  *  
  */
 static PEP_STATUS cert_all(PEP_SESSION, int, pgp_cert_t **, int *) __attribute__((nonnull));
@@ -945,21 +1001,24 @@ static PEP_STATUS cert_all(PEP_SESSION session, int private_only,
     return status;
 }
 
-// Returns keys that have a user id that matches the specified pattern.
-//
-// The keys returned must be freed using pgp_cert_free.
 /**
  *  @internal
  *  
  *  <!--       cert_find_by_email()       -->
  *  
- *  @brief			TODO
+ *  @brief    Returns keys that have a user id that matches the specified pattern.
  *  
- *  @param[in]	PEP_SESSION		PEP_SESSION
- *  @param[in]	*		constchar
- *  @param[in]	int		int
- *  @param[in]	**		pgp_cert_t
- *  @param[in]	*		int
+ *  @param[in]      session         PEP_SESSION
+ *  @param[in]      pattern         pattern to search for in uids
+ *  @param[in]      private_only    if true, only return keys which 
+ *                                  contain secret keys (???)
+ *  @param[out]     certsp          Returns the array of found certs
+ *  @param[out]     countp          Returns the count of found certs
+ * 
+ *  @pre    certsp is non-NULL
+ *  @pre    certs_countsp is non-NULL
+ * 
+ *  @warning The keys returned must be freed using pgp_cert_free.
  *  
  */
 static PEP_STATUS cert_find_by_email(PEP_SESSION, const char *, int, pgp_cert_t **, int *)
@@ -984,19 +1043,21 @@ static PEP_STATUS cert_find_by_email(PEP_SESSION session,
     return status;
 }
 
-// end detect possibly changed key stuff
+// end detect possibly changed key stuff ????
+
 /**
  *  @internal
  *  
  *  <!--       serialize_cert()       -->
  *  
- *  @brief			TODO
+ *  @brief    Serialise this certificate (likely for writing to file)
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	cert		pgp_cert_t
- *  @param[in]	**buffer_ptr		void
- *  @param[in]	*buffer_size_ptr		size_t
+ *  @param[in]    session             PEP_SESSION
+ *  @param[in]    cert                certificate to be serialised
+ *  @param[out]   buffer_ptr          Serialised certificate data
+ *  @param[out]   buffer_size_ptr     Size of serialised certificate data
  *  
+ *  @todo       address the above
  */
 static PEP_STATUS serialize_cert(PEP_SESSION session, pgp_cert_t cert,
                                  void** buffer_ptr, size_t* buffer_size_ptr)   {
@@ -1040,6 +1101,7 @@ out:
 // Saves the specified certificates.
 //
 // This function takes ownership of CERT.
+
 static PEP_STATUS cert_save(PEP_SESSION, pgp_cert_t, identity_list **, bool* changed_ptr)
     __attribute__((nonnull(1, 2)));
 static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
@@ -1264,10 +1326,12 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
 /**
  *  @internal
  *  
- *  @struct	decrypt_cookie
+ *  @struct    decrypt_cookie
  *  
- *  @brief	TODO
+ *  @brief    Cookie passed back and forth passed to decrypt callbacks to
+ *            communicate information pre and post decrypt
  *  
+ *  @todo   Clarify
  */
 struct decrypt_cookie {
     PEP_SESSION session;
@@ -1569,19 +1633,20 @@ decrypt_cb(void *cookie_opaque,
     return cookie->decrypted ? PGP_STATUS_SUCCESS : PGP_STATUS_UNKNOWN_ERROR;
 }
 
-static pgp_status_t
 /**
  *  @internal
  *  
  *  <!--       check_signatures_cb()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*cookie_opaque		void
- *  @param[in]	structure		pgp_message_structure_t
+ *  @param[in,out]        cookie_opaque     cookie to add result information to
+ *                                          (signer keylist, counts of various verification
+ *                                          errors (expired, revoked, ...), key errors, etc) 
+ *  @param[in]            structure         pgp_message_structure_t ???
  *  
  */
-check_signatures_cb(void *cookie_opaque, pgp_message_structure_t structure)
+static pgp_status_t check_signatures_cb(void *cookie_opaque, pgp_message_structure_t structure)
 {
     struct decrypt_cookie *cookie = cookie_opaque;
 
@@ -1803,11 +1868,14 @@ check_signatures_cb(void *cookie_opaque, pgp_message_structure_t structure)
  *  
  *  <!--       inspect_cb()       -->
  *  
- *  @brief			TODO
+ *  @brief  inspect packet
  *  
- *  @param[in]	*cookie_opaque		void
- *  @param[in]	pp		pgp_packet_parser_t
+ *  @param[in,out]    cookie_opaque     cookie to add result information to
+ *                                      (in this case, filename information if
+ *                                      it exists in the packet)
+ *  @param[in]        pp                pgp_packet_parser_t
  *  
+ *  @todo   More
  */
 static pgp_status_t inspect_cb(
     void *cookie_opaque, pgp_packet_parser_t pp)
@@ -2198,16 +2266,20 @@ PEP_STATUS pgp_sign_only(
  *  
  *  <!--       pgp_encrypt_sign_optional()       -->
  *  
- *  @brief			TODO
+ *  @brief    internal function used by pgp_encrypt_only() and
+ *            pgp_encrypt_and_sign() to to encryption, and, where
+ *            indication, signing of the input text
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*keylist		conststringlist_t
- *  @param[in]	*ptext		constchar
- *  @param[in]	psize		size_t
- *  @param[in]	**ctext		char
- *  @param[in]	*csize		size_t
- *  @param[in]	sign		bool
- *  
+ *  @param[in]      session        PEP_SESSION
+ *  @param[in]      keylist        const stringlist_t*
+ *  @param[in]      ptext          const char*
+ *  @param[in]      psize          size_t
+ *  @param[in,out]  ctext          char**
+ *  @param[in,out]  csize          size_t*
+ *  @param[in]      sign           bool
+ * 
+ *  @see pgp_encrypt_only()
+ *  @see pgp_encrypt_and_sign()
  */
 static PEP_STATUS pgp_encrypt_sign_optional(
     PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
@@ -2458,10 +2530,13 @@ PEP_STATUS pgp_encrypt_and_sign(
  *  
  *  <!--       _filter_parentheses()       -->
  *  
- *  @brief			TODO
+ *  @brief      Replace parentheses in input string with brackets
  *  
- *  @param[in]	*input		constchar
+ *  @param[in]  input       string where replacement needs to occur
  *  
+ *  @retval     copy of input, but with brackets instead of parentheses
+ * 
+ *  @ownership  input string ownership stays with caller
  */
 static char* _filter_parentheses(const char* input) {
     if (!input)
@@ -2494,10 +2569,14 @@ static char* _filter_parentheses(const char* input) {
  *  
  *  <!--       _flatten_to_alphanum()       -->
  *  
- *  @brief			TODO
+ *  @brief  Replace non-alphanumeric or space characters in input
+ *          with underscores
  *  
- *  @param[in]	*input		constchar
- *  
+ *  @param[in]    input        string which needs replacing
+ * 
+ *  @retval       Copy of input with appropriate replacements
+ * 
+ *  @ownership    input ownership remains with caller
  */
 static char* _flatten_to_alphanum(const char* input) {
     if (!input)
@@ -2528,11 +2607,11 @@ static char* _flatten_to_alphanum(const char* input) {
  *  
  *  <!--       _pgp_generate_keypair()       -->
  *  
- *  @brief			TODO
+ *  @brief  Internal logic for pgp_generate_keypair
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*identity		pEp_identity
- *  @param[in]	when		time_t
+ *  @param[in]    session        PEP_SESSION
+ *  @param[in]    *identity        pEp_identity
+ *  @param[in]    when        time_t
  *  
  */
 PEP_STATUS _pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity, time_t when)
@@ -2685,11 +2764,13 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr_raw)
  *  
  *  <!--       count_keydata_parts()       -->
  *  
- *  @brief			TODO
+ *  @brief   Get a count of how many pgp sections are in the input data
  *  
- *  @param[in]	*key_data		constchar
- *  @param[in]	size		size_t
+ *  @param[in]    key_data  string containing one or more ascii-armoured 
+ *                          PGP data blocks
+ *  @param[in]    size      size of string (no NUL-termination guarantee required)
  *  
+ *  @retval       count of how many blocks start with the "-----BEGIN PGP" header class
  */
 static unsigned int count_keydata_parts(const char* key_data, size_t size) {
     unsigned int retval = 0;
@@ -2712,6 +2793,8 @@ static unsigned int count_keydata_parts(const char* key_data, size_t size) {
  }
 
 // This is for single keys, which is why we're using a boolean here.
+
+
 PEP_STATUS _pgp_import_keydata(PEP_SESSION session, const char *key_data,
                                size_t size, identity_list **private_idents,
                                stringlist_t** imported_keys,
@@ -3049,10 +3132,16 @@ PEP_STATUS pgp_export_keydata(
  *  
  *  <!--       _undot_address()       -->
  *  
- *  @brief			TODO
+ *  @brief      Return a string which, if the input string is in the form of 
+ *              a username@address email string, contains copy of the email address string 
+ *              with the username undotted, and otherwise, contains a copy of the
+ *              whole string, undotted
  *  
- *  @param[in]	*address		constchar
+ *  @param[in]  address        NUL-terminated email address or other string to undot
+ * 
+ *  @retval     undotted copy of email (or other) string as described above
  *  
+ *  @ownership  ownership of the retval goes to the calle
  */
 static char *_undot_address(const char* address) {
     if (!address)
@@ -3089,14 +3178,21 @@ static char *_undot_address(const char* address) {
  *  
  *  <!--       add_key()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*keyinfo_list		stringpair_list_t
- *  @param[in]	*keylist		stringlist_t
- *  @param[in]	cert		pgp_cert_t
- *  @param[in]	fpr		pgp_fingerprint_t
+ *  @param[in]      session        PEP_SESSION
+ *  @param[in,out]  keyinfo_list   if present, a list of <fpr, openpgp userid> tuples 
+ *                                 to which such information from the input cert and, if present, the
+ *                                 input fpr should be added
+ *  @param[in,out]  keylist        if present, a list of fprs to which 
+ *                                 information from the input cert, or, if present, the
+ *                                 input fpr should be added 
+ *  @param[in]      cert           the actual key from which to take information (we only take the primary key ID)
+ *  @param[in]      fpr            if not NULL, the fpr to which the primary uid information should be bound
  *  
+ *  @retval     tail of keyinfo_list
+ *  
+ *  @todo   do we need null checks here? I think we do.
  */
 static stringpair_list_t *add_key(PEP_SESSION session,
                                   stringpair_list_t *keyinfo_list,
@@ -3131,6 +3227,7 @@ static stringpair_list_t *add_key(PEP_SESSION session,
     }
 
     if (keylist)
+        // safe, because this is NOT *keylist
         keylist = stringlist_add(keylist, fpr_str);
 
     free(fpr_str);
@@ -3145,13 +3242,21 @@ static stringpair_list_t *add_key(PEP_SESSION session,
  *  
  *  <!--       list_keys()       -->
  *  
- *  @brief			TODO
+ *  @brief  list keys whose uids contain the input pattern or 
+ *          which whose fingerprints match a fingerprint 
+ *          contained in the pattern
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*pattern		constchar
- *  @param[in]	private_only		int
- *  @param[in]	**keyinfo_list		stringpair_list_t
- *  @param[in]	**keylist		stringlist_t
+ *  @param[in]      session         PEP_SESSION
+ *  @param[in]      pattern         pattern to search for
+ *  @param[in]      private_only    only return matches for keys which contain
+ *                                  a private key
+ *  @param[in,out]  keyinfo_list    if present, a list of <fpr, openpgp userid> tuples 
+ *                                  to which such information from matching keys should 
+ *                                  be added
+ *  @param[in,out]  keylist         if present, a list of fprs to which 
+ *                                  information from matching keys should be added 
+ * 
+ *  @todo           what if both output params are NULL? What does it mean?
  *  
  */
 static PEP_STATUS list_keys(PEP_SESSION session,
@@ -3265,12 +3370,6 @@ static PEP_STATUS list_keys(PEP_SESSION session,
     return status;
 }
 
-// pattern could be empty, an fpr, or a mailbox.
-//
-// keyinfo_list is a list of <fpr, openpgp userid> tuples for the
-// matching keys.
-//
-// This function filters out revoked key, but not expired keys.
 PEP_STATUS pgp_list_keyinfo(PEP_SESSION session,
                             const char* pattern,
                             stringpair_list_t** keyinfo_list)
@@ -3285,6 +3384,8 @@ PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern)
 }
 
 // Unlike pgp_list_keyinfo, this function returns revoked keys.
+
+
 PEP_STATUS pgp_find_keys(
     PEP_SESSION session, const char *pattern, stringlist_t **keylist)
 {
@@ -3292,6 +3393,8 @@ PEP_STATUS pgp_find_keys(
 }
 
 // Unlike pgp_list_keyinfo, this function returns revoked keys.
+
+
 PEP_STATUS pgp_find_private_keys(
     PEP_SESSION session, const char *pattern, stringlist_t **keylist)
 {
@@ -3504,19 +3607,19 @@ PEP_STATUS pgp_revoke_key(
     return status;
 }
 
-// NOTE: Doesn't check the *validity* of these subkeys. Just checks to see 
-// if they exist.
 /**
  *  @internal
  *  
  *  <!--       _pgp_contains_encryption_subkey()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	cert		pgp_cert_t
- *  @param[in]	*has_subkey		bool
+ *  @param[in]      session        PEP_SESSION
+ *  @param[in]      cert           pgp_cert_t
+ *  @param[out]     has_subkey     bool
  *  
+ *  @note   Doesn't check the *validity* of these subkeys. 
+ *          Just checks to see if they exist.
  */
 static void _pgp_contains_encryption_subkey(PEP_SESSION session, pgp_cert_t cert, bool* has_subkey) {
     pgp_cert_valid_key_iter_t key_iter
@@ -3533,19 +3636,19 @@ static void _pgp_contains_encryption_subkey(PEP_SESSION session, pgp_cert_t cert
     pgp_cert_valid_key_iter_free(key_iter);
 }
 
-// NOTE: Doesn't check the *validity* of these subkeys. Just checks to see 
-// if they exist.
 /**
  *  @internal
  *  
  *  <!--       _pgp_contains_sig_subkey()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	cert		pgp_cert_t
- *  @param[in]	*has_subkey		bool
+ *  @param[in]      session        PEP_SESSION
+ *  @param[in]      cert           pgp_cert_t
+ *  @param[out]     has_subkey     bool
  *  
+ *  @note   Doesn't check the *validity* of these subkeys. 
+ *          Just checks to see if they exist.
  */
 static void _pgp_contains_sig_subkey(PEP_SESSION session, pgp_cert_t cert, bool* has_subkey) {
     pgp_cert_valid_key_iter_t key_iter
@@ -3560,17 +3663,16 @@ static void _pgp_contains_sig_subkey(PEP_SESSION session, pgp_cert_t cert, bool*
     pgp_cert_valid_key_iter_free(key_iter);
 }
 
-// Check to see that key, at a minimum, even contains encryption or signing subkeys
 /**
  *  @internal
  *  
  *  <!--       _pgp_key_broken()       -->
  *  
- *  @brief			TODO
+ *  @brief  Check to see that key, at a minimum, even contains encryption or signing subkeys
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	cert		pgp_cert_t
- *  @param[in]	*is_broken		bool
+ *  @param[in]    session        PEP_SESSION
+ *  @param[in]    cert        pgp_cert_t
+ *  @param[in]    *is_broken        bool
  *  
  */
 static void _pgp_key_broken(PEP_SESSION session, pgp_cert_t cert, bool* is_broken) {
@@ -3591,12 +3693,12 @@ static void _pgp_key_broken(PEP_SESSION session, pgp_cert_t cert, bool* is_broke
  *  
  *  <!--       _pgp_key_expired()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	cert		pgp_cert_t
- *  @param[in]	when		consttime_t
- *  @param[in]	*expired		bool
+ *  @param[in]    session        PEP_SESSION
+ *  @param[in]    cert           pgp_cert_t
+ *  @param[in]    when           consttime_t
+ *  @param[out]   expired        contains true if key expired, else false
  *  
  */
 static void _pgp_key_expired(PEP_SESSION session, pgp_cert_t cert, const time_t when, bool* expired)
@@ -3706,11 +3808,11 @@ PEP_STATUS pgp_key_expired(PEP_SESSION session, const char *fpr,
  *  
  *  <!--       _pgp_key_revoked()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	cert		pgp_cert_t
- *  @param[in]	*revoked		bool
+ *  @param[in]    session        PEP_SESSION
+ *  @param[in]    cert        pgp_cert_t
+ *  @param[in]    *revoked        bool
  *  
  */
 static void _pgp_key_revoked(PEP_SESSION session, pgp_cert_t cert, bool* revoked) {
