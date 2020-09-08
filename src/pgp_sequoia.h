@@ -17,20 +17,23 @@
 /**
  *  <!--       pgp_init()       -->
  *  
- *  @brief			TODO
+ *  @brief      initialise the sequoia driver for this session
  *  
  *  @param[in]	session		PEP_SESSION
- *  @param[in]	in_first		bool
+ *  @param[in]	in_first    true if this is the first pEp session running
+ *                          after startup, else false
  *  
  */
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first);
+
 /**
  *  <!--       pgp_release()       -->
  *  
- *  @brief			TODO
+ *  @brief      release resources used by the sequoia driver in this session
  *  
  *  @param[in]	session		PEP_SESSION
- *  @param[in]	out_last		bool
+ *  @param[in]	out_last	true if this is the last extant pEp session
+ *                          running, else false
  *  
  */
 void pgp_release(PEP_SESSION session, bool out_last);
