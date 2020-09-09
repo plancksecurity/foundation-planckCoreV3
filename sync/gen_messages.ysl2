@@ -15,7 +15,7 @@ tstylesheet {
     include ./functions.ysl2
 
     function "pEp_imports"
-        | IMPORTS Version, Identity, IdentityList, TID, Hash FROM PEP;
+        | IMPORTS Version, Identity, IdentityList, TID, Hash, Rating FROM PEP;
 
     function "header"
     ||
