@@ -490,7 +490,7 @@ DYNAMIC_API PEP_STATUS get_trustwords_for_fprs(
 //
 //  parameters:
 //      session (in)            session handle
-//      msg (in)                message to get the rating for
+//      msg (inout)             message to get the rating for
 //      x_keylist (in)          decrypted message recipients keys fpr
 //      x_enc_status (in)       original rating for the decrypted message
 //      rating (out)            rating for the message

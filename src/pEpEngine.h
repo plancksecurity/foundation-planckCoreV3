@@ -25,7 +25,7 @@ extern "C" {
 #define PEP_ENGINE_VERSION_MAJOR 2
 #define PEP_ENGINE_VERSION_MINOR 1
 #define PEP_ENGINE_VERSION_PATCH 0
-#define PEP_ENGINE_VERSION_RC    36
+#define PEP_ENGINE_VERSION_RC    37
 
 
 #define PEP_OWN_USERID "pEp_own_userId"

@@ -5446,21 +5446,30 @@ static void remove_sync_message(message *msg)
         return;
 
     bloblist_t *b = NULL;
-    for (bloblist_t *a = msg->attachments; a && a->value ; a = a->next) {
-        if (a->mime_type && strcasecmp(a->mime_type, "application/pEp.sync") == 0) {
+    for (bloblist_t *a = msg->attachments; a && a->value ; ) {
+        if (a->mime_type && (
+                    strcasecmp(a->mime_type, "application/pEp.sync") == 0 ||
+                    strcasecmp(a->mime_type, "application/pEp.sign") == 0
+                )
+           )
+        {
             if (b) {
                 b->next = a->next;
                 a->next = NULL;
                 free_bloblist(a);
+                a = b->next;
             }
             else {
                 msg->attachments = a->next;
                 a->next = NULL;
                 free_bloblist(a);
+                a = msg->attachments;
             }
-            break;
         }
-        b = a;
+        else {
+            b = a;
+            a = a->next;
+        }
     }
 }
 
