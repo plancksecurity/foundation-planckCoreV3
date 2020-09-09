@@ -247,6 +247,8 @@ PEP_STATUS get_receiverRating(PEP_SESSION session, message *msg, PEP_rating *rat
     bool own_key;
     status = is_own_key(session, fpr, &own_key);
     free(fpr);
+    if (status)
+        return status;
     if (!own_key)
         return PEP_SYNC_NO_CHANNEL;
 
