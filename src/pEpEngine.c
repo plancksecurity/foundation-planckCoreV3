@@ -5218,20 +5218,23 @@ PEP_STATUS is_own_key(PEP_SESSION session, const char* fpr, bool* own_key) {
             status = PEP_OUT_OF_MEMORY;
         else    
             status = get_trust(session, placeholder_ident);
-    }
 
-    if (status == PEP_STATUS_OK) {
-        if (placeholder_ident->comm_type == PEP_ct_pEp) {
-            stringlist_t* keylist = NULL;
-            status = find_private_keys(session, fpr, &keylist);
-            if (status == PEP_STATUS_OK) {
-                if (keylist && !EMPTYSTR(keylist->value))
-                    *own_key = true;            
+        if (status == PEP_STATUS_OK) {
+            if (placeholder_ident->comm_type == PEP_ct_pEp) {
+                stringlist_t* keylist = NULL;
+                status = find_private_keys(session, fpr, &keylist);
+                if (status == PEP_STATUS_OK) {
+                    if (keylist && !EMPTYSTR(keylist->value))
+                        *own_key = true;            
+                }
+                free_stringlist(keylist);
             }
-            free_stringlist(keylist);
-        }
+        }    
     }
-
+    if (status == PEP_CANNOT_FIND_IDENTITY)
+        status = PEP_STATUS_OK; // either no default own id yet, so no own keys yet
+                                // or there was no own trust entry! False either way
+ 
     free(default_own_userid);
     free_identity(placeholder_ident);
 
