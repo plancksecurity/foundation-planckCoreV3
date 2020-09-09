@@ -3933,7 +3933,7 @@ static PEP_STATUS _decrypt_message(
     // if there is an own identity defined via this message is coming in
     // retrieve the details; in case there's no usuable own key make it
     // functional
-    if (src->recv_by) {
+    if (src->recv_by && !EMPTYSTR(src->recv_by->address)) {
         status = myself(session, src->recv_by);
         if (status) {
             free_stringlist(_imported_key_list);
