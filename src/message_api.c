@@ -187,7 +187,7 @@ void replace_opt_field(message *msg,
     }
 }
 
-bool sync_message_attached(message *msg)
+static bool sync_message_attached(message *msg)
 {
     if (!(msg && msg->attachments))
         return false;
@@ -5438,6 +5438,30 @@ enomem:
     return PEP_OUT_OF_MEMORY;
 }
 
+static void remove_sync_message(message *msg)
+{
+    if (!(msg && msg->attachments))
+        return;
+
+    bloblist_t *b = NULL;
+    for (bloblist_t *a = msg->attachments; a && a->value ; a = a->next) {
+        if (a->mime_type && strcasecmp(a->mime_type, "application/pEp.sync") == 0) {
+            if (b) {
+                b->next = a->next;
+                a->next = NULL;
+                free_bloblist(a);
+            }
+            else {
+                msg->attachments = a->next;
+                a->next = NULL;
+                free_bloblist(a);
+            }
+            break;
+        }
+        b = a;
+    }
+}
+
 // CAN return PASSPHRASE errors
 DYNAMIC_API PEP_STATUS re_evaluate_message_rating(
     PEP_SESSION session,
@@ -5516,9 +5540,12 @@ got_keylist:
 
     status = amend_rating_according_to_sender_and_recipients(session, &_rating,
              msg->from, _keylist);
-    if (status == PEP_STATUS_OK)
+    if (status == PEP_STATUS_OK) {
+        remove_sync_message(msg);
+        set_receiverRating(session, msg, _rating);
         *rating = _rating;
-    
+    }
+
 pEp_error:
     if (must_free_keylist)
         free_stringlist(_keylist);
