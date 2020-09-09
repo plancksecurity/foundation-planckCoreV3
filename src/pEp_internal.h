@@ -312,7 +312,7 @@ typedef enum _normalize_hex_rest_t {
     reject_hex
 } normalize_hex_res_t;
 
-static inline normalize_hex_res_t _normalize_hex(char *hex) 
+static inline normalize_hex_res_t _normalize_hex(char* hex) 
 {
     if (*hex >= '0' && *hex <= '9')
         return accept_hex;

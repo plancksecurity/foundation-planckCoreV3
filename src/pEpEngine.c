@@ -5479,14 +5479,20 @@ PEP_STATUS set_all_userids_to_own(PEP_SESSION session, identity_list* id_list) {
 }
 
 bool check_fpr_format(const char* fpr) {
+    if (EMPTYSTR(fpr))
+        return false;
+
     int fpr_len = strlen(fpr);
     if (fpr_len > 128 || fpr_len < 16)
         return false;
 
-    for(int i=0; i < fpr_len; i++){
-        char fprc = fpr[i];
-        if (_normalize_hex(&fprc) != accept_hex)
-            return false;
+    const char* curr_fpr;
+
+    for (curr_fpr = fpr; curr_fpr && *curr_fpr != '\0'; curr_fpr++) {
+        char c = *curr_fpr;
+        if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
+            continue;
+        return false;
     }
     return true;
 }
