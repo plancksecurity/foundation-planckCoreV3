@@ -14,6 +14,7 @@
 #include "resource_id.h"
 #include "internal_format.h"
 #include "keymanagement.h"
+#include "sync_codec.h"
 
 #include <assert.h>
 #include <string.h>
@@ -187,7 +188,88 @@ void replace_opt_field(message *msg,
     }
 }
 
+static bool sync_message_attached(message *msg)
+{
+    if (!(msg && msg->attachments))
+        return false;
+
+    for (bloblist_t *a = msg->attachments; a && a->value ; a = a->next) {
+        if (a->mime_type && strcasecmp(a->mime_type, "application/pEp.sync") == 0)
+            return true;
+    }
+
+    return false;
+}
+
+PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rating)
+{
+    if (!(session && msg && rating))
+        return PEP_ILLEGAL_VALUE;
+
+    if (!(msg->recv_by && msg->recv_by->fpr && msg->recv_by->fpr[0]))
+        return PEP_SYNC_NO_CHANNEL;
+
+    // don't add a second sync message
+    if (sync_message_attached(msg))
+        return PEP_STATUS_OK;
+
+    Sync_t *res = new_Sync_message(Sync_PR_keysync, KeySync_PR_receiverRating);
+    if (!res)
+        return PEP_OUT_OF_MEMORY;
+
+    res->choice.keysync.choice.receiverRating.rating = (Rating_t) rating;
+
+    char *payload;
+    size_t size;
+    PEP_STATUS status = encode_Sync_message(res, &payload, &size);
+    free_Sync_message(res);
+    if (status)
+        return status;
+
+    return base_decorate_message(session, msg, BASE_SYNC, payload, size, msg->recv_by->fpr);
+}
+
+PEP_STATUS get_receiverRating(PEP_SESSION session, message *msg, PEP_rating *rating)
+{
+    if (!(session && msg && rating))
+        return PEP_ILLEGAL_VALUE;
+
+    *rating = PEP_rating_undefined;
+
+    size_t size;
+    const char *payload;
+    char *fpr;
+    PEP_STATUS status = base_extract_message(session, msg, BASE_SYNC, &size, &payload, &fpr);
+    if (status)
+        return status;
+    if (!fpr)
+        return PEP_SYNC_NO_CHANNEL;
+
+    bool own_key;
+    status = is_own_key(session, fpr, &own_key);
+    free(fpr);
+    if (status)
+        return status;
+    if (!own_key)
+        return PEP_SYNC_NO_CHANNEL;
+
+    Sync_t *res;
+    status = decode_Sync_message(payload, size, &res);
+    if (status)
+        return status;
+
+    if (!(res->present == Sync_PR_keysync && res->choice.keysync.present == KeySync_PR_receiverRating)) {
+        free_Sync_message(res);
+        return PEP_SYNC_NO_CHANNEL;
+    }
+
+    *rating = res->choice.keysync.choice.receiverRating.rating;
+    replace_opt_field(msg, "X-EncStatus", rating_to_string(*rating), true);
+    return PEP_STATUS_OK;
+}
+
 void decorate_message(
+    PEP_SESSION session,
     message *msg,
     PEP_rating rating,
     stringlist_t *keylist,
@@ -200,8 +282,10 @@ void decorate_message(
     if (add_version)
         replace_opt_field(msg, "X-pEp-Version", PEP_VERSION, clobber);
 
-    if (rating != PEP_rating_undefined)
+    if (rating != PEP_rating_undefined) {
         replace_opt_field(msg, "X-EncStatus", rating_to_string(rating), clobber);
+        set_receiverRating(session, msg, rating);
+    }
 
     if (keylist) {
         char *_keylist = keylist_to_string(keylist);
@@ -2195,7 +2279,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             attach_own_key(session, src);
             added_key_to_real_src = true;
         }
-        decorate_message(src, PEP_rating_undefined, NULL, true, true);
+        decorate_message(session, src, PEP_rating_undefined, NULL, true, true);
         return PEP_UNENCRYPTED;
     }
     else {
@@ -2267,7 +2351,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
 
     if (msg) {
-        decorate_message(msg, PEP_rating_undefined, NULL, true, true);
+        decorate_message(session, msg, PEP_rating_undefined, NULL, true, true);
         if (_src->id) {
             msg->id = strdup(_src->id);
             assert(msg->id);
@@ -2639,7 +2723,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
             if (msg->id == NULL)
                 goto enomem;
         }
-        decorate_message(msg, PEP_rating_undefined, NULL, true, true);
+        decorate_message(session, msg, PEP_rating_undefined, NULL, true, true);
     }
 
     *dst = msg;
@@ -3652,7 +3736,9 @@ PEP_STATUS check_for_own_revoked_key(
 {
     if (!session || !revoked_fpr_pairs)
         return PEP_ILLEGAL_VALUE;
-        
+
+    char* default_own_userid = NULL;
+
     *revoked_fpr_pairs = NULL;
 
     PEP_STATUS status = PEP_STATUS_OK;
@@ -3674,17 +3760,45 @@ PEP_STATUS check_for_own_revoked_key(
                                      &revoke_date);
 
         bool own_key = false;
-        
+
+        pEp_identity* placeholder_ident = NULL;
+
         switch (status) {
             case PEP_CANNOT_FIND_IDENTITY:
                 status = PEP_STATUS_OK;
                 continue;
             case PEP_STATUS_OK:
-        
-                status = is_own_key(session, recip_fpr, &own_key);
+                // Ok, we know it's a revoked key. Now see if it was "ours" by checking
+                // to see if we have an entry for it with our user id, since we already clearly
+                // know its replacement
                 
+                status = get_default_own_userid(session, &default_own_userid);
+            
+                if (status == PEP_STATUS_OK && !EMPTYSTR(default_own_userid)) {
+                    placeholder_ident = new_identity(NULL, recip_fpr, default_own_userid, NULL);
+                    if (!placeholder_ident)
+                        status = PEP_OUT_OF_MEMORY;
+                    else    
+                        status = get_trust(session, placeholder_ident);
+
+                    if (status == PEP_STATUS_OK) {
+                        stringlist_t* keylist = NULL;
+                        status = find_private_keys(session, recip_fpr, &keylist);
+                        if (status == PEP_STATUS_OK) {
+                            if (keylist && !EMPTYSTR(keylist->value))
+                                own_key = true;            
+                        }
+                        free_stringlist(keylist);
+                    }
+                }
+                else if (status == PEP_CANNOT_FIND_IDENTITY)
+                    status = PEP_STATUS_OK;
+
+                free_identity(placeholder_ident);
+
                 if (status != PEP_STATUS_OK) {
                     free(replace_fpr);
+                    free(default_own_userid);
                     return status;
                 }
                 
@@ -3706,6 +3820,7 @@ PEP_STATUS check_for_own_revoked_key(
             
 pEp_free:
     free_stringpair_list(_the_list);
+    free(default_own_userid);
     return status;
 
 }
@@ -4031,8 +4146,15 @@ static PEP_STATUS _decrypt_message(
     }
     // Check for and deal with unencrypted messages
     if (src->enc_format == PEP_enc_none) {
+        // if there is a valid receiverRating then return this rating else
+        // return unencrypted
 
-        *rating = PEP_rating_unencrypted;
+        PEP_rating _rating = PEP_rating_undefined;
+        status = get_receiverRating(session, src, &_rating);
+        if (status == PEP_STATUS_OK && _rating)
+            *rating = _rating;
+        else
+            *rating = PEP_rating_unencrypted;
 
         // We remove these from the outermost source message
         // if (keys_were_imported)
@@ -4079,9 +4201,22 @@ static PEP_STATUS _decrypt_message(
         return (status == PEP_STATUS_OK ? PEP_UNENCRYPTED : status);
     }
 
+    // if there is an own identity defined via this message is coming in
+    // retrieve the details; in case there's no usuable own key make it
+    // functional
+    if (src->recv_by && !EMPTYSTR(src->recv_by->address)) {
+        status = myself(session, src->recv_by);
+        if (status) {
+            free_stringlist(_imported_key_list);
+            return status;
+        }
+    }
+
     status = get_crypto_text(src, &ctext, &csize);
-    if (status != PEP_STATUS_OK)
+    if (status) {
+        free_stringlist(_imported_key_list);
         return status;
+    }
         
     /** Ok, we should be ready to decrypt. Try decrypt and verify first! **/
     status = decrypt_and_verify(session, ctext, csize, dsig_text, dsig_size,
@@ -4640,7 +4775,13 @@ static PEP_STATUS _decrypt_message(
             dedup_stringlist(_keylist->next);
             
         /* add pEp-related status flags to header */
-        decorate_message(msg, *rating, _keylist, false, false);
+        if (src->recv_by) {
+            free_identity(msg->recv_by);
+            msg->recv_by = identity_dup(src->recv_by);
+            if (!msg->recv_by)
+                goto enomem;
+        }
+        decorate_message(session, msg, *rating, _keylist, false, true);
 
         // Maybe unnecessary
         // if (keys_were_imported)
@@ -5679,6 +5820,39 @@ enomem:
     return PEP_OUT_OF_MEMORY;
 }
 
+static void remove_sync_message(message *msg)
+{
+    if (!(msg && msg->attachments))
+        return;
+
+    bloblist_t *b = NULL;
+    for (bloblist_t *a = msg->attachments; a && a->value ; ) {
+        if (a->mime_type && (
+                    strcasecmp(a->mime_type, "application/pEp.sync") == 0 ||
+                    strcasecmp(a->mime_type, "application/pEp.sign") == 0
+                )
+           )
+        {
+            if (b) {
+                b->next = a->next;
+                a->next = NULL;
+                free_bloblist(a);
+                a = b->next;
+            }
+            else {
+                msg->attachments = a->next;
+                a->next = NULL;
+                free_bloblist(a);
+                a = msg->attachments;
+            }
+        }
+        else {
+            b = a;
+            a = a->next;
+        }
+    }
+}
+
 // CAN return PASSPHRASE errors
 DYNAMIC_API PEP_STATUS re_evaluate_message_rating(
     PEP_SESSION session,
@@ -5757,9 +5931,12 @@ got_keylist:
 
     status = amend_rating_according_to_sender_and_recipients(session, &_rating,
              msg->from, _keylist);
-    if (status == PEP_STATUS_OK)
+    if (status == PEP_STATUS_OK) {
+        remove_sync_message(msg);
+        set_receiverRating(session, msg, _rating);
         *rating = _rating;
-    
+    }
+
 pEp_error:
     if (must_free_keylist)
         free_stringlist(_keylist);

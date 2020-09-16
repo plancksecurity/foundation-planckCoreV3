@@ -294,6 +294,7 @@ PEP_STATUS encrypt_only(
 );
 
 void decorate_message(
+    PEP_SESSION session,
     message *msg,
     PEP_rating rating,
     stringlist_t *keylist,

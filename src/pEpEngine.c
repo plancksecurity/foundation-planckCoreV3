@@ -5263,24 +5263,39 @@ PEP_STATUS is_own_key(PEP_SESSION session, const char* fpr, bool* own_key) {
         return PEP_ILLEGAL_VALUE;
     
     *own_key = false;
-    sqlite3_reset(session->own_key_is_listed);
-    
-    sqlite3_bind_text(session->own_key_is_listed, 1, fpr, -1,
-            SQLITE_STATIC);
-    int result = sqlite3_step(session->own_key_is_listed);
-    switch (result) {
-        case SQLITE_ROW: {
-            *own_key = (sqlite3_column_int(session->own_key_is_listed, 0) != 0);
-            break;
-        }
-        default:
-            sqlite3_reset(session->own_key_is_listed);
-            return PEP_UNKNOWN_DB_ERROR;
+
+    char* default_own_userid = NULL;
+    pEp_identity* placeholder_ident = NULL;
+
+    PEP_STATUS status = get_default_own_userid(session, &default_own_userid);
+
+    if (status == PEP_STATUS_OK && !EMPTYSTR(default_own_userid)) {
+        placeholder_ident = new_identity(NULL, fpr, default_own_userid, NULL);
+        if (!placeholder_ident)
+            status = PEP_OUT_OF_MEMORY;
+        else    
+            status = get_trust(session, placeholder_ident);
+
+        if (status == PEP_STATUS_OK) {
+            if (placeholder_ident->comm_type == PEP_ct_pEp) {
+                stringlist_t* keylist = NULL;
+                status = find_private_keys(session, fpr, &keylist);
+                if (status == PEP_STATUS_OK) {
+                    if (keylist && !EMPTYSTR(keylist->value))
+                        *own_key = true;            
+                }
+                free_stringlist(keylist);
+            }
+        }    
     }
+    if (status == PEP_CANNOT_FIND_IDENTITY)
+        status = PEP_STATUS_OK; // either no default own id yet, so no own keys yet
+                                // or there was no own trust entry! False either way
+ 
+    free(default_own_userid);
+    free_identity(placeholder_ident);
 
-    sqlite3_reset(session->own_key_is_listed);
-    return PEP_STATUS_OK;
-
+    return status;
 }
 
 DYNAMIC_API PEP_STATUS set_revoked(
