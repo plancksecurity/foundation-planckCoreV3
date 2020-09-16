@@ -70,6 +70,10 @@ $(SRCROOT)/../asn.1/PString.c
 $(SRCROOT)/../asn.1/PString.h
 $(SRCROOT)/../asn.1/PrintableString.c
 $(SRCROOT)/../asn.1/PrintableString.h
+$(SRCROOT)/../asn.1/Rating.c
+$(SRCROOT)/../asn.1/Rating.h
+$(SRCROOT)/../asn.1/ReceiverRating.c
+$(SRCROOT)/../asn.1/ReceiverRating.h
 $(SRCROOT)/../asn.1/Rollback.c
 $(SRCROOT)/../asn.1/Rollback.h
 $(SRCROOT)/../asn.1/Sync.c
