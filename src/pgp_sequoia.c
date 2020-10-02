@@ -2140,12 +2140,15 @@ static PEP_STATUS pgp_encrypt_sign_optional(
     ws = pgp_encryptor_new (&err, ws,
                             NULL, 0, recipients, recipient_count,
                             0, 0);
+    // pgp_encrypt_new consumes the recipients (but not the keys).
+    // This seems to still happen even if it failed, so we need to be sure
+    // not to try to free them if we bail.
+    recipient_count = 0;
+
     if (!ws)
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Setting up encryptor");
 
-    // pgp_encrypt_new consumes the recipients (but not the keys).
-    recipient_count = 0;
-
+ 
     if (sign) {            
         
         iter = pgp_cert_valid_key_iter(signer_cert, session->policy, 0);
