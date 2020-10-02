@@ -2220,16 +2220,19 @@ static PEP_STATUS pgp_encrypt_sign_optional(
     pgp_cert_valid_key_iter_free (iter);
     pgp_cert_free(signer_cert);
 
-    for (int i = 0; i < recipient_count; i ++)
-        pgp_recipient_free(recipients[i]);
-    free(recipients);
-    for (int i = 0; i < recipient_keys_count; i ++)
-        pgp_key_free(recipient_keys[i]);
-    free(recipient_keys);
-    for (int i = 0; i < recipient_cert_count; i ++)
-        pgp_cert_free(recipient_certs[i]);
-    free(recipient_certs);
-
+    // if we're out of mem, any of these could be in an inconsistent state.
+    // We're going to bail from above anyway.
+    if (status != PEP_OUT_OF_MEMORY) {
+        for (int i = 0; i < recipient_count; i ++)
+            pgp_recipient_free(recipients[i]);
+        free(recipients);
+        for (int i = 0; i < recipient_keys_count; i ++)
+            pgp_key_free(recipient_keys[i]);
+        free(recipient_keys);
+        for (int i = 0; i < recipient_cert_count; i ++)
+            pgp_cert_free(recipient_certs[i]);
+        free(recipient_certs);
+    }
     T("-> %s", pEp_status_to_string(status));
     return status;
 }

@@ -32,10 +32,9 @@ namespace {
                 test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
                 test_path = get_main_test_home_dir() + "/" + test_suite_name + "/" + test_name;
 
-                message_to_encrypt = "";
-                keys_db_to_init = "";
-                mgmt_db_to_init = "";
-
+                message_to_encrypt = "/Users/krista/tmpbug/stuff.eml";
+                keys_db_to_init = "/Users/krista/tmpbug/keys.db";
+                mgmt_db_to_init = "/Users/krista/tmpbug/management.db";
             }
 
             ~BareEncryptShellTest() override {
@@ -94,6 +93,7 @@ namespace {
 
 TEST_F(BareEncryptShellTest, check_bare_encrypt_shell) {
     char* outmsg = NULL;
-    PEP_STATUS status = MIME_encrypt_message(session, message_to_encrypt.c_str(), message_to_encrypt.size(), NULL, &outmsg, PEP_enc_auto, 0);
+    string inmsg = slurp(message_to_encrypt);
+    PEP_STATUS status = MIME_encrypt_message(session, inmsg.c_str(), inmsg.size(), NULL, &outmsg, PEP_enc_auto, 0);
     ASSERT_OK;
 }
