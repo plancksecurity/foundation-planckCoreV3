@@ -3,11 +3,11 @@ import re
 import sys
 import argparse
 
-parser = argparse.ArgumentParser(description='Automate the RC release process as sanely as possible.')
+parser = argparse.ArgumentParser(description='Automate the patch release process as sanely as possible.')
 parser.add_argument('-r','--rev',nargs=1, help="revision number or changeset to tag as next RC")
 group = parser.add_mutually_exclusive_group(required=False)
-group.add_argument('-v','--version',nargs=4, type=int, help="force this version - bypasses version inference. Format: major minor patch RC")
-group.add_argument('--rc', type=int, help="force this RC number on the inferred version")
+group.add_argument('-v','--version',nargs=4, type=int, help="force this version - bypasses version inference. Format: major minor patch")
+group.add_argument('p', '--patch', type=int, help="force this patch number on the inferred version")
 args = parser.parse_args()
 
 # Note: we could get this from the macros, but since folks seem to be actually upgrading 
@@ -22,20 +22,18 @@ changeset = args.rev # can be None :)
 major = -1
 minor = -1
 patch = -1
-rc = -1
 
 if args.version:
     major = args.version[0]
     minor = args.version[1]
     patch = args.version[2]
-    rc = args.version[3]
     #print(rc)
-    if (major < 0) or (minor < 0) or (patch < 0) or (rc < 0):
+    if (major < 0) or (minor < 0) or (patch < 0):
         raise Exception("Version numbers must all be positive values.")
-elif args.rc:
-    rc = args.rc
-    if (rc < 0):
-        raise Exception("RC numbers must all be positive values.")
+elif args.patch:
+    patch = args.patch
+    if (patch < 0):
+        raise Exception("Patch numbers must all be positive values.")
 
 #define PEP_ENGINE_VERSION_MAJOR 2
 #define PEP_ENGINE_VERSION_MINOR 1
@@ -63,36 +61,36 @@ if not args.version:
     #    for num in tagnums:
     #        print (num)
 
-    if not tag_nums or len(tag_nums) != 4:
+    if not tag_nums or len(tag_nums) < 3:
         if not tag_nums:
             print("Wow... there is no extant release tag. What did you do, wipe the repository?")
         else:
             print("Somehow, there was an error with the numbering of the tag \"" + release_string + "\"")
-        print("Do you want to continue? We'll make a tag from the source RC info. (Y/N)[enter]")
+        print("Do you want to continue? We'll make a tag from the source patch info. (Y/N)[enter]")
         a = input().lower()
         if not (a.startswith("y") or a.startswith("Y")):
             sys.exit()
             
     force = False
 
-    if len(tag_nums) == 4 and src_nums:
+    if len(tag_nums) >= 3 and src_nums:
         major_tag = int(tag_nums[0])
         major_src = int(src_nums[0])
         minor_tag = int(tag_nums[1])
         minor_src = int(src_nums[1])
         patch_tag = int(tag_nums[2])
         patch_src = int(src_nums[2])
-        rc_tag = int(tag_nums[3])
-        rc_src = int(src_nums[3])
 
         print("Inferring current/next version info for automatic upgrade:")
-        print("Tagged (should show current):                    " + str(major_tag) + "." + str(minor_tag) + "." + str(patch_tag) + "." + str(rc_tag))
-        print("Source (should show *next* (i.e. this upgrade)): " + str(major_src) + "." + str(minor_src) + "." + str(patch_src) + "." + str(rc_src))            
+        print("Tagged (should show current):                    " + str(major_tag) + "." + str(minor_tag) + "." + str(patch_tag)
+        print("Source (should show *next* (i.e. this upgrade)): " + str(major_src) + "." + str(minor_src) + "." + str(patch_src)            
             
         if (major_tag == major_src):
             major = major_tag
             if (minor_tag == minor_src):
                 minor = minor_tag
+
+
                 if (patch_tag == patch_src):
                     patch = patch_tag
                     # Hoorah, we're just changing the RC number.
@@ -202,13 +200,13 @@ filedata = filedata.replace(grep_output, "#define PEP_ENGINE_VERSION \"" + versi
 filedata = filedata.replace(grep_strs[0], "#define PEP_ENGINE_VERSION_MAJOR " + str(major))
 filedata = filedata.replace(grep_strs[1], "#define PEP_ENGINE_VERSION_MINOR " + str(minor))
 filedata = filedata.replace(grep_strs[2], "#define PEP_ENGINE_VERSION_PATCH " + str(patch))
-filedata = filedata.replace(grep_strs[3], "#define PEP_ENGINE_VERSION_RC    " + str(rc + 1))
+filedata = filedata.replace(grep_strs[3], "#define PEP_ENGINE_VERSION_RC    0"
 
 # Write the file out again
 with open('src/pEpEngine.h', 'w') as file:
     file.write(filedata)     
 
-comment = "Automatically bumped RC in source for future release. Next RC after this one will be " + version_str + "-RC" + str(rc + 1) + " **if released**."
+comment = "Automatically bumped patch in source for future release. Next patch after this one will be " + version_str + "-RC" + str(rc + 1) + " **if released**."
 #print("about to run with this comment:")
 print(comment) 
 cmd = ["hg", "commit", "-m", comment]  
