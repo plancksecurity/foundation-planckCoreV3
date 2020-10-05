@@ -6,6 +6,7 @@
 #include "test_util.h"
 #include "TestConstants.h"
 #include "Engine.h"
+#include "mime.h"
 
 #include <gtest/gtest.h>
 
@@ -92,8 +93,13 @@ namespace {
 
 
 TEST_F(BareEncryptShellTest, check_bare_encrypt_shell) {
-    char* outmsg = NULL;
-    string inmsg = slurp(message_to_encrypt);
-    PEP_STATUS status = MIME_encrypt_message(session, inmsg.c_str(), inmsg.size(), NULL, &outmsg, PEP_enc_auto, 0);
+    string inmsg_str = slurp(message_to_encrypt);
+    message* inmsg = NULL;
+    message* outmsg = NULL;
+
+    mime_decode_message(inmsg_str.c_str(), inmsg_str.size(), &inmsg, NULL);
+    PEP_STATUS status = encrypt_message(session, inmsg, NULL, &outmsg, PEP_enc_auto, 0);
+    update_identity(session, inmsg->from);
     ASSERT_OK;
+    cout << message_to_str(outmsg);
 }
