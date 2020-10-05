@@ -65,7 +65,7 @@ newfile.write("\n" + tb(4) + "// Get a new test Engine.\n")
 newfile.write(tb(4) + "engine = new Engine(test_path);\n");
 newfile.write(tb(4) + "ASSERT_NE(engine, nullptr);\n")
 newfile.write("\n" + tb(4) + "// Ok, let's initialize test directories etc.\n")                                        
-newfile.write(tb(4) + "engine->prep(NULL, NULL, init_files);\n")
+newfile.write(tb(4) + "engine->prep(NULL, NULL, NULL, init_files);\n")
 newfile.write("\n" + tb(4) + "// Ok, try to start this bugger.\n")                    
 newfile.write(tb(4) + "engine->start();\n")                    
 newfile.write(tb(4) + "ASSERT_NE(engine->session, nullptr);\n")                    
