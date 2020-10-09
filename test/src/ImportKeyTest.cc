@@ -66,6 +66,17 @@ namespace {
                 session = NULL;
             }
 
+            PEP_STATUS import_and_and_fix_key(string filename, stringlist_t** keylist, uint64_t* changes, char** fixed_key, size_t* fixed_key_size) {
+                string pubkey = slurp(filename);
+                PEP_STATUS status = _import_key_with_fpr_return(session, pubkey.c_str(), pubkey.size(), NULL, keylist, changes);
+                if (status != PEP_KEY_IMPORTED)
+                    return status;
+                else if (*changes != 1)
+                    return PEP_TEST_NO_KEY_IMPORT;    
+                else
+                    return export_key(session, (*keylist)->value, fixed_key, fixed_key_size);
+            }
+
         private:
             const char* test_suite_name;
             const char* test_name;
@@ -122,16 +133,27 @@ TEST_F(ImportKeyTest, check_import_fpr_priv_new) {
 
 TEST_F(ImportKeyTest, check_import_change_pub_nochange) {
     PEP_STATUS status = PEP_STATUS_OK;
-    
-    string pubkey = slurp("test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");
+
+    char* fixed_key = NULL;
+    size_t fixed_key_size = 0;
     stringlist_t* keylist = NULL;
     uint64_t changes = 0;
-    status = _import_key_with_fpr_return(session, pubkey.c_str(), pubkey.size(), NULL, &keylist, &changes);
-    ASSERT_EQ(status, PEP_KEY_IMPORTED);
-    ASSERT_NE(keylist, nullptr);
-    ASSERT_STREQ(keylist->value, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
-    ASSERT_EQ(keylist->next, nullptr);
-    ASSERT_EQ(changes, 1);
+
+    // this checks to see if a key was imported and if it changed the first time.
+    status = import_and_and_fix_key("test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc", &keylist, &changes, &fixed_key, &fixed_key_size);    
+    ASSERT_OK;
+    string pubkey = string(fixed_key);
+
+    // N.B. This is transitional - ideally, we'll test it this way, but we first need to understand what the equality metric is and change the heuristic.
+    // free_stringlist(keylist);
+    // keylist = NULL;
+    // uint64_t changes = 0;
+    // status = _import_key_with_fpr_return(session, pubkey.c_str(), pubkey.size(), NULL, &keylist, &changes);
+    // ASSERT_EQ(status, PEP_KEY_IMPORTED);
+    // ASSERT_NE(keylist, nullptr);
+    // ASSERT_STREQ(keylist->value, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
+    // ASSERT_EQ(keylist->next, nullptr);
+    // ASSERT_EQ(changes, 1);
 
     // import again!
     free_stringlist(keylist);
