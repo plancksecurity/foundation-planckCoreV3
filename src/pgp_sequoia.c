@@ -231,82 +231,120 @@ int email_cmp(void *cookie, int a_len, const void *a, int b_len, const void *b)
     return result;
 }
 
+// Decrypts the key.
+//
+// This function takes ownership of key (key must be owned; not a
+// reference).
+//
+// On success, it sets *decrypt_key to the decrypted key, which the
+// caller owns, and returns PEP_STATUS_OK.  On failure, key is freed,
+// *decrypted_key is set to NULL, and an error is returned.
 static PEP_STATUS _pgp_get_decrypted_key(PEP_SESSION session,
-                                         pgp_cert_valid_key_iter_t iter,
+                                         pgp_key_t key,
                                          pgp_key_t* decrypted_key) {
-
-    if (!iter)
-        return PEP_UNKNOWN_ERROR; // ???
-    
-    if (!decrypted_key)
-        return PEP_ILLEGAL_VALUE;
-        
     PEP_STATUS status = PEP_STATUS_OK;
-    
-    pgp_error_t err = NULL;    
+    pgp_error_t err = NULL;
+
+    pgp_fingerprint_t pgp_fpr = pgp_key_fingerprint(key);
+    char *fpr = pgp_fingerprint_to_hex(pgp_fpr);
+    T("(%s)", fpr);
+
+    if (!decrypted_key)
+        ERROR_OUT (err, PEP_ILLEGAL_VALUE, "missing decrypted_key parameter");
+    *decrypted_key = NULL;
+    if (!key)
+        ERROR_OUT (err, PEP_ILLEGAL_VALUE, "missing key parameter");
+
+    if (pgp_key_has_unencrypted_secret(key)) {
+        // In case key is a reference (and not an owned value), we
+        // clone it.
+        *decrypted_key = key;
+        key = NULL;
+    } else {
+        const char* pass = session->curr_passphrase;
+        if (pass && pass[0]) {
+            *decrypted_key = pgp_key_decrypt_secret(&err, key,
+                                                    (uint8_t*)pass,
+                                                    strlen(pass));
+            key = NULL;
+            if (!*decrypted_key) {
+                ERROR_OUT (err, PEP_WRONG_PASSPHRASE, "wrong passphrase");
+            }
+        } else {
+            ERROR_OUT (err, PEP_PASSPHRASE_REQUIRED, "passphrase required");
+        }
+    }
+
+out:
+    T("(%s) -> %s", fpr, pEp_status_to_string(status));
+    pgp_key_free (key);
+    pgp_fingerprint_free (pgp_fpr);
+    free (fpr);
+    return status;
+}
+
+// Returns the first key in iter that is already decrypted or can be
+// decrypted using the stored passphrase.
+//
+// This function does not take ownership of iter (the caller must
+// still free it).
+//
+// On success, it sets *decrypt_key to the decrypted key and returns
+// PEP_STATUS_OK.  On failure, key is freed, *decrypted_key is set to
+// NULL, and an error is returned.
+static PEP_STATUS _pgp_get_decrypted_key_iter(PEP_SESSION session,
+                                              pgp_cert_valid_key_iter_t iter,
+                                              pgp_key_t* decrypted_key) {
+
+    PEP_STATUS status = PEP_STATUS_OK;
+    pgp_error_t err = NULL;
+
+    if (!decrypted_key)
+        ERROR_OUT (err, PEP_ILLEGAL_VALUE, "missing decrypt_key parameter");
+    *decrypted_key = NULL;
+    if (!iter)
+        ERROR_OUT (err, PEP_ILLEGAL_VALUE, "missing iter parameter");
+
     bool bad_pass = false;
     bool missing_pass = false;
     pgp_key_t key = NULL;
-    *decrypted_key = NULL;
 
-    pgp_valid_key_amalgamation_t ka = pgp_cert_valid_key_iter_next (iter, NULL, NULL);
-
+    pgp_valid_key_amalgamation_t ka
+        = pgp_cert_valid_key_iter_next (iter, NULL, NULL);
     // FIXME: better error!!!
     if (! ka)
-        ERROR_OUT (err, PEP_UNKNOWN_ERROR,
-                   "%s has no capable key", fpr);
+        ERROR_OUT (err, PEP_UNKNOWN_ERROR, "no matching key");
 
-    // pgp_key_into_key_pair needs to own the key, but here we
-    // only get a reference (which we still need to free).
-    
-    for ( ; ka ; (ka = pgp_cert_valid_key_iter_next(iter, NULL, NULL))) {                       
-        // pgp_key_into_key_pair needs to own the key, but here we
-        // only get a reference (which we still need to free).
-        key = pgp_valid_key_amalgamation_key (ka);
+    for ( ; ka ; (ka = pgp_cert_valid_key_iter_next(iter, NULL, NULL))) {
+        // _pgp_get_decrypted_key takes an owned key, but here we only
+        // get a reference (which we still need to free).
+        pgp_key_t keyref = pgp_valid_key_amalgamation_key (ka);
+        key = pgp_key_clone (keyref);
+        pgp_key_free (keyref);
 
-        if (pgp_key_has_unencrypted_secret(key)) 
+        pgp_valid_key_amalgamation_free (ka);
+
+        status = _pgp_get_decrypted_key(session, key, decrypted_key);
+        if (status == PEP_STATUS_OK)
             break;
-        else {
-            const char* pass = session->curr_passphrase;
-            if (pass && pass[0]) {
-                pgp_key_t decrypted_key = NULL;
-                decrypted_key = pgp_key_decrypt_secret(&err, pgp_key_clone(key), (uint8_t*)session->curr_passphrase,
-                                                        strlen(session->curr_passphrase));                             
-                pgp_key_free(key);
-                key = NULL;
-                
-                if (!decrypted_key) {                               
-                    bad_pass = true;
-                    continue;
-                }    
-                else {
-                    key = decrypted_key;
-                    break;
-                }
-            }
-            else {
-                pgp_key_free(key);
-                key = NULL;
-                missing_pass = true;
-                continue;
-            }
-        }
+        else if (status == PEP_WRONG_PASSPHRASE)
+            bad_pass = true;
+        else if (status == PEP_PASSPHRASE_REQUIRED)
+            missing_pass = true;
     }
-    if (!key) {
+
+    if (!*decrypted_key) {
         if (bad_pass)
             ERROR_OUT(err, PEP_WRONG_PASSPHRASE, "pgp_key_decrypt_secret");
-        else if (missing_pass)    
+        else if (missing_pass)
             ERROR_OUT(err, PEP_PASSPHRASE_REQUIRED, "pgp_key_decrypt_secret");
-        else        
-            ERROR_OUT(err, PEP_UNKNOWN_ERROR, "pgp_valid_key_amalgamation_key");            
-    }   
-    
-out:
-    pgp_valid_key_amalgamation_free (ka);
-    *decrypted_key = key;
+        else
+            ERROR_OUT(err, PEP_UNKNOWN_ERROR, "pgp_valid_key_amalgamation_key");
+    }
 
-    T("(%s)-> %s", fpr, pEp_status_to_string(status));
-    return status;                                                 
+out:
+    T(" -> %s", pEp_status_to_string(status));
+    return status;
 }
 
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
@@ -1938,7 +1976,7 @@ PEP_STATUS pgp_sign_only(
     pgp_cert_valid_key_iter_for_signing (iter);
 
     pgp_key_t key = NULL;
-    status = _pgp_get_decrypted_key(session, iter, &key);
+    status = _pgp_get_decrypted_key_iter(session, iter, &key);
 
     if (!key || status != PEP_STATUS_OK) {
         ERROR_OUT (err, status,
@@ -2139,7 +2177,7 @@ static PEP_STATUS pgp_encrypt_sign_optional(
     ws = pgp_writer_stack_message(writer);
     ws = pgp_encryptor_new (&err, ws,
                             NULL, 0, recipients, recipient_count,
-                            0, 0);
+                            0);
     // pgp_encrypt_new consumes the recipients (but not the keys).
     // This seems to still happen even if it failed, so we need to be sure
     // not to try to free them if we bail.
@@ -2157,16 +2195,15 @@ static PEP_STATUS pgp_encrypt_sign_optional(
         pgp_cert_valid_key_iter_for_signing (iter);
 
         pgp_key_t key = NULL;
-        status = _pgp_get_decrypted_key(session, iter, &key);
+        status = _pgp_get_decrypted_key_iter(session, iter, &key);
 
         if (!key || status != PEP_STATUS_OK) {
             ERROR_OUT (err, status,
-                       "%s has no signing capable key", fpr);
+                       "no signing capable key");
         }               
                 
                     
-        signing_keypair = pgp_key_into_key_pair (NULL, pgp_key_clone (key));
-        pgp_key_free (key);
+        signing_keypair = pgp_key_into_key_pair (NULL, key);
         if (! signing_keypair)
             ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a keypair");
 
@@ -2555,7 +2592,7 @@ PEP_STATUS _pgp_import_keydata(PEP_SESSION session, const char *key_data,
         if (cert) {
             T("Merging packet: %s", pgp_packet_debug(packet));
 
-            cert = pgp_cert_merge_packets (&err, cert, &packet, 1);
+            cert = pgp_cert_insert_packets (&err, cert, &packet, 1);
             if (! cert)
                 ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Merging signature");
 
@@ -3034,9 +3071,12 @@ PEP_STATUS pgp_renew_key(
     pgp_error_t err = NULL;
     pgp_cert_t cert = NULL;
     pgp_cert_valid_key_iter_t iter = NULL;
-    pgp_valid_key_amalgamation_t primary = NULL;
+    pgp_key_t key = NULL;
     pgp_key_pair_t keypair = NULL;
     pgp_signer_t signer = NULL;
+    pgp_key_t subkey = NULL;
+    pgp_key_pair_t subkey_keypair = NULL;
+    pgp_signer_t subkey_signer = NULL;
     time_t t = timegm((timestamp *) ts); // timestamp because of Windows
     pgp_cert_valid_key_iter_t key_iter = NULL;
     pgp_valid_key_amalgamation_t ka = NULL;
@@ -3059,37 +3099,75 @@ PEP_STATUS pgp_renew_key(
     pgp_cert_valid_key_iter_for_certification (iter);
     pgp_cert_valid_key_iter_revoked(iter, false);
 
-    pgp_key_t key = NULL;
-    status = _pgp_get_decrypted_key(session, iter, &key);
-
+    status = _pgp_get_decrypted_key_iter(session, iter, &key);
     if (!key || status != PEP_STATUS_OK) {
         ERROR_OUT (err, status,
-                   "%s has no signing capable key", fpr);
-    }               
+                   "%s: decrypting primary key's secret key", fpr);
+    }
 
-    // pgp_key_into_key_pair needs to own the key, but here we
-    // only get a reference (which we still need to free).
-    keypair = pgp_key_into_key_pair (NULL, pgp_key_clone (key));
-    pgp_key_free (key);
+    // pgp_key_into_key_pair takes ownership of key.
+    keypair = pgp_key_into_key_pair (&err, key);
+    key = NULL;
     if (! keypair)
         ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a keypair");
 
+    // signer references keypair.
     signer = pgp_key_pair_as_signer (keypair);
     if (! signer)
         ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a signer");
+
 
     // Set the expiration for all non-revoked keys.
     key_iter = pgp_cert_valid_key_iter(cert, session->policy, 0);
     pgp_cert_valid_key_iter_revoked(key_iter, false);
 
+    // The first key is guaranteed to be the primary key.
+    bool is_primary = true;
     while ((ka = pgp_cert_valid_key_iter_next(key_iter, NULL, NULL))) {
         pgp_status_t sq_status;
-        pgp_error_t err;
         pgp_signature_t *sigs = NULL;
         size_t sig_count = 0;
 
+        // Arrange for a backsig, if needed.
+        if (! is_primary
+            && (pgp_valid_key_amalgamation_for_certification(ka)
+                || pgp_valid_key_amalgamation_for_signing(ka)
+                || pgp_valid_key_amalgamation_for_authentication(ka))) {
+            // _pgp_get_decrypted_key takes an owned key, but here we only
+            // get a reference (which we still need to free).
+            pgp_key_t subkeyref = pgp_valid_key_amalgamation_key (ka);
+            subkey = pgp_key_clone (subkeyref);
+            pgp_key_free (subkeyref);
+
+            status = _pgp_get_decrypted_key(session, subkey, &subkey);
+            if (!subkey || status != PEP_STATUS_OK) {
+                ERROR_OUT (err, status,
+                           "%s: failed to get secret key material", fpr);
+            }
+
+            // pgp_key_into_key_pair takes ownership of subkey.
+            subkey_keypair = pgp_key_into_key_pair (&err, subkey);
+            subkey = NULL;
+            if (! subkey_keypair)
+                ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a keypair");
+
+            // subkey_signer references subkey_keypair.
+            subkey_signer = pgp_key_pair_as_signer (subkey_keypair);
+            if (! signer)
+                ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a signer");
+        }
+        is_primary = false;
+
         sq_status = pgp_valid_key_amalgamation_set_expiration_time
-            (&err, ka, signer, t, &sigs, &sig_count);
+            (&err, ka, signer, subkey_signer, t, &sigs, &sig_count);
+        pgp_signer_free (subkey_signer);
+        subkey_signer = NULL;
+        // XXX: pgp_key_pair_as_signer is only supposed to reference
+        // signing_keypair, but it consumes it.  If this is fixed,
+        // this will become a leak.
+        //
+        //pgp_key_pair_free (subkey_keypair);
+        subkey_keypair = NULL;
         if (sq_status)
             ERROR_OUT(err, PEP_UNKNOWN_ERROR,
                       "setting expiration (generating self signatures)");
@@ -3128,7 +3206,7 @@ PEP_STATUS pgp_renew_key(
     pgp_cert_valid_key_iter_free (key_iter);
     key_iter = NULL;
 
-    cert = pgp_cert_merge_packets (&err, cert, packets, packet_count);
+    cert = pgp_cert_insert_packets (&err, cert, packets, packet_count);
     // The packets (but not the array) are now owned by cert.
     packet_count = 0;
     if (! cert)
@@ -3148,13 +3226,16 @@ PEP_STATUS pgp_renew_key(
 
     pgp_valid_key_amalgamation_free (ka);
     pgp_cert_valid_key_iter_free (key_iter);
-    pgp_signer_free (signer);
+    pgp_signer_free (subkey_signer);
     // XXX: pgp_key_pair_as_signer is only supposed to reference
     // signing_keypair, but it consumes it.  If this is fixed, this
     // will become a leak.
     //
-    pgp_key_pair_free (keypair);
-    pgp_valid_key_amalgamation_free (primary);
+    //pgp_key_pair_free (subkey_keypair);
+    pgp_key_free (subkey);
+    pgp_signer_free (signer);
+    //pgp_key_pair_free (keypair);
+    pgp_key_free (key);
     pgp_cert_valid_key_iter_free (iter);
     pgp_cert_free(cert);
 
@@ -3186,7 +3267,7 @@ PEP_STATUS pgp_revoke_key(
     // pgp_key_into_key_pair needs to own the key, but here we
     // only get a reference (which we still need to free).    
     pgp_key_t key = NULL;
-    status = _pgp_get_decrypted_key(session, iter, &key);
+    status = _pgp_get_decrypted_key_iter(session, iter, &key);
 
     if (!key || status != PEP_STATUS_OK) {
         ERROR_OUT (err, (status != PEP_STATUS_OK ? status : PEP_UNKNOWN_ERROR),
