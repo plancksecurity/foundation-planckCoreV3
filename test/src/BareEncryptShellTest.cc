@@ -10,6 +10,7 @@
 
 #include <gtest/gtest.h>
 
+#if 0
 /* This is just a quick shell to insert messages and databases into for quick testing during debugging. */
 
 namespace {
@@ -103,3 +104,4 @@ TEST_F(BareEncryptShellTest, check_bare_encrypt_shell) {
     ASSERT_OK;
     cout << message_to_str(outmsg);
 }
+#endif
