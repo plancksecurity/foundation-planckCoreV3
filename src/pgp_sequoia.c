@@ -1981,14 +1981,15 @@ PEP_STATUS pgp_sign_only(
     if (!key || status != PEP_STATUS_OK) {
         ERROR_OUT (err, status,
                    "%s has no signing capable key", fpr);
-    }               
-    
+    }
+
     signing_keypair = pgp_key_into_key_pair (NULL, pgp_key_clone (key));
     pgp_key_free (key);
     if (! signing_keypair)
         ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a keypair");
 
     signer = pgp_key_pair_as_signer (signing_keypair);
+    signing_keypair = NULL;
     if (! signer)
         ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a signer");
 
@@ -2031,11 +2032,7 @@ PEP_STATUS pgp_sign_only(
 
  out:
     pgp_signer_free (signer);
-    // XXX: pgp_key_pair_as_signer is only supposed to reference
-    // signing_keypair, but it consumes it.  If this is fixed, this
-    // will become a leak.
-    //
-    //pgp_key_pair_free (signing_keypair);
+    pgp_key_pair_free (signing_keypair);
     pgp_valid_key_amalgamation_free (ka);
     pgp_cert_valid_key_iter_free (iter);
     pgp_cert_free(signer_cert);
@@ -2208,6 +2205,7 @@ static PEP_STATUS pgp_encrypt_sign_optional(
             ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a keypair");
 
         signer = pgp_key_pair_as_signer (signing_keypair);
+        signing_keypair = NULL;
         if (! signer)
             ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a signer");
 
@@ -2249,13 +2247,9 @@ static PEP_STATUS pgp_encrypt_sign_optional(
     *ctext = t;
     (*ctext)[*csize] = 0;
 
- out:    
+ out:
     pgp_signer_free (signer);
-    // XXX: pgp_key_pair_as_signer is only supposed to reference
-    // signing_keypair, but it consumes it.  If this is fixed, this
-    // will become a leak.
-    //
-    // pgp_key_pair_free (signing_keypair);
+    pgp_key_pair_free (signing_keypair);
     pgp_valid_key_amalgamation_free (ka);
     pgp_cert_valid_key_iter_free (iter);
     pgp_cert_free(signer_cert);
@@ -3111,8 +3105,9 @@ PEP_STATUS pgp_renew_key(
     if (! keypair)
         ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a keypair");
 
-    // signer references keypair.
+    // signer takes ownership of keypair.
     signer = pgp_key_pair_as_signer (keypair);
+    keypair = NULL;
     if (! signer)
         ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a signer");
 
@@ -3151,8 +3146,9 @@ PEP_STATUS pgp_renew_key(
             if (! subkey_keypair)
                 ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a keypair");
 
-            // subkey_signer references subkey_keypair.
+            // subkey_signer takes ownership subkey_keypair.
             subkey_signer = pgp_key_pair_as_signer (subkey_keypair);
+            subkey_keypair = NULL;
             if (! signer)
                 ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a signer");
         }
@@ -3162,12 +3158,6 @@ PEP_STATUS pgp_renew_key(
             (&err, ka, signer, subkey_signer, t, &sigs, &sig_count);
         pgp_signer_free (subkey_signer);
         subkey_signer = NULL;
-        // XXX: pgp_key_pair_as_signer is only supposed to reference
-        // signing_keypair, but it consumes it.  If this is fixed,
-        // this will become a leak.
-        //
-        //pgp_key_pair_free (subkey_keypair);
-        subkey_keypair = NULL;
         if (sq_status)
             ERROR_OUT(err, PEP_UNKNOWN_ERROR,
                       "setting expiration (generating self signatures)");
@@ -3227,14 +3217,10 @@ PEP_STATUS pgp_renew_key(
     pgp_valid_key_amalgamation_free (ka);
     pgp_cert_valid_key_iter_free (key_iter);
     pgp_signer_free (subkey_signer);
-    // XXX: pgp_key_pair_as_signer is only supposed to reference
-    // signing_keypair, but it consumes it.  If this is fixed, this
-    // will become a leak.
-    //
-    //pgp_key_pair_free (subkey_keypair);
+    pgp_key_pair_free (subkey_keypair);
     pgp_key_free (subkey);
     pgp_signer_free (signer);
-    //pgp_key_pair_free (keypair);
+    pgp_key_pair_free (keypair);
     pgp_key_free (key);
     pgp_cert_valid_key_iter_free (iter);
     pgp_cert_free(cert);
@@ -3280,6 +3266,7 @@ PEP_STATUS pgp_revoke_key(
         ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a keypair");
 
     signer = pgp_key_pair_as_signer (keypair);
+    keypair = NULL;
     if (! signer)
         ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a signer");
 
