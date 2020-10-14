@@ -105,7 +105,8 @@ install_headers: $(TARGET)
 
 install: $(TARGET) install_headers
 	mkdir -p "$(PREFIX)/lib/"
-	cp $< $(PREFIX)/lib/
+	cp -v $< $(PREFIX)/lib/
+	cp -v libpEpEngine.a $(PREFIX)/lib/
 
 beinstall: install
 	cp platform*.h $(PREFIX)/include/pEp/

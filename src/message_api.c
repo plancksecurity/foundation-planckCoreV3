@@ -3640,7 +3640,9 @@ PEP_STATUS check_for_own_revoked_key(
 {
     if (!session || !revoked_fpr_pairs)
         return PEP_ILLEGAL_VALUE;
-        
+
+    char* default_own_userid = NULL;
+
     *revoked_fpr_pairs = NULL;
 
     PEP_STATUS status = PEP_STATUS_OK;
@@ -3662,17 +3664,45 @@ PEP_STATUS check_for_own_revoked_key(
                                      &revoke_date);
 
         bool own_key = false;
-        
+
+        pEp_identity* placeholder_ident = NULL;
+
         switch (status) {
             case PEP_CANNOT_FIND_IDENTITY:
                 status = PEP_STATUS_OK;
                 continue;
             case PEP_STATUS_OK:
-        
-                status = is_own_key(session, recip_fpr, &own_key);
+                // Ok, we know it's a revoked key. Now see if it was "ours" by checking
+                // to see if we have an entry for it with our user id, since we already clearly
+                // know its replacement
                 
+                status = get_default_own_userid(session, &default_own_userid);
+            
+                if (status == PEP_STATUS_OK && !EMPTYSTR(default_own_userid)) {
+                    placeholder_ident = new_identity(NULL, recip_fpr, default_own_userid, NULL);
+                    if (!placeholder_ident)
+                        status = PEP_OUT_OF_MEMORY;
+                    else    
+                        status = get_trust(session, placeholder_ident);
+
+                    if (status == PEP_STATUS_OK) {
+                        stringlist_t* keylist = NULL;
+                        status = find_private_keys(session, recip_fpr, &keylist);
+                        if (status == PEP_STATUS_OK) {
+                            if (keylist && !EMPTYSTR(keylist->value))
+                                own_key = true;            
+                        }
+                        free_stringlist(keylist);
+                    }
+                }
+                else if (status == PEP_CANNOT_FIND_IDENTITY)
+                    status = PEP_STATUS_OK;
+
+                free_identity(placeholder_ident);
+
                 if (status != PEP_STATUS_OK) {
                     free(replace_fpr);
+                    free(default_own_userid);
                     return status;
                 }
                 
@@ -3694,6 +3724,7 @@ PEP_STATUS check_for_own_revoked_key(
             
 pEp_free:
     free_stringpair_list(_the_list);
+    free(default_own_userid);
     return status;
 
 }

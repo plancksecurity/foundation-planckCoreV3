@@ -174,7 +174,7 @@ TEST_F(KeyManipulationTest, check_generate_keypair_no_valid_session) {
     ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
 }
 
-TEST_F(KeyManipulationTest, check_generate_keypair_no_id) {
+TEST_F(KeyManipulationTest, check_generate_keypair_no_identity) {
     PEP_STATUS status = generate_keypair(session, NULL);
     ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
 }
@@ -185,6 +185,20 @@ TEST_F(KeyManipulationTest, check_generate_keypair_has_fpr) {
         "leon.schumacher@digitalekho.com",
         "8BD08954C74D830EEFFB5DEB2682A17F7C87F73D",
         "23",
+        "Leon Schumacher"
+    );
+
+    PEP_STATUS status = generate_keypair(session, id);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+
+}
+
+TEST_F(KeyManipulationTest, check_generate_keypair_identity_without_user_id) {
+    stringlist_t* keylist = NULL;
+    pEp_identity* id = new_identity(
+        "leon.schumacher@digitalekho.com",
+        "",
+        "",
         "Leon Schumacher"
     );
 
