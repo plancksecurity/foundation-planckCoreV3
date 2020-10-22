@@ -18,12 +18,19 @@ typedef struct _pEp_member {
     bool adopted;
 } pEp_member;
 
+pEp_member *new_member(pEp_identity *ident);
+void free_member(pEp_member *member);
+
 typedef struct _member_list {
     pEp_member *member;
     struct _member_list *next;
 } member_list;
 
-struct _pEp_group {
+member_list *new_memberlist(pEp_member *member);
+void free_memberlist(member_list *list);
+member_list *memberlist_add(member_list *list, pEp_member *member);
+
+typedef struct _pEp_group {
     pEp_identity *group_identity;
     pEp_identity *manager;
     member_list *members;
