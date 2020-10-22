@@ -24,13 +24,13 @@ Sync.c: sync.asn1 keysync.asn1 pEp.asn1
 	rm -f converter-sample.c
 	touch Sync.c
 
-Distribution.c: distribution.asn1 keyreset.asn1 pEp.asn1
-	$(ASN1C) -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keyreset.asn1 $<
+Distribution.c: distribution.asn1 keyreset.asn1 managedgroup.asn1 pEp.asn1
+	$(ASN1C) -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keyreset.asn1 managedgroup.asn1 $<
 	rm -f converter-sample.c
 	touch Distribution.c
 
 clean:
-	rm -f *.a *.o *.c *.h *.sample sync.asn1 keysync.asn1 distribution.asn1 keyreset.asn1
+	rm -f *.a *.o *.c *.h *.sample sync.asn1 keysync.asn1 distribution.asn1 keyreset.asn1 managedgroup.asn1
 
 install:
 

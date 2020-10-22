@@ -45,7 +45,9 @@ tstylesheet {
 
         BEGIN
 
-        `` for "fsm" | IMPORTS «@name» FROM «yml:ucase(@name)»;
+            IMPORTS
+        `` for "fsm" |         «@name» FROM «yml:ucase(@name)»
+            ;
 
         «@name» ::= CHOICE {
             `` for "fsm" |> «yml:lcase(@name)» [APPLICATION «@id»] «@name»`if "position()!=last()" > , `

@@ -25,17 +25,17 @@ protocol Distribution 2 {
     fsm ManagedGroup 2 {
         version 1, 0;
 
-        message GroupCreate {
+        message GroupCreate 2 {
             field Identity groupIdentity;
             field Identity manager;
         }
 
-        message GroupAdopted {
+        message GroupAdopted 3 {
             field Identity groupIdentity;
             field Identity member;
         }
 
-        message GroupDissolve {
+        message GroupDissolve 4 {
             field Identity groupIdentity;
             field Identity manager;
         }
