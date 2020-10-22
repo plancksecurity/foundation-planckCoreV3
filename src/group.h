@@ -34,6 +34,7 @@ typedef struct _pEp_group {
     pEp_identity *group_identity;
     pEp_identity *manager;
     member_list *members;
+    bool active;
 } pEp_group;
 
 
@@ -61,7 +62,7 @@ pEp_group *new_group(
 void free_group(pEp_group *group);
 
 
-// group_create() - create group as group manager
+// group_create() - create group as group manager and marks it as being active
 //
 //  params:
 //      group_identity (in)
@@ -89,7 +90,7 @@ PEP_STATUS group_adopt(
     );
 
 
-// group_dissolve() - dissolve a group
+// group_dissolve() - dissolve a group and marks it as being inactive
 
 PEP_STATUS group_dissolve(
         PEP_SESSION session,
