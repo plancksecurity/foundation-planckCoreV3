@@ -13,24 +13,43 @@ extern "C" {
 // struct for holding group data in memory
 // groups are persistant, therefore they're living in management.db
 
+typedef struct _pEp_member {
+    pEp_identity *ident;
+    bool adopted;
+} pEp_member;
+
+typedef struct _member_list {
+    pEp_member *member;
+    struct _member_list *next;
+} member_list;
+
 struct _pEp_group {
     pEp_identity *group_identity;
     pEp_identity *manager;
-    identity_list *members;
+    member_list *members;
 } pEp_group;
 
 
-// new_group() - allocate pEp_group struct. This function does not create a group.
+// new_group() - allocate pEp_group struct. This function does not create a
+// group.
 //
 //  params:
 //      group_identity (in)
 //      manager (in, optional)
-//      members (in, optional)
+//      memberlist (in, optional)
+//
+//  caveat:
+//      the ownership of all parameters groes to the struct; data is not copied
 
-pEp_group *new_group(pEp_identity *group_identity, pEp_identity *manager, identity_list *members);
+pEp_group *new_group(
+        pEp_identity *group_identity,
+        pEp_identity *manager,
+        member_list *memberlist
+    );
 
 
-// free_group() - free pEp_group struct. This function does not dissolve a group.
+// free_group() - free pEp_group struct. This function does not dissolve a
+// group.
 
 void free_group(pEp_group *group);
 
@@ -45,7 +64,7 @@ PEP_STATUS group_create(
         PEP_SESSION session,
         pEp_identity *group_identity,
         pEp_identity *manager,
-        identity_list *members,
+        member_list *memberlist,
         pEp_group **group
     );
 
@@ -67,7 +86,8 @@ PEP_STATUS group_adopt(
 
 PEP_STATUS group_dissolve(
         PEP_SESSION session,
-        pEp_identity *group_identity
+        pEp_identity *group_identity,
+        pEp_identity *manager
     );
 
 
@@ -76,7 +96,8 @@ PEP_STATUS group_dissolve(
 PEP_STATUS group_add_member(
         PEP_SESSION session,
         pEp_identity *group_identity,
-        pEp_identity *group_member
+        pEp_identity *group_member,
+        pEp_identity *manager
     );
 
 
@@ -85,15 +106,18 @@ PEP_STATUS group_add_member(
 PEP_STATUS group_remove_member(
         PEP_SESSION session,
         pEp_identity *group_identity,
-        pEp_identity *group_member
+        pEp_identity *group_member,
+        pEp_identity *manager
     );
 
 
-// group_rating() - calculate the rating of the group
+// group_rating() - returns the group rating as manager or the straight rating
+// otherwise
 
 PEP_STATUS group_rating(
         PEP_SESSION session,
         pEp_identity *group_identity,
+        pEp_identity *manager,
         PEP_rating *rating
     );
 
