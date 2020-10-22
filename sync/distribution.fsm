@@ -21,5 +21,24 @@ protocol Distribution 2 {
             }
         }
     }
+
+    fsm ManagedGroup 2 {
+        version 1, 0;
+
+        message GroupCreate {
+            field Identity groupIdentity;
+            field Identity manager;
+        }
+
+        message GroupAdopted {
+            field Identity groupIdentity;
+            field Identity member;
+        }
+
+        message GroupDissolve {
+            field Identity groupIdentity;
+            field Identity manager;
+        }
+    }
 }
 
