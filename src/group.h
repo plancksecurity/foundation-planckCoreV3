@@ -35,7 +35,11 @@ pEp_group *new_group(pEp_identity *group_identity, pEp_identity *manager, identi
 void free_group(pEp_group *group);
 
 
-// group_create() - create a group
+// group_create() - create group as group manager
+//
+//  params:
+//      group_identity (in)
+//      manager (in)            own identity
 
 PEP_STATUS group_create(
         PEP_SESSION session,
@@ -43,6 +47,19 @@ PEP_STATUS group_create(
         pEp_identity *manager,
         identity_list *members,
         pEp_group **group
+    );
+
+
+// group_adopt() - adopt group as member
+//
+//  params:
+//      group_identity (in)
+//      as_member (in)          own identity
+
+PEP_STATUS group_adopt(
+        PEP_SESSION session,
+        pEp_identity *group_identity,
+        pEp_identity *as_member
     );
 
 
