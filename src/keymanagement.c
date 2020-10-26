@@ -762,10 +762,13 @@ DYNAMIC_API PEP_STATUS update_identity(
                                 this_uid = NULL;
                                 
                                 // Reflect the change we just made to the DB
-                                this_id->user_id = strdup(identity->user_id);
-                                stored_ident = this_id;
-                                // FIXME: free list.
-                                break;                                
+                                this_id->user_id = NULL;
+
+                                stored_ident = identity_dup(this_id);
+                                if (!stored_ident)
+                                    goto enomem;
+                                stored_ident->user_id = strdup(identity->user_id);
+                                break;
                             }
                         }
                         else if (input_is_TOFU && !curr_is_TOFU) {
@@ -773,13 +776,17 @@ DYNAMIC_API PEP_STATUS update_identity(
                             // BAD APP BEHAVIOUR.
                             free(identity->user_id);
                             identity->user_id = strdup(this_id->user_id);
-                            stored_ident = this_id;
-                            // FIXME: free list.
-                            break;                                
+                            stored_ident = identity_dup(this_id);
+                            if (!stored_ident)
+                                goto enomem;
+
+                            break;
                         }                            
                     }
                     id_curr = id_curr->next;
                 }
+                free_identity_list(id_list);
+                id_list = NULL;
             }
         } 
                 
@@ -874,14 +881,15 @@ DYNAMIC_API PEP_STATUS update_identity(
                                 if (!identity->user_id)
                                     goto enomem;
 
-                                stored_ident = this_id;
-                                
+                                stored_ident = identity_dup(this_id);
                                 break;                                
                             }                            
                         } 
                     }
                     id_curr = id_curr->next;
                 }
+                free_identity_list(id_list);
+                id_list = NULL;
             }
         }
         
@@ -979,10 +987,12 @@ DYNAMIC_API PEP_STATUS update_identity(
 
             // Results are ordered by timestamp descending, so this covers
             // both the one-result and multi-result cases
-            if (id_list) {
+            if (id_list && id_list->ident) {
                 if (stored_ident) // unlikely
                     free_identity(stored_ident);
-                stored_ident = id_list->ident;
+                stored_ident = identity_dup(id_list->ident);
+                free_identity_list(id_list);
+                id_list = NULL;
             }
         }
         if (stored_ident)
