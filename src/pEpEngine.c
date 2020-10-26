@@ -698,7 +698,8 @@ PEP_STATUS repair_altered_tables(PEP_SESSION session) {
                 NULL,
                 NULL
             );
-            assert(int_result == PEP_STATUS_OK);
+            if (int_result != SQLITE_OK)
+                return PEP_UNKNOWN_DB_ERROR;
         }
         else if (strcmp(table_name, "trust") == 0) {
             int_result = sqlite3_exec(session->db,
@@ -724,8 +725,9 @@ PEP_STATUS repair_altered_tables(PEP_SESSION session) {
                 NULL,
                 NULL,
                 NULL
-            );             
-            assert(int_result == PEP_STATUS_OK);                       
+            );
+            if (int_result != SQLITE_OK)
+                return PEP_UNKNOWN_DB_ERROR;
         }
         else if (strcmp(table_name, "alternate_user_id") == 0) {
             int_result = sqlite3_exec(session->db,
@@ -746,7 +748,8 @@ PEP_STATUS repair_altered_tables(PEP_SESSION session) {
                 NULL,
                 NULL
             );
-            assert(int_result == PEP_STATUS_OK);
+            if (int_result != SQLITE_OK)
+                return PEP_UNKNOWN_DB_ERROR;
         }
         else if (strcmp(table_name, "revocation_contact_list") == 0) {
             int_result = sqlite3_exec(session->db,
@@ -769,8 +772,9 @@ PEP_STATUS repair_altered_tables(PEP_SESSION session) {
                 NULL,
                 NULL,
                 NULL
-            );      
-            assert(int_result == PEP_STATUS_OK);                              
+            );
+            if (int_result != SQLITE_OK)
+                return PEP_UNKNOWN_DB_ERROR;
         }
         else if (strcmp(table_name, "social_graph")) {
             int_result = sqlite3_exec(session->db,
@@ -795,7 +799,8 @@ PEP_STATUS repair_altered_tables(PEP_SESSION session) {
                 NULL,
                 NULL
             );
-            assert(int_result == PEP_STATUS_OK);                                    
+            if (int_result != SQLITE_OK)
+                return PEP_UNKNOWN_DB_ERROR;
         }        
     }
     
@@ -807,7 +812,8 @@ PEP_STATUS repair_altered_tables(PEP_SESSION session) {
         NULL,
         NULL
     );
-    assert(int_result == SQLITE_OK);
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
 
 pEp_free:
     for (i = 0; i < _PEP_MAX_AFFECTED; i++) {
@@ -845,6 +851,10 @@ static PEP_STATUS upgrade_revoc_contact_to_13(PEP_SESSION session) {
             NULL
         );
         assert(int_result == SQLITE_OK);
+
+        if (int_result != SQLITE_OK)
+            return PEP_UNKNOWN_DB_ERROR;
+
     }    
                 
     // the best we can do here is search per address, since these
@@ -898,8 +908,13 @@ static PEP_STATUS upgrade_revoc_contact_to_13(PEP_SESSION session) {
                               SQLITE_STATIC);
                               
             int_result = sqlite3_step(update_revoked_w_addr_stmt);
-            assert(int_result == SQLITE_DONE);                  
-            sqlite3_reset(update_revoked_w_addr_stmt);                      
+            assert(int_result == SQLITE_DONE);
+
+            sqlite3_reset(update_revoked_w_addr_stmt);
+
+            if (int_result != SQLITE_DONE)
+                return PEP_UNKNOWN_DB_ERROR;
+
         }
     }  
     sqlite3_finalize(update_revoked_w_addr_stmt);
@@ -936,8 +951,11 @@ static PEP_STATUS upgrade_revoc_contact_to_13(PEP_SESSION session) {
         NULL,
         NULL
     );
-    assert(int_result == SQLITE_OK);    
-    
+
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
     return status;
 }
 
@@ -1194,6 +1212,10 @@ DYNAMIC_API PEP_STATUS init(
         );
         assert(int_result == SQLITE_OK);
 
+        if (int_result != SQLITE_OK)
+            return PEP_UNKNOWN_DB_ERROR;
+
+
         int version;
         int_result = sqlite3_exec(
             _session->db,
@@ -1204,7 +1226,10 @@ DYNAMIC_API PEP_STATUS init(
         );
 
         assert(int_result == SQLITE_OK);
-        
+        if (int_result != SQLITE_OK)
+            return PEP_UNKNOWN_DB_ERROR;
+
+
         void (*xFunc_lower)(sqlite3_context*,int,sqlite3_value**) = &_sql_lower;
         
         int_result = sqlite3_create_function_v2(
@@ -1217,7 +1242,12 @@ DYNAMIC_API PEP_STATUS init(
             NULL,
             NULL,
             NULL);
+
         assert(int_result == SQLITE_OK);
+
+        if (int_result != SQLITE_OK)
+            return PEP_UNKNOWN_DB_ERROR;
+
 
         int_result = sqlite3_exec(
             _session->db,
@@ -1228,6 +1258,9 @@ DYNAMIC_API PEP_STATUS init(
         );
 
         assert(int_result == SQLITE_OK);
+
+        if (int_result != SQLITE_OK)
+            return PEP_UNKNOWN_DB_ERROR;
 
         if (version > atoi(_DDL_USER_VERSION)) {
             // This is *explicitly* not allowed.
@@ -1325,6 +1358,10 @@ DYNAMIC_API PEP_STATUS init(
                     NULL
                 );
                 assert(int_result == SQLITE_OK);
+
+                if (int_result != SQLITE_OK)
+                    return PEP_UNKNOWN_DB_ERROR;
+
             }
 
             if (version < 5) {
@@ -1336,6 +1373,10 @@ DYNAMIC_API PEP_STATUS init(
                     NULL
                 );
                 assert(int_result == SQLITE_OK);
+
+                if (int_result != SQLITE_OK)
+                    return PEP_UNKNOWN_DB_ERROR;
+
                 int_result = sqlite3_exec(
                     _session->db,
                     "delete from trust where pgp_keypair_fpr = '';",
@@ -1344,6 +1385,10 @@ DYNAMIC_API PEP_STATUS init(
                     NULL
                 );
                 assert(int_result == SQLITE_OK);
+
+                if (int_result != SQLITE_OK)
+                    return PEP_UNKNOWN_DB_ERROR;
+
             }
             
             if (version < 6) {
@@ -1355,7 +1400,11 @@ DYNAMIC_API PEP_STATUS init(
                     NULL,
                     NULL
                 );
-                assert(int_result == SQLITE_OK);                
+                assert(int_result == SQLITE_OK);
+
+                if (int_result != SQLITE_OK)
+                    return PEP_UNKNOWN_DB_ERROR;
+
                 int_result = sqlite3_exec(
                     _session->db,
                     "update identity\n"
@@ -1365,7 +1414,11 @@ DYNAMIC_API PEP_STATUS init(
                     NULL,
                     NULL
                 );
-                assert(int_result == SQLITE_OK);    
+                assert(int_result == SQLITE_OK);
+
+                if (int_result != SQLITE_OK)
+                    return PEP_UNKNOWN_DB_ERROR;
+
 
                 // Turns out that just adding "on update cascade" in
                 // sqlite is a PITA. We need to be able to cascade
@@ -1421,7 +1474,11 @@ DYNAMIC_API PEP_STATUS init(
                     NULL,
                     NULL
                 );
-                assert(int_result == SQLITE_OK);   
+                assert(int_result == SQLITE_OK);
+
+                if (int_result != SQLITE_OK)
+                    return PEP_UNKNOWN_DB_ERROR;
+
                 
                 int_result = sqlite3_exec(
                     _session->db,
@@ -1432,6 +1489,10 @@ DYNAMIC_API PEP_STATUS init(
                     NULL
                 );
                 assert(int_result == SQLITE_OK);
+
+                if (int_result != SQLITE_OK)
+                    return PEP_UNKNOWN_DB_ERROR;
+
 
                 // FIXME: foreign key check here 
             }
@@ -1445,6 +1506,10 @@ DYNAMIC_API PEP_STATUS init(
                     NULL
                 );
                 assert(int_result == SQLITE_OK);
+
+                if (int_result != SQLITE_OK)
+                    return PEP_UNKNOWN_DB_ERROR;
+
                 int_result = sqlite3_exec(
                     _session->db,
                     "update person\n"
@@ -1461,6 +1526,10 @@ DYNAMIC_API PEP_STATUS init(
                     NULL
                 );
                 assert(int_result == SQLITE_OK);
+
+                if (int_result != SQLITE_OK)
+                    return PEP_UNKNOWN_DB_ERROR;
+
                 
                 int_result = sqlite3_exec(
                     _session->db,
@@ -1471,7 +1540,11 @@ DYNAMIC_API PEP_STATUS init(
                     NULL,
                     NULL
                 );
-                assert(int_result == SQLITE_OK);    
+                assert(int_result == SQLITE_OK);
+
+                if (int_result != SQLITE_OK)
+                    return PEP_UNKNOWN_DB_ERROR;
+
             }
             if (version < 8) {
                 int_result = sqlite3_exec(
@@ -1509,7 +1582,11 @@ DYNAMIC_API PEP_STATUS init(
                     NULL,
                     NULL
                 );
-                assert(int_result == SQLITE_OK);    
+                assert(int_result == SQLITE_OK);
+
+                if (int_result != SQLITE_OK)
+                    return PEP_UNKNOWN_DB_ERROR;
+
                 
                 int_result = sqlite3_exec(
                     _session->db,
@@ -1520,6 +1597,10 @@ DYNAMIC_API PEP_STATUS init(
                     NULL
                 );
                 assert(int_result == SQLITE_OK);
+
+                if (int_result != SQLITE_OK)
+                    return PEP_UNKNOWN_DB_ERROR;
+
 
                 // FIXME: foreign key check
             }
@@ -1548,7 +1629,11 @@ DYNAMIC_API PEP_STATUS init(
                     NULL,
                     NULL
                 );
-                assert(int_result == SQLITE_OK);    
+                assert(int_result == SQLITE_OK);
+
+                if (int_result != SQLITE_OK)
+                    return PEP_UNKNOWN_DB_ERROR;
+
             }
             if (version < 10 && version > 1) {
                 int_result = sqlite3_exec(
@@ -1582,7 +1667,11 @@ DYNAMIC_API PEP_STATUS init(
                     NULL,
                     NULL
                 );
-                assert(int_result == SQLITE_OK);    
+                assert(int_result == SQLITE_OK);
+
+                if (int_result != SQLITE_OK)
+                    return PEP_UNKNOWN_DB_ERROR;
+
                 int_result = sqlite3_exec(
                     _session->db,
                     "PRAGMA foreign_key_check;\n"
@@ -1592,6 +1681,10 @@ DYNAMIC_API PEP_STATUS init(
                     NULL
                 );
                 assert(int_result == SQLITE_OK);
+
+                if (int_result != SQLITE_OK)
+                    return PEP_UNKNOWN_DB_ERROR;
+
             }
             if (version < 11) {
                 status = repair_altered_tables(_session);
@@ -1609,6 +1702,10 @@ DYNAMIC_API PEP_STATUS init(
                     NULL
                 );
                 assert(int_result == SQLITE_OK);
+
+                if (int_result != SQLITE_OK)
+                    return PEP_UNKNOWN_DB_ERROR;
+
                 
                 int_result = sqlite3_exec(
                     _session->db,
@@ -1711,6 +1808,10 @@ DYNAMIC_API PEP_STATUS init(
                     NULL
                 );
                 assert(int_result == SQLITE_OK);
+
+                if (int_result != SQLITE_OK)
+                    return PEP_UNKNOWN_DB_ERROR;
+
             }
                     
         }        
@@ -1731,6 +1832,10 @@ DYNAMIC_API PEP_STATUS init(
                 NULL
             );
             assert(int_result == SQLITE_OK);
+
+            if (int_result != SQLITE_OK)
+                return PEP_UNKNOWN_DB_ERROR;
+
         }
         
         // We need to init a few globals for message id that we'd rather not
@@ -1742,126 +1847,242 @@ DYNAMIC_API PEP_STATUS init(
             (int)strlen(sql_log), &_session->log, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->system_db, sql_trustword,
             (int)strlen(sql_trustword), &_session->trustword, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_get_identity,
             (int)strlen(sql_get_identity), &_session->get_identity, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
 
     int_result = sqlite3_prepare_v2(_session->db, sql_get_identity_without_trust_check,
             (int)strlen(sql_get_identity_without_trust_check), 
             &_session->get_identity_without_trust_check, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_get_identities_by_address,
             (int)strlen(sql_get_identities_by_address), 
             &_session->get_identities_by_address, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
     
     int_result = sqlite3_prepare_v2(_session->db, sql_get_identities_by_userid,
             (int)strlen(sql_get_identities_by_userid), 
             &_session->get_identities_by_userid, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_get_identities_by_main_key_id,
             (int)strlen(sql_get_identities_by_main_key_id), 
             &_session->get_identities_by_main_key_id, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_get_user_default_key,
             (int)strlen(sql_get_user_default_key), &_session->get_user_default_key, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
 
     int_result = sqlite3_prepare_v2(_session->db, sql_get_all_keys_for_user,
             (int)strlen(sql_get_all_keys_for_user), &_session->get_all_keys_for_user, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_get_default_own_userid,
             (int)strlen(sql_get_default_own_userid), &_session->get_default_own_userid, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
     
     int_result = sqlite3_prepare_v2(_session->db, sql_get_userid_alias_default,
             (int)strlen(sql_get_userid_alias_default), &_session->get_userid_alias_default, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_add_userid_alias,
             (int)strlen(sql_add_userid_alias), &_session->add_userid_alias, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
 
     int_result = sqlite3_prepare_v2(_session->db, sql_replace_userid,
             (int)strlen(sql_replace_userid), &_session->replace_userid, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_delete_key,
             (int)strlen(sql_delete_key), &_session->delete_key, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
 
     int_result = sqlite3_prepare_v2(_session->db, sql_replace_main_user_fpr,
             (int)strlen(sql_replace_main_user_fpr), &_session->replace_main_user_fpr, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_replace_main_user_fpr_if_equal,
             (int)strlen(sql_replace_main_user_fpr_if_equal), &_session->replace_main_user_fpr_if_equal, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
 
     int_result = sqlite3_prepare_v2(_session->db, sql_get_main_user_fpr,
             (int)strlen(sql_get_main_user_fpr), &_session->get_main_user_fpr, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_refresh_userid_default_key,
             (int)strlen(sql_refresh_userid_default_key), &_session->refresh_userid_default_key, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
 
     int_result = sqlite3_prepare_v2(_session->db, sql_replace_identities_fpr,
             (int)strlen(sql_replace_identities_fpr), 
             &_session->replace_identities_fpr, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
     
     int_result = sqlite3_prepare_v2(_session->db, sql_remove_fpr_as_identity_default,
             (int)strlen(sql_remove_fpr_as_identity_default), 
             &_session->remove_fpr_as_identity_default, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_remove_fpr_as_user_default,
             (int)strlen(sql_remove_fpr_as_user_default), 
             &_session->remove_fpr_as_user_default, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_set_person,
             (int)strlen(sql_set_person), &_session->set_person, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
 
     int_result = sqlite3_prepare_v2(_session->db, sql_update_person,
             (int)strlen(sql_update_person), &_session->update_person, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_delete_person,
             (int)strlen(sql_delete_person), &_session->delete_person, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
 
     int_result = sqlite3_prepare_v2(_session->db, sql_exists_person,
             (int)strlen(sql_exists_person), &_session->exists_person, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_set_as_pEp_user,
             (int)strlen(sql_set_as_pEp_user), &_session->set_as_pEp_user, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
     
     int_result = sqlite3_prepare_v2(_session->db, sql_is_pEp_user,
             (int)strlen(sql_is_pEp_user), &_session->is_pEp_user, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_add_into_social_graph,
             (int)strlen(sql_add_into_social_graph), &_session->add_into_social_graph, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
 
     int_result = sqlite3_prepare_v2(_session->db, 
             sql_get_own_address_binding_from_contact,
             (int)strlen(sql_get_own_address_binding_from_contact), 
             &_session->get_own_address_binding_from_contact, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
 
     int_result = sqlite3_prepare_v2(_session->db, 
             sql_set_revoke_contact_as_notified,
@@ -1869,11 +2090,19 @@ DYNAMIC_API PEP_STATUS init(
             &_session->set_revoke_contact_as_notified, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, 
             sql_get_contacted_ids_from_revoke_fpr,
             (int)strlen(sql_get_contacted_ids_from_revoke_fpr), 
             &_session->get_contacted_ids_from_revoke_fpr, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
 
     int_result = sqlite3_prepare_v2(_session->db, 
             sql_was_id_for_revoke_contacted,
@@ -1881,11 +2110,19 @@ DYNAMIC_API PEP_STATUS init(
             &_session->was_id_for_revoke_contacted, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, 
             sql_has_id_contacted_address,
             (int)strlen(sql_has_id_contacted_address), 
             &_session->has_id_contacted_address, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
 
     int_result = sqlite3_prepare_v2(_session->db, 
             sql_get_last_contacted,
@@ -1893,106 +2130,202 @@ DYNAMIC_API PEP_STATUS init(
             &_session->get_last_contacted, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, 
             sql_get_own_address_binding_from_contact,
             (int)strlen(sql_get_own_address_binding_from_contact), 
             &_session->get_own_address_binding_from_contact, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_set_pgp_keypair,
             (int)strlen(sql_set_pgp_keypair), &_session->set_pgp_keypair,
             NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_set_identity_entry,
             (int)strlen(sql_set_identity_entry), &_session->set_identity_entry, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
 
     int_result = sqlite3_prepare_v2(_session->db, sql_update_identity_entry,
             (int)strlen(sql_update_identity_entry), &_session->update_identity_entry, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_exists_identity_entry,
             (int)strlen(sql_exists_identity_entry), &_session->exists_identity_entry, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
 
     int_result = sqlite3_prepare_v2(_session->db, sql_set_identity_flags,
             (int)strlen(sql_set_identity_flags), &_session->set_identity_flags,
             NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_unset_identity_flags,
             (int)strlen(sql_unset_identity_flags), &_session->unset_identity_flags,
             NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_set_ident_enc_format,
             (int)strlen(sql_set_ident_enc_format), &_session->set_ident_enc_format,
             NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
             
     int_result = sqlite3_prepare_v2(_session->db, sql_set_pEp_version,
             (int)strlen(sql_set_pEp_version), &_session->set_pEp_version,
             NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
     
     int_result = sqlite3_prepare_v2(_session->db, sql_upgrade_pEp_version_by_user_id,
             (int)strlen(sql_upgrade_pEp_version_by_user_id), &_session->upgrade_pEp_version_by_user_id,
             NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_clear_trust_info,
             (int)strlen(sql_clear_trust_info), &_session->clear_trust_info, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
 
     int_result = sqlite3_prepare_v2(_session->db, sql_set_trust,
             (int)strlen(sql_set_trust), &_session->set_trust, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_update_trust,
             (int)strlen(sql_update_trust), &_session->update_trust, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
 
     int_result = sqlite3_prepare_v2(_session->db, sql_update_trust_to_pEp,
             (int)strlen(sql_update_trust_to_pEp), &_session->update_trust_to_pEp, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_exists_trust_entry,
                  (int)strlen(sql_exists_trust_entry), &_session->exists_trust_entry, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
 
     int_result = sqlite3_prepare_v2(_session->db, sql_update_trust_for_fpr,
             (int)strlen(sql_update_trust_for_fpr), &_session->update_trust_for_fpr, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_get_trust,
             (int)strlen(sql_get_trust), &_session->get_trust, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
 
     int_result = sqlite3_prepare_v2(_session->db, sql_get_trust_by_userid,
             (int)strlen(sql_get_trust_by_userid), &_session->get_trust_by_userid, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_least_trust,
             (int)strlen(sql_least_trust), &_session->least_trust, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
 
     int_result = sqlite3_prepare_v2(_session->db, sql_mark_as_compromised,
             (int)strlen(sql_mark_as_compromised), &_session->mark_compromised,
             NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_crashdump,
             (int)strlen(sql_crashdump), &_session->crashdump, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
 
     int_result = sqlite3_prepare_v2(_session->system_db, sql_languagelist,
             (int)strlen(sql_languagelist), &_session->languagelist, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->system_db, sql_i18n_token,
             (int)strlen(sql_i18n_token), &_session->i18n_token, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
     
     // blacklist
 
@@ -2000,20 +2333,36 @@ DYNAMIC_API PEP_STATUS init(
             (int)strlen(sql_blacklist_add), &_session->blacklist_add, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_blacklist_delete,
             (int)strlen(sql_blacklist_delete), &_session->blacklist_delete,
             NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
 
     int_result = sqlite3_prepare_v2(_session->db, sql_blacklist_is_listed,
             (int)strlen(sql_blacklist_is_listed),
             &_session->blacklist_is_listed, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_blacklist_retrieve,
             (int)strlen(sql_blacklist_retrieve), &_session->blacklist_retrieve,
             NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
     
     // Own keys
     
@@ -2022,25 +2371,42 @@ DYNAMIC_API PEP_STATUS init(
             NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_is_own_address,
             (int)strlen(sql_is_own_address), &_session->is_own_address,
             NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
     
     int_result = sqlite3_prepare_v2(_session->db, sql_own_identities_retrieve,
             (int)strlen(sql_own_identities_retrieve),
             &_session->own_identities_retrieve, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
  
     int_result = sqlite3_prepare_v2(_session->db, sql_own_keys_retrieve,
             (int)strlen(sql_own_keys_retrieve),
             &_session->own_keys_retrieve, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
  
     // int_result = sqlite3_prepare_v2(_session->db, sql_set_own_key,
     //         (int)strlen(sql_set_own_key),
     //         &_session->set_own_key, NULL);
     // assert(int_result == SQLITE_OK);
+
  
     // Sequence
 
@@ -2049,36 +2415,68 @@ DYNAMIC_API PEP_STATUS init(
             NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_sequence_value2,
             (int)strlen(sql_sequence_value2), &_session->sequence_value2,
             NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
 
     // Revocation tracking
     
     int_result = sqlite3_prepare_v2(_session->db, sql_set_revoked,
             (int)strlen(sql_set_revoked), &_session->set_revoked, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
     
     int_result = sqlite3_prepare_v2(_session->db, sql_get_revoked,
             (int)strlen(sql_get_revoked), &_session->get_revoked, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
     
     int_result = sqlite3_prepare_v2(_session->db, sql_get_replacement_fpr,
             (int)strlen(sql_get_replacement_fpr), &_session->get_replacement_fpr, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_add_mistrusted_key,
             (int)strlen(sql_add_mistrusted_key), &_session->add_mistrusted_key, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
 
     int_result = sqlite3_prepare_v2(_session->db, sql_delete_mistrusted_key,
             (int)strlen(sql_delete_mistrusted_key), &_session->delete_mistrusted_key, NULL);
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(_session->db, sql_is_mistrusted_key,
             (int)strlen(sql_is_mistrusted_key), &_session->is_mistrusted_key, NULL);
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
     
     status = init_cryptotech(_session, in_first);
     if (status != PEP_STATUS_OK)
