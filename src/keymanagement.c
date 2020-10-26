@@ -362,7 +362,10 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
                          bool* is_user_default,
                          bool* is_address_default,
                          bool check_blacklist) {
-    
+
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
     PEP_STATUS status = PEP_STATUS_OK;
 
     if (!stored_identity || EMPTYSTR(stored_identity->user_id)
@@ -476,6 +479,10 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
 
 static void transfer_ident_lang_and_flags(pEp_identity* new_ident,
                                           pEp_identity* stored_ident) {
+
+    if (!(new_ident && stored_ident))
+        return;
+
     if (new_ident->lang[0] == 0) {
       new_ident->lang[0] = stored_ident->lang[0];
       new_ident->lang[1] = stored_ident->lang[1];
@@ -489,9 +496,10 @@ static void transfer_ident_lang_and_flags(pEp_identity* new_ident,
 static void adjust_pEp_trust_status(PEP_SESSION session, pEp_identity* identity) {
     assert(session);
     assert(identity);
-    
-    if (identity->comm_type < PEP_ct_strong_but_unconfirmed ||
-        (identity->comm_type | PEP_ct_confirmed) == PEP_ct_pEp)
+
+    if (!session || !identity ||
+         identity->comm_type < PEP_ct_strong_but_unconfirmed ||
+         ((identity->comm_type | PEP_ct_confirmed) == PEP_ct_pEp) )
         return;
     
     bool pEp_user;
@@ -1035,6 +1043,9 @@ PEP_STATUS elect_ownkey(
         PEP_SESSION session, pEp_identity * identity
     )
 {
+    if (!(session && identity))
+        return PEP_ILLEGAL_VALUE;
+
     PEP_STATUS status;
     stringlist_t *keylist = NULL;
 
@@ -1126,7 +1137,7 @@ PEP_STATUS _myself(PEP_SESSION session,
     assert(identity);
     assert(!EMPTYSTR(identity->address));
 
-    if (!session || EMPTYSTR(identity->address))
+    if (!session || !identity || EMPTYSTR(identity->address))
         return PEP_ILLEGAL_VALUE;
 
     // this is leading to crashes otherwise
@@ -2124,7 +2135,10 @@ PEP_STATUS is_mistrusted_key(PEP_SESSION session, const char* fpr,
 
 static PEP_STATUS _wipe_default_key_if_invalid(PEP_SESSION session,
                                          pEp_identity* ident) {
-    
+
+    if (!(session && ident))
+        return PEP_ILLEGAL_VALUE;
+
     PEP_STATUS status = PEP_STATUS_OK;
     
     if (!ident->user_id)
@@ -2167,6 +2181,10 @@ static PEP_STATUS _wipe_default_key_if_invalid(PEP_SESSION session,
 }
 
 DYNAMIC_API PEP_STATUS clean_own_key_defaults(PEP_SESSION session) {
+
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
     identity_list* idents = NULL;
     PEP_STATUS status = own_identities_retrieve(session, &idents);
     if (status != PEP_STATUS_OK)
