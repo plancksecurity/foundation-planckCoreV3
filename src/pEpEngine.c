@@ -641,18 +641,22 @@ static int table_contains_column(PEP_SESSION session, const char* table_name,
     return retval;
 }
 
+#define _PEP_MAX_AFFECTED 5
 PEP_STATUS repair_altered_tables(PEP_SESSION session) {
     PEP_STATUS status = PEP_STATUS_OK;
-    
-    const int _PEP_MAX_AFFECTED = 5;
-    char** table_names = calloc(_PEP_MAX_AFFECTED, sizeof(char*));
-    if (!table_names)
-        return PEP_OUT_OF_MEMORY;
+
+    char* table_names[_PEP_MAX_AFFECTED];
+
+    int i = 0;
+    char** index = table_names;
+    for (i = 0; i < _PEP_MAX_AFFECTED; i++, index++) {
+        *index = NULL;
+    }
 
     const char* sql_query = "select tbl_name from sqlite_master WHERE sql LIKE '%REFERENCES%' AND sql LIKE '%_old%';";
     sqlite3_stmt *stmt; 
     sqlite3_prepare_v2(session->db, sql_query, -1, &stmt, NULL);
-    int i = 0;
+    i = 0;
     int int_result = 0;
     while ((int_result = sqlite3_step(stmt)) == SQLITE_ROW && i < _PEP_MAX_AFFECTED) {
         table_names[i++] = strdup((const char*)(sqlite3_column_text(stmt, 0)));
@@ -817,12 +821,8 @@ PEP_STATUS repair_altered_tables(PEP_SESSION session) {
 
 pEp_free:
     for (i = 0; i < _PEP_MAX_AFFECTED; i++) {
-        if (table_names[i])
-            free(table_names[i]);
-        else
-            break;
+        free(table_names[i]);
     }
-    free(table_names);
     return status;
 }
 void errorLogCallback(void *pArg, int iErrCode, const char *zMsg){
