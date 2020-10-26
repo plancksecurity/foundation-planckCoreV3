@@ -804,7 +804,13 @@ DYNAMIC_API PEP_STATUS update_identity(
             //    * create identity with user_id, address, username
             //      (this is the input id without the fpr + comm type!)
 
-            elect_pubkey(session, identity, false);
+            // the only non-OK status which must be addressed here
+            // (and is possible) is PEP_OUT_OF_MEMORY. This function will
+            // disappear in the next release, so we check for this and
+            // handle it explicitly.
+            status = elect_pubkey(session, identity, false);
+            if (status == PEP_OUT_OF_MEMORY)
+                goto enomem;
                         
             //    * We've already checked and retrieved
             //      any applicable temporary identities above. If we're 
