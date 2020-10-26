@@ -2615,6 +2615,7 @@ pEp_identity *identity_dup(const pEp_identity *src)
         dup->me = src->me;
         dup->major_ver = src->major_ver;
         dup->minor_ver = src->minor_ver;
+        dup->enc_format = src->enc_format;
     }    
     return dup;
 }
