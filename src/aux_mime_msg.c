@@ -277,4 +277,6 @@ pEp_error:
 
     return status;
 }
+#else
+const int the_answer_my_friend = 42;
 #endif
