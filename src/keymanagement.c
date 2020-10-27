@@ -63,7 +63,6 @@ PEP_STATUS elect_pubkey(
             PEP_comm_type _comm_type_key;
 
             status = get_key_rating(session, _keylist->value, &_comm_type_key);
-            assert(status != PEP_OUT_OF_MEMORY);
             if (status == PEP_OUT_OF_MEMORY) {
                 free_stringlist(keylist);
                 return PEP_OUT_OF_MEMORY;
@@ -142,13 +141,20 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
 
     if (ct == PEP_ct_unknown) {
         // If status is bad, it's ok, we get the rating
-        // we should use then (PEP_ct_unknown)
-        get_key_rating(session, fpr, &ct);
+        // we should use then (PEP_ct_unknown).
+        // Only one we really care about here is PEP_OUT_OF_MEMORY
+        status = get_key_rating(session, fpr, &ct);
+        if (status == PEP_OUT_OF_MEMORY)
+            return PEP_OUT_OF_MEMORY;
+
         ident->comm_type = ct;
     }
     else if (ct == PEP_ct_key_expired || ct == PEP_ct_key_expired_but_confirmed) {
         PEP_comm_type ct_expire_check = PEP_ct_unknown;
-        get_key_rating(session, fpr, &ct_expire_check);
+        status = get_key_rating(session, fpr, &ct_expire_check);
+        if (status == PEP_OUT_OF_MEMORY)
+            return PEP_OUT_OF_MEMORY;
+
         if (ct_expire_check >= PEP_ct_strong_but_unconfirmed) {
             ident->comm_type = ct_expire_check;
             if (ct == PEP_ct_key_expired_but_confirmed)
@@ -162,7 +168,9 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
     
     bool pEp_user = false;
     
-    is_pEp_user(session, ident, &pEp_user);
+    status = is_pEp_user(session, ident, &pEp_user);
+    if (status == PEP_OUT_OF_MEMORY)
+        return PEP_OUT_OF_MEMORY;
 
     if (pEp_user) {
         switch (ct) {
