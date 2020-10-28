@@ -63,7 +63,6 @@ PEP_STATUS elect_pubkey(
             PEP_comm_type _comm_type_key;
 
             status = get_key_rating(session, _keylist->value, &_comm_type_key);
-            assert(status != PEP_OUT_OF_MEMORY);
             if (status == PEP_OUT_OF_MEMORY) {
                 free_stringlist(keylist);
                 return PEP_OUT_OF_MEMORY;
@@ -142,13 +141,20 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
 
     if (ct == PEP_ct_unknown) {
         // If status is bad, it's ok, we get the rating
-        // we should use then (PEP_ct_unknown)
-        get_key_rating(session, fpr, &ct);
+        // we should use then (PEP_ct_unknown).
+        // Only one we really care about here is PEP_OUT_OF_MEMORY
+        status = get_key_rating(session, fpr, &ct);
+        if (status == PEP_OUT_OF_MEMORY)
+            return PEP_OUT_OF_MEMORY;
+
         ident->comm_type = ct;
     }
     else if (ct == PEP_ct_key_expired || ct == PEP_ct_key_expired_but_confirmed) {
         PEP_comm_type ct_expire_check = PEP_ct_unknown;
-        get_key_rating(session, fpr, &ct_expire_check);
+        status = get_key_rating(session, fpr, &ct_expire_check);
+        if (status == PEP_OUT_OF_MEMORY)
+            return PEP_OUT_OF_MEMORY;
+
         if (ct_expire_check >= PEP_ct_strong_but_unconfirmed) {
             ident->comm_type = ct_expire_check;
             if (ct == PEP_ct_key_expired_but_confirmed)
@@ -162,7 +168,9 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
     
     bool pEp_user = false;
     
-    is_pEp_user(session, ident, &pEp_user);
+    status = is_pEp_user(session, ident, &pEp_user);
+    if (status == PEP_OUT_OF_MEMORY)
+        return PEP_OUT_OF_MEMORY;
 
     if (pEp_user) {
         switch (ct) {
@@ -362,7 +370,10 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
                          bool* is_user_default,
                          bool* is_address_default,
                          bool check_blacklist) {
-    
+
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
     PEP_STATUS status = PEP_STATUS_OK;
 
     if (!stored_identity || EMPTYSTR(stored_identity->user_id)
@@ -476,6 +487,10 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
 
 static void transfer_ident_lang_and_flags(pEp_identity* new_ident,
                                           pEp_identity* stored_ident) {
+
+    if (!(new_ident && stored_ident))
+        return;
+
     if (new_ident->lang[0] == 0) {
       new_ident->lang[0] = stored_ident->lang[0];
       new_ident->lang[1] = stored_ident->lang[1];
@@ -489,9 +504,10 @@ static void transfer_ident_lang_and_flags(pEp_identity* new_ident,
 static void adjust_pEp_trust_status(PEP_SESSION session, pEp_identity* identity) {
     assert(session);
     assert(identity);
-    
-    if (identity->comm_type < PEP_ct_strong_but_unconfirmed ||
-        (identity->comm_type | PEP_ct_confirmed) == PEP_ct_pEp)
+
+    if (!session || !identity ||
+         identity->comm_type < PEP_ct_strong_but_unconfirmed ||
+         ((identity->comm_type | PEP_ct_confirmed) == PEP_ct_pEp) )
         return;
     
     bool pEp_user;
@@ -754,10 +770,13 @@ DYNAMIC_API PEP_STATUS update_identity(
                                 this_uid = NULL;
                                 
                                 // Reflect the change we just made to the DB
-                                this_id->user_id = strdup(identity->user_id);
-                                stored_ident = this_id;
-                                // FIXME: free list.
-                                break;                                
+                                this_id->user_id = NULL;
+
+                                stored_ident = identity_dup(this_id);
+                                if (!stored_ident)
+                                    goto enomem;
+                                stored_ident->user_id = strdup(identity->user_id);
+                                break;
                             }
                         }
                         else if (input_is_TOFU && !curr_is_TOFU) {
@@ -765,13 +784,17 @@ DYNAMIC_API PEP_STATUS update_identity(
                             // BAD APP BEHAVIOUR.
                             free(identity->user_id);
                             identity->user_id = strdup(this_id->user_id);
-                            stored_ident = this_id;
-                            // FIXME: free list.
-                            break;                                
+                            stored_ident = identity_dup(this_id);
+                            if (!stored_ident)
+                                goto enomem;
+
+                            break;
                         }                            
                     }
                     id_curr = id_curr->next;
                 }
+                free_identity_list(id_list);
+                id_list = NULL;
             }
         } 
                 
@@ -804,7 +827,13 @@ DYNAMIC_API PEP_STATUS update_identity(
             //    * create identity with user_id, address, username
             //      (this is the input id without the fpr + comm type!)
 
-            elect_pubkey(session, identity, false);
+            // the only non-OK status which must be addressed here
+            // (and is possible) is PEP_OUT_OF_MEMORY. This function will
+            // disappear in the next release, so we check for this and
+            // handle it explicitly.
+            status = elect_pubkey(session, identity, false);
+            if (status == PEP_OUT_OF_MEMORY)
+                goto enomem;
                         
             //    * We've already checked and retrieved
             //      any applicable temporary identities above. If we're 
@@ -860,14 +889,15 @@ DYNAMIC_API PEP_STATUS update_identity(
                                 if (!identity->user_id)
                                     goto enomem;
 
-                                stored_ident = this_id;
-                                
+                                stored_ident = identity_dup(this_id);
                                 break;                                
                             }                            
                         } 
                     }
                     id_curr = id_curr->next;
                 }
+                free_identity_list(id_list);
+                id_list = NULL;
             }
         }
         
@@ -965,10 +995,12 @@ DYNAMIC_API PEP_STATUS update_identity(
 
             // Results are ordered by timestamp descending, so this covers
             // both the one-result and multi-result cases
-            if (id_list) {
+            if (id_list && id_list->ident) {
                 if (stored_ident) // unlikely
                     free_identity(stored_ident);
-                stored_ident = id_list->ident;
+                stored_ident = identity_dup(id_list->ident);
+                free_identity_list(id_list);
+                id_list = NULL;
             }
         }
         if (stored_ident)
@@ -1029,6 +1061,9 @@ PEP_STATUS elect_ownkey(
         PEP_SESSION session, pEp_identity * identity
     )
 {
+    if (!(session && identity))
+        return PEP_ILLEGAL_VALUE;
+
     PEP_STATUS status;
     stringlist_t *keylist = NULL;
 
@@ -1120,7 +1155,7 @@ PEP_STATUS _myself(PEP_SESSION session,
     assert(identity);
     assert(!EMPTYSTR(identity->address));
 
-    if (!session || EMPTYSTR(identity->address))
+    if (!session || !identity || EMPTYSTR(identity->address))
         return PEP_ILLEGAL_VALUE;
 
     // this is leading to crashes otherwise
@@ -2118,7 +2153,10 @@ PEP_STATUS is_mistrusted_key(PEP_SESSION session, const char* fpr,
 
 static PEP_STATUS _wipe_default_key_if_invalid(PEP_SESSION session,
                                          pEp_identity* ident) {
-    
+
+    if (!(session && ident))
+        return PEP_ILLEGAL_VALUE;
+
     PEP_STATUS status = PEP_STATUS_OK;
     
     if (!ident->user_id)
@@ -2161,6 +2199,10 @@ static PEP_STATUS _wipe_default_key_if_invalid(PEP_SESSION session,
 }
 
 DYNAMIC_API PEP_STATUS clean_own_key_defaults(PEP_SESSION session) {
+
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
     identity_list* idents = NULL;
     PEP_STATUS status = own_identities_retrieve(session, &idents);
     if (status != PEP_STATUS_OK)
