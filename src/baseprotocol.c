@@ -44,18 +44,27 @@ PEP_STATUS base_decorate_message(
 
     bloblist_t *bl;
 
+    const char* type_str = NULL;
+
     switch (type) {
         case BASE_SYNC:
             bl = bloblist_add(msg->attachments, payload, size,
-                              _BASE_PROTO_MIME_TYPE_SIGN, "sync.pEp");
+                              _BASE_PROTO_MIME_TYPE_SYNC, "sync.pEp");
             break;
         case BASE_KEYRESET:
             bl = bloblist_add(msg->attachments, payload, size,
-                              _BASE_PROTO_MIME_TYPE_SYNC, "distribution.pEp");
+                              _BASE_PROTO_MIME_TYPE_DIST, "distribution.pEp");
             break;
         default:
+            status = _get_base_protocol_type_str(type, &type_str);
+            if (status != PEP_STATUS_OK)
+                return status;
+            else if (!type_str)
+                return PEP_UNKNOWN_ERROR;
+
             bl = bloblist_add(msg->attachments, payload, size,
-                              _BASE_PROTO_MIME_TYPE_DIST, "ignore_this_attachment.pEp");
+                              type_str, "ignore_this_attachment.pEp");
+            type_str = NULL;
     }
 
     if (bl == NULL)
