@@ -81,6 +81,8 @@ DYNAMIC_API stringpair_list_t *stringpair_list_dup(
         return NULL;
 
     stringpair_t* copy_pair = stringpair_dup(src->value);
+    if (!copy_pair)
+        return NULL;
     
     stringpair_list_t *dst = new_stringpair_list(copy_pair);
     if (dst == NULL)

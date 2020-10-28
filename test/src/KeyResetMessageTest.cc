@@ -1779,34 +1779,34 @@ TEST_F(KeyResetMessageTest, check_reset_ident_other_priv_no_fpr) {
 }
 
 
-TEST_F(KeyResetMessageTest, check_reset_ident_own_pub_fpr) {
-    send_setup(); // lazy
-    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), NULL);
-    PEP_STATUS status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander-0x26B54E4E_pub.asc");
+// TEST_F(KeyResetMessageTest, check_reset_ident_own_pub_fpr) {
+//     send_setup(); // lazy
+//     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), NULL);
+//     PEP_STATUS status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander-0x26B54E4E_pub.asc");
 
-    // hacky
-    alice->fpr = strdup("3AD9F60FAEB22675DB873A1362D6981326B54E4E");
-    status = set_pgp_keypair(session, alice->fpr);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    alice->comm_type = PEP_ct_OpenPGP;
-    status = set_trust(session, alice);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+//     // hacky
+//     alice->fpr = strdup("3AD9F60FAEB22675DB873A1362D6981326B54E4E");
+//     status = set_pgp_keypair(session, alice->fpr);
+//     ASSERT_EQ(status , PEP_STATUS_OK);
+//     alice->comm_type = PEP_ct_OpenPGP;
+//     status = set_trust(session, alice);
+//     ASSERT_EQ(status , PEP_STATUS_OK);
 
-    // Ok, let's reset it
-    status = key_reset_identity(session, alice, alice->fpr);
-    status = myself(session, alice);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+//     // Ok, let's reset it
+//     status = key_reset_identity(session, alice, alice->fpr);
+//     status = myself(session, alice);
+//     ASSERT_EQ(status , PEP_STATUS_OK);
 
-    ASSERT_TRUE(alice->me);
-    ASSERT_NE(alice->fpr, nullptr);
-    ASSERT_STREQ(alice->fpr, alice_fpr);
-    ASSERT_EQ(alice->comm_type , PEP_ct_pEp);
+//     ASSERT_TRUE(alice->me);
+//     ASSERT_NE(alice->fpr, nullptr);
+//     ASSERT_STREQ(alice->fpr, alice_fpr);
+//     ASSERT_EQ(alice->comm_type , PEP_ct_pEp);
 
-    free(alice->fpr);
-    alice->fpr = strdup("3AD9F60FAEB22675DB873A1362D6981326B54E4E");
-    status = get_trust(session, alice);
-    ASSERT_EQ(status , PEP_CANNOT_FIND_IDENTITY);
-}
+//     free(alice->fpr);
+//     alice->fpr = strdup("3AD9F60FAEB22675DB873A1362D6981326B54E4E");
+//     status = get_trust(session, alice);
+//     ASSERT_EQ(status , PEP_CANNOT_FIND_IDENTITY);
+// }
 
 
 TEST_F(KeyResetMessageTest, check_reset_ident_own_priv_fpr) {

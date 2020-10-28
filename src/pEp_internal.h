@@ -4,9 +4,9 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-// maximum attachment size to import as key 1MB, maximum of 20 attachments
+// maximum attachment size to import as key 25MB, maximum of 20 attachments
 
-#define MAX_KEY_SIZE (1024 * 1024)
+#define MAX_KEY_SIZE (25 * 1024 * 1024)
 #define MAX_KEYS_TO_IMPORT  20
 
 #define KEY_EXPIRE_DELTA (60 * 60 * 24 * 365)

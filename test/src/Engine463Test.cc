@@ -107,33 +107,6 @@ TEST_F(Engine463Test, check_engine_463_no_own_key) {
     ASSERT_EQ(status , PEP_STATUS_OK);
 }
 
-TEST_F(Engine463Test, check_engine_463_own_key) {
-    const string claudio_keys = slurp("test_keys/priv/notfound-alt-pub_and_private.asc");
-    const string fake_schleuder_key = slurp("test_keys/pub/fake-schleuder.asc");
-
-    PEP_STATUS status = import_key(session, claudio_keys.c_str(), claudio_keys.length(), NULL);
-    ASSERT_EQ(status , PEP_TEST_KEY_IMPORT_SUCCESS);
-    status = import_key(session, fake_schleuder_key.c_str(), fake_schleuder_key.length(), NULL);
-    ASSERT_EQ(status , PEP_TEST_KEY_IMPORT_SUCCESS);
-
-    pEp_identity* own_ident = new_identity("claudio+engine-463@pep.foundation", "A039BC60E43E0DFDDC9DE8663B48C38325210C88", PEP_OWN_USERID, "Not Actually Claudio");
-    status = set_own_key(session, own_ident, "A039BC60E43E0DFDDC9DE8663B48C38325210C88");
-    ASSERT_EQ(status , PEP_STATUS_OK);
-
-    // Ok, bring in message, decrypt, and see what happens.
-    const string msg = slurp("test_mails/notfound-alt.msg");
-
-    char* decrypted_msg = NULL;
-    stringlist_t* keylist_used = nullptr;
-    char* modified_src = NULL;
-
-    PEP_rating rating;
-    PEP_decrypt_flags_t flags = 0;
-
-    status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-}
-
 TEST_F(Engine463Test, check_engine_463_sender_expired_and_renewed) {
     bool ok = false;
     ok = slurp_and_import_key(session, "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");

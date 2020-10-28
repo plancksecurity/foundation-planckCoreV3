@@ -1474,6 +1474,17 @@ PEP_STATUS key_reset(
         // Now it matters if we're talking about ourselves or a partner.
         bool is_own_private = false;
         if (is_me(session, tmp_ident)) {
+            // For now: We don't reset own revoked/mistrusted key. We're 
+            // already done with this. @bug - check after key election removal
+            bool mistr = false;
+            bool revok = false;
+            status = is_mistrusted_key(session, fpr_copy, &mistr);
+            if (status != PEP_STATUS_OK || mistr)
+                goto pEp_free;
+            status = key_revoked(session, fpr_copy, &revok);
+            if (status != PEP_STATUS_OK || revok)
+                goto pEp_free;
+
             bool own_key = false;            
             status = is_own_key(session, fpr_copy, &own_key);
 

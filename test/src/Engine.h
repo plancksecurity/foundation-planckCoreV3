@@ -19,11 +19,12 @@ class Engine {
         void shut_down();
 
         PEP_SESSION session;
-        
-    protected:
+
         string engine_home;
         string real_home;
         string prev_pgp_home;
+
+    protected:
         
         messageToSend_t cached_messageToSend;
         inject_sync_event_t cached_inject_sync_event;

@@ -1,4 +1,4 @@
-/** 
+/**
  * @file     message_api.h
  * @brief    pEp engine API for message handling and evaluation and related functions
  * @license  GNU General Public License 3.0 - see LICENSE.txt
@@ -18,15 +18,15 @@ extern "C" {
 
 /**
  *  <!--       import_attached_keys()       -->
- *  
+ *
  *  @brief			TODO
- *  
- *  @param[in]	session		PEP_SESSION 
- *  @param[in]	*msg		message 
- *  @param[in]	**private_idents		identity_list 
- *  @param[in]	**imported_keys		stringlist_t 
- *  @param[in]	*changed_keys		uint64_t 
- *  
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*msg		message
+ *  @param[in]	**private_idents		identity_list
+ *  @param[in]	**imported_keys		stringlist_t
+ *  @param[in]	*changed_keys		uint64_t
+ *
  */
 bool import_attached_keys(
         PEP_SESSION session,
@@ -38,42 +38,42 @@ bool import_attached_keys(
 
 /**
  *  <!--       attach_own_key()       -->
- *  
+ *
  *  @brief			TODO
- *  
+ *
  *  @param[in]	session		PEP_SESSION
  *  @param[in]	*msg		message
- *  
+ *
  */
 void attach_own_key(PEP_SESSION session, message *msg);
 
 /**
  *  <!--       determine_encryption_format()       -->
- *  
+ *
  *  @brief			TODO
- *  
+ *
  *  @param[in]	*msg		message
- *  
+ *
  */
 PEP_cryptotech determine_encryption_format(message *msg);
 
 /**
  *  <!--       add_opt_field()       -->
- *  
+ *
  *  @brief			TODO
- *  
+ *
  *  @param[in]	*msg		message
  *  @param[in]	*name		constchar
  *  @param[in]	*value		constchar
- *  
+ *
  */
 void add_opt_field(message *msg, const char *name, const char *value);
 
 /**
  *  @enum	PEP_encrypt_flags
- *  
+ *
  *  @brief	TODO
- *  
+ *
  */
 typedef enum _PEP_encrypt_flags {
     // "default" means whatever the default behaviour for the function is.
@@ -104,9 +104,9 @@ typedef unsigned int PEP_encrypt_flags_t;
 
 /**
  *  @enum	message_wrap_type
- *  
+ *
  *  @brief	TODO
- *  
+ *
  */
 typedef enum _message_wrap_type {
     PEP_message_unwrapped,  // 1.0 or anything we don't wrap    
@@ -117,36 +117,36 @@ typedef enum _message_wrap_type {
 
 /**
  *  <!--       encrypt_message()       -->
- *  
+ *
  *  @brief Encrypt message in memory
- *  
+ *
  *  @param[in]     session       session handle
- *  @param[in,out] src           message to encrypt - usually in-only, but can be 
- *                               in-out for unencrypted messages; in that case, 
+ *  @param[in,out] src           message to encrypt - usually in-only, but can be
+ *                               in-out for unencrypted messages; in that case,
  *                               we may attach the key and decorate the message
  *  @param[in]     extra         extra keys for encryption
  *  @param[out]    dst           pointer to new encrypted message or NULL if no
  *                               encryption could take place
  *  @param[in]     enc_format    The desired format this message should be encrypted with
  *  @param[in]     flags         flags to set special encryption features
- *  
+ *
  *  @retval PEP_STATUS_OK                   on success
  *  @retval PEP_KEY_HAS_AMBIG_NAME          at least one of the receipient keys has
  *                                          an ambiguous name
  *  @retval PEP_UNENCRYPTED                 on demand or no recipients with usable
  *                                          key, is left unencrypted, and key is
  *                                          attached to it
- *  
+ *
  *  @warning the ownership of src remains with the caller
  *           the ownership of dst goes to the caller
- * 
+ *
  *           enc_format PEP_enc_inline_EA:
  *              internal format of the encrypted attachments is changing, see
  *              https://dev.pep.foundation/Engine/ElevatedAttachments
- * 
+ *
  *               Only use this for transports without support for attachments
  *               when attached data must be sent inline
- *  
+ *
  */
 
 DYNAMIC_API PEP_STATUS encrypt_message(
@@ -161,10 +161,10 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
 /**
  *  <!--       encrypt_message_and_add_priv_key()       -->
- *  
+ *
  *  @brief Encrypt message in memory, adding an encrypted private
  *         key (encrypted separately and sent within the inner message)
- *  
+ *
  *  @param[in]     session       session handle
  *  @param[in]     src           message to encrypt
  *  @param[out]    dst           pointer to new encrypted message or NULL if no
@@ -173,17 +173,17 @@ DYNAMIC_API PEP_STATUS encrypt_message(
  *                               should be encrypted
  *  @param[in]     enc_format    encrypted format
  *  @param[in]     flags         flags to set special encryption features
- *  
+ *
  *  @retval PEP_STATUS_OK                   on success
  *  @retval PEP_KEY_HAS_AMBIG_NAME          at least one of the receipient keys has
  *                                          an ambiguous name
  *  @retval PEP_UNENCRYPTED                 on demand or no recipients with usable
  *                                          key, is left unencrypted, and key is
  *                                          attached to it
- *  
+ *
  *  @warning the ownershop of src remains with the caller
  *           the ownership of dst goes to the caller
- *  
+ *
  */
 DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
         PEP_SESSION session,
@@ -197,11 +197,11 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
 
 /**
  *  <!--       encrypt_message_for_self()       -->
- *  
+ *
  *  @brief Encrypt message in memory for user's identity only,
  *         ignoring recipients and other identities from
  *         the message
- *  
+ *
  *  @param[in]     session       session handle
  *  @param[in]     target_id     self identity this message should be encrypted for
  *  @param[in]     src           message to encrypt
@@ -209,20 +209,20 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
  *  @param[out]    dst           pointer to new encrypted message or NULL on failure
  *  @param[in]     enc_format    encrypted format
  *  @param[in]     flags         flags to set special encryption features
- *  
+ *
  *  @retval PEP_STATUS_OK            on success
  *  @retval PEP_KEY_NOT_FOUND        at least one of the receipient keys
  *                                   could not be found
  *  @retval PEP_KEY_HAS_AMBIG_NAME   at least one of the receipient keys has
  *                                   an ambiguous name
  *  @retval PEP_GET_KEY_FAILED       cannot retrieve key
- *  
+ *
  *  @warning the ownership of src remains with the caller
- *           the ownership of target_id remains w/ caller            
+ *           the ownership of target_id remains w/ caller
  *           the ownership of dst goes to the caller
  *           message is NOT encrypted for identities other than the target_id (and then,
  *           only if the target_id refers to self!)
- *  
+ *
  */
 DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         PEP_SESSION session,
@@ -236,9 +236,9 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
 
 /**
  *  @enum	PEP_rating
- *  
+ *
  *  @brief	TODO
- *  
+ *
  */
 typedef enum _PEP_rating {
     PEP_rating_undefined = 0,
@@ -270,9 +270,9 @@ typedef enum _PEP_rating {
 
 /**
  *  @enum	PEP_color
- *  
+ *
  *  @brief	TODO
- *  
+ *
  */
 typedef enum _PEP_color {
     PEP_color_no_color = 0,
@@ -284,20 +284,20 @@ typedef enum _PEP_color {
 
 /**
  *  <!--       color_from_rating()       -->
- *  
+ *
  *  @brief Calculate color from rating
- *  
+ *
  *  @param[in]     rating    rating
- *  
+ *
  *  @retval PEP_color   color representing the rating
  */
 DYNAMIC_API PEP_color color_from_rating(PEP_rating rating);
 
 /**
  *  @enum	PEP_decrypt_flags
- *  
+ *
  *  @brief	TODO
- *  
+ *
  */
 typedef enum _PEP_decrypt_flags {
     PEP_decrypt_flag_own_private_key = 0x1,
@@ -315,22 +315,22 @@ typedef unsigned int PEP_decrypt_flags_t;
 
 /**
  *  <!--       decrypt_message()       -->
- *  
+ *
  *  @brief Decrypt message in memory
- *  
+ *
  *  @param[in]     session    session handle
  *  @param[in,out] src        message to decrypt
  *  @param[out]    dst        pointer to new decrypted message or NULL on failure
  *  @param[in,out] keylist    in: stringlist with additional keyids for reencryption if needed
- *                            (will be freed and replaced with output keylist) 
+ *                            (will be freed and replaced with output keylist)
  *                            out: stringlist with keyids used for signing and encryption. first
  *                            first key is signer, additional keys are the ones it was encrypted
- *                            to. Only signer and whichever of the user's keys was used are 
+ *                            to. Only signer and whichever of the user's keys was used are
  *                            reliable
  *  @param[out]    rating     rating for the message
  *  @param[in,out] flags      flags to signal special decryption features
- *  
- *  @retval <ERROR>                 any error status 
+ *
+ *  @retval <ERROR>                 any error status
  *  @retval PEP_DECRYPTED           if message decrypted but not verified
  *  @retval PEP_CANNOT_REENCRYPT    if message was decrypted (and possibly
  *                                  verified) but a reencryption operation is expected by the caller
@@ -342,7 +342,7 @@ typedef unsigned int PEP_decrypt_flags_t;
  *  ---------------------------------------------------------------------------------------------|
  *  Incoming flags                                                                               |
  *  ---------------------------------------------------------------------------------------------|
- *  Flag                                  | Description                                          |                     
+ *  Flag                                  | Description                                          |
  *  --------------------------------------|------------------------------------------------------|
  *  PEP_decrypt_flag_untrusted_server     | used to signal that decrypt function should engage   |
  *                                        | in behaviour specified for when the server storing   |
@@ -354,8 +354,8 @@ typedef unsigned int PEP_decrypt_flags_t;
  *                                        | (NOT trusted or set to be used - handshake/trust is  |
  *                                        | required for that)                                   |
  *                                        |                                                      |
- *  PEP_decrypt_flag_src_modified         | indicates that the modified_src field should contain | 
- *                                        | a modified version of the source, at the moment      | 
+ *  PEP_decrypt_flag_src_modified         | indicates that the modified_src field should contain |
+ *                                        | a modified version of the source, at the moment      |
  *                                        | always as a result of the input flags.               |
  *                                        |                                                      |
  *  PEP_decrypt_flag_consume              | used by sync to indicate this was a pEp internal     |
@@ -364,8 +364,8 @@ typedef unsigned int PEP_decrypt_flags_t;
  *                                        |                                                      |
  *  PEP_decrypt_flag_ignore               | used by sync                                         |
  *  ---------------------------------------------------------------------------------------------| @endverbatim
- * 
- *  @warning the ownership of src remains with the caller - however, the contents 
+ *
+ *  @warning the ownership of src remains with the caller - however, the contents
  *               might be modified (strings freed and allocated anew or set to NULL,
  *               etc) intentionally; when this happens, PEP_decrypt_flag_src_modified
  *               is set.
@@ -375,7 +375,7 @@ typedef unsigned int PEP_decrypt_flags_t;
  *              dst to NULL
  *           if src->enc_format is PEP_enc_inline_EA on input then elevated attachments
  *              will be expected
- *  
+ *
  */
 
 DYNAMIC_API PEP_STATUS decrypt_message(
@@ -389,24 +389,24 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
 /**
  *  <!--       own_message_private_key_details()       -->
- *  
+ *
  *  @brief Details on own key in own message
- *  
+ *
  *  @param[in]     session    session handle
  *  @param[in]     msg        message to decrypt
  *  @param[out]    ident      identity containing uid, address and fpr of key
  *                            note:
  *                            In order to obtain details about key to be possibly imported
- *                            as a replacement of key currently used as own identity, 
- *                            application passes message that have been previously flagged by 
+ *                            as a replacement of key currently used as own identity,
+ *                            application passes message that have been previously flagged by
  *                            decrypt_message() as own message containing own key to this function
- *  
+ *
  *  @retval error status or PEP_STATUS_OK on success
- *  
+ *
  *  @warning the ownership of msg remains with the caller
  *           the ownership of ident goes to the caller
  *           msg MUST be encrypted so that this function can check own signature
- *  
+ *
  */
 DYNAMIC_API PEP_STATUS own_message_private_key_details(
         PEP_SESSION session,
@@ -417,19 +417,19 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
 
 /**
  *  <!--       outgoing_message_rating()       -->
- *  
+ *
  *  @brief Get rating for an outgoing message
- *  
+ *
  *  @param[in]     session    session handle
  *  @param[in]     msg        message to get the rating for
  *  @param[out]    rating     rating for the message
- *  
+ *
  *  @retval error status or PEP_STATUS_OK on success
- *  
+ *
  *  @warning msg->from must point to a valid pEp_identity
  *           msg->dir must be PEP_dir_outgoing
  *           the ownership of msg remains with the caller
- *  
+ *
  */
 DYNAMIC_API PEP_STATUS outgoing_message_rating(
         PEP_SESSION session,
@@ -440,19 +440,19 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
 
 /**
  *  <!--       outgoing_message_rating_preview()       -->
- *  
+ *
  *  @brief Get rating preview
- *  
+ *
  *  @param[in]     session    session handle
  *  @param[in]     msg        message to get the rating for
  *  @param[out]    rating     rating preview for the message
- *  
+ *
  *  @retval error status or PEP_STATUS_OK on success
- *  
+ *
  *  @warning msg->from must point to a valid pEp_identity
  *           msg->dir must be PEP_dir_outgoing
  *           the ownership of msg remains with the caller
- *  
+ *
  */
 DYNAMIC_API PEP_STATUS outgoing_message_rating_preview(
         PEP_SESSION session,
@@ -462,17 +462,17 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating_preview(
 
 /**
  *  <!--       identity_rating()       -->
- *  
+ *
  *  @brief Get rating for a single identity
- *  
+ *
  *  @param[in]     session    session handle
  *  @param[in]     ident      identity to get the rating for
  *  @param[out]    rating     rating for the identity
- *  
+ *
  *  @retval error status or PEP_STATUS_OK on success
- *  
+ *
  *  @warning the ownership of ident remains with the caller
- *  
+ *
  */
 DYNAMIC_API PEP_STATUS identity_rating(
         PEP_SESSION session,
@@ -483,25 +483,25 @@ DYNAMIC_API PEP_STATUS identity_rating(
 
 /**
  *  <!--       get_binary_path()       -->
- *  
+ *
  *  @brief Retrieve path of cryptotech binary if available
- *  
+ *
  *  @param[in]     tech    cryptotech to get the binary for
  *  @param[out]    path    path to cryptotech binary or NULL if not available
  *                         **path is owned by the library, do not change it!
- *  
- *  
+ *
+ *
  */
 DYNAMIC_API PEP_STATUS get_binary_path(PEP_cryptotech tech, const char **path);
 
 
 /**
  *  <!--       get_trustwords()       -->
- *  
+ *
  *  @brief Get full trustwords string for a *pair* of identities
- *  
+ *
  *  @param[in]     session    session handle
- *  @param[in]     id1        identity of first party in communication - fpr can't be NULL  
+ *  @param[in]     id1        identity of first party in communication - fpr can't be NULL
  *  @param[in]     id2        identity of second party in communication - fpr can't be NULL
  *  @param[in]     lang       C string with ISO 639-1 language code
  *  @param[out]    words      pointer to C string with all trustwords UTF-8 encoded,
@@ -512,14 +512,14 @@ DYNAMIC_API PEP_STATUS get_binary_path(PEP_cryptotech tech, const char **path);
  *  @param[in]     full       if true, generate ALL trustwords for these identities.
  *                            else, generate a fixed-size subset. (TODO: fixed-minimum-entropy
  *                            subset in next version)
- *  
+ *
  *  @retval PEP_STATUS_OK            trustwords retrieved
  *  @retval PEP_OUT_OF_MEMORY        out of memory
  *  @retval PEP_TRUSTWORD_NOT_FOUND  at least one trustword not found
- *  
+ *
  *  @warning the word pointer goes to the ownership of the caller
  *           the caller is responsible to free() it (on Windoze use pEp_free())
- *  
+ *
  */
 DYNAMIC_API PEP_STATUS get_trustwords(
         PEP_SESSION session, const pEp_identity* id1, const pEp_identity* id2,
@@ -529,9 +529,9 @@ DYNAMIC_API PEP_STATUS get_trustwords(
 
 /**
  *  <!--       get_message_trustwords()       -->
- *  
- *  @brief Get full trustwords string for message sender and reciever identities 
- *  
+ *
+ *  @brief Get full trustwords string for message sender and reciever identities
+ *
  *  @param[in]     session        session handle
  *  @param[in]     msg            message to get sender identity from
  *  @param[in]     keylist        NULL if message to be decrypted,
@@ -545,15 +545,15 @@ DYNAMIC_API PEP_STATUS get_trustwords(
  *  @param[in]     full           if true, generate ALL trustwords for these identities.
  *                                else, generate a fixed-size subset. (TODO: fixed-minimum-entropy
  *                                subset in next version)
- *  
+ *
  *  @retval PEP_STATUS_OK            trustwords retrieved
  *  @retval PEP_OUT_OF_MEMORY        out of memory
  *  @retval PEP_TRUSTWORD_NOT_FOUND  at least one trustword not found
  *  @retval error                    status of decrypt_message() if decryption fails.
- *  
+ *
  *  @warning the word pointer goes to the ownership of the caller
  *           the caller is responsible to free() it (on Windoze use pEp_free())
- *  
+ *
  */
 DYNAMIC_API PEP_STATUS get_message_trustwords(
         PEP_SESSION session, 
@@ -565,9 +565,9 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
 
 /**
  *  <!--       get_trustwords_for_fprs()       -->
- *  
+ *
  *  @brief Get full trustwords string for a pair of fingerprints
- *  
+ *
  *  @param[in]     session    session handle
  *  @param[in]     fpr1       fingerprint 1
  *  @param[in]     fpr2       fingerprint 2
@@ -580,14 +580,14 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
  *  @param[in]     full       if true, generate ALL trustwords for these identities.
  *                            else, generate a fixed-size subset. (TODO: fixed-minimum-entropy
  *                            subset in next version)
- *  
+ *
  *  @retval PEP_STATUS_OK            trustwords retrieved
  *  @retval PEP_OUT_OF_MEMORY        out of memory
  *  @retval PEP_TRUSTWORD_NOT_FOUND  at least one trustword not found
- *  
+ *
  *  @warning the word pointer goes to the ownership of the caller
  *           the caller is responsible to free() it (on Windoze use pEp_free())
- *  
+ *
  */
 DYNAMIC_API PEP_STATUS get_trustwords_for_fprs(
         PEP_SESSION session, const char* fpr1, const char* fpr2,
@@ -596,26 +596,26 @@ DYNAMIC_API PEP_STATUS get_trustwords_for_fprs(
 
 /**
  *  <!--       re_evaluate_message_rating()       -->
- *  
+ *
  *  @brief Re-evaluate already decrypted message rating
- *  
+ *
  *  @param[in]     session         session handle
  *  @param[in]     msg             message to get the rating for
  *  @param[in]     x_keylist       decrypted message recipients keys fpr
  *  @param[in]     x_enc_status    original rating for the decrypted message
  *  @param[out]    rating          rating for the message
- *  
- *  @retval PEP_ILLEGAL_VALUE       if decrypted message doesn't contain 
- *                                  X-EncStatus optional field and x_enc_status is 
+ *
+ *  @retval PEP_ILLEGAL_VALUE       if decrypted message doesn't contain
+ *                                  X-EncStatus optional field and x_enc_status is
  *                                  pEp_rating_udefined
- *                                  or if decrypted message doesn't contain 
+ *                                  or if decrypted message doesn't contain
  *                                  X-Keylist optional field and x_keylist is NULL
  *  @retval PEP_OUT_OF_MEMORY       if not enough memory could be allocated
- *  
+ *
  *  @warning msg->from must point to a valid pEp_identity
  *           the ownership of msg remains with the caller
  *           the ownership of x_keylist remains with to the caller
- *  
+ *
  */
 
 DYNAMIC_API PEP_STATUS re_evaluate_message_rating(
@@ -628,18 +628,18 @@ DYNAMIC_API PEP_STATUS re_evaluate_message_rating(
 
 /**
  *  <!--       get_key_rating_for_user()       -->
- *  
+ *
  *  @brief Get the rating of a certain key for a certain user
- *  
+ *
  *  @param[in]     session    session handle
  *  @param[in]     user_id    string with user ID
  *  @param[in]     fpr        string with fingerprint
  *  @param[out]    rating     rating of key for this user
- *  
- *  @retval PEP_RECORD_NOT_FOUND    if no trust record for user_id 
+ *
+ *  @retval PEP_RECORD_NOT_FOUND    if no trust record for user_id
  *                                  and fpr can be found
- *  
- *  
+ *
+ *
  */
 
 DYNAMIC_API PEP_STATUS get_key_rating_for_user(
@@ -651,37 +651,37 @@ DYNAMIC_API PEP_STATUS get_key_rating_for_user(
 
 /**
  *  <!--       rating_from_comm_type()       -->
- *  
+ *
  *  @brief Get the rating for a comm type
- *  
+ *
  *  @param[in]     ct    the comm type to deliver the rating for
- *  
+ *
  *  @retval PEP_rating    rating value for comm type ct
- *  
- *  
+ *
+ *
  */
 
 DYNAMIC_API PEP_rating rating_from_comm_type(PEP_comm_type ct);
 
 /**
  *  @internal
- * 
+ *
  *  <!--       try_encrypt_message()       -->
- *  
- *  @brief This is the internal version of encrypt_message() 
+ *
+ *  @brief This is the internal version of encrypt_message()
  *         to be used by asynchronous network protocol
- *         implementations. This function is calls messageToSend(NULL) 
+ *         implementations. This function is calls messageToSend(NULL)
  *         in case there is a missing or wrong passphrase.
- *  
+ *
  *  @param[in]	session		PEP_SESSION
  *  @param[in]	*src		message
  *  @param[in]	*extra		stringlist_t
  *  @param[in]	**dst		message
  *  @param[in]	enc_format		PEP_enc_format
  *  @param[in]	flags		PEP_encrypt_flags_t
- *  
+ *
  *  @warning    Do NOT use this function in adapters.
- * 
+ *
  *  @todo KB: line up with the try_base_blahblah docs
  */
 PEP_STATUS try_encrypt_message(
@@ -695,16 +695,16 @@ PEP_STATUS try_encrypt_message(
 
 /**
  *  <!--       probe_encrypt()       -->
- *  
+ *
  *  @brief Test if passphrase for a key is working in current session
- *  
+ *
  *  @param[in]     session    session handle
  *  @param[in]     fpr        fingerprint of key to test
- *  
+ *
  *  @retval PEP_STATUS_OK           in case passphrase works
  *  @retval error                   if not
- *  
- *  
+ *
+ *
  */
 
 DYNAMIC_API PEP_STATUS probe_encrypt(PEP_SESSION session, const char *fpr);
