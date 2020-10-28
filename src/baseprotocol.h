@@ -9,10 +9,12 @@
 extern "C" {
 #endif
 
+#define _BASE_PROTO_MIME_TYPE_SIGN "application/pEp.sign"
+#define _BASE_PROTO_MIME_TYPE_SYNC "application/pEp.sync"
+#define _BASE_PROTO_MIME_TYPE_DIST "application/pEp.distribution"
 
 typedef enum _base_protocol_type {
     BASE_SIGN = 0,
-
     BASE_SYNC = 1,
     BASE_KEYRESET = 2
 } base_protocol_type;
