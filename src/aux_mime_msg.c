@@ -278,5 +278,6 @@ pEp_error:
     return status;
 }
 #else
+// This is here to please ISO C - it needs a compilation unit. Value will never be used.
 const int the_answer_my_friend = 42;
 #endif
