@@ -15,9 +15,9 @@ extern "C" {
 // error values
 
 /**
- *  @enum	fsm_error
+ *  @enum    fsm_error
  *  
- *  @brief	TODO
+ *  @brief   TODO
  *  
  */
 typedef enum _fsm_error {

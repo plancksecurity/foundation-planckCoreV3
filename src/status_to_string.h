@@ -15,9 +15,9 @@ extern "C" {
 /**
  *  <!--       pEp_status_to_string()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	status		PEP_STATUS
+ *  @param[in]  status        PEP_STATUS
  *  
  */
 static inline const char *pEp_status_to_string(PEP_STATUS status) {
@@ -129,9 +129,9 @@ static inline const char *pEp_status_to_string(PEP_STATUS status) {
 /**
  *  <!--       pEp_comm_type_to_string()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	ct		PEP_comm_type
+ *  @param[in]  ct        PEP_comm_type
  *  
  */
 static inline const char *pEp_comm_type_to_string(PEP_comm_type ct) {

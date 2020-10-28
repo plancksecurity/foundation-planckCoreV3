@@ -14,9 +14,9 @@ extern "C" {
 
 
 /**
- *  @struct	stringlist_t
+ *  @struct    stringlist_t
  *  
- *  @brief	TODO
+ *  @brief    TODO
  *  
  */
 typedef struct _stringlist_t {
@@ -30,7 +30,7 @@ typedef struct _stringlist_t {
  *  
  *  @brief Allocate a new stringlist
  *  
- *  @param[in]     value    initial value as C string or NULL for empty list
+ *  @param[in]   value    initial value as C string or NULL for empty list
  *  
  *  @retval pointer to stringlist_t object or NULL if out of memory
  *  
@@ -48,7 +48,7 @@ DYNAMIC_API stringlist_t *new_stringlist(const char *value);
  *  
  *  @brief Duplicate a stringlist
  *  
- *  @param[in]     src    stringlist to copy
+ *  @param[in]   src    stringlist to copy
  *  
  *  @retval pointer to stringlist_t object or NULL if out of memory
  *  
@@ -63,8 +63,8 @@ DYNAMIC_API stringlist_t *stringlist_dup(const stringlist_t *src);
  *  
  *  @brief Add key to stringlist
  *  
- *  @param[in]     stringlist    stringlist struct or NULL to create a new one
- *  @param[in]     value         value as C string
+ *  @param[in]   stringlist    stringlist struct or NULL to create a new one
+ *  @param[in]   value         value as C string
  *  
  *  @retval pointer to last element in stringlist or NULL if out of memory
  *  
@@ -83,8 +83,8 @@ DYNAMIC_API stringlist_t *stringlist_add(
  *  
  *  @brief Add string to stringlist, if not already there
  *  
- *  @param[in]     stringlist    stringlist struct or NULL to create a new one
- *  @param[in]     value         value as C string
+ *  @param[in]   stringlist    stringlist struct or NULL to create a new one
+ *  @param[in]   value         value as C string
  *  
  *  @retval pointer to last element in stringlist or NULL if out of memory
  *  
@@ -104,8 +104,8 @@ DYNAMIC_API stringlist_t *stringlist_add_unique(
  *  
  *  @brief Append stringlist to stringlist
  *  
- *  @param[in]     stringlist    stringlist struct to append to
- *  @param[in]     second        stringlist struct to append
+ *  @param[in]   stringlist    stringlist struct to append to
+ *  @param[in]   second        stringlist struct to append
  *  
  *  @retval pointer to last element in stringlist or NULL if out of memory
  *  @retval or stringpair_list is NULL
@@ -126,7 +126,7 @@ DYNAMIC_API stringlist_t *stringlist_append(
  *  
  *  @brief Get length of stringlist
  *  
- *  @param[in]     stringlist    stringlist struct to determine length of
+ *  @param[in]   stringlist    stringlist struct to determine length of
  *  
  *  @retval length of stringlist in number of elements
  *  
@@ -141,8 +141,8 @@ DYNAMIC_API int stringlist_length(const stringlist_t *stringlist);
  *  
  *  @brief Delete entry from stringlist
  *  
- *  @param[in]     stringlist    stringlist struct to delete from
- *  @param[in]     value         data to delete
+ *  @param[in]   stringlist    stringlist struct to delete from
+ *  @param[in]   value         data to delete
  *  
  *  @retval modified stringlist
  *  
@@ -160,7 +160,7 @@ DYNAMIC_API stringlist_t *stringlist_delete(
  *  
  *  @brief Free memory occupied by stringlist
  *  
- *  @param[in]     stringlist    stringlist to free
+ *  @param[in]   stringlist    stringlist to free
  *  
  *  
  */
@@ -170,10 +170,10 @@ DYNAMIC_API void free_stringlist(stringlist_t *stringlist);
 /**
  *  <!--       stringlist_search()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*head		stringlist_t
- *  @param[in]	*value		constchar
+ *  @param[in]  head         stringlist_t*
+ *  @param[in]  value        const char*
  *  
  */
 stringlist_t* stringlist_search(stringlist_t* head, const char* value);
@@ -182,18 +182,18 @@ stringlist_t* stringlist_search(stringlist_t* head, const char* value);
 /**
  *  <!--       stringlist_to_string()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*list		stringlist_t
+ *  @param[in]  list        stringlist_t*
  *  
  */
 char* stringlist_to_string(stringlist_t* list);
 /**
  *  <!--       string_to_stringlist()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*str		constchar
+ *  @param[in]  str         const char*
  *  
  */
 stringlist_t* string_to_stringlist(const char* str);
@@ -201,9 +201,9 @@ stringlist_t* string_to_stringlist(const char* str);
 /**
  *  <!--       dedup_stringlist()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*stringlist		stringlist_t
+ *  @param[in]  stringlist         stringlist_t*
  *  
  */
 void dedup_stringlist(stringlist_t* stringlist);

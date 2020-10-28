@@ -8,9 +8,9 @@
 
 /* structs to contain info about parsed resource ids (filenames, uids) */
 /**
- *  @enum	pEp_resource_id_type
+ *  @enum    pEp_resource_id_type
  *  
- *  @brief	TODO
+ *  @brief    TODO
  *  
  */
 typedef enum _resource_id_type {
@@ -21,9 +21,9 @@ typedef enum _resource_id_type {
 typedef struct pEp_rid_list_t pEp_rid_list_t;
 
 /**
- *  @struct	pEp_rid_list_t
+ *  @struct    pEp_rid_list_t
  *  
- *  @brief	TODO
+ *  @brief    TODO
  *  
  */
 struct pEp_rid_list_t {
@@ -37,9 +37,9 @@ pEp_rid_list_t* new_rid_node(pEp_resource_id_type type, const char* resource);
 /**
  *  <!--       free_rid_list()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*list		pEp_rid_list_t
+ *  @param[in]  list         pEp_rid_list_t*
  *  
  */
 void free_rid_list(pEp_rid_list_t* list);
@@ -47,9 +47,9 @@ void free_rid_list(pEp_rid_list_t* list);
 /**
  *  <!--       parse_uri()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*uri		constchar
+ *  @param[in]  uri         const char*
  *  
  */
 pEp_rid_list_t* parse_uri(const char* uri);
@@ -57,10 +57,10 @@ pEp_rid_list_t* parse_uri(const char* uri);
 /**
  *  <!--       build_uri()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*uri_prefix		constchar
- *  @param[in]	*resource		constchar
+ *  @param[in]  uri_prefix         const char*
+ *  @param[in]  resource         const char*
  *  
  */
 char* build_uri(const char* uri_prefix, const char* resource);
@@ -68,9 +68,9 @@ char* build_uri(const char* uri_prefix, const char* resource);
 /**
  *  <!--       get_resource_ptr_noown()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*uri		constchar
+ *  @param[in]  uri         const char*
  *  
  */
 const char* get_resource_ptr_noown(const char* uri);
@@ -78,9 +78,9 @@ const char* get_resource_ptr_noown(const char* uri);
 /**
  *  <!--       get_resource()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*uri		char
+ *  @param[in]  uri         char*
  *  
  */
 char* get_resource(char* uri);
@@ -88,9 +88,9 @@ char* get_resource(char* uri);
 /**
  *  <!--       is_file_uri()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*str		char
+ *  @param[in]  str         char*
  *  
  */
 bool is_file_uri(char* str);
@@ -98,9 +98,9 @@ bool is_file_uri(char* str);
 /**
  *  <!--       is_cid_uri()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*str		constchar
+ *  @param[in]  str         const char*
  *  
  */
 bool is_cid_uri(const char* str);

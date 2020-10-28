@@ -14,9 +14,9 @@ extern "C" {
 #endif
 
 /**
- *  @enum	PEP_transports
+ *  @enum    PEP_transports
  *  
- *  @brief	TODO
+ *  @brief    TODO
  *  
  */
 typedef enum _PEP_transports {
@@ -35,9 +35,9 @@ typedef PEP_STATUS (*readnext_t)(PEP_SESSION session, message **msg,
         PEP_transport_t **via);
 
 /**
- *  @struct	_PEP_transport_t
+ *  @struct    _PEP_transport_t
  *  
- *  @brief	TODO
+ *  @brief    TODO
  *  
  */
 struct _PEP_transport_t {

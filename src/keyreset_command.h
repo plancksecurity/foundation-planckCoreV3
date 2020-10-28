@@ -14,9 +14,9 @@ extern "C" {
 #endif
 
 /**
- *  @struct	keyreset_command
+ *  @struct keyreset_command
  *  
- *  @brief	TODO
+ *  @brief  TODO
  *  
  */
 typedef struct _keyreset_command {
@@ -29,8 +29,8 @@ typedef struct _keyreset_command {
  *  
  *  @brief Allocate new keyreset_command
  *  
- *  @param[in]     ident      identity to reset, including fpr of existing key
- *  @param[in]     new_key    fpr of new key
+ *  @param[in]   ident      identity to reset, including fpr of existing key
+ *  @param[in]   new_key    fpr of new key
  *  
  *  @retval pointer to keyreset_command or NULL on failure
  *  
@@ -46,7 +46,7 @@ DYNAMIC_API keyreset_command * new_keyreset_command(const pEp_identity * ident, 
  *  
  *  @brief Free memory allocated by keyreset_command
  *  
- *  @param[in]     command    pointer to keyreset_command to free
+ *  @param[in]   command    pointer to keyreset_command to free
  *  
  *  
  */
@@ -59,7 +59,7 @@ DYNAMIC_API void free_keyreset_command(keyreset_command * command);
  *  
  *  @brief Duplicate keyreset_command (deep copy)
  *  
- *  @param[in]     src    pointer to keyreset_command to duplicate
+ *  @param[in]  src    pointer to keyreset_command to duplicate
  *  
  *  @retval pointer to copy of src or NULL on failure
  *  
@@ -70,9 +70,9 @@ DYNAMIC_API keyreset_command * keyreset_command_dup(const keyreset_command * src
 
 
 /**
- *  @struct	keyreset_command_list
+ *  @struct keyreset_command_list
  *  
- *  @brief	TODO
+ *  @brief  TODO
  *  
  */
 typedef struct _keyreset_command_list {
@@ -86,7 +86,7 @@ typedef struct _keyreset_command_list {
  *  
  *  @brief Allocate a new keyreset_command_list
  *  
- *  @param[in]     command    initial command
+ *  @param[in]   command    initial command
  *  
  *  @retval pointer to keyreset_command_list object or NULL if out of memory
  *  
@@ -103,7 +103,7 @@ DYNAMIC_API keyreset_command_list * new_keyreset_command_list(keyreset_command *
  *  
  *  @brief Duplicate a keyreset_command_list (deep copy)
  *  
- *  @param[in]     src    keyreset_command_list to copy
+ *  @param[in]   src    keyreset_command_list to copy
  *  
  *  @retval pointer to keyreset_command_list object or NULL if out of memory
  *  @retval keyreset_command command copies created by this function belong to the returned list
@@ -121,8 +121,8 @@ DYNAMIC_API keyreset_command_list * keyreset_command_list_dup(
  *  
  *  @brief Add key to keyreset_command_list
  *  
- *  @param[in]     command_list    keyreset_command_list struct or NULL to create a new one
- *  @param[in]     command         keyreset_command to add
+ *  @param[in]   command_list    keyreset_command_list struct or NULL to create a new one
+ *  @param[in]   command         keyreset_command to add
  *  
  *  @retval pointer to last element in keyreset_command_list or NULL if out of memory
  *  
@@ -141,8 +141,8 @@ DYNAMIC_API keyreset_command_list * keyreset_command_list_add(
  *  
  *  @brief Append keyreset_command_list to keyreset_command_list
  *  
- *  @param[in]     command_list    keyreset_command_list struct to append to
- *  @param[in]     second          keyreset_command_list struct to append
+ *  @param[in]   command_list    keyreset_command_list struct to append to
+ *  @param[in]   second          keyreset_command_list struct to append
  *  
  *  @retval pointer to last element in command_list or NULL if out of memory
  *  @retval or command_list is NULL
@@ -163,7 +163,7 @@ DYNAMIC_API keyreset_command_list * keyreset_command_list_append(
  *  
  *  @brief Get length of keyreset_command_list
  *  
- *  @param[in]     command_list    keyreset_command_list struct to determine length of
+ *  @param[in]   command_list    keyreset_command_list struct to determine length of
  *  
  *  @retval length of command_list in number of elements
  *  
@@ -180,7 +180,7 @@ DYNAMIC_API int keyreset_command_list_length(
  *  
  *  @brief Free memory occupied by command_list
  *  
- *  @param[in]     command_list    keyreset_command_list to free
+ *  @param[in]   command_list    keyreset_command_list to free
  *  
  *  
  */

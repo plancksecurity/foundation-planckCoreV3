@@ -18,11 +18,11 @@ extern "C" {
  *  
  *  @brief Encode to the internal message format
  *  
- *  @param[in]     value        blob
- *  @param[in]     size         size of value
- *  @param[in]     mime_type    string of MIME type
- *  @param[out]    code         blob in Internal Message Format
- *  @param[out]    code_size    size of code
+ *  @param[in]   value        blob
+ *  @param[in]   size         size of value
+ *  @param[in]   mime_type    string of MIME type
+ *  @param[out]  code         blob in Internal Message Format
+ *  @param[out]  code_size    size of code
  *  
  *  @warning call this for the data in an attachment
  *           for unsupported MIME types this function is returning NULL for code and
@@ -49,12 +49,12 @@ DYNAMIC_API PEP_STATUS encode_internal(
  *  
  *  @brief Decode from internal message format
  *  
- *  @param[in]     code         blob in Internal Message Format
- *  @param[in]     code_size    size of code
- *  @param[in]     tech         crypto tech for MIME type, PEP_crypt_none for auto
- *  @param[out]    value        blob or string for longmsg
- *  @param[out]    size         size of value
- *  @param[out]    mime_type    string with MIME type or NULL for longmsg
+ *  @param[in]   code         blob in Internal Message Format
+ *  @param[in]   code_size    size of code
+ *  @param[in]   tech         crypto tech for MIME type, PEP_crypt_none for auto
+ *  @param[out]  value        blob or string for longmsg
+ *  @param[out]  size         size of value
+ *  @param[out]  mime_type    string with MIME type or NULL for longmsg
  *  
  *  @warning this functions copies data from the code
  *           value goes into the ownership of the caller

@@ -17,9 +17,9 @@ extern "C" {
 #define _BASE_PROTO_MIME_TYPE_DIST "application/pEp.distribution"
 
 /**
- *  @enum	base_protocol_type
+ *  @enum    base_protocol_type
  *  
- *  @brief	TODO
+ *  @brief    TODO
  *  
  */
 typedef enum _base_protocol_type {
@@ -65,14 +65,14 @@ PEP_STATUS base_decorate_message(
  *  
  *  @brief Prepare a sync message with payload
  *  
- *  @param[in]     session    session handle
- *  @param[in]     me         identity to use for the sender
- *  @param[in]     partner    identity to use for the receiver
- *  @param[in]     type       base protocol type
- *  @param[in]     payload    payload to send
- *  @param[in]     size       size of payload
- *  @param[in]     fpr        optional key to sign or NULL
- *  @param[out]    result     returned message with payload on success
+ *  @param[in]   session    session handle
+ *  @param[in]   me         identity to use for the sender
+ *  @param[in]   partner    identity to use for the receiver
+ *  @param[in]   type       base protocol type
+ *  @param[in]   payload    payload to send
+ *  @param[in]   size       size of payload
+ *  @param[in]   fpr        optional key to sign or NULL
+ *  @param[out]  result     returned message with payload on success
  *  
  *  @retval PEP_STATUS_OK       on success
  *  @retval error_status        on failure
@@ -100,14 +100,14 @@ PEP_STATUS base_prepare_message(
  *  
  *  @brief Extract a sync message from a pEp message
  *  
- *  @param[in]     session    session handle
- *  @param[in]     msg        message to analyze
- *  @param[in]     type       base protocol type to extract
- *  @param[out]    size       size of extracted payload, or 0 if not found
- *  @param[out]    payload    extracted payload, if sync message is found. 
- *                            otherwise, NULL
- *  @param[out]    fpr        if message was correctly signed then fpr of signature's
- *                            key, otherwise NULL
+ *  @param[in]   session    session handle
+ *  @param[in]   msg        message to analyze
+ *  @param[in]   type       base protocol type to extract
+ *  @param[out]  size       size of extracted payload, or 0 if not found
+ *  @param[out]  payload    extracted payload, if sync message is found.
+ *                          otherwise, NULL
+ *  @param[out]  fpr        if message was correctly signed then fpr of signature's
+ *                          key, otherwise NULL
  *  
  *  @retval PEP_STATUS_OK     if no error occurred, whether or not sync message was found
  *  @retval error_status      any other value on error
@@ -138,14 +138,14 @@ PEP_STATUS base_extract_message(
  *         base_prepare_message in that it calls messageToSend(NULL) in case there is a missing 
  *         or wrong passphrase, but more explanation is required here.
  *  
- *  @param[in]     session    session handle
- *  @param[in]     me         identity to use for the sender
- *  @param[in]     partner    identity to use for the receiver
- *  @param[in]     type       base protocol type
- *  @param[in]     payload    payload to send
- *  @param[in]     size       size of payload
- *  @param[in]     fpr        optional key to sign or NULL
- *  @param[out]    result     returned message with payload on success
+ *  @param[in]   session    session handle
+ *  @param[in]   me         identity to use for the sender
+ *  @param[in]   partner    identity to use for the receiver
+ *  @param[in]   type       base protocol type
+ *  @param[in]   payload    payload to send
+ *  @param[in]   size       size of payload
+ *  @param[in]   fpr        optional key to sign or NULL
+ *  @param[out]  result     returned message with payload on success
  *  
  *  @ownership 
  *  - On (and only on) success, ownership of payload is assigned to the result structure

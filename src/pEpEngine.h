@@ -44,9 +44,9 @@ struct _pEpSession;
 typedef struct _pEpSession * PEP_SESSION;
 
 /**
- *  @enum	PEP_STATUS
+ *  @enum    PEP_STATUS
  *  
- *  @brief	TODO
+ *  @brief    TODO
  *  
  */
 typedef enum {
@@ -161,9 +161,9 @@ typedef enum {
 } PEP_STATUS;
 
 /**
- *  @enum	PEP_enc_format
+ *  @enum    PEP_enc_format
  *  
- *  @brief	TODO
+ *  @brief    TODO
  *  
  */
 typedef enum _PEP_enc_format {
@@ -184,7 +184,7 @@ typedef enum _PEP_enc_format {
  *  
  *  @brief A message needs to be delivered by application
  *  
- *  @param[in]     msg    message struct with message to send
+ *  @param[in]   msg    message struct with message to send
  *  
  *  @retval PEP_STATUS_OK or any other value on error
  *  
@@ -204,7 +204,7 @@ typedef struct Sync_event *SYNC_EVENT;
  *  
  *  @brief Free memory occupied by sync protocol message
  *  
- *  @param[in]     ev    event to free
+ *  @param[in]   ev    event to free
  *  
  *  
  */
@@ -217,8 +217,8 @@ DYNAMIC_API void free_Sync_event(SYNC_EVENT ev);
  *  
  *  @brief Inject sync protocol message
  *  
- *  @param[in]     ev            event to inject
- *  @param[in]     management    application defined; usually a locked queue
+ *  @param[in]   ev            event to inject
+ *  @param[in]   management    application defined; usually a locked queue
  *  
  *  @retval 0           if event could be stored successfully 
  *  @retval nonzero     otherwise
@@ -236,7 +236,7 @@ typedef int (*inject_sync_event_t)(SYNC_EVENT ev, void *management);
  *  @brief Callee ensures correct password for (signing) key is configured in the session on
  *         return, or returns error when it is not found
  *  
- *  @param[in]     fpr    fpr to check
+ *  @param[in]   fpr    fpr to check
  *  
  *  @retval PEP_STATUS_OK       passphrase is configured and ready to use
  *  @retval PEP_PASSPHRASE*     If the caller runs out of passphrases to try, PEP_*PASSWORD* errors 
@@ -255,10 +255,10 @@ typedef PEP_STATUS (*ensure_passphrase_t)(PEP_SESSION session, const char* fpr);
  *  
  *  @param[out]    session              init() allocates session memory and
  *                                      returns a pointer as a handle
- *  @param[in]     messageToSend        callback for sending message by the
+ *  @param[in]   messageToSend        callback for sending message by the
  *                                      application
- *  @param[in]     inject_sync_event    callback for injecting a sync event
- *  @param[in]     ensure_passphrase    callback for ensuring correct password for key is set
+ *  @param[in]   inject_sync_event    callback for injecting a sync event
+ *  @param[in]   ensure_passphrase    callback for ensuring correct password for key is set
  *  
  *  @retval PEP_STATUS_OK                       if init() succeeds
  *  @retval PEP_INIT_SQLITE3_WITHOUT_MUTEX      if SQLite3 was compiled with
@@ -302,7 +302,7 @@ DYNAMIC_API PEP_STATUS init(
  *  
  *  @brief Release thread session handle
  *  
- *  @param[in]     session    session handle to release
+ *  @param[in]   session    session handle to release
  *  
  *  @warning THE CALLER MUST GUARD THIS CALL EXTERNALLY WITH A MUTEX. init() should
  *           be similarly guarded.
@@ -319,8 +319,8 @@ DYNAMIC_API void release(PEP_SESSION session);
  *  
  *  @brief Enable passive mode
  *  
- *  @param[in]     session    session handle
- *  @param[in]     enable     flag if enabled or disabled
+ *  @param[in]   session    session handle
+ *  @param[in]   enable     flag if enabled or disabled
  *  
  *  
  */
@@ -333,8 +333,8 @@ DYNAMIC_API void config_passive_mode(PEP_SESSION session, bool enable);
  *  
  *  @brief Disable subject encryption
  *  
- *  @param[in]     session    session handle
- *  @param[in]     enable     flag if enabled or disabled
+ *  @param[in]   session    session handle
+ *  @param[in]   enable     flag if enabled or disabled
  *  
  *  
  */
@@ -347,8 +347,8 @@ DYNAMIC_API void config_unencrypted_subject(PEP_SESSION session, bool enable);
  *  
  *  @brief Enable passive mode
  *  
- *  @param[in]     session    session handle
- *  @param[in]     enable     flag if enabled or disabled
+ *  @param[in]   session    session handle
+ *  @param[in]   enable     flag if enabled or disabled
  *  
  *  
  */
@@ -371,9 +371,9 @@ DYNAMIC_API void config_service_log(PEP_SESSION session, bool enable);
 
 
 /**
- *  @enum	PEP_CIPHER_SUITE
+ *  @enum    PEP_CIPHER_SUITE
  *  
- *  @brief	TODO
+ *  @brief    TODO
  *  
  */
 typedef enum {
@@ -393,8 +393,8 @@ typedef enum {
  *  
  *  @brief Cipher suite being used when encrypting
  *  
- *  @param[in]     session         session handle
- *  @param[in]     cipher_suite    cipher suite to use
+ *  @param[in]   session         session handle
+ *  @param[in]   cipher_suite    cipher suite to use
  *  
  *  @retval PEP_STATUS_OK           cipher suite configured
  *  @retval PEP_CANNOT_CONFIG       configuration failed; falling back to default
@@ -513,10 +513,10 @@ DYNAMIC_API PEP_STATUS encrypt_and_sign(
 /**
  *  <!--       set_debug_color()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	ansi_color		int
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  ansi_color     int
  *  
  */
 DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color);
@@ -527,12 +527,12 @@ DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color);
  *  @brief Log a user defined event defined by UTF-8 encoded strings into
  *         management log
  *  
- *  @param[in]     session        session handle
- *  @param[in]     title          C string with event name
- *  @param[in]     entity         C string with name of entity which is logging
- *  @param[in]     description    C string with long description for event or NULL if
+ *  @param[in]   session        session handle
+ *  @param[in]   title          C string with event name
+ *  @param[in]   entity         C string with name of entity which is logging
+ *  @param[in]   description    C string with long description for event or NULL if
  *                                  omitted
- *  @param[in]     comment        C string with user defined comment or NULL if
+ *  @param[in]   comment        C string with user defined comment or NULL if
  *                                  omitted
  *  
  *  @retval PEP_STATUS_OK       log entry created
@@ -552,13 +552,13 @@ DYNAMIC_API PEP_STATUS log_event(
 /**
  *  <!--       log_service()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*title		constchar
- *  @param[in]	*entity		constchar
- *  @param[in]	*description		constchar
- *  @param[in]	*comment		constchar
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  title          const char*
+ *  @param[in]  entity         const char*
+ *  @param[in]  description    const char*
+ *  @param[in]  comment        const char*
  *  
  */
 DYNAMIC_API PEP_STATUS log_service(PEP_SESSION session, const char *title,
@@ -574,12 +574,12 @@ DYNAMIC_API PEP_STATUS log_service(PEP_SESSION session, const char *title,
 /**
  *  <!--       _service_error_log()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*entity		constchar
- *  @param[in]	status		PEP_STATUS
- *  @param[in]	*where		constchar
+ *  @param[in]  session       PEP_SESSION
+ *  @param[in]  entity        const char*
+ *  @param[in]  status        PEP_STATUS
+ *  @param[in]  where         const char*
  *  
  */
 DYNAMIC_API void _service_error_log(PEP_SESSION session, const char *entity,
@@ -655,9 +655,9 @@ DYNAMIC_API PEP_STATUS trustwords(
 // TODO: increase versions in pEp.asn1 if rating changes
 
 /**
- *  @enum	PEP_comm_type
+ *  @enum    PEP_comm_type
  *  
- *  @brief	TODO
+ *  @brief    TODO
  *  
  */
 typedef enum _PEP_comm_type {
@@ -723,9 +723,9 @@ typedef enum _PEP_comm_type {
 } PEP_comm_type;
 
 /**
- *  @enum	identity_flags
+ *  @enum    identity_flags
  *  
- *  @brief	TODO
+ *  @brief    TODO
  *  
  */
 typedef enum _identity_flags {
@@ -744,9 +744,9 @@ typedef unsigned int identity_flags_t;
 typedef unsigned int keypair_flags_t;
 
 /**
- *  @struct	pEp_identity
+ *  @struct    pEp_identity
  *  
- *  @brief	TODO
+ *  @brief    TODO
  *  
  */
 typedef struct _pEp_identity {
@@ -769,9 +769,9 @@ typedef struct _pEp_identity {
 } pEp_identity;
 
 /**
- *  @struct	identity_list
+ *  @struct    identity_list
  *  
- *  @brief	TODO
+ *  @brief    TODO
  *  
  */
 typedef struct _identity_list {
@@ -785,10 +785,10 @@ typedef struct _identity_list {
  *  
  *  @brief Allocate memory and set the string and size fields
  *  
- *  @param[in]     address     UTF-8 string or NULL 
- *  @param[in]     fpr         UTF-8 string or NULL 
- *  @param[in]     user_id     UTF-8 string or NULL 
- *  @param[in]     username    UTF-8 string or NULL 
+ *  @param[in]   address     UTF-8 string or NULL
+ *  @param[in]   fpr         UTF-8 string or NULL
+ *  @param[in]   user_id     UTF-8 string or NULL
+ *  @param[in]   username    UTF-8 string or NULL
  *  
  *  @retval pEp_identity    duplicate identity struct
  *  @retval NULL            if out of memory
@@ -809,7 +809,7 @@ DYNAMIC_API pEp_identity *new_identity(
  *  
  *  @brief Allocate memory and duplicate
  *  
- *  @param[in]     src    identity to duplicate
+ *  @param[in]   src    identity to duplicate
  *  
  *  @retval pEp_identity    duplicate identity struct
  *  @retval NULL            if out of memory
@@ -827,7 +827,7 @@ DYNAMIC_API pEp_identity *identity_dup(const pEp_identity *src);
  *  
  *  @brief Free all memory being occupied by a pEp_identity struct
  *  
- *  @param[in]     identity    struct to release
+ *  @param[in]   identity    struct to release
  *  
  *  @warning not only the struct but also all string memory referenced by the
  *           struct is being freed; all pointers inside are invalid afterwards
@@ -867,11 +867,11 @@ DYNAMIC_API PEP_STATUS get_identity(
 /**
  *  <!--       replace_identities_fpr()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*old_fpr		constchar
- *  @param[in]	*new_fpr		constchar
+ *  @param[in]  session     PEP_SESSION
+ *  @param[in]  old_fpr     const char*
+ *  @param[in]  new_fpr     const char*
  *  
  */
 PEP_STATUS replace_identities_fpr(PEP_SESSION session, 
@@ -884,8 +884,8 @@ PEP_STATUS replace_identities_fpr(PEP_SESSION session,
  *  
  *  @brief Set identity information
  *  
- *  @param[in]     session     session handle
- *  @param[in]     identity    pointer to pEp_identity structure
+ *  @param[in]   session     session handle
+ *  @param[in]   identity    pointer to pEp_identity structure
  *  
  *  @retval PEP_STATUS_OK                 encryption and signing succeeded
  *  @retval PEP_CANNOT_SET_PERSON         writing to table person failed
@@ -960,11 +960,11 @@ DYNAMIC_API PEP_STATUS get_userid_alias_default(
  *  
  *  @brief Set an alias to correspond to a default id
  *  
- *  @param[in]     session       session handle
- *  @param[in]     default_id    the default id for this alias. This must
+ *  @param[in]   session       session handle
+ *  @param[in]   default_id    the default id for this alias. This must
  *                               correspond to the default user_id for an
  *                               entry in the person (user) table.
- *  @param[in]     alias_id      the alias to be set for this default id
+ *  @param[in]   alias_id      the alias to be set for this default id
  *  
  *  @retval PEP_STATUS_OK                 userid was found
  *  @retval PEP_CANNOT_SET_ALIAS          there was an error setting this
@@ -982,9 +982,9 @@ DYNAMIC_API PEP_STATUS set_userid_alias (
  *  
  *  @brief Update identity flags on existing identity
  *  
- *  @param[in]     session    session handle
+ *  @param[in]   session    session handle
  *                            identity (in,out)   pointer to pEp_identity structure
- *  @param[in]     flags      new value for flags
+ *  @param[in]   flags      new value for flags
  *  
  *  @retval PEP_STATUS_OK                 encryption and signing succeeded
  *  @retval PEP_CANNOT_SET_IDENTITY       update of identity failed
@@ -1004,9 +1004,9 @@ DYNAMIC_API PEP_STATUS set_identity_flags(
  *  
  *  @brief Update identity flags on existing identity
  *  
- *  @param[in]     session    session handle
+ *  @param[in]   session    session handle
  *                            identity (in,out)   pointer to pEp_identity structure
- *  @param[in]     flags      new value for flags
+ *  @param[in]   flags      new value for flags
  *  
  *  @retval PEP_STATUS_OK                 encryption and signing succeeded
  *  @retval PEP_CANNOT_SET_IDENTITY       update of identity failed
@@ -1026,8 +1026,8 @@ DYNAMIC_API PEP_STATUS unset_identity_flags(
  *  
  *  @brief Mark key in trust db as compromised
  *  
- *  @param[in]     session    session handle
- *  @param[in]     fpr        fingerprint of key to mark
+ *  @param[in]   session    session handle
+ *  @param[in]   fpr        fingerprint of key to mark
  *  
  *  
  */
@@ -1086,8 +1086,8 @@ DYNAMIC_API PEP_STATUS generate_keypair(
  *  
  *  @brief Delete a public key or a key pair from the key ring
  *  
- *  @param[in]     session    session handle
- *  @param[in]     fpr        C string with key id or fingerprint of the
+ *  @param[in]   session    session handle
+ *  @param[in]   fpr        C string with key id or fingerprint of the
  *                            public key
  *  
  *  @retval PEP_STATUS_OK           key was successfully deleted
@@ -1238,8 +1238,8 @@ DYNAMIC_API PEP_STATUS export_secrect_key(
  *  
  *  @brief Update key(s) from keyserver
  *  
- *  @param[in]     session    session handle
- *  @param[in]     pattern    key id, user id or address to search for as
+ *  @param[in]   session    session handle
+ *  @param[in]   pattern    key id, user id or address to search for as
  *                            UTF-8 string
  *  
  *  
@@ -1306,8 +1306,8 @@ DYNAMIC_API void pEp_free(void *p);
  *  
  *  @brief Reallocate memory allocated by pEp engine
  *  
- *  @param[in]     p       pointer to free
- *  @param[in]     size    new memory size
+ *  @param[in]   p       pointer to free
+ *  @param[in]   size    new memory size
  *  
  *  @retval pointer to allocated memory
  * 
@@ -1345,10 +1345,10 @@ DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity);
 /**
  *  <!--       set_trust()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*identity		pEp_identity
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  identity       pEp_identity*
  *  
  */
 PEP_STATUS set_trust(PEP_SESSION session, 
@@ -1357,11 +1357,11 @@ PEP_STATUS set_trust(PEP_SESSION session,
 /**
  *  <!--       update_trust_for_fpr()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*fpr		constchar
- *  @param[in]	comm_type		PEP_comm_type
+ *  @param[in]  session       PEP_SESSION
+ *  @param[in]  fpr           const char*
+ *  @param[in]  comm_type     PEP_comm_type
  *  
  */
 PEP_STATUS update_trust_for_fpr(PEP_SESSION session, 
@@ -1414,9 +1414,9 @@ DYNAMIC_API PEP_STATUS get_key_rating(
  *  
  *  @brief Renew an expired key
  *  
- *  @param[in]     session    session handle
- *  @param[in]     fpr        ID of key to renew as UTF-8 string
- *  @param[in]     ts         timestamp when key should expire or NULL for
+ *  @param[in]   session    session handle
+ *  @param[in]   fpr        ID of key to renew as UTF-8 string
+ *  @param[in]   ts         timestamp when key should expire or NULL for
  *                            default
  *  
  *  
@@ -1434,9 +1434,9 @@ DYNAMIC_API PEP_STATUS renew_key(
  *  
  *  @brief Revoke a key
  *  
- *  @param[in]     session    session handle
- *  @param[in]     fpr        ID of key to revoke as UTF-8 string
- *  @param[in]     reason     text with reason for revoke as UTF-8 string
+ *  @param[in]   session    session handle
+ *  @param[in]   fpr        ID of key to revoke as UTF-8 string
+ *  @param[in]   reason     text with reason for revoke as UTF-8 string
  *                            or NULL if reason unknown
  *  
  *  @warning reason text must not include empty lines
@@ -1494,11 +1494,11 @@ DYNAMIC_API PEP_STATUS key_revoked(
 /**
  *  <!--       get_key_userids()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*fpr		constchar
- *  @param[in]	**keylist		stringlist_t
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  fpr            const char*
+ *  @param[in]  keylist        stringlist_t**
  *  
  */
 PEP_STATUS get_key_userids(
@@ -1824,9 +1824,9 @@ DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys(PEP_SESSION session,
  *         basis in the order of to_list, cc_list, and bcc_list. We take 
  *         the first set value we come to)
  *  
- *  @param[in]     session     session handle
- *  @param[in]     identity    identity->user_id and identity->address must NOT be NULL
- *  @param[in]     format      the desired default encryption format
+ *  @param[in]   session     session handle
+ *  @param[in]   identity    identity->user_id and identity->address must NOT be NULL
+ *  @param[in]   format      the desired default encryption format
  *  
  *  
  */
@@ -1839,11 +1839,11 @@ DYNAMIC_API PEP_STATUS set_ident_enc_format(PEP_SESSION session,
 /**
  *  <!--       _generate_keypair()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*identity		pEp_identity
- *  @param[in]	suppress_event		bool
+ *  @param[in]  session          PEP_SESSION
+ *  @param[in]  identity         pEp_identity*
+ *  @param[in]  suppress_event   bool
  *  
  */
 PEP_STATUS _generate_keypair(PEP_SESSION session, 
@@ -1853,9 +1853,9 @@ PEP_STATUS _generate_keypair(PEP_SESSION session,
 /**
  *  <!--       reset_pEptest_hack()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]  session        PEP_SESSION
  *  
  */
 DYNAMIC_API PEP_STATUS reset_pEptest_hack(PEP_SESSION session);
@@ -1866,12 +1866,12 @@ DYNAMIC_API PEP_STATUS reset_pEptest_hack(PEP_SESSION session);
 /**
  *  <!--       get_identity_without_trust_check()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*address		constchar
- *  @param[in]	*user_id		constchar
- *  @param[in]	**identity		pEp_identity
+ *  @param[in]  session         PEP_SESSION
+ *  @param[in]  address         const char*
+ *  @param[in]  user_id         const char*
+ *  @param[in]  identity        pEp_identity**
  *  
  */
 PEP_STATUS get_identity_without_trust_check(
@@ -1884,11 +1884,11 @@ PEP_STATUS get_identity_without_trust_check(
 /**
  *  <!--       get_identities_by_address()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*address		constchar
- *  @param[in]	**id_list		identity_list
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  address        const char*
+ *  @param[in]  id_list        identity_list**
  *  
  */
 PEP_STATUS get_identities_by_address(
@@ -1900,11 +1900,11 @@ PEP_STATUS get_identities_by_address(
 /**
  *  <!--       get_identities_by_userid()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*user_id		constchar
- *  @param[in]	**identities		identity_list
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  user_id        const char*
+ *  @param[in]  identities     identity_list**
  *  
  */
 PEP_STATUS get_identities_by_userid(
@@ -1916,11 +1916,11 @@ PEP_STATUS get_identities_by_userid(
 /**
  *  <!--       is_own_address()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*address		constchar
- *  @param[in]	*is_own_addr		bool
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  address        const char*
+ *  @param[in]  is_own_addr    bool*
  *  
  */
 PEP_STATUS is_own_address(PEP_SESSION session, 
@@ -1930,11 +1930,11 @@ PEP_STATUS is_own_address(PEP_SESSION session,
 /**
  *  <!--       replace_userid()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*old_uid		constchar
- *  @param[in]	*new_uid		constchar
+ *  @param[in]  session         PEP_SESSION
+ *  @param[in]  old_uid         const char*
+ *  @param[in]  new_uid         const char*
  *  
  */
 PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
@@ -1943,10 +1943,10 @@ PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
 /**
  *  <!--       remove_key()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*fpr		constchar
+ *  @param[in]  session     PEP_SESSION
+ *  @param[in]  fpr         const char*
  *  
  */
 PEP_STATUS remove_key(PEP_SESSION session, const char* fpr);
@@ -1954,10 +1954,10 @@ PEP_STATUS remove_key(PEP_SESSION session, const char* fpr);
 /**
  *  <!--       remove_fpr_as_default()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*fpr		constchar
+ *  @param[in]  session     PEP_SESSION
+ *  @param[in]  fpr         const char*
  *  
  */
 PEP_STATUS remove_fpr_as_default(PEP_SESSION session, 
@@ -1967,11 +1967,11 @@ PEP_STATUS remove_fpr_as_default(PEP_SESSION session,
 /**
  *  <!--       get_main_user_fpr()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*user_id		constchar
- *  @param[in]	**main_fpr		char
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  user_id        const char*
+ *  @param[in]  main_fpr       char**
  *  
  */
 PEP_STATUS get_main_user_fpr(PEP_SESSION session, 
@@ -1981,11 +1981,11 @@ PEP_STATUS get_main_user_fpr(PEP_SESSION session,
 /**
  *  <!--       replace_main_user_fpr()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*user_id		constchar
- *  @param[in]	*new_fpr		constchar
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  user_id        const char*
+ *  @param[in]  new_fpr        const char*
  *  
  */
 PEP_STATUS replace_main_user_fpr(PEP_SESSION session, const char* user_id,
@@ -1994,12 +1994,12 @@ PEP_STATUS replace_main_user_fpr(PEP_SESSION session, const char* user_id,
 /**
  *  <!--       replace_main_user_fpr_if_equal()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*user_id		constchar
- *  @param[in]	*new_fpr		constchar
- *  @param[in]	*compare_fpr		constchar
+ *  @param[in]  session         PEP_SESSION
+ *  @param[in]  user_id         const char*
+ *  @param[in]  new_fpr         const char*
+ *  @param[in]  compare_fpr     const char*
  *  
  */
 PEP_STATUS replace_main_user_fpr_if_equal(PEP_SESSION session, const char* user_id,
@@ -2008,12 +2008,12 @@ PEP_STATUS replace_main_user_fpr_if_equal(PEP_SESSION session, const char* user_
 /**
  *  <!--       get_replacement_fpr()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION 
- *  @param[in]	*fpr		const char 
- *  @param[in]	**revoked_fpr		char 
- *  @param[in]	*revocation_date		uint64_t 
+ *  @param[in]  session          PEP_SESSION
+ *  @param[in]  fpr              const char*
+ *  @param[in]  revoked_fpr      char**
+ *  @param[in]  revocation_date  uint64_t*
  *  
  */
 DYNAMIC_API PEP_STATUS get_replacement_fpr(
@@ -2026,10 +2026,10 @@ DYNAMIC_API PEP_STATUS get_replacement_fpr(
 /**
  *  <!--       refresh_userid_default_key()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*user_id		constchar
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  user_id        const char*
  *  
  */
 PEP_STATUS refresh_userid_default_key(PEP_SESSION session, const char* user_id);
@@ -2038,10 +2038,10 @@ PEP_STATUS refresh_userid_default_key(PEP_SESSION session, const char* user_id);
 /**
  *  <!--       set_as_pEp_user()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*user		pEp_identity
+ *  @param[in]  session      PEP_SESSION
+ *  @param[in]  user         pEp_identity*
  *  
  */
 DYNAMIC_API PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user);
@@ -2051,11 +2051,11 @@ DYNAMIC_API PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user);
 /**
  *  <!--       exists_person()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*identity		pEp_identity
- *  @param[in]	*exists		bool
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  identity       pEp_identity*
+ *  @param[in]  exists         bool*
  *  
  */
 PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity, bool* exists);
@@ -2063,10 +2063,10 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity, bool* exis
 /**
  *  <!--       set_pgp_keypair()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*fpr		constchar
+ *  @param[in]  session     PEP_SESSION
+ *  @param[in]  fpr         const char*
  *  
  */
 PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr);
@@ -2074,12 +2074,12 @@ PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr);
 /**
  *  <!--       set_pEp_version()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*ident		pEp_identity
- *  @param[in]	new_ver_major		unsignedint
- *  @param[in]	new_ver_minor		unsignedint
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  ident          pEp_identity*
+ *  @param[in]  new_ver_major  unsigned int
+ *  @param[in]  new_ver_minor  unsigned int
  *  
  */
 PEP_STATUS set_pEp_version(PEP_SESSION session, pEp_identity* ident, unsigned int new_ver_major, unsigned int new_ver_minor);
@@ -2087,11 +2087,11 @@ PEP_STATUS set_pEp_version(PEP_SESSION session, pEp_identity* ident, unsigned in
 /**
  *  <!--       clear_trust_info()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*user_id		constchar
- *  @param[in]	*fpr		constchar
+ *  @param[in]  session     PEP_SESSION
+ *  @param[in]  user_id     const char*
+ *  @param[in]  fpr         const char*
  *  
  */
 PEP_STATUS clear_trust_info(PEP_SESSION session,
@@ -2102,12 +2102,12 @@ PEP_STATUS clear_trust_info(PEP_SESSION session,
 /**
  *  <!--       upgrade_pEp_version_by_user_id()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*ident		pEp_identity
- *  @param[in]	new_ver_major		unsignedint
- *  @param[in]	new_ver_minor		unsignedint
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  ident          pEp_identity*
+ *  @param[in]  new_ver_major  unsigned int
+ *  @param[in]  new_ver_minor  unsigned int
  *  
  */
 PEP_STATUS upgrade_pEp_version_by_user_id(PEP_SESSION session, 
@@ -2120,11 +2120,11 @@ PEP_STATUS upgrade_pEp_version_by_user_id(PEP_SESSION session,
 /**
  *  <!--       set_person()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*identity		pEp_identity
- *  @param[in]	guard_transaction		bool
+ *  @param[in]  session            PEP_SESSION
+ *  @param[in]  identity           pEp_identity*
+ *  @param[in]  guard_transaction  bool
  *  
  */
 PEP_STATUS set_person(PEP_SESSION session, pEp_identity* identity,
@@ -2132,11 +2132,11 @@ PEP_STATUS set_person(PEP_SESSION session, pEp_identity* identity,
 /**
  *  <!--       bind_own_ident_with_contact_ident()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*own_ident		pEp_identity
- *  @param[in]	*contact_ident		pEp_identity
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  own_ident      pEp_identity*
+ *  @param[in]  contact_ident  pEp_identity*
  *  
  */
 PEP_STATUS bind_own_ident_with_contact_ident(PEP_SESSION session,
@@ -2146,10 +2146,10 @@ PEP_STATUS bind_own_ident_with_contact_ident(PEP_SESSION session,
 /**
  *  <!--       get_last_contacted()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	**id_list		identity_list
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  id_list        identity_list**
  *  
  */
 PEP_STATUS get_last_contacted(
@@ -2160,11 +2160,11 @@ PEP_STATUS get_last_contacted(
 /**
  *  <!--       get_own_ident_for_contact_id()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*contact		constpEp_identity
- *  @param[in]	**own_ident		pEp_identity
+ *  @param[in]   session        PEP_SESSION
+ *  @param[in]   contact        const pEp_identity*
+ *  @param[out]  own_ident      pEp_identity**
  *  
  */
 PEP_STATUS get_own_ident_for_contact_id(PEP_SESSION session,
@@ -2174,11 +2174,11 @@ PEP_STATUS get_own_ident_for_contact_id(PEP_SESSION session,
 /**
  *  <!--       exists_trust_entry()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*identity		pEp_identity
- *  @param[in]	*exists		bool
+ *  @param[in]   session        PEP_SESSION
+ *  @param[in]   identity       pEp_identity*
+ *  @param[out]  exists         bool*
  *  
  */
 PEP_STATUS exists_trust_entry(PEP_SESSION session, pEp_identity* identity,
@@ -2187,11 +2187,11 @@ PEP_STATUS exists_trust_entry(PEP_SESSION session, pEp_identity* identity,
 /**
  *  <!--       is_own_key()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*fpr		constchar
- *  @param[in]	*own_key		bool
+ *  @param[in]   session        PEP_SESSION
+ *  @param[in]   fpr            const char*
+ *  @param[out]  own_key        bool*
  *  
  */
 PEP_STATUS is_own_key(PEP_SESSION session, const char* fpr, bool* own_key);
@@ -2199,11 +2199,11 @@ PEP_STATUS is_own_key(PEP_SESSION session, const char* fpr, bool* own_key);
 /**
  *  <!--       get_identities_by_main_key_id()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*fpr		constchar
- *  @param[in]	**identities		identity_list
+ *  @param[in]   session      PEP_SESSION
+ *  @param[in]   fpr          const char*
+ *  @param[out]  identities   identity_list**
  *  
  */
 PEP_STATUS get_identities_by_main_key_id(
@@ -2214,14 +2214,14 @@ PEP_STATUS get_identities_by_main_key_id(
 /**
  *  <!--       sign_only()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*data		constchar
- *  @param[in]	data_size		size_t
- *  @param[in]	*fpr		constchar
- *  @param[in]	**sign		char
- *  @param[in]	*sign_size		size_t
+ *  @param[in]   session        PEP_SESSION
+ *  @param[in]   data           const char*
+ *  @param[in]   data_size      size_t
+ *  @param[in]   fpr            const char*
+ *  @param[out]  sign           char**
+ *  @param[out]  sign_size      size_t*
  *  
  */
 PEP_STATUS sign_only(PEP_SESSION session, 
@@ -2234,10 +2234,10 @@ PEP_STATUS sign_only(PEP_SESSION session,
 /**
  *  <!--       set_all_userids_to_own()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*id_list		identity_list
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  id_list        identity_list*
  *  
  */
 PEP_STATUS set_all_userids_to_own(PEP_SESSION session, 
@@ -2246,12 +2246,12 @@ PEP_STATUS set_all_userids_to_own(PEP_SESSION session,
 /**
  *  <!--       has_partner_contacted_address()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*partner_id		constchar
- *  @param[in]	*own_address		constchar
- *  @param[in]	*was_contacted		bool
+ *  @param[in]  session         PEP_SESSION
+ *  @param[in]  partner_id      const char*
+ *  @param[in]  own_address     const char*
+ *  @param[in]  was_contacted   bool*
  *  
  */
 PEP_STATUS has_partner_contacted_address(PEP_SESSION session, const char* partner_id,

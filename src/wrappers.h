@@ -16,10 +16,10 @@
 /**
  *  <!--       Fopen()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*filename		constchar
- *  @param[in]	*mode		constchar
+ *  @param[in]  filename     const char*
+ *  @param[in]  mode         const char*
  *  
  */
 static inline FILE * Fopen(const char *filename, const char *mode)
@@ -36,10 +36,10 @@ static inline FILE * Fopen(const char *filename, const char *mode)
 /**
  *  <!--       Fdopen()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	fildes		int
- *  @param[in]	*mode		constchar
+ *  @param[in]  fildes        int
+ *  @param[in]  mode          const char*
  *  
  */
 static inline FILE * Fdopen(int fildes, const char *mode)
@@ -56,11 +56,11 @@ static inline FILE * Fdopen(int fildes, const char *mode)
 /**
  *  <!--       Fgets()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*str		char
- *  @param[in]	size		int
- *  @param[in]	*stream		FILE
+ *  @param[in]  str         char*
+ *  @param[in]  size        int
+ *  @param[in]  stream      FILE*
  *  
  */
 static inline char *Fgets(char * str, int size, FILE * stream)
@@ -77,10 +77,10 @@ static inline char *Fgets(char * str, int size, FILE * stream)
 /**
  *  <!--       Fputs()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*str		constchar
- *  @param[in]	*stream		FILE
+ *  @param[in]  str         const char*
+ *  @param[in]  stream      FILE*
  *  
  */
 static inline int Fputs(const char *str, FILE * stream)
@@ -97,9 +97,9 @@ static inline int Fputs(const char *str, FILE * stream)
 /**
  *  <!--       Fclose()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*stream		FILE
+ *  @param[in]  stream         FILE*
  *  
  */
 static inline int Fclose(FILE *stream)
@@ -116,11 +116,11 @@ static inline int Fclose(FILE *stream)
 /**
  *  <!--       Freopen()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*filename		constchar
- *  @param[in]	*mode		constchar
- *  @param[in]	*stream		FILE
+ *  @param[in]  filename       const char*
+ *  @param[in]  mode           const char*
+ *  @param[in]  stream         FILE*
  *  
  */
 static inline FILE * Freopen(
@@ -157,12 +157,12 @@ static inline int Fprintf(FILE * stream, const char * format, ...)
 /**
  *  <!--       Fwrite()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*ptr		constvoid
- *  @param[in]	size		size_t
- *  @param[in]	nitems		size_t
- *  @param[in]	*stream		FILE
+ *  @param[in]  ptr         constvoid*
+ *  @param[in]  size        size_t
+ *  @param[in]  nitems      size_t
+ *  @param[in]  stream      FILE*
  *  
  */
 static inline size_t Fwrite(const void *ptr, size_t size, size_t nitems, FILE *stream)
@@ -182,12 +182,12 @@ static inline size_t Fwrite(const void *ptr, size_t size, size_t nitems, FILE *s
 /**
  *  <!--       Fread()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*ptr		void
- *  @param[in]	size		size_t
- *  @param[in]	nitems		size_t
- *  @param[in]	*stream		FILE
+ *  @param[in]  ptr         void*
+ *  @param[in]  size        size_t
+ *  @param[in]  nitems      size_t
+ *  @param[in]  stream      FILE*
  *  
  */
 static inline size_t Fread(void *ptr, size_t size, size_t nitems, FILE *stream)
@@ -207,9 +207,9 @@ static inline size_t Fread(void *ptr, size_t size, size_t nitems, FILE *stream)
 /**
  *  <!--       Fflush()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*stream		FILE
+ *  @param[in]  stream         FILE*
  *  
  */
 static inline int Fflush(FILE *stream)
@@ -226,9 +226,9 @@ static inline int Fflush(FILE *stream)
 /**
  *  <!--       Mkstemp()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*template		char
+ *  @param[in]  template         char*
  *  
  */
 static inline int Mkstemp(char *template)
@@ -245,9 +245,9 @@ static inline int Mkstemp(char *template)
 /**
  *  <!--       Close()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	fildes		int
+ *  @param[in]  fildes        int
  *  
  */
 static inline int Close(int fildes)

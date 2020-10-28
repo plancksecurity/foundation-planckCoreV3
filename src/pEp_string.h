@@ -19,8 +19,8 @@ extern "C" {
  *  
  *  @brief Allocate a new string
  *  
- *  @param[in]     src    string to copy or NULL
- *  @param[in]     len    length of newly created string or 0 for default
+ *  @param[in]   src    string to copy or NULL
+ *  @param[in]   len    length of newly created string or 0 for default
  *  
  *  @retval pointer to string object or NULL if out of memory
  *  @retval calling with str and len is equivalent to strndup()
@@ -38,7 +38,7 @@ DYNAMIC_API char * new_string(const char *src, size_t len);
  *  
  *  @brief Free memory occupied by string
  *  
- *  @param[in]     s    pointer to string to free
+ *  @param[in]   s    pointer to string to free
  *  
  *  
  */
@@ -51,8 +51,8 @@ DYNAMIC_API void free_string(char *s);
  *  
  *  @brief Duplicate a string
  *  
- *  @param[in]     src    string to duplicate
- *  @param[in]     len    length of newly created string or 0 for default
+ *  @param[in]   src    string to duplicate
+ *  @param[in]   len    length of newly created string or 0 for default
  *  
  *  @retval pointer to copy or NULL if out of memory
  *  

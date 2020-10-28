@@ -28,10 +28,10 @@ extern "C" {
  *  @brief Get a key/UID list for pattern matches in keyring (NULL or ""
  *         to return entire keyring), filtering out revoked keys in the results
  *  
- *  @param[in]     session           session handle
- *  @param[in]     search_pattern    search pattern - either an fpr, or something within the UID, or NULL / "" for
+ *  @param[in]   session           session handle
+ *  @param[in]   search_pattern    search pattern - either an fpr, or something within the UID, or NULL / "" for
  *                                   all keys
- *  @param[out]    keyinfo_list      a key/value pair list for each key / UID combination
+ *  @param[out]  keyinfo_list      a key/value pair list for each key / UID combination
  *  
  *  @warning keyinfo_list must be freed by the caller.
  *  

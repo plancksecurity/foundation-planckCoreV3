@@ -23,9 +23,9 @@ extern "C" {
 
 
 /**
- *  @enum	PEP_text_format
+ *  @enum PEP_text_format
  *  
- *  @brief	TODO
+ *  @brief TODO
  *  
  */
 typedef enum _PEP_text_format {
@@ -35,9 +35,9 @@ typedef enum _PEP_text_format {
 } PEP_text_format;
 
 /**
- *  @enum	PEP_msg_direction
+ *  @enum PEP_msg_direction
  *  
- *  @brief	TODO
+ *  @brief TODO
  *  
  */
 typedef enum _PEP_msg_direction {
@@ -48,9 +48,9 @@ typedef enum _PEP_msg_direction {
 struct _message_ref_list;
 
 /**
- *  @struct	message
+ *  @struct message
  *  
- *  @brief	TODO
+ *  @brief TODO
  *  
  */
 typedef struct _message {
@@ -89,9 +89,9 @@ typedef struct _message {
 } message;
 
 /**
- *  @struct	message_ref_list
+ *  @struct message_ref_list
  *  
- *  @brief	TODO
+ *  @brief TODO
  *  
  */
 typedef struct _message_ref_list {
@@ -104,7 +104,7 @@ typedef struct _message_ref_list {
  *  
  *  @brief Allocate new message
  *  
- *  @param[in]     dir    PEP_dir_incoming or PEP_dir_outgoing
+ *  @param[in]   dir    PEP_dir_incoming or PEP_dir_outgoing
  *  
  *  @retval pointer to new message or NULL if out of memory
  *  
@@ -121,7 +121,7 @@ DYNAMIC_API message *new_message(
  *  
  *  @brief Free message struct
  *  
- *  @param[in]     msg    message struct to free
+ *  @param[in]   msg    message struct to free
  *                        NOTA BENE:
  *                        raw data (msg->rawmsg_ref) and referenced other messages (msg->refering_msg_ref)
  *                        aren't freed and remain in the ownership of the caller!
@@ -137,7 +137,7 @@ DYNAMIC_API void free_message(message *msg);
  *  
  *  @brief Duplicate message (deep copy)
  *  
- *  @param[in]     msg    message to duplicate
+ *  @param[in]   msg    message to duplicate
  *  
  *  @retval pointer to duplicate of message pointed by msg or NULL
  *  @retval NOTA BENE:
@@ -173,7 +173,7 @@ DYNAMIC_API void message_transfer(message* dst, message *src);
  *  
  *  @brief Allocate new message reference list
  *  
- *  @param[in]     msg    message to add a reference to or NULL
+ *  @param[in]   msg    message to add a reference to or NULL
  *  
  *  @retval pointer to new message_ref_list or NULL if out of memory
  *  
@@ -188,7 +188,7 @@ DYNAMIC_API message_ref_list *new_message_ref_list(message *msg);
  *  
  *  @brief Free message reference list
  *  
- *  @param[in]     msg_list    message_ref_list to free
+ *  @param[in]   msg_list    message_ref_list to free
  *  
  *  
  */
@@ -219,8 +219,8 @@ DYNAMIC_API message_ref_list *message_ref_list_dup(
  *  @brief Add a reference to a message to a message reference
  *         list
  *  
- *  @param[in]     msg_list    message_ref_list to add to
- *  @param[in]     msg         message to add a reference to
+ *  @param[in]   msg_list    message_ref_list to add to
+ *  @param[in]   msg         message to add a reference to
  *  
  *  @retval pointer to the last element of message_ref_list or NULL if out of
  *  @retval memory

@@ -16,9 +16,9 @@ extern "C" {
 
 
 /**
- *  @enum	sync_handshake_signal
+ *  @enum    sync_handshake_signal
  *  
- *  @brief	TODO
+ *  @brief    TODO
  *  
  */
 typedef enum _sync_handshake_signal {
@@ -63,10 +63,10 @@ typedef enum _sync_handshake_signal {
  *  
  *  @brief Notify UI about sync handshaking process
  *  
- *  @param[in]     obj        object handle (implementation defined)
- *  @param[in]     me         own identity
- *  @param[in]     partner    identity of partner
- *  @param[in]     signal     reason of the notification
+ *  @param[in]   obj        object handle (implementation defined)
+ *  @param[in]   me         own identity
+ *  @param[in]   partner    identity of partner
+ *  @param[in]   signal     reason of the notification
  *  
  *  @retval PEP_STATUS_OK or any other value on error
  *  
@@ -81,9 +81,9 @@ typedef PEP_STATUS (*notifyHandshake_t)(
     );
 
 /**
- *  @enum	sync_handshake_result
+ *  @enum    sync_handshake_result
  *  
- *  @brief	TODO
+ *  @brief    TODO
  *  
  */
 typedef enum _sync_handshake_result {
@@ -97,9 +97,9 @@ typedef enum _sync_handshake_result {
  *  
  *  @brief Provide the result of the handshake dialog
  *  
- *  @param[in]     session               session handle
- *  @param[in]     result                handshake result
- *  @param[in]     identities_sharing    own_identities sharing data in this group
+ *  @param[in]   session               session handle
+ *  @param[in]   result                handshake result
+ *  @param[in]   identities_sharing    own_identities sharing data in this group
  *  
  *  @warning identities_sharing may be NULL; in this case all identities are sharing
  *           data in the group
@@ -119,8 +119,8 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
  *  
  *  @brief Receive next sync event
  *  
- *  @param[in]     management    application defined; usually a locked queue
- *  @param[in]     threshold     threshold in seconds for timeout
+ *  @param[in]   management    application defined; usually a locked queue
+ *  @param[in]   threshold     threshold in seconds for timeout
  *  
  *  @retval next event
  *  
@@ -138,10 +138,10 @@ typedef SYNC_EVENT (*retrieve_next_sync_event_t)(void *management,
  *  
  *  @brief Register adapter's callbacks
  *  
- *  @param[in]     session                     session where to register callbacks
- *  @param[in]     management                  application defined; usually a locked queue
- *  @param[in]     notifyHandshake             callback for doing the handshake
- *  @param[in]     retrieve_next_sync_event    callback for receiving sync event
+ *  @param[in]   session                     session where to register callbacks
+ *  @param[in]   management                  application defined; usually a locked queue
+ *  @param[in]   notifyHandshake             callback for doing the handshake
+ *  @param[in]   retrieve_next_sync_event    callback for receiving sync event
  *  
  *  @retval PEP_STATUS_OK or any other value on errror
  *  
@@ -168,9 +168,9 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
 /**
  *  <!--       unregister_sync_callbacks()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]  session        PEP_SESSION
  *  
  */
 DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session);
@@ -242,8 +242,8 @@ DYNAMIC_API SYNC_EVENT new_sync_timeout_event();
  *  
  *  @brief Enter a device group
  *  
- *  @param[in]     session               pEp session
- *  @param[in]     identities_sharing    own_identities sharing data in this group
+ *  @param[in]   session               pEp session
+ *  @param[in]   identities_sharing    own_identities sharing data in this group
  *  
  *  @warning identities_sharing may be NULL; in this case all identities are sharing
  *           data in the group

@@ -18,7 +18,7 @@ extern "C" {
  *  
  *  @brief Determine if text encodes a PGP message
  *  
- *  @param[in]     text    text to examine
+ *  @param[in]   text    text to examine
  *  
  *  @retval true if text is a PGP message, false otherwise
  *  
@@ -33,12 +33,12 @@ DYNAMIC_API bool is_PGP_message_text(const char *text);
  *  
  *  @brief Encode a MIME message
  *  
- *  @param[in]     msg                       message to encode
- *  @param[in]     omit_fields               only encode message body and 
+ *  @param[in]   msg                       message to encode
+ *  @param[in]   omit_fields               only encode message body and
  *                                           attachments
  *  @param[out]    mimetext                  the resulting encoded text or 
  *                                           NULL on any error
- *  @param[in]     has_pEp_msg_attachment    is the first *attachment* to this 
+ *  @param[in]   has_pEp_msg_attachment    is the first *attachment* to this
  *                                           message an embedded pEp message
  *                                           which needs appropriate marking
  *                                           (forwarded=no, etc) and encoding?

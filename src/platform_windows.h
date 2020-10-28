@@ -55,38 +55,38 @@ extern "C" {
 /**
  *  <!--       dlopen()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*filename		constchar
- *  @param[in]	flag		int
+ *  @param[in]  filename    const char*
+ *  @param[in]  flag        int
  *  
  */
 void *dlopen(const char *filename, int flag);
 /**
  *  <!--       dlclose()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*handle		void
+ *  @param[in]  handle         void*
  *  
  */
 int dlclose(void *handle);
 /**
  *  <!--       dlsym()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*handle		void
- *  @param[in]	*symbol		constchar
+ *  @param[in]  handle         void*
+ *  @param[in]  symbol         const char*
  *  
  */
 void *dlsym(void *handle, const char *symbol);
 /**
  *  <!--       mkstemp()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*templ		char
+ *  @param[in]  templ         char*
  *  
  */
 int mkstemp(char *templ);
@@ -96,9 +96,9 @@ int mkstemp(char *templ);
 /**
  *  <!--       timegm()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*timeptr		timestamp
+ *  @param[in]  timeptr         timestamp*
  *  
  */
 DYNAMIC_API time_t timegm(timestamp *timeptr);
@@ -133,20 +133,20 @@ DYNAMIC_API time_t timegm(timestamp *timeptr);
 /**
  *  <!--       strndup()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*s1		const char 
- *  @param[in]	n		size_t 
+ *  @param[in]  s1       const char*
+ *  @param[in]  n        size_t
  *  
  */
 char *strndup(const char *s1, size_t n);
 /**
  *  <!--       stpcpy()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*dst		char
- *  @param[in]	*src		constchar
+ *  @param[in]  dst         char*
+ *  @param[in]  src         const char*
  *  
  */
 char *stpcpy(char *dst, const char *src);
@@ -154,33 +154,33 @@ char *stpcpy(char *dst, const char *src);
 /**
  *  <!--       strlcpy()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*dst		char
- *  @param[in]	*src		constchar
- *  @param[in]	size		size_t
+ *  @param[in]  dst         char*
+ *  @param[in]  src         const char*
+ *  @param[in]  size        size_t
  *  
  */
-size_t strlcpy(char* dst, const	char* src, size_t size);
+size_t strlcpy(char* dst, const    char* src, size_t size);
 /**
  *  <!--       strlcat()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*dst		char
- *  @param[in]	*src		constchar
- *  @param[in]	size		size_t
+ *  @param[in]  dst         char*
+ *  @param[in]  src         const char*
+ *  @param[in]  size        size_t
  *  
  */
-size_t strlcat(char* dst, const	char* src, size_t size);
+size_t strlcat(char* dst, const    char* src, size_t size);
 /**
  *  <!--       strnstr()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*big		constchar
- *  @param[in]	*little		constchar
- *  @param[in]	len		size_t
+ *  @param[in]  big         const char*
+ *  @param[in]  little      const char*
+ *  @param[in]  len         size_t
  *  
  */
 char *strnstr(const char *big, const char *little, size_t len);
@@ -189,7 +189,7 @@ char *strnstr(const char *big, const char *little, size_t len);
 /**
  *  <!--       windoze_keys_db()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
  *  
  */
@@ -197,7 +197,7 @@ const char *windoze_keys_db(void);
 /**
  *  <!--       windoze_local_db()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
  *  
  */
@@ -205,7 +205,7 @@ const char *windoze_local_db(void);
 /**
  *  <!--       windoze_system_db()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
  *  
  */
@@ -214,12 +214,12 @@ const char *windoze_system_db(void);
 /**
  *  <!--       log_output_debug()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*title		constchar
- *  @param[in]	*entity		constchar
- *  @param[in]	*description		constchar
- *  @param[in]	*comment		constchar
+ *  @param[in]  title          const char*
+ *  @param[in]  entity         const char*
+ *  @param[in]  description    const char*
+ *  @param[in]  comment        const char*
  *  
  */
 void log_output_debug(const char *title, const char *entity, const char *description, const char *comment);
@@ -227,7 +227,7 @@ void log_output_debug(const char *title, const char *entity, const char *descrip
 /**
  *  <!--       random()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
  *  
  */
@@ -241,29 +241,29 @@ typedef char uuid_string_t[37];
 /**
  *  <!--       uuid_generate_random()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	out		pEpUUID
+ *  @param[in]  out        pEpUUID
  *  
  */
 void uuid_generate_random(pEpUUID out);
 /**
  *  <!--       uuid_parse()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*in		char
- *  @param[in]	uu		pEpUUID
+ *  @param[in]  in        char*
+ *  @param[in]  uu        pEpUUID
  *  
  */
 int uuid_parse(char *in, pEpUUID uu);
 /**
  *  <!--       uuid_unparse_upper()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	uu		pEpUUID
- *  @param[in]	out		uuid_string_t
+ *  @param[in]  uu        pEpUUID
+ *  @param[in]  out       uuid_string_t
  *  
  */
 void uuid_unparse_upper(pEpUUID uu, uuid_string_t out);

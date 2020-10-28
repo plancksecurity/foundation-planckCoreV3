@@ -125,14 +125,14 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity);
 /**
  *  <!--       _myself()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*identity		pEp_identity
- *  @param[in]	do_keygen		bool
- *  @param[in]	do_renew		bool
- *  @param[in]	ignore_flags		bool
- *  @param[in]	read_only		bool
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  identity       pEp_identity*
+ *  @param[in]  do_keygen      bool
+ *  @param[in]  do_renew       bool
+ *  @param[in]  ignore_flags   bool
+ *  @param[in]  read_only      bool
  *  
  */
 PEP_STATUS _myself(PEP_SESSION session, 
@@ -147,7 +147,7 @@ PEP_STATUS _myself(PEP_SESSION session,
  *  
  *  @brief Callback being called by do_keymanagement()
  *  
- *  @param[in]     management    data structure to deliver (implementation defined)
+ *  @param[in]   management    data structure to deliver (implementation defined)
  *  
  *  @retval identity to check or NULL to terminate do_keymanagement()
  *  @retval if given identity must be created with new_identity()
@@ -168,8 +168,8 @@ typedef pEp_identity *(*retrieve_next_identity_t)(void *management);
  *  
  *  @brief Callback for appending to queue
  *  
- *  @param[in]     ident         identity to examine
- *  @param[in]     management    data structure to deliver (implementation defined)
+ *  @param[in]   ident         identity to examine
+ *  @param[in]   management    data structure to deliver (implementation defined)
  *  
  *  @retval 0 if identity was added successfully to queue or nonzero otherwise
  *  
@@ -184,9 +184,9 @@ typedef int (*examine_identity_t)(pEp_identity *ident, void *management);
  *  
  *  @brief Register examine_identity() callback
  *  
- *  @param[in]     session             session to use
- *  @param[in]     examine_identity    examine_identity() function to register
- *  @param[in]     management          data structure to deliver (implementation defined)
+ *  @param[in]   session             session to use
+ *  @param[in]   examine_identity    examine_identity() function to register
+ *  @param[in]   management          data structure to deliver (implementation defined)
  *  
  *  
  */
@@ -203,7 +203,7 @@ DYNAMIC_API PEP_STATUS register_examine_function(
  *  
  *  @brief Function to be run on an extra thread
  *  
- *  @param[in]     retrieve_next_identity    pointer to retrieve_next_identity()
+ *  @param[in]   retrieve_next_identity    pointer to retrieve_next_identity()
  *                                           callback which returns at least a valid
  *                                           address field in the identity struct
  *  
@@ -229,8 +229,8 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
  *  
  *  @brief Mark key as being compromised
  *  
- *  @param[in]     session    session to use
- *  @param[in]     ident      person and key which was compromised
+ *  @param[in]   session    session to use
+ *  @param[in]   ident      person and key which was compromised
  *  
  *  @warning ident is INPUT ONLY. If you want updated trust on the identity, you'll have
  *           to call update_identity or myself respectively after this.
@@ -253,8 +253,8 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
  *  
  *  @brief Mark a key as trusted for a user
  *  
- *  @param[in]     session    session to use
- *  @param[in]     ident      person and key to trust in - this must not be an
+ *  @param[in]   session    session to use
+ *  @param[in]   ident      person and key to trust in - this must not be an
  *                            own_identity in which the .me flag is set or
  *                            the user_id is an own user_id.
  *  
@@ -280,8 +280,8 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
  *         associated with outselves for issues like
  *         manual key import
  *  
- *  @param[in]     session    session to use
- *  @param[in]     ident      own ident containing fpr to trust
+ *  @param[in]   session    session to use
+ *  @param[in]   ident      own ident containing fpr to trust
  *  
  *  @warning if this is a public key only, keep in mind that if
  *           the private part of the keypair is later added,
@@ -309,8 +309,8 @@ DYNAMIC_API PEP_STATUS trust_own_key(
  *  @brief Reset trust bit or explicitly mistrusted status for an identity and
  *         its accompanying key/user_id pair.
  *  
- *  @param[in]     session    session to use
- *  @param[in]     ident      identity for person and key whose trust status is to be reset
+ *  @param[in]   session    session to use
+ *  @param[in]   ident      identity for person and key whose trust status is to be reset
  *  
  *  @warning ident is INPUT ONLY. If you want updated trust on the identity, you'll have
  *           to call update_identity or myself respectively after this.
@@ -383,11 +383,11 @@ DYNAMIC_API PEP_STATUS own_identities_retrieve(
 /**
  *  <!--       contains_priv_key()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*fpr		constchar
- *  @param[in]	*has_private		bool
+ *  @param[in]  session       PEP_SESSION
+ *  @param[in]  fpr           const char*
+ *  @param[in]  has_private   bool*
  *  
  */
 PEP_STATUS contains_priv_key(PEP_SESSION session, const char *fpr,
@@ -398,10 +398,10 @@ PEP_STATUS contains_priv_key(PEP_SESSION session, const char *fpr,
  *  
  *  @brief Retrieve all flagged keypair fingerprints 
  *  
- *  @param[in]     session           session to use
- *  @param[out]    keylist           list of fingerprints
- *  @param[in]     excluded_flags    flags to exclude from results
- *  @param[in]     private_only      if true, return only fprs for
+ *  @param[in]   session           session to use
+ *  @param[out]  keylist           list of fingerprints
+ *  @param[in]   excluded_flags    flags to exclude from results
+ *  @param[in]   private_only      if true, return only fprs for
  *                                   which we have the secret part
  *  
  *  @warning the ownership of the list goes to the caller
@@ -478,9 +478,9 @@ DYNAMIC_API PEP_STATUS set_own_key(
 /**
  *  <!--       clean_own_key_defaults()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]  session     PEP_SESSION
  *  
  */
 DYNAMIC_API PEP_STATUS clean_own_key_defaults(PEP_SESSION session);
@@ -488,11 +488,11 @@ DYNAMIC_API PEP_STATUS clean_own_key_defaults(PEP_SESSION session);
 /**
  *  <!--       get_all_keys_for_user()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*user_id		constchar
- *  @param[in]	**keys		stringlist_t
+ *  @param[in]  session   PEP_SESSION
+ *  @param[in]  user_id   const char*
+ *  @param[in]  keys      stringlist_t**
  *  
  */
 PEP_STATUS get_all_keys_for_user(PEP_SESSION session, 
@@ -505,42 +505,42 @@ PEP_STATUS get_all_keys_for_user(PEP_SESSION session,
 /**
  *  <!--       add_mistrusted_key()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*fpr		constchar
+ *  @param[in]  session   PEP_SESSION
+ *  @param[in]  fpr       const char*
  *  
  */
 PEP_STATUS add_mistrusted_key(PEP_SESSION session, const char* fpr);
 /**
  *  <!--       delete_mistrusted_key()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*fpr		constchar
+ *  @param[in]  session     PEP_SESSION
+ *  @param[in]  fpr         const char*
  *  
  */
 PEP_STATUS delete_mistrusted_key(PEP_SESSION session, const char* fpr);
 /**
  *  <!--       is_mistrusted_key()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*fpr		constchar
- *  @param[in]	*mistrusted		bool
+ *  @param[in]  session      PEP_SESSION
+ *  @param[in]  fpr          const char*
+ *  @param[in]  mistrusted   bool*
  *  
  */
 PEP_STATUS is_mistrusted_key(PEP_SESSION session, const char* fpr, bool* mistrusted);
 /**
  *  <!--       get_user_default_key()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*user_id		constchar
- *  @param[in]	**default_key		char
+ *  @param[in]  session         PEP_SESSION
+ *  @param[in]  user_id         const char*
+ *  @param[in]  default_key     char**
  *  
  */
 PEP_STATUS get_user_default_key(PEP_SESSION session, const char* user_id,
@@ -556,14 +556,14 @@ PEP_STATUS get_user_default_key(PEP_SESSION session, const char* user_id,
 /**
  *  <!--       get_valid_pubkey()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*stored_identity		pEp_identity
- *  @param[in]	*is_identity_default		bool
- *  @param[in]	*is_user_default		bool
- *  @param[in]	*is_address_default		bool
- *  @param[in]	check_blacklist		bool
+ *  @param[in]  session               PEP_SESSION
+ *  @param[in]  stored_identity       pEp_identity*
+ *  @param[in]  is_identity_default   bool*
+ *  @param[in]  is_user_default       bool*
+ *  @param[in]  is_address_default    bool*
+ *  @param[in]  check_blacklist       bool
  *  
  */
 PEP_STATUS get_valid_pubkey(PEP_SESSION session,

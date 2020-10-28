@@ -14,9 +14,9 @@ extern "C" {
 
 
 /**
- *  @struct	stringpair_t
+ *  @struct    stringpair_t
  *  
- *  @brief	TODO
+ *  @brief    TODO
  *  
  */
 typedef struct _stringpair_t {
@@ -30,8 +30,8 @@ typedef struct _stringpair_t {
  *  
  *  @brief Allocate new stringpair_t
  *  
- *  @param[in]     key      utf-8 string used as key, should not be NULL
- *  @param[in]     value    utf-8 string containing the value, should not be NULL
+ *  @param[in]   key      utf-8 string used as key, should not be NULL
+ *  @param[in]   value    utf-8 string containing the value, should not be NULL
  *  
  *  @retval pointer to stringpair_t or NULL on failure
  *  
@@ -47,7 +47,7 @@ DYNAMIC_API stringpair_t * new_stringpair(const char *key, const char *value);
  *  
  *  @brief Free memory allocated by stringpair_t
  *  
- *  @param[in]     pair    pointer to stringpair_t to free
+ *  @param[in]   pair    pointer to stringpair_t to free
  *  
  *  
  */
@@ -60,7 +60,7 @@ DYNAMIC_API void free_stringpair(stringpair_t * pair);
  *  
  *  @brief Duplicate stringpair_t (deep copy)
  *  
- *  @param[in]     src    pointer to stringpair_t to duplicate
+ *  @param[in]   src    pointer to stringpair_t to duplicate
  *  
  *  @retval pointer to copy of src or NULL on failure
  *  
@@ -71,9 +71,9 @@ DYNAMIC_API stringpair_t * stringpair_dup(const stringpair_t *src);
 
 
 /**
- *  @struct	stringpair_list_t
+ *  @struct    stringpair_list_t
  *  
- *  @brief	TODO
+ *  @brief    TODO
  *  
  */
 typedef struct _stringpair_list_t {
@@ -87,7 +87,7 @@ typedef struct _stringpair_list_t {
  *  
  *  @brief Allocate a new stringpair_list
  *  
- *  @param[in]     value    initial value
+ *  @param[in]   value    initial value
  *  
  *  @retval pointer to stringpair_list_t object or NULL if out of memory
  *  
@@ -104,7 +104,7 @@ DYNAMIC_API stringpair_list_t *new_stringpair_list(stringpair_t *value);
  *  
  *  @brief Duplicate a stringpair_list (deep copy)
  *  
- *  @param[in]     src    stringpair_list to copy
+ *  @param[in]   src    stringpair_list to copy
  *  
  *  @retval pointer to stringpair_list_t object or NULL if out of memory
  *  @retval stringpair value copies created by this function belong to the returned list
@@ -122,9 +122,9 @@ DYNAMIC_API stringpair_list_t *stringpair_list_dup(
  *  
  *  @brief Add key to stringpair_list
  *  
- *  @param[in]     stringpair_list    stringpair_list struct or NULL to create a new
+ *  @param[in]   stringpair_list    stringpair_list struct or NULL to create a new
  *                                    one
- *  @param[in]     value              stringpair to add
+ *  @param[in]   value              stringpair to add
  *  
  *  @retval pointer to last element in stringpair_list or NULL if out of memory
  *  
@@ -143,8 +143,8 @@ DYNAMIC_API stringpair_list_t *stringpair_list_add(
  *  
  *  @brief Append stringpair_list to stringpair_list
  *  
- *  @param[in]     stringpair_list    stringpair_list struct to append to
- *  @param[in]     second             stringpair_list struct to append
+ *  @param[in]   stringpair_list    stringpair_list struct to append to
+ *  @param[in]   second             stringpair_list struct to append
  *  
  *  @retval pointer to last element in stringpair_list or NULL if out of memory
  *  @retval or stringpair_list is NULL
@@ -165,7 +165,7 @@ DYNAMIC_API stringpair_list_t *stringpair_list_append(
  *  
  *  @brief Get length of stringpair_list
  *  
- *  @param[in]     stringpair_list    stringpair_list struct to determine length of
+ *  @param[in]   stringpair_list    stringpair_list struct to determine length of
  *  
  *  @retval length of stringpair_list in number of elements
  *  
@@ -182,7 +182,7 @@ DYNAMIC_API int stringpair_list_length(
  *  
  *  @brief Free memory occupied by stringpair_list
  *  
- *  @param[in]     stringpair_list    stringpair_list to free
+ *  @param[in]   stringpair_list    stringpair_list to free
  *  
  *  
  */
@@ -195,8 +195,8 @@ DYNAMIC_API void free_stringpair_list(stringpair_list_t *stringpair_list);
  *  
  *  @brief Find element in list using key
  *  
- *  @param[in]     stringpair_list    list to search
- *  @param[in]     key                key to search for
+ *  @param[in]   stringpair_list    list to search
+ *  @param[in]   key                key to search for
  *  
  *  @retval node with result if found or NULL if not
  *  
@@ -212,10 +212,10 @@ DYNAMIC_API stringpair_list_t *stringpair_list_find(
 /**
  *  <!--       stringpair_list_delete_by_key()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*sp_list		stringpair_list_t
- *  @param[in]	*key		constchar
+ *  @param[in]  sp_list     stringpair_list_t*
+ *  @param[in]  key         const char*
  *  
  */
 DYNAMIC_API stringpair_list_t *stringpair_list_delete_by_key(

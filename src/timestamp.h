@@ -51,7 +51,7 @@ DYNAMIC_API time_t timegm_with_gmtoff(const timestamp* ts);
  *  
  *  @brief Allocate a new timestamp
  *  
- *  @param[in]     clock    initial value or 0 if not available
+ *  @param[in]   clock    initial value or 0 if not available
  *  
  *  @retval pointer to timestamp object or NULL if out of memory
  *  
@@ -66,7 +66,7 @@ DYNAMIC_API timestamp * new_timestamp(time_t clock);
  *  
  *  @brief Free memory occupied by timestamp
  *  
- *  @param[in]     ts    pointer to timestamp to free
+ *  @param[in]   ts    pointer to timestamp to free
  *  
  *  
  */
@@ -79,7 +79,7 @@ DYNAMIC_API void free_timestamp(timestamp *ts);
  *  
  *  @brief Duplicate a timestamp
  *  
- *  @param[in]     src    pointer to timestamp to duplicate
+ *  @param[in]   src    pointer to timestamp to duplicate
  *  
  *  @retval pointer to copy or NULL if out of memory
  *  

@@ -22,8 +22,8 @@
  *  
  *  @brief      initialise the sequoia driver for this session
  *  
- *  @param[in]    session        PEP_SESSION
- *  @param[in]    in_first    true if this is the first pEp session running
+ *  @param[in]  session     PEP_SESSION
+ *  @param[in]  in_first    true if this is the first pEp session running
  *                          after startup, else false
  *  
  */
@@ -34,8 +34,8 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first);
  *  
  *  @brief      release resources used by the sequoia driver in this session
  *  
- *  @param[in]    session        PEP_SESSION
- *  @param[in]    out_last    true if this is the last extant pEp session
+ *  @param[in]  session     PEP_SESSION
+ *  @param[in]  out_last    true if this is the last extant pEp session
  *                          running, else false
  *  
  */
@@ -46,15 +46,15 @@ void pgp_release(PEP_SESSION session, bool out_last);
  *  
  *  @brief            TODO
  *  
- *  @param[in]    session        PEP_SESSION
- *  @param[in]    *ctext        constchar
- *  @param[in]    csize        size_t
- *  @param[in]    *dsigtext        constchar
- *  @param[in]    dsigsize        size_t
- *  @param[in]    **ptext        char
- *  @param[in]    *psize        size_t
- *  @param[in]    **keylist        stringlist_t
- *  @param[in]    **filename_ptr        char
+ *  @param[in]  session       PEP_SESSION
+ *  @param[in]  ctext         const char*
+ *  @param[in]  csize         size_t
+ *  @param[in]  dsigtext      const char*
+ *  @param[in]  dsigsize      size_t
+ *  @param[in]  ptext         char**
+ *  @param[in]  psize         size_t*
+ *  @param[in]  keylist       stringlist_t**
+ *  @param[in]  filename_ptr  char**
  *  
  */
 PEP_STATUS pgp_decrypt_and_verify(
@@ -69,12 +69,12 @@ PEP_STATUS pgp_decrypt_and_verify(
  *  
  *  @brief            TODO
  *  
- *  @param[in]    session        PEP_SESSION
- *  @param[in]    *keylist        conststringlist_t
- *  @param[in]    *ptext        constchar
- *  @param[in]    psize        size_t
- *  @param[in]    **ctext        char
- *  @param[in]    *csize        size_t
+ *  @param[in]   session      PEP_SESSION
+ *  @param[in]   keylist      const stringlist_t*
+ *  @param[in]   ptext        const char*
+ *  @param[in]   psize        size_t
+ *  @param[out]  ctext        char**
+ *  @param[out]  csize        size_t*
  *  
  */
 PEP_STATUS pgp_encrypt_and_sign(
@@ -87,12 +87,12 @@ PEP_STATUS pgp_encrypt_and_sign(
  *  
  *  @brief            TODO
  *  
- *  @param[in]    session        PEP_SESSION
- *  @param[in]    *fpr        constchar
- *  @param[in]    *ptext        constchar
- *  @param[in]    psize        size_t
- *  @param[in]    **stext        char
- *  @param[in]    *ssize        size_t
+ *  @param[in]   session        PEP_SESSION
+ *  @param[in]   fpr            const char*
+ *  @param[in]   ptext          const char*
+ *  @param[in]   psize          size_t
+ *  @param[out]  stext          char**
+ *  @param[out]  ssize          size_t*
  *  
  */
 PEP_STATUS pgp_sign_only(
@@ -105,12 +105,12 @@ PEP_STATUS pgp_sign_only(
  *  
  *  @brief            TODO
  *  
- *  @param[in]    session        PEP_SESSION
- *  @param[in]    *keylist        conststringlist_t
- *  @param[in]    *ptext        constchar
- *  @param[in]    psize        size_t
- *  @param[in]    **ctext        char
- *  @param[in]    *csize        size_t
+ *  @param[in]   session        PEP_SESSION
+ *  @param[in]   keylist        const stringlist_t*
+ *  @param[in]   ptext          const char*
+ *  @param[in]   psize          size_t
+ *  @param[out]  ctext          char**
+ *  @param[out]  csize          size_t*
  *  
  */
 PEP_STATUS pgp_encrypt_only(
@@ -124,12 +124,12 @@ PEP_STATUS pgp_encrypt_only(
  *  
  *  @brief            TODO
  *  
- *  @param[in]    session        PEP_SESSION
- *  @param[in]    *text        constchar
- *  @param[in]    size        size_t
- *  @param[in]    *signature        constchar
- *  @param[in]    sig_size        size_t
- *  @param[in]    **keylist        stringlist_t
+ *  @param[in]  session      PEP_SESSION
+ *  @param[in]  text         const char*
+ *  @param[in]  size         size_t
+ *  @param[in]  signature    const char*
+ *  @param[in]  sig_size     size_t
+ *  @param[in]  keylist      stringlist_t**
  *  
  */
 PEP_STATUS pgp_verify_text(
@@ -142,8 +142,8 @@ PEP_STATUS pgp_verify_text(
  *  
  *  @brief            TODO
  *  
- *  @param[in]    session        PEP_SESSION
- *  @param[in]    *fpr        constchar
+ *  @param[in]  session     PEP_SESSION
+ *  @param[in]  fpr         const char*
  *  
  */
 PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr);
@@ -153,11 +153,11 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr);
  *  
  *  @brief            TODO
  *  
- *  @param[in]    session        PEP_SESSION
- *  @param[in]    *fpr        constchar
- *  @param[in]    **key_data        char
- *  @param[in]    *size        size_t
- *  @param[in]    secret        bool
+ *  @param[in]  session     PEP_SESSION
+ *  @param[in]  fpr         const char*
+ *  @param[in]  key_data    char**
+ *  @param[in]  size        size_t*
+ *  @param[in]  secret      bool
  *  
  */
 PEP_STATUS pgp_export_keydata(
@@ -172,7 +172,7 @@ PEP_STATUS pgp_export_keydata(
  *          userid pattern
  * 
  *  @param[in]        session                PEP_SESSION
- *  @param[in]        pattern                Pattern to search for; could be empty, 
+ *  @param[in]        pattern                Pattern to search for; could be empty,
  *                                           an fpr, or a mailbox (email, URI, etc).
  *  @param[in,out]    keylist                A list of fprs containing matching keys.
  *  
@@ -191,7 +191,7 @@ PEP_STATUS pgp_find_keys(
  *          or OpenPGP userid pattern
  *  
  *  @param[in]        session                PEP_SESSION
- *  @param[in]        pattern                Pattern to search for; could be empty, 
+ *  @param[in]        pattern                Pattern to search for; could be empty,
  *                                           an fpr, or a mailbox (email, URI, etc).
  *  @param[in,out]    keyinfo_list           A list of <fpr, OpenPGP userid> tuples for the
  *                                           matching keys.
@@ -207,8 +207,8 @@ PEP_STATUS pgp_list_keyinfo(
  *  
  *  @brief            TODO
  *  
- *  @param[in]    session        PEP_SESSION
- *  @param[in]    *identity        pEp_identity
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  identity       pEp_identity*
  *  
  */
 PEP_STATUS pgp_generate_keypair(
@@ -220,9 +220,9 @@ PEP_STATUS pgp_generate_keypair(
  *  
  *  @brief            TODO
  *  
- *  @param[in]    session       PEP_SESSION
- *  @param[in]    *fpr          constchar
- *  @param[in]    *comm_type    PEP_comm_type
+ *  @param[in]  session       PEP_SESSION
+ *  @param[in]  fpr           const char*
+ *  @param[in]  comm_type     PEP_comm_type*
  *  
  */
 PEP_STATUS pgp_get_key_rating(
@@ -236,12 +236,12 @@ PEP_STATUS pgp_get_key_rating(
  *  
  *  @brief            TODO
  *  
- *  @param[in]    session              PEP_SESSION 
- *  @param[in]    *key_data            const char 
- *  @param[in]    size                 size_t 
- *  @param[in]    **private_idents     identity_list 
- *  @param[in]    **imported_keys      stringlist_t 
- *  @param[in]    *changed_key_index   uint64_t 
+ *  @param[in]  session              PEP_SESSION
+ *  @param[in]  key_data             const char *
+ *  @param[in]  size                 size_t
+ *  @param[in]  private_idents       identity_list **
+ *  @param[in]  imported_keys        stringlist_t **
+ *  @param[in]  changed_key_index    uint64_t *
  *  
  */
 PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
@@ -254,10 +254,10 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
  *  
  *  @brief            TODO
  *  
- *  @param[in]    session        PEP_SESSION
- *  @param[in]    *key_data        constchar
- *  @param[in]    size        size_t
- *  @param[in]    **private_idents        identity_list
+ *  @param[in]  session         PEP_SESSION
+ *  @param[in]  key_data        const char*
+ *  @param[in]  size            size_t
+ *  @param[in]  private_idents  identity_list**
  *  
  */
 PEP_STATUS pgp_import_private_keydata(PEP_SESSION session, const char *key_data,
@@ -268,8 +268,8 @@ PEP_STATUS pgp_import_private_keydata(PEP_SESSION session, const char *key_data,
  *  
  *  @brief            TODO
  *  
- *  @param[in]    session        PEP_SESSION
- *  @param[in]    *pattern        constchar
+ *  @param[in]  session         PEP_SESSION
+ *  @param[in]  pattern         const char*
  *  
  */
 PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern);
@@ -278,8 +278,8 @@ PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern);
  *  
  *  @brief            TODO
  *  
- *  @param[in]    session        PEP_SESSION
- *  @param[in]    *pattern        constchar
+ *  @param[in]  session         PEP_SESSION
+ *  @param[in]  pattern         const char*
  *  
  */
 PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern);
@@ -289,9 +289,9 @@ PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern);
  *  
  *  @brief            TODO
  *  
- *  @param[in]    session        PEP_SESSION
- *  @param[in]    *fpr        constchar
- *  @param[in]    *ts        consttimestamp
+ *  @param[in]  session     PEP_SESSION
+ *  @param[in]  fpr         const char*
+ *  @param[in]  ts          const timestamp*
  *  
  */
 PEP_STATUS pgp_renew_key(
@@ -305,9 +305,9 @@ PEP_STATUS pgp_renew_key(
  *  
  *  @brief            TODO
  *  
- *  @param[in]    session        PEP_SESSION
- *  @param[in]    *fpr        constchar
- *  @param[in]    *reason        constchar
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  fpr            const char*
+ *  @param[in]  reason         const char*
  *  
  */
 PEP_STATUS pgp_revoke_key(
@@ -321,10 +321,10 @@ PEP_STATUS pgp_revoke_key(
  *  
  *  @brief            TODO
  *  
- *  @param[in]    session        PEP_SESSION
- *  @param[in]    *fpr        constchar
- *  @param[in]    when        consttime_t
- *  @param[in]    *expired        bool
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  fpr            const char*
+ *  @param[in]  when           const time_t
+ *  @param[in]  expired        bool*
  *  
  */
 PEP_STATUS pgp_key_expired(
@@ -339,9 +339,9 @@ PEP_STATUS pgp_key_expired(
  *  
  *  @brief            TODO
  *  
- *  @param[in]    session        PEP_SESSION
- *  @param[in]    *fpr        constchar
- *  @param[in]    *revoked        bool
+ *  @param[in]   session        PEP_SESSION
+ *  @param[in]   fpr            const char*
+ *  @param[out]  revoked        bool*
  *  
  */
 PEP_STATUS pgp_key_revoked(
@@ -355,9 +355,9 @@ PEP_STATUS pgp_key_revoked(
  *  
  *  @brief            TODO
  *  
- *  @param[in]    session        PEP_SESSION
- *  @param[in]    *fpr        constchar
- *  @param[in]    *created        time_t
+ *  @param[in]   session        PEP_SESSION
+ *  @param[in]   fpr            const char*
+ *  @param[out]  created        time_t*
  *  
  */
 PEP_STATUS pgp_key_created(
@@ -371,9 +371,9 @@ PEP_STATUS pgp_key_created(
  *  
  *  @brief            TODO
  *  
- *  @param[in]    session        PEP_SESSION
- *  @param[in]    *fpr        constchar
- *  @param[in]    *has_private        bool
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  fpr         const char*
+ *  @param[in]  has_private         bool*
  *  
  */
 PEP_STATUS pgp_contains_priv_key(
@@ -388,8 +388,8 @@ PEP_STATUS pgp_contains_priv_key(
  *          userid pattern AND contain a private key
  * 
  *  @param[in]        session                PEP_SESSION
- *  @param[in]        pattern                Pattern to search for; could be empty, 
- *                                      an fpr, or a mailbox (email, URI, etc).
+ *  @param[in]        pattern                Pattern to search for; could be empty,
+ *                                             an fpr, or a mailbox (email, URI, etc).
  *  @param[in,out]    keylist                A list of fprs containing matching keys.
  *  
  *  @note   Unlike pgp_list_keyinfo, this function returns revoked keys.
@@ -405,7 +405,7 @@ PEP_STATUS pgp_find_private_keys(
  *  
  *  @brief            TODO
  *  
- *  @param[in]    **path        constchar
+ *  @param[out]  path          const char**
  *  
  */
 PEP_STATUS pgp_binary(const char **path);
@@ -415,8 +415,8 @@ PEP_STATUS pgp_binary(const char **path);
  *  
  *  @brief            TODO
  *  
- *  @param[in]    session        PEP_SESSION
- *  @param[in]    suite        PEP_CIPHER_SUITE
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  suite          PEP_CIPHER_SUITE
  *  
  */
 PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,

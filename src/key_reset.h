@@ -31,12 +31,12 @@ extern "C" {
  *  If no key is provided, reset the identity default.
  *  Note that reset keys will be removed as defaults for all users and identities.
  *  
- *  @param[in]     session    session handle
- *  @param[in]     fpr        fingerprint of key to reset. If NULL, we reset the default key
+ *  @param[in]   session    session handle
+ *  @param[in]   fpr        fingerprint of key to reset. If NULL, we reset the default key
  *                            this identity if there is one, and the user default if not.
- *  @param[in]     ident      identity for which the key reset should occur. Must contain 
- *                            user_id and address. Must not be NULL.
- *                            Note: ident->fpr field will be ignored.
+ *  @param[in]   ident      identity for which the key reset should occur. Must contain
+ *                          user_id and address. Must not be NULL.
+ *                          Note: ident->fpr field will be ignored.
  *  
  *  
  */
@@ -59,15 +59,15 @@ DYNAMIC_API PEP_STATUS key_reset_identity(
  *  For a reset of all own user keys, call key_reset_all_own_keys() instead.
  *  Note that reset keys will be removed as defaults for all users and identities.
  *  
- *  @param[in]     session    session handle
- *  @param[in]     user_id    user_id for which the key reset should occur. If this 
+ *  @param[in]   session    session handle
+ *  @param[in]   user_id    user_id for which the key reset should occur. If this
  *                            is the own user_id, fpr MUST NOT be NULL.
- *  @param[in]     fpr        fingerprint of key to reset.
- *                            If NULL, we reset all default 
- *                            keys for this user and all of its identities.
- *                            *** However, it is forbidden to use the own user_id 
- *                            here when the fpr is NULL. For this functionality, 
- *                            call key_reset_all_own_keys ***
+ *  @param[in]   fpr        fingerprint of key to reset.
+ *                          If NULL, we reset all default
+ *                          keys for this user and all of its identities.
+ *                          *** However, it is forbidden to use the own user_id
+ *                          here when the fpr is NULL. For this functionality,
+ *                          call key_reset_all_own_keys ***
  *  
  *  
  */
@@ -87,7 +87,7 @@ DYNAMIC_API PEP_STATUS key_reset_user(
  *         key reset information to people we have recently 
  *         contacted. 
  *  
- *  @param[in]     session    session handle
+ *  @param[in]   session    session handle
  *  
  *  @warning HOWEVER, apps and adapters must decide if this is a reasonable state;
  *           since the period where no own user exists will necessarily be very short
@@ -105,9 +105,9 @@ DYNAMIC_API PEP_STATUS key_reset_all_own_keys(PEP_SESSION session);
 /**
  *  <!--       key_reset_own_grouped_keys()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]  session     PEP_SESSION
  *  
  */
 DYNAMIC_API PEP_STATUS key_reset_own_grouped_keys(PEP_SESSION session);
@@ -126,17 +126,17 @@ DYNAMIC_API PEP_STATUS key_reset_own_grouped_keys(PEP_SESSION session);
  *  
  *  Can be called manually or through another protocol.
  *  
- *  @param[in]     session    session handle
- *  @param[in]     fpr        fingerprint of key to reset. If NULL and ident is NULL,
+ *  @param[in]   session    session handle
+ *  @param[in]   fpr        fingerprint of key to reset. If NULL and ident is NULL,
  *                            we reset all keys for the own user. If NULL and ident is
  *                            an own identity, we reset the default key for that
  *                            identity. If that own identity has no default key, we
  *                            reset the user default.
- *                            if it is NULL and there is a non-own identity, we will reset 
+ *                            if it is NULL and there is a non-own identity, we will reset
  *                            the default key for this identity if present, and user if not.
- *  @param[in]     ident      identity for which the key reset should occur.
+ *  @param[in]   ident      identity for which the key reset should occur.
  *                            if NULL and fpr is non-NULL, we'll reset the key for all
- *                            associated identities. If both ident and fpr are NULL, see 
+ *                            associated identities. If both ident and fpr are NULL, see
  *                            the fpr arg documentation.
  *                            ***IF there is an ident, it must have a user_id.***
  *                            Note: ident->fpr is always ignored
@@ -162,13 +162,13 @@ PEP_STATUS key_reset_own_and_deliver_revocations(PEP_SESSION session,
 /**
  *  <!--       has_key_reset_been_sent()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*from_addr		constchar
- *  @param[in]	*user_id		constchar
- *  @param[in]	*revoked_fpr		constchar
- *  @param[in]	*contacted		bool
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  from_addr      const char*
+ *  @param[in]  user_id        const char*
+ *  @param[in]  revoked_fpr    const char*
+ *  @param[in]  contacted      bool*
  *  
  */
 PEP_STATUS has_key_reset_been_sent(
@@ -181,12 +181,12 @@ PEP_STATUS has_key_reset_been_sent(
 /**
  *  <!--       set_reset_contact_notified()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*own_address		constchar
- *  @param[in]	*revoke_fpr		constchar
- *  @param[in]	*contact_id		constchar
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  own_address    const char*
+ *  @param[in]  revoke_fpr     const char*
+ *  @param[in]  contact_id     const char*
  *  
  */
 PEP_STATUS set_reset_contact_notified(
@@ -199,10 +199,10 @@ PEP_STATUS set_reset_contact_notified(
 /**
  *  <!--       receive_key_reset()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*reset_msg		message
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  reset_msg      message*
  *  
  */
 PEP_STATUS receive_key_reset(PEP_SESSION session,
@@ -211,14 +211,14 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
 /**
  *  <!--       create_standalone_key_reset_message()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	**dst		message
- *  @param[in]	*own_identity		pEp_identity
- *  @param[in]	*recip		pEp_identity
- *  @param[in]	*old_fpr		constchar
- *  @param[in]	*new_fpr		constchar
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  dst            message**
+ *  @param[in]  own_identity   pEp_identity*
+ *  @param[in]  recip          pEp_identity*
+ *  @param[in]  old_fpr        const char*
+ *  @param[in]  new_fpr        const char*
  *  
  */
 PEP_STATUS create_standalone_key_reset_message(PEP_SESSION session,
@@ -232,12 +232,12 @@ PEP_STATUS create_standalone_key_reset_message(PEP_SESSION session,
 /**
  *  <!--       send_key_reset_to_recents()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*from_ident		pEp_identity
- *  @param[in]	*old_fpr		constchar
- *  @param[in]	*new_fpr		constchar
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  from_ident     pEp_identity*
+ *  @param[in]  old_fpr        const char*
+ *  @param[in]  new_fpr        const char*
  *  
  */
 PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
@@ -248,22 +248,22 @@ PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
 /**
  *  <!--       key_reset_commands_to_PER()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*command_list		constkeyreset_command_list
- *  @param[in]	**cmds		char
- *  @param[in]	*size		size_t
+ *  @param[in]  command_list    const keyreset_command_list*
+ *  @param[in]  cmds            char**
+ *  @param[in]  size            size_t*
  *  
  */
 PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, char **cmds, size_t *size);
 /**
  *  <!--       PER_to_key_reset_commands()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*cmds		constchar
- *  @param[in]	size		size_t
- *  @param[in]	**command_list		keyreset_command_list
+ *  @param[in]  cmds             const char*
+ *  @param[in]  size             size_t
+ *  @param[in]  command_list     keyreset_command_list**
  *  
  */
 PEP_STATUS PER_to_key_reset_commands(const char *cmds, size_t size, keyreset_command_list **command_list);

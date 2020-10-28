@@ -8,15 +8,25 @@
 
 #include "transport.h"
 
+/**
+ *  <!--       email_sendto()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]  session      PEP_SESSION
+ *  @param[in]  msg          message*
+ *
+ */
 PEP_STATUS email_sendto(PEP_SESSION session, const message *msg);
+
 /**
  *  <!--       email_readnext()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	**msg		message
- *  @param[in]	**via		PEP_transport_t
+ *  @param[in]  session      PEP_SESSION
+ *  @param[in]  msg          message**
+ *  @param[in]  via          PEP_transport_t**
  *  
  */
 PEP_STATUS email_readnext(PEP_SESSION session, message **msg, PEP_transport_t **via);

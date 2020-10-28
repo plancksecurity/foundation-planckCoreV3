@@ -20,9 +20,9 @@ extern "C" {
 // i.e. for encoding to XER
 
 /**
- *  @struct	growing_buf_t
+ *  @struct    growing_buf_t
  *  
- *  @brief	TODO
+ *  @brief     TODO
  *  
  */
 typedef struct growing_buf {
@@ -49,7 +49,7 @@ growing_buf_t *new_growing_buf(void);
  *  
  *  @brief Free growing buffer
  *  
- *  @param[in]     buf    buffer to free
+ *  @param[in]   buf    buffer to free
  *  
  *  
  */
@@ -62,9 +62,9 @@ void free_growing_buf(growing_buf_t *buf);
  *  
  *  @brief Append new data to growing buffer
  *  
- *  @param[in]     src     new data
- *  @param[in]     size    size of new data
- *  @param[in]     dst     growing buffer where new data will be appended
+ *  @param[in]   src     new data
+ *  @param[in]   size    size of new data
+ *  @param[in]   dst     growing buffer where new data will be appended
  *  
  *  @retval 1 on succes, -1 on failure
  *  

@@ -44,9 +44,9 @@ const char *unix_local_db(void);
 /**
  *  <!--       unix_local_db()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	reset		int
+ *  @param[in]  reset        int
  *  
  */
 const char *unix_local_db(int reset);
@@ -54,7 +54,7 @@ const char *unix_local_db(int reset);
 /**
  *  <!--       unix_system_db()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
  *  
  */
@@ -90,33 +90,33 @@ const char *android_system_db(void);
 /**
  *  <!--       strlcpy()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*dst		char
- *  @param[in]	*src		constchar
- *  @param[in]	size		size_t
+ *  @param[in]  dst         char*
+ *  @param[in]  src         const char*
+ *  @param[in]  size        size_t
  *  
  */
-size_t strlcpy(char* dst, const	char* src, size_t size);
+size_t strlcpy(char* dst, const    char* src, size_t size);
 /**
  *  <!--       strlcat()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*dst		char
- *  @param[in]	*src		constchar
- *  @param[in]	size		size_t
+ *  @param[in]  dst         char*
+ *  @param[in]  src         const char*
+ *  @param[in]  size        size_t
  *  
  */
-size_t strlcat(char* dst, const	char* src, size_t size);
+size_t strlcat(char* dst, const    char* src, size_t size);
 /**
  *  <!--       strnstr()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*big		constchar
- *  @param[in]	*little		constchar
- *  @param[in]	len		size_t
+ *  @param[in]  big        const char*
+ *  @param[in]  little     const char*
+ *  @param[in]  len        size_t
  *  
  */
 char *strnstr(const char *big, const char *little, size_t len);

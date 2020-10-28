@@ -11,9 +11,9 @@
 #include "bloblist.h"
 
 /**
- *  @enum	PEP_cryptotech
+ *  @enum    PEP_cryptotech
  *  
- *  @brief	TODO
+ *  @brief    TODO
  *  
  */
 typedef enum _PEP_cryptotech {
@@ -221,9 +221,9 @@ typedef PEP_STATUS (*config_cipher_suite_t)(PEP_SESSION session,
 
 
 /**
- *  @struct	PEP_cryptotech_t
+ *  @struct    PEP_cryptotech_t
  *  
- *  @brief	TODO
+ *  @brief    TODO
  *  
  */
 typedef struct _PEP_cryptotech_t {
@@ -262,20 +262,20 @@ typedef uint64_t cryptotech_mask;
 /**
  *  <!--       init_cryptotech()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	in_first		bool
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  in_first       bool
  *  
  */
 PEP_STATUS init_cryptotech(PEP_SESSION session, bool in_first);
 /**
  *  <!--       release_cryptotech()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	out_last		bool
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  out_last       bool
  *  
  */
 void release_cryptotech(PEP_SESSION session, bool out_last);

@@ -19,13 +19,13 @@ extern "C" {
 /**
  *  <!--       import_attached_keys()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*msg		message
- *  @param[in]	**private_idents		identity_list
- *  @param[in]	**imported_keys		stringlist_t
- *  @param[in]	*changed_keys		uint64_t
+ *  @param[in]  session         PEP_SESSION
+ *  @param[in]  msg             message*
+ *  @param[in]  private_idents  identity_list**
+ *  @param[in]  imported_keys   stringlist_t**
+ *  @param[in]  changed_keys    uint64_t*
  *
  */
 bool import_attached_keys(
@@ -39,10 +39,10 @@ bool import_attached_keys(
 /**
  *  <!--       attach_own_key()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*msg		message
+ *  @param[in]  session     PEP_SESSION
+ *  @param[in]  msg         message*
  *
  */
 void attach_own_key(PEP_SESSION session, message *msg);
@@ -50,9 +50,9 @@ void attach_own_key(PEP_SESSION session, message *msg);
 /**
  *  <!--       determine_encryption_format()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*msg		message
+ *  @param[in]  msg         message*
  *
  */
 PEP_cryptotech determine_encryption_format(message *msg);
@@ -60,19 +60,19 @@ PEP_cryptotech determine_encryption_format(message *msg);
 /**
  *  <!--       add_opt_field()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*msg		message
- *  @param[in]	*name		constchar
- *  @param[in]	*value		constchar
+ *  @param[in]  msg         message*
+ *  @param[in]  name        const char*
+ *  @param[in]  value       const char*
  *
  */
 void add_opt_field(message *msg, const char *name, const char *value);
 
 /**
- *  @enum	PEP_encrypt_flags
+ *  @enum    PEP_encrypt_flags
  *
- *  @brief	TODO
+ *  @brief    TODO
  *
  */
 typedef enum _PEP_encrypt_flags {
@@ -103,9 +103,9 @@ typedef enum _PEP_encrypt_flags {
 typedef unsigned int PEP_encrypt_flags_t;
 
 /**
- *  @enum	message_wrap_type
+ *  @enum    message_wrap_type
  *
- *  @brief	TODO
+ *  @brief    TODO
  *
  */
 typedef enum _message_wrap_type {
@@ -165,14 +165,14 @@ DYNAMIC_API PEP_STATUS encrypt_message(
  *  @brief Encrypt message in memory, adding an encrypted private
  *         key (encrypted separately and sent within the inner message)
  *
- *  @param[in]     session       session handle
- *  @param[in]     src           message to encrypt
- *  @param[out]    dst           pointer to new encrypted message or NULL if no
+ *  @param[in]   session       session handle
+ *  @param[in]   src           message to encrypt
+ *  @param[out]  dst           pointer to new encrypted message or NULL if no
  *                               encryption could take place
- *  @param[in]     to_fpr        fingerprint of the recipient key to which the private key
+ *  @param[in]   to_fpr        fingerprint of the recipient key to which the private key
  *                               should be encrypted
- *  @param[in]     enc_format    encrypted format
- *  @param[in]     flags         flags to set special encryption features
+ *  @param[in]   enc_format    encrypted format
+ *  @param[in]   flags         flags to set special encryption features
  *
  *  @retval PEP_STATUS_OK                   on success
  *  @retval PEP_KEY_HAS_AMBIG_NAME          at least one of the receipient keys has
@@ -202,13 +202,13 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
  *         ignoring recipients and other identities from
  *         the message
  *
- *  @param[in]     session       session handle
- *  @param[in]     target_id     self identity this message should be encrypted for
- *  @param[in]     src           message to encrypt
- *  @param[in]     extra         extra keys for encryption
- *  @param[out]    dst           pointer to new encrypted message or NULL on failure
- *  @param[in]     enc_format    encrypted format
- *  @param[in]     flags         flags to set special encryption features
+ *  @param[in]   session       session handle
+ *  @param[in]   target_id     self identity this message should be encrypted for
+ *  @param[in]   src           message to encrypt
+ *  @param[in]   extra         extra keys for encryption
+ *  @param[out]  dst           pointer to new encrypted message or NULL on failure
+ *  @param[in]   enc_format    encrypted format
+ *  @param[in]   flags         flags to set special encryption features
  *
  *  @retval PEP_STATUS_OK            on success
  *  @retval PEP_KEY_NOT_FOUND        at least one of the receipient keys
@@ -235,9 +235,9 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     );
 
 /**
- *  @enum	PEP_rating
+ *  @enum    PEP_rating
  *
- *  @brief	TODO
+ *  @brief    TODO
  *
  */
 typedef enum _PEP_rating {
@@ -269,9 +269,9 @@ typedef enum _PEP_rating {
 } PEP_rating;
 
 /**
- *  @enum	PEP_color
+ *  @enum    PEP_color
  *
- *  @brief	TODO
+ *  @brief    TODO
  *
  */
 typedef enum _PEP_color {
@@ -287,16 +287,16 @@ typedef enum _PEP_color {
  *
  *  @brief Calculate color from rating
  *
- *  @param[in]     rating    rating
+ *  @param[in]   rating    rating
  *
  *  @retval PEP_color   color representing the rating
  */
 DYNAMIC_API PEP_color color_from_rating(PEP_rating rating);
 
 /**
- *  @enum	PEP_decrypt_flags
+ *  @enum    PEP_decrypt_flags
  *
- *  @brief	TODO
+ *  @brief    TODO
  *
  */
 typedef enum _PEP_decrypt_flags {
@@ -392,9 +392,9 @@ DYNAMIC_API PEP_STATUS decrypt_message(
  *
  *  @brief Details on own key in own message
  *
- *  @param[in]     session    session handle
- *  @param[in]     msg        message to decrypt
- *  @param[out]    ident      identity containing uid, address and fpr of key
+ *  @param[in]   session    session handle
+ *  @param[in]   msg        message to decrypt
+ *  @param[out]  ident      identity containing uid, address and fpr of key
  *                            note:
  *                            In order to obtain details about key to be possibly imported
  *                            as a replacement of key currently used as own identity,
@@ -420,9 +420,9 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
  *
  *  @brief Get rating for an outgoing message
  *
- *  @param[in]     session    session handle
- *  @param[in]     msg        message to get the rating for
- *  @param[out]    rating     rating for the message
+ *  @param[in]   session    session handle
+ *  @param[in]   msg        message to get the rating for
+ *  @param[out]  rating     rating for the message
  *
  *  @retval error status or PEP_STATUS_OK on success
  *
@@ -443,9 +443,9 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
  *
  *  @brief Get rating preview
  *
- *  @param[in]     session    session handle
- *  @param[in]     msg        message to get the rating for
- *  @param[out]    rating     rating preview for the message
+ *  @param[in]   session    session handle
+ *  @param[in]   msg        message to get the rating for
+ *  @param[out]  rating     rating preview for the message
  *
  *  @retval error status or PEP_STATUS_OK on success
  *
@@ -465,9 +465,9 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating_preview(
  *
  *  @brief Get rating for a single identity
  *
- *  @param[in]     session    session handle
- *  @param[in]     ident      identity to get the rating for
- *  @param[out]    rating     rating for the identity
+ *  @param[in]   session    session handle
+ *  @param[in]   ident      identity to get the rating for
+ *  @param[out]  rating     rating for the identity
  *
  *  @retval error status or PEP_STATUS_OK on success
  *
@@ -486,8 +486,8 @@ DYNAMIC_API PEP_STATUS identity_rating(
  *
  *  @brief Retrieve path of cryptotech binary if available
  *
- *  @param[in]     tech    cryptotech to get the binary for
- *  @param[out]    path    path to cryptotech binary or NULL if not available
+ *  @param[in]   tech    cryptotech to get the binary for
+ *  @param[out]  path    path to cryptotech binary or NULL if not available
  *                         **path is owned by the library, do not change it!
  *
  *
@@ -500,16 +500,16 @@ DYNAMIC_API PEP_STATUS get_binary_path(PEP_cryptotech tech, const char **path);
  *
  *  @brief Get full trustwords string for a *pair* of identities
  *
- *  @param[in]     session    session handle
- *  @param[in]     id1        identity of first party in communication - fpr can't be NULL
- *  @param[in]     id2        identity of second party in communication - fpr can't be NULL
- *  @param[in]     lang       C string with ISO 639-1 language code
- *  @param[out]    words      pointer to C string with all trustwords UTF-8 encoded,
+ *  @param[in]   session    session handle
+ *  @param[in]   id1        identity of first party in communication - fpr can't be NULL
+ *  @param[in]   id2        identity of second party in communication - fpr can't be NULL
+ *  @param[in]   lang       C string with ISO 639-1 language code
+ *  @param[out]  words      pointer to C string with all trustwords UTF-8 encoded,
  *                            separated by a blank each
  *                            NULL if language is not supported or trustword
  *                            wordlist is damaged or unavailable
- *  @param[out]    wsize      length of full trustwords string
- *  @param[in]     full       if true, generate ALL trustwords for these identities.
+ *  @param[out]  wsize      length of full trustwords string
+ *  @param[in]   full       if true, generate ALL trustwords for these identities.
  *                            else, generate a fixed-size subset. (TODO: fixed-minimum-entropy
  *                            subset in next version)
  *
@@ -532,17 +532,17 @@ DYNAMIC_API PEP_STATUS get_trustwords(
  *
  *  @brief Get full trustwords string for message sender and reciever identities
  *
- *  @param[in]     session        session handle
- *  @param[in]     msg            message to get sender identity from
- *  @param[in]     keylist        NULL if message to be decrypted,
+ *  @param[in]   session        session handle
+ *  @param[in]   msg            message to get sender identity from
+ *  @param[in]   keylist        NULL if message to be decrypted,
  *                                keylist returned by decrypt_message() otherwise
- *  @param[in]     received_by    identity for account receiving message can't be NULL
- *  @param[in]     lang           C string with ISO 639-1 language code
- *  @param[out]    words          pointer to C string with all trustwords UTF-8 encoded,
+ *  @param[in]   received_by    identity for account receiving message can't be NULL
+ *  @param[in]   lang           C string with ISO 639-1 language code
+ *  @param[out]  words          pointer to C string with all trustwords UTF-8 encoded,
  *                                separated by a blank each
  *                                NULL if language is not supported or trustword
  *                                wordlist is damaged or unavailable
- *  @param[in]     full           if true, generate ALL trustwords for these identities.
+ *  @param[in]   full           if true, generate ALL trustwords for these identities.
  *                                else, generate a fixed-size subset. (TODO: fixed-minimum-entropy
  *                                subset in next version)
  *
@@ -568,16 +568,16 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
  *
  *  @brief Get full trustwords string for a pair of fingerprints
  *
- *  @param[in]     session    session handle
- *  @param[in]     fpr1       fingerprint 1
- *  @param[in]     fpr2       fingerprint 2
- *  @param[in]     lang       C string with ISO 639-1 language code
- *  @param[out]    words      pointer to C string with all trustwords UTF-8 encoded,
+ *  @param[in]   session    session handle
+ *  @param[in]   fpr1       fingerprint 1
+ *  @param[in]   fpr2       fingerprint 2
+ *  @param[in]   lang       C string with ISO 639-1 language code
+ *  @param[out]  words      pointer to C string with all trustwords UTF-8 encoded,
  *                            separated by a blank each
  *                            NULL if language is not supported or trustword
  *                            wordlist is damaged or unavailable
- *  @param[out]    wsize      length of full trustwords string
- *  @param[in]     full       if true, generate ALL trustwords for these identities.
+ *  @param[out]  wsize      length of full trustwords string
+ *  @param[in]   full       if true, generate ALL trustwords for these identities.
  *                            else, generate a fixed-size subset. (TODO: fixed-minimum-entropy
  *                            subset in next version)
  *
@@ -599,11 +599,11 @@ DYNAMIC_API PEP_STATUS get_trustwords_for_fprs(
  *
  *  @brief Re-evaluate already decrypted message rating
  *
- *  @param[in]     session         session handle
- *  @param[in]     msg             message to get the rating for
- *  @param[in]     x_keylist       decrypted message recipients keys fpr
- *  @param[in]     x_enc_status    original rating for the decrypted message
- *  @param[out]    rating          rating for the message
+ *  @param[in]   session         session handle
+ *  @param[in]   msg             message to get the rating for
+ *  @param[in]   x_keylist       decrypted message recipients keys fpr
+ *  @param[in]   x_enc_status    original rating for the decrypted message
+ *  @param[out]  rating          rating for the message
  *
  *  @retval PEP_ILLEGAL_VALUE       if decrypted message doesn't contain
  *                                  X-EncStatus optional field and x_enc_status is
@@ -631,10 +631,10 @@ DYNAMIC_API PEP_STATUS re_evaluate_message_rating(
  *
  *  @brief Get the rating of a certain key for a certain user
  *
- *  @param[in]     session    session handle
- *  @param[in]     user_id    string with user ID
- *  @param[in]     fpr        string with fingerprint
- *  @param[out]    rating     rating of key for this user
+ *  @param[in]   session    session handle
+ *  @param[in]   user_id    string with user ID
+ *  @param[in]   fpr        string with fingerprint
+ *  @param[out]  rating     rating of key for this user
  *
  *  @retval PEP_RECORD_NOT_FOUND    if no trust record for user_id
  *                                  and fpr can be found
@@ -654,7 +654,7 @@ DYNAMIC_API PEP_STATUS get_key_rating_for_user(
  *
  *  @brief Get the rating for a comm type
  *
- *  @param[in]     ct    the comm type to deliver the rating for
+ *  @param[in]   ct    the comm type to deliver the rating for
  *
  *  @retval PEP_rating    rating value for comm type ct
  *
@@ -673,12 +673,12 @@ DYNAMIC_API PEP_rating rating_from_comm_type(PEP_comm_type ct);
  *         implementations. This function is calls messageToSend(NULL)
  *         in case there is a missing or wrong passphrase.
  *
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*src		message
- *  @param[in]	*extra		stringlist_t
- *  @param[in]	**dst		message
- *  @param[in]	enc_format		PEP_enc_format
- *  @param[in]	flags		PEP_encrypt_flags_t
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  src         message*
+ *  @param[in]  extra         stringlist_t*
+ *  @param[in]  dst          message**
+ *  @param[in]  enc_format        PEP_enc_format
+ *  @param[in]  flags        PEP_encrypt_flags_t
  *
  *  @warning    Do NOT use this function in adapters.
  *
@@ -698,8 +698,8 @@ PEP_STATUS try_encrypt_message(
  *
  *  @brief Test if passphrase for a key is working in current session
  *
- *  @param[in]     session    session handle
- *  @param[in]     fpr        fingerprint of key to test
+ *  @param[in]   session    session handle
+ *  @param[in]   fpr        fingerprint of key to test
  *
  *  @retval PEP_STATUS_OK           in case passphrase works
  *  @retval error                   if not

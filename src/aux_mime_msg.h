@@ -26,13 +26,13 @@ extern "C" {
  *  
  *  @brief Encrypt a MIME message, with MIME output
  *  
- *  @param[in]     session            session handle
- *  @param[in]     mimetext           MIME encoded text to encrypt
- *  @param[in]     size               size of input mime text
- *  @param[in]     extra              extra keys for encryption
+ *  @param[in]   session            session handle
+ *  @param[in]   mimetext           MIME encoded text to encrypt
+ *  @param[in]   size               size of input mime text
+ *  @param[in]   extra              extra keys for encryption
  *  @param[out]    mime_ciphertext    encrypted, encoded message
- *  @param[in]     enc_format         encrypted format
- *  @param[in]     flags              flags to set special encryption features
+ *  @param[in]   enc_format         encrypted format
+ *  @param[in]   flags              flags to set special encryption features
  *  
  *  @retval PEP_STATUS_OK                   if everything worked
  *  @retval PEP_BUFFER_TOO_SMALL            if encoded message size is too big to handle
@@ -64,14 +64,14 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
  *         ignoring recipients and other identities from
  *         the message, with MIME output
  *  
- *  @param[in]     session            session handle
- *  @param[in]     target_id          self identity this message should be encrypted for
- *  @param[in]     mimetext           MIME encoded text to encrypt
- *  @param[in]     size               size of input mime text
- *  @param[in]     extra              extra keys for encryption
+ *  @param[in]   session            session handle
+ *  @param[in]   target_id          self identity this message should be encrypted for
+ *  @param[in]   mimetext           MIME encoded text to encrypt
+ *  @param[in]   size               size of input mime text
+ *  @param[in]   extra              extra keys for encryption
  *  @param[out]    mime_ciphertext    encrypted, encoded message
- *  @param[in]     enc_format         encrypted format
- *  @param[in]     flags              flags to set special encryption features
+ *  @param[in]   enc_format         encrypted format
+ *  @param[in]   flags              flags to set special encryption features
  *  
  *  @retval PEP_STATUS_OK                   if everything worked
  *  @retval PEP_BUFFER_TOO_SMALL            if encoded message size is too big to handle
@@ -103,9 +103,9 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message_for_self(
  *  
  *  @brief Decrypt a MIME message, with MIME output
  *  
- *  @param[in]     session           session handle
- *  @param[in]     mimetext          MIME encoded text to decrypt
- *  @param[in]     size              size of mime text to decode (in order to decrypt)
+ *  @param[in]   session           session handle
+ *  @param[in]   mimetext          MIME encoded text to decrypt
+ *  @param[in]   size              size of mime text to decode (in order to decrypt)
  *  @param[out]    mime_plaintext    decrypted, encoded message
  *  @param[in,out] keylist           in: stringlist with additional keyids for reencryption if needed
  *                                   (will be freed and replaced with output keylist)

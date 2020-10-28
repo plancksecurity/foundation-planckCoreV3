@@ -17,8 +17,8 @@ extern "C" {
  *  
  *  @brief Add to blacklist
  *  
- *  @param[in]     session    session to use
- *  @param[in]     fpr        fingerprint of key to blacklist
+ *  @param[in]   session    session to use
+ *  @param[in]   fpr        fingerprint of key to blacklist
  *  
  *  @warning there is no point in blacklisting an own key; for any own
  *           identity, this will be ignored. The correct function to use
@@ -36,8 +36,8 @@ DYNAMIC_API PEP_STATUS blacklist_add(PEP_SESSION session, const char *fpr);
  *  
  *  @brief Delete from blacklist
  *  
- *  @param[in]     session    session to use
- *  @param[in]     fpr        fingerprint of key to be removed from blacklist
+ *  @param[in]   session    session to use
+ *  @param[in]   fpr        fingerprint of key to be removed from blacklist
  *  
  *  
  */
@@ -50,9 +50,9 @@ DYNAMIC_API PEP_STATUS blacklist_delete(PEP_SESSION session, const char *fpr);
  *  
  *  @brief Is listed in blacklist
  *  
- *  @param[in]     session    session to use
- *  @param[in]     fpr        fingerprint of key to blacklist
- *  @param[out]    bool       flags if key is blacklisted
+ *  @param[in]   session    session to use
+ *  @param[in]   fpr        fingerprint of key to blacklist
+ *  @param[out]  bool       flags if key is blacklisted
  *  
  *  
  */
@@ -69,8 +69,8 @@ DYNAMIC_API PEP_STATUS blacklist_is_listed(
  *  
  *  @brief Retrieve full blacklist of key fingerprints
  *  
- *  @param[in]     session      session to use
- *  @param[out]    blacklist    copy of blacklist
+ *  @param[in]   session      session to use
+ *  @param[out]  blacklist    copy of blacklist
  *  
  *  @ownership the ownership of the copy of blacklist goes to the caller
  *  
