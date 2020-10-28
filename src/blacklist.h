@@ -1,6 +1,15 @@
 /**
  * @file    blacklist.h
- * @brief   blacklist (FIXME: derived from filename)
+ * @brief   Functions for maintaining a key blacklist for OpenPGP keys
+ *          (i.e. keys received from OpenPGP partners). This is currently
+ *          used by users when an OpenPGP partner has indicated that they
+ *          do not want us to use a particular key we may have for them.
+ *          This is marked as deprecated because we want users to use
+ *          key reset instead, and this code will be in fact removed
+ *          in Release 2.2.0 when key election is also removed.
+ *
+ * @deprecated These files are still in use as of Release 2.1 and will be removed with key election removal.
+ *
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
@@ -14,7 +23,9 @@ extern "C" {
 
 /**
  *  <!--       blacklist_add()       -->
- *  
+ *
+ *  @deprecated As of Release 2.2.0
+ *
  *  @brief Add to blacklist
  *  
  *  @param[in]   session    session to use
@@ -33,7 +44,9 @@ DYNAMIC_API PEP_STATUS blacklist_add(PEP_SESSION session, const char *fpr);
 
 /**
  *  <!--       blacklist_delete()       -->
- *  
+ *
+ *  @deprecated As of Release 2.2.0
+ *
  *  @brief Delete from blacklist
  *  
  *  @param[in]   session    session to use
@@ -47,7 +60,9 @@ DYNAMIC_API PEP_STATUS blacklist_delete(PEP_SESSION session, const char *fpr);
 
 /**
  *  <!--       blacklist_is_listed()       -->
- *  
+ *
+ *  @deprecated As of Release 2.2.0
+ *
  *  @brief Is listed in blacklist
  *  
  *  @param[in]   session    session to use
@@ -66,7 +81,9 @@ DYNAMIC_API PEP_STATUS blacklist_is_listed(
 
 /**
  *  <!--       blacklist_retrieve()       -->
- *  
+ *
+ *  @deprecated As of Release 2.2.0
+ *
  *  @brief Retrieve full blacklist of key fingerprints
  *  
  *  @param[in]   session      session to use

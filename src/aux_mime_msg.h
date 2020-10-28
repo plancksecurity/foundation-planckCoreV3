@@ -1,10 +1,14 @@
 /**
  * @file      aux_mime_msg.h
  * 
- * @brief     Auxilliary file which provides the MIME* functions for the enigmail/pEp implementation and some tests.
+ * @brief     Auxiliary file which provides the MIME* functions for the enigmail/pEp implementation and some tests.
  *            Provides access to pEp functions for messages fed in in MIME string format instead of
  *            through the message struct.
- * 
+ *
+ * @deprecated These functions should no longer be used, and these files will be removed shortly.
+ *
+ * @warning   No version of the engine which implements pEp sync should use these functions
+ *
  * @license   GNU General Public License 3.0 - see LICENSE.txt
  */
 
@@ -23,14 +27,16 @@ extern "C" {
 
 /**
  *  <!--       MIME_encrypt_message()       -->
- *  
+ *
+ *  @deprecated
+ *
  *  @brief Encrypt a MIME message, with MIME output
  *  
  *  @param[in]   session            session handle
  *  @param[in]   mimetext           MIME encoded text to encrypt
  *  @param[in]   size               size of input mime text
  *  @param[in]   extra              extra keys for encryption
- *  @param[out]    mime_ciphertext    encrypted, encoded message
+ *  @param[out]  mime_ciphertext    encrypted, encoded message
  *  @param[in]   enc_format         encrypted format
  *  @param[in]   flags              flags to set special encryption features
  *  
@@ -44,7 +50,7 @@ extern "C" {
  *  @ownership 
  *  -  the encrypted, encoded mime text will go to the ownership of the caller 
  *  -  the original mimetext will remain in the ownership of the caller
- *  
+ *
  */
 DYNAMIC_API PEP_STATUS MIME_encrypt_message(
     PEP_SESSION session,
@@ -59,7 +65,9 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
 
 /**
  *  <!--       MIME_encrypt_message_for_self()       -->
- *  
+ *
+ *  @deprecated
+ *
  *  @brief Encrypt MIME message for user's identity only,
  *         ignoring recipients and other identities from
  *         the message, with MIME output
@@ -100,12 +108,14 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message_for_self(
 
 /**
  *  <!--       MIME_decrypt_message()       -->
- *  
+ *
+ *  @deprecated
+ *
  *  @brief Decrypt a MIME message, with MIME output
  *  
- *  @param[in]   session           session handle
- *  @param[in]   mimetext          MIME encoded text to decrypt
- *  @param[in]   size              size of mime text to decode (in order to decrypt)
+ *  @param[in]     session           session handle
+ *  @param[in]     mimetext          MIME encoded text to decrypt
+ *  @param[in]     size              size of mime text to decode (in order to decrypt)
  *  @param[out]    mime_plaintext    decrypted, encoded message
  *  @param[in,out] keylist           in: stringlist with additional keyids for reencryption if needed
  *                                   (will be freed and replaced with output keylist)

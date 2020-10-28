@@ -1,6 +1,9 @@
 /**
  * @file     baseprotocol.h
- * @brief    base protocol (FIXME: derived from filename)
+ * @brief    Basic functions for administrative pEp messages (preparation,
+ *           decoration, payload, extraction, etc.). These are used for
+ *           protocol messages in, for example, key sync and key reset.
+ *           The payloads of these messages are, in general, not human-readable.
  * @license  GNU General Public License 3.0 - see LICENSE.txt
  */
 

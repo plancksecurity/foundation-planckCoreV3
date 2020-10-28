@@ -1,6 +1,6 @@
 /**
  * @file    dynamic_api.h
- * @brief   dynamic api (FIXME: derived from filename)
+ * @brief   defines for windows API export
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 

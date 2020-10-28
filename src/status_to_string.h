@@ -1,7 +1,8 @@
 /**
  * @file    status_to_string.h
- * @brief   status to string (FIXME: derived from filename)
+ * @brief   Convert various statuses and enums into string format (generally for logs)
  * @license GNU General Public License 3.0 - see LICENSE.txt
+ * @todo    generate this file
  */
 #ifdef __cplusplus
 extern "C" {

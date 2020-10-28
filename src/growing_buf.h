@@ -16,13 +16,11 @@ extern "C" {
 #endif
 
 
-// this is a growing buffer, which is needed by the ASN.1 implementation
-// i.e. for encoding to XER
-
 /**
  *  @struct    growing_buf_t
  *  
- *  @brief     TODO
+ *  @brief     this is a growing buffer, which is needed by the ASN.1 implementation
+ *             i.e. for encoding to XER
  *  
  */
 typedef struct growing_buf {
@@ -66,11 +64,10 @@ void free_growing_buf(growing_buf_t *buf);
  *  @param[in]   size    size of new data
  *  @param[in]   dst     growing buffer where new data will be appended
  *  
- *  @retval 1 on succes, -1 on failure
- *  
- *  
+ *  @retval    1       on success
+ *  @retval   -1       on failure
+ *
  */
-
 int growing_buf_consume(const void *src, size_t size, growing_buf_t *dst);
 
 
