@@ -22,8 +22,13 @@ template "/" {
 template "protocol", mode=header
     document "generated/{@name}_func.h", "text"
 ||
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file        «@name»_func.h
+ * @brief       States and functions for the «@name» protocol.
+ * @generated   from ../sync/gen_message_func.ysl2
+ *
+ * @license     GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #pragma once
 
@@ -72,11 +77,39 @@ struct «@name»_state_s {
     `` apply "fsm", mode=state
 };
 
+/**
+ *  <!--         free_«@name»_state()       -->
+ *
+ *  @brief       free and reset all «@name» state associated with this session
+ *
+ *  @param[in]   session          the session
+ *
+ */
 void free_«@name»_state(PEP_SESSION session);
 
 // functions for protocol «@name»
 
+/**
+ *  <!--         new_«@name»_message()       -->
+ *
+ *  @brief       create a new «@name» message of the indicated type
+ *
+ *  @param[in]   fsm              the state machine
+ *  @param[in]   message_type     the type of «@name» message to be created
+ *
+ *  @return     ???
+ *
+ */
 «@name»_t *new_«@name»_message(«@name»_PR fsm, int message_type);
+
+/**
+ *  <!--         free_«@name»_message()       -->
+ *
+ *  @brief       free a «@name» message struct
+ *
+ *  @param[in]   msg              the desired message
+ *
+ */
 void free_«@name»_message(«@name»_t *msg);
 
 PEP_STATUS update_«@name»_state(PEP_SESSION session, «@name»_t *msg,
