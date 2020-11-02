@@ -1,13 +1,26 @@
-#pragma once
-
+/**
+ * @file    status_to_string.h
+ * @brief   Convert various statuses and enums into string format (generally for logs)
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ * @todo    generate this file
+ */
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include "pEpEngine.h"
 #ifndef PEP_STATUS_TO_STRING
 #define PEP_STATUS_TO_STRING
 #endif
 
+/**
+ *  <!--       pEp_status_to_string()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  status        PEP_STATUS
+ *  
+ */
 static inline const char *pEp_status_to_string(PEP_STATUS status) {
     switch (status) {
     case PEP_STATUS_OK: return "PEP_STATUS_OK";
@@ -114,6 +127,14 @@ static inline const char *pEp_status_to_string(PEP_STATUS status) {
     }
 }
 
+/**
+ *  <!--       pEp_comm_type_to_string()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  ct        PEP_comm_type
+ *  
+ */
 static inline const char *pEp_comm_type_to_string(PEP_comm_type ct) {
     switch (ct) {
     case PEP_ct_unknown: return "unknown";

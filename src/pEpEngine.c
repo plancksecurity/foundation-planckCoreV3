@@ -1,3 +1,6 @@
+/** @file */
+/** @brief File description for doxygen missing. FIXME */
+
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
@@ -18,6 +21,18 @@
 static volatile int init_count = -1;
 
 // sql overloaded functions - modified from sqlite3.c
+/**
+ *  @internal
+ *
+ *  <!--       _sql_lower()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*ctx		sqlite3_context
+ *  @param[in]	argc		int
+ *  @param[in]	**argv		sqlite3_value
+ *
+ */
 static void _sql_lower(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
     const char *z2;
     int n;
@@ -42,7 +57,20 @@ static void _sql_lower(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
 }
 
 #ifdef _PEP_SQLITE_DEBUG
-int sql_trace_callback (unsigned trace_constant, 
+/**
+ *  @internal
+ *
+ *  <!--       sql_trace_callback()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	trace_constant		unsigned
+ *  @param[in]	*context_ptr		void
+ *  @param[in]	*P		void
+ *  @param[in]	*X		void
+ *
+ */
+int sql_trace_callback (unsigned trace_constant,
                         void* context_ptr,
                         void* P,
                         void* X) {
@@ -536,6 +564,19 @@ static const char *sql_has_id_contacted_address =
 static const char *sql_get_last_contacted =
     "select user_id, address from identity where datetime('now') < datetime(timestamp, '+14 days') ; ";
         
+/**
+ *  @internal
+ *
+ *  <!--       user_version()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*_version		void
+ *  @param[in]	count		int
+ *  @param[in]	**text		char
+ *  @param[in]	**name		char
+ *
+ */
 static int user_version(void *_version, int count, char **text, char **name)
 {
     if (!(_version && count == 1 && text && text[0]))
@@ -547,6 +588,17 @@ static int user_version(void *_version, int count, char **text, char **name)
 }
 
 // TODO: refactor and generalise these two functions if possible.
+/**
+ *  @internal
+ *
+ *  <!--       db_contains_table()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*table_name		constchar
+ *
+ */
 static int db_contains_table(PEP_SESSION session, const char* table_name) {
     if (!session || !table_name)
         return -1;
@@ -591,6 +643,18 @@ static int db_contains_table(PEP_SESSION session, const char* table_name) {
         
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       table_contains_column()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*table_name		constchar
+ *  @param[in]	*col_name		constchar
+ *
+ */
 static int table_contains_column(PEP_SESSION session, const char* table_name,
                                                       const char* col_name) {
 
@@ -641,6 +705,16 @@ static int table_contains_column(PEP_SESSION session, const char* table_name,
     return retval;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       repair_altered_tables()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *
+ */
 #define _PEP_MAX_AFFECTED 5
 PEP_STATUS repair_altered_tables(PEP_SESSION session) {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -819,10 +893,32 @@ pEp_free:
     }
     return status;
 }
+/**
+ *  @internal
+ *
+ *  <!--       errorLogCallback()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*pArg		void
+ *  @param[in]	iErrCode		int
+ *  @param[in]	*zMsg		constchar
+ *
+ */
 void errorLogCallback(void *pArg, int iErrCode, const char *zMsg){
   fprintf(stderr, "(%d) %s\n", iErrCode, zMsg);
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       upgrade_revoc_contact_to_13()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *
+ */
 static PEP_STATUS upgrade_revoc_contact_to_13(PEP_SESSION session) {
     // I HATE SQLITE.
     PEP_STATUS status = PEP_STATUS_OK;
@@ -849,7 +945,7 @@ static PEP_STATUS upgrade_revoc_contact_to_13(PEP_SESSION session) {
         if (int_result != SQLITE_OK)
             return PEP_UNKNOWN_DB_ERROR;
 
-    }    
+    }
                 
     // the best we can do here is search per address, since these
     // are no longer associated with an identity. For now, if we find 
@@ -1488,7 +1584,7 @@ DYNAMIC_API PEP_STATUS init(
                     return PEP_UNKNOWN_DB_ERROR;
 
 
-                // FIXME: foreign key check here 
+                // FIXME: foreign key check here
             }
             if (version < 7) {
                 int_result = sqlite3_exec(
@@ -1524,7 +1620,7 @@ DYNAMIC_API PEP_STATUS init(
                 if (int_result != SQLITE_OK)
                     return PEP_UNKNOWN_DB_ERROR;
 
-                
+
                 int_result = sqlite3_exec(
                     _session->db,
                     "create table if not exists mistrusted_keys (\n"
@@ -1700,7 +1796,7 @@ DYNAMIC_API PEP_STATUS init(
                 if (int_result != SQLITE_OK)
                     return PEP_UNKNOWN_DB_ERROR;
 
-                
+
                 int_result = sqlite3_exec(
                     _session->db,
                     "alter table identity\n"
@@ -1878,7 +1974,7 @@ DYNAMIC_API PEP_STATUS init(
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
-    
+
     int_result = sqlite3_prepare_v2(_session->db, sql_get_identities_by_userid,
             (int)strlen(sql_get_identities_by_userid), 
             &_session->get_identities_by_userid, NULL);
@@ -1920,7 +2016,7 @@ DYNAMIC_API PEP_STATUS init(
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
-    
+
     int_result = sqlite3_prepare_v2(_session->db, sql_get_userid_alias_default,
             (int)strlen(sql_get_userid_alias_default), &_session->get_userid_alias_default, NULL);
     assert(int_result == SQLITE_OK);
@@ -1993,7 +2089,7 @@ DYNAMIC_API PEP_STATUS init(
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
-    
+
     int_result = sqlite3_prepare_v2(_session->db, sql_remove_fpr_as_identity_default,
             (int)strlen(sql_remove_fpr_as_identity_default), 
             &_session->remove_fpr_as_identity_default, NULL);
@@ -2051,7 +2147,7 @@ DYNAMIC_API PEP_STATUS init(
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
-    
+
     int_result = sqlite3_prepare_v2(_session->db, sql_is_pEp_user,
             (int)strlen(sql_is_pEp_user), &_session->is_pEp_user, NULL);
     assert(int_result == SQLITE_OK);
@@ -2068,7 +2164,7 @@ DYNAMIC_API PEP_STATUS init(
         return PEP_UNKNOWN_DB_ERROR;
 
 
-    int_result = sqlite3_prepare_v2(_session->db, 
+    int_result = sqlite3_prepare_v2(_session->db,
             sql_get_own_address_binding_from_contact,
             (int)strlen(sql_get_own_address_binding_from_contact), 
             &_session->get_own_address_binding_from_contact, NULL);
@@ -2078,7 +2174,7 @@ DYNAMIC_API PEP_STATUS init(
         return PEP_UNKNOWN_DB_ERROR;
 
 
-    int_result = sqlite3_prepare_v2(_session->db, 
+    int_result = sqlite3_prepare_v2(_session->db,
             sql_set_revoke_contact_as_notified,
             (int)strlen(sql_set_revoke_contact_as_notified), 
             &_session->set_revoke_contact_as_notified, NULL);
@@ -2088,7 +2184,7 @@ DYNAMIC_API PEP_STATUS init(
         return PEP_UNKNOWN_DB_ERROR;
 
 
-    int_result = sqlite3_prepare_v2(_session->db, 
+    int_result = sqlite3_prepare_v2(_session->db,
             sql_get_contacted_ids_from_revoke_fpr,
             (int)strlen(sql_get_contacted_ids_from_revoke_fpr), 
             &_session->get_contacted_ids_from_revoke_fpr, NULL);
@@ -2098,7 +2194,7 @@ DYNAMIC_API PEP_STATUS init(
         return PEP_UNKNOWN_DB_ERROR;
 
 
-    int_result = sqlite3_prepare_v2(_session->db, 
+    int_result = sqlite3_prepare_v2(_session->db,
             sql_was_id_for_revoke_contacted,
             (int)strlen(sql_was_id_for_revoke_contacted), 
             &_session->was_id_for_revoke_contacted, NULL);
@@ -2108,7 +2204,7 @@ DYNAMIC_API PEP_STATUS init(
         return PEP_UNKNOWN_DB_ERROR;
 
 
-    int_result = sqlite3_prepare_v2(_session->db, 
+    int_result = sqlite3_prepare_v2(_session->db,
             sql_has_id_contacted_address,
             (int)strlen(sql_has_id_contacted_address), 
             &_session->has_id_contacted_address, NULL);
@@ -2118,7 +2214,7 @@ DYNAMIC_API PEP_STATUS init(
         return PEP_UNKNOWN_DB_ERROR;
 
 
-    int_result = sqlite3_prepare_v2(_session->db, 
+    int_result = sqlite3_prepare_v2(_session->db,
             sql_get_last_contacted,
             (int)strlen(sql_get_last_contacted), 
             &_session->get_last_contacted, NULL);
@@ -2128,7 +2224,7 @@ DYNAMIC_API PEP_STATUS init(
         return PEP_UNKNOWN_DB_ERROR;
 
 
-    int_result = sqlite3_prepare_v2(_session->db, 
+    int_result = sqlite3_prepare_v2(_session->db,
             sql_get_own_address_binding_from_contact,
             (int)strlen(sql_get_own_address_binding_from_contact), 
             &_session->get_own_address_binding_from_contact, NULL);
@@ -2197,7 +2293,7 @@ DYNAMIC_API PEP_STATUS init(
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
-            
+
     int_result = sqlite3_prepare_v2(_session->db, sql_set_pEp_version,
             (int)strlen(sql_set_pEp_version), &_session->set_pEp_version,
             NULL);
@@ -2206,7 +2302,7 @@ DYNAMIC_API PEP_STATUS init(
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
-    
+
     int_result = sqlite3_prepare_v2(_session->db, sql_upgrade_pEp_version_by_user_id,
             (int)strlen(sql_upgrade_pEp_version_by_user_id), &_session->upgrade_pEp_version_by_user_id,
             NULL);
@@ -2320,7 +2416,7 @@ DYNAMIC_API PEP_STATUS init(
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
-    
+
     // blacklist
 
     int_result = sqlite3_prepare_v2(_session->db, sql_blacklist_add,
@@ -2357,7 +2453,7 @@ DYNAMIC_API PEP_STATUS init(
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
-    
+
     // Own keys
     
     int_result = sqlite3_prepare_v2(_session->db, sql_own_key_is_listed,
@@ -2377,7 +2473,7 @@ DYNAMIC_API PEP_STATUS init(
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
-    
+
     int_result = sqlite3_prepare_v2(_session->db, sql_own_identities_retrieve,
             (int)strlen(sql_own_identities_retrieve),
             &_session->own_identities_retrieve, NULL);
@@ -2386,7 +2482,7 @@ DYNAMIC_API PEP_STATUS init(
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
- 
+
     int_result = sqlite3_prepare_v2(_session->db, sql_own_keys_retrieve,
             (int)strlen(sql_own_keys_retrieve),
             &_session->own_keys_retrieve, NULL);
@@ -2395,13 +2491,13 @@ DYNAMIC_API PEP_STATUS init(
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
- 
+
     // int_result = sqlite3_prepare_v2(_session->db, sql_set_own_key,
     //         (int)strlen(sql_set_own_key),
     //         &_session->set_own_key, NULL);
     // assert(int_result == SQLITE_OK);
 
- 
+
     // Sequence
 
     int_result = sqlite3_prepare_v2(_session->db, sql_sequence_value1,
@@ -2431,7 +2527,7 @@ DYNAMIC_API PEP_STATUS init(
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
-    
+
     int_result = sqlite3_prepare_v2(_session->db, sql_get_revoked,
             (int)strlen(sql_get_revoked), &_session->get_revoked, NULL);
     assert(int_result == SQLITE_OK);
@@ -2439,7 +2535,7 @@ DYNAMIC_API PEP_STATUS init(
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
-    
+
     int_result = sqlite3_prepare_v2(_session->db, sql_get_replacement_fpr,
             (int)strlen(sql_get_replacement_fpr), &_session->get_replacement_fpr, NULL);
     assert(int_result == SQLITE_OK);
@@ -2471,7 +2567,7 @@ DYNAMIC_API PEP_STATUS init(
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
-    
+
     status = init_cryptotech(_session, in_first);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
@@ -3008,7 +3104,7 @@ pEp_identity *identity_dup(const pEp_identity *src)
         dup->major_ver = src->major_ver;
         dup->minor_ver = src->minor_ver;
         dup->enc_format = src->enc_format;
-    }    
+    }
     return dup;
 }
 
@@ -3498,6 +3594,18 @@ PEP_STATUS get_identities_by_address(
     return PEP_STATUS_OK;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       exists_identity_entry()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*identity		pEp_identity
+ *  @param[in]	*exists		bool
+ *
+ */
 PEP_STATUS exists_identity_entry(PEP_SESSION session, pEp_identity* identity,
                                  bool* exists) {
     if (!session || !exists || !identity || EMPTYSTR(identity->user_id) || EMPTYSTR(identity->address))
@@ -3599,6 +3707,18 @@ PEP_STATUS clear_trust_info(PEP_SESSION session,
     return PEP_STATUS_OK;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       _set_or_update_trust()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*identity		pEp_identity
+ *  @param[in]	*set_or_update		sqlite3_stmt
+ *
+ */
 static PEP_STATUS _set_or_update_trust(PEP_SESSION session,
                                        pEp_identity* identity,
                                        sqlite3_stmt* set_or_update) {
@@ -3627,6 +3747,18 @@ static PEP_STATUS _set_or_update_trust(PEP_SESSION session,
     return PEP_STATUS_OK;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       _set_or_update_identity_entry()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*identity		pEp_identity
+ *  @param[in]	*set_or_update		sqlite3_stmt
+ *
+ */
 static PEP_STATUS _set_or_update_identity_entry(PEP_SESSION session,
                                                 pEp_identity* identity,
                                                 sqlite3_stmt* set_or_update) {
@@ -3654,7 +3786,19 @@ static PEP_STATUS _set_or_update_identity_entry(PEP_SESSION session,
     return PEP_STATUS_OK;
 }
 
-static PEP_STATUS _set_or_update_person(PEP_SESSION session, 
+/**
+ *  @internal
+ *
+ *  <!--       _set_or_update_person()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*identity		pEp_identity
+ *  @param[in]	*set_or_update		sqlite3_stmt
+ *
+ */
+static PEP_STATUS _set_or_update_person(PEP_SESSION session,
                                         pEp_identity* identity,
                                         sqlite3_stmt* set_or_update) {
                         
@@ -3713,6 +3857,18 @@ PEP_STATUS set_or_update_with_identity(PEP_SESSION session,
     return status;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       _set_trust_internal()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*identity		pEp_identity
+ *  @param[in]	guard_transaction		bool
+ *
+ */
 PEP_STATUS _set_trust_internal(PEP_SESSION session, pEp_identity* identity,
                                bool guard_transaction) {
     return set_or_update_with_identity(session, identity,
@@ -3746,6 +3902,18 @@ PEP_STATUS set_person(PEP_SESSION session, pEp_identity* identity,
                                        guard_transaction);
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       set_identity_entry()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*identity		pEp_identity
+ *  @param[in]	guard_transaction		bool
+ *
+ */
 PEP_STATUS set_identity_entry(PEP_SESSION session, pEp_identity* identity,
                               bool guard_transaction) {
     return set_or_update_with_identity(session, identity,
@@ -3834,6 +4002,17 @@ pEp_free:
     return status;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       update_pEp_user_trust_vals()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*user		pEp_identity
+ *
+ */
 PEP_STATUS update_pEp_user_trust_vals(PEP_SESSION session,
                                       pEp_identity* user) {
     if (!user->user_id)
@@ -3978,6 +4157,17 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity,
     return status;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       delete_person()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*user_id		constchar
+ *
+ */
 PEP_STATUS delete_person(PEP_SESSION session, const char* user_id) {
 
     if (!session || EMPTYSTR(user_id))
@@ -4329,6 +4519,18 @@ DYNAMIC_API PEP_STATUS set_ident_enc_format(
     return PEP_STATUS_OK;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       get_trust_by_userid()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*user_id		constchar
+ *  @param[in]	**trust_list		labeled_int_list_t
+ *
+ */
 PEP_STATUS get_trust_by_userid(PEP_SESSION session, const char* user_id,
                                            labeled_int_list_t** trust_list)
 {
@@ -4359,6 +4561,17 @@ PEP_STATUS get_trust_by_userid(PEP_SESSION session, const char* user_id,
     return PEP_STATUS_OK;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       reconcile_trust()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	t_old		PEP_comm_type
+ *  @param[in]	t_new		PEP_comm_type
+ *
+ */
 PEP_comm_type reconcile_trust(PEP_comm_type t_old, PEP_comm_type t_new) {
     switch (t_new) {
         case PEP_ct_mistrusted:
@@ -4388,7 +4601,19 @@ PEP_comm_type reconcile_trust(PEP_comm_type t_old, PEP_comm_type t_new) {
     return result;
 }
 
-PEP_STATUS reconcile_pEp_status(PEP_SESSION session, const char* old_uid, 
+/**
+ *  @internal
+ *
+ *  <!--       reconcile_pEp_status()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*old_uid		constchar
+ *  @param[in]	*new_uid		constchar
+ *
+ */
+PEP_STATUS reconcile_pEp_status(PEP_SESSION session, const char* old_uid,
                                 const char* new_uid) {
     PEP_STATUS status = PEP_STATUS_OK;
     // We'll make this easy - if the old one has a pEp status, we set no matter
@@ -4410,7 +4635,19 @@ pEp_free:
     return status;
 }
 
-const char* reconcile_usernames(const char* old_name, const char* new_name, 
+/**
+ *  @internal
+ *
+ *  <!--       reconcile_usernames()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*old_name		constchar
+ *  @param[in]	*new_name		constchar
+ *  @param[in]	*address		constchar
+ *
+ */
+const char* reconcile_usernames(const char* old_name, const char* new_name,
                                 const char* address) {
     if (EMPTYSTR(old_name)) {
         if (EMPTYSTR(new_name))
@@ -4425,6 +4662,18 @@ const char* reconcile_usernames(const char* old_name, const char* new_name,
     return new_name;        
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       reconcile_default_keys()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*old_ident		pEp_identity
+ *  @param[in]	*new_ident		pEp_identity
+ *
+ */
 PEP_STATUS reconcile_default_keys(PEP_SESSION session, pEp_identity* old_ident,
                                   pEp_identity* new_ident) {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -4477,6 +4726,17 @@ PEP_STATUS reconcile_default_keys(PEP_SESSION session, pEp_identity* old_ident,
     return status;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       reconcile_language()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*old_ident		pEp_identity
+ *  @param[in]	*new_ident		pEp_identity
+ *
+ */
 void reconcile_language(pEp_identity* old_ident,
                         pEp_identity* new_ident) {
     if (new_ident->lang[0] == 0) {
@@ -4489,6 +4749,18 @@ void reconcile_language(pEp_identity* old_ident,
 }
 
 // ONLY CALL THIS IF BOTH IDs ARE IN THE PERSON DB, FOOL! </Mr_T>
+/**
+ *  @internal
+ *
+ *  <!--       merge_records()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*old_uid		constchar
+ *  @param[in]	*new_uid		constchar
+ *
+ */
 PEP_STATUS merge_records(PEP_SESSION session, const char* old_uid,
                          const char* new_uid) {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -4915,6 +5187,16 @@ DYNAMIC_API PEP_STATUS least_trust(
     return status;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       sanitize_pgp_filename()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*filename		char
+ *
+ */
 static void sanitize_pgp_filename(char *filename)
 {
     for (int i=0; filename[i]; ++i) {
@@ -5262,6 +5544,16 @@ DYNAMIC_API PEP_STATUS config_cipher_suite(PEP_SESSION session,
     return session->cryptotech[PEP_crypt_OpenPGP].config_cipher_suite(session, suite);
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       _clean_log_value()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*text		char
+ *
+ */
 static void _clean_log_value(char *text)
 {
     if (text) {
@@ -5274,6 +5566,18 @@ static void _clean_log_value(char *text)
     }
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       _concat_string()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*str1		char
+ *  @param[in]	*str2		const char
+ *  @param[in]	delim		char
+ *
+ */
 static char *_concat_string(char *str1, const char *str2, char delim)
 {
     str2 = str2 ? str2 : "";
@@ -5510,6 +5814,18 @@ the_end:
     return status;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       _get_sequence_value()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*name		const char
+ *  @param[in]	*value		int32_t
+ *
+ */
 static PEP_STATUS _get_sequence_value(PEP_SESSION session, const char *name,
         int32_t *value)
 {
@@ -5540,6 +5856,17 @@ static PEP_STATUS _get_sequence_value(PEP_SESSION session, const char *name,
     return status;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       _increment_sequence_value()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*name		constchar
+ *
+ */
 static PEP_STATUS _increment_sequence_value(PEP_SESSION session,
         const char *name)
 {
@@ -5609,7 +5936,7 @@ PEP_STATUS is_own_key(PEP_SESSION session, const char* fpr, bool* own_key) {
         placeholder_ident = new_identity(NULL, fpr, default_own_userid, NULL);
         if (!placeholder_ident)
             status = PEP_OUT_OF_MEMORY;
-        else    
+        else
             status = get_trust(session, placeholder_ident);
 
         if (status == PEP_STATUS_OK) {
@@ -5618,16 +5945,16 @@ PEP_STATUS is_own_key(PEP_SESSION session, const char* fpr, bool* own_key) {
                 status = find_private_keys(session, fpr, &keylist);
                 if (status == PEP_STATUS_OK) {
                     if (keylist && !EMPTYSTR(keylist->value))
-                        *own_key = true;            
+                        *own_key = true;
                 }
                 free_stringlist(keylist);
             }
-        }    
+        }
     }
     if (status == PEP_CANNOT_FIND_IDENTITY)
         status = PEP_STATUS_OK; // either no default own id yet, so no own keys yet
                                 // or there was no own trust entry! False either way
- 
+
     free(default_own_userid);
     free_identity(placeholder_ident);
 
@@ -5713,6 +6040,19 @@ DYNAMIC_API PEP_STATUS get_revoked(
     return status;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       get_replacement_fpr()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*fpr		const char
+ *  @param[in]	**revoked_fpr		char
+ *  @param[in]	*revocation_date		uint64_t
+ *
+ */
 DYNAMIC_API PEP_STATUS get_replacement_fpr(
         PEP_SESSION session,
         const char *fpr,

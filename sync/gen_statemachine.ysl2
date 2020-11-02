@@ -16,8 +16,13 @@ tstylesheet {
     template "/protocol" {
         document "generated/{@name}_event.h", "text"
         ||
-        // This file is under GNU General Public License 3.0
-        // see LICENSE.txt
+        /**
+         * @file      «@name»_event.h
+         * @brief     Structures and functions for «@name» events.
+         * @generated from ../sync/gen_statemachine.ysl2
+         *
+         * @license   GNU General Public License 3.0 - see LICENSE.txt
+         */
 
         #pragma once
 
@@ -27,47 +32,56 @@ tstylesheet {
         extern "C" {
         #endif
 
+        /**
+         * «@name» is also defined as «yml:ucase(@name)» for ASN.1 reasons and
+         * forward declaration to avoid the need for header inclusion everywhere.
+         * @see struct «@name» in «@name».h
+         */
         typedef struct «@name» «yml:ucase(@name)»;
+        /** forward declaration - @see enum «@name»_PR in «@name».h */
         typedef int «yml:ucase(@name)»_PR;
 
+        /**
+         * Data for an event related to a message
+         */
         typedef struct «@name»_event {
             // state machine data
-            «yml:ucase(@name)»_PR fsm;
-            int event;
-            «yml:ucase(@name)» *msg;
+            «yml:ucase(@name)»_PR fsm;            /*!< state machine type associated with this event */
+            int event;            /*!< type of event */
+            «yml:ucase(@name)» *msg;              /*!< the «@name» messaged caused by (or causing???) this event */
 
             // transport data
-            pEp_identity *from;
-            char *sender_fpr;
+            pEp_identity *from;                 /*!< identity of the message sender */
+            char *sender_fpr;                   /*!< fpr of key used by the message sender */
 
-            identity_list *own_identities;
+            identity_list *own_identities;      /*!< List of our own identities */
         } «@name»_event_t;
 
- 
-        // new_«@name»_event() - allocate a new «@name»_event
-        //
-        //  parameters:
-        //      fsm (in)        finite state machine the event is for
-        //      event (in)      event or None
-        //      msg (in)        message to compute event from
-        //
-        //  return value:
-        //      pointer to new event or NULL in case of failure
-        //
-        //  caveat:
-        //      event must be valid for fsm or None
-        //      in case msg is given event will be calculated out of message
-
+        /**
+        *  <!--       new_«@name»_event()       -->
+        *
+        *  @brief       allocate a new «@name»_event
+        *
+        *  @param[in]   fsm     finite state machine the event is for
+        *  @param[in]   event   event or None
+        *  @param[in]   msg     message to compute event from
+        *
+        *  @retval      pointer to new event
+        *  @retval      NULL    in case of failure
+        *
+        */
         DYNAMIC_API «@name»_event_t *new_«@name»_event(«yml:ucase(@name)»_PR fsm, int event, «yml:ucase(@name)» *msg);
 
         #define «yml:ucase(@name)»_TIMEOUT_EVENT new_«@name»_event(«@name»_PR_NOTHING, 0, NULL);
 
-    
-        // free_«@name»_event() - free memory occupied by event
-        //
-        //  parameters:
-        //      ev (in)         event to free
-
+        /**
+        *  <!--       free_«@name»_event()       -->
+        *
+        *  @brief       free memory occupied by event
+        *
+        *  @param[in]   ev      event to free
+        *
+        */
         DYNAMIC_API void free_«@name»_event(«@name»_event_t *ev);
 
 
@@ -79,8 +93,14 @@ tstylesheet {
 
         document "generated/{@name}_event.c", "text"
         ||
-        // This file is under GNU General Public License 3.0
-        // see LICENSE.txt
+
+        /**
+         * @file    «@name»_event.c
+         * @brief   Allocation, fsm drivers, and handling for «@name» events.
+         * @generated from ../sync/gen_statemachine.ysl2
+         *
+         * @license   GNU General Public License 3.0 - see LICENSE.txt
+         */
 
         #include "platform.h"
 
@@ -128,8 +148,13 @@ tstylesheet {
 
         document "generated/{@name}_impl.h", "text" {
             ||
-            // This file is under GNU General Public License 3.0
-            // see LICENSE.txt
+            /**
+             * @file      «@name»_impl.h
+             * @brief     «@name» protocol implementation declarations
+             * @generated from ../sync/gen_statemachine.ysl2
+             *
+             * @license   GNU General Public License 3.0 - see LICENSE.txt
+             */
 
             #pragma once
 
@@ -145,68 +170,156 @@ tstylesheet {
             extern "C" {
             #endif
 
+            /////////////////////////////////////////////////////////////////////
             // conditions
+            /////////////////////////////////////////////////////////////////////
 
             ||
-            for "func:distinctName(*//condition)"
-                | PEP_STATUS «@name»(PEP_SESSION session, bool *result);
+            for "func:distinctName(*//condition)" {
+                | /**
+                |  * @brief         Evaluate condition: Is «@name» true?
+                |  * @param[in]     session         the session
+                |  * @param[out]    result          true if «@name», else false
+                |  * @retval        status
+                |  */
+                | PEP_STATUS «@name»(PEP_SESSION session, bool * result);
+            }
             ||
 
+            /////////////////////////////////////////////////////////////////////
             // actions
+            /////////////////////////////////////////////////////////////////////
 
             ||
-            for "func:distinctName(*//action)"
+            for "func:distinctName(*//action)" {
+                | /**
+                |  * @brief         Action: Do «@name»
+                |  * @param[in]     session         the session
+                |  * @retval        status
+                |  */
                 | PEP_STATUS «@name»(PEP_SESSION session);
+            }
             ||
 
-            // timeout handler
-            
+            /////////////////////////////////////////////////////////////////////
+            // timeout handlers
+            /////////////////////////////////////////////////////////////////////
+
             ||
-            for "fsm[@threshold > 0]"
+            for "fsm[@threshold > 0]" {
+                | /**
+                |  *  <!--         «@name»TimeoutHandler()       -->
+                |  *
+                |  * @brief         Handle timeouts for «@name» state machine
+                |  *
+                |  * @param[in]     session         the session
+                |  * @retval        status
+                |  */
                 | PEP_STATUS «@name»TimeoutHandler(PEP_SESSION session);
+            }
             ||
 
-            // send message about an event to communication partners using state
 
+            /////////////////////////////////////////////////////////////////////
+            // «@name» state machine driver, message sending, and event receipt
+            /////////////////////////////////////////////////////////////////////
+
+            /**
+             *  <!--         send_«@name»_message()       -->
+             *
+             *  @brief       send message about «@name» event to communication partners using state
+             *
+             *  @param[in]   session          the session
+             *  @param[in]   fsm              the finite state machine from which to get state
+             *  @param[in]   message_type     type of message to send
+             *
+             *  @retval      status of message send
+             *
+             */
             PEP_STATUS send_«@name»_message(
-                    PEP_SESSION session, 
-                    «@name»_PR fsm,
-                    int message_type
-                );
+                PEP_SESSION session,
+                «@name»_PR fsm,
+                int message_type
+            );
 
-            // receive message and store it in state
-
+            /**
+             *  <!--         recv_«@name»_event()       -->
+             *
+             *  @brief       receive «@name» message and store it in state
+             *
+             *  @param[in]   session          the session
+             *  @param[in]   ev               the event to process
+             *
+             *  @retval      status of event processing/storage
+             *
+             */
             PEP_STATUS recv_«@name»_event(
                     PEP_SESSION session,
                     «@name»_event_t *ev
                 );
-        
-            // state machine driver
-            // if fsm or event set to 0 use fields in src if present
 
+            /**
+             *  <!--         «@name»_driver()       -->
+             *
+             *  @brief       «@name» state machine driver
+             *
+             *  @param[in]   session          the session
+             *  @param[in]   fsm              finite state machine to drive
+             *  @param[in]   ev               the event to process???
+             *
+             *  @retval      ???
+             *
+             *  @note       if fsm or event set to 0 use fields in src if present
+             *
+             */
             PEP_STATUS «@name»_driver(
                     PEP_SESSION session,
                     «@name»_PR fsm,
                     int event
                 );
 
-            // API being used by the engine internally
+            /////////////////////////////////////////////////////////////////////////////
+            // API used by the engine internally                                       //
+            /////////////////////////////////////////////////////////////////////////////
 
-            // call this if you need to signal an external event
-            // caveat: the ownership of own_identities goes to the callee
-
+            /**
+             *  <!--         signal_«@name»_event()       -->
+             *
+             *  @brief       Internal engine API: call this if you need to signal an external «@name» event
+             *
+             *  @param[in]   session              the session
+             *  @param[in]   fsm                  finite state machine
+             *  @param[in]   event                event type
+             *  @param[out]  own_identities       list of own identities
+             *
+             *  @retval      status
+             *
+             *  @ownership   the ownership of own_identities goes to the callee
+             *
+             */
             PEP_STATUS signal_«@name»_event(
-                    PEP_SESSION session, 
+                    PEP_SESSION session,
                     «@name»_PR fsm,
                     int event,
                     identity_list *own_identities
                 );
-            
-            // call this if you are a transport and are receiving
-            // a «@name» message
 
+            /**
+             *  <!--         signal_«@name»_message()       -->
+             *
+             *  @brief       Internal engine API: to be called by transports receiving a «@name» message
+             *
+             *  @param[in]    session          the session
+             *  @param[in]    rating           rating of the decrypted «@name» message
+             *  @param[out]   data             payload of «@name» message
+             *  @param[out]   from             identity of the message sender
+             *  @param[out]   fpr              fingerprint of the sender key used to sign the message
+             *
+             *  @retval      status
+             *
+             */
             PEP_STATUS signal_«@name»_message(
-                    PEP_SESSION session, 
+                    PEP_SESSION session,
                     PEP_rating rating,
                     const char *data,
                     size_t size,
@@ -223,8 +336,13 @@ tstylesheet {
 
         document "generated/{@name}_impl.c", "text" {
             ||
-            // This file is under GNU General Public License 3.0
-            // see LICENSE.txt
+            /**
+             * @file      «@name»_impl.c
+             * @brief     «@name» protocol implementation: driver, event handling, message signalling/sending/receipt, etc.
+             * @generated from ../sync/gen_statemachine.ysl2
+             *
+             * @license   GNU General Public License 3.0 - see LICENSE.txt
+             */
         
             #include "«@name»_impl.h"
             #include "pEp_internal.h"
@@ -1081,6 +1199,20 @@ tstylesheet {
 
     template "fsm", mode=timeout
     ||
+    /**
+     *  <!--            _«@name»_timeout()       -->
+     *
+     *  @internal
+     *
+     *  @brief          Determine if «@name» state machine has timed out
+     *                  (by hanging in the same state too long,
+     *                  exceeding «yml:ucase(@name)»_THRESHOLD)
+     *
+     *  @param[in]      state       current state
+     *
+     *  @retval         true        if wait has exceeded «yml:ucase(@name)»_THRESHOLD
+     *                  false       otherwise
+     */
     static bool _«@name»_timeout(int state)
     {
         static int last_state = None;
@@ -1236,8 +1368,13 @@ tstylesheet {
     template "fsm", mode=gen {
         document "generated/{@name}_fsm.h", "text" {
         ||
-        // This file is under GNU General Public License 3.0
-        // see LICENSE.txt
+        /**
+         * @file    «@name»_fsm.h
+         * @brief   Finite state machine states, definitions, and structs for the «@name» protocol.
+         * @generated from ../sync/gen_statemachine.ysl2
+         *
+         * @license   GNU General Public License 3.0 - see LICENSE.txt
+         */
 
         #pragma once
 
@@ -1247,7 +1384,9 @@ tstylesheet {
         extern "C" {
         #endif
 
+        ///////////////////////////////////////////////////////////////////////////////////////////
         // state machine for «@name»
+        ///////////////////////////////////////////////////////////////////////////////////////////
 
         // states
 
@@ -1283,16 +1422,49 @@ tstylesheet {
         ||
         } «@name»_event;
 
+
         // state machine
 
         #ifndef NDEBUG
+        /**
+         *  <!--            «@name»_state_name()       -->
+         *
+         *  @brief          Convert «@name» state to string
+         *
+         *  @param[in]      state       state to convert to string
+         *
+         *  @retval         string      representation of state name
+         *                  NULL        if invalid state
+         */
         const char *«@name»_state_name(int state);
+        /**
+         *  <!--            «@name»_event_name()       -->
+         *
+         *  @brief          Convert «@name» event to string
+         *
+         *  @param[in]      event       event to convert to string
+         *
+         *  @retval         string      representation of event name
+         *                  NULL        if invalid event
+         */
         const char *«@name»_event_name(int event);
         #endif
 
-        // the state machine function is returning the next state in case of a
-        // transition or None for staying
-
+        /**
+         *  <!--            fsm_«@name»       -->
+         *
+         *  @brief          Given the current state of a «@name» state machine, determine if
+         *                  a received «@name» event will cause a state transition
+         *                  and, if so, return the next state.
+         *
+         *  @param[in]      session         session state machine is associated with
+         *  @param[in]      state           current state
+         *  @param[in]      event           incoming event to evaluate
+         *
+         *  @retval         next_state      if event causes a state transition
+         *  @retval         None            if state machine should remain in the same state
+         *
+         */
         «@name»_state fsm_«@name»(
                 PEP_SESSION session,
                 «@name»_state state,
@@ -1308,8 +1480,13 @@ tstylesheet {
 
         document "generated/{@name}_fsm.c", "text" {
         ||
-        // This file is under GNU General Public License 3.0
-        // see LICENSE.txt
+        /**
+         * @file        «@name»_fsm.c
+         * @brief       Finite state machine implementation for the «@name» protocol.
+         * @generated   from ../sync/gen_statemachine.ysl2
+         *
+         * @license   GNU General Public License 3.0 - see LICENSE.txt
+         */
 
         #include "«@name»_fsm.h"
         #include <stdlib.h>
@@ -1360,7 +1537,20 @@ tstylesheet {
             }
         }
 
-
+        /**
+         *  <!--            _str()       -->
+         *
+         *  @internal
+         *
+         *  @brief          Convert an integer to a string representation
+         *
+         *  @param[in]      n           integer to convert
+         *  @param[in]      hex         true if it should be in hex representation,
+         *                              false for decimal
+         *
+         *  @retval         string      representation of input
+         *                  NULL        if out of memory or input invalid
+         */
         static char *_str(int n, bool hex)
         {
             char *buf = calloc(1, 24);
@@ -1377,6 +1567,23 @@ tstylesheet {
 
         #define «@name»_ERR_LOG(t, d) log_event(session, (t), "«@name»", (d), "error")
 
+        /**
+         *  <!--            _«@name»_ERR_LOG_int()       -->
+         *
+         *  @internal
+         *
+         *  @brief          Write a «@name» error to log with integer input as description
+         *
+         *  @param[in]      session         relevant session
+         *  @param[in]      t               C string event name
+         *  @param[in]      n               integer to log (e.g. error status)
+         *  @param[in]      hex             true if integer should be logged in hex format,
+         *                                  false if decimal
+         *
+         *  @retval         PEP_OUT_OF_MEMORY       if out of memory
+         *  @retval         PEP_ILLEGAL_VALUE       if input error during logging
+         *  @retval         PEP_STATUS_OK           otherwise
+         */
         static PEP_STATUS _«@name»_ERR_LOG_int(PEP_SESSION session, char *t, int n, bool hex)
         {
             char *_buf = _str(n, hex);

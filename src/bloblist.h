@@ -1,5 +1,9 @@
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    bloblist.h
+ * @brief   functions for list structure to hold data of unspecified format (hence,
+ *          "blob list"); can contain addition format information in structure's mime info
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #pragma once
 
@@ -12,12 +16,24 @@
 extern "C" {
 #endif
 
+/**
+ *  @enum    content_disposition_type
+ *  
+ *  @brief    TODO
+ *  
+ */
 typedef enum {
     PEP_CONTENT_DISP_ATTACHMENT = 0,
     PEP_CONTENT_DISP_INLINE = 1,
     PEP_CONTENT_DISP_OTHER = -1      // must be affirmatively set
 } content_disposition_type;
 
+/**
+ *  @struct    bloblist_t
+ *  
+ *  @brief    TODO
+ *  
+ */
 typedef struct _bloblist_t {
     char *value;                        // blob
     size_t size;                        // size of blob
@@ -34,98 +50,131 @@ typedef struct _bloblist_t {
 } bloblist_t;
 
 
-// new_bloblist() - allocate a new bloblist
-//
-//  parameters:
-//      blob (in)       blob to add to the list
-//      size (in)       size of the blob
-//      mime_type (in)  MIME type of the blob data or NULL if unknown
-//      filename (in)  file name of origin of blob data or NULL if unknown
-//
-//  return value:
-//      pointer to new bloblist_t or NULL if out of memory
-//
-//  caveat:
-//      the ownership of the blob goes to the bloblist; mime_type and filename
-//      are being copied, the originals remain in the ownership of the caller
-//
-//      if blob is on a different heap then after the call release_value has to
-//      be set by the adapter; this is relevant on operating systems with
-//      multiple heaps like Microsoft Windows
+/**
+ *  <!--       new_bloblist()       -->
+ *  
+ *  @brief Allocate a new bloblist
+ *  
+ *  @param[in]   blob         blob to add to the list
+ *  @param[in]   size         size of the blob
+ *  @param[in]   mime_type    MIME type of the blob data or NULL if unknown
+ *  @param[in]   filename     file name of origin of blob data or NULL if unknown
+ *  
+ *  @retval pointer to new bloblist_t or NULL if out of memory
+ *  
+ *  @ownership 
+ *  -  the ownership of the blob goes to the bloblist struct
+ *  -  mime_type and filename are copied (copies belong to bloblist struct, 
+ *     the originals remain in the ownership of the caller)
+ * 
+ * @warning  if blob is on a different heap, then after the call, release_value has to
+ *           be set by the adapter; this is relevant on operating systems with
+ *           multiple heaps like Microsoft Windows
+ *  
+ */
 
 DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_type,
         const char *filename);
 
 
-// free_bloblist() - free bloblist
-//
-//  parameters:
-//      bloblist (in)   bloblist to free
+/**
+ *  <!--       free_bloblist()       -->
+ *  
+ *  @brief Free bloblist
+ *  
+ *  @param[in]   bloblist    bloblist to free
+ *  
+ *  
+ */
 
 DYNAMIC_API void free_bloblist(bloblist_t *bloblist);
 
 
-// bloblist_dup() - duplicate bloblist
-//
-//  parameters:
-//      src (in)    bloblist to duplicate
-//
-//  return value:
-//      pointer to a new bloblist_t or NULL if out of memory
-//
-//  caveat:
-//      this is an expensive operation because all blobs are copied
+/**
+ *  <!--       bloblist_dup()       -->
+ *  
+ *  @brief Duplicate bloblist
+ *  
+ *  @param[in]   src    bloblist to duplicate
+ *  
+ *  @retval pointer to a new bloblist_t or NULL if out of memory
+ *  
+ *  @warning this is an expensive operation because all blobs are copied
+ *  
+ */
 
 DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src);
 
 
-// bloblist_add() - add reference to a blob to bloblist
-//
-//  parameters:
-//      bloblist (in)   bloblist to add to
-//      blob (in)       blob
-//      size (in)       size of the blob
-//      mime_type (in)  MIME type of the blob or NULL if unknown
-//      filename (in)  file name of the blob or NULL if unknown
-//
-//  return value:
-//      pointer to the last element of bloblist or NULL if out of memory or
-//      NULL passed in as blob value
-//
-//  caveat:
-//      the ownership of the blob goes to the bloblist; mime_type and filename
-//      are being copied, the originals remain in the ownership of the caller.
-//      bloblist input parameter equal to NULL or with value == NULL is a valid
-//      empty input list.
-//
-//      If there is release_value set in bloblist it is copied to the added
-//      leaf
+/**
+ *  <!--       bloblist_add()       -->
+ *  
+ *  @brief Add reference to a blob to bloblist
+ *  
+ *  @param[in]   bloblist     bloblist to add to
+ *  @param[in]   blob         blob
+ *  @param[in]   size         size of the blob
+ *  @param[in]   mime_type    MIME type of the blob or NULL if unknown
+ *  @param[in]   filename     file name of the blob or NULL if unknown
+ *  
+ *  @retval pointer to the last element of bloblist or NULL if out of memory or
+ *  @retval NULL passed in as blob value
+ *  
+ *  @ownership 
+ *  - the ownership of the blob goes to the bloblist struct 
+ *  - mime_type and filename are copied and belong to the bloblist struct, the originals remain in the ownership of the caller.
+ *           
+ *  @note Bloblist input parameter equal to NULL or with value == NULL is a valid
+ *        empty input list.
+ * 
+ *  @note If there is release_value set in bloblist it is copied to the added
+ *        leaf
+ *  
+ */
 
 DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t size,
         const char *mime_type, const char *filename);
 
 
-// bloblist_length() - get length of bloblist
-//
-//  parameters:
-//      bloblist (in)   bloblist struct to determine length of
-//
-//  return value:
-//      length of bloblist in number of elements
+/**
+ *  <!--       bloblist_length()       -->
+ *  
+ *  @brief Get length of bloblist
+ *  
+ *  @param[in]   bloblist    bloblist struct to determine length of
+ *  
+ *  @retval length of bloblist in number of elements
+ *  
+ *  
+ */
 
 DYNAMIC_API int bloblist_length(const bloblist_t *bloblist);
 
 
-// set_blob_content_disposition() - set blob content disposition and parameters
-//                                  when necessary
-//
-//  parameters:
-//      blob (in)               bloblist struct to change disposition for
-//      disposition (in)        disposition type (see enum)
+/**
+ *  <!--       set_blob_content_disposition()       -->
+ *  
+ *  @brief Set blob content disposition and parameters
+ *         when necessary
+ *  
+ *  @param[in]   blob           bloblist struct to change disposition for
+ *  @param[in]   disposition    disposition type (see enum)
+ *  
+ *  
+ */
 
 DYNAMIC_API void set_blob_disposition(bloblist_t* blob, 
         content_disposition_type disposition);
 
+/**
+ *  <!--       bloblist_join()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  first         bloblist_t*
+ *  @param[in]  second        bloblist_t*
+ *  
+ */
 DYNAMIC_API bloblist_t* bloblist_join(bloblist_t* first, bloblist_t* second);
 
 #ifdef __cplusplus

@@ -1,3 +1,6 @@
+/** @file */
+/** @brief File description for doxygen missing. FIXME */
+
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
@@ -25,6 +28,16 @@ static char translate_char_to_bits(char input) {
     return -1;    
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       _is_whitespace()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	in		constchar
+ *  
+ */
 static bool _is_whitespace(const char in) {
     switch (in) {
         case ' ':
@@ -37,6 +50,17 @@ static bool _is_whitespace(const char in) {
     }        
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       subtract_whitespace()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*input		constchar
+ *  @param[in]	length		int
+ *  
+ */
 static size_t subtract_whitespace(const char* input, int length) {
     size_t actual_size = length;
     int i;
@@ -48,6 +72,17 @@ static size_t subtract_whitespace(const char* input, int length) {
     return actual_size;
 }
     
+/**
+ *  @internal
+ *  
+ *  <!--       trim_end()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*input		constchar
+ *  @param[in]	*length		int
+ *  
+ */
 static void trim_end(const char* input, int* length) {
     const char* end = input + *length;
     
@@ -62,6 +97,17 @@ static void trim_end(const char* input, int* length) {
     }
 }    
     
+/**
+ *  @internal
+ *  
+ *  <!--       next_char()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	**input_ptr		constchar
+ *  @param[in]	*end		constchar
+ *  
+ */
 char next_char(const char** input_ptr, const char* end) {
     const char* input = *input_ptr;
     char this_ch = 0;
@@ -80,6 +126,17 @@ char next_char(const char** input_ptr, const char* end) {
 }
 
 // 4 chars = 3 output bytes
+/**
+ *  @internal
+ *  
+ *  <!--       base64_str_to_binary_blob()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*input		const char 
+ *  @param[in]	length		int 
+ *  
+ */
 bloblist_t* base64_str_to_binary_blob(const char* input, int length) {
     if (length == 0)
         return NULL;

@@ -1,3 +1,6 @@
+/** @file */
+/** @brief File description for doxygen missing. FIXME */
+
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
@@ -247,6 +250,17 @@ char *strnstr(const char *big, const char *little, size_t len) {
 
 #endif
 
+/**
+ *  @internal
+ *  
+ *  <!--       _stradd()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	**first		char
+ *  @param[in]	*second		constchar
+ *  
+ */
 static char *_stradd(char **first, const char *second)
 {
     assert(first && *first && second);
@@ -267,12 +281,34 @@ static char *_stradd(char **first, const char *second)
     return *first;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       _empty()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	**p		char
+ *  
+ */
 static void _empty(char **p)
 {
     free(*p);
     *p = NULL;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       _move()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*o		constchar
+ *  @param[in]	*ext		constchar
+ *  @param[in]	*n		constchar
+ *  
+ */
 static void _move(const char *o, const char *ext, const char *n)
 {
     assert(o && ext && n);
@@ -306,6 +342,16 @@ static void _move(const char *o, const char *ext, const char *n)
 }
 
 #ifndef NDEBUG
+/**
+ *  @internal
+ *  
+ *  <!--       _per_user_directory()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	reset		int
+ *  
+ */
 static const char *_per_user_directory(int reset)
 #else 
 static const char *_per_user_directory(void)
