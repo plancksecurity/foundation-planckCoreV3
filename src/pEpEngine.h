@@ -1087,7 +1087,7 @@ DYNAMIC_API PEP_STATUS generate_keypair(
  *  @brief Delete a public key or a key pair from the key ring
  *  
  *  @param[in]   session    session handle
- *  @param[in]   fpr        C string with key id or fingerprint of the
+ *  @param[in]   fpr        C string with fingerprint of the
  *                            public key
  *  
  *  @retval PEP_STATUS_OK           key was successfully deleted
@@ -1175,7 +1175,7 @@ PEP_STATUS _import_key_with_fpr_return(
  *  @brief Export ascii armored key
  *  
  *  @param[in]     session     session handle
- *  @param[in]     fpr         key id or fingerprint of key
+ *  @param[in]     fpr         fingerprint of key
  *  @param[out]    key_data    ASCII armored OpenPGP key
  *  @param[out]    size        amount of data to handle
  *  
@@ -1254,7 +1254,7 @@ DYNAMIC_API PEP_STATUS recv_key(PEP_SESSION session, const char *pattern);
  *  @brief Find keys in keyring
  *  
  *  @param[in]     session    session handle
- *  @param[in]     pattern    key id, user id or address to search for as
+ *  @param[in]     pattern    fingerprint or address to search for as
  *                            UTF-8 string
  *  @param[out]    keylist    list of fingerprints found or NULL on error
  *  
@@ -1664,7 +1664,7 @@ PEP_STATUS key_created(
  *  @brief Find keys in keyring
  *  
  *  @param[in]     session    session handle
- *  @param[in]     pattern    key id, user id or address to search for as
+ *  @param[in]     pattern    fingerprint or address to search for as
  *                            UTF-8 string
  *  @param[out]    keylist    list of fingerprints found or NULL on error
  *  
