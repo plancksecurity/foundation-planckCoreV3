@@ -12,34 +12,39 @@ SET yml2_directory=%engine_directory:~0,-11%\yml2
 :: Generate code in ...\pEpEngine\sync
 PUSHD %engine_directory%\sync
 
+:: Make sure YML2 is installed
+PY -m pip install wheel
+PY -m pip install yml2
+
+:: Generate the code
 IF NOT EXIST generated MKDIR generated
 
-ECHO py "%yml2_directory%\yml2proc" -E utf-8 -y gen_actions.ysl2 sync.fsm
-py "%yml2_directory%\yml2proc" -E utf-8 -y gen_actions.ysl2 sync.fsm
+ECHO PY -m yml2.yml2proc -E utf-8 -y gen_actions.ysl2 sync.fsm
+PY -m yml2.yml2proc -E utf-8 -y gen_actions.ysl2 sync.fsm
 IF %ERRORLEVEL% NEQ 0 GOTO end
 
-ECHO py "%yml2_directory%\yml2proc" -E utf-8 -y gen_codec.ysl2 distribution.fsm
-py "%yml2_directory%\yml2proc" -E utf-8 -y gen_codec.ysl2 distribution.fsm
+ECHO PY -m yml2.yml2proc -E utf-8 -y gen_codec.ysl2 distribution.fsm
+PY -m yml2.yml2proc -E utf-8 -y gen_codec.ysl2 distribution.fsm
 IF %ERRORLEVEL% NEQ 0 GOTO end
 
-ECHO py "%yml2_directory%\yml2proc" -E utf-8 -y gen_codec.ysl2 sync.fsm
-py "%yml2_directory%\yml2proc" -E utf-8 -y gen_codec.ysl2 sync.fsm
+ECHO PY -m yml2.yml2proc -E utf-8 -y gen_codec.ysl2 sync.fsm
+PY -m yml2.yml2proc -E utf-8 -y gen_codec.ysl2 sync.fsm
 IF %ERRORLEVEL% NEQ 0 GOTO end
 
-ECHO py "%yml2_directory%\yml2proc" -E utf-8 -y gen_messages.ysl2 sync.fsm
-py "%yml2_directory%\yml2proc" -E utf-8 -y gen_messages.ysl2 sync.fsm
+ECHO PY -m yml2.yml2proc -E utf-8 -y gen_messages.ysl2 sync.fsm
+PY -m yml2.yml2proc -E utf-8 -y gen_messages.ysl2 sync.fsm
 IF %ERRORLEVEL% NEQ 0 GOTO end
 
-ECHO py "%yml2_directory%\yml2proc" -E utf-8 -y gen_messages.ysl2 distribution.fsm
-py "%yml2_directory%\yml2proc" -E utf-8 -y gen_messages.ysl2 distribution.fsm
+ECHO PY -m yml2.yml2proc -E utf-8 -y gen_messages.ysl2 distribution.fsm
+PY -m yml2.yml2proc -E utf-8 -y gen_messages.ysl2 distribution.fsm
 IF %ERRORLEVEL% NEQ 0 GOTO end
 
-ECHO py "%yml2_directory%\yml2proc" -E utf-8 -y gen_message_func.ysl2 sync.fsm
-py "%yml2_directory%\yml2proc" -E utf-8 -y gen_message_func.ysl2 sync.fsm
+ECHO PY -m yml2.yml2proc -E utf-8 -y gen_message_func.ysl2 sync.fsm
+PY -m yml2.yml2proc -E utf-8 -y gen_message_func.ysl2 sync.fsm
 IF %ERRORLEVEL% NEQ 0 GOTO end
 
-ECHO py "%yml2_directory%\yml2proc" -E utf-8 -y gen_statemachine.ysl2 sync.fsm
-py "%yml2_directory%\yml2proc" -E utf-8 -y gen_statemachine.ysl2 sync.fsm
+ECHO PY -m yml2.yml2proc -E utf-8 -y gen_statemachine.ysl2 sync.fsm
+PY -m yml2.yml2proc -E utf-8 -y gen_statemachine.ysl2 sync.fsm
 IF %ERRORLEVEL% NEQ 0 GOTO end
 
 XCOPY /y generated\*.asn1 ..\asn.1\
