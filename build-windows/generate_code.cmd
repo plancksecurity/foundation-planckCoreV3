@@ -9,14 +9,21 @@ SET engine_directory=%current_directory:~0,-14%
 :: YML2 directory is ...\pEpForWindowsAdapterSolution\yml2\
 SET yml2_directory=%engine_directory:~0,-11%\yml2
 
+:: Create the system.db
+PUSHD %engine_directory%\db
+CALL make_systemdb
+IF NOT EXIST "%ProgramData%\pEp" "MKDIR %ProgramData%\pEp"
+DEL "%ProgramData%\pEp\system.db"
+MOVE system.db "%ProgramData%\pEp\system.db"
+
 :: Generate code in ...\pEpEngine\sync
-PUSHD %engine_directory%\sync
+CD ..\sync
 
 :: Make sure YML2 is installed
 PY -m pip install wheel
 PY -m pip install yml2
 
-:: Generate the code
+:: Generate the Sync code
 IF NOT EXIST generated MKDIR generated
 
 ECHO PY -m yml2.yml2proc -E utf-8 -y gen_actions.ysl2 sync.fsm
