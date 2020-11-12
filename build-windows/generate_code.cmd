@@ -58,15 +58,10 @@ DEL *.h
 DEL *.c
 
 ..\..\Tools\asn1c\bin\asn1c -S ../../Tools/asn1c/share/asn1c -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keysync.asn1 sync.asn1
-IF %ERRORLEVEL% NEQ 0 (
-	POPD
-	EXIT /B 1
-	)
+IF %ERRORLEVEL% NEQ 0 GOTO end
+
 ..\..\Tools\asn1c\bin\asn1c -S ../../Tools/asn1c/share/asn1c -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keyreset.asn1 distribution.asn1
-IF %ERRORLEVEL% NEQ 0 (
-	POPD
-	EXIT /B 1
-	)
+IF %ERRORLEVEL% NEQ 0 GOTO end
 
 DEL *-sample.c
 
