@@ -509,7 +509,14 @@ static inline int _same_fpr(
     return comparison == 0;
 }
 
-// Check if fpr is hex and has between 16 and 128 characters inclusive 
+/**
+ *  <!--       check_fpr_format()       -->
+ *  
+ *  @brief     Check if fpr is hex and has between 16 and 128 characters inclusive            
+ *  
+ *  @param[in]  fpr       fingerprint to check 
+ *  
+ */
 bool check_fpr_format(const char* fpr); 
 
 // size is the length of the bytestr that's coming in. This is really only intended

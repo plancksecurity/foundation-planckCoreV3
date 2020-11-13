@@ -6142,7 +6142,7 @@ bool check_fpr_format(const char* fpr) {
 
     for (curr_fpr = fpr; curr_fpr && *curr_fpr != '\0'; curr_fpr++) {
         char c = *curr_fpr;
-        if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
+        if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'))
             continue;
         return false;
     }
