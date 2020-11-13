@@ -1,9 +1,12 @@
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    pEp_internal.h
+ * @brief   pEp internal structs, functions, defines, and values
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
-// maximum attachment size to import as key 1MB, maximum of 20 attachments
+// maximum attachment size to import as key 25MB, maximum of 20 attachments
 
-#define MAX_KEY_SIZE (1024 * 1024)
+#define MAX_KEY_SIZE (25 * 1024 * 1024)
 #define MAX_KEYS_TO_IMPORT  20
 
 #define KEY_EXPIRE_DELTA (60 * 60 * 24 * 365)
@@ -112,6 +115,12 @@
 
 struct _pEpSession;
 typedef struct _pEpSession pEpSession;
+/**
+ *  @struct    _pEpSession
+ *  
+ *  @brief    TODO
+ *  
+ */
 struct _pEpSession {
     const char *version;
     messageToSend_t messageToSend;
@@ -274,15 +283,61 @@ struct _pEpSession {
 };
 
 
+/**
+ *  <!--       init_transport_system()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  in_first       bool
+ *  
+ */
 PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first);
+
+/**
+ *  <!--       release_transport_system()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  out_last       bool
+ *  
+ */
 void release_transport_system(PEP_SESSION session, bool out_last);
 
-/* NOT to be exposed to the outside!!! */
+/**
+ *  @internal
+ * 
+ *  <!--       encrypt_only()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session     PEP_SESSION
+ *  @param[in]  keylist     const stringlist_t*
+ *  @param[in]  ptext       const char*
+ *  @param[in]  psize       size_t
+ *  @param[in]  ctext       char**
+ *  @param[in]  csize       size_t*
+ *  
+ *  @warning    NOT to be exposed to the outside!!!!!
+ */
 PEP_STATUS encrypt_only(
         PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
         size_t psize, char **ctext, size_t *csize
 );
 
+/**
+ *  <!--       decorate_message()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  msg          message*
+ *  @param[in]  rating       PEP_rating
+ *  @param[in]  keylist      stringlist_t*
+ *  @param[in]  add_version  bool
+ *  @param[in]  clobber      bool
+ *  
+ */
 void decorate_message(
     PEP_SESSION session,
     message *msg,
@@ -307,6 +362,12 @@ void decorate_message(
 }
 #endif
 
+/**
+ *  @enum    normalize_hex_res_t
+ *  
+ *  @brief    TODO
+ *  
+ */
 typedef enum _normalize_hex_rest_t {
     accept_hex,
     ignore_hex,
@@ -333,6 +394,18 @@ static inline normalize_hex_res_t _normalize_hex(char* hex)
 }
 
 // Space tolerant and case insensitive fingerprint string compare
+/**
+ *  <!--       _compare_fprs()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  fpra         const char*
+ *  @param[in]  fpras        size_t
+ *  @param[in]  fprb         const char*
+ *  @param[in]  fprbs        size_t
+ *  @param[in]  comparison   int*
+ *  
+ */
 static inline PEP_STATUS _compare_fprs(
         const char* fpra,
         size_t fpras,
@@ -410,6 +483,17 @@ static inline PEP_STATUS _compare_fprs(
     return PEP_STATUS_OK;
 }
 
+/**
+ *  <!--       _same_fpr()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  fpra         const char*
+ *  @param[in]  fpras        size_t
+ *  @param[in]  fprb         const char*
+ *  @param[in]  fprbs        size_t
+ *  
+ */
 static inline int _same_fpr(
         const char* fpra,
         size_t fpras,
@@ -431,6 +515,24 @@ bool check_fpr_format(const char* fpr);
 // size is the length of the bytestr that's coming in. This is really only intended
 // for comparing two full strings. If charstr's length is different from bytestr_size,
 // we'll return a non-zero value.
+/**
+ *  @internal
+ * 
+ *  <!--       _unsigned_signed_strcmp()       -->
+ *  
+ *  @brief      Compare an unsigned sequence of bytes with the input string.
+ *              This is really only intended for comparing two full strings. 
+ *              If charstr's length is different from bytestr_size,
+ *              we'll return a non-zero value.
+ * 
+ *  @param[in]  bytestr         byte string (unsigned char data)
+ *  @param[in]  charstr         character string (NUL-terminated)
+ *  @param[in]  bytestr_size    length of byte string passed in
+ * 
+ *  @retval     0           if equal
+ *  @retval     non-zero    if not equal
+ *  
+ */
 static inline int _unsigned_signed_strcmp(const unsigned char* bytestr, const char* charstr, int bytestr_size) {
     int charstr_len = strlen(charstr);
     if (charstr_len != bytestr_size)
@@ -439,6 +541,13 @@ static inline int _unsigned_signed_strcmp(const unsigned char* bytestr, const ch
 }
 
 // This is just a horrible example of C type madness. UTF-8 made me do it.
+/**
+ *  <!--       _pEp_subj_copy()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  
+ */
 static inline char* _pEp_subj_copy() {
 #ifndef WIN32
     unsigned char pEpstr[] = PEP_SUBJ_STRING;
@@ -450,6 +559,15 @@ static inline char* _pEp_subj_copy() {
 #endif
 }
 
+/**
+ *  <!--       is_me()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  test_ident     const pEp_identity*
+ *  
+ */
 static inline bool is_me(PEP_SESSION session, const pEp_identity* test_ident) {
     bool retval = false;
     if (test_ident && test_ident->user_id) {
@@ -464,6 +582,14 @@ static inline bool is_me(PEP_SESSION session, const pEp_identity* test_ident) {
     return retval;
 }
 
+/**
+ *  <!--       pEp_version_numeric()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  version_str         const char*
+ *  
+ */
 static inline float pEp_version_numeric(const char* version_str) {
     float retval = 0;    
         
@@ -473,6 +599,16 @@ static inline float pEp_version_numeric(const char* version_str) {
     return retval;    
 }
 
+/**
+ *  <!--       pEp_version_major_minor()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]   version_str   const char*
+ *  @param[out]  major         unsigned int*
+ *  @param[out]  minor         unsigned int*
+ *  
+ */
 static inline void pEp_version_major_minor(const char* version_str, unsigned int* major, unsigned int* minor) {
     if (!major || !minor)
         return;
@@ -485,6 +621,17 @@ static inline void pEp_version_major_minor(const char* version_str, unsigned int
     return;    
 }
 
+/**
+ *  <!--       compare_versions()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  first_maj       unsigned int
+ *  @param[in]  first_min       unsigned int
+ *  @param[in]  second_maj      unsigned int
+ *  @param[in]  second_min      unsigned int
+ *  
+ */
 static inline int compare_versions(unsigned int first_maj, unsigned int first_min,
                                    unsigned int second_maj, unsigned int second_min) {
     if (first_maj > second_maj)
@@ -498,6 +645,19 @@ static inline int compare_versions(unsigned int first_maj, unsigned int first_mi
     return 0;    
 }
 
+/**
+ *  <!--       set_min_version()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  first_maj        unsigned int
+ *  @param[in]  first_minor      unsigned int
+ *  @param[in]  second_maj       unsigned int
+ *  @param[in]  second_minor     unsigned int
+ *  @param[in]  result_maj       unsigned int*
+ *  @param[in]  result_minor     unsigned int*
+ *  
+ */
 static inline void set_min_version(unsigned int first_maj, unsigned int first_minor,
                                    unsigned int second_maj, unsigned int second_minor,
                                    unsigned int* result_maj, unsigned int* result_minor) {
@@ -512,6 +672,19 @@ static inline void set_min_version(unsigned int first_maj, unsigned int first_mi
     }    
 }
 
+/**
+ *  <!--       set_max_version()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]   first_maj        unsigned int
+ *  @param[in]   first_minor      unsigned int
+ *  @param[in]   second_maj       unsigned int
+ *  @param[in]   second_minor     unsigned int
+ *  @param[out]  result_maj       unsigned int*
+ *  @param[out]  result_minor     unsigned int*
+ *  
+ */
 static inline void set_max_version(unsigned int first_maj, unsigned int first_minor,
                                    unsigned int second_maj, unsigned int second_minor,
                                    unsigned int* result_maj, unsigned int* result_minor) {
@@ -551,6 +724,13 @@ static inline void set_max_version(unsigned int first_maj, unsigned int first_mi
 extern int _pEp_rand_max_bits;
 extern double _pEp_log2_36;
 
+/**
+ *  <!--       _init_globals()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  
+ */
 static inline void _init_globals() {
     _pEp_rand_max_bits = (int) ceil(log2((double) RAND_MAX));
     _pEp_log2_36 = log2(36);

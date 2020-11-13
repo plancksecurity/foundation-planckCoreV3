@@ -1,3 +1,6 @@
+/** @file */
+/** @brief File description for doxygen missing. FIXME */
+
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
@@ -154,7 +157,7 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
         list_curr = list_curr->next;
 
     list_curr->next = new_bloblist(blob, size, mime_type, filename);
-    list_curr->release_value = release_value;
+    list_curr->next->release_value = release_value;
 
     assert(list_curr->next);
     if (!list_curr->next)

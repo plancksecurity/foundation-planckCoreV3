@@ -15,8 +15,16 @@ tstylesheet {
     template "/protocol" {
         document "generated/{yml:lcase(@name)}_codec.h", "text"
         ||
-        // This file is under GNU General Public License 3.0
-        // see LICENSE.txt
+        /**
+         * @file        «@name»_codec.h
+         * @brief       Definitions for «@name» encode and decode functions which transform message payloads to
+         *              and from PER-encoded data, and XER text to and from PER
+         * @generated   from ../sync/gen_codec.ysl2
+         *
+         * @see         https://www.itu.int/en/ITU-T/asn1/Pages/introduction.aspx
+         *
+         * @license     GNU General Public License 3.0 - see LICENSE.txt
+         */
 
         #pragma once
 
@@ -31,33 +39,38 @@ tstylesheet {
 
         struct «@name»;
 
-        // decode_«@name»_message() - decode PER encoded «@name» message
-        //
-        //  parameters:
-        //      data (in)               PER encoded data
-        //      size (in)               size of PER encoded data
-        //      msg (out)               «@name» message
-        //
-        //  caveat:
-        //      msg goes into the ownership of the caller
-
+        /**
+         *  <!--         decode_«@name»_message()       -->
+         *
+         *  @brief       decode PER encoded «@name» message
+         *
+         *  @param[in]   data             PER encoded data
+         *  @param[in]   size             size of PER encoded data
+         *  @param[out]  msg              decoded «@name» message
+         *
+         *  @retval      status
+         *
+         *  @ownership   msg goes into the ownership of the caller
+         */
         DYNAMIC_API PEP_STATUS decode_«@name»_message(
                 const char *data,
                 size_t size,
                 struct «@name» **msg
             );
 
-
-        // encode_«@name»_message() - encode «@name» message into PER encoded data
-        //
-        //  parameters:
-        //      msg (in)                «@name» message
-        //      data (out)              PER encoded data
-        //      size (out)              size of PER encoded data
-        //
-        //  caveat:
-        //      data goes to the ownership of the caller
-
+        /**
+         *  <!--         encode_«@name»_message()       -->
+         *
+         *  @brief       decode PER encoded «@name» message
+         *
+         *  @param[in]   msg              «@name» message to encode
+         *  @param[out]  data             PER encoded data
+         *  @param[out]  size             size of PER encoded data
+         *
+         *  @retval      status
+         *
+         *  @ownership   msg goes into the ownership of the caller
+         */
         DYNAMIC_API PEP_STATUS encode_«@name»_message(
                 struct «@name» *msg,
                 char **data,
@@ -65,27 +78,34 @@ tstylesheet {
             );
 
 
-        // PER_to_XER_«@name»_msg() - decode «@name» message from PER into XER
-        //
-        //  parameters:
-        //      data (in)               PER encoded data
-        //      size (in)               size of PER encoded data
-        //      text (out)              XER text of the same «@name» message
-
+        /**
+         *  <!--         PER_to_XER_«@name»_msg()       -->
+         *
+         *  @brief          decode «@name» message from PER into XER
+         *
+         *  @param[in]   data       PER encoded data
+         *  @param[in]   size       size of PER encoded data
+         *  @param[out]  text       XER text of the same «@name» message
+         *
+         *  @retval      status
+         */
         DYNAMIC_API PEP_STATUS PER_to_XER_«@name»_msg(
                 const char *data,
                 size_t size,
                 char **text
             );
 
-
-        // XER_to_PER_«@name»_msg() - encode «@name» message from XER into PER
-        //
-        //  parameters:
-        //      text (in)               string with XER text of the «@name» message
-        //      data (out)              PER encoded data
-        //      size (out)              size of PER encoded data
-
+        /**
+         *  <!--         XER_to_PER_«@name»_msg()       -->
+         *
+         *  @brief          encode «@name» message from XER into PER
+         *
+         *  @param[in]   text       string text with XER text of the «@name» message
+         *  @param[out]  data       PER encoded data
+         *  @param[out]  size       size of PER encoded data
+         *
+         *  @retval      status
+         */
         DYNAMIC_API PEP_STATUS XER_to_PER_«@name»_msg(
                 const char *text,
                 char **data,
@@ -100,8 +120,16 @@ tstylesheet {
         ||
         document "generated/{yml:lcase(@name)}_codec.c", "text"
         ||
-        // This file is under GNU General Public License 3.0
-        // see LICENSE.txt
+        /**
+         * @file        «@name»_codec.c
+         * @brief       Implementation for «@name» encode and decode functions which transform message payloads to
+         *              and from PER-encoded data, and XER text to and from PER
+         * @generated   from ../sync/gen_codec.ysl2
+         *
+         * @see         https://www.itu.int/en/ITU-T/asn1/Pages/introduction.aspx
+         *
+         * @license     GNU General Public License 3.0 - see LICENSE.txt
+         */
 
         #include "platform.h"
 
