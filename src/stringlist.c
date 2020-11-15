@@ -139,31 +139,35 @@ DYNAMIC_API stringlist_t *stringlist_add_unique(
         return NULL;
 
     stringlist_t *result = NULL;
+
     if(_stringlist_add_first(stringlist, &result, value))
         return result;
-    
+
+    if (!stringlist)
+    	return NULL; // If the previous call fails somehow. this code is bizarre.
+
     stringlist_t* list_curr = stringlist;
 
-    bool found = false;
-    while (list_curr->next) {
-        if(strcmp(list_curr->value,value)==0)
-            found = true;
-        list_curr = list_curr->next;
+    stringlist_t** next_ptr_addr = NULL;
+
+    while (list_curr) {
+    	next_ptr_addr = &list_curr->next;
+	    if (strcmp(list_curr->value, value) == 0)
+	    	return list_curr;
+	    list_curr = list_curr->next;
     }
-    if(strcmp(list_curr->value,value)==0)
-        found = true;
 
-    if (!found) {
-        list_curr->next = new_stringlist(value);
+    if (!next_ptr_addr)
+    	return NULL; // This is an error, because stringlist_add_first should
+    	             // have handled this case
 
-        assert(list_curr->next);
-        if (list_curr->next == NULL)
-            return NULL;
+    *next_ptr_addr = new_stringlist(value);
 
-        return list_curr->next;
-    } else {
-        return list_curr;
-    }
+    if (!*next_ptr_addr)
+    	return NULL;
+
+    return *next_ptr_addr;
+
 }
 
 
