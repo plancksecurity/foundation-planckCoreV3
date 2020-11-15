@@ -168,7 +168,10 @@ DYNAMIC_API bloblist_t* bloblist_join(bloblist_t* first, bloblist_t* second) {
         return second;
     if (!second)
         return first;
-    
+
+    if (first == second)
+        return first;
+
     bloblist_t* list_curr = first;
     
     while (list_curr->next) {
