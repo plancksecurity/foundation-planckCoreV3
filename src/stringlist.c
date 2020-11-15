@@ -144,27 +144,27 @@ DYNAMIC_API stringlist_t *stringlist_add_unique(
         return result;
 
     if (!stringlist)
-    	return NULL; // If the previous call fails somehow. this code is bizarre.
+        return NULL; // If the previous call fails somehow. this code is bizarre.
 
     stringlist_t* list_curr = stringlist;
 
     stringlist_t** next_ptr_addr = NULL;
 
     while (list_curr) {
-    	next_ptr_addr = &list_curr->next;
-	    if (strcmp(list_curr->value, value) == 0)
-	    	return list_curr;
-	    list_curr = list_curr->next;
+        next_ptr_addr = &list_curr->next;
+        if (strcmp(list_curr->value, value) == 0)
+            return list_curr;
+        list_curr = list_curr->next;
     }
 
     if (!next_ptr_addr)
-    	return NULL; // This is an error, because stringlist_add_first should
-    	             // have handled this case
+        return NULL; // This is an error, because stringlist_add_first should
+                     // have handled this case
 
     *next_ptr_addr = new_stringlist(value);
 
     if (!*next_ptr_addr)
-    	return NULL;
+        return NULL;
 
     return *next_ptr_addr;
 
@@ -185,6 +185,27 @@ DYNAMIC_API stringlist_t *stringlist_append(
         return stringlist;
 
     stringlist_t *_s = stringlist;
+
+    if (stringlist == second) {
+        // Passing in the same pointer twice is not cool.
+        // Since the semantics are to copy the second list,
+        // we'll just do that, presuming that the
+        // caller wants this.
+        second = stringlist_dup(stringlist);
+
+        stringlist_t** end_ptr = NULL;
+
+        while (_s) {
+            end_ptr = &_s->next;
+            _s = _s->next;
+        }
+        if (!end_ptr)
+            return NULL;
+        *end_ptr = second;
+
+        return stringlist;
+    }
+
     stringlist_t *_s2;
     for (_s2 = second; _s2 != NULL; _s2 = _s2->next) {
         _s = stringlist_add(_s, _s2->value);
