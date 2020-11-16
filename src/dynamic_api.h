@@ -1,5 +1,8 @@
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    dynamic_api.h
+ * @brief   defines for windows API export
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #pragma once
 

@@ -1,5 +1,8 @@
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/** 
+ * @file    pEpEngine.h
+ * @brief   pEp Engine API, as well as exposed internal functions and structures. (The latter should probably be factored out at some point) 
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #pragma once
 
@@ -21,11 +24,11 @@ extern "C" {
 
 // RELEASE version this targets
 // (string: major.minor.patch)
-#define PEP_ENGINE_VERSION "2.1.0"
+#define PEP_ENGINE_VERSION "2.2.0"
 #define PEP_ENGINE_VERSION_MAJOR 2
-#define PEP_ENGINE_VERSION_MINOR 1
+#define PEP_ENGINE_VERSION_MINOR 2
 #define PEP_ENGINE_VERSION_PATCH 0
-#define PEP_ENGINE_VERSION_RC    39
+#define PEP_ENGINE_VERSION_RC    4
 
 
 #define PEP_OWN_USERID "pEp_own_userId"
@@ -40,6 +43,12 @@ extern "C" {
 struct _pEpSession;
 typedef struct _pEpSession * PEP_SESSION;
 
+/**
+ *  @enum    PEP_STATUS
+ *  
+ *  @brief    TODO
+ *  
+ */
 typedef enum {
     PEP_STATUS_OK                                   = 0,
 
@@ -151,6 +160,12 @@ typedef enum {
     PEP_VERSION_MISMATCH                            = -7,
 } PEP_STATUS;
 
+/**
+ *  @enum    PEP_enc_format
+ *  
+ *  @brief    TODO
+ *  
+ */
 typedef enum _PEP_enc_format {
     PEP_enc_none = 0,                       // message is not encrypted
     PEP_enc_pieces = 1,                     // inline PGP + PGP extensions, was removed
@@ -164,16 +179,18 @@ typedef enum _PEP_enc_format {
 } PEP_enc_format;
 
 
-// messageToSend() - a message needs to be delivered by application
-//
-//  parameters:
-//      msg (in)        message struct with message to send
-//
-//  return value:
-//      PEP_STATUS_OK or any other value on error
-//
-//  caveat:
-//      the ownership of msg goes to the callee
+/**
+ *  <!--       messageToSend()       -->
+ *  
+ *  @brief A message needs to be delivered by application
+ *  
+ *  @param[in]   msg    message struct with message to send
+ *  
+ *  @retval PEP_STATUS_OK or any other value on error
+ *  
+ *  @warning the ownership of msg goes to the callee
+ *  
+ */
 
 struct _message;
 typedef PEP_STATUS (*messageToSend_t)(struct _message *msg);
@@ -182,85 +199,94 @@ typedef PEP_STATUS (*messageToSend_t)(struct _message *msg);
 struct Sync_event;
 typedef struct Sync_event *SYNC_EVENT;
 
-// free_Sync_event() - free memory occupied by sync protocol message
-//
-//  parameters:
-//      ev (in)         event to free
+/**
+ *  <!--       free_Sync_event()       -->
+ *  
+ *  @brief Free memory occupied by sync protocol message
+ *  
+ *  @param[in]   ev    event to free
+ *  
+ *  
+ */
 
 DYNAMIC_API void free_Sync_event(SYNC_EVENT ev);
 
 
-// inject_sync_event - inject sync protocol message
-//
-//  parameters:
-//      ev (in)             event to inject
-//      management (in)     application defined; usually a locked queue
-//
-//  return value:
-//      0 if event could be stored successfully or nonzero otherwise
-//
-//  caveat:
-//      if ev is SHUTDOWN then the implementation has to be synchronous
-//      and the shutdown must be immediate
+/**
+ *  <!--       inject_sync_event()       -->
+ *  
+ *  @brief Inject sync protocol message
+ *  
+ *  @param[in]   ev            event to inject
+ *  @param[in]   management    application defined; usually a locked queue
+ *  
+ *  @retval 0           if event could be stored successfully 
+ *  @retval nonzero     otherwise
+ *  
+ *  @warning if ev is SHUTDOWN then the implementation has to be synchronous
+ *           and the shutdown must be immediate
+ *  
+ */
 
 typedef int (*inject_sync_event_t)(SYNC_EVENT ev, void *management);
 
-// ensure_passphrase() - callee ensures correct password for (signing) key is configured in the session on
-//                        return, or returns error when it is not found
-//  parameters:
-//.     session (in)      session for which the guarantee is made
-//      fpr (in)          fpr to check
-//
-//  return value:
-//      PEP_STATUS_OK passphrase is configured and ready to use
-//      If the caller runs out of passphrases to try, PEP_*PASSWORD* errors 
-//      are acceptable.
-//.     Other errors if, e.g., the key is not found
-//
-//  caveat:
-//      The callee is responsible for iterating through passwords
-//      to ensure signing/encryption can occur successfully. 
-//
+/**
+ *  <!--       ensure_passphrase()       -->
+ *  
+ *  @brief Callee ensures correct password for (signing) key is configured in the session on
+ *         return, or returns error when it is not found
+ *  
+ *  @param[in]   fpr    fpr to check
+ *  
+ *  @retval PEP_STATUS_OK       passphrase is configured and ready to use
+ *  @retval PEP_PASSPHRASE*     If the caller runs out of passphrases to try, PEP_*PASSWORD* errors 
+ *                              are acceptable.
+ *  @retval **ERROR**           Other errors if, for example, the key is not found
+ *  @warning The callee is responsible for iterating through passwords
+ *           to ensure signing/encryption can occur successfully. 
+ *  
+ */
 typedef PEP_STATUS (*ensure_passphrase_t)(PEP_SESSION session, const char* fpr);
 
-// INIT_STATUS init() - initialize pEpEngine for a thread
-//
-//  parameters:
-//      session (out)                       init() allocates session memory and
-//                                          returns a pointer as a handle
-//      messageToSend (in)                  callback for sending message by the
-//                                          application
-//      inject_sync_event (in)              callback for injecting a sync event
-//      ensure_passphrase (in)             callback for ensuring correct password for key is set
-//
-//  return value:
-//      PEP_STATUS_OK = 0                   if init() succeeds
-//      PEP_INIT_SQLITE3_WITHOUT_MUTEX      if SQLite3 was compiled with
-//                                          SQLITE_THREADSAFE 0
-//      PEP_INIT_CANNOT_LOAD_CRYPTO_LIB     if crypto lin cannot be found
-//      PEP_INIT_CRYPTO_LIB_INIT_FAILED     if CRYPTO_LIB init fails
-//      PEP_INIT_CANNOT_OPEN_DB             if user's management db cannot be
-//                                          opened
-//      PEP_INIT_CANNOT_OPEN_SYSTEM_DB      if system's management db cannot be
-//                                          opened
-//
-//  caveat:
-//      THE CALLER MUST GUARD THIS CALL EXTERNALLY WITH A MUTEX. release()
-//      should be similarly guarded.
-//
-//      the pointer is valid only if the return value is PEP_STATUS_OK
-//      in other case a NULL pointer will be returned; a valid handle must
-//      be released using release() when it's no longer needed
-//
-//      the caller has to guarantee that the first call to this function
-//      will succeed before further calls can be done
-//
-//      messageToSend can only be null if no transport is application based
-//      if transport system is not used it must not be NULL
-//
-//      ensure_refresh_key should only be NULL if the 
-//      caller can guarantee that there is only one single or zero passphrases 
-//      used in the whole of the keys database
+/**
+ *  <!--       init()       -->
+ *  
+ *  @brief Initialize pEpEngine for a thread
+ *  
+ *  @param[out]    session              init() allocates session memory and
+ *                                      returns a pointer as a handle
+ *  @param[in]   messageToSend        callback for sending message by the
+ *                                      application
+ *  @param[in]   inject_sync_event    callback for injecting a sync event
+ *  @param[in]   ensure_passphrase    callback for ensuring correct password for key is set
+ *  
+ *  @retval PEP_STATUS_OK                       if init() succeeds
+ *  @retval PEP_INIT_SQLITE3_WITHOUT_MUTEX      if SQLite3 was compiled with
+ *                                              SQLITE_THREADSAFE 0
+ *  @retval PEP_INIT_CANNOT_LOAD_CRYPTO_LIB     if crypto lin cannot be found
+ *  @retval PEP_INIT_CRYPTO_LIB_INIT_FAILED     if CRYPTO_LIB init fails
+ *  @retval PEP_INIT_CANNOT_OPEN_DB             if user's management db cannot be
+ *                                              opened
+ *  @retval PEP_INIT_CANNOT_OPEN_SYSTEM_DB      if system's management db cannot be
+ *                                              opened
+ *  
+ *  @warning THE CALLER MUST GUARD THIS CALL EXTERNALLY WITH A MUTEX. release()
+ *           should be similarly guarded.
+ * 
+ *  @warning the pointer is valid only if the return value is PEP_STATUS_OK
+ *           in other case a NULL pointer will be returned; a valid handle must
+ *           be released using release() when it's no longer needed
+ * 
+ *  @warning the caller has to guarantee that the first call to this function
+ *           will succeed before further calls can be done
+ *           messageToSend can only be null if no transport is application based
+ *           if transport system is not used it must not be NULL
+ * 
+ *  @warning ensure_refresh_key should only be NULL if the 
+ *           caller can guarantee that there is only one single or zero passphrases 
+ *           used in the whole of the keys database
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS init(
         PEP_SESSION *session,
@@ -271,55 +297,85 @@ DYNAMIC_API PEP_STATUS init(
 
 
 
-// void release() - release thread session handle
-//
-//  parameters:
-//        session (in)    session handle to release
-//
-//    caveat:
-//        THE CALLER MUST GUARD THIS CALL EXTERNALLY WITH A MUTEX. init() should
-//        be similarly guarded.
-//       
-//        the last release() can be called only when all other release() calls
-//        are done
+/**
+ *  <!--       release()       -->
+ *  
+ *  @brief Release thread session handle
+ *  
+ *  @param[in]   session    session handle to release
+ *  
+ *  @warning THE CALLER MUST GUARD THIS CALL EXTERNALLY WITH A MUTEX. init() should
+ *           be similarly guarded.
+ * 
+ *  @warning the last release() can be called only when all other release() calls
+ *           are done
+ *  
+ */
 
 DYNAMIC_API void release(PEP_SESSION session);
 
-// config_passive_mode() - enable passive mode
-//
-//  parameters:
-//      session (in)    session handle
-//      enable (in)     flag if enabled or disabled
+/**
+ *  <!--       config_passive_mode()       -->
+ *  
+ *  @brief Enable passive mode
+ *  
+ *  @param[in]   session    session handle
+ *  @param[in]   enable     flag if enabled or disabled
+ *  
+ *  
+ */
 
 DYNAMIC_API void config_passive_mode(PEP_SESSION session, bool enable);
 
 
-// config_unencrypted_subject() - disable subject encryption
-//
-//  parameters:
-//      session (in)    session handle
-//      enable (in)     flag if enabled or disabled
+/**
+ *  <!--       config_unencrypted_subject()       -->
+ *  
+ *  @brief Disable subject encryption
+ *  
+ *  @param[in]   session    session handle
+ *  @param[in]   enable     flag if enabled or disabled
+ *  
+ *  
+ */
 
 DYNAMIC_API void config_unencrypted_subject(PEP_SESSION session, bool enable);
 
 
-// config_use_only_own_private_keys() - enable passive mode
-//
-//  parameters:
-//      session (in)    session handle
-//      enable (in)     flag if enabled or disabled
+/**
+ *  <!--       config_use_only_own_private_keys()       -->
+ *  
+ *  @brief Enable passive mode
+ *  
+ *  @param[in]   session    session handle
+ *  @param[in]   enable     flag if enabled or disabled
+ *  
+ *  
+ */
 
 DYNAMIC_API void config_use_only_own_private_keys(PEP_SESSION session, bool enable);
 
 
-// config_service_log() - log more for service purposes
-//
-//      session (in)    session handle
-//      enable (in)     flag if enabled or disabled
+/**
+ *  <!--       config_service_log()       -->
+ *  
+ *  @brief Log more for service purposes
+ *  
+ *  session (in)    session handle
+ *  enable (in)     flag if enabled or disabled
+ *  
+ *  
+ */
 
 DYNAMIC_API void config_service_log(PEP_SESSION session, bool enable);
 
 
+/**
+ *  @enum    PEP_CIPHER_SUITE
+ *  
+ *  @brief    TODO
+ *  
+ */
 typedef enum {
     PEP_CIPHER_SUITE_DEFAULT = 0,
     PEP_CIPHER_SUITE_CV25519 = 1,
@@ -332,57 +388,61 @@ typedef enum {
     PEP_CIPHER_SUITE_RSA8K = 8
 } PEP_CIPHER_SUITE;
 
-// config_cipher_suite() - cipher suite being used when encrypting
-//
-//  parameters:
-//      session (in)            session handle
-//      cipher_suite (in)       cipher suite to use
-//
-//  return value:
-//      PEP_STATUS_OK           cipher suite configured
-//      PEP_CANNOT_CONFIG       configuration failed; falling back to default
-//
-//  caveat: the default ciphersuite for a crypt tech implementation is
-//  implementation defined
+/**
+ *  <!--       config_cipher_suite()       -->
+ *  
+ *  @brief Cipher suite being used when encrypting
+ *  
+ *  @param[in]   session         session handle
+ *  @param[in]   cipher_suite    cipher suite to use
+ *  
+ *  @retval PEP_STATUS_OK           cipher suite configured
+ *  @retval PEP_CANNOT_CONFIG       configuration failed; falling back to default
+ *  
+ *  @warning the default ciphersuite for a crypt tech implementation is implementation defined
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS config_cipher_suite(PEP_SESSION session,
         PEP_CIPHER_SUITE suite);
 
 
-// decrypt_and_verify() - decrypt and/or verify a message
-//
-//    parameters:
-//        session (in)          session handle
-//        ctext (in)            cipher text to decrypt and/or verify
-//        csize (in)            size of cipher text
-//        dsigtext (in)         if extant, *detached* signature text for this
-//                              message (or NULL if not)
-//        dsize (in)            size of *detached* signature text for this
-//                              message (0, if no detached sig exists)
-//        ptext (out)           pointer to internal buffer with plain text
-//        psize (out)           size of plain text
-//        keylist (out)         list of key ids which where used to encrypt
-//        filename_ptr (out)    mails produced by certain PGP implementations 
-//                              may return a decrypted filename here for attachments. 
-//                              Externally, this can generally be NULL, and is an optional
-//                              parameter.
-//
-//    return value:
-//        PEP_UNENCRYPTED               message was unencrypted and not signed
-//        PEP_VERIFIED                  message was unencrypted, signature matches
-//        PEP_DECRYPTED                 message is decrypted now, no signature
-//        PEP_DECRYPTED_AND_VERIFIED    message is decrypted now and verified
-//        PEP_DECRYPT_WRONG_FORMAT      message has wrong format to handle
-//        PEP_DECRYPT_NO_KEY            key not available to decrypt and/or verify
-//        PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH    wrong signature
-//
-//    caveat:
-//        the ownerships of ptext as well as keylist are going to the caller
-//        the caller must use free() (or an Windoze pEp_free()) and
-//        free_stringlist() to free them
-//
-//      if this function failes an error message may be the first element of
-//      keylist and the other elements may be the keys used for encryption
+/**
+ *  <!--       decrypt_and_verify()       -->
+ *  
+ *  @brief Decrypt and/or verify a message
+ *  
+ *  @param[in]     session         session handle
+ *  @param[in]     ctext           cipher text to decrypt and/or verify
+ *  @param[in]     csize           size of cipher text
+ *  @param[in]     dsigtext        if extant, *detached* signature text for this
+ *                                 message (or NULL if not)
+ *  @param[in]     dsize           size of *detached* signature text for this
+ *                                 message (0, if no detached sig exists)
+ *  @param[out]    ptext           pointer to internal buffer with plain text
+ *  @param[out]    psize           size of plain text
+ *  @param[out]    keylist         list of key ids which where used to encrypt
+ *  @param[out]    filename_ptr    mails produced by certain PGP implementations 
+ *                                 may return a decrypted filename here for attachments. 
+ *                                 Externally, this can generally be NULL, and is an optional
+ *                                 parameter.
+ *  
+ *  @retval PEP_UNENCRYPTED               message was unencrypted and not signed
+ *  @retval PEP_VERIFIED                  message was unencrypted, signature matches
+ *  @retval PEP_DECRYPTED                 message is decrypted now, no signature
+ *  @retval PEP_DECRYPTED_AND_VERIFIED    message is decrypted now and verified
+ *  @retval PEP_DECRYPT_WRONG_FORMAT      message has wrong format to handle
+ *  @retval PEP_DECRYPT_NO_KEY            key not available to decrypt and/or verify
+ *  @retval PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH    wrong signature
+ *  
+ *  @warning the ownerships of ptext as well as keylist are going to the caller
+ *           the caller must use free() (or an Windoze pEp_free()) and
+ *           free_stringlist() to free them
+ * 
+ *  @note if this function fails an error message may be the first element of
+ *        keylist and the other elements may be the keys used for encryption
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS decrypt_and_verify(
         PEP_SESSION session, const char *ctext, size_t csize,
@@ -392,21 +452,25 @@ DYNAMIC_API PEP_STATUS decrypt_and_verify(
     );
 
 
-// verify_text() - verfy plain text with a digital signature
-//
-//  parameters:
-//      session (in)    session handle
-//      text (in)       text to verify
-//      size (in)       size of text
-//      signature (in)  signature text
-//      sig_size (in)   size of signature
-//      keylist (out)   list of key ids which where used to encrypt or NULL on
-//                        error
-//
-//  return value:
-//        PEP_VERIFIED                message was unencrypted, signature matches
-//        PEP_DECRYPT_NO_KEY          key not available to decrypt and/or verify
-//        PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH    wrong signature
+/**
+ *  <!--       verify_text()       -->
+ *  
+ *  @brief Verfy plain text with a digital signature
+ *  
+ *  @param[in]     session      session handle
+ *  @param[in]     text         text to verify
+ *  @param[in]     size         size of text
+ *  @param[in]     signature    signature text
+ *  @param[in]     sig_size     size of signature
+ *  @param[out]    keylist      list of key ids which where used to encrypt or NULL on
+ *                              error
+ *  
+ *  @retval PEP_VERIFIED                message was unencrypted, signature matches
+ *  @retval PEP_DECRYPT_NO_KEY          key not available to decrypt and/or verify
+ *  @retval PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH    wrong signature
+ *  
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS verify_text(
         PEP_SESSION session, const char *text, size_t size,
@@ -414,29 +478,31 @@ DYNAMIC_API PEP_STATUS verify_text(
     );
 
 
-// encrypt_and_sign() - encrypt and sign a message
-//
-//    parameters:
-//        session (in)    session handle
-//        keylist (in)    list of key ids to encrypt with as C strings
-//        ptext (in)      plain text to decrypt and/or verify
-//        psize (in)      size of plain text
-//        ctext (out)     pointer to internal buffer with cipher text
-//        csize (out)     size of cipher text
-//
-//    return value:
-//        PEP_STATUS_OK = 0            encryption and signing succeeded
-//        PEP_KEY_NOT_FOUND            at least one of the recipient keys
-//                                     could not be found
-//        PEP_KEY_HAS_AMBIG_NAME       at least one of the recipient keys has
-//                                     an ambiguous name
-//        PEP_GET_KEY_FAILED           cannot retrieve key
-//
-//    caveat:
-//      the ownership of ctext is going to the caller
-//      the caller is responsible to free() it (on Windoze use pEp_free())
-//      the first key in keylist is being used to sign the message
-//      this implies there has to be a private key for that keypair
+/**
+ *  <!--       encrypt_and_sign()       -->
+ *  
+ *  @brief Encrypt and sign a message
+ *  
+ *  @param[in]     session    session handle
+ *  @param[in]     keylist    list of key ids to encrypt with as C strings
+ *  @param[in]     ptext      plain text to decrypt and/or verify
+ *  @param[in]     psize      size of plain text
+ *  @param[out]    ctext      pointer to internal buffer with cipher text
+ *  @param[out]    csize      size of cipher text
+ *  
+ *  @retval PEP_STATUS_OK                encryption and signing succeeded
+ *  @retval PEP_KEY_NOT_FOUND            at least one of the recipient keys
+ *                                           could not be found
+ *  @retval PEP_KEY_HAS_AMBIG_NAME       at least one of the recipient keys has
+ *                                           an ambiguous name
+ *  @retval PEP_GET_KEY_FAILED           cannot retrieve key
+ *  
+ *  @warning the ownership of ctext goes to the caller
+ *           the caller is responsible to free() it (on Windoze use pEp_free())
+ *           the first key in keylist is being used to sign the message
+ *           this implies there has to be a private key for that keypair
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS encrypt_and_sign(
         PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
@@ -444,22 +510,35 @@ DYNAMIC_API PEP_STATUS encrypt_and_sign(
     );
 
 
+/**
+ *  <!--       set_debug_color()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  ansi_color     int
+ *  
+ */
 DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color);
 
-// log_event() - log a user defined event defined by UTF-8 encoded strings into
-// management log
-//
-//    parameters:
-//        session (in)        session handle
-//        title (in)          C string with event name
-//        entity (in)         C string with name of entity which is logging
-//        description (in)    C string with long description for event or NULL if
-//                            omitted
-//        comment (in)        C string with user defined comment or NULL if
-//                            omitted
-//
-//    return value:
-//        PEP_STATUS_OK       log entry created
+/**
+ *  <!--       log_event()       -->
+ *  
+ *  @brief Log a user defined event defined by UTF-8 encoded strings into
+ *         management log
+ *  
+ *  @param[in]   session        session handle
+ *  @param[in]   title          C string with event name
+ *  @param[in]   entity         C string with name of entity which is logging
+ *  @param[in]   description    C string with long description for event or NULL if
+ *                                  omitted
+ *  @param[in]   comment        C string with user defined comment or NULL if
+ *                                  omitted
+ *  
+ *  @retval PEP_STATUS_OK       log entry created
+ *  
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS log_event(
         PEP_SESSION session,
@@ -470,6 +549,18 @@ DYNAMIC_API PEP_STATUS log_event(
     );
 
 
+/**
+ *  <!--       log_service()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  title          const char*
+ *  @param[in]  entity         const char*
+ *  @param[in]  description    const char*
+ *  @param[in]  comment        const char*
+ *  
+ */
 DYNAMIC_API PEP_STATUS log_service(PEP_SESSION session, const char *title,
         const char *entity, const char *description, const char *comment);
 
@@ -480,30 +571,43 @@ DYNAMIC_API PEP_STATUS log_service(PEP_SESSION session, const char *title,
 #define SERVICE_LOG(session, title, entity, desc) \
     log_service((session), (title), (entity), (desc), "service " __FILE__ ":" S_LINE)
 
+/**
+ *  <!--       _service_error_log()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session       PEP_SESSION
+ *  @param[in]  entity        const char*
+ *  @param[in]  status        PEP_STATUS
+ *  @param[in]  where         const char*
+ *  
+ */
 DYNAMIC_API void _service_error_log(PEP_SESSION session, const char *entity,
         PEP_STATUS status, const char *where);
 
 #define SERVICE_ERROR_LOG(session, entity, status) \
     _service_error_log((session), (entity), (status), __FILE__ ":" S_LINE)
 
-// trustword() - get the corresponding trustword for a 16 bit value
-//
-//    parameters:
-//        session (in)            session handle
-//        value (in)              value to find a trustword for
-//        lang (in)               C string with ISO 639-1 language code
-//        word (out)              pointer to C string with trustword UTF-8 encoded
-//                                NULL if language is not supported or trustword
-//                                wordlist is damaged or unavailable
-//        wsize (out)             length of trustword
-//
-//    return value:
-//        PEP_STATUS_OK            trustword retrieved
-//        PEP_TRUSTWORD_NOT_FOUND  trustword not found
-//
-//    caveat:
-//        the word pointer goes to the ownership of the caller
-//      the caller is responsible to free() it (on Windoze use pEp_free())
+/**
+ *  <!--       trustword()       -->
+ *  
+ *  @brief Get the corresponding trustword for a 16 bit value
+ *  
+ *  @param[in]     session    session handle
+ *  @param[in]     value      value to find a trustword for
+ *  @param[in]     lang       C string with ISO 639-1 language code
+ *  @param[out]    word       pointer to C string with trustword UTF-8 encoded;
+ *                            NULL if language is not supported or trustword
+ *                            wordlist is damaged or unavailable
+ *  @param[out]    wsize      length of trustword
+ *  
+ *  @retval PEP_STATUS_OK            trustword retrieved
+ *  @retval PEP_TRUSTWORD_NOT_FOUND  trustword not found
+ *  
+ *  @warning the word pointer goes to the ownership of the caller
+ *           the caller is responsible to free() it (on Windoze use pEp_free())
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS trustword(
             PEP_SESSION session, uint16_t value, const char *lang,
@@ -511,34 +615,36 @@ DYNAMIC_API PEP_STATUS trustword(
         );
 
 
-// trustwords() - get trustwords for a string of hex values of a fingerprint
-//
-//    parameters:
-//        session (in)        session handle
-//        fingerprint (in)    C string with hex values to find trustwords for
-//        lang (in)           C string with ISO 639-1 language code
-//        words (out)         pointer to C string with trustwords UTF-8 encoded,
-//                            separated by a blank each
-//                            NULL if language is not supported or trustword
-//                            wordlist is damaged or unavailable
-//        wsize (out)         length of trustwords string
-//        max_words (in)      only generate a string with max_words;
-//                            if max_words == 0 there is no such limit
-//
-//    return value:
-//        PEP_STATUS_OK            trustwords retrieved
-//        PEP_OUT_OF_MEMORY        out of memory
-//        PEP_TRUSTWORD_NOT_FOUND  at least one trustword not found
-//
-//    caveat:
-//        the word pointer goes to the ownership of the caller
-//      the caller is responsible to free() it (on Windoze use pEp_free())
-//
-//  DON'T USE THIS FUNCTION FROM HIGH LEVEL LANGUAGES!
-//
-//  Better implement a simple one in the adapter yourself using trustword(), and
-//  return a list of trustwords.
-//  This function is provided for being used by C and C++ programs only.
+/**
+ *  <!--       trustwords()       -->
+ *  
+ *  @brief Get trustwords for a string of hex values of a fingerprint
+ *  
+ *  @param[in]     session        session handle
+ *  @param[in]     fingerprint    C string with hex values to find trustwords for
+ *  @param[in]     lang           C string with ISO 639-1 language code
+ *  @param[out]    words          pointer to C string with trustwords UTF-8 encoded,
+ *                                separated by a blank each;
+ *                                NULL if language is not supported or trustword
+ *                                wordlist is damaged or unavailable
+ *  @param[out]    wsize          length of trustwords string
+ *  @param[in]     max_words      only generate a string with max_words;
+ *                                if max_words == 0 there is no such limit
+ *  
+ *  @retval PEP_STATUS_OK            trustwords retrieved
+ *  @retval PEP_OUT_OF_MEMORY        out of memory
+ *  @retval PEP_TRUSTWORD_NOT_FOUND  at least one trustword not found
+ *  
+ *  @warning the word pointer goes to the ownership of the caller
+ *           the caller is responsible to free() it (on Windoze use pEp_free())
+ * 
+ *  @warning DON'T USE THIS FUNCTION FROM HIGH LEVEL LANGUAGES!
+ *           Better implement a simple one in the adapter yourself using trustword(), and
+ *           return a list of trustwords.
+ * 
+ *  @warning This function is provided for being used by C and C++ programs only.
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS trustwords(
         PEP_SESSION session, const char *fingerprint, const char *lang,
@@ -548,6 +654,12 @@ DYNAMIC_API PEP_STATUS trustwords(
 
 // TODO: increase versions in pEp.asn1 if rating changes
 
+/**
+ *  @enum    PEP_comm_type
+ *  
+ *  @brief    TODO
+ *  
+ */
 typedef enum _PEP_comm_type {
     PEP_ct_unknown = 0,
 
@@ -610,6 +722,12 @@ typedef enum _PEP_comm_type {
     PEP_ct_pEp = 0xff
 } PEP_comm_type;
 
+/**
+ *  @enum    identity_flags
+ *  
+ *  @brief    TODO
+ *  
+ */
 typedef enum _identity_flags {
     // the first octet flags are app defined settings
     PEP_idf_not_for_sync = 0x0001,   // don't use this identity for sync
@@ -625,6 +743,12 @@ typedef unsigned int identity_flags_t;
 
 typedef unsigned int keypair_flags_t;
 
+/**
+ *  @struct    pEp_identity
+ *  
+ *  @brief    TODO
+ *  
+ */
 typedef struct _pEp_identity {
     char *address;              // C string with address UTF-8 encoded
     char *fpr;                  // C string with fingerprint UTF-8 encoded
@@ -644,26 +768,35 @@ typedef struct _pEp_identity {
     identity_flags_t flags;     // identity_flag1 | identity_flag2 | ...
 } pEp_identity;
 
+/**
+ *  @struct    identity_list
+ *  
+ *  @brief    TODO
+ *  
+ */
 typedef struct _identity_list {
     pEp_identity *ident;
     struct _identity_list *next;
 } identity_list;
 
 
-// new_identity() - allocate memory and set the string and size fields
-//
-//  parameters:
-//      address (in)        UTF-8 string or NULL 
-//      fpr (in)            UTF-8 string or NULL 
-//      user_id (in)        UTF-8 string or NULL 
-//      username (in)       UTF-8 string or NULL 
-//
-//  return value:
-//      pEp_identity struct or NULL if out of memory
-//
-//  caveat:
-//      the strings are copied; the original strings are still being owned by
-//      the caller
+/**
+ *  <!--       new_identity()       -->
+ *  
+ *  @brief Allocate memory and set the string and size fields
+ *  
+ *  @param[in]   address     UTF-8 string or NULL
+ *  @param[in]   fpr         UTF-8 string or NULL
+ *  @param[in]   user_id     UTF-8 string or NULL
+ *  @param[in]   username    UTF-8 string or NULL
+ *  
+ *  @retval pEp_identity    duplicate identity struct
+ *  @retval NULL            if out of memory
+ *  
+ *  @warning the strings are copied; the original strings are still being owned by
+ *           the caller
+ *  
+ */
 
 DYNAMIC_API pEp_identity *new_identity(
         const char *address, const char *fpr, const char *user_id,
@@ -671,49 +804,58 @@ DYNAMIC_API pEp_identity *new_identity(
     );
 
 
-// identity_dup() - allocate memory and duplicate
-//
-//  parameters:
-//      src (in)            identity to duplicate
-//
-//  return value:
-//      pEp_identity struct or NULL if out of memory
-//
-//  caveat:
-//      the strings are copied; the original strings are still being owned by
-//      the caller
+/**
+ *  <!--       identity_dup()       -->
+ *  
+ *  @brief Allocate memory and duplicate
+ *  
+ *  @param[in]   src    identity to duplicate
+ *  
+ *  @retval pEp_identity    duplicate identity struct
+ *  @retval NULL            if out of memory
+ *  
+ *  @warning the strings are copied; the original strings are still being owned by
+ *           the caller
+ *  
+ */
 
 DYNAMIC_API pEp_identity *identity_dup(const pEp_identity *src);
 
 
-// free_identity() - free all memory being occupied by a pEp_identity struct
-//
-//  parameters:
-//      identity (in)       struct to release
-//
-//  caveat:
-//      not only the struct but also all string memory referenced by the
-//      struct is being freed; all pointers inside are invalid afterwards
+/**
+ *  <!--       free_identity()       -->
+ *  
+ *  @brief Free all memory being occupied by a pEp_identity struct
+ *  
+ *  @param[in]   identity    struct to release
+ *  
+ *  @warning not only the struct but also all string memory referenced by the
+ *           struct is being freed; all pointers inside are invalid afterwards
+ *  
+ */
 
 DYNAMIC_API void free_identity(pEp_identity *identity);
 
 
-// get_identity() - get identity information
-//
-//    parameters:
-//        session (in)        session handle
-//        address (in)        C string with communication address, UTF-8 encoded
-//        user_id (in)        unique C string to identify person that identity
-//                            is refering to
-//        identity (out)      pointer to pEp_identity structure with results or
-//                            NULL if failure
-//
-//    caveat:
-//        address and user_id are being copied; the original strings remains in
-//        the ownership of the caller
-//        the resulting pEp_identity structure goes to the ownership of the
-//        caller and has to be freed with free_identity() when not in use any
-//        more
+/**
+ *  <!--       get_identity()       -->
+ *  
+ *  @brief Get identity information
+ *  
+ *  @param[in]     session     session handle
+ *  @param[in]     address     C string with communication address, UTF-8 encoded
+ *  @param[in]     user_id     unique C string to identify person that identity
+ *                             is refering to
+ *  @param[out]    identity    pointer to pEp_identity structure with results or
+ *                             NULL if failure
+ *  
+ *  @warning address and user_id are being copied; the original strings remains in
+ *           the ownership of the caller
+ *           the resulting pEp_identity structure goes to the ownership of the
+ *           caller and has to be freed with free_identity() when not in use any
+ *           more
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS get_identity(
         PEP_SESSION session,
@@ -722,104 +864,134 @@ DYNAMIC_API PEP_STATUS get_identity(
         pEp_identity **identity
     );
 
+/**
+ *  <!--       replace_identities_fpr()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session     PEP_SESSION
+ *  @param[in]  old_fpr     const char*
+ *  @param[in]  new_fpr     const char*
+ *  
+ */
 PEP_STATUS replace_identities_fpr(PEP_SESSION session, 
                                  const char* old_fpr, 
                                  const char* new_fpr); 
 
 
-// set_identity() - set identity information
-//
-//    parameters:
-//        session (in)        session handle
-//        identity (in)       pointer to pEp_identity structure
-//
-//    return value:
-//        PEP_STATUS_OK = 0             encryption and signing succeeded
-//        PEP_CANNOT_SET_PERSON         writing to table person failed
-//        PEP_CANNOT_SET_PGP_KEYPAIR    writing to table pgp_keypair failed
-//        PEP_CANNOT_SET_IDENTITY       writing to table identity failed
-//        PEP_COMMIT_FAILED             SQL commit failed
-//
-//    caveat:
-//        address, fpr, user_id and username must be given
+/**
+ *  <!--       set_identity()       -->
+ *  
+ *  @brief Set identity information
+ *  
+ *  @param[in]   session     session handle
+ *  @param[in]   identity    pointer to pEp_identity structure
+ *  
+ *  @retval PEP_STATUS_OK                 encryption and signing succeeded
+ *  @retval PEP_CANNOT_SET_PERSON         writing to table person failed
+ *  @retval PEP_CANNOT_SET_PGP_KEYPAIR    writing to table pgp_keypair failed
+ *  @retval PEP_CANNOT_SET_IDENTITY       writing to table identity failed
+ *  @retval PEP_COMMIT_FAILED             SQL commit failed
+ *  
+ *  @warning address, fpr, user_id and username must be given
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS set_identity(
         PEP_SESSION session, const pEp_identity *identity
     );
 
-// get_default own_userid() - get the user_id of the own user
-//
-//    parameters:
-//        session (in)        session handle
-//        userid  (out)       own user id (if it exists)
-//
-//    return value:
-//        PEP_STATUS_OK = 0             userid was found
-//        PEP_CANNOT_FIND_IDENTITY      no own_user found in the DB
-//        PEP_UNKNOWN_ERROR             results were returned, but no ID
-//                                      found (no reason this should ever occur)
-//    caveat:
-//        userid will be NULL if not found; otherwise, returned string
-//        belongs to the caller.
+/**
+ *  <!--       get_default_own_userid()       -->
+ *  
+ *  @brief Get the user_id of the own user
+ *  
+ *  @param[in]     session    session handle
+ *  @param[out]    userid     own user id (if it exists)
+ *  
+ *  @retval PEP_STATUS_OK                 userid was found
+ *  @retval PEP_CANNOT_FIND_IDENTITY      no own_user found in the DB
+ *  @retval PEP_UNKNOWN_ERROR             results were returned, but no ID
+ *                                        found (no reason this should ever 
+ *                                        occur)
+ *  
+ *  @warning userid will be NULL if not found; otherwise, returned string
+ *           belongs to the caller.
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS get_default_own_userid(
         PEP_SESSION session, 
         char** userid
     );
 
-// get_userid_alias_default() - get the default user_id which corresponds
-//                              to an alias
-//    parameters:
-//        session (in)        session handle
-//        alias_id (in)       the user_id which may be an alias for a default id
-//        default_id (out)    the default id for this alias, if the alias
-//                            is in the DB as an alias, else NULL
-//    return value:
-//        PEP_STATUS_OK = 0             userid was found
-//        PEP_CANNOT_FIND_ALIAS         this userid is not listed as an 
-//                                      alias in the DB
-//        PEP_UNKNOWN_ERROR             results were returned, but no ID
-//                                      found (no reason this should ever occur)
-//    caveat:
-//        default_id will be NULL if not found; otherwise, returned string
-//        belongs to the caller.
-//        also, current implementation does NOT check to see if this userid
-//        IS a default.
+/**
+ *  <!--       get_userid_alias_default()       -->
+ *  
+ *  @brief Get the default user_id which corresponds
+ *         to an alias
+ *  
+ *  @param[in]     session       session handle
+ *  @param[in]     alias_id      the user_id which may be an alias for a default id
+ *  @param[out]    default_id    the default id for this alias, if the alias
+ *                               is in the DB as an alias, else NULL
+ *  
+ *  @retval PEP_STATUS_OK                 userid was found
+ *  @retval PEP_CANNOT_FIND_ALIAS         this userid is not listed as an 
+ *                                        alias in the DB
+ *  @retval PEP_UNKNOWN_ERROR             results were returned, but no ID
+ *                                        found (no reason this should ever 
+ *                                        occur)
+ *  
+ *  @warning default_id will be NULL if not found; otherwise, returned string
+ *           belongs to the caller.
+ *           also, current implementation does NOT check to see if this userid
+ *           IS a default.
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS get_userid_alias_default(
         PEP_SESSION session, 
         const char* alias_id,
         char** default_id);
 
-// set_userid_alias() - set an alias to correspond to a default id
-//    parameters:
-//        session (in)        session handle
-//        default_id (in)     the default id for this alias. This must
-//                            correspond to the default user_id for an
-//                            entry in the person (user) table.
-//        alias_id (in)       the alias to be set for this default id
-//    return value:
-//        PEP_STATUS_OK = 0             userid was found
-//        PEP_CANNOT_SET_ALIAS          there was an error setting this
+/**
+ *  <!--       set_userid_alias()       -->
+ *  
+ *  @brief Set an alias to correspond to a default id
+ *  
+ *  @param[in]   session       session handle
+ *  @param[in]   default_id    the default id for this alias. This must
+ *                               correspond to the default user_id for an
+ *                               entry in the person (user) table.
+ *  @param[in]   alias_id      the alias to be set for this default id
+ *  
+ *  @retval PEP_STATUS_OK                 userid was found
+ *  @retval PEP_CANNOT_SET_ALIAS          there was an error setting this
+ *  
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS set_userid_alias (
         PEP_SESSION session, 
         const char* default_id,
         const char* alias_id);
 
-// set_identity_flags() - update identity flags on existing identity
-//
-//    parameters:
-//        session (in)        session handle
-//        identity (in,out)   pointer to pEp_identity structure
-//        flags (in)          new value for flags
-//
-//    return value:
-//        PEP_STATUS_OK = 0             encryption and signing succeeded
-//        PEP_CANNOT_SET_IDENTITY       update of identity failed
-//
-//    caveat:
-//        address and user_id must be given in identity
+/**
+ *  <!--       set_identity_flags()       -->
+ *  
+ *  @brief Update identity flags on existing identity
+ *  
+ *  @param[in]   session    session handle
+ *                            identity (in,out)   pointer to pEp_identity structure
+ *  @param[in]   flags      new value for flags
+ *  
+ *  @retval PEP_STATUS_OK                 encryption and signing succeeded
+ *  @retval PEP_CANNOT_SET_IDENTITY       update of identity failed
+ *  
+ *  @warning address and user_id must be given in identity
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS set_identity_flags(
         PEP_SESSION session,
@@ -827,19 +999,21 @@ DYNAMIC_API PEP_STATUS set_identity_flags(
         identity_flags_t flags
     );
 
-// unset_identity_flags() - update identity flags on existing identity
-//
-//    parameters:
-//        session (in)        session handle
-//        identity (in,out)   pointer to pEp_identity structure
-//        flags (in)          new value for flags
-//
-//    return value:
-//        PEP_STATUS_OK = 0             encryption and signing succeeded
-//        PEP_CANNOT_SET_IDENTITY       update of identity failed
-//
-//    caveat:
-//        address and user_id must be given in identity
+/**
+ *  <!--       unset_identity_flags()       -->
+ *  
+ *  @brief Update identity flags on existing identity
+ *  
+ *  @param[in]   session    session handle
+ *                            identity (in,out)   pointer to pEp_identity structure
+ *  @param[in]   flags      new value for flags
+ *  
+ *  @retval PEP_STATUS_OK                 encryption and signing succeeded
+ *  @retval PEP_CANNOT_SET_IDENTITY       update of identity failed
+ *  
+ *  @warning address and user_id must be given in identity
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS unset_identity_flags(
         PEP_SESSION session,
@@ -847,11 +1021,16 @@ DYNAMIC_API PEP_STATUS unset_identity_flags(
         identity_flags_t flags
     );
 
-// mark_as_compromised() - mark key in trust db as compromised
-//
-//    parameters:
-//        session (in)        session handle
-//        fpr (in)            fingerprint of key to mark
+/**
+ *  <!--       mark_as_compromised()       -->
+ *  
+ *  @brief Mark key in trust db as compromised
+ *  
+ *  @param[in]   session    session handle
+ *  @param[in]   fpr        fingerprint of key to mark
+ *  
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS mark_as_compromised(
         PEP_SESSION session,
@@ -859,8 +1038,14 @@ DYNAMIC_API PEP_STATUS mark_as_compromised(
     );
 
 
-// mark_as_compromized() - deprecated to fix misspelling. Please move to
-//                         mark_as_compromised();
+/**
+ *  <!--       mark_as_compromized()       -->
+ *  
+ *  @brief Deprecated to fix misspelling. Please move to
+ *         mark_as_compromised();
+ *  
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS mark_as_compromized(
         PEP_SESSION session,
@@ -868,66 +1053,74 @@ DYNAMIC_API PEP_STATUS mark_as_compromized(
     );
 
 
-// generate_keypair() - generate a new key pair and add it to the key ring
-//
-//  parameters:
-//      session (in)            session handle
-//        identity (inout)      pointer to pEp_identity structure
-//
-//    return value:
-//        PEP_STATUS_OK = 0       encryption and signing succeeded
-//        PEP_ILLEGAL_VALUE       illegal values for identity fields given
-//        PEP_CANNOT_CREATE_KEY   key engine is on strike
-//
-//  caveat:
-//      address must be set to UTF-8 string
-//      the fpr field must be set to NULL
-//      username field must either be NULL or be a UTF8-string conforming 
-//      to RFC4880 for PGP uid usernames  
-//
-//      this function allocates a string and sets set fpr field of identity
-//      the caller is responsible to call free() for that string or use
-//      free_identity() on the struct
+/**
+ *  <!--       generate_keypair()       -->
+ *  
+ *  @brief Generate a new key pair and add it to the key ring
+ *  
+ *  @param[in]     session     session handle
+ *  @param[in,out] identity    pointer to pEp_identity structure
+ *  
+ *  @retval PEP_STATUS_OK           encryption and signing succeeded
+ *  @retval PEP_ILLEGAL_VALUE       illegal values for identity fields given
+ *  @retval PEP_CANNOT_CREATE_KEY   key engine is on strike
+ *  
+ *  @warning address must be set to UTF-8 string
+ *           the fpr field must be set to NULL
+ *           username field must either be NULL or be a UTF8-string conforming 
+ *           to RFC4880 for PGP uid usernames  
+ * 
+ *  @note this function allocates a string and sets set fpr field of identity
+ *        the caller is responsible to call free() for that string or use
+ *        free_identity() on the struct
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS generate_keypair(
         PEP_SESSION session, pEp_identity *identity
     );
 
 
-// delete_keypair() - delete a public key or a key pair from the key ring
-//
-//  parameters:
-//      session (in)            session handle
-//      fpr (in)                C string with key id or fingerprint of the
-//                              public key
-//
-//  return value:
-//      PEP_STATUS_OK = 0       key was successfully deleted
-//      PEP_KEY_NOT_FOUND       key not found
-//      PEP_ILLEGAL_VALUE       not a valid key id or fingerprint
-//      PEP_KEY_HAS_AMBIG_NAME  fpr does not uniquely identify a key
-//      PEP_OUT_OF_MEMORY       out of memory
+/**
+ *  <!--       delete_keypair()       -->
+ *  
+ *  @brief Delete a public key or a key pair from the key ring
+ *  
+ *  @param[in]   session    session handle
+ *  @param[in]   fpr        C string with fingerprint of the
+ *                            public key
+ *  
+ *  @retval PEP_STATUS_OK           key was successfully deleted
+ *  @retval PEP_KEY_NOT_FOUND       key not found
+ *  @retval PEP_ILLEGAL_VALUE       not a valid key id or fingerprint
+ *  @retval PEP_KEY_HAS_AMBIG_NAME  fpr does not uniquely identify a key
+ *  @retval PEP_OUT_OF_MEMORY       out of memory
+ *  
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS delete_keypair(PEP_SESSION session, const char *fpr);
 
 
-// import_key() - import key from data
-//
-//  parameters:
-//      session (in)                session handle
-//      key_data (in)               key data, i.e. ASCII armored OpenPGP key
-//      size (in)                   amount of data to handle
-//      private_keys (out)          list of identities containing the 
-//                                  private keys that have been imported
-//
-//  return value:
-//      PEP_STATUS_OK = 0       key was successfully imported
-//      PEP_OUT_OF_MEMORY       out of memory
-//      PEP_ILLEGAL_VALUE       there is no key data to import
-//
-//  caveat:
-//      private_keys goes to the ownership of the caller
-//      private_keys can be left NULL, it is then ignored
+/**
+ *  <!--       import_key()       -->
+ *  
+ *  @brief Import key from data
+ *  
+ *  @param[in]     session         session handle
+ *  @param[in]     key_data        key data, i.e. ASCII armored OpenPGP key
+ *  @param[in]     size            amount of data to handle
+ *  @param[out]    private_keys    list of identities containing the 
+ *                                 private keys that have been imported
+ *  
+ *  @retval PEP_STATUS_OK           key was successfully imported
+ *  @retval PEP_OUT_OF_MEMORY       out of memory
+ *  @retval PEP_ILLEGAL_VALUE       there is no key data to import
+ *  
+ *  @warning private_keys goes to the ownership of the caller
+ *           private_keys can be left NULL, it is then ignored
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS import_key(
         PEP_SESSION session,
@@ -936,34 +1129,35 @@ DYNAMIC_API PEP_STATUS import_key(
         identity_list **private_keys       
     );
 
-// _import_key_with_fpr_return() - 
-//                INTERNAL FUNCTION - import keys from data, return optional list 
-//                of fprs imported
-//
-//  parameters:
-//      session (in)                session handle
-//      key_data (in)               key data, i.e. ASCII armored OpenPGP key
-//      size (in)                   amount of data to handle
-//      private_keys (out)          list of identities containing the 
-//                                  private keys that have been imported
-//      imported_keys (out)         if non-NULL, list of actual keys imported
-//      changed_public_keys (out)   if non-NULL AND imported_keys is non-NULL:
-//                                  bitvector - corresponds to the first 64 keys
-//                                  imported. If nth bit is set, import changed a
-//                                  key corresponding to the nth element in
-//                                  imported keys (i.e. key was in DB and was
-//                                  changed by import)
-//
-//  return value:
-//      PEP_STATUS_OK = 0       key was successfully imported
-//      PEP_OUT_OF_MEMORY       out of memory
-//      PEP_ILLEGAL_VALUE       there is no key data to import, or imported keys was NULL and 
-//                              changed_public_keys was not
-//
-//  caveat:
-//      private_keys and imported_keys goes to the ownership of the caller
-//      private_keys and imported_keys can be left NULL, it is then ignored
-//      *** THIS IS THE ACTUAL FUNCTION IMPLEMENTED BY CRYPTOTECH "import_key" ***
+/**
+ *  <!--       _import_key_with_fpr_return()       -->
+ *  
+ *  @brief INTERNAL FUNCTION - import keys from data, return optional list 
+ *         of fprs imported
+ *  
+ *  @param[in]     session                session handle
+ *  @param[in]     key_data               key data, i.e. ASCII armored OpenPGP key
+ *  @param[in]     size                   amount of data to handle
+ *  @param[out]    private_keys           list of identities containing the 
+ *                                        private keys that have been imported
+ *  @param[out]    imported_keys          if non-NULL, list of actual keys imported
+ *  @param[out]    changed_public_keys    if non-NULL AND imported_keys is non-NULL:
+ *                                        bitvector - corresponds to the first 64 keys
+ *                                        imported. If nth bit is set, import changed a
+ *                                        key corresponding to the nth element in
+ *                                        imported keys (i.e. key was in DB and was
+ *                                        changed by import)
+ *  
+ *  @retval PEP_STATUS_OK           key was successfully imported
+ *  @retval PEP_OUT_OF_MEMORY       out of memory
+ *  @retval PEP_ILLEGAL_VALUE       there is no key data to import, or imported keys was NULL and 
+ *                                  changed_public_keys was not
+ *  
+ *  @warning private_keys and imported_keys goes to the ownership of the caller
+ *           private_keys and imported_keys can be left NULL, it is then ignored
+ *           *** THIS IS THE ACTUAL FUNCTION IMPLEMENTED BY CRYPTOTECH "import_key" ***
+ *  
+ */
 
 PEP_STATUS _import_key_with_fpr_return(
         PEP_SESSION session,
@@ -975,159 +1169,217 @@ PEP_STATUS _import_key_with_fpr_return(
 );
 
 
-// export_key() - export ascii armored key
-//
-//  parameters:
-//      session (in)            session handle
-//      fpr (in)                key id or fingerprint of key
-//      key_data (out)          ASCII armored OpenPGP key
-//      size (out)              amount of data to handle
-//
-//  return value:
-//      PEP_STATUS_OK = 0       key was successfully exported
-//      PEP_OUT_OF_MEMORY       out of memory
-//      PEP_KEY_NOT_FOUND       key not found
-//
-//  caveat:
-//      the key_data goes to the ownership of the caller
-//      the caller is responsible to free() it (on Windoze use pEp_free())
+/**
+ *  <!--       export_key()       -->
+ *  
+ *  @brief Export ascii armored key
+ *  
+ *  @param[in]     session     session handle
+ *  @param[in]     fpr         fingerprint of key
+ *  @param[out]    key_data    ASCII armored OpenPGP key
+ *  @param[out]    size        amount of data to handle
+ *  
+ *  @retval PEP_STATUS_OK           key was successfully exported
+ *  @retval PEP_OUT_OF_MEMORY       out of memory
+ *  @retval PEP_KEY_NOT_FOUND       key not found
+ *  
+ *  @warning the key_data goes to the ownership of the caller
+ *           the caller is responsible to free() it (on Windoze use pEp_free())
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS export_key(
         PEP_SESSION session, const char *fpr, char **key_data, size_t *size
     );
 
 
-// export_secret_key() - export secret key ascii armored
-//
-//  parameters:
-//      session (in)            session handle
-//      fpr (in)                fingerprint of key, at least 16 hex digits
-//      key_data (out)          ASCII armored OpenPGP secret key
-//      size (out)              amount of data to handle
-//
-//  return value:
-//      PEP_STATUS_OK = 0       key was successfully exported
-//      PEP_OUT_OF_MEMORY       out of memory
-//      PEP_KEY_NOT_FOUND       key not found
-//      PEP_CANNOT_EXPORT_KEY   cannot export secret key (i.e. it's on an HKS)
-//
-//  caveat:
-//      the key_data goes to the ownership of the caller
-//      the caller is responsible to free() it (on Windoze use pEp_free())
-//      beware of leaking secret key data - overwrite it in memory after use
+/**
+ *  <!--       export_secret_key()       -->
+ *  
+ *  @brief Export secret key ascii armored
+ *  
+ *  @param[in]     session     session handle
+ *  @param[in]     fpr         fingerprint of key, at least 16 hex digits
+ *  @param[out]    key_data    ASCII armored OpenPGP secret key
+ *  @param[out]    size        amount of data to handle
+ *  
+ *  @retval PEP_STATUS_OK           key was successfully exported
+ *  @retval PEP_OUT_OF_MEMORY       out of memory
+ *  @retval PEP_KEY_NOT_FOUND       key not found
+ *  @retval PEP_CANNOT_EXPORT_KEY   cannot export secret key (i.e. it's on an HKS)
+ *  
+ *  @warning the key_data goes to the ownership of the caller
+ *           the caller is responsible to free() it (on Windoze use pEp_free())
+ *           beware of leaking secret key data - overwrite it in memory after use
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS export_secret_key(
         PEP_SESSION session, const char *fpr, char **key_data, size_t *size
     );
 
 
-// export_secrect_key() - deprecated misspelled function. Please replace with
-//                        export_secret_key
+/**
+ *  <!--       export_secrect_key()       -->
+ *  
+ *  @brief Deprecated misspelled function. Please replace with
+ *         export_secret_key
+ *  
+ *  @deprecated
+ */
 
 DYNAMIC_API PEP_STATUS export_secrect_key(
         PEP_SESSION session, const char *fpr, char **key_data, size_t *size
     );
 
 
-// recv_key() - update key(s) from keyserver
-//
-//  parameters:
-//      session (in)            session handle
-//      pattern (in)            key id, user id or address to search for as
-//                              UTF-8 string
+/**
+ *  <!--       recv_key()       -->
+ *  
+ *  @brief Update key(s) from keyserver
+ *  
+ *  @param[in]   session    session handle
+ *  @param[in]   pattern    key id, user id or address to search for as
+ *                            UTF-8 string
+ *  
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS recv_key(PEP_SESSION session, const char *pattern);
 
 
-// find_keys() - find keys in keyring
-//
-//  parameters:
-//      session (in)            session handle
-//      pattern (in)            key id, user id or address to search for as
-//                              UTF-8 string
-//      keylist (out)           list of fingerprints found or NULL on error
-//
-//  caveat:
-//        the ownerships of keylist isgoing to the caller
-//        the caller must use free_stringlist() to free it
+/**
+ *  <!--       find_keys()       -->
+ *  
+ *  @brief Find keys in keyring
+ *  
+ *  @param[in]     session    session handle
+ *  @param[in]     pattern    fingerprint or address to search for as
+ *                            UTF-8 string
+ *  @param[out]    keylist    list of fingerprints found or NULL on error
+ *  
+ *  @warning the ownership of keylist and its elements go to the caller
+ *           the caller must use free_stringlist() to free it
+ *  
+ */
 
 
 DYNAMIC_API PEP_STATUS find_keys(
         PEP_SESSION session, const char *pattern, stringlist_t **keylist
     );
 
-// send_key() - send key(s) to keyserver
-//
-//  parameters:
-//      session (in)            session handle
-//      pattern (in)            key id, user id or address to search for as
-//                              UTF-8 string
+/**
+ *  <!--       send_key()       -->
+ *  
+ *  @brief Send key(s) to keyserver
+ *  
+ *  @param[in]     session    session handle
+ *  @param[in]     pattern    key id, user id or address to search for as
+ *                            UTF-8 string
+ *  
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS send_key(PEP_SESSION session, const char *pattern);
 
 
-// pEp_free() - free memory allocated by pEp engine
-//
-//  parameters:
-//      p (in)                  pointer to free
-//
-//  The reason for this function is that heap management can be a pretty
-//  complex task with Windoze. This free() version calls the free()
-//  implementation of the C runtime library which was used to build pEp engine,
-//  so you're using the correct heap. For more information, see:
-//  <http://msdn.microsoft.com/en-us/library/windows/desktop/aa366711(v=vs.85).aspx>
+/**
+ *  <!--       pEp_free()       -->
+ *  
+ *  @brief Free memory allocated by pEp engine
+ *  
+ *  @param[in]     p    pointer to free <br>
+ *                      The reason for this function is that heap management can be a pretty
+ *                      complex task with Windoze. This free() version calls the free()
+ *                      implementation of the C runtime library which was used to build pEp engine,
+ *                      so you're using the correct heap. For more information, see:
+ *                      <http://msdn.microsoft.com/en-us/library/windows/desktop/aa366711(v=vs.85).aspx>
+ *  
+ *  
+ */
 
 DYNAMIC_API void pEp_free(void *p);
 
 
-// pEp_realloc() - reallocate memory allocated by pEp engine
-//
-//  parameters:
-//      p (in)                  pointer to free
-//      size (in)               new memory size
-//
-//  returns:
-//      pointer to allocated memory
-//
-//  The reason for this function is that heap management can be a pretty
-//  complex task with Windoze. This realloc() version calls the realloc()
-//  implementation of the C runtime library which was used to build pEp engine,
-//  so you're using the correct heap. For more information, see:
-//  <http://msdn.microsoft.com/en-us/library/windows/desktop/aa366711(v=vs.85).aspx>
+/**
+ *  <!--       pEp_realloc()       -->
+ *  
+ *  @brief Reallocate memory allocated by pEp engine
+ *  
+ *  @param[in]   p       pointer to free
+ *  @param[in]   size    new memory size
+ *  
+ *  @retval pointer to allocated memory
+ * 
+ *  @note The reason for this function is that heap management can be a pretty
+ *        complex task with Windoze. This realloc() version calls the realloc()
+ *        implementation of the C runtime library which was used to build pEp engine,
+ *        so you're using the correct heap. For more information, see:
+ *        <http://msdn.microsoft.com/en-us/library/windows/desktop/aa366711(v=vs.85).aspx>
+ *  
+ *  
+ */
 
 DYNAMIC_API void *pEp_realloc(void *p, size_t size);
 
 
-// get_trust() - get the trust level a key has for a person
-//
-//  parameters:
-//      session (in)            session handle
-//      identity (inout)        user_id and fpr to check as UTF-8 strings (in)
-//                              comm_type as result (out)
-//
-//  this function modifies the given identity struct; the struct remains in
-//  the ownership of the caller
-//  if the trust level cannot be determined identity->comm_type is set
-//  to PEP_ct_unknown
+/**
+ *  <!--       get_trust()       -->
+ *  
+ *  @brief Get the trust level a key has for a person
+ *  
+ *  @param[in]     session     session handle
+ *  @param[in,out] identity    user_id and fpr to check as UTF-8 strings (in)
+ *                             comm_type as result (out)
+ *                             this function modifies the given identity struct; the struct remains in
+ *                             the ownership of the caller
+ *                             if the trust level cannot be determined identity->comm_type is set
+ *                             to PEP_ct_unknown
+ *  
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity);
 
 
+/**
+ *  <!--       set_trust()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  identity       pEp_identity*
+ *  
+ */
 PEP_STATUS set_trust(PEP_SESSION session, 
                      pEp_identity* identity);
                             
+/**
+ *  <!--       update_trust_for_fpr()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session       PEP_SESSION
+ *  @param[in]  fpr           const char*
+ *  @param[in]  comm_type     PEP_comm_type
+ *  
+ */
 PEP_STATUS update_trust_for_fpr(PEP_SESSION session, 
                                 const char* fpr, 
                                 PEP_comm_type comm_type);
 
-// least_trust() - get the least known trust level for a key in the database
-//
-//  parameters:
-//      session (in)            session handle
-//      fpr (in)                fingerprint of key to check
-//      comm_type (out)         least comm_type as result (out)
-//
-//  if the trust level cannot be determined comm_type is set to PEP_ct_unknown
+/**
+ *  <!--       least_trust()       -->
+ *  
+ *  @brief Get the least known trust level for a key in the database
+ *  
+ *  @param[in]     session      session handle
+ *  @param[in]     fpr          fingerprint of key to check
+ *  @param[out]    comm_type    least comm_type as result (out)
+ *                              if the trust level cannot be determined comm_type is set to PEP_ct_unknown
+ *  
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS least_trust(
         PEP_SESSION session,
@@ -1136,15 +1388,19 @@ DYNAMIC_API PEP_STATUS least_trust(
     );
 
 
-// get_key_rating() - get the rating a bare key has
-//
-//  parameters:
-//      session (in)            session handle
-//      fpr (in)                unique identifyer for key as UTF-8 string
-//      comm_type (out)         key rating
-//
-//  if an error occurs, *comm_type is set to PEP_ct_unknown and an error
-//  is returned
+/**
+ *  <!--       get_key_rating()       -->
+ *  
+ *  @brief Get the rating a bare key has
+ *  
+ *  @param[in]     session      session handle
+ *  @param[in]     fpr          unique identifyer for key as UTF-8 string
+ *  @param[out]    comm_type    key rating
+ *                              if an error occurs, *comm_type is set to PEP_ct_unknown and an error
+ *                              is returned
+ *  
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS get_key_rating(
         PEP_SESSION session,
@@ -1153,13 +1409,18 @@ DYNAMIC_API PEP_STATUS get_key_rating(
     );
 
 
-// renew_key() - renew an expired key
-//
-//  parameters:
-//      session (in)            session handle
-//      fpr (in)                ID of key to renew as UTF-8 string
-//      ts (in)                 timestamp when key should expire or NULL for
-//                              default
+/**
+ *  <!--       renew_key()       -->
+ *  
+ *  @brief Renew an expired key
+ *  
+ *  @param[in]   session    session handle
+ *  @param[in]   fpr        ID of key to renew as UTF-8 string
+ *  @param[in]   ts         timestamp when key should expire or NULL for
+ *                            default
+ *  
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS renew_key(
         PEP_SESSION session,
@@ -1168,18 +1429,21 @@ DYNAMIC_API PEP_STATUS renew_key(
     );
 
 
-// revoke_key() - revoke a key
-//
-//  parameters:
-//      session (in)            session handle
-//      fpr (in)                ID of key to revoke as UTF-8 string
-//      reason (in)             text with reason for revoke as UTF-8 string
-//                              or NULL if reason unknown
-//
-//  caveat:
-//      reason text must not include empty lines
-//      this function is meant for internal use only; better use
-//      key_mistrusted() of keymanagement API
+/**
+ *  <!--       revoke_key()       -->
+ *  
+ *  @brief Revoke a key
+ *  
+ *  @param[in]   session    session handle
+ *  @param[in]   fpr        ID of key to revoke as UTF-8 string
+ *  @param[in]   reason     text with reason for revoke as UTF-8 string
+ *                            or NULL if reason unknown
+ *  
+ *  @warning reason text must not include empty lines
+ *           this function is meant for internal use only; better use
+ *           key_mistrusted() of keymanagement API
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS revoke_key(
         PEP_SESSION session,
@@ -1188,13 +1452,18 @@ DYNAMIC_API PEP_STATUS revoke_key(
     );
 
 
-// key_expired() - flags if a key is already expired
-//
-//  parameters:
-//      session (in)            session handle
-//      fpr (in)                ID of key to check as UTF-8 string
-//      when (in)               UTC time of when should expiry be considered
-//      expired (out)           flag if key expired
+/**
+ *  <!--       key_expired()       -->
+ *  
+ *  @brief Flags if a key is already expired
+ *  
+ *  @param[in]     session    session handle
+ *  @param[in]     fpr        ID of key to check as UTF-8 string
+ *  @param[in]     when       UTC time of when should expiry be considered
+ *  @param[out]    expired    flag if key expired
+ *  
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS key_expired(
         PEP_SESSION session,
@@ -1204,12 +1473,17 @@ DYNAMIC_API PEP_STATUS key_expired(
     );
 
     
-// key_revoked() - flags if a key is already revoked
-//
-//  parameters:
-//      session (in)            session handle
-//      fpr (in)                ID of key to check as UTF-8 string
-//      revoked (out)           flag if key revoked
+/**
+ *  <!--       key_revoked()       -->
+ *  
+ *  @brief Flags if a key is already revoked
+ *  
+ *  @param[in]     session    session handle
+ *  @param[in]     fpr        ID of key to check as UTF-8 string
+ *  @param[out]    revoked    flag if key revoked
+ *  
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS key_revoked(
         PEP_SESSION session,
@@ -1217,6 +1491,16 @@ DYNAMIC_API PEP_STATUS key_revoked(
         bool *revoked
     );
 
+/**
+ *  <!--       get_key_userids()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  fpr            const char*
+ *  @param[in]  keylist        stringlist_t**
+ *  
+ */
 PEP_STATUS get_key_userids(
         PEP_SESSION session,
         const char* fpr,
@@ -1224,19 +1508,22 @@ PEP_STATUS get_key_userids(
     );
 
 
-// get_crashdump_log() - get the last log messages out
-//
-//  parameters:
-//      session (in)            session handle
-//      maxlines (in)           maximum number of lines (0 for default)
-//      logdata (out)           logdata as string in double quoted CSV format
-//                              column1 is title
-//                              column2 is entity
-//                              column3 is description
-//                              column4 is comment
-//
-//  caveat:
-//      the ownership of logdata goes to the caller
+/**
+ *  <!--       get_crashdump_log()       -->
+ *  
+ *  @brief Get the last log messages out
+ *  
+ *  @param[in]     session     session handle
+ *  @param[in]     maxlines    maximum number of lines (0 for default)
+ *  @param[out]    logdata     logdata as string in double quoted CSV format
+ *                             column1 is title
+ *                             column2 is entity
+ *                             column3 is description
+ *                             column4 is comment
+ *  
+ *  @warning the ownership of logdata goes to the caller
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS get_crashdump_log(
         PEP_SESSION session,
@@ -1245,16 +1532,19 @@ DYNAMIC_API PEP_STATUS get_crashdump_log(
     );
 
 
-// get_languagelist() - get the list of languages
-//
-//  parameters:
-//      session (in)            session handle
-//      languages (out)         languages as string in double quoted CSV format
-//                              column 1 is the ISO 639-1 language code
-//                              column 2 is the name of the language
-//
-//  caveat:
-//      the ownership of languages goes to the caller
+/**
+ *  <!--       get_languagelist()       -->
+ *  
+ *  @brief Get the list of languages
+ *  
+ *  @param[in]     session      session handle
+ *  @param[out]    languages    languages as string in double quoted CSV format
+ *                              column 1 is the ISO 639-1 language code
+ *                              column 2 is the name of the language
+ *  
+ *  @warning the ownership of languages goes to the caller
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS get_languagelist(
         PEP_SESSION session,
@@ -1262,16 +1552,19 @@ DYNAMIC_API PEP_STATUS get_languagelist(
     );
 
 
-// get_phrase() - get phrase in a dedicated language through i18n
-//
-//  parameters:
-//      session (in)            session handle
-//      lang (in)               C string with ISO 639-1 language code
-//      phrase_id (in)          id of phrase in i18n
-//      phrase (out)            phrase as UTF-8 string
-//
-//  caveat:
-//      the ownership of phrase goes to the caller
+/**
+ *  <!--       get_phrase()       -->
+ *  
+ *  @brief Get phrase in a dedicated language through i18n
+ *  
+ *  @param[in]     session      session handle
+ *  @param[in]     lang         C string with ISO 639-1 language code
+ *  @param[in]     phrase_id    id of phrase in i18n
+ *  @param[out]    phrase       phrase as UTF-8 string
+ *  
+ *  @warning the ownership of phrase goes to the caller
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS get_phrase(
         PEP_SESSION session,
@@ -1281,18 +1574,22 @@ DYNAMIC_API PEP_STATUS get_phrase(
     );
 
 
-// sequence_value() - raise the value of a named sequence and retrieve it
-//
-//  parameters:
-//      session (in)            session handle
-//      name (in)               name of sequence
-//      value (out)             value of sequence
-//
-//  returns:
-//      PEP_STATUS_OK                   no error, not own sequence
-//      PEP_SEQUENCE_VIOLATED           if sequence violated
-//      PEP_CANNOT_INCREASE_SEQUENCE    if sequence cannot be increased
-//      PEP_OWN_SEQUENCE                if own sequence
+/**
+ *  <!--       sequence_value()       -->
+ *  
+ *  @brief Raise the value of a named sequence and retrieve it
+ *  
+ *  @param[in]     session    session handle
+ *  @param[in]     name       name of sequence
+ *  @param[out]    value      value of sequence
+ *  
+ *  @retval PEP_STATUS_OK                   no error, not own sequence
+ *  @retval PEP_SEQUENCE_VIOLATED           if sequence violated
+ *  @retval PEP_CANNOT_INCREASE_SEQUENCE    if sequence cannot be increased
+ *  @retval PEP_OWN_SEQUENCE                if own sequence
+ *  
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS sequence_value(
         PEP_SESSION session,
@@ -1301,13 +1598,18 @@ DYNAMIC_API PEP_STATUS sequence_value(
     );
 
 
-// set_revoked() - records relation between a revoked key and its replacement
-//
-//  parameters:
-//      session (in)            session handle
-//      revoked_fpr (in)        revoked fingerprint
-//      replacement_fpr (in)    replacement key fingerprint
-//      revocation_date (in)    revocation date
+/**
+ *  <!--       set_revoked()       -->
+ *  
+ *  @brief Records relation between a revoked key and its replacement
+ *  
+ *  @param[in]     session            session handle
+ *  @param[in]     revoked_fpr        revoked fingerprint
+ *  @param[in]     replacement_fpr    replacement key fingerprint
+ *  @param[in]     revocation_date    revocation date
+ *  
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS set_revoked(
        PEP_SESSION session,
@@ -1317,13 +1619,18 @@ DYNAMIC_API PEP_STATUS set_revoked(
     );
 
 
-// get_revoked() - find revoked key that may have been replaced by given key, if any
-//
-//  parameters:
-//      session (in)            session handle
-//      fpr (in)                given fingerprint
-//      revoked_fpr (out)       revoked fingerprint
-//      revocation_date (out)   revocation date
+/**
+ *  <!--       get_revoked()       -->
+ *  
+ *  @brief Find revoked key that may have been replaced by given key, if any
+ *  
+ *  @param[in]     session            session handle
+ *  @param[in]     fpr                given fingerprint
+ *  @param[out]    revoked_fpr        revoked fingerprint
+ *  @param[out]    revocation_date    revocation date
+ *  
+ *  
+ */
     
 DYNAMIC_API PEP_STATUS get_revoked(
         PEP_SESSION session,
@@ -1332,12 +1639,17 @@ DYNAMIC_API PEP_STATUS get_revoked(
         uint64_t *revocation_date
     );
 
-// key_created() - get creation date of a key
-//
-//  parameters:
-//      session (in)            session handle
-//      fpr (in)                fingerprint of key
-//      created (out)           date of creation
+/**
+ *  <!--       key_created()       -->
+ *  
+ *  @brief Get creation date of a key
+ *  
+ *  @param[in]     session    session handle
+ *  @param[in]     fpr        fingerprint of key
+ *  @param[out]    created    date of creation
+ *  
+ *  
+ */
 
 PEP_STATUS key_created(
         PEP_SESSION session,
@@ -1346,151 +1658,222 @@ PEP_STATUS key_created(
     );
 
 
-// find_private_keys() - find keys in keyring
-//
-//  parameters:
-//      session (in)            session handle
-//      pattern (in)            key id, user id or address to search for as
-//                              UTF-8 string
-//      keylist (out)           list of fingerprints found or NULL on error
-//
-//  caveat:
-//        the ownerships of keylist isgoing to the caller
-//        the caller must use free_stringlist() to free it
+/**
+ *  <!--       find_private_keys()       -->
+ *  
+ *  @brief Find keys in keyring
+ *  
+ *  @param[in]     session    session handle
+ *  @param[in]     pattern    fingerprint or address to search for as
+ *                            UTF-8 string
+ *  @param[out]    keylist    list of fingerprints found or NULL on error
+ *  
+ *  @warning the ownerships of keylist isgoing to the caller
+ *           the caller must use free_stringlist() to free it
+ *  
+ */
 PEP_STATUS find_private_keys(PEP_SESSION session, const char* pattern,
                              stringlist_t **keylist);
 
-// get_engine_version() - returns the current version of pEpEngine (this is different
-//                        from the pEp protocol version!)
-//
-//  parameters: none
-//
-//  return_value: const char* to the engine version string constant
-//
+/**
+ *  <!--       get_engine_version()       -->
+ *  
+ *  @brief Returns the current version of pEpEngine (this is different
+ *         from the pEp protocol version!)
+ *  
+ *  
+ */
 DYNAMIC_API const char* get_engine_version();
 
-// get_protocol_version() - returns the pEp protocol version
+/**
+ *  <!--       get_protocol_version()       -->
+ *  
+ *  @brief Returns the pEp protocol version
+ *  
+ *  
+ */
 
 DYNAMIC_API const char *get_protocol_version();
 
-// is_pEp_user() - returns true if the USER corresponding to this identity 
-//                 has been listed in the *person* table as a pEp user. 
-//
-//  parameters:
-//      identity (in) - identity containing the user_id to check (this is
-//                      the only part of the struct we require to be set)
-//      is_pEp (out)  - boolean pointer - will return true or false by
-//                      reference with respect to whether or not user is
-//                      a known pEp user
-//
-//  return_value: PEP_STATUS_OK if user found in person table
-//                PEP_ILLEGAL_VALUE if no user_id in input
-//                PEP_CANNOT_FIND_PERSON if user_id doesn't exist
-//
-//  caveat: This *does not check comm_type*
-//                         
+/**
+ *  <!--       is_pEp_user()       -->
+ *  
+ *  @brief Returns true if the USER corresponding to this identity 
+ *         has been listed in the *person* table as a pEp user. 
+ *  
+ *  @param[in]     identity    identity containing the user_id to check (this is
+ *                             the only part of the struct we require to be set)
+ *  @param[out]    is_pEp      boolean pointer - will return true or false by
+ *                             reference with respect to whether or not user is
+ *                             a known pEp user
+ *  
+ *  @retval PEP_STATUS_OK           if user found in person table
+ *  @retval PEP_ILLEGAL_VALUE       if no user_id in input
+ *  @retval PEP_CANNOT_FIND_PERSON  if user_id doesn't exist
+ *  
+ *  
+ */
 DYNAMIC_API PEP_STATUS is_pEp_user(PEP_SESSION session, 
                                    pEp_identity *identity, 
                                    bool* is_pEp);
 
-// per_user_directory() - returns the directory for pEp management db
-//
-//  return_value:
-//      path to actual per user directory or NULL on failure
+/**
+ *  <!--       per_user_directory()       -->
+ *  
+ *  @brief Returns the directory for pEp management db
+ *  
+ *  @retval char*   path to actual per user directory
+ *  @retval NULL    on failure
+ *  
+ *  
+ */
 
 DYNAMIC_API const char *per_user_directory(void);
 
 
-// per_machine_directory() - returns the directory for pEp system db
-//
-//  return value:
-//      path to actual per user directory or NULL on failure
+/**
+ *  <!--       per_machine_directory()       -->
+ *  
+ *  @brief Returns the directory for pEp system db
+ *  
+ *  @retval char*   path to actual per machine directory
+ *  @retval NULL    on failure
+ *  
+ *  
+ */
 
 DYNAMIC_API const char *per_machine_directory(void);
 
 // FIXME: replace in canonical style
 //
-// config_passphrase() - configure a key passphrase for the current session.
-//
-// A passphrase can be configured into a p≡p session. Then it is used whenever a
-// secret key is used which requires a passphrase.
-// 
-// A passphrase is a string between 1 and 1024 bytes and is only ever present in
-// memory. Because strings in the p≡p engine are UTF-8 NFC, the string is
-// restricted to 250 code points in UI.
-// 
-// This function copies the passphrase into the session. It may return
-// PEP_OUT_OF_MEMORY. The behaviour of all functions which use secret keys may
-// change after this is configured.  Error behaviour
-// 
-// For any function which may trigger the use of a secret key, if an attempt
-// to use a secret key which requires a passphrase occurs and no passphrase
-// is configured for the current session, PEP_PASSPHRASE_REQUIRED is
-// returned by this function (and thus, all functions which could trigger
-// such a usage must be prepared to return this value).  For any function
-// which may trigger the use of a secret key, if a passphrase is configured
-// and the configured passphrase is the wrong passphrase for the use of a
-// given passphrase-protected secret key, PEP_WRONG_PASSPHRASE is returned
-// by this function (and thus, all functions which could trigger such a
-// usage must be prepared to return this value).
+/**
+ *  <!--       config_passphrase()       -->
+ *  
+ *  @brief Configure a key passphrase for the current session.
+ *  
+ *  A passphrase can be configured into a p≡p session. Then it is used whenever a
+ *  secret key is used which requires a passphrase.
+ * 
+ *  A passphrase is a string between 1 and 1024 bytes and is only ever present in
+ *  memory. Because strings in the p≡p engine are UTF-8 NFC, the string is
+ *  restricted to 250 code points in UI.
+ * 
+ *  This function copies the passphrase into the session. It may return
+ *  PEP_OUT_OF_MEMORY. The behaviour of all functions which use secret keys may
+ *  change after this is configured.  
+ * 
+ *  Error behaviour:
+ * 
+ *  For any function which may trigger the use of a secret key, if an attempt
+ *  to use a secret key which requires a passphrase occurs and no passphrase
+ *  is configured for the current session, PEP_PASSPHRASE_REQUIRED is
+ *  returned by this function (and thus, all functions which could trigger
+ *  such a usage must be prepared to return this value).  For any function
+ *  which may trigger the use of a secret key, if a passphrase is configured
+ *  and the configured passphrase is the wrong passphrase for the use of a
+ *  given passphrase-protected secret key, PEP_WRONG_PASSPHRASE is returned
+ *  by this function (and thus, all functions which could trigger such a
+ *  usage must be prepared to return this value).
+ *  
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS config_passphrase(PEP_SESSION session, const char *passphrase);
 
 // FIXME: replace in canonical style
 //
-// Passphrase enablement for newly-generated secret keys
-// 
-// If it is desired that new p≡p keys are passphrase-protected, the following
-// API call is used to enable the addition of passphrases to new keys during key
-// generation.
-//
-// If enabled and a passphrase for new keys has been configured
-// through this function (NOT the one above - this is a separate passphrase!),
-// then anytime a secret key is generated while enabled, the configured
-// passphrase will be used as the passphrase for any newly-generated secret key.
-//
-// If enabled and a passphrase for new keys has not been configured, then any
-// function which can attempt to generate a secret key will return
-// PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED.  
-//
-// If disabled (i.e. not enabled) and a passphrase for new keys has been
-// configured, no passphrases will be used for newly-generated keys.
-//
-// This function copies the passphrase for new keys into a special field that is
-// specifically for key generation into the session. It may return
-// PEP_OUT_OF_MEMORY. The behaviour of all functions which use secret keys may
-// change after this is configured.
-//
+
+/**
+ *  <!--       config_passphrase_for_new_keys()       -->
+ * 
+ * @brief Passphrase enablement for newly-generated secret keys
+ * 
+ * If it is desired that new p≡p keys are passphrase-protected, the following
+ * API call is used to enable the addition of passphrases to new keys during key
+ * generation.
+ *
+ * If enabled and a passphrase for new keys has been configured
+ * through this function (NOT the one above - this is a separate passphrase!),
+ * then anytime a secret key is generated while enabled, the configured
+ * passphrase will be used as the passphrase for any newly-generated secret key.
+ *
+ * If enabled and a passphrase for new keys has not been configured, then any
+ * function which can attempt to generate a secret key will return
+ * PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED.  
+ *
+ * If disabled (i.e. not enabled) and a passphrase for new keys has been
+ * configured, no passphrases will be used for newly-generated keys.
+ *
+ * This function copies the passphrase for new keys into a special field that is
+ * specifically for key generation into the session. It may return
+ * PEP_OUT_OF_MEMORY. The behaviour of all functions which use secret keys may
+ * change after this is configured.
+ *
+ */
 
 DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys(PEP_SESSION session, 
                                                 bool enable, 
                                                 const char *passphrase);
-// set_ident_enc_format() - set the default encryption format for this identity
-//                          (value only MIGHT be used, and only in the case where the
-//                          message enc_format is PEP_enc_auto. It will be used 
-//                          opportunistically in the case on a first-come, first-serve 
-//                          basis in the order of to_list, cc_list, and bcc_list. We take 
-//                          the first set value we come to)
-//
-//  parameters:
-//      session (in)            session handle
-//      identity (in)           identity->user_id and identity->address must NOT be NULL
-//      format (in)             the desired default encryption format
-//
+/**
+ *  <!--       set_ident_enc_format()       -->
+ *  
+ *  @brief Set the default encryption format for this identity
+ *         (value only MIGHT be used, and only in the case where the
+ *         message enc_format is PEP_enc_auto. It will be used 
+ *         opportunistically in the case on a first-come, first-serve 
+ *         basis in the order of to_list, cc_list, and bcc_list. We take 
+ *         the first set value we come to)
+ *  
+ *  @param[in]   session     session handle
+ *  @param[in]   identity    identity->user_id and identity->address must NOT be NULL
+ *  @param[in]   format      the desired default encryption format
+ *  
+ *  
+ */
+
 DYNAMIC_API PEP_STATUS set_ident_enc_format(PEP_SESSION session,
                                             pEp_identity *identity,
                                             PEP_enc_format format);
 
 
+/**
+ *  <!--       _generate_keypair()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session          PEP_SESSION
+ *  @param[in]  identity         pEp_identity*
+ *  @param[in]  suppress_event   bool
+ *  
+ */
 PEP_STATUS _generate_keypair(PEP_SESSION session, 
                              pEp_identity *identity,
                              bool suppress_event);
 
+/**
+ *  <!--       reset_pEptest_hack()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session        PEP_SESSION
+ *  
+ */
 DYNAMIC_API PEP_STATUS reset_pEptest_hack(PEP_SESSION session);
 
 // This is used internally when there is a temporary identity to be retrieved
 // that may not yet have an FPR attached. See get_identity() for functionality,
 // params and caveats.
+/**
+ *  <!--       get_identity_without_trust_check()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session         PEP_SESSION
+ *  @param[in]  address         const char*
+ *  @param[in]  user_id         const char*
+ *  @param[in]  identity        pEp_identity**
+ *  
+ */
 PEP_STATUS get_identity_without_trust_check(
         PEP_SESSION session,
         const char *address,
@@ -1498,31 +1881,99 @@ PEP_STATUS get_identity_without_trust_check(
         pEp_identity **identity
     );
     
+/**
+ *  <!--       get_identities_by_address()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  address        const char*
+ *  @param[in]  id_list        identity_list**
+ *  
+ */
 PEP_STATUS get_identities_by_address(
         PEP_SESSION session,
         const char *address,
         identity_list** id_list
     );
     
+/**
+ *  <!--       get_identities_by_userid()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  user_id        const char*
+ *  @param[in]  identities     identity_list**
+ *  
+ */
 PEP_STATUS get_identities_by_userid(
         PEP_SESSION session,
         const char *user_id,
         identity_list **identities
     );    
         
+/**
+ *  <!--       is_own_address()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  address        const char*
+ *  @param[in]  is_own_addr    bool*
+ *  
+ */
 PEP_STATUS is_own_address(PEP_SESSION session, 
                           const char* address, 
                           bool* is_own_addr);
 
+/**
+ *  <!--       replace_userid()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session         PEP_SESSION
+ *  @param[in]  old_uid         const char*
+ *  @param[in]  new_uid         const char*
+ *  
+ */
 PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
                               const char* new_uid);
                               
+/**
+ *  <!--       remove_key()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session     PEP_SESSION
+ *  @param[in]  fpr         const char*
+ *  
+ */
 PEP_STATUS remove_key(PEP_SESSION session, const char* fpr);
                               
+/**
+ *  <!--       remove_fpr_as_default()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session     PEP_SESSION
+ *  @param[in]  fpr         const char*
+ *  
+ */
 PEP_STATUS remove_fpr_as_default(PEP_SESSION session, 
                                     const char* fpr);
                               
                                     
+/**
+ *  <!--       get_main_user_fpr()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  user_id        const char*
+ *  @param[in]  main_fpr       char**
+ *  
+ */
 PEP_STATUS get_main_user_fpr(PEP_SESSION session, 
                              const char* user_id,
                              char** main_fpr);
@@ -1532,12 +1983,44 @@ PEP_STATUS get_default_identity_fpr(PEP_SESSION session,
                                     const char* user_id,
                                     char** main_fpr);
 
+/**
+ *  <!--       replace_main_user_fpr()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  user_id        const char*
+ *  @param[in]  new_fpr        const char*
+ *  
+ */
 PEP_STATUS replace_main_user_fpr(PEP_SESSION session, const char* user_id,
                               const char* new_fpr);
 
+/**
+ *  <!--       replace_main_user_fpr_if_equal()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session         PEP_SESSION
+ *  @param[in]  user_id         const char*
+ *  @param[in]  new_fpr         const char*
+ *  @param[in]  compare_fpr     const char*
+ *  
+ */
 PEP_STATUS replace_main_user_fpr_if_equal(PEP_SESSION session, const char* user_id,
                                           const char* new_fpr, const char* compare_fpr);
     
+/**
+ *  <!--       get_replacement_fpr()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session          PEP_SESSION
+ *  @param[in]  fpr              const char*
+ *  @param[in]  revoked_fpr      char**
+ *  @param[in]  revocation_date  uint64_t*
+ *  
+ */
 DYNAMIC_API PEP_STATUS get_replacement_fpr(
         PEP_SESSION session,
         const char *fpr,
@@ -1545,24 +2028,93 @@ DYNAMIC_API PEP_STATUS get_replacement_fpr(
         uint64_t *revocation_date
     );
     
+/**
+ *  <!--       refresh_userid_default_key()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  user_id        const char*
+ *  
+ */
 PEP_STATUS refresh_userid_default_key(PEP_SESSION session, const char* user_id);
 
 // This ONLY sets the *user* flag, and creates a shell identity if necessary.
+/**
+ *  <!--       set_as_pEp_user()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session      PEP_SESSION
+ *  @param[in]  user         pEp_identity*
+ *  
+ */
 DYNAMIC_API PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user);
 
 // returns true (by reference) if a person with this user_id exists; 
 // Also replaces aliased user_ids by defaults in identity.
+/**
+ *  <!--       exists_person()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  identity       pEp_identity*
+ *  @param[in]  exists         bool*
+ *  
+ */
 PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity, bool* exists);
 
+/**
+ *  <!--       set_pgp_keypair()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session     PEP_SESSION
+ *  @param[in]  fpr         const char*
+ *  
+ */
 PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr);
 
+/**
+ *  <!--       set_pEp_version()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  ident          pEp_identity*
+ *  @param[in]  new_ver_major  unsigned int
+ *  @param[in]  new_ver_minor  unsigned int
+ *  
+ */
 PEP_STATUS set_pEp_version(PEP_SESSION session, pEp_identity* ident, unsigned int new_ver_major, unsigned int new_ver_minor);
                 
+/**
+ *  <!--       clear_trust_info()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session     PEP_SESSION
+ *  @param[in]  user_id     const char*
+ *  @param[in]  fpr         const char*
+ *  
+ */
 PEP_STATUS clear_trust_info(PEP_SESSION session,
                             const char* user_id,
                             const char* fpr);
                             
 // Generally ONLY called by set_as_pEp_user, and ONLY from < 2.0 to 2.0.
+/**
+ *  <!--       upgrade_pEp_version_by_user_id()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  ident          pEp_identity*
+ *  @param[in]  new_ver_major  unsigned int
+ *  @param[in]  new_ver_minor  unsigned int
+ *  
+ */
 PEP_STATUS upgrade_pEp_version_by_user_id(PEP_SESSION session, 
         pEp_identity* ident, 
         unsigned int new_ver_major,
@@ -1570,31 +2122,113 @@ PEP_STATUS upgrade_pEp_version_by_user_id(PEP_SESSION session,
     );
      
 // exposed for testing
+/**
+ *  <!--       set_person()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session            PEP_SESSION
+ *  @param[in]  identity           pEp_identity*
+ *  @param[in]  guard_transaction  bool
+ *  
+ */
 PEP_STATUS set_person(PEP_SESSION session, pEp_identity* identity,
                       bool guard_transaction);
+/**
+ *  <!--       bind_own_ident_with_contact_ident()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  own_ident      pEp_identity*
+ *  @param[in]  contact_ident  pEp_identity*
+ *  
+ */
 PEP_STATUS bind_own_ident_with_contact_ident(PEP_SESSION session,
                                              pEp_identity* own_ident, 
                                              pEp_identity* contact_ident);
 
+/**
+ *  <!--       get_last_contacted()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  id_list        identity_list**
+ *  
+ */
 PEP_STATUS get_last_contacted(
         PEP_SESSION session,
         identity_list** id_list
     );
 
+/**
+ *  <!--       get_own_ident_for_contact_id()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]   session        PEP_SESSION
+ *  @param[in]   contact        const pEp_identity*
+ *  @param[out]  own_ident      pEp_identity**
+ *  
+ */
 PEP_STATUS get_own_ident_for_contact_id(PEP_SESSION session,
                                           const pEp_identity* contact,
                                           pEp_identity** own_ident);
 
+/**
+ *  <!--       exists_trust_entry()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]   session        PEP_SESSION
+ *  @param[in]   identity       pEp_identity*
+ *  @param[out]  exists         bool*
+ *  
+ */
 PEP_STATUS exists_trust_entry(PEP_SESSION session, pEp_identity* identity,
                               bool* exists);
 
+/**
+ *  <!--       is_own_key()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]   session        PEP_SESSION
+ *  @param[in]   fpr            const char*
+ *  @param[out]  own_key        bool*
+ *  
+ */
 PEP_STATUS is_own_key(PEP_SESSION session, const char* fpr, bool* own_key);
 
+/**
+ *  <!--       get_identities_by_main_key_id()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]   session      PEP_SESSION
+ *  @param[in]   fpr          const char*
+ *  @param[out]  identities   identity_list**
+ *  
+ */
 PEP_STATUS get_identities_by_main_key_id(
         PEP_SESSION session,
         const char *fpr,
         identity_list **identities);
         
+/**
+ *  <!--       sign_only()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]   session        PEP_SESSION
+ *  @param[in]   data           const char*
+ *  @param[in]   data_size      size_t
+ *  @param[in]   fpr            const char*
+ *  @param[out]  sign           char**
+ *  @param[out]  sign_size      size_t*
+ *  
+ */
 PEP_STATUS sign_only(PEP_SESSION session, 
                      const char *data, 
                      size_t data_size, 
@@ -1602,9 +2236,29 @@ PEP_STATUS sign_only(PEP_SESSION session,
                      char **sign, 
                      size_t *sign_size);
                      
+/**
+ *  <!--       set_all_userids_to_own()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session        PEP_SESSION
+ *  @param[in]  id_list        identity_list*
+ *  
+ */
 PEP_STATUS set_all_userids_to_own(PEP_SESSION session, 
                                   identity_list* id_list);
 
+/**
+ *  <!--       has_partner_contacted_address()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session         PEP_SESSION
+ *  @param[in]  partner_id      const char*
+ *  @param[in]  own_address     const char*
+ *  @param[in]  was_contacted   bool*
+ *  
+ */
 PEP_STATUS has_partner_contacted_address(PEP_SESSION session, const char* partner_id,
                                          const char* own_address, bool* was_contacted);
                                                                                   

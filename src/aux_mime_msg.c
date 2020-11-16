@@ -1,3 +1,6 @@
+/** @file */
+/** @brief File description for doxygen missing. FIXME */
+
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
@@ -278,5 +281,6 @@ pEp_error:
     return status;
 }
 #else
+// This is here to please ISO C - it needs a compilation unit. Value will never be used.
 const int the_answer_my_friend = 42;
 #endif

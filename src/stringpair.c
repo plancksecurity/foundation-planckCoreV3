@@ -1,3 +1,6 @@
+/** @file */
+/** @brief File description for doxygen missing. FIXME */
+
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
@@ -78,6 +81,8 @@ DYNAMIC_API stringpair_list_t *stringpair_list_dup(
         return NULL;
 
     stringpair_t* copy_pair = stringpair_dup(src->value);
+    if (!copy_pair)
+        return NULL;
     
     stringpair_list_t *dst = new_stringpair_list(copy_pair);
     if (dst == NULL)
@@ -112,6 +117,9 @@ DYNAMIC_API stringpair_list_t *stringpair_list_add(
     )
 {
     assert(value);
+
+    if (!value)
+    	return NULL;
 
     // empty list (no nodes)
     if (stringpair_list == NULL)
@@ -177,6 +185,9 @@ DYNAMIC_API int stringpair_list_length(
         const stringpair_list_t *stringpair_list
     )
 {
+	if (!stringpair_list)
+		return 0;
+
     int len = 0;
 
     for (const stringpair_list_t *_sl = stringpair_list; _sl && _sl->value; _sl = _sl->next)
@@ -202,6 +213,9 @@ DYNAMIC_API stringpair_list_t *stringpair_list_delete_by_key(
 {
     assert(sp_list);
     assert(key);
+
+    if (!key || !sp_list)
+    	return NULL;
 
     if (sp_list->value == NULL) {
         free_stringpair_list(sp_list);
@@ -235,6 +249,9 @@ DYNAMIC_API stringpair_list_t *stringpair_list_find(
     )
 {
     assert(key);
+
+    if (!key || !stringpair_list || !stringpair_list->value)
+    	return NULL;
 
     for (stringpair_list_t *_l = stringpair_list; _l; _l = _l->next) {
         if (strcoll(key, _l->value->key) == 0)

@@ -1,5 +1,10 @@
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    resource.h
+ * @brief   Windows platform-specific implementation details
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ * @note    If this file is overwritten when generated, please fix it to
+ *          generate or merge this header information before committing.
+ */
 
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.

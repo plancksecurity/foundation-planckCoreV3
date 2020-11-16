@@ -1,3 +1,6 @@
+/** @file */
+/** @brief File description for doxygen missing. FIXME */
+
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
@@ -80,47 +83,37 @@ DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src)
     assert(src);
     if (src == NULL)
         return NULL;
-    
-    bloblist_t *bloblist = NULL;
 
-    // head
-    char *blob2 = malloc(src->size);
-    assert(blob2);
-    if (blob2 == NULL)
-        goto enomem;
+    bloblist_t* head_ptr = NULL;
+    bloblist_t** dst_curr_ptr = &head_ptr;
 
-    memcpy(blob2, src->value, src->size);
+    const bloblist_t* src_curr = src;
 
-    bloblist = new_bloblist(blob2, src->size, src->mime_type, src->filename);
-    if (bloblist == NULL)
-        goto enomem;
-    blob2 = NULL;
+    char* blob2 = NULL;
 
-    bloblist_t* src_curr = src->next;
-    bloblist_t** dst_curr_ptr = &bloblist->next;
-
-    // list
-    while (src_curr) {
+    for ( ; src_curr; src_curr = src_curr->next, dst_curr_ptr = &((*dst_curr_ptr)->next)) {
         blob2 = malloc(src_curr->size);
 
         assert(blob2);
         if (blob2 == NULL)
             goto enomem;
 
+        // This is why we don't calloc
         memcpy(blob2, src_curr->value, src_curr->size);
+
         *dst_curr_ptr = new_bloblist(blob2, src_curr->size, src_curr->mime_type, src_curr->filename);
         if (*dst_curr_ptr == NULL)
             goto enomem;
-
-        src_curr = src_curr->next;
-        dst_curr_ptr = &((*dst_curr_ptr)->next);
     }
 
-    return bloblist;
+    if (!head_ptr)
+        return NULL;
+
+    return head_ptr;
 
 enomem:
     free(blob2);
-    free_bloblist(bloblist);
+    free_bloblist(head_ptr);
     return NULL;
 }
 
@@ -154,7 +147,7 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
         list_curr = list_curr->next;
 
     list_curr->next = new_bloblist(blob, size, mime_type, filename);
-    list_curr->release_value = release_value;
+    list_curr->next->release_value = release_value;
 
     assert(list_curr->next);
     if (!list_curr->next)
@@ -168,7 +161,10 @@ DYNAMIC_API bloblist_t* bloblist_join(bloblist_t* first, bloblist_t* second) {
         return second;
     if (!second)
         return first;
-    
+
+    if (first == second)
+        return first;
+
     bloblist_t* list_curr = first;
     
     while (list_curr->next) {

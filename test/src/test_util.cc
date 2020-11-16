@@ -471,6 +471,12 @@ bool slurp_message_and_import_key(PEP_SESSION session, const char* message_fname
     return ok;
 }
 
+char* message_to_str(message* msg) {
+    char* retval = NULL;
+    mime_encode_message(msg, false, &retval, false);
+    return retval;
+}
+
 int util_delete_filepath(const char *filepath,
                          const struct stat *file_stat,
                          int ftw_info,

@@ -1,3 +1,6 @@
+/** @file */
+/** @brief File description for doxygen missing. FIXME */
+
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
@@ -20,11 +23,37 @@
 #define KEY_RESET_MAJOR_VERSION 1L
 #define KEY_RESET_MINOR_VERSION 0L
 
+/**
+ *  @internal
+ *  
+ *  <!--       _add_auto_consume()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*msg		message
+ *  
+ */
 static void _add_auto_consume(message* msg) {
     add_opt_field(msg, "pEp-auto-consume", "yes");
     msg->in_reply_to = stringlist_add(msg->in_reply_to, "pEp-auto-consume@pEp.foundation");
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       _generate_reset_structs()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*reset_ident		constpEp_identity
+ *  @param[in]	*old_fpr		constchar
+ *  @param[in]	*new_fpr		constchar
+ *  @param[in]	**key_attachments		bloblist_t
+ *  @param[in]	**command_list		keyreset_command_list
+ *  @param[in]	include_secret		bool
+ *  
+ */
 static PEP_STATUS _generate_reset_structs(PEP_SESSION session,
                                           const pEp_identity* reset_ident,
                                           const char* old_fpr,
@@ -131,6 +160,19 @@ pEp_error:
 
 // For multiple idents under a single key
 // idents contain new fprs
+/**
+ *  @internal
+ *  
+ *  <!--       _generate_own_commandlist_msg()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*from_idents		identity_list
+ *  @param[in]	*old_fpr		constchar
+ *  @param[in]	**dst		message
+ *  
+ */
 static PEP_STATUS _generate_own_commandlist_msg(PEP_SESSION session,
                                                 identity_list* from_idents,
                                                 const char* old_fpr,
@@ -215,6 +257,22 @@ pEp_error:
     return status;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       _generate_keyreset_command_message()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*from_ident		constpEp_identity
+ *  @param[in]	*to_ident		constpEp_identity
+ *  @param[in]	*old_fpr		constchar
+ *  @param[in]	*new_fpr		constchar
+ *  @param[in]	is_private		bool
+ *  @param[in]	**dst		message
+ *  
+ */
 static PEP_STATUS _generate_keyreset_command_message(PEP_SESSION session,
                                                      const pEp_identity* from_ident,
                                                      const pEp_identity* to_ident,
@@ -939,6 +997,17 @@ DYNAMIC_API PEP_STATUS key_reset_all_own_keys(PEP_SESSION session) {
     return key_reset(session, NULL, NULL);
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       _dup_grouped_only()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*idents		identity_list
+ *  @param[in]	**filtered		identity_list
+ *  
+ */
 static PEP_STATUS _dup_grouped_only(identity_list* idents, identity_list** filtered) {
     if (!idents)
         return PEP_STATUS_OK;
@@ -972,6 +1041,17 @@ static PEP_STATUS _dup_grouped_only(identity_list* idents, identity_list** filte
     return PEP_STATUS_OK;    
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       _check_own_reset_passphrase_readiness()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*key		constchar
+ *  
+ */
 static PEP_STATUS _check_own_reset_passphrase_readiness(PEP_SESSION session,
                                                         const char* key) { 
 
@@ -1033,6 +1113,19 @@ static PEP_STATUS _check_own_reset_passphrase_readiness(PEP_SESSION session,
 // FIXME:
 // I am not sure this is safe with already-revoked keys.
 //
+/**
+ *  @internal
+ *  
+ *  <!--       _key_reset_device_group_for_shared_key()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*key_idents		identity_list
+ *  @param[in]	*old_key		constchar
+ *  @param[in]	grouped_only		bool
+ *  
+ */
 static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session, 
                                                          identity_list* key_idents, 
                                                          const char* old_key,
@@ -1574,6 +1667,17 @@ pEp_free:
     return status;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       Distribution_from_keyreset_command_list()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*command_list		constkeyreset_command_list
+ *  @param[in]	*dist		Distribution_t
+ *  
+ */
 Distribution_t *Distribution_from_keyreset_command_list(
         const keyreset_command_list *command_list,
         Distribution_t *dist
@@ -1679,6 +1783,17 @@ the_end:
     return status;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       Distribution_to_keyreset_command_list()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	*dist		Distribution_t
+ *  @param[in]	*command_list		keyreset_command_list
+ *  
+ */
 keyreset_command_list * Distribution_to_keyreset_command_list(
         Distribution_t *dist,
         keyreset_command_list *command_list

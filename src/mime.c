@@ -1,3 +1,6 @@
+/** @file */
+/** @brief File description for doxygen missing. FIXME */
+
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
@@ -9,6 +12,16 @@
 #include <assert.h>
 #include <errno.h>
 
+/**
+ *  @internal
+ *  
+ *  <!--       is_whitespace()       -->
+ *  
+ *  @brief			TODO
+ *  
+ *  @param[in]	c		char
+ *  
+ */
 static bool is_whitespace(char c)
 {
     switch (c) {
