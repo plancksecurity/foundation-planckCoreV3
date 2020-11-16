@@ -365,3 +365,21 @@ TEST_F(StringlistTest, check_string_to_stringlist_commas_to_two) {
     ASSERT_STREQ(sl->value, str0);
     ASSERT_STREQ(sl->next->value, str1);    
 }
+
+TEST_F(StringlistTest, check_stringlist_append_self) {
+	const char* str0 = "I am so tired";
+	const char* str1 = "of doing stuff";
+	const char* str2 = "Bob";
+
+	stringlist_t* s1 = new_stringlist(str0);
+	stringlist_add(s1, str1);
+	stringlist_add(s1, str2);
+	ASSERT_EQ(stringlist_length(s1), 3);
+
+	stringlist_t* s2 = stringlist_append(s1, s1);
+	ASSERT_EQ(s1, s2);
+	ASSERT_EQ(stringlist_length(s1), 6);
+	ASSERT_STREQ(str0, s1->next->next->next->value);
+	ASSERT_STREQ(str1, s1->next->next->next->next->value);
+	ASSERT_STREQ(str2, s1->next->next->next->next->next->value);
+}

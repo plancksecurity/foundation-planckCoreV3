@@ -2856,7 +2856,7 @@ DYNAMIC_API PEP_STATUS log_event(
 {
 
 #if defined(_WIN32) && !defined(NDEBUG)
-	log_output_debug(title, entity, description, comment);
+    log_output_debug(title, entity, description, comment);
 #endif
 
 #if defined(ANDROID) && !defined(NDEBUG)
