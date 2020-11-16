@@ -126,6 +126,21 @@ DYNAMIC_API int bloblist_length(const bloblist_t *bloblist);
 DYNAMIC_API void set_blob_disposition(bloblist_t* blob, 
         content_disposition_type disposition);
 
+// bloblist_join() - append second list to the first.
+//
+//  parameters:
+//      first (in)              first bloblist, to be head of list if not NULL
+//      second (in)             bloblist to append to first bloblist; if first
+//                              bloblist is NULL, this will be the head of the list
+//
+//  return value:
+//      head of the joined bloblist
+//
+//  caveats:
+//      This function appends the actual bloblist to the end of the first - ownership
+//      of the second bloblist goes to the list. THERE IS NO COPYING.
+//      Also, if the same pointer is sent in twice, there is no join - the original
+//      list will be returned as is.
 DYNAMIC_API bloblist_t* bloblist_join(bloblist_t* first, bloblist_t* second);
 
 #ifdef __cplusplus
