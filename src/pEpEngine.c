@@ -5204,7 +5204,7 @@ DYNAMIC_API PEP_STATUS verify_text(
 DYNAMIC_API PEP_STATUS delete_keypair(PEP_SESSION session, const char *fpr)
 {
 
-    if (!(session && fpr))
+    if (!(session && fpr && check_fpr_format(fpr)))
         return PEP_ILLEGAL_VALUE;
 
     return session->cryptotech[PEP_crypt_OpenPGP].delete_keypair(session, fpr);
@@ -5215,7 +5215,7 @@ DYNAMIC_API PEP_STATUS export_key(
     )
 {
 
-    if (!(session && fpr && key_data && size))
+    if (!(session && fpr && key_data && size && check_fpr_format(fpr)))
         return PEP_ILLEGAL_VALUE;
 
     return session->cryptotech[PEP_crypt_OpenPGP].export_key(session, fpr,
@@ -5226,7 +5226,7 @@ DYNAMIC_API PEP_STATUS export_secret_key(
         PEP_SESSION session, const char *fpr, char **key_data, size_t *size
     )
 {
-    if (!(session && fpr && key_data && size))
+    if (!(session && fpr && key_data && size && check_fpr_format(fpr)))
         return PEP_ILLEGAL_VALUE;
 
     // don't accept key IDs but full fingerprints only
@@ -5242,7 +5242,7 @@ DYNAMIC_API PEP_STATUS export_secrect_key(
         PEP_SESSION session, const char *fpr, char **key_data, size_t *size
     )
 {
-    return export_secret_key(session, fpr, key_data, size);
+    return export_secret_key(session, fpr, key_data, size && check_fpr_format(fpr));
 }
 
 DYNAMIC_API PEP_STATUS find_keys(
@@ -5327,7 +5327,7 @@ DYNAMIC_API PEP_STATUS get_key_rating(
         PEP_comm_type *comm_type
     )
 {
-    if (!(session && fpr && comm_type))
+    if (!(session && fpr && comm_type && check_fpr_format(fpr)))
         return PEP_ILLEGAL_VALUE;
 
     return session->cryptotech[PEP_crypt_OpenPGP].get_key_rating(session, fpr,
@@ -5384,7 +5384,7 @@ DYNAMIC_API PEP_STATUS renew_key(
         const timestamp *ts
     )
 {
-    if (!(session && fpr))
+    if (!(session && fpr && check_fpr_format(fpr)))
         return PEP_ILLEGAL_VALUE;
 
     return session->cryptotech[PEP_crypt_OpenPGP].renew_key(session, fpr, ts);
@@ -5396,7 +5396,7 @@ DYNAMIC_API PEP_STATUS revoke_key(
         const char *reason
     )
 {
-    if (!(session && fpr))
+    if (!(session && fpr && check_fpr_format(fpr)))
         return PEP_ILLEGAL_VALUE;
 
     // Check to see first if it is revoked
@@ -5419,7 +5419,7 @@ DYNAMIC_API PEP_STATUS key_expired(
         bool *expired
     )
 {
-    if (!(session && fpr && expired))
+    if (!(session && fpr && expired && check_fpr_format(fpr)))
         return PEP_ILLEGAL_VALUE;
 
     return session->cryptotech[PEP_crypt_OpenPGP].key_expired(session, fpr,
@@ -5432,7 +5432,7 @@ DYNAMIC_API PEP_STATUS key_revoked(
        bool *revoked
    )
 {    
-    if (!(session && fpr && revoked))
+    if (!(session && fpr && revoked && check_fpr_format(fpr)))
         return PEP_ILLEGAL_VALUE;
     
     return session->cryptotech[PEP_crypt_OpenPGP].key_revoked(session, fpr,
@@ -5875,8 +5875,8 @@ DYNAMIC_API PEP_STATUS set_revoked(
     PEP_STATUS status = PEP_STATUS_OK;
         
     if (!(session &&
-          revoked_fpr && revoked_fpr[0] &&
-          replacement_fpr && replacement_fpr[0]
+          revoked_fpr && check_fpr_format(revoked_fpr) &&
+          replacement_fpr && check_fpr_format(replacement_fpr) 
          ))
         return PEP_ILLEGAL_VALUE;
     
@@ -5911,7 +5911,7 @@ DYNAMIC_API PEP_STATUS get_revoked(
 {
     PEP_STATUS status = PEP_STATUS_OK;
    
-    if (!(session && revoked_fpr && fpr && fpr[0]))
+    if (!(session && revoked_fpr && fpr && check_fpr_format(fpr)))
         return PEP_ILLEGAL_VALUE;
 
     *revoked_fpr = NULL;

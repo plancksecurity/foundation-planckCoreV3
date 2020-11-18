@@ -19,7 +19,6 @@ namespace {
             PEP_SESSION session;
             
             const char* alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
-            
             const char* alice_keyid = "9411D176FF00E97";
             const char* alice_email = "pep.test.alice@pep-project.org";
             const char* bob_fpr = "5C76378A62B04CF3F41BEC8D4940FC9FA1878736";
@@ -30,6 +29,13 @@ namespace {
             const string alice_user_id = PEP_OWN_USERID;
             const string bob_user_id = "BobId";
             const string mary_user_id = "MaryId";
+
+            const char* nobodys_fpr = "11111133333333CFE4F86500A9411D4444445555"; 
+
+            // faulty fpr
+            const char* alice_too_long_fpr = "586500A9411D176FF00E974ABE3AAF59AC32CFE4F86500A9411D176FF00E974ABE3AAF59AC32CFE4F86500A9411D176FF00E974ABE3AAF59AC32CFE4F86500AA9";
+            const char* bob_too_short_fpr = "BFCDB7F301DEEEB";
+            const char* alice_not_hex_fpr = "6500A9411D176FF00E974ABE3AAF59ACXYZ";
 
         protected:
             // You can remove any or all of the following functions if its body
@@ -203,7 +209,7 @@ TEST_F(KeyManipulationTest, check_generate_keypair_identity_without_user_id) {
     );
 
     PEP_STATUS status = generate_keypair(session, id);
-    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+    ASSERT_EQ(status, PEP_STATUS_OK);
 
 }
 
@@ -243,6 +249,8 @@ TEST_F(KeyManipulationTest, check_generate_keypair_seccond_key_for_same_adress) 
     status = find_keys(session, id->address, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_TRUE(keylist && keylist->value);
+
+    free_stringlist(keylist);
     keylist = NULL;
 
     status = generate_keypair(session, id2);
@@ -257,6 +265,18 @@ TEST_F(KeyManipulationTest, check_generate_keypair_seccond_key_for_same_adress) 
 // delete_keypair()
 // only parameter testing as full test are done in in DeleteKeyTest.cc        
 
+TEST_F(KeyManipulationTest, check_delete_keypair) {
+    import_test_keys();
+    stringlist_t* keylist = NULL;
+
+    PEP_STATUS status = delete_keypair(session, alice_fpr);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    status = find_keys(session, alice_fpr, &keylist);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_FALSE(keylist && keylist->value);
+    free_stringlist(keylist);
+}
+
 TEST_F(KeyManipulationTest, check_delete_keypair_no_session) {
     PEP_STATUS status = delete_keypair(NULL, alice_fpr);
     ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
@@ -267,24 +287,23 @@ TEST_F(KeyManipulationTest, check_delete_keypair_no_fpr) {
     ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
 }
 
-TEST_F(KeyManipulationTest, check_delete_invalid_fpr) {
-    const char* alice_to_long_fpr = "586500A9411D176FF00E974ABE3AAF59AC32CFE4F86500A9411D176FF00E974ABE3AAF59AC32CFE4F86500A9411D176FF00E974ABE3AAF59AC32CFE4F86500AA9";
-    const char* bob_to_short_fpr = "BFCDB7F301DEEEB";
-    
-    const char* alice_not_hex_fpr = "6500A9411D176FF00E974ABE3AAF59AC32CFE4F86500A9411D176FF00E974ABE3AAF59AC32CFE4F86500A9411D176FF00E974ABE3AAF59AC32CFE4F8XXXXXXXX";
-    const char* bob_not_hex_fpr = "ZZZCDB7F301DEEEB";
+TEST_F(KeyManipulationTest, check_delete_keypair_invalid_fpr) {
 
-    PEP_STATUS status = delete_keypair(session, alice_to_long_fpr);
+    PEP_STATUS status = delete_keypair(session, alice_too_long_fpr);
     ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
-    status = delete_keypair(session, bob_to_short_fpr);
+    status = delete_keypair(session, bob_too_short_fpr);
     ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
     status = delete_keypair(session, alice_not_hex_fpr);
     ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
-    status = delete_keypair(session, bob_not_hex_fpr);
-    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
 }
 
-TEST_F(KeyManipulationTest, check_delete_keypair_key_not_found) {
+TEST_F(KeyManipulationTest, check_delete_keypair_nonexistent_fpr) {
+    import_test_keys();
+    PEP_STATUS status = delete_keypair(session, nobodys_fpr);
+    ASSERT_EQ(status, PEP_KEY_NOT_FOUND);
+}
+
+TEST_F(KeyManipulationTest, check_delete_keypair_delete_twice) {
     import_test_keys();
     stringlist_t* keylist = NULL;
 
@@ -298,20 +317,6 @@ TEST_F(KeyManipulationTest, check_delete_keypair_key_not_found) {
     status = delete_keypair(session, alice_fpr);
     ASSERT_EQ(status, PEP_KEY_NOT_FOUND);
 }
-
-//TEST_F(KeyManipulationTest, check_delete_keypair_by_key_id) {
-//    import_test_keys();
-//    stringlist_t* keylist = NULL;
-//    PEP_STATUS status = find_keys(session, alice_user_id.c_str(), &keylist);
-//    ASSERT_TRUE(keylist && keylist->value);
-//    ASSERT_EQ(status, PEP_STATUS_OK);
-//    status = delete_keypair(session, alice_keyid);
-//    ASSERT_EQ(status, PEP_STATUS_OK);
-//    status = find_keys(session, alice_user_id.c_str(), &keylist);
-//    ASSERT_EQ(status, PEP_STATUS_OK);
-//    ASSERT_FALSE(keylist && keylist->value);
-//    free_stringlist(keylist);
-//}
 
 // import_key()
 TEST_F(KeyManipulationTest, check_import_key) {
@@ -394,6 +399,30 @@ TEST_F(KeyManipulationTest, check_export_key_no_fpr) {
     free(keydata);
 }
 
+TEST_F(KeyManipulationTest, check_export_key_bad_fpr) {
+    import_test_keys();
+    size_t keysize = 0;
+    char* keydata = NULL;
+
+    PEP_STATUS status = export_key(session, alice_too_long_fpr, &keydata, &keysize);     
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+    status = export_key(session, bob_too_short_fpr, &keydata, &keysize);     
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+    status = export_key(session, alice_not_hex_fpr, &keydata, &keysize);     
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+    free(keydata);
+}
+
+TEST_F(KeyManipulationTest, check_export_key_nonexisting_fpr) {
+    import_test_keys();
+    size_t keysize = 0;
+    char* keydata = NULL;
+
+    PEP_STATUS status = export_key(session, nobodys_fpr, &keydata, &keysize);     
+    ASSERT_EQ(status, PEP_KEY_NOT_FOUND);
+    free(keydata);
+}
+
 TEST_F(KeyManipulationTest, check_export_key_data_no_keydata) {
     import_test_keys();
     size_t keysize = 0;
@@ -414,14 +443,6 @@ TEST_F(KeyManipulationTest, check_export_key_data_no_size) {
     free(keydata);
 }
 
-//TEST_F(KeyManipulationTest, check_export_key_by_keyid) {
-//    import_test_keys();
-//    size_t keysize = 0;
-//    char* keydata = NULL;
-//
-//    PEP_STATUS status = export_key(session, alice_keyid, &keydata, &keysize);     
-//    ASSERT_EQ(status, PEP_STATUS_OK);
-//}
 //TEST_F(KeyManipulationTest, check_export_key_size_missmatch) {
 //    import_test_keys();
 //    size_t keysize = 10;
@@ -475,10 +496,23 @@ TEST_F(KeyManipulationTest, check_export_secret_key_no_fpr) {
 TEST_F(KeyManipulationTest, check_export_secret_key_non_existing_fpr) {
     size_t keysize = 0;
     char* keydata = NULL;
-    const char* anna_fpr = "AAAAAAAAAAAAAACFE4F86500A9411D176FF00E97"; 
 
-    PEP_STATUS status = export_key(session, anna_fpr, &keydata, &keysize);     
+    PEP_STATUS status = export_key(session, nobodys_fpr, &keydata, &keysize);     
     ASSERT_EQ(status, PEP_KEY_NOT_FOUND);
+    free(keydata);
+}
+
+TEST_F(KeyManipulationTest, check_export_secret_key_bad_fpr_format) {
+    import_test_keys();
+    size_t keysize = 0;
+    char* keydata = NULL;
+
+    PEP_STATUS status = export_secret_key(session, alice_too_long_fpr, &keydata, &keysize);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+    status = export_secret_key(session, bob_too_short_fpr, &keydata, &keysize);     
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+    status = export_secret_key(session, alice_not_hex_fpr, &keydata, &keysize);     
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
     free(keydata);
 }
 
@@ -558,10 +592,10 @@ TEST_F(KeyManipulationTest, check_find_keys_by_address) {
    free_stringlist(keylist);
 }
 
-TEST_F(KeyManipulationTest, check_find_keys_by_keyid) {
+TEST_F(KeyManipulationTest, check_find_keys_by_fpr) {
     import_test_keys();
     stringlist_t* keylist = NULL;
-    PEP_STATUS status = find_keys(session, alice_keyid, &keylist);
+    PEP_STATUS status = find_keys(session, alice_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_TRUE(keylist && keylist->value);
     ASSERT_STREQ(keylist->value, alice_fpr);
@@ -612,13 +646,16 @@ TEST_F(KeyManipulationTest, check_get_key_rating_no_comm_type) {
     ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
 }
 
-//TEST_F(KeyManipulationTest, check_get_key_rating_bad_fpr_format) {
-//    import_test_keys();
-//    PEP_comm_type communication_type = PEP_ct_unknown;
-//    const char* aurelio_fpr = "ZZZZZAAF59AC32CFE4F86500A9411D176FF00E97";
-//    PEP_STATUS status = get_key_rating(session, aurelio_fpr, &communication_type); 
-//    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
-//}
+TEST_F(KeyManipulationTest, check_get_key_rating_bad_fpr_format) {
+    import_test_keys();
+    PEP_comm_type communication_type = PEP_ct_unknown;
+    PEP_STATUS status = get_key_rating(session, alice_too_long_fpr, &communication_type); 
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);           
+    status = get_key_rating(session, bob_too_short_fpr, &communication_type); 
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);           
+    status = get_key_rating(session, alice_not_hex_fpr, &communication_type); 
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);           
+}
 
 // renew_key()
 
@@ -642,6 +679,7 @@ TEST_F(KeyManipulationTest, check_renew_key_expired_key_one_year) {
     ASSERT_EQ(status, PEP_STATUS_OK); 
     // TODO: check expiry date of key before and after
 }
+
 TEST_F(KeyManipulationTest, check_renew_key_not_expired_key_one_year) {
     import_test_keys();
     time_t now = time(NULL);
@@ -651,3 +689,253 @@ TEST_F(KeyManipulationTest, check_renew_key_not_expired_key_one_year) {
     ASSERT_EQ(status, PEP_STATUS_OK); 
     // TODO: check expiry date of key before and after
 }
+
+TEST_F(KeyManipulationTest, check_renew_key_no_session) {
+    import_test_keys();
+    time_t now = time(NULL);
+    timestamp *ts = new_timestamp(now);
+    ts->tm_year += 1;
+    PEP_STATUS status = renew_key(NULL, alice_fpr, ts); 
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE); 
+}
+
+TEST_F(KeyManipulationTest, check_renew_key_no_fpr) {
+    import_test_keys();
+    time_t now = time(NULL);
+    timestamp *ts = new_timestamp(now);
+    ts->tm_year += 1;
+    PEP_STATUS status = renew_key(session, NULL, ts); 
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE); 
+}
+
+TEST_F(KeyManipulationTest, check_renew_key_non_existing_fpr) {
+    import_test_keys();
+    time_t now = time(NULL);
+    timestamp *ts = new_timestamp(now);
+    ts->tm_year += 1;
+    PEP_STATUS status = renew_key(session, nobodys_fpr, ts); 
+    ASSERT_EQ(status, PEP_KEY_NOT_FOUND); 
+}
+
+TEST_F(KeyManipulationTest, check_renew_key_bad_fpr_format) {
+    import_test_keys();
+    time_t now = time(NULL);
+    timestamp *ts = new_timestamp(now);
+    ts->tm_year += 1;
+    PEP_STATUS status = renew_key(session, alice_too_long_fpr, ts); 
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE); 
+    status = renew_key(session, bob_too_short_fpr, ts); 
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE); 
+    status = renew_key(session, alice_not_hex_fpr, ts); 
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE); 
+}
+
+// revoke_key
+TEST_F(KeyManipulationTest, check_revoke_key_no_reason) {
+    import_test_keys();
+    PEP_STATUS status = revoke_key(session, alice_fpr, NULL);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+}
+
+TEST_F(KeyManipulationTest, check_revoke_key) {
+    import_test_keys();
+    PEP_STATUS status = revoke_key(session, alice_fpr, "revoking old key");
+    ASSERT_EQ(status, PEP_STATUS_OK);
+}
+
+TEST_F(KeyManipulationTest, check_revoke_key_no_session) {
+    import_test_keys();
+    PEP_STATUS status = revoke_key(NULL, alice_fpr, NULL);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+}
+
+TEST_F(KeyManipulationTest, check_revoke_key_no_fpr) {
+    import_test_keys();
+    PEP_STATUS status = revoke_key(session, NULL, NULL);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+}
+
+TEST_F(KeyManipulationTest, check_revoke_key_bad_fpr_format) {
+    import_test_keys();
+    PEP_STATUS status = revoke_key(session, alice_too_long_fpr, NULL);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+    status = revoke_key(session, bob_too_short_fpr, NULL);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+    status = revoke_key(session, alice_not_hex_fpr, NULL);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+}
+
+TEST_F(KeyManipulationTest, check_revoke_key_non_existent_fpr) {
+    import_test_keys();
+    PEP_STATUS status = revoke_key(session, nobodys_fpr, NULL);
+    ASSERT_EQ(status, PEP_KEY_NOT_FOUND);
+}
+
+// key_expired
+TEST_F(KeyManipulationTest, check_key_expired_false) {
+    import_test_keys();
+    bool expired = false;
+    PEP_STATUS status = key_expired(session, alice_fpr, time(NULL), &expired);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(expired, false);
+}
+
+TEST_F(KeyManipulationTest, check_key_expired_true) {
+    import_test_keys();
+    bool expired = false;
+    PEP_STATUS status = key_expired(session, mary_fpr, time(NULL), &expired);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(expired, true);
+}
+
+TEST_F(KeyManipulationTest, check_key_expired_no_session) {
+    import_test_keys();
+    bool expired = false;
+    PEP_STATUS status = key_expired(NULL, mary_fpr, time(NULL), &expired);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+}
+
+TEST_F(KeyManipulationTest, check_key_expired_no_fpr) {
+    import_test_keys();
+    bool expired = false;
+    PEP_STATUS status = key_expired(session, NULL, time(NULL), &expired);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+}
+
+TEST_F(KeyManipulationTest, check_key_expired_bad_fpr_format) {
+    import_test_keys();
+    bool expired = false;
+    PEP_STATUS status = key_expired(session, alice_too_long_fpr, time(NULL), &expired);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+    status = key_expired(session, bob_too_short_fpr, time(NULL), &expired);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+    status = key_expired(session, alice_not_hex_fpr, time(NULL), &expired);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+}
+
+TEST_F(KeyManipulationTest, check_key_expired_not_existing_fpr) {
+    import_test_keys();
+    bool expired = false;
+    PEP_STATUS status = key_expired(session, nobodys_fpr, time(NULL), &expired);
+    ASSERT_EQ(status, PEP_KEY_NOT_FOUND);
+}
+
+//TEST_F(KeyManipulationTest, check_key_expired_no_timestapm) {
+//    import_test_keys();
+//    bool expired = false;
+//    PEP_STATUS status = key_expired(session, mary_fpr, NULL, &expired);
+//    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+//}
+
+TEST_F(KeyManipulationTest, check_key_expired_no_flag) {
+    import_test_keys();
+    bool expired = false;
+    PEP_STATUS status = key_expired(session, mary_fpr, time(NULL), NULL);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+}
+
+// key_revoked
+
+TEST_F(KeyManipulationTest, check_key_revoked_false) {
+    import_test_keys();
+    bool revoked = false;
+    PEP_STATUS status = key_revoked(session, alice_fpr, &revoked);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(revoked, false);
+}
+
+TEST_F(KeyManipulationTest, check_key_revoked_true) {
+    import_test_keys();
+    bool revoked = false;
+    PEP_STATUS status = revoke_key(session, alice_fpr, NULL);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    status = key_revoked(session, alice_fpr, &revoked);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(revoked, true);
+}
+
+TEST_F(KeyManipulationTest, check_key_revoked_no_session) {
+    import_test_keys();
+    bool revoked = false;
+    PEP_STATUS status = key_revoked(NULL, alice_fpr, &revoked);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+    ASSERT_EQ(revoked, false);
+}
+
+TEST_F(KeyManipulationTest, check_key_no_fpr) {
+    import_test_keys();
+    bool revoked = false;
+    PEP_STATUS status = key_revoked(session, NULL, &revoked);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+}
+
+TEST_F(KeyManipulationTest, check_key_revoked_no_flag) {
+    import_test_keys();
+    bool revoked = false;
+    PEP_STATUS status = key_revoked(session, alice_fpr, NULL);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+}
+
+TEST_F(KeyManipulationTest, check_key_revoked_non_existent_fpr) {
+    import_test_keys();
+    bool revoked = false;
+    PEP_STATUS status = key_revoked(session, nobodys_fpr, &revoked);
+    ASSERT_EQ(status, PEP_KEY_NOT_FOUND);
+}
+
+TEST_F(KeyManipulationTest, check_key_revoked_bad_fpr_format) {
+    import_test_keys();
+    bool revoked = false;
+    PEP_STATUS status = key_revoked(session, alice_too_long_fpr, &revoked);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+    status = key_revoked(session, bob_too_short_fpr, &revoked);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+    status = key_revoked(session, alice_not_hex_fpr, &revoked);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+}
+
+// set_revoked()
+TEST_F(KeyManipulationTest, check_set_revoked) {
+    stringlist_t* keylist = NULL;
+    pEp_identity* id = new_identity(
+        "leon.schumacher@digitalekho.com",
+        NULL,
+        "23",
+        "Leon Schumacher"
+    );
+
+    pEp_identity* id2 = new_identity(
+        "leon.schumacher@digitalekho.com",
+        NULL,
+        "24",
+        "Leon Schumacher"
+    );
+
+    PEP_STATUS status = generate_keypair(session, id);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    // Is it there?
+    status = find_keys(session, id->address, &keylist);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_TRUE(keylist && keylist->value);
+    status = revoke_key(session, keylist->value, NULL);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    string revoked_fpr = keylist->value;
+    cout << revoked_fpr << endl;
+
+
+    status = generate_keypair(session, id2);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    status = find_keys(session, id->address, &keylist);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_TRUE(keylist && keylist->value);
+    cout << keylist->value << endl;
+    keylist = keylist->next;
+    string new_fpr = keylist->value;
+    cout << keylist->value << endl;
+
+    status = set_revoked(session, revoked_fpr.c_str(), new_fpr.c_str(), time(NULL)); 
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    free_stringlist(keylist);
+}
+// get_revoked()
