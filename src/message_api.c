@@ -1927,6 +1927,7 @@ static PEP_STATUS _update_state_for_ident_list(
             
             if (status == PEP_CANNOT_FIND_IDENTITY) {
                 _il->ident->comm_type = PEP_ct_key_not_found;
+                *dest_keys_found = false;
                 status = PEP_STATUS_OK;
             }
             // 0 unless set, so safe.
