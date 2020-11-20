@@ -733,7 +733,9 @@ typedef enum _identity_flags {
     PEP_idf_not_for_sync = 0x0001,   // don't use this identity for sync
     PEP_idf_list = 0x0002,           // identity of list of persons
     // the second octet flags are calculated
-    PEP_idf_devicegroup = 0x0100     // identity of a device group member
+    PEP_idf_devicegroup = 0x0100,     // identity of a device group member
+    PEP_idf_org_ident = 0x0200,       // identity is associated with an org (i.e. NOT a private account - could be company email)
+    PEP_idf_group_ident = 0x0300      // identity is a group identity (e.g. mailing list) - N.B. not related to device group!
 } identity_flags;
 
 typedef unsigned int identity_flags_t;
@@ -746,7 +748,11 @@ typedef unsigned int keypair_flags_t;
 /**
  *  @struct    pEp_identity
  *  
- *  @brief    TODO
+ *  @brief    This is the engine representation of the pEp identity concept,
+ *            which is at its base a user bound to an address (and is uniquely
+ *            identified as such). Other information such as default keys,
+ *            the default language used with the user, etc, are associated
+ *            in this structure as well.
  *  
  */
 typedef struct _pEp_identity {
@@ -771,12 +777,12 @@ typedef struct _pEp_identity {
 /**
  *  @struct    identity_list
  *  
- *  @brief    TODO
+ *  @brief     List nodes for pEp_identity structs
  *  
  */
 typedef struct _identity_list {
-    pEp_identity *ident;
-    struct _identity_list *next;
+    pEp_identity *ident;            // This node's identity
+    struct _identity_list *next;    // The next identity node in the list, or NULL if this is the tail
 } identity_list;
 
 
@@ -793,8 +799,8 @@ typedef struct _identity_list {
  *  @retval pEp_identity    duplicate identity struct
  *  @retval NULL            if out of memory
  *  
- *  @warning the strings are copied; the original strings are still being owned by
- *           the caller
+ *  @ownership the strings are copied; the original strings are still being owned by
+ *             the caller
  *  
  */
 
@@ -814,8 +820,8 @@ DYNAMIC_API pEp_identity *new_identity(
  *  @retval pEp_identity    duplicate identity struct
  *  @retval NULL            if out of memory
  *  
- *  @warning the strings are copied; the original strings are still being owned by
- *           the caller
+ *  @ownership the strings are copied; the original strings are still being owned by
+ *             the caller
  *  
  */
 
