@@ -2494,9 +2494,10 @@ static PEP_STATUS interpret_body(struct mailmime *part, char **longmsg, size_t *
 
     if (part->mm_content_type) {
         if (_get_content_type(part->mm_content_type, &type, &charset) == 0) {
-            if (charset && strncasecmp(charset, "utf-8", 5) != 0) {
+            if (charset && (strlen(charset) < 5 || strncasecmp(charset, "utf-8", 5) != 0)) {
                 char * _text;
-                int r = charconv("utf-8", charset, _longmsg, _size, &_text);
+                size_t new_size;
+                int r = charconv_buffer("utf-8", charset, _longmsg, _size, &_text, &new_size);
                 switch (r) {
                     case MAILIMF_NO_ERROR:
                         break;
@@ -2506,13 +2507,16 @@ static PEP_STATUS interpret_body(struct mailmime *part, char **longmsg, size_t *
                         return PEP_ILLEGAL_VALUE;
                 }
                 free(_longmsg);
-                _longmsg = _text;
+                _longmsg = (char*)(malloc(new_size));
+                if (!_longmsg || !memcpy(_longmsg, _text, new_size))
+                    return PEP_OUT_OF_MEMORY;
+                charconv_buffer_free(_text);
+                _size = new_size;
             }
         }
     }
     // FIXME: KG - we now have the text we want.
     // Now we need to strip sigs and process them if they are there..
-    
 
     *longmsg = _longmsg;
     if (size)
