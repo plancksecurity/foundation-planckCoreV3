@@ -2738,6 +2738,7 @@ static PEP_STATUS interpret_body(struct mailmime *part, char **longmsg, size_t *
                 }
                 free(_longmsg);
                 _longmsg = _text;
+                _size = strlen(_longmsg);
             }
         }
     }
