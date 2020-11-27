@@ -1,3 +1,5 @@
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "UnreachableCode"
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
@@ -325,7 +327,7 @@ TEST_F(KeyResetMessageTest, check_reset_key_and_notify) {
     );
     ASSERT_EQ(int_result , SQLITE_OK);
 
-    status = key_reset(session, alice_fpr, from_ident);
+    status = key_reset(session, alice_fpr, from_ident, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_GT(m_queue.size(), 0);
     status = myself(session, from_ident);
@@ -487,7 +489,7 @@ TEST_F(KeyResetMessageTest, revoke_and_check_receive_message) {
 
     PEP_STATUS status = set_own_key(session, me, "8E8D2381AE066ABE1FEE509821BA977CA4728718");
     ASSERT_EQ(status, PEP_STATUS_OK);
-    status = key_reset(session, "8E8D2381AE066ABE1FEE509821BA977CA4728718", me);
+    status = key_reset(session, "8E8D2381AE066ABE1FEE509821BA977CA4728718", me, true);
     ASSERT_EQ(status, PEP_STATUS_OK);
     status = myself(session, me);
     ASSERT_NE(me->fpr, nullptr);
@@ -524,7 +526,7 @@ TEST_F(KeyResetMessageTest, check_receive_message_to_revoked_key_from_unknown) {
     ASSERT_STRCASEEQ(from_ident->fpr, alice_fpr);
     ASSERT_TRUE(from_ident->me);
 
-    status = key_reset(session, alice_fpr, from_ident);
+    status = key_reset(session, alice_fpr, from_ident, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     m_queue.clear();
 
@@ -589,7 +591,7 @@ TEST_F(KeyResetMessageTest, check_receive_message_to_revoked_key_from_contact) {
     // FIXME: longer term we need to fix the test, but the key attached to the message below has expired, so for now, we give her a new key
     slurp_and_import_key(session, "test_keys/pub/pep-test-gabrielle-0xE203586C_pub.asc");
 
-    status = key_reset(session, alice_fpr, from_ident);
+    status = key_reset(session, alice_fpr, from_ident, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(m_queue.size() , 0);
     m_queue.clear();
@@ -636,10 +638,10 @@ TEST_F(KeyResetMessageTest, check_multiple_resets_single_key) {
     ASSERT_STRCASEEQ(from_ident->fpr, alice_fpr);
     ASSERT_TRUE(from_ident->me);
 
-    status = key_reset(session, NULL, NULL);
+    status = key_reset(session, NULL, NULL, false);
     ASSERT_EQ(status , PEP_STATUS_OK);
 
-    status = key_reset(session, NULL, NULL);
+    status = key_reset(session, NULL, NULL, false);
     ASSERT_EQ(status , PEP_STATUS_OK);
 
     status = myself(session, from_ident);
@@ -3198,3 +3200,5 @@ TEST_F(KeyResetMessageTest, codec_test) {
     free_identity(ident2);
     free_keyreset_command_list(il);
 }
+
+#pragma clang diagnostic pop

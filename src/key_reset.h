@@ -128,7 +128,8 @@ DYNAMIC_API PEP_STATUS key_reset_own_grouped_keys(PEP_SESSION session);
 PEP_STATUS key_reset(
         PEP_SESSION session,
         const char* fpr,
-        pEp_identity* ident
+        pEp_identity* ident,
+        bool no_recurse
     );
 
 /*
