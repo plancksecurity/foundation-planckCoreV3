@@ -4529,6 +4529,9 @@ DYNAMIC_API PEP_STATUS set_ident_enc_format(
  *  @param[in]	session		PEP_SESSION
  *  @param[in]	*user_id		constchar
  *  @param[in]	**trust_list		labeled_int_list_t
+ *  
+ *  @retval     PEP_ILLEGAL_VALUE   illegal parameter value
+ *  @retval     PEP_STATUS_OK
  *
  */
 PEP_STATUS get_trust_by_userid(PEP_SESSION session, const char* user_id,

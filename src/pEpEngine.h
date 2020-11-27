@@ -361,8 +361,8 @@ DYNAMIC_API void config_use_only_own_private_keys(PEP_SESSION session, bool enab
  *  
  *  @brief Log more for service purposes
  *  
- *  session (in)    session handle
- *  enable (in)     flag if enabled or disabled
+ *  @param[in]  session     session handle
+ *  @param[in]  enable      flag if enabled or disabled
  *  
  *  
  */
@@ -515,7 +515,7 @@ DYNAMIC_API PEP_STATUS encrypt_and_sign(
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session        PEP_SESSION
+ *  @param[in]  session        session handle
  *  @param[in]  ansi_color     int
  *  
  */
@@ -536,7 +536,7 @@ DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color);
  *                                  omitted
  *  
  *  @retval PEP_STATUS_OK       log entry created
- *  
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter value  
  *  
  */
 
@@ -554,11 +554,14 @@ DYNAMIC_API PEP_STATUS log_event(
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session        PEP_SESSION
+ *  @param[in]  session        session handle
  *  @param[in]  title          const char*
  *  @param[in]  entity         const char*
  *  @param[in]  description    const char*
  *  @param[in]  comment        const char*
+
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE
  *  
  */
 DYNAMIC_API PEP_STATUS log_service(PEP_SESSION session, const char *title,
@@ -576,7 +579,7 @@ DYNAMIC_API PEP_STATUS log_service(PEP_SESSION session, const char *title,
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session       PEP_SESSION
+ *  @param[in]  session       session handle
  *  @param[in]  entity        const char*
  *  @param[in]  status        PEP_STATUS
  *  @param[in]  where         const char*
@@ -603,6 +606,7 @@ DYNAMIC_API void _service_error_log(PEP_SESSION session, const char *entity,
  *  
  *  @retval PEP_STATUS_OK            trustword retrieved
  *  @retval PEP_TRUSTWORD_NOT_FOUND  trustword not found
+ *  @retval PEP_OUT_OF_MEMORY        out of memory 
  *  
  *  @warning the word pointer goes to the ownership of the caller
  *           the caller is responsible to free() it (on Windoze use pEp_free())
@@ -849,6 +853,11 @@ DYNAMIC_API void free_identity(pEp_identity *identity);
  *  @param[out]    identity    pointer to pEp_identity structure with results or
  *                             NULL if failure
  *  
+ *  @retval        PEP_STATUS_OK
+ *  @retval        PEP_ILLEGAL_VALUE        illegal parameter
+ *  @retval        PEP_OUT_OF_MEMORY        out of memory 
+ *  @retval        PEP_CANNOT_FIND_IDENTITY
+ *
  *  @warning address and user_id are being copied; the original strings remains in
  *           the ownership of the caller
  *           the resulting pEp_identity structure goes to the ownership of the
@@ -869,9 +878,13 @@ DYNAMIC_API PEP_STATUS get_identity(
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session     PEP_SESSION
+ *  @param[in]  session     session handle
  *  @param[in]  old_fpr     const char*
  *  @param[in]  new_fpr     const char*
+ *
+ *  @retval     PEP_STATUS_OK        
+ *  @retval     PEP_CANNOT_SET_IDENTITY     
+ *  @retval     PEP_ILLEGAL_VALUE       illegal parameter values     
  *  
  */
 PEP_STATUS replace_identities_fpr(PEP_SESSION session, 
@@ -892,6 +905,8 @@ PEP_STATUS replace_identities_fpr(PEP_SESSION session,
  *  @retval PEP_CANNOT_SET_PGP_KEYPAIR    writing to table pgp_keypair failed
  *  @retval PEP_CANNOT_SET_IDENTITY       writing to table identity failed
  *  @retval PEP_COMMIT_FAILED             SQL commit failed
+ *  @retval PEP_ILLEGAL_VALUE             illegal parameter value
+ *  @retval PEP_OUT_OF_MEMORY             out of memory
  *  
  *  @warning address, fpr, user_id and username must be given
  *  
@@ -914,6 +929,8 @@ DYNAMIC_API PEP_STATUS set_identity(
  *  @retval PEP_UNKNOWN_ERROR             results were returned, but no ID
  *                                        found (no reason this should ever 
  *                                        occur)
+ *  @retval PEP_ILLEGAL_VALUE             illegal parameter value
+ *  @retval PEP_OUT_OF_MEMORY             out of memory
  *  
  *  @warning userid will be NULL if not found; otherwise, returned string
  *           belongs to the caller.
@@ -942,6 +959,8 @@ DYNAMIC_API PEP_STATUS get_default_own_userid(
  *  @retval PEP_UNKNOWN_ERROR             results were returned, but no ID
  *                                        found (no reason this should ever 
  *                                        occur)
+ *  @retval PEP_ILLEGAL_VALUE             illegal parameter value
+ *  @retval PEP_OUT_OF_MEMORY             out of memory
  *  
  *  @warning default_id will be NULL if not found; otherwise, returned string
  *           belongs to the caller.
@@ -968,6 +987,7 @@ DYNAMIC_API PEP_STATUS get_userid_alias_default(
  *  
  *  @retval PEP_STATUS_OK                 userid was found
  *  @retval PEP_CANNOT_SET_ALIAS          there was an error setting this
+ *  @retval PEP_ILLEGAL_VALUE             illegal parameter value
  *  
  *  
  */
@@ -982,12 +1002,13 @@ DYNAMIC_API PEP_STATUS set_userid_alias (
  *  
  *  @brief Update identity flags on existing identity
  *  
- *  @param[in]   session    session handle
- *                            identity (in,out)   pointer to pEp_identity structure
- *  @param[in]   flags      new value for flags
+ *  @param[in]      session    session handle
+ *  @param[in,out]  identity   pointer to pEp_identity structure
+ *  @param[in]      flags      new value for flags
  *  
  *  @retval PEP_STATUS_OK                 encryption and signing succeeded
  *  @retval PEP_CANNOT_SET_IDENTITY       update of identity failed
+ *  @retval PEP_ILLEGAL_VALUE             illegal parameter value
  *  
  *  @warning address and user_id must be given in identity
  *  
@@ -1004,12 +1025,13 @@ DYNAMIC_API PEP_STATUS set_identity_flags(
  *  
  *  @brief Update identity flags on existing identity
  *  
- *  @param[in]   session    session handle
- *                            identity (in,out)   pointer to pEp_identity structure
- *  @param[in]   flags      new value for flags
+ *  @param[in]      session    session handle
+ *  @param[in,out]  identity   pointer to pEp_identity structure
+ *  @param[in]      flags      new value for flags
  *  
  *  @retval PEP_STATUS_OK                 encryption and signing succeeded
  *  @retval PEP_CANNOT_SET_IDENTITY       update of identity failed
+ *  @retval PEP_ILLEGAL_VALUE             illegal parameter value
  *  
  *  @warning address and user_id must be given in identity
  *  
@@ -1028,15 +1050,12 @@ DYNAMIC_API PEP_STATUS unset_identity_flags(
  *  
  *  @param[in]   session    session handle
  *  @param[in]   fpr        fingerprint of key to mark
- *  
- *  
+ *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE 
+ *  @retval PEP_CANNOT_SET_TRUST
+ *
  */
-
-DYNAMIC_API PEP_STATUS mark_as_compromised(
-        PEP_SESSION session,
-        const char *fpr
-    );
-
 
 /**
  *  <!--       mark_as_compromized()       -->
@@ -1092,7 +1111,7 @@ DYNAMIC_API PEP_STATUS generate_keypair(
  *  
  *  @retval PEP_STATUS_OK           key was successfully deleted
  *  @retval PEP_KEY_NOT_FOUND       key not found
- *  @retval PEP_ILLEGAL_VALUE       not a valid key id or fingerprint
+ *  @retval PEP_ILLEGAL_VALUE       not a valid fingerprint
  *  @retval PEP_KEY_HAS_AMBIG_NAME  fpr does not uniquely identify a key
  *  @retval PEP_OUT_OF_MEMORY       out of memory
  *  
@@ -1113,7 +1132,7 @@ DYNAMIC_API PEP_STATUS delete_keypair(PEP_SESSION session, const char *fpr);
  *  @param[out]    private_keys    list of identities containing the 
  *                                 private keys that have been imported
  *  
- *  @retval PEP_STATUS_OK           key was successfully imported
+ *  @retval PEP_KEY_IMPORTED        key was successfully imported
  *  @retval PEP_OUT_OF_MEMORY       out of memory
  *  @retval PEP_ILLEGAL_VALUE       there is no key data to import
  *  
@@ -1148,7 +1167,7 @@ DYNAMIC_API PEP_STATUS import_key(
  *                                        imported keys (i.e. key was in DB and was
  *                                        changed by import)
  *  
- *  @retval PEP_STATUS_OK           key was successfully imported
+ *  @retval PEP_KEY_IMPORTED        key was successfully imported
  *  @retval PEP_OUT_OF_MEMORY       out of memory
  *  @retval PEP_ILLEGAL_VALUE       there is no key data to import, or imported keys was NULL and 
  *                                  changed_public_keys was not
@@ -1182,6 +1201,7 @@ PEP_STATUS _import_key_with_fpr_return(
  *  @retval PEP_STATUS_OK           key was successfully exported
  *  @retval PEP_OUT_OF_MEMORY       out of memory
  *  @retval PEP_KEY_NOT_FOUND       key not found
+ *  @retval PEP_ILLEGAL_VALUE       illegal parameter value
  *  
  *  @warning the key_data goes to the ownership of the caller
  *           the caller is responsible to free() it (on Windoze use pEp_free())
@@ -1207,6 +1227,7 @@ DYNAMIC_API PEP_STATUS export_key(
  *  @retval PEP_OUT_OF_MEMORY       out of memory
  *  @retval PEP_KEY_NOT_FOUND       key not found
  *  @retval PEP_CANNOT_EXPORT_KEY   cannot export secret key (i.e. it's on an HKS)
+ *  @retval PEP_ILLEGAL_VALUE       illegal parameter value
  *  
  *  @warning the key_data goes to the ownership of the caller
  *           the caller is responsible to free() it (on Windoze use pEp_free())
@@ -1258,6 +1279,9 @@ DYNAMIC_API PEP_STATUS recv_key(PEP_SESSION session, const char *pattern);
  *                            UTF-8 string
  *  @param[out]    keylist    list of fingerprints found or NULL on error
  *  
+ *  @retval        PEP_ILLEGAL_VALUE    illegal parametres
+ *  @retval        PEP_STATUS_OK        
+ *
  *  @warning the ownership of keylist and its elements go to the caller
  *           the caller must use free_stringlist() to free it
  *  
@@ -1336,7 +1360,10 @@ DYNAMIC_API void *pEp_realloc(void *p, size_t size);
  *                             if the trust level cannot be determined identity->comm_type is set
  *                             to PEP_ct_unknown
  *  
- *  
+ *  @retval        PEP_STATUS_OK      
+ *  @retval        PEP_ILLEGAL_VALUE         illegal parameter value
+ *  @retval        PEP_CANNOT_FIND_IDENTITY  
+ *
  */
 
 DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity);
@@ -1349,7 +1376,7 @@ DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity);
  *  
  *  @param[in]  session        PEP_SESSION
  *  @param[in]  identity       pEp_identity*
- *  
+ *
  */
 PEP_STATUS set_trust(PEP_SESSION session, 
                      pEp_identity* identity);
@@ -1362,6 +1389,11 @@ PEP_STATUS set_trust(PEP_SESSION session,
  *  @param[in]  session       PEP_SESSION
  *  @param[in]  fpr           const char*
  *  @param[in]  comm_type     PEP_comm_type
+ *
+ *   
+ *  @retval        PEP_STATUS_OK      
+ *  @retval        PEP_ILLEGAL_VALUE    illegal parameter value
+ *  @retval        PEP_CANNOT_SET_TRUST
  *  
  */
 PEP_STATUS update_trust_for_fpr(PEP_SESSION session, 
@@ -1378,6 +1410,9 @@ PEP_STATUS update_trust_for_fpr(PEP_SESSION session,
  *  @param[out]    comm_type    least comm_type as result (out)
  *                              if the trust level cannot be determined comm_type is set to PEP_ct_unknown
  *  
+ *  @retval        PEP_STATUS_OK      
+ *  @retval        PEP_ILLEGAL_VALUE    illegal parameter value
+ *  @retval        PEP_CANNOT_FIND_IDENTITY    
  *  
  */
 
@@ -1399,6 +1434,8 @@ DYNAMIC_API PEP_STATUS least_trust(
  *                              if an error occurs, *comm_type is set to PEP_ct_unknown and an error
  *                              is returned
  *  
+ *  @retval        PEP_STATUS_OK      
+ *  @retval        PEP_ILLEGAL_VALUE    illegal parameter value
  *  
  */
 
@@ -1419,6 +1456,9 @@ DYNAMIC_API PEP_STATUS get_key_rating(
  *  @param[in]   ts         timestamp when key should expire or NULL for
  *                            default
  *  
+ *  @retval        PEP_STATUS_OK        key renewed       
+ *  @retval        PEP_ILLEGAL_VALUE    illegal parameter value
+ *  @retval        PEP_KEY_NOT_FOUND    key not found
  *  
  */
 
@@ -1438,6 +1478,10 @@ DYNAMIC_API PEP_STATUS renew_key(
  *  @param[in]   fpr        ID of key to revoke as UTF-8 string
  *  @param[in]   reason     text with reason for revoke as UTF-8 string
  *                            or NULL if reason unknown
+ *
+ *  @retval        PEP_STATUS_OK        if key revoked      
+ *  @retval        PEP_ILLEGAL_VALUE    illegal parameter value
+ *  @retval        PEP_KEY_NOT_FOUND    key not found
  *  
  *  @warning reason text must not include empty lines
  *           this function is meant for internal use only; better use
@@ -1462,6 +1506,9 @@ DYNAMIC_API PEP_STATUS revoke_key(
  *  @param[in]     when       UTC time of when should expiry be considered
  *  @param[out]    expired    flag if key expired
  *  
+ *  @retval        PEP_STATUS_OK      
+ *  @retval        PEP_ILLEGAL_VALUE    illegal parameter value
+ *  @retval        PEP_KEY_NOT_FOUND    key not found
  *  
  */
 
@@ -1482,6 +1529,9 @@ DYNAMIC_API PEP_STATUS key_expired(
  *  @param[in]     fpr        ID of key to check as UTF-8 string
  *  @param[out]    revoked    flag if key revoked
  *  
+ *  @retval        PEP_STATUS_OK      
+ *  @retval        PEP_ILLEGAL_VALUE    illegal parameter value
+ *  @retval        PEP_KEY_NOT_FOUND    key not found
  *  
  */
 
@@ -1496,7 +1546,7 @@ DYNAMIC_API PEP_STATUS key_revoked(
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session        PEP_SESSION
+ *  @param[in]  session        session handle
  *  @param[in]  fpr            const char*
  *  @param[in]  keylist        stringlist_t**
  *  
@@ -1521,6 +1571,11 @@ PEP_STATUS get_key_userids(
  *                             column3 is description
  *                             column4 is comment
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_OUT_OF_MEMORY       out of memory
+ *  @retval PEP_ILLEGAL_VALUE       illegal parameter value
+ *  @retval PEP_UNKNOWN_ERROR   
+ * 
  *  @warning the ownership of logdata goes to the caller
  *  
  */
@@ -1542,6 +1597,11 @@ DYNAMIC_API PEP_STATUS get_crashdump_log(
  *                              column 1 is the ISO 639-1 language code
  *                              column 2 is the name of the language
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_OUT_OF_MEMORY       out of memory
+ *  @retval PEP_ILLEGAL_VALUE       illegal parameter value
+ *  @retval PEP_UNKNOWN_DB_ERROR
+ *  
  *  @warning the ownership of languages goes to the caller
  *  
  */
@@ -1562,6 +1622,12 @@ DYNAMIC_API PEP_STATUS get_languagelist(
  *  @param[in]     phrase_id    id of phrase in i18n
  *  @param[out]    phrase       phrase as UTF-8 string
  *  
+ *  @retval     PEP_STATUS_OK
+ *  @retval     PEP_OUT_OF_MEMORY       out of memory
+ *  @retval     PEP_ILLEGAL_VALUE       illegal parameter value
+ *  @retval     PEP_UNKNOWN_DB_ERROR
+ *  @retval     PEP_PHRASE_NOT_FOUND
+ *
  *  @warning the ownership of phrase goes to the caller
  *  
  */
@@ -1587,6 +1653,7 @@ DYNAMIC_API PEP_STATUS get_phrase(
  *  @retval PEP_SEQUENCE_VIOLATED           if sequence violated
  *  @retval PEP_CANNOT_INCREASE_SEQUENCE    if sequence cannot be increased
  *  @retval PEP_OWN_SEQUENCE                if own sequence
+ *  @retval PEP_COMMIT_FAILED
  *  
  *  
  */
@@ -1608,6 +1675,9 @@ DYNAMIC_API PEP_STATUS sequence_value(
  *  @param[in]     replacement_fpr    replacement key fingerprint
  *  @param[in]     revocation_date    revocation date
  *  
+ *  @retval     PEP_STATUS_OK
+ *  @retval     PEP_ILLEGAL_VALUE       illegal parameter value
+ *  @retval     PEP_UNKNOWN_DB_ERROR
  *  
  */
 
@@ -1629,7 +1699,10 @@ DYNAMIC_API PEP_STATUS set_revoked(
  *  @param[out]    revoked_fpr        revoked fingerprint
  *  @param[out]    revocation_date    revocation date
  *  
- *  
+ *  @retval     PEP_STATUS_OK
+ *  @retval     PEP_ILLEGAL_VALUE       illegal parameter value
+ *  @retval     PEP_CANNOT_FIND_IDENTITY  
+ *
  */
     
 DYNAMIC_API PEP_STATUS get_revoked(
@@ -1648,6 +1721,8 @@ DYNAMIC_API PEP_STATUS get_revoked(
  *  @param[in]     fpr        fingerprint of key
  *  @param[out]    created    date of creation
  *  
+ *  @retval        PEP_STATUS_OK      
+ *  @retval        PEP_ILLEGAL_VALUE    illegal parameter value
  *  
  */
 
@@ -1668,6 +1743,9 @@ PEP_STATUS key_created(
  *                            UTF-8 string
  *  @param[out]    keylist    list of fingerprints found or NULL on error
  *  
+ *  @retval        PEP_STATUS_OK      
+ *  @retval        PEP_ILLEGAL_VALUE    illegal parameter value
+ *
  *  @warning the ownerships of keylist isgoing to the caller
  *           the caller must use free_stringlist() to free it
  *  
@@ -1681,6 +1759,7 @@ PEP_STATUS find_private_keys(PEP_SESSION session, const char* pattern,
  *  @brief Returns the current version of pEpEngine (this is different
  *         from the pEp protocol version!)
  *  
+ *  @retval  PEP_ENGINE_VERSION 
  *  
  */
 DYNAMIC_API const char* get_engine_version();
@@ -1690,6 +1769,7 @@ DYNAMIC_API const char* get_engine_version();
  *  
  *  @brief Returns the pEp protocol version
  *  
+ *  @retval     PEP_VERSION
  *  
  */
 
@@ -1776,6 +1856,13 @@ DYNAMIC_API const char *per_machine_directory(void);
  *  usage must be prepared to return this value).
  *  
  *  
+ *  @param[in]     session      session handle
+ *  @param[in]     passphrase   string between 1 and 1024 bytes long     
+ *  
+ *  @retval        PEP_STATUS_OK      
+ *  @retval        PEP_ILLEGAL_VALUE    illegal parameter value
+ *  @retval        PEP_OUT_OF_MEMORY    out of memory
+ *
  */
 
 DYNAMIC_API PEP_STATUS config_passphrase(PEP_SESSION session, const char *passphrase);
@@ -1809,6 +1896,14 @@ DYNAMIC_API PEP_STATUS config_passphrase(PEP_SESSION session, const char *passph
  * PEP_OUT_OF_MEMORY. The behaviour of all functions which use secret keys may
  * change after this is configured.
  *
+ *  @param[in]     session      session handle
+ *  @param[in]     enable       boolean flag if enabled or disabled     
+ *  @param[in]     passphrase   string between 1 and 1024 bytes long     
+ *  
+ *  @retval        PEP_STATUS_OK      
+ *  @retval        PEP_ILLEGAL_VALUE    illegal parameter value
+ *  @retval        PEP_OUT_OF_MEMORY    out of memory
+ *  
  */
 
 DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys(PEP_SESSION session, 
@@ -1827,7 +1922,10 @@ DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys(PEP_SESSION session,
  *  @param[in]   session     session handle
  *  @param[in]   identity    identity->user_id and identity->address must NOT be NULL
  *  @param[in]   format      the desired default encryption format
- *  
+ *
+ *  @retval     PEP_STATUS_OK      
+ *  @retval     PEP_ILLEGAL_VALUE        illegal parameter value
+ *  @retval     PEP_CANNOT_SET_IDENTITY  
  *  
  */
 
@@ -1841,7 +1939,7 @@ DYNAMIC_API PEP_STATUS set_ident_enc_format(PEP_SESSION session,
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session          PEP_SESSION
+ *  @param[in]  session          session handle
  *  @param[in]  identity         pEp_identity*
  *  @param[in]  suppress_event   bool
  *  
@@ -1855,8 +1953,13 @@ PEP_STATUS _generate_keypair(PEP_SESSION session,
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session        PEP_SESSION
+ *  @param[in]  session        session handle
+ *
  *  
+ *  @retval       PEP_STATUS_OK      
+ *  @retval       PEP_ILLEGAL_VALUE    illegal parameter value
+ *  @retval       PEP_UNKNOWN_DB_ERROR
+ *
  */
 DYNAMIC_API PEP_STATUS reset_pEptest_hack(PEP_SESSION session);
 
@@ -1868,11 +1971,16 @@ DYNAMIC_API PEP_STATUS reset_pEptest_hack(PEP_SESSION session);
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session         PEP_SESSION
+ *  @param[in]  session         session handle
  *  @param[in]  address         const char*
  *  @param[in]  user_id         const char*
  *  @param[in]  identity        pEp_identity**
  *  
+ *  @retval     PEP_STATUS_OK      
+ *  @retval     PEP_ILLEGAL_VALUE           illegal parameter value
+ *  @retval     PEP_CANNOT_FIND_IDENTITY
+ *  @retval     PEP_OUT_OF_MEMORY           out of memory
+ *
  */
 PEP_STATUS get_identity_without_trust_check(
         PEP_SESSION session,
@@ -1886,10 +1994,15 @@ PEP_STATUS get_identity_without_trust_check(
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session        PEP_SESSION
+ *  @param[in]  session        session handle
  *  @param[in]  address        const char*
  *  @param[in]  id_list        identity_list**
  *  
+ *  @retval     PEP_STATUS_OK      
+ *  @retval     PEP_ILLEGAL_VALUE           illegal parameter value
+ *  @retval     PEP_CANNOT_FIND_IDENTITY
+ *  @retval     PEP_OUT_OF_MEMORY           out of memory
+ *
  */
 PEP_STATUS get_identities_by_address(
         PEP_SESSION session,
@@ -1902,10 +2015,15 @@ PEP_STATUS get_identities_by_address(
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session        PEP_SESSION
+ *  @param[in]  session        session handle
  *  @param[in]  user_id        const char*
  *  @param[in]  identities     identity_list**
  *  
+ *  @retval     PEP_STATUS_OK      
+ *  @retval     PEP_ILLEGAL_VALUE           illegal parameter value
+ *  @retval     PEP_CANNOT_FIND_IDENTITY
+ *  @retval     PEP_OUT_OF_MEMORY           out of memory
+ *
  */
 PEP_STATUS get_identities_by_userid(
         PEP_SESSION session,
@@ -1918,9 +2036,13 @@ PEP_STATUS get_identities_by_userid(
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session        PEP_SESSION
+ *  @param[in]  session        session handle
  *  @param[in]  address        const char*
  *  @param[in]  is_own_addr    bool*
+ *
+ *  @retval     PEP_STATUS_OK      
+ *  @retval     PEP_ILLEGAL_VALUE    illegal parameter value
+ *  @retval     PEP_RECORD_NOT_FOUND
  *  
  */
 PEP_STATUS is_own_address(PEP_SESSION session, 
@@ -1932,10 +2054,13 @@ PEP_STATUS is_own_address(PEP_SESSION session,
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session         PEP_SESSION
+ *  @param[in]  session         session handle
  *  @param[in]  old_uid         const char*
  *  @param[in]  new_uid         const char*
  *  
+ *  @retval     PEP_STATUS_OK      
+ *  @retval     PEP_ILLEGAL_VALUE       illegal parameter value
+ *  @retval     PEP_CANNOT_SET_PERSON
  */
 PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
                               const char* new_uid);
@@ -1945,9 +2070,13 @@ PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session     PEP_SESSION
+ *  @param[in]  session     session handle
  *  @param[in]  fpr         const char*
  *  
+ *  @retval     PEP_STATUS_OK      
+ *  @retval     PEP_ILLEGAL_VALUE           illegal parameter value
+ *  @retval     PEP_CANNOT_SET_PGP_KEYPAIR
+ *
  */
 PEP_STATUS remove_key(PEP_SESSION session, const char* fpr);
                               
@@ -1956,8 +2085,13 @@ PEP_STATUS remove_key(PEP_SESSION session, const char* fpr);
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session     PEP_SESSION
+ *  @param[in]  session     session handle
  *  @param[in]  fpr         const char*
+ *
+ *  @retval     PEP_STATUS_OK      
+ *  @retval     PEP_ILLEGAL_VALUE           illegal parameter value
+ *  @retval     PEP_CANNOT_SET_IDENTITY
+ *  @retval     PEP_CANNOT_SET_PERSON
  *  
  */
 PEP_STATUS remove_fpr_as_default(PEP_SESSION session, 
@@ -1969,10 +2103,15 @@ PEP_STATUS remove_fpr_as_default(PEP_SESSION session,
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session        PEP_SESSION
+ *  @param[in]  session        session handle
  *  @param[in]  user_id        const char*
  *  @param[in]  main_fpr       char**
  *  
+ *  @retval     PEP_STATUS_OK      
+ *  @retval     PEP_ILLEGAL_VALUE           illegal parameter value
+ *  @retval     PEP_OUT_OF_MEMORY           out of memory
+ *  @retval     PEP_KEY_NOT_FOUND
+ *  @retval     PEP_CANNOT_FIND_PERSON
  */
 PEP_STATUS get_main_user_fpr(PEP_SESSION session, 
                              const char* user_id,
@@ -1983,10 +2122,14 @@ PEP_STATUS get_main_user_fpr(PEP_SESSION session,
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session        PEP_SESSION
+ *  @param[in]  session        session handle
  *  @param[in]  user_id        const char*
  *  @param[in]  new_fpr        const char*
  *  
+ *  @retval     PEP_STATUS_OK      
+ *  @retval     PEP_ILLEGAL_VALUE    illegal parameter value
+ *  @retval     PEP_CANNOT_SET_PERSON  
+ *
  */
 PEP_STATUS replace_main_user_fpr(PEP_SESSION session, const char* user_id,
                               const char* new_fpr);
@@ -1996,11 +2139,15 @@ PEP_STATUS replace_main_user_fpr(PEP_SESSION session, const char* user_id,
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session         PEP_SESSION
+ *  @param[in]  session         session handle
  *  @param[in]  user_id         const char*
  *  @param[in]  new_fpr         const char*
  *  @param[in]  compare_fpr     const char*
  *  
+ *  @retval     PEP_STATUS_OK      
+ *  @retval     PEP_ILLEGAL_VALUE    illegal parameter value
+ *  @retval     PEP_CANNOT_SET_PERSON  
+ *
  */
 PEP_STATUS replace_main_user_fpr_if_equal(PEP_SESSION session, const char* user_id,
                                           const char* new_fpr, const char* compare_fpr);
@@ -2010,11 +2157,12 @@ PEP_STATUS replace_main_user_fpr_if_equal(PEP_SESSION session, const char* user_
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session          PEP_SESSION
+ *  @param[in]  session          session handle
  *  @param[in]  fpr              const char*
  *  @param[in]  revoked_fpr      char**
  *  @param[in]  revocation_date  uint64_t*
  *  
+ *
  */
 DYNAMIC_API PEP_STATUS get_replacement_fpr(
         PEP_SESSION session,
@@ -2028,9 +2176,13 @@ DYNAMIC_API PEP_STATUS get_replacement_fpr(
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session        PEP_SESSION
+ *  @param[in]  session        session handle
  *  @param[in]  user_id        const char*
  *  
+ *  @retval     PEP_STATUS_OK      
+ *  @retval     PEP_ILLEGAL_VALUE    illegal parameter value
+ *  @retval     PEP_CANNOT_SET_PERSON  
+ *
  */
 PEP_STATUS refresh_userid_default_key(PEP_SESSION session, const char* user_id);
 
@@ -2040,9 +2192,13 @@ PEP_STATUS refresh_userid_default_key(PEP_SESSION session, const char* user_id);
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session      PEP_SESSION
+ *  @param[in]  session      session handle
  *  @param[in]  user         pEp_identity*
  *  
+ *  @retval     PEP_STATUS_OK      
+ *  @retval     PEP_ILLEGAL_VALUE    illegal parameter value
+ *  @retval     PEP_CANNOT_SET_PERSON  
+ *
  */
 DYNAMIC_API PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user);
 
@@ -2053,10 +2209,13 @@ DYNAMIC_API PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user);
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session        PEP_SESSION
+ *  @param[in]  session        session handle
  *  @param[in]  identity       pEp_identity*
  *  @param[in]  exists         bool*
  *  
+ *  @retval     PEP_STATUS_OK      
+ *  @retval     PEP_ILLEGAL_VALUE    illegal parameter value
+ *  @retval     PEP_UNKNOWN_DB_ERROR
  */
 PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity, bool* exists);
 
@@ -2065,9 +2224,12 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity, bool* exis
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session     PEP_SESSION
+ *  @param[in]  session     session handle
  *  @param[in]  fpr         const char*
  *  
+ *  @retval     PEP_STATUS_OK      
+ *  @retval     PEP_ILLEGAL_VALUE           illegal parameter value
+ *  @retval     PEP_CANNOT_SET_PGP_KEYPAIR
  */
 PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr);
 
@@ -2076,11 +2238,15 @@ PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr);
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session        PEP_SESSION
+ *  @param[in]  session        session handle
  *  @param[in]  ident          pEp_identity*
  *  @param[in]  new_ver_major  unsigned int
  *  @param[in]  new_ver_minor  unsigned int
  *  
+ *  @retval     PEP_STATUS_OK      
+ *  @retval     PEP_ILLEGAL_VALUE           illegal parameter value
+ *  @retval     PEP_CANNOT_SET_PEP_VERSION
+ *
  */
 PEP_STATUS set_pEp_version(PEP_SESSION session, pEp_identity* ident, unsigned int new_ver_major, unsigned int new_ver_minor);
                 
@@ -2089,10 +2255,14 @@ PEP_STATUS set_pEp_version(PEP_SESSION session, pEp_identity* ident, unsigned in
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session     PEP_SESSION
+ *  @param[in]  session     session handle
  *  @param[in]  user_id     const char*
  *  @param[in]  fpr         const char*
  *  
+ *  @retval     PEP_STATUS_OK      
+ *  @retval     PEP_ILLEGAL_VALUE           illegal parameter value
+ *  @retval     PEP_UNKNOWN_ERROR
+ *
  */
 PEP_STATUS clear_trust_info(PEP_SESSION session,
                             const char* user_id,
@@ -2104,10 +2274,14 @@ PEP_STATUS clear_trust_info(PEP_SESSION session,
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session        PEP_SESSION
+ *  @param[in]  session        session handle
  *  @param[in]  ident          pEp_identity*
  *  @param[in]  new_ver_major  unsigned int
  *  @param[in]  new_ver_minor  unsigned int
+ *
+ *  @retval     PEP_STATUS_OK      
+ *  @retval     PEP_ILLEGAL_VALUE           illegal parameter value
+ *  @retval     PEP_CANNOT_SET_PEP_VERSION
  *  
  */
 PEP_STATUS upgrade_pEp_version_by_user_id(PEP_SESSION session, 
@@ -2122,7 +2296,7 @@ PEP_STATUS upgrade_pEp_version_by_user_id(PEP_SESSION session,
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session            PEP_SESSION
+ *  @param[in]  session            session handle
  *  @param[in]  identity           pEp_identity*
  *  @param[in]  guard_transaction  bool
  *  
@@ -2134,10 +2308,14 @@ PEP_STATUS set_person(PEP_SESSION session, pEp_identity* identity,
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session        PEP_SESSION
+ *  @param[in]  session        session handle
  *  @param[in]  own_ident      pEp_identity*
  *  @param[in]  contact_ident  pEp_identity*
- *  
+ *
+ *  @retval     PEP_STATUS_OK      
+ *  @retval     PEP_ILLEGAL_VALUE           illegal parameter value
+ *  @retval     PEP_CANNOT_SET_PERSON
+ *    
  */
 PEP_STATUS bind_own_ident_with_contact_ident(PEP_SESSION session,
                                              pEp_identity* own_ident, 
@@ -2148,9 +2326,14 @@ PEP_STATUS bind_own_ident_with_contact_ident(PEP_SESSION session,
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session        PEP_SESSION
+ *  @param[in]  session        session handle
  *  @param[in]  id_list        identity_list**
  *  
+ *  @retval     PEP_STATUS_OK      
+ *  @retval     PEP_ILLEGAL_VALUE           illegal parameter value
+ *  @retval     PEP_CANNOT_FIND_IDENTITY     
+ *  @retval     PEP_OUT_OF_MEMORY           out of memory     
+ *
  */
 PEP_STATUS get_last_contacted(
         PEP_SESSION session,
@@ -2162,10 +2345,14 @@ PEP_STATUS get_last_contacted(
  *  
  *  @brief            TODO
  *  
- *  @param[in]   session        PEP_SESSION
+ *  @param[in]   session        session handle
  *  @param[in]   contact        const pEp_identity*
  *  @param[out]  own_ident      pEp_identity**
- *  
+ *
+ *  @retval     PEP_STATUS_OK      
+ *  @retval     PEP_ILLEGAL_VALUE           illegal parameter value
+ *  @retval     PEP_CANNOT_FIND_IDENTITY     
+ *
  */
 PEP_STATUS get_own_ident_for_contact_id(PEP_SESSION session,
                                           const pEp_identity* contact,
@@ -2176,10 +2363,14 @@ PEP_STATUS get_own_ident_for_contact_id(PEP_SESSION session,
  *  
  *  @brief            TODO
  *  
- *  @param[in]   session        PEP_SESSION
+ *  @param[in]   session        session handle
  *  @param[in]   identity       pEp_identity*
  *  @param[out]  exists         bool*
  *  
+ *  @retval     PEP_STATUS_OK      
+ *  @retval     PEP_ILLEGAL_VALUE           illegal parameter value
+ *  @retval     PEP_UNKNOWN_DB_ERROR     
+ *
  */
 PEP_STATUS exists_trust_entry(PEP_SESSION session, pEp_identity* identity,
                               bool* exists);
@@ -2189,10 +2380,14 @@ PEP_STATUS exists_trust_entry(PEP_SESSION session, pEp_identity* identity,
  *  
  *  @brief            TODO
  *  
- *  @param[in]   session        PEP_SESSION
+ *  @param[in]   session        session handle
  *  @param[in]   fpr            const char*
  *  @param[out]  own_key        bool*
  *  
+ *  @retval     PEP_STATUS_OK      
+ *  @retval     PEP_ILLEGAL_VALUE           illegal parameter value
+ *  @retval     PEP_OUT_OF_MEMORY           out of memory     
+ *
  */
 PEP_STATUS is_own_key(PEP_SESSION session, const char* fpr, bool* own_key);
 
@@ -2201,10 +2396,15 @@ PEP_STATUS is_own_key(PEP_SESSION session, const char* fpr, bool* own_key);
  *  
  *  @brief            TODO
  *  
- *  @param[in]   session      PEP_SESSION
+ *  @param[in]   session      session handle
  *  @param[in]   fpr          const char*
  *  @param[out]  identities   identity_list**
  *  
+ *  @retval     PEP_STATUS_OK      
+ *  @retval     PEP_ILLEGAL_VALUE           illegal parameter value
+ *  @retval     PEP_OUT_OF_MEMORY           out of memory     
+ *  @retval     PEP_CANNOT_FIND_IDENTITY
+ *
  */
 PEP_STATUS get_identities_by_main_key_id(
         PEP_SESSION session,
@@ -2216,13 +2416,16 @@ PEP_STATUS get_identities_by_main_key_id(
  *  
  *  @brief            TODO
  *  
- *  @param[in]   session        PEP_SESSION
+ *  @param[in]   session        session handle
  *  @param[in]   data           const char*
  *  @param[in]   data_size      size_t
  *  @param[in]   fpr            const char*
  *  @param[out]  sign           char**
  *  @param[out]  sign_size      size_t*
  *  
+ *  @retval     PEP_STATUS_OK      
+ *  @retval     PEP_ILLEGAL_VALUE           illegal parameter value
+ *
  */
 PEP_STATUS sign_only(PEP_SESSION session, 
                      const char *data, 
@@ -2236,7 +2439,7 @@ PEP_STATUS sign_only(PEP_SESSION session,
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session        PEP_SESSION
+ *  @param[in]  session        session handle
  *  @param[in]  id_list        identity_list*
  *  
  */
@@ -2248,11 +2451,15 @@ PEP_STATUS set_all_userids_to_own(PEP_SESSION session,
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session         PEP_SESSION
+ *  @param[in]  session         session handle 
  *  @param[in]  partner_id      const char*
  *  @param[in]  own_address     const char*
  *  @param[in]  was_contacted   bool*
  *  
+ *  @retval     PEP_STATUS_OK      
+ *  @retval     PEP_ILLEGAL_VALUE           illegal parameter value
+ *  @retval     PEP_UNKNOWN_DB_ERROR    
+ *
  */
 PEP_STATUS has_partner_contacted_address(PEP_SESSION session, const char* partner_id,
                                          const char* own_address, bool* was_contacted);
