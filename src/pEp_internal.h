@@ -70,6 +70,7 @@
 #define LOCAL_DB unix_local_db()
 #else
 #define LOCAL_DB unix_local_db(false)
+#define LOCAL_DB_RESET unix_local_db(true)
 #endif
 #ifdef ANDROID
 #define SYSTEM_DB android_system_db()

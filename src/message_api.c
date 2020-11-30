@@ -2574,6 +2574,13 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
+    // This is only local, the caller will keep the keylist, but we don't want to
+    // allow extra keys for non-org (e.g. business) accounts, so we set it to NULL
+    // locally so as not to use it if it's a non-org account (cheaper than checks
+    // everywhere)
+    if (!(src->from->flags & PEP_idf_org_ident))
+        extra = NULL;
+
     // is a passphrase needed?
     status = probe_encrypt(session, src->from->fpr);
     if (failed_test(status))
@@ -2588,6 +2595,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
     stringlist_t *_k = keys;
 
+    // Will be NULL if this is a private account
     if (extra) {
         _k = stringlist_append(_k, extra);
         if (_k == NULL)
@@ -3074,7 +3082,11 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     else if (!target_id->fpr) {
         return PEP_ILLEGAL_VALUE;
     }
-    
+
+    // Ensure we don't encrypt to extra keys if this is a non-org account
+    if (!(target_id->flags & PEP_idf_org_ident))
+        extra = NULL;
+
     *dst = NULL;
 
     // PEP_STATUS _status = update_identity(session, target_id);
@@ -5395,12 +5407,13 @@ static PEP_STATUS _decrypt_message(
             if (has_extra_keys)
                 sfpr = _keylist->value;
 
+            // We only actually reencrypt if the message is 100% safe.
             if (sfpr && decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
                 own_key_is_listed(session, sfpr, &reenc_signer_key_is_own_key);
 
                 bool key_missing = false;
 
-                // Also, see if extra keys are all in the encrypted-to keys; otherwise, we do it again                 
+                // Also, see if extra keys are all in the encrypted-to keys; otherwise, we do it again
                 if (extra) {
                     stringlist_t* curr_key = NULL;
                     for (curr_key = extra; curr_key && curr_key->value; curr_key = curr_key->next) {
@@ -5411,35 +5424,31 @@ static PEP_STATUS _decrypt_message(
                         }
                     }
                 }
-                    
+
+                // Reencrypt if not signed by us, or there was a key missing from us/extra keys or if we keep subjects
+                // unencrypted and they don't match on inner/outer (?)
                 if (key_missing || (!reenc_signer_key_is_own_key) || ((!subjects_match) && session->unencrypted_subject)) {
                     message* reencrypt_msg = NULL;
                     PEP_STATUS reencrypt_status = PEP_CANNOT_REENCRYPT;
-                    char* own_id = NULL;
-                    status = get_default_own_userid(session, &own_id);
-                    if (own_id) {
-                        char* target_own_fpr = seek_good_trusted_private_fpr(session,
-                                                                             own_id,
-                                                                             _keylist);
-                        if (target_own_fpr) {
-                            pEp_identity* target_id = new_identity(NULL, target_own_fpr, 
-                                                                   own_id, NULL);
-                            if (target_id) {
-                                reencrypt_status = encrypt_message_for_self(session, target_id, msg,
-                                                                            extra, &reencrypt_msg, PEP_enc_PGP_MIME,
-                                                                            PEP_encrypt_reencrypt);
-                                if (reencrypt_status != PEP_STATUS_OK)
-                                    reencrypt_status = PEP_CANNOT_REENCRYPT;
-                                
-                                free_identity(target_id);
-                            }
-                            free(target_own_fpr);
-                        }     
-                        free(own_id);
+
+                    if (src->recv_by && !EMPTYSTR(src->recv_by->address)) {
+                        // we've already called myself() on this, so we have a key.
+                        if (!EMPTYSTR(src->recv_by->fpr)) {
+                            reencrypt_status = encrypt_message_for_self(session, src->recv_by, msg,
+                                                                        extra, &reencrypt_msg, PEP_enc_PGP_MIME,
+                                                                        PEP_encrypt_reencrypt);
+                            if (reencrypt_status != PEP_STATUS_OK)
+                                reencrypt_status = PEP_CANNOT_REENCRYPT;
+                        }
                     }
-                    free_stringlist(extra); // This was an input variable for us. Keylist is overwritten above.
-                    
+
+                    // This was the initial contents of the keylist**, which we now own.
+                    // Keylist is overwritten as an output variable above.
+                    free_stringlist(extra);
+
                     if (reencrypt_status != PEP_CANNOT_REENCRYPT && reencrypt_msg) {
+                        // This will reassign pointers and NULL out others and make sure
+                        // reencrypt_msg is safe to free, FYI
                         message_transfer(src, reencrypt_msg);
                         *flags |= PEP_decrypt_flag_src_modified;
                         free_message(reencrypt_msg);
@@ -5447,8 +5456,8 @@ static PEP_STATUS _decrypt_message(
                     else
                         decrypt_status = PEP_CANNOT_REENCRYPT;
                 }
-            }            
-            else if (!has_extra_keys && session->unencrypted_subject) {
+            }
+            else if (!has_extra_keys && session->unencrypted_subject) { // this is just unencrypted subj.
                 free(src->shortmsg);
                 src->shortmsg = strdup(msg->shortmsg);
                 assert(src->shortmsg);
