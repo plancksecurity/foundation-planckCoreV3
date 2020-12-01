@@ -120,6 +120,12 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
     PEP_STATUS mystatus = set_own_key(session, alice, alice_fpr);
     ASSERT_EQ(mystatus, PEP_STATUS_OK);
 
+    mystatus = set_identity_flags(session, alice, PEP_idf_org_ident);
+    ASSERT_EQ(mystatus , PEP_STATUS_OK);
+
+    mystatus = myself(session, alice);
+    ASSERT_EQ(alice->flags, alice->flags & PEP_idf_org_ident);
+
     identity_list* to_list = new_identity_list(bob); // to bob
     message* outgoing_message = new_message(PEP_dir_outgoing);
     ASSERT_NE(outgoing_message, nullptr);
@@ -384,6 +390,13 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity_with_URI) {
 
     PEP_STATUS mystatus = set_own_key(session, alice, alice_fpr);
     ASSERT_EQ(mystatus, PEP_STATUS_OK);
+
+    mystatus = set_identity_flags(session, alice, PEP_idf_org_ident);
+    ASSERT_EQ(mystatus , PEP_STATUS_OK);
+
+    mystatus = myself(session, alice);
+    ASSERT_EQ(alice->flags, alice->flags & PEP_idf_org_ident);
+
 
     identity_list* to_list = new_identity_list(bob); // to bob
     message* outgoing_message = new_message(PEP_dir_outgoing);

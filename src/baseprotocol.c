@@ -1,3 +1,6 @@
+/** @file */
+/** @brief File description for doxygen missing. FIXME */
+
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
@@ -5,11 +8,23 @@
 #include "message_api.h"
 #include "baseprotocol.h"
 
-static const char *_base_type[] = {
-    "application/pEp.sign",
-    "application/pEp.sync",
-    "application/pEp.distribution"
-};
+static PEP_STATUS _get_base_protocol_type_str(base_protocol_type type, const char** type_str) {
+    *type_str = NULL;
+    switch(type) {
+        case BASE_SIGN:
+            *type_str = _BASE_PROTO_MIME_TYPE_SIGN;
+            break;
+        case BASE_SYNC:
+            *type_str = _BASE_PROTO_MIME_TYPE_SYNC;
+            break;
+        case BASE_KEYRESET:
+            *type_str = _BASE_PROTO_MIME_TYPE_DIST;
+            break;
+        default:
+            return PEP_ILLEGAL_VALUE;
+    }
+    return PEP_STATUS_OK;
+}
 
 PEP_STATUS base_decorate_message(
         PEP_SESSION session,
@@ -32,18 +47,27 @@ PEP_STATUS base_decorate_message(
 
     bloblist_t *bl;
 
+    const char* type_str = NULL;
+
     switch (type) {
         case BASE_SYNC:
             bl = bloblist_add(msg->attachments, payload, size,
-                    _base_type[type], "sync.pEp");
+                              _BASE_PROTO_MIME_TYPE_SYNC, "sync.pEp");
             break;
         case BASE_KEYRESET:
             bl = bloblist_add(msg->attachments, payload, size,
-                    _base_type[type], "distribution.pEp");
+                              _BASE_PROTO_MIME_TYPE_DIST, "distribution.pEp");
             break;
         default:
+            status = _get_base_protocol_type_str(type, &type_str);
+            if (status != PEP_STATUS_OK)
+                return status;
+            else if (!type_str)
+                return PEP_UNKNOWN_ERROR;
+
             bl = bloblist_add(msg->attachments, payload, size,
-                    _base_type[type], "ignore_this_attachment.pEp");
+                              type_str, "ignore_this_attachment.pEp");
+            type_str = NULL;
     }
 
     if (bl == NULL)
@@ -61,7 +85,7 @@ PEP_STATUS base_decorate_message(
         assert(sign && sign_size);
 
         bl = bloblist_add(bl, sign, sign_size,
-                _base_type[BASE_SIGN], "electronic_signature.asc");
+                _BASE_PROTO_MIME_TYPE_SIGN, "electronic_signature.asc");
         if (!bl)
             goto enomem;
     }
@@ -162,8 +186,14 @@ PEP_STATUS base_extract_message(
     size_t _sign_size = 0;
     stringlist_t *keylist = NULL;
 
+    const char* type_str = NULL;
+
+    status = _get_base_protocol_type_str(type, &type_str);
+    if (status != PEP_STATUS_OK || !type_str)
+        return status;
+
     for (bloblist_t *bl = msg->attachments; bl ; bl = bl->next) {
-        if (bl->mime_type && strcasecmp(bl->mime_type, _base_type[type]) == 0) {
+        if (bl->mime_type && strcasecmp(bl->mime_type, type_str) == 0) {
             if (!_payload) {
                 _payload = bl->value;
                 _payload_size = bl->size;
@@ -173,7 +203,7 @@ PEP_STATUS base_extract_message(
                 goto the_end;
             }
         }
-        else if (bl->mime_type && strcasecmp(bl->mime_type, _base_type[BASE_SIGN]) == 0) {
+        else if (bl->mime_type && strcasecmp(bl->mime_type, _BASE_PROTO_MIME_TYPE_SIGN) == 0) {
             if (!_sign) {
                 _sign = bl->value;
                 _sign_size = bl->size;

@@ -1,3 +1,6 @@
+/** @file */
+/** @brief File description for doxygen missing. FIXME */
+
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
@@ -28,6 +31,16 @@
 int _pEp_rand_max_bits;
 double _pEp_log2_36;
 
+/**
+ *  @internal
+ *
+ *  <!--       is_a_pEpmessage()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*msg		constmessage
+ *
+ */
 static bool is_a_pEpmessage(const message *msg)
 {
     for (stringpair_list_t *i = msg->opt_fields; i && i->value ; i=i->next) {
@@ -37,6 +50,16 @@ static bool is_a_pEpmessage(const message *msg)
     return false;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       keylist_to_string()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*keylist		conststringlist_t
+ *
+ */
 static char * keylist_to_string(const stringlist_t *keylist)
 {
     if (keylist) {
@@ -65,6 +88,16 @@ static char * keylist_to_string(const stringlist_t *keylist)
     }
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       rating_to_string()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	rating		PEP_rating
+ *
+ */
 static const char * rating_to_string(PEP_rating rating)
 {
     switch (rating) {
@@ -95,7 +128,20 @@ static const char * rating_to_string(PEP_rating rating)
     }
 }
 
-bool _memnmemn(const char* needle, 
+/**
+ *  @internal
+ *
+ *  <!--       _memnmemn()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*needle		constchar
+ *  @param[in]	needle_size		size_t
+ *  @param[in]	*haystack		constchar
+ *  @param[in]	haystack_size		size_t
+ *
+ */
+bool _memnmemn(const char* needle,
                 size_t needle_size,
                 const char* haystack, 
                 size_t haystack_size) 
@@ -153,7 +199,20 @@ void add_opt_field(message *msg, const char *name, const char *value)
     }
 }
 
-void replace_opt_field(message *msg, 
+/**
+ *  @internal
+ *
+ *  <!--       replace_opt_field()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*msg		message
+ *  @param[in]	*name		constchar
+ *  @param[in]	*value		constchar
+ *  @param[in]	clobber		bool
+ *
+ */
+void replace_opt_field(message *msg,
                        const char *name, 
                        const char *value,
                        bool clobber)
@@ -187,6 +246,16 @@ void replace_opt_field(message *msg,
     }
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       sync_message_attached()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*msg		message
+ *
+ */
 static bool sync_message_attached(message *msg)
 {
     if (!(msg && msg->attachments))
@@ -200,6 +269,18 @@ static bool sync_message_attached(message *msg)
     return false;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       set_receiverRating()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*msg		message
+ *  @param[in]	rating		PEP_rating
+ *
+ */
 PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rating)
 {
     if (!(session && msg && rating))
@@ -228,6 +309,18 @@ PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rati
     return base_decorate_message(session, msg, BASE_SYNC, payload, size, msg->recv_by->fpr);
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       get_receiverRating()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*msg		message
+ *  @param[in]	*rating		PEP_rating
+ *
+ */
 PEP_STATUS get_receiverRating(PEP_SESSION session, message *msg, PEP_rating *rating)
 {
     if (!(session && msg && rating))
@@ -293,6 +386,16 @@ void decorate_message(
     }
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       _get_resource_ptr_noown()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*uri		char
+ *
+ */
 static char* _get_resource_ptr_noown(char* uri) {
     char* uri_delim = strstr(uri, "://");
     if (!uri_delim)
@@ -301,6 +404,17 @@ static char* _get_resource_ptr_noown(char* uri) {
         return uri + 3;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       string_equality()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*s1		const char
+ *  @param[in]	*s2		const char
+ *
+ */
 static bool string_equality(const char *s1, const char *s2)
 {
     if (s1 == NULL || s2 == NULL)
@@ -311,6 +425,17 @@ static bool string_equality(const char *s1, const char *s2)
     return strcmp(s1, s2) == 0;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       is_mime_type()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*bl		constbloblist_t
+ *  @param[in]	*mt		constchar
+ *
+ */
 static bool is_mime_type(const bloblist_t *bl, const char *mt)
 {
     assert(mt);
@@ -324,6 +449,17 @@ static bool is_mime_type(const bloblist_t *bl, const char *mt)
 // return true, but if bl->filename is ".pgp" and fe is ".pgp", it will
 // return false. This is desired behaviour.
 //
+/**
+ *  @internal
+ *
+ *  <!--       is_fileending()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*bl		constbloblist_t
+ *  @param[in]	*fe		constchar
+ *
+ */
 static bool is_fileending(const bloblist_t *bl, const char *fe)
 {
     assert(fe);
@@ -344,6 +480,17 @@ static bool is_fileending(const bloblist_t *bl, const char *fe)
     return strcmp(bl->filename + (fn_len - fe_len), fe) == 0;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       encapsulate_message_wrap_info()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*msg_wrap_info		constchar
+ *  @param[in]	*longmsg		constchar
+ *
+ */
 char * encapsulate_message_wrap_info(const char *msg_wrap_info, const char *longmsg)
 {
     assert(msg_wrap_info);
@@ -378,6 +525,17 @@ char * encapsulate_message_wrap_info(const char *msg_wrap_info, const char *long
     return ptext;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       combine_short_and_long()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*shortmsg		constchar
+ *  @param[in]	*longmsg		constchar
+ *
+ */
 static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
 {
     assert(shortmsg);
@@ -427,6 +585,16 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
     return ptext;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       replace_subject()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*msg		message
+ *
+ */
 static PEP_STATUS replace_subject(message* msg) {
     unsigned char pEpstr[] = PEP_SUBJ_STRING;
     if (msg->shortmsg && *(msg->shortmsg) != '\0') {
@@ -451,6 +619,16 @@ static PEP_STATUS replace_subject(message* msg) {
     return PEP_STATUS_OK;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       get_bitmask()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	num_bits		int
+ *
+ */
 unsigned long long get_bitmask(int num_bits) {
     if (num_bits <= 0)
         return 0;
@@ -464,6 +642,17 @@ unsigned long long get_bitmask(int num_bits) {
     return bitmask;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       get_base_36_rep()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	value		unsigned long long
+ *  @param[in]	num_sig_bits		int
+ *
+ */
 static char* get_base_36_rep(unsigned long long value, int num_sig_bits) {
         
     int bufsize = ((int) ceil((double) num_sig_bits / _pEp_log2_36)) + 1;
@@ -489,6 +678,15 @@ static char* get_base_36_rep(unsigned long long value, int num_sig_bits) {
 }
 
 
+/**
+ *  @internal
+ *
+ *  <!--       message_id_prand_part()       -->
+ *
+ *  @brief			TODO
+ *
+ *
+ */
 static char* message_id_prand_part(void) {
     // RAND modulus
     int num_bits = _pEp_rand_max_bits;
@@ -526,6 +724,16 @@ static char* message_id_prand_part(void) {
     return get_base_36_rep(output_value, DESIRED_BITS);
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       generate_message_id()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*msg		message
+ *
+ */
 static PEP_STATUS generate_message_id(message* msg) {
 
     if (!msg || !msg->from || !msg->from->address)
@@ -614,7 +822,21 @@ enomem:
    Does case-insensitive compare of keys, so sending in a lower-cased
    string constant saves a bit of computation
  */
-static PEP_STATUS get_data_from_encapsulated_line(const char* plaintext, const char* key, 
+/**
+ *  @internal
+ *
+ *  <!--       get_data_from_encapsulated_line()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*plaintext		constchar
+ *  @param[in]	*key		constchar
+ *  @param[in]	keylen		constsize_t
+ *  @param[in]	**data		char
+ *  @param[in]	**modified_msg		char
+ *
+ */
+static PEP_STATUS get_data_from_encapsulated_line(const char* plaintext, const char* key,
                                                   const size_t keylen, char** data, 
                                                   char** modified_msg) {
     char* _data = NULL;
@@ -657,6 +879,19 @@ static PEP_STATUS get_data_from_encapsulated_line(const char* plaintext, const c
 }
 
 
+/**
+ *  @internal
+ *
+ *  <!--       separate_short_and_long()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*src		constchar
+ *  @param[in]	**shortmsg		char
+ *  @param[in]	**msg_wrap_info		char
+ *  @param[in]	**longmsg		char
+ *
+ */
 static int separate_short_and_long(const char *src, char **shortmsg, char** msg_wrap_info, char **longmsg)
 {
     char *_shortmsg = NULL;
@@ -724,6 +959,17 @@ enomem:
     return -1;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       copy_fields()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*dst		message
+ *  @param[in]	*src		constmessage
+ *
+ */
 static PEP_STATUS copy_fields(message *dst, const message *src)
 {
     assert(dst);
@@ -841,7 +1087,18 @@ static PEP_STATUS copy_fields(message *dst, const message *src)
 }
 
 // FIXME: error mem leakage
-static message* extract_minimal_envelope(const message* src, 
+/**
+ *  @internal
+ *
+ *  <!--       extract_minimal_envelope()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*src		constmessage
+ *  @param[in]	direct		PEP_msg_direction
+ *
+ */
+static message* extract_minimal_envelope(const message* src,
                                          PEP_msg_direction direct) {
                                                  
     message* envelope = new_message(direct);
@@ -905,6 +1162,16 @@ enomem:
     return NULL;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       clone_to_empty_message()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*src		constmessage
+ *
+ */
 static message * clone_to_empty_message(const message * src)
 {
     PEP_STATUS status;
@@ -932,7 +1199,23 @@ enomem:
     return NULL;
 }
 
-static message* wrap_message_as_attachment(message* envelope, 
+/**
+ *  @internal
+ *
+ *  <!--       wrap_message_as_attachment()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*envelope		message
+ *  @param[in]	*attachment		message
+ *  @param[in]	wrap_type		message_wrap_type
+ *  @param[in]	keep_orig_subject		bool
+ *  @param[in]	*extra_keys		stringlist_t
+ *  @param[in]	max_major		unsignedint
+ *  @param[in]	max_minor		unsignedint
+ *
+ */
+static message* wrap_message_as_attachment(message* envelope,
     message* attachment, message_wrap_type wrap_type, 
     bool keep_orig_subject, stringlist_t* extra_keys,
     unsigned int max_major, unsigned int max_minor) {
@@ -1040,6 +1323,20 @@ enomem:
     return NULL;    
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       encrypt_PGP_inline()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*src		constmessage
+ *  @param[in]	*keys		stringlist_t
+ *  @param[in]	*dst		message
+ *  @param[in]	flags		PEP_encrypt_flags_t
+ *
+ */
 static PEP_STATUS encrypt_PGP_inline(
         PEP_SESSION session,
         const message *src,
@@ -1161,6 +1458,21 @@ static PEP_STATUS encrypt_PGP_inline(
     return PEP_STATUS_OK;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       encrypt_PGP_MIME()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*src		constmessage
+ *  @param[in]	*keys		stringlist_t
+ *  @param[in]	*dst		message
+ *  @param[in]	flags		PEP_encrypt_flags_t
+ *  @param[in]	wrap_type		message_wrap_type
+ *
+ */
 static PEP_STATUS encrypt_PGP_MIME(
     PEP_SESSION session,
     const message *src,
@@ -1269,6 +1581,16 @@ static bool _has_PGP_MIME_format(message* msg) {
 }
 */
 
+/**
+ *  @internal
+ *
+ *  <!--       _rating()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	ct		PEP_comm_type
+ *
+ */
 static inline PEP_rating _rating(PEP_comm_type ct)
 {
     if (ct == PEP_ct_unknown)
@@ -1305,6 +1627,16 @@ DYNAMIC_API PEP_rating rating_from_comm_type(PEP_comm_type ct)
     return _rating(ct);
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       is_encrypted_attachment()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*blob		constbloblist_t
+ *
+ */
 static bool is_encrypted_attachment(const bloblist_t *blob)
 {
     assert(blob);
@@ -1334,6 +1666,16 @@ static bool is_encrypted_attachment(const bloblist_t *blob)
     return false;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       is_encrypted_html_attachment()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*blob		constbloblist_t
+ *
+ */
 static bool is_encrypted_html_attachment(const bloblist_t *blob)
 {
     assert(blob);
@@ -1352,6 +1694,16 @@ static bool is_encrypted_html_attachment(const bloblist_t *blob)
     return false;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       without_double_ending()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*filename		constchar
+ *
+ */
 static char * without_double_ending(const char *filename)
 {
     assert(filename);
@@ -1367,6 +1719,16 @@ static char * without_double_ending(const char *filename)
     return result;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       decrypt_rating()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	status		PEP_STATUS
+ *
+ */
 static PEP_rating decrypt_rating(PEP_STATUS status)
 {
     switch (status) {
@@ -1396,6 +1758,17 @@ static PEP_rating decrypt_rating(PEP_STATUS status)
     }
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       key_rating()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*fpr		constchar
+ *
+ */
 static PEP_rating key_rating(PEP_SESSION session, const char *fpr)
 {
 
@@ -1429,10 +1802,34 @@ static PEP_rating key_rating(PEP_SESSION session, const char *fpr)
     return _rating(resulting_comm_type);
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       worst_rating()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	rating1		PEP_rating
+ *  @param[in]	rating2		PEP_rating
+ *
+ */
 static PEP_rating worst_rating(PEP_rating rating1, PEP_rating rating2) {
     return ((rating1 < rating2) ? rating1 : rating2);
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       keylist_rating()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*keylist		stringlist_t
+ *  @param[in]	*sender_fpr		char
+ *  @param[in]	sender_rating		PEP_rating
+ *
+ */
 static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist, char* sender_fpr, PEP_rating sender_rating)
 {
     PEP_rating rating = sender_rating;
@@ -1466,6 +1863,18 @@ static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist, cha
 // We do not want myself() setting the fpr here.
 //
 // Cannot return passphrase statuses. No keygen or renewal allowed here.
+/**
+ *  @internal
+ *
+ *  <!--       _get_comm_type()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	max_comm_type		PEP_comm_type
+ *  @param[in]	*ident		pEp_identity
+ *
+ */
 static PEP_comm_type _get_comm_type(
     PEP_SESSION session,
     PEP_comm_type max_comm_type,
@@ -1503,6 +1912,18 @@ static PEP_comm_type _get_comm_type(
     }                    
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       _get_comm_type_preview()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	max_comm_type		PEP_comm_type
+ *  @param[in]	*ident		pEp_identity
+ *
+ */
 static PEP_comm_type _get_comm_type_preview(
     PEP_SESSION session,
     PEP_comm_type max_comm_type,
@@ -1552,6 +1973,16 @@ static PEP_comm_type _get_comm_type_preview(
 //     }
 // }
 
+/**
+ *  @internal
+ *
+ *  <!--       is_key()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*bl		constbloblist_t
+ *
+ */
 static bool is_key(const bloblist_t *bl)
 {
     return (// workaround for Apple Mail bugs
@@ -1595,6 +2026,18 @@ static bool is_key(const bloblist_t *bl)
 //     }
 // }
 
+/**
+ *  @internal
+ *
+ *  <!--       compare_first_n_bytes()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*first		constchar
+ *  @param[in]	*second		constchar
+ *  @param[in]	n		size_t
+ *
+ */
 static bool compare_first_n_bytes(const char* first, const char* second, size_t n) {
     size_t i;
     for (i = 0; i < n; i++) {
@@ -1614,6 +2057,20 @@ static bool compare_first_n_bytes(const char* first, const char* second, size_t 
     return true;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       import_attached_keys()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*msg		message
+ *  @param[in]	**private_idents		identity_list
+ *  @param[in]	**imported_key_list		stringlist_t
+ *  @param[in]	*changed_keys		uint64_t
+ *
+ */
 bool import_attached_keys(
         PEP_SESSION session,
         message *msg,
@@ -1730,6 +2187,18 @@ bool import_attached_keys(
 }
 
 
+/**
+ *  @internal
+ *
+ *  <!--       _attach_key()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*fpr		constchar
+ *  @param[in]	*msg		message
+ *
+ */
 PEP_STATUS _attach_key(PEP_SESSION session, const char* fpr, message *msg)
 {
     char *keydata = NULL;
@@ -1813,6 +2282,17 @@ PEP_cryptotech determine_encryption_format(message *msg)
     }
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       _cleanup_src()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*src		message
+ *  @param[in]	remove_attached_key		bool
+ *
+ */
 static void _cleanup_src(message* src, bool remove_attached_key) {
     assert(src);
     
@@ -1844,6 +2324,18 @@ static void _cleanup_src(message* src, bool remove_attached_key) {
     }                   
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       id_list_set_enc_format()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*id_list		identity_list
+ *  @param[in]	enc_format		PEP_enc_format
+ *
+ */
 static PEP_STATUS id_list_set_enc_format(PEP_SESSION session, identity_list* id_list, PEP_enc_format enc_format) {
     PEP_STATUS status = PEP_STATUS_OK;
     identity_list* id_list_curr = id_list;
@@ -1855,6 +2347,17 @@ static PEP_STATUS id_list_set_enc_format(PEP_SESSION session, identity_list* id_
 
 // N.B.
 // depends on update_identity and friends having already been called on list
+/**
+ *  @internal
+ *
+ *  <!--       update_encryption_format()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*id_list		identity_list
+ *  @param[in]	*enc_format		PEP_enc_format
+ *
+ */
 static void update_encryption_format(identity_list* id_list, PEP_enc_format* enc_format) {
     identity_list* id_list_curr;
     for (id_list_curr = id_list; id_list_curr && id_list_curr->ident; id_list_curr = id_list_curr->next) {
@@ -1884,6 +2387,16 @@ DYNAMIC_API PEP_STATUS probe_encrypt(PEP_SESSION session, const char *fpr)
     return status;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       failed_test()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	status		PEP_STATUS
+ *
+ */
 static bool failed_test(PEP_STATUS status)
 {
     if (status == PEP_OUT_OF_MEMORY ||
@@ -1896,6 +2409,25 @@ static bool failed_test(PEP_STATUS status)
 }
 
 // CANNOT return PASSPHRASE errors, as no gen or renew allowed below
+/**
+ *  @internal
+ *
+ *  <!--       _update_state_for_ident_list()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*from_ident		pEp_identity
+ *  @param[in]	*ident_list		identity_list
+ *  @param[in]	**keylist		stringlist_t
+ *  @param[in]	*max_comm_type		PEP_comm_type
+ *  @param[in]	*max_version_major		unsignedint
+ *  @param[in]	*max_version_minor		unsignedint
+ *  @param[in]	*has_pEp_user		bool
+ *  @param[in]	*dest_keys_found		bool
+ *  @param[in]	suppress_update_for_bcc		bool
+ *
+ */
 static PEP_STATUS _update_state_for_ident_list(
         PEP_SESSION session,
         pEp_identity* from_ident,
@@ -2042,6 +2574,13 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
+    // This is only local, the caller will keep the keylist, but we don't want to
+    // allow extra keys for non-org (e.g. business) accounts, so we set it to NULL
+    // locally so as not to use it if it's a non-org account (cheaper than checks
+    // everywhere)
+    if (!(src->from->flags & PEP_idf_org_ident))
+        extra = NULL;
+
     // is a passphrase needed?
     status = probe_encrypt(session, src->from->fpr);
     if (failed_test(status))
@@ -2056,6 +2595,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
     stringlist_t *_k = keys;
 
+    // Will be NULL if this is a private account
     if (extra) {
         _k = stringlist_append(_k, extra);
         if (_k == NULL)
@@ -2542,7 +3082,11 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     else if (!target_id->fpr) {
         return PEP_ILLEGAL_VALUE;
     }
-    
+
+    // Ensure we don't encrypt to extra keys if this is a non-org account
+    if (!(target_id->flags & PEP_idf_org_ident))
+        extra = NULL;
+
     *dst = NULL;
 
     // PEP_STATUS _status = update_identity(session, target_id);
@@ -2680,7 +3224,18 @@ pEp_error:
 // }
 
 
-static PEP_STATUS _get_detached_signature(message* msg, 
+/**
+ *  @internal
+ *
+ *  <!--       _get_detached_signature()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*msg		message
+ *  @param[in]	**signature_blob		bloblist_t
+ *
+ */
+static PEP_STATUS _get_detached_signature(message* msg,
                                           bloblist_t** signature_blob) {
     bloblist_t* attach_curr = msg->attachments;
 
@@ -2698,6 +3253,19 @@ static PEP_STATUS _get_detached_signature(message* msg,
     return PEP_STATUS_OK;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       _get_signed_text()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*ptext		constchar
+ *  @param[in]	psize		constsize_t
+ *  @param[in]	**stext		char
+ *  @param[in]	*ssize		size_t
+ *
+ */
 static PEP_STATUS _get_signed_text(const char* ptext, const size_t psize,
                                    char** stext, size_t* ssize) {
 
@@ -2773,7 +3341,20 @@ static PEP_STATUS _get_signed_text(const char* ptext, const size_t psize,
     return PEP_STATUS_OK;
 }
 
-static PEP_STATUS combine_keylists(PEP_SESSION session, stringlist_t** verify_in, 
+/**
+ *  @internal
+ *
+ *  <!--       combine_keylists()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	**verify_in		stringlist_t
+ *  @param[in]	**keylist_in_out		stringlist_t
+ *  @param[in]	*from		pEp_identity
+ *
+ */
+static PEP_STATUS combine_keylists(PEP_SESSION session, stringlist_t** verify_in,
                                    stringlist_t** keylist_in_out, 
                                    pEp_identity* from) {
     
@@ -2852,6 +3433,19 @@ free:
     return status;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       amend_rating_according_to_sender_and_recipients()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*rating		PEP_rating
+ *  @param[in]	*sender		pEp_identity
+ *  @param[in]	*recipients		stringlist_t
+ *
+ */
 static PEP_STATUS amend_rating_according_to_sender_and_recipients(
        PEP_SESSION session,
        PEP_rating *rating,
@@ -2896,6 +3490,16 @@ static PEP_STATUS amend_rating_according_to_sender_and_recipients(
 }
 
 // FIXME: Do we need to remove the attachment? I think we do...
+/**
+ *  @internal
+ *
+ *  <!--       pull_up_attached_main_msg()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*src		message
+ *
+ */
 static bool pull_up_attached_main_msg(message* src) {
     char* slong = src->longmsg;
     char* sform = src->longmsg_formatted;
@@ -2930,6 +3534,18 @@ static bool pull_up_attached_main_msg(message* src) {
 
 
 
+/**
+ *  @internal
+ *
+ *  <!--       unencapsulate_hidden_fields()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*src		message
+ *  @param[in]	*msg		message
+ *  @param[in]	**msg_wrap_info		char
+ *
+ */
 static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg,
                                               char** msg_wrap_info) {
     if (!src)
@@ -3022,6 +3638,18 @@ static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg,
 
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       get_crypto_text()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*src		message
+ *  @param[in]	**crypto_text		char
+ *  @param[in]	*text_size		size_t
+ *
+ */
 static PEP_STATUS get_crypto_text(message* src, char** crypto_text, size_t* text_size) {
                 
     // this is only here because of how NOT_IMPLEMENTED works            
@@ -3070,6 +3698,23 @@ static PEP_STATUS get_crypto_text(message* src, char** crypto_text, size_t* text
 }
 
 
+/**
+ *  @internal
+ *
+ *  <!--       verify_decrypted()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*src		message
+ *  @param[in]	*msg		message
+ *  @param[in]	*plaintext		char
+ *  @param[in]	plaintext_size		size_t
+ *  @param[in]	**keylist		stringlist_t
+ *  @param[in]	*decrypt_status		PEP_STATUS
+ *  @param[in]	crypto		PEP_cryptotech
+ *
+ */
 static PEP_STATUS verify_decrypted(PEP_SESSION session,
                                    message* src,
                                    message* msg, 
@@ -3137,7 +3782,21 @@ static PEP_STATUS verify_decrypted(PEP_SESSION session,
     return PEP_STATUS_OK;
 }
 
-static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session, 
+/**
+ *  @internal
+ *
+ *  <!--       _decrypt_in_pieces()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*src		message
+ *  @param[in]	**msg_ptr		message
+ *  @param[in]	*ptext		char
+ *  @param[in]	psize		size_t
+ *
+ */
+static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
                                      message* src, 
                                      message** msg_ptr, 
                                      char* ptext,
@@ -3284,6 +3943,22 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
 }
 
 // This is misleading - this imports ALL the keys!
+/**
+ *  @internal
+ *
+ *  <!--       import_keys_from_decrypted_msg()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*msg		message
+ *  @param[in]	*keys_were_imported		bool
+ *  @param[in]	*imported_private		bool
+ *  @param[in]	**private_il		identity_list
+ *  @param[in]	**keylist		stringlist_t
+ *  @param[in]	*changed_keys		uint64_t
+ *
+ */
 static PEP_STATUS import_keys_from_decrypted_msg(PEP_SESSION session,
                                                       message* msg,
                                                       bool* keys_were_imported,
@@ -3349,6 +4024,19 @@ static PEP_STATUS import_keys_from_decrypted_msg(PEP_SESSION session,
 }
 
 // ident is in_only and should have been updated
+/**
+ *  @internal
+ *
+ *  <!--       pEp_version_upgrade_or_ignore()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*ident		pEp_identity
+ *  @param[in]	major		unsignedint
+ *  @param[in]	minor		unsignedint
+ *
+ */
 static PEP_STATUS pEp_version_upgrade_or_ignore(
         PEP_SESSION session,
         pEp_identity* ident,
@@ -3364,6 +4052,20 @@ static PEP_STATUS pEp_version_upgrade_or_ignore(
 }
 
 // FIXME: myself ??????
+/**
+ *  @internal
+ *
+ *  <!--       update_sender_to_pEp_trust()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*sender		pEp_identity
+ *  @param[in]	*keylist		stringlist_t
+ *  @param[in]	major		unsignedint
+ *  @param[in]	minor		unsignedint
+ *
+ */
 static PEP_STATUS update_sender_to_pEp_trust(
         PEP_SESSION session, 
         pEp_identity* sender, 
@@ -3433,6 +4135,17 @@ static PEP_STATUS update_sender_to_pEp_trust(
     return status;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       reconcile_identity()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*srcid		pEp_identity
+ *  @param[in]	*resultid		pEp_identity
+ *
+ */
 static PEP_STATUS reconcile_identity(pEp_identity* srcid,
                                      pEp_identity* resultid) {
     assert(srcid);
@@ -3458,6 +4171,17 @@ static PEP_STATUS reconcile_identity(pEp_identity* srcid,
     return PEP_STATUS_OK;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       reconcile_identity_lists()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*src_ids		identity_list
+ *  @param[in]	*result_ids		identity_list
+ *
+ */
 static PEP_STATUS reconcile_identity_lists(identity_list* src_ids,
                                            identity_list* result_ids) {
                                            
@@ -3487,6 +4211,17 @@ static PEP_STATUS reconcile_identity_lists(identity_list* src_ids,
     return status;    
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       reconcile_sent_and_recv_info()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*src		message
+ *  @param[in]	*inner_message		message
+ *
+ */
 static PEP_STATUS reconcile_sent_and_recv_info(message* src, message* inner_message) {
     if (!src || !inner_message)
         return PEP_ILLEGAL_VALUE;
@@ -3500,7 +4235,18 @@ static PEP_STATUS reconcile_sent_and_recv_info(message* src, message* inner_mess
     return PEP_STATUS_OK;
 }
 
-static PEP_STATUS reconcile_src_and_inner_messages(message* src, 
+/**
+ *  @internal
+ *
+ *  <!--       reconcile_src_and_inner_messages()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*src		message
+ *  @param[in]	*inner_message		message
+ *
+ */
+static PEP_STATUS reconcile_src_and_inner_messages(message* src,
                                              message* inner_message) {
 
     PEP_STATUS status = PEP_STATUS_OK;
@@ -3527,7 +4273,19 @@ static PEP_STATUS reconcile_src_and_inner_messages(message* src,
     // FIXME - are there any flags or anything else we need to be sure are carried?
 }
 
-static bool is_trusted_own_priv_fpr(PEP_SESSION session, 
+/**
+ *  @internal
+ *
+ *  <!--       is_trusted_own_priv_fpr()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*own_id		constchar
+ *  @param[in]	*fpr		constchar
+ *
+ */
+static bool is_trusted_own_priv_fpr(PEP_SESSION session,
                        const char* own_id, 
                        const char* fpr
     ) 
@@ -3551,6 +4309,17 @@ static bool is_trusted_own_priv_fpr(PEP_SESSION session,
     return retval;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       reject_fpr()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*fpr		constchar
+ *
+ */
 static bool reject_fpr(PEP_SESSION session, const char* fpr) {
     bool reject = true;
 
@@ -3569,7 +4338,19 @@ static bool reject_fpr(PEP_SESSION session, const char* fpr) {
     return reject;
 }
 
-static char* seek_good_trusted_private_fpr(PEP_SESSION session, char* own_id, 
+/**
+ *  @internal
+ *
+ *  <!--       seek_good_trusted_private_fpr()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*own_id		char
+ *  @param[in]	*keylist		stringlist_t
+ *
+ */
+static char* seek_good_trusted_private_fpr(PEP_SESSION session, char* own_id,
                                            stringlist_t* keylist) {
     if (!own_id || !keylist)
         return NULL;
@@ -3605,6 +4386,19 @@ static char* seek_good_trusted_private_fpr(PEP_SESSION session, char* own_id,
     return NULL;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       import_header_keys()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*src		message
+ *  @param[in]	**imported_key_list		stringlist_t
+ *  @param[in]	*changed_keys		uint64_t
+ *
+ */
 static bool import_header_keys(PEP_SESSION session, message* src, stringlist_t** imported_key_list, uint64_t* changed_keys) {
     stringpair_list_t* header_keys = stringpair_list_find(src->opt_fields, "Autocrypt"); 
     if (!header_keys || !header_keys->value)
@@ -3632,6 +4426,18 @@ static bool import_header_keys(PEP_SESSION session, message* src, stringlist_t**
     return false;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       check_for_own_revoked_key()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*keylist		stringlist_t
+ *  @param[in]	**revoked_fpr_pairs		stringpair_list_t
+ *
+ */
 PEP_STATUS check_for_own_revoked_key(
         PEP_SESSION session, 
         stringlist_t* keylist,
@@ -3675,14 +4481,14 @@ PEP_STATUS check_for_own_revoked_key(
                 // Ok, we know it's a revoked key. Now see if it was "ours" by checking
                 // to see if we have an entry for it with our user id, since we already clearly
                 // know its replacement
-                
+
                 status = get_default_own_userid(session, &default_own_userid);
-            
+
                 if (status == PEP_STATUS_OK && !EMPTYSTR(default_own_userid)) {
                     placeholder_ident = new_identity(NULL, recip_fpr, default_own_userid, NULL);
                     if (!placeholder_ident)
                         status = PEP_OUT_OF_MEMORY;
-                    else    
+                    else
                         status = get_trust(session, placeholder_ident);
 
                     if (status == PEP_STATUS_OK) {
@@ -3690,7 +4496,7 @@ PEP_STATUS check_for_own_revoked_key(
                         status = find_private_keys(session, recip_fpr, &keylist);
                         if (status == PEP_STATUS_OK) {
                             if (keylist && !EMPTYSTR(keylist->value))
-                                own_key = true;            
+                                own_key = true;
                         }
                         free_stringlist(keylist);
                     }
@@ -3729,6 +4535,16 @@ pEp_free:
 
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       _have_extrakeys()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*keylist		stringlist_t
+ *
+ */
 static bool _have_extrakeys(stringlist_t *keylist)
 {
     return keylist
@@ -3739,7 +4555,19 @@ static bool _have_extrakeys(stringlist_t *keylist)
 // practically speaking, only useful to get user_id/address intersection
 // we presume no dups in the first list if you're looking for
 // a unique result.
-static PEP_STATUS ident_list_intersect(identity_list* list_a, 
+/**
+ *  @internal
+ *
+ *  <!--       ident_list_intersect()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*list_a		identity_list
+ *  @param[in]	*list_b		identity_list
+ *  @param[in]	**intersection		identity_list
+ *
+ */
+static PEP_STATUS ident_list_intersect(identity_list* list_a,
                                        identity_list* list_b,
                                        identity_list** intersection) {
 
@@ -4579,12 +5407,13 @@ static PEP_STATUS _decrypt_message(
             if (has_extra_keys)
                 sfpr = _keylist->value;
 
+            // We only actually reencrypt if the message is 100% safe.
             if (sfpr && decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
                 own_key_is_listed(session, sfpr, &reenc_signer_key_is_own_key);
 
                 bool key_missing = false;
 
-                // Also, see if extra keys are all in the encrypted-to keys; otherwise, we do it again                 
+                // Also, see if extra keys are all in the encrypted-to keys; otherwise, we do it again
                 if (extra) {
                     stringlist_t* curr_key = NULL;
                     for (curr_key = extra; curr_key && curr_key->value; curr_key = curr_key->next) {
@@ -4595,35 +5424,31 @@ static PEP_STATUS _decrypt_message(
                         }
                     }
                 }
-                    
+
+                // Reencrypt if not signed by us, or there was a key missing from us/extra keys or if we keep subjects
+                // unencrypted and they don't match on inner/outer (?)
                 if (key_missing || (!reenc_signer_key_is_own_key) || ((!subjects_match) && session->unencrypted_subject)) {
                     message* reencrypt_msg = NULL;
                     PEP_STATUS reencrypt_status = PEP_CANNOT_REENCRYPT;
-                    char* own_id = NULL;
-                    status = get_default_own_userid(session, &own_id);
-                    if (own_id) {
-                        char* target_own_fpr = seek_good_trusted_private_fpr(session,
-                                                                             own_id,
-                                                                             _keylist);
-                        if (target_own_fpr) {
-                            pEp_identity* target_id = new_identity(NULL, target_own_fpr, 
-                                                                   own_id, NULL);
-                            if (target_id) {
-                                reencrypt_status = encrypt_message_for_self(session, target_id, msg,
-                                                                            extra, &reencrypt_msg, PEP_enc_PGP_MIME,
-                                                                            PEP_encrypt_reencrypt);
-                                if (reencrypt_status != PEP_STATUS_OK)
-                                    reencrypt_status = PEP_CANNOT_REENCRYPT;
-                                
-                                free_identity(target_id);
-                            }
-                            free(target_own_fpr);
-                        }     
-                        free(own_id);
+
+                    if (src->recv_by && !EMPTYSTR(src->recv_by->address)) {
+                        // we've already called myself() on this, so we have a key.
+                        if (!EMPTYSTR(src->recv_by->fpr)) {
+                            reencrypt_status = encrypt_message_for_self(session, src->recv_by, msg,
+                                                                        extra, &reencrypt_msg, PEP_enc_PGP_MIME,
+                                                                        PEP_encrypt_reencrypt);
+                            if (reencrypt_status != PEP_STATUS_OK)
+                                reencrypt_status = PEP_CANNOT_REENCRYPT;
+                        }
                     }
-                    free_stringlist(extra); // This was an input variable for us. Keylist is overwritten above.
-                    
+
+                    // This was the initial contents of the keylist**, which we now own.
+                    // Keylist is overwritten as an output variable above.
+                    free_stringlist(extra);
+
                     if (reencrypt_status != PEP_CANNOT_REENCRYPT && reencrypt_msg) {
+                        // This will reassign pointers and NULL out others and make sure
+                        // reencrypt_msg is safe to free, FYI
                         message_transfer(src, reencrypt_msg);
                         *flags |= PEP_decrypt_flag_src_modified;
                         free_message(reencrypt_msg);
@@ -4631,8 +5456,8 @@ static PEP_STATUS _decrypt_message(
                     else
                         decrypt_status = PEP_CANNOT_REENCRYPT;
                 }
-            }            
-            else if (!has_extra_keys && session->unencrypted_subject) {
+            }
+            else if (!has_extra_keys && session->unencrypted_subject) { // this is just unencrypted subj.
                 free(src->shortmsg);
                 src->shortmsg = strdup(msg->shortmsg);
                 assert(src->shortmsg);
@@ -4825,6 +5650,19 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
 // we were unable to get key information for anyone in the list,
 // likely because a key is missing.
 // Cannot propagate PASSPHRASE errors.
+/**
+ *  @internal
+ *
+ *  <!--       _max_comm_type_from_identity_list()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*identities		identity_list
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*max_comm_type		PEP_comm_type
+ *  @param[in]	*comm_type_determined		bool
+ *
+ */
 static void _max_comm_type_from_identity_list(
         identity_list *identities,
         PEP_SESSION session,
@@ -4875,6 +5713,18 @@ static void _max_comm_type_from_identity_list(
     }
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       _max_comm_type_from_identity_list_preview()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*identities		identity_list
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*max_comm_type		PEP_comm_type
+ *
+ */
 static void _max_comm_type_from_identity_list_preview(
         identity_list *identities,
         PEP_SESSION session,
@@ -5065,6 +5915,16 @@ DYNAMIC_API PEP_color color_from_rating(PEP_rating rating)
 }
 
 /* [0-9]: 0x30 - 0x39; [A-F] = 0x41 - 0x46; [a-f] = 0x61 - 0x66 */
+/**
+ *  @internal
+ *
+ *  <!--       asciihex_to_num()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	a		char
+ *
+ */
 static short asciihex_to_num(char a) {
     short conv_num = -1;
     if (a >= 0x30 && a <= 0x39)
@@ -5078,6 +5938,16 @@ static short asciihex_to_num(char a) {
     return conv_num;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       num_to_asciihex()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	h		short
+ *
+ */
 static char num_to_asciihex(short h) {
     if (h < 0 || h > 16)
         return '\0';
@@ -5086,6 +5956,17 @@ static char num_to_asciihex(short h) {
     return (char)((h - 10) + 0x41); // for readability
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       xor_hex_chars()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	a		char
+ *  @param[in]	b		char
+ *
+ */
 static char xor_hex_chars(char a, char b) {
     short a_num = asciihex_to_num(a);
     short b_num = asciihex_to_num(b);
@@ -5095,6 +5976,17 @@ static char xor_hex_chars(char a, char b) {
     return num_to_asciihex(xor_num);
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       skip_separators()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*current		constchar
+ *  @param[in]	*begin		constchar
+ *
+ */
 static const char* skip_separators(const char* current, const char* begin) {
     while (current >= begin) {
         /* .:,;-_ ' ' - [2c-2e] [3a-3b] [20] [5f] */
@@ -5117,6 +6009,16 @@ static const char* skip_separators(const char* current, const char* begin) {
     return current;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       check_for_zero_fpr()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*fpr		char
+ *
+ */
 PEP_STATUS check_for_zero_fpr(char* fpr) {
     PEP_STATUS status = PEP_TRUSTWORDS_DUPLICATE_FPR;
     
@@ -5147,6 +6049,18 @@ DYNAMIC_API PEP_STATUS get_trustwords(
             wsize, full);
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       remove_separators()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*str1		const char
+ *  @param[in]	*str2		char
+ *  @param[in]	str1len		int
+ *
+ */
 static void remove_separators(const char* str1, char* str2, int str1len) {
     int i = 0;
     char* curr_write = str2;
@@ -5399,6 +6313,16 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
     return status;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       string_to_rating()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*rating		constchar
+ *
+ */
 static PEP_rating string_to_rating(const char * rating)
 {
     if (rating == NULL)
@@ -5430,6 +6354,17 @@ static PEP_rating string_to_rating(const char * rating)
     return PEP_rating_undefined;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       string_to_keylist()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*skeylist		constchar
+ *  @param[in]	**keylist		stringlist_t
+ *
+ */
 static PEP_STATUS string_to_keylist(const char * skeylist, stringlist_t **keylist)
 {
     if (skeylist == NULL || keylist == NULL)

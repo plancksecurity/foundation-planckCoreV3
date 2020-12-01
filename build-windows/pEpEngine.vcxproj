@@ -87,8 +87,6 @@
     </Link>
     <PreBuildEvent>
       <Command>cargo build --manifest-path="$(SolutionDir)sequoia\Cargo.toml" -p sequoia-openpgp-ffi</Command>
-      <Message>
-      </Message>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>xcopy "$(SolutionDir)sequoia\target\debug\sequoia_openpgp_ffi.dll" "$(TargetDir)" /Y</Command>
@@ -121,8 +119,6 @@
     </Link>
     <PreBuildEvent>
       <Command>cargo build --manifest-path="$(SolutionDir)sequoia\Cargo.toml" --release -p sequoia-openpgp-ffi</Command>
-      <Message>
-      </Message>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>xcopy "$(SolutionDir)sequoia\target\release\sequoia_openpgp_ffi.dll" "$(TargetDir)" /Y</Command>

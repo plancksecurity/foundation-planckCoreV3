@@ -22,8 +22,13 @@ template "/" {
 template "protocol", mode=header
     document "generated/{@name}_func.h", "text"
 ||
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file        «@name»_func.h
+ * @brief       State storage and retrieval, and associated «@name» message generation and processing, for the «@name» protocol.
+ * @generated   from ../sync/gen_message_func.ysl2
+ *
+ * @license     GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #pragma once
 
@@ -36,52 +41,132 @@ extern "C" {
 #include "../asn.1/«@name».h"
 `` for "func:distinctType(fsm/message/field[not(func:basicType())])" | #include "../asn.1/«@type».h"
 
-// state
-
+/**
+ * State information and associated stored data for all «@name» state machines
+ */
 struct «@name»_state_s {
-    // own state
 
+    /**
+     * @struct «@name»_state_s::own_«@name»_state_s
+     * @brief Own state storage.
+     */
     struct own_«@name»_state_s {
-        stringlist_t *keys;
-        stringlist_t *backup;
-        identity_list *identities;
-        `` for "fsm/message[@ratelimit>0]" |>> time_t last_«../@name»_«@name»;
+        stringlist_t *keys; 				//!< own keys
+        stringlist_t *backup; 				//!< ????
+        identity_list *identities; 			//!< own identities
+        `` for "fsm/message[@ratelimit>0]" |>> time_t last_«../@name»_«@name»; 				//!< Timestamp of last «../@name» «@name» message accepted
 
         // TIDs we're using ourselves
-        `` for "func:distinctName(fsm/message/field[@type='TID'])" |>> «func:ctype()» «@name»;
-    } own;
+        `` for "func:distinctName(fsm/message/field[@type='TID'])" |>> «func:ctype()» «@name»;				//!< own «@name» TID
+    } own; /*!< Own state storage */
 
-    // state we learned about our communication partner
-
+    /**
+     * @struct «@name»_state_s::comm_partner_state_s
+     * @brief State acquired from our communications partner
+     */
     struct comm_partner_state_s {
         // transport data we expect
-        char *sender_fpr;
-        pEp_identity *identity;
+        char *sender_fpr; 					//!< sender fpr for comm partner that we expect all sender messages to be signed by
+        pEp_identity *identity;				//!< comm partner identity
 
         // TIDs our comm partner wants to have
-        `` for "func:distinctName(fsm/message/field[@type='TID'])" |>> «func:ctype()» «@name»;
-    } comm_partner;
+        `` for "func:distinctName(fsm/message/field[@type='TID'])" |>> «func:ctype()» «@name»;          //!< sender's «@name» TID
+    } comm_partner; /*!< Received comm partner state storage */
 
-    // input buffer for actual transport data coming in
-
+    /**
+     * @struct «@name»_state_s::transport_data_s
+     * @brief Input buffer for actual transport data coming in
+     */
     struct transport_data_s {
         // transport data we got
-        pEp_identity *from;
-        char *sender_fpr;
-    } transport;
+        pEp_identity *from;             //!< identity of the sender of incoming transport data
+        char *sender_fpr;               //!< sender fpr for sender of incoming transport data
+    } transport; /*!< transport input buffer */
+
     `` apply "fsm", mode=state
 };
 
+/**
+ *  <!--         free_«@name»_state()       -->
+ *
+ *  @brief       free and reset all «@name» state associated with this session
+ *
+ *  @param[in]   session          the session
+ *
+ */
 void free_«@name»_state(PEP_SESSION session);
 
 // functions for protocol «@name»
 
+/**
+ *  <!--         new_«@name»_message()       -->
+ *
+ *  @brief       Generate new «@name»_t message structure of the given message type
+ *               for the input finite state machine type
+ *
+ *  @param[in]   fsm              current state machine type (??)
+ *  @param[in]   message_type     the type of «@name» message struct to be created (with empty data)
+ *
+ *  @return      message          the message struct desired
+ *  @return      NULL             if the message_type is unknown
+ *
+ *  @TODO           This description comes entirely from code inspection, but is probably
+ *                  better optimised by the author. Caveat lector - I may have gotten it wrong.
+ */
 «@name»_t *new_«@name»_message(«@name»_PR fsm, int message_type);
+
+/**
+ *  <!--         free_«@name»_message()       -->
+ *
+ *  @brief       free a/an «@name»_t asn.1 message struct
+ *
+ *  @param[in]   msg              the «@name»_t message struct to free
+ *
+ *  @TODO           This description comes entirely from code inspection, but is probably
+ *                  better optimised by the author. Caveat lector - I may have gotten it wrong.
+ */
 void free_«@name»_message(«@name»_t *msg);
 
+/**
+ *  <!--            update_«@name»_state()       -->
+ *
+ *  @brief          Given a/an «@name» message and its corresponding finite state machine,
+ *                  update the session's state for its «@name» state machine given the information
+ *                  decoded from the message.
+ *
+ *  This function takes a «@name» message and, depending on the type of «@name» message it is,
+ *  (determined during parsing), copies the relevant data from the message struct into the
+ *  corresponding session state structures as a utf8 string.
+ *
+ *  @param[in]      session         session associated with the «@name» finite state machine
+ *  @param[in]      msg             the message struct containing «@name» data (asn.1 - XER?)
+ *  @param[out]     fsm             present finite state machine type indicated by the message
+ *  @param[out]     message_type    the type of the message that was sent in
+ *
+ *  @retval         status
+ *
+ *  @TODO           This description comes entirely from code inspection, but is probably
+ *                  better optimised by the author. Caveat lector - I may have gotten it wrong.
+ *
+ */
 PEP_STATUS update_«@name»_state(PEP_SESSION session, «@name»_t *msg,
         «@name»_PR *fsm, int *message_type);
 
+/**
+ *  <!--            update_«@name»_message()       -->
+ *
+ *  @brief          Given a «@name»_t message struct, fill in the relevant data for that message type and
+ *                  the state machine type indicated in the message from the current information contained
+ *                  in the session according to the message type indicated on the message struct
+ *
+ *  @param[in]      session         the session from which to take the «@name» data
+ *  @param[in]      msg             the «@name»_t message structure
+ *
+ *  @retval         status
+ *
+ *  @TODO           This description comes entirely from code inspection, but is probably
+ *                  better optimised by the author. Caveat lector - I may have gotten it wrong.
+ */
 PEP_STATUS update_«@name»_message(PEP_SESSION session, «@name»_t *msg);
 
 #ifdef __cplusplus
@@ -93,20 +178,31 @@ PEP_STATUS update_«@name»_message(PEP_SESSION session, «@name»_t *msg);
 template "fsm", mode=state
 ||
 
-// input/output buffer for «@name» messages
+/**
+* @struct «../@name»::_«@name»_state_s
+* @brief Input/output buffer for «@name» messages
+*
+* @note Can't find a good way to generate documentation for the fields here.
+*/
 
 struct _«@name»_state_s {
-    int state;
+    int state;                      //!< current «@name» state
 
     `` for "func:distinctName(message/field)" |> «func:ctype()» «@name»;
-} «yml:lcase(@name)»;
+} «yml:lcase(@name)»; /*!< «@name» message Input/output buffer */
 ||
 
 template "protocol", mode=impl
     document "generated/{@name}_func.c", "text" {
 ||
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file        «@name»_func.c
+ * @brief       Implementation of tate storage and retrieval, and associated «@name» message
+ *              generation and processing, for the «@name» protocol.
+ * @generated   from ../sync/gen_message_func.ysl2
+ *
+ * @license     GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #include <assert.h>
 #include <stdlib.h>
