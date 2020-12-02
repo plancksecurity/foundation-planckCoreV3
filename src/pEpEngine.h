@@ -1857,7 +1857,7 @@ DYNAMIC_API const char *per_machine_directory(void);
  *  
  *  
  *  @param[in]     session      session handle
- *  @param[in]     passphrase   string between 1 and 1024 bytes long     
+ *  @param[in]     passphrase
  *  
  *  @retval        PEP_STATUS_OK      
  *  @retval        PEP_ILLEGAL_VALUE    illegal parameter value
@@ -1897,8 +1897,8 @@ DYNAMIC_API PEP_STATUS config_passphrase(PEP_SESSION session, const char *passph
  * change after this is configured.
  *
  *  @param[in]     session      session handle
- *  @param[in]     enable       boolean flag if enabled or disabled     
- *  @param[in]     passphrase   string between 1 and 1024 bytes long     
+ *  @param[in]     enable     
+ *  @param[in]     passphrase
  *  
  *  @retval        PEP_STATUS_OK      
  *  @retval        PEP_ILLEGAL_VALUE    illegal parameter value

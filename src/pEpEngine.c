@@ -595,7 +595,7 @@ static int user_version(void *_version, int count, char **text, char **name)
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session	        session handle	
  *  @param[in]	*table_name		constchar
  *
  */
@@ -650,7 +650,7 @@ static int db_contains_table(PEP_SESSION session, const char* table_name) {
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session	        session handle	
  *  @param[in]	*table_name		constchar
  *  @param[in]	*col_name		constchar
  *
@@ -712,7 +712,7 @@ static int table_contains_column(PEP_SESSION session, const char* table_name,
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session	    session handle	
  *
  */
 #define _PEP_MAX_AFFECTED 5
@@ -916,7 +916,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg){
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session	    session handle	
  *
  */
 static PEP_STATUS upgrade_revoc_contact_to_13(PEP_SESSION session) {
@@ -3601,9 +3601,13 @@ PEP_STATUS get_identities_by_address(
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session	        session handle	
  *  @param[in]	*identity		pEp_identity
- *  @param[in]	*exists		bool
+ *  @param[in]	*exists		    bool
+ *
+ *  @retval     PEP_STATUS_OK
+ *  @retval     PEP_ILLEGAL_VALUE       illegal parameter value 
+ *  @retval     PEP_UNKNOWN_DB_ERROR
  *
  */
 PEP_STATUS exists_identity_entry(PEP_SESSION session, pEp_identity* identity,
@@ -3714,9 +3718,13 @@ PEP_STATUS clear_trust_info(PEP_SESSION session,
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*identity		pEp_identity
+ *  @param[in]	session	            session handle	
+ *  @param[in]	*identity		    pEp_identity
  *  @param[in]	*set_or_update		sqlite3_stmt
+ *
+ *  @retval     PEP_STATUS_OK     
+ *  @retval     PEP_CANNOT_SET_TRUST          
+ *  @retval     PEP_ILLEGAL_VALUE       illegal parameter value
  *
  */
 static PEP_STATUS _set_or_update_trust(PEP_SESSION session,
@@ -3754,9 +3762,13 @@ static PEP_STATUS _set_or_update_trust(PEP_SESSION session,
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*identity		pEp_identity
+ *  @param[in]	session	            session handle	
+ *  @param[in]	*identity		    pEp_identity
  *  @param[in]	*set_or_update		sqlite3_stmt
+ *
+ *  @retval     PEP_STATUS_OK 
+ *  @retval     PEP_CANNOT_SET_IDENTITY
+ *  @retval     PEP_ILLEGAL_VALUE           illegal parameter value
  *
  */
 static PEP_STATUS _set_or_update_identity_entry(PEP_SESSION session,
@@ -3793,9 +3805,13 @@ static PEP_STATUS _set_or_update_identity_entry(PEP_SESSION session,
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*identity		pEp_identity
+ *  @param[in]	session             session handle		
+ *  @param[in]	*identity		    pEp_identity
  *  @param[in]	*set_or_update		sqlite3_stmt
+ *
+ *  @retval     PEP_STATUS_OK 
+ *  @retval     PEP_CANNOT_SET_IDENTITY
+ *  @retval     PEP_CANNOT_SET_PERSON
  *
  */
 static PEP_STATUS _set_or_update_person(PEP_SESSION session,
@@ -3864,8 +3880,8 @@ PEP_STATUS set_or_update_with_identity(PEP_SESSION session,
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*identity		pEp_identity
+ *  @param[in]	session	                session handle	
+ *  @param[in]	*identity		        pEp_identity
  *  @param[in]	guard_transaction		bool
  *
  */
@@ -3909,8 +3925,8 @@ PEP_STATUS set_person(PEP_SESSION session, pEp_identity* identity,
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*identity		pEp_identity
+ *  @param[in]	session	                session handle	
+ *  @param[in]	*identity		        pEp_identity
  *  @param[in]	guard_transaction		bool
  *
  */
@@ -4009,8 +4025,11 @@ pEp_free:
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session	    session handle	
  *  @param[in]	*user		pEp_identity
+ *
+ *  @retval     PEP_ILLEGAL_VALUE       illegal parameter value
+ *  @retval     PEP_CANNOT_SET_TRUST
  *
  */
 PEP_STATUS update_pEp_user_trust_vals(PEP_SESSION session,
@@ -4164,8 +4183,12 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity,
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session	        session handle	
  *  @param[in]	*user_id		constchar
+ *
+ *  @retval     PEP_STATUS_OK
+ *  @retval     PEP_ILLEGAL_VALUE       illegal parameter value
+ *  @retval     PEP_UNKNOWN_ERROR
  *
  */
 PEP_STATUS delete_person(PEP_SESSION session, const char* user_id) {
@@ -4526,8 +4549,8 @@ DYNAMIC_API PEP_STATUS set_ident_enc_format(
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*user_id		constchar
+ *  @param[in]	session	            session handle	
+ *  @param[in]	*user_id		    constchar
  *  @param[in]	**trust_list		labeled_int_list_t
  *  
  *  @retval     PEP_ILLEGAL_VALUE   illegal parameter value
@@ -4611,9 +4634,12 @@ PEP_comm_type reconcile_trust(PEP_comm_type t_old, PEP_comm_type t_new) {
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session	        session handle	
  *  @param[in]	*old_uid		constchar
  *  @param[in]	*new_uid		constchar
+ *
+ *  @retval     PEP_STATUS_OK
+ *  @retval     PEP_OUT_OF_MEMORY   out of memory
  *
  */
 PEP_STATUS reconcile_pEp_status(PEP_SESSION session, const char* old_uid,
@@ -4649,6 +4675,7 @@ pEp_free:
  *  @param[in]	*new_name		constchar
  *  @param[in]	*address		constchar
  *
+ *
  */
 const char* reconcile_usernames(const char* old_name, const char* new_name,
                                 const char* address) {
@@ -4672,9 +4699,12 @@ const char* reconcile_usernames(const char* old_name, const char* new_name,
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session	        session handle	
  *  @param[in]	*old_ident		pEp_identity
  *  @param[in]	*new_ident		pEp_identity
+ *
+ *  @retval     PEP_STATUS_OK
+ *  @retval     PEP_OUT_OF_MEMORY   out of memory
  *
  */
 PEP_STATUS reconcile_default_keys(PEP_SESSION session, pEp_identity* old_ident,
@@ -4759,9 +4789,13 @@ void reconcile_language(pEp_identity* old_ident,
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session	        session handle	
  *  @param[in]	*old_uid		constchar
  *  @param[in]	*new_uid		constchar
+ *
+ *  @retval     PEP_STATUS_OK
+ *  @retval     PEP_OUT_OF_MEMORY   out of memory
+ *  @retval     PEP_CANNOT_FIND_IDENTITY
  *
  */
 PEP_STATUS merge_records(PEP_SESSION session, const char* old_uid,
@@ -5824,9 +5858,13 @@ the_end:
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session	    session handle	
  *  @param[in]	*name		const char
  *  @param[in]	*value		int32_t
+ *
+ *  @retval     PEP_STATUS_OK
+ *  @retval     PEP_RECORD_NOT_FOUND
+ *  @retval     PEP_UNKNOWN_DB_ERROR
  *
  */
 static PEP_STATUS _get_sequence_value(PEP_SESSION session, const char *name,
@@ -5866,8 +5904,12 @@ static PEP_STATUS _get_sequence_value(PEP_SESSION session, const char *name,
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session	    session handle	
  *  @param[in]	*name		constchar
+ *
+ *  @retval     PEP_STATUS_OK
+ *  @retval     PEP_ILLEGAL_VALUE       illegal parameter value
+ *  @retval     PEP_CANNOT_INCREASE_SEQUENCE
  *
  */
 static PEP_STATUS _increment_sequence_value(PEP_SESSION session,
@@ -6050,11 +6092,15 @@ DYNAMIC_API PEP_STATUS get_revoked(
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*fpr		const char
- *  @param[in]	**revoked_fpr		char
+ *  @param[in]	session	                session handle	
+ *  @param[in]	*fpr		            const char
+ *  @param[in]	**revoked_fpr		    char
  *  @param[in]	*revocation_date		uint64_t
  *
+ *  @retval     PEP_STATUS_OK
+ *  @retval     PEP_ILLEGAL_VALUE           illegal parameter value
+ *  @retval     PEP_CANNOT_FIND_IDENTITY
+ *  @retval     PEP_OUT_OF_MEMORY           out of memory
  */
 DYNAMIC_API PEP_STATUS get_replacement_fpr(
         PEP_SESSION session,
