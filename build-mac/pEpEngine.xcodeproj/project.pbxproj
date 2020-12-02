@@ -11,6 +11,17 @@
 		15147EF1237E9EA7003989FE /* GroupHandshake.h in Headers */ = {isa = PBXBuildFile; fileRef = 15147EED237E9EA7003989FE /* GroupHandshake.h */; };
 		15147EF2237E9EA7003989FE /* GroupKeysAndClose.c in Sources */ = {isa = PBXBuildFile; fileRef = 15147EEE237E9EA7003989FE /* GroupKeysAndClose.c */; };
 		15147EF3237E9EA7003989FE /* GroupKeysAndClose.h in Headers */ = {isa = PBXBuildFile; fileRef = 15147EEF237E9EA7003989FE /* GroupKeysAndClose.h */; };
+		1543DA422577F8BE0041EFB5 /* Sync_actions.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A9223C4B2DE008EF79C /* Sync_actions.c */; };
+		1543DA432577F8BE0041EFB5 /* Sync_event.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A9023C4B2DE008EF79C /* Sync_event.c */; };
+		1543DA442577F8BE0041EFB5 /* Sync_func.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A8E23C4B2DE008EF79C /* Sync_func.c */; };
+		1543DA452577F8BE0041EFB5 /* Sync_func.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A8C23C4B2DE008EF79C /* Sync_func.h */; };
+		1543DA462577F8BE0041EFB5 /* sync_codec.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A9123C4B2DE008EF79C /* sync_codec.h */; };
+		1543DA472577F8BE0041EFB5 /* KeySync_fsm.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A8B23C4B2DE008EF79C /* KeySync_fsm.c */; };
+		1543DA482577F8BE0041EFB5 /* sync_codec.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A8623C4B2DD008EF79C /* sync_codec.c */; };
+		1543DA492577F8BE0041EFB5 /* KeySync_fsm.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A8923C4B2DD008EF79C /* KeySync_fsm.h */; };
+		1543DA4A2577F8BE0041EFB5 /* Sync_impl.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A8F23C4B2DE008EF79C /* Sync_impl.c */; };
+		1543DA4B2577F8BE0041EFB5 /* Sync_impl.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A8723C4B2DD008EF79C /* Sync_impl.h */; };
+		1543DA4C2577F8BE0041EFB5 /* Sync_event.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A8823C4B2DD008EF79C /* Sync_event.h */; };
 		154917FD22B926700091B6D6 /* libnettle.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 154917F922B9266F0091B6D6 /* libnettle.a */; };
 		154917FE22B926700091B6D6 /* libsequoia_openpgp_ffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 154917FA22B926700091B6D6 /* libsequoia_openpgp_ffi.a */; };
 		154917FF22B926700091B6D6 /* libhogweed.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 154917FB22B926700091B6D6 /* libhogweed.a */; };
@@ -1043,8 +1054,10 @@
 				1552DC722577D70000A92F71 /* key_reset.h in Headers */,
 				1552DB882577D5A800A92F71 /* Hash.h in Headers */,
 				1552DB4A2577D5A800A92F71 /* UTF8String.h in Headers */,
+				1543DA452577F8BE0041EFB5 /* Sync_func.h in Headers */,
 				1552DBA12577D5A800A92F71 /* Rating.h in Headers */,
 				1552DB412577D5A800A92F71 /* asn_codecs.h in Headers */,
+				1543DA4B2577F8BE0041EFB5 /* Sync_impl.h in Headers */,
 				1552DB292577D5A800A92F71 /* GroupHandshake.h in Headers */,
 				1552DB512577D5A800A92F71 /* NativeInteger.h in Headers */,
 				1552DB4D2577D5A800A92F71 /* GroupKeysAndClose.h in Headers */,
@@ -1069,6 +1082,7 @@
 				1552DC8A2577D71800A92F71 /* distribution_codec.h in Headers */,
 				1552DC872577D71800A92F71 /* growing_buf.h in Headers */,
 				1552DC852577D71800A92F71 /* blacklist.h in Headers */,
+				1543DA462577F8BE0041EFB5 /* sync_codec.h in Headers */,
 				1552DC552577D6D700A92F71 /* pEp_string.h in Headers */,
 				1552DB3D2577D5A800A92F71 /* TID.h in Headers */,
 				1552DB2A2577D5A800A92F71 /* BIT_STRING.h in Headers */,
@@ -1084,6 +1098,7 @@
 				1552DB8F2577D5A800A92F71 /* per_encoder.h in Headers */,
 				1552DC192577D69300A92F71 /* pEpEngine.h in Headers */,
 				1552DB842577D5A800A92F71 /* constr_SEQUENCE.h in Headers */,
+				1543DA492577F8BE0041EFB5 /* KeySync_fsm.h in Headers */,
 				1552DB762577D5A800A92F71 /* CommitAcceptOfferer.h in Headers */,
 				1552DB5B2577D5A800A92F71 /* KeySync.h in Headers */,
 				1552DB142577D4F100A92F71 /* pEpEngine_macOS.h in Headers */,
@@ -1098,6 +1113,7 @@
 				1552DC7F2577D71800A92F71 /* pgp_sequoia_internal.h in Headers */,
 				1552DB872577D5A800A92F71 /* der_encoder.h in Headers */,
 				1552DB722577D5A800A92F71 /* xer_encoder.h in Headers */,
+				1543DA4C2577F8BE0041EFB5 /* Sync_event.h in Headers */,
 				1552DC512577D6D000A92F71 /* baseprotocol.h in Headers */,
 				1552DB652577D5A800A92F71 /* asn_SEQUENCE_OF.h in Headers */,
 				1552DB9A2577D5A800A92F71 /* per_opentype.h in Headers */,
@@ -1448,6 +1464,7 @@
 				1552DB8B2577D5A800A92F71 /* NegotiationRequest.c in Sources */,
 				1552DB442577D5A800A92F71 /* KeyReset.c in Sources */,
 				1552DB5F2577D5A800A92F71 /* constr_TYPE.c in Sources */,
+				1543DA432577F8BE0041EFB5 /* Sync_event.c in Sources */,
 				1552DC092577D68000A92F71 /* timestamp.c in Sources */,
 				1552DB2C2577D5A800A92F71 /* BIT_STRING.c in Sources */,
 				1552DB772577D5A800A92F71 /* pdu_collection.c in Sources */,
@@ -1478,7 +1495,9 @@
 				1552DB392577D5A800A92F71 /* Hex.c in Sources */,
 				1552DB562577D5A800A92F71 /* Sync.c in Sources */,
 				1552DC662577D6F900A92F71 /* distribution_codec.c in Sources */,
+				1543DA472577F8BE0041EFB5 /* KeySync_fsm.c in Sources */,
 				1552DB6E2577D5A800A92F71 /* NativeInteger.c in Sources */,
+				1543DA442577F8BE0041EFB5 /* Sync_func.c in Sources */,
 				1552DBAA2577D5A800A92F71 /* CommitAcceptRequester.c in Sources */,
 				1552DB432577D5A800A92F71 /* NegotiationOpen.c in Sources */,
 				1552DC652577D6F900A92F71 /* keyreset_command.c in Sources */,
@@ -1490,6 +1509,7 @@
 				1552DB372577D5A800A92F71 /* PrintableString.c in Sources */,
 				1552DC012577D67800A92F71 /* transport.c in Sources */,
 				1552DC392577D6B900A92F71 /* email.c in Sources */,
+				1543DA482577F8BE0041EFB5 /* sync_codec.c in Sources */,
 				1552DC6D2577D6F900A92F71 /* aux_mime_msg.c in Sources */,
 				1552DC252577D6A600A92F71 /* message.c in Sources */,
 				1552DC6A2577D6F900A92F71 /* pgp_sequoia.c in Sources */,
@@ -1506,6 +1526,7 @@
 				1552DB322577D5A800A92F71 /* GroupKeysUpdate.c in Sources */,
 				1552DB542577D5A800A92F71 /* constr_SET_OF.c in Sources */,
 				1552DB2B2577D5A800A92F71 /* xer_support.c in Sources */,
+				1543DA4A2577F8BE0041EFB5 /* Sync_impl.c in Sources */,
 				1552DC6C2577D6F900A92F71 /* key_reset.c in Sources */,
 				1552DBA22577D5A800A92F71 /* GroupKeysForNewMember.c in Sources */,
 				1552DB7E2577D5A800A92F71 /* NegotiationRequestGrouped.c in Sources */,
@@ -1526,6 +1547,7 @@
 				1552DC2D2577D6AE00A92F71 /* keymanagement.c in Sources */,
 				1552DB752577D5A800A92F71 /* CommitAcceptForGroup.c in Sources */,
 				1552DB982577D5A800A92F71 /* NativeEnumerated.c in Sources */,
+				1543DA422577F8BE0041EFB5 /* Sync_actions.c in Sources */,
 				1552DB632577D5A800A92F71 /* Identity.c in Sources */,
 				1552DB492577D5A800A92F71 /* per_decoder.c in Sources */,
 				1552DB382577D5A800A92F71 /* BOOLEAN.c in Sources */,
