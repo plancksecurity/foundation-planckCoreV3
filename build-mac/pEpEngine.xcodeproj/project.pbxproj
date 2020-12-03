@@ -22,6 +22,8 @@
 		1543DA4A2577F8BE0041EFB5 /* Sync_impl.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A8F23C4B2DE008EF79C /* Sync_impl.c */; };
 		1543DA4B2577F8BE0041EFB5 /* Sync_impl.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A8723C4B2DD008EF79C /* Sync_impl.h */; };
 		1543DA4C2577F8BE0041EFB5 /* Sync_event.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A8823C4B2DD008EF79C /* Sync_event.h */; };
+		1543DAA9257801880041EFB5 /* baseprotocol.c in Sources */ = {isa = PBXBuildFile; fileRef = 646C414C1D510D8800C63EFF /* baseprotocol.c */; };
+		1543DAAD257801A90041EFB5 /* resource_id.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F6921C1F164A47009418F5 /* resource_id.c */; };
 		154917FD22B926700091B6D6 /* libnettle.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 154917F922B9266F0091B6D6 /* libnettle.a */; };
 		154917FE22B926700091B6D6 /* libsequoia_openpgp_ffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 154917FA22B926700091B6D6 /* libsequoia_openpgp_ffi.a */; };
 		154917FF22B926700091B6D6 /* libhogweed.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 154917FB22B926700091B6D6 /* libhogweed.a */; };
@@ -481,10 +483,6 @@
 		1552DB112577D4F100A92F71 /* libpEpEngine_macOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpEpEngine_macOS.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		1552DB132577D4F100A92F71 /* pEpEngine_macOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pEpEngine_macOS.h; sourceTree = "<group>"; };
 		1552DB152577D4F100A92F71 /* pEpEngine_macOS.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = pEpEngine_macOS.m; sourceTree = "<group>"; };
-		1552DCAD2577DF3500A92F71 /* libgmp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgmp.a; path = ../../local/lib/libgmp.a; sourceTree = "<group>"; };
-		1552DCAE2577DF3500A92F71 /* libetpan.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libetpan.a; path = ../../local/lib/libetpan.a; sourceTree = "<group>"; };
-		1552DCAF2577DF3500A92F71 /* libhogweed.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libhogweed.a; path = ../../local/lib/libhogweed.a; sourceTree = "<group>"; };
-		1552DCB02577DF3500A92F71 /* libnettle.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libnettle.a; path = ../../local/lib/libnettle.a; sourceTree = "<group>"; };
 		158FF95223C49ED500CB1016 /* KeyReset.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = KeyReset.c; path = ../asn.1/KeyReset.c; sourceTree = "<group>"; };
 		158FF95323C49ED500CB1016 /* KeyReset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = KeyReset.h; path = ../asn.1/KeyReset.h; sourceTree = "<group>"; };
 		158FF95423C49ED500CB1016 /* InitUnledGroupKeyReset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = InitUnledGroupKeyReset.h; path = ../asn.1/InitUnledGroupKeyReset.h; sourceTree = "<group>"; };
@@ -732,10 +730,6 @@
 		154917EB22B926080091B6D6 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				1552DCAE2577DF3500A92F71 /* libetpan.a */,
-				1552DCAD2577DF3500A92F71 /* libgmp.a */,
-				1552DCAF2577DF3500A92F71 /* libhogweed.a */,
-				1552DCB02577DF3500A92F71 /* libnettle.a */,
 				154917F422B926420091B6D6 /* sequoia4ios */,
 			);
 			name = Frameworks;
@@ -1480,6 +1474,7 @@
 				1552DB7C2577D5A800A92F71 /* Hash.c in Sources */,
 				1552DB4B2577D5A800A92F71 /* TID.c in Sources */,
 				1552DB9C2577D5A800A92F71 /* ElectGroupKeyResetLeader.c in Sources */,
+				1543DAAD257801A90041EFB5 /* resource_id.c in Sources */,
 				1552DB902577D5A800A92F71 /* OCTET_STRING.c in Sources */,
 				1552DBAC2577D5A800A92F71 /* asn_codecs_prim.c in Sources */,
 				1552DB332577D5A800A92F71 /* PString.c in Sources */,
@@ -1492,6 +1487,7 @@
 				1552DBA62577D5A800A92F71 /* OwnKeysOfferer.c in Sources */,
 				1552DB532577D5A800A92F71 /* constr_SEQUENCE.c in Sources */,
 				1552DC352577D6B500A92F71 /* etpan_mime.c in Sources */,
+				1543DAA9257801880041EFB5 /* baseprotocol.c in Sources */,
 				1552DB392577D5A800A92F71 /* Hex.c in Sources */,
 				1552DB562577D5A800A92F71 /* Sync.c in Sources */,
 				1552DC662577D6F900A92F71 /* distribution_codec.c in Sources */,
@@ -1710,7 +1706,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
-				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../local/lib/libnettle.a ${PROJECT_DIR}/../../local/lib/libgmp.a ${PROJECT_DIR}/../../local/lib/libsequoia_ffi.a ${PROJECT_DIR}/../../local/lib/libetpan.a";
+				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../local/lib/libnettle.a ${PROJECT_DIR}/../../local/lib/libgmp.a ${PROJECT_DIR}/../../local/lib/libhogweed.a ${PROJECT_DIR}/../../local/lib/libsequoia_openpgp_ffi.a ${PROJECT_DIR}/../../local/lib/libetpan.a";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -1733,7 +1729,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_FAST_MATH = YES;
-				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../local/lib/libnettle.a ${PROJECT_DIR}/../../local/lib/libgmp.a ${PROJECT_DIR}/../../local/lib/libsequoia_ffi.a ${PROJECT_DIR}/../../local/lib/libetpan.a";
+				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../local/lib/libnettle.a ${PROJECT_DIR}/../../local/lib/libgmp.a ${PROJECT_DIR}/../../local/lib/libhogweed.a ${PROJECT_DIR}/../../local/lib/libsequoia_openpgp_ffi.a ${PROJECT_DIR}/../../local/lib/libetpan.a";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
