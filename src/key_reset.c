@@ -611,7 +611,7 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         // from the user
         if (!sender_own_key) {
             // Clear all info (ALSO REMOVES OLD KEY RIGHT NOW!!!)            
-            status = key_reset(session, old_fpr, curr_ident);
+            status = key_reset(session, old_fpr, curr_ident, true);
             if (status != PEP_STATUS_OK)
                 return status;
                                 
@@ -911,7 +911,7 @@ DYNAMIC_API PEP_STATUS key_reset_identity(
     if (!session || !ident || (ident && (EMPTYSTR(ident->user_id) || EMPTYSTR(ident->address))))
         return PEP_ILLEGAL_VALUE;
     
-    return key_reset(session, fpr, ident);    
+    return key_reset(session, fpr, ident, false);
 }
 
 DYNAMIC_API PEP_STATUS key_reset_user(
@@ -930,13 +930,13 @@ DYNAMIC_API PEP_STATUS key_reset_user(
     if (is_me(session, input_ident) && EMPTYSTR(fpr))
         return PEP_ILLEGAL_VALUE;
         
-    PEP_STATUS status = key_reset(session, fpr, input_ident);
+    PEP_STATUS status = key_reset(session, fpr, input_ident, false);
     free_identity(input_ident);
     return status;
 }
 
 DYNAMIC_API PEP_STATUS key_reset_all_own_keys(PEP_SESSION session) {
-    return key_reset(session, NULL, NULL);
+    return key_reset(session, NULL, NULL, false);
 }
 
 static PEP_STATUS _dup_grouped_only(identity_list* idents, identity_list** filtered) {
@@ -1281,10 +1281,46 @@ pEp_free:
     return status;
 }
 
+static PEP_STATUS _key_reset_partner_by_address(PEP_SESSION session,
+                                                pEp_identity* ident) {
+    if (!ident->address)
+        return PEP_ILLEGAL_VALUE;
+
+    if (is_me(session, ident))
+        return PEP_ILLEGAL_VALUE;
+
+    identity_list* id_list = NULL;
+
+    PEP_STATUS status = get_identities_by_address(session, ident->address, &id_list);
+
+    if (status != PEP_STATUS_OK && status != PEP_CANNOT_FIND_IDENTITY)
+        return status;
+    else
+        status = PEP_STATUS_OK;
+
+    // won't hurt to do it this way; this is correct, anyway. Maybe it's still default
+    // for the user_id even if the address is not in the DB, so... yeah.
+    if (!id_list)
+        return key_reset(session, NULL, ident, true);
+
+    identity_list* curr;
+
+    for (curr = id_list; curr && curr->ident; curr = curr->next) {
+        status = key_reset(session, NULL, curr->ident, true);
+        if (status != PEP_STATUS_OK)
+            goto pEp_free;
+    }
+
+pEp_free:
+    free_identity_list(id_list);
+    return status;
+}
+
 PEP_STATUS key_reset(
         PEP_SESSION session,
         const char* key_id,
-        pEp_identity* ident
+        pEp_identity* ident,
+        bool no_recurse
     )
 {
     if (!session || (ident && EMPTYSTR(ident->user_id)))
@@ -1336,7 +1372,7 @@ PEP_STATUS key_reset(
             
             for (curr_key = keys; curr_key && curr_key->value; curr_key = curr_key->next) {
                 // FIXME: Is the ident really necessary?
-                status = key_reset(session, curr_key->value, tmp_ident);
+                status = key_reset(session, curr_key->value, tmp_ident, false);
                 if (status != PEP_STATUS_OK && status != PEP_CANNOT_FIND_IDENTITY)
                     break;
                 else 
@@ -1529,22 +1565,26 @@ PEP_STATUS key_reset(
             }    
         } // end is_own_private
         else {
-            // if it's mistrusted, make it not be so.
-            bool mistrusted_key = false;
-            is_mistrusted_key(session, fpr_copy, &mistrusted_key);
+            if (!no_recurse && EMPTYSTR(key_id))
+                _key_reset_partner_by_address(session, tmp_ident);
+            else {
+                // if it's mistrusted, make it not be so.
+                bool mistrusted_key = false;
+                is_mistrusted_key(session, fpr_copy, &mistrusted_key);
 
-            if (mistrusted_key)
-                delete_mistrusted_key(session, fpr_copy);
-            
-            if (tmp_ident->user_id)
-                status = clear_trust_info(session, tmp_ident->user_id, fpr_copy);
+                if (mistrusted_key)
+                    delete_mistrusted_key(session, fpr_copy);
 
-            // This is a public key (or a private key that isn't ours, which means
-            // we want it gone anyway)
-            //
-            // Delete this key from the keyring.
-            // FIXME: when key election disappears, so should this!
-            status = delete_keypair(session, fpr_copy);
+                if (tmp_ident->user_id)
+                    status = clear_trust_info(session, tmp_ident->user_id, fpr_copy);
+
+                // This is a public key (or a private key that isn't ours, which means
+                // we want it gone anyway)
+                //
+                // Delete this key from the keyring.
+                // FIXME: when key election disappears, so should this!
+                status = delete_keypair(session, fpr_copy);
+            }
         }
 
         // REGARDLESS OF WHO OWNS THE KEY, WE NOW NEED TO REMOVE IT AS A DEFAULT.

@@ -415,6 +415,16 @@ tstylesheet {
                 if (!(session && fsm > None && message_type > None))
                     return PEP_ILLEGAL_VALUE;
             ||
+            if "fsm/message[@security='ignore']" {
+                |
+                |> // ignore
+                |> switch (message_type) {
+                    for "fsm/message[@security='ignore']" {
+                        |>> case «../@name»_PR_«yml:mixedCase(@name)»:
+                        |>>> return PEP_STATUS_OK;
+                    }
+                |> }
+            }
             if "fsm/message[@ratelimit>0]" {
             ||
 
@@ -506,7 +516,7 @@ tstylesheet {
                         break;
 
                     // these go anycast; previously used address is sticky (unicast)
-                    `` for "fsm/message[@type='anycast']" |>> case «../@name»_PR_«yml:mixedCase(@name)»:
+                    `` for "fsm/message[@type='anycast' and @security!='ignore']" |>> case «../@name»_PR_«yml:mixedCase(@name)»:
                         // if we have a comm_partner fixed send it there
                         if (session->«yml:lcase(@name)»_state.comm_partner.identity) {
                             pEp_identity *channel = identity_dup(session->«yml:lcase(@name)»_state.comm_partner.identity);
@@ -1162,7 +1172,7 @@ tstylesheet {
 
         ||
         }
-        for "message[@security!='unencrypted' and @security!='untrusted']" {
+        for "message[@security!='unencrypted' and @security!='untrusted' and @security!='ignore']" {
         if "position()=1" |>> // these messages must come through a trusted channel
         ||
                 case «../@name»_PR_«yml:mixedCase(@name)»:
@@ -1182,6 +1192,13 @@ tstylesheet {
 
         ||
         }
+        for "message[@security='ignore']"
+        ||
+                case «../@name»_PR_«yml:mixedCase(@name)»:
+                    free_«../../@name»_message(msg);
+                    return PEP_STATUS_OK;
+
+        ||
         ||
                 default:
                     status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
