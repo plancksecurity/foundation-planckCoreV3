@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  * @file    pEp_internal.h
  * @brief   pEp internal structs, functions, defines, and values
