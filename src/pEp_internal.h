@@ -236,6 +236,20 @@ struct _pEpSession {
         
     sqlite3_stmt *get_default_own_userid;
 
+    // groups
+    sqlite3_stmt *create_group;
+    sqlite3_stmt *enable_group;
+    sqlite3_stmt *disable_group;
+    sqlite3_stmt *exists_group_entry;
+    sqlite3_stmt *group_add_member;
+    sqlite3_stmt *join_group;
+    sqlite3_stmt *leave_group;
+    sqlite3_stmt *group_activate_member;
+    sqlite3_stmt *group_deactivate_member;
+    sqlite3_stmt *get_all_members;
+    sqlite3_stmt *get_active_members;
+    sqlite3_stmt *get_active_groups;
+    sqlite3_stmt *get_all_groups;
 
 //    sqlite3_stmt *set_own_key;
 

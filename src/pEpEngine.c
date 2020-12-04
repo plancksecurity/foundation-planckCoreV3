@@ -261,6 +261,8 @@ static const char *sql_set_pgp_keypair =
     "insert or ignore into pgp_keypair (fpr) "
     "values (upper(replace(?1,' ',''))) ;";
 
+
+
 static const char* sql_exists_identity_entry = 
     "select count(*) from identity "
     "   where (case when (address = ?1) then (1)"
@@ -563,7 +565,53 @@ static const char *sql_has_id_contacted_address =
 // on this anyway when sending out messages.
 static const char *sql_get_last_contacted =
     "select user_id, address from identity where datetime('now') < datetime(timestamp, '+14 days') ; ";
-        
+
+static const char *sql_create_group =
+        "insert into groups (group_id, group_address, manager_userid, manager_address) "
+        "VALUES (?1, ?2, ?3, ?4) ;";
+
+static const char *sql_enable_group =
+        "update groups set active = 1 "
+        "   where group_id = ?1 and group_address = ?2 ;";
+
+static const char *sql_disable_group =
+        "update groups set active = 0 "
+        "   where group_id = ?1 and group_address = ?2 ;";
+
+static const char *sql_exists_group_entry =
+        "select count(*) from groups "
+        "   where group_id = ?1 and group_address = ?2;";
+static const char *sql_group_add_member =
+        "insert into own_groups_members (group_id, group_address, member_id, member_address) "
+        "    values (?1, ?2, ?3, ?4) ;";
+static const char *sql_group_activate_member =
+        "update own_groups_members set active_member = 1 "
+        "    where group_id = ?1 and group_address = ?2 and "
+        "          member_id = ?3 and member_address = ?4; ";
+static const char *sql_group_deactivate_member =
+        "update own_groups_members set active_member = 0 "
+        "    where group_id = ?1 and group_address = ?2 and "
+        "          member_id = ?3 and member_address = ?4; ";
+static const char *sql_join_group =
+        "update own_memberships set have_joined = 1 "
+        "    where group_id = ?1 and group_address = ?2 and "
+        "          own_id = ?3 and own_address = ?4; ";
+static const char *sql_leave_group =
+        "update own_memberships set have_joined = 0 "
+        "    where group_id = ?1 and group_address = ?2 and "
+        "          own_id = ?3 and own_address = ?4; ";
+static const char *sql_get_all_members =
+        "select member_id, member_address from own_groups_members "
+        "    where group_id = ?1 and group_address = ?1; ";
+static const char *sql_get_active_members =
+        "select member_id, member_address from own_groups_members "
+        "    where group_id = ?1 and group_address = ?1 and active_member = 1; ";
+static const char *sql_get_all_groups =
+        "select group_id, group_address from own_memberships;";
+static const char *sql_get_active_groups =
+        "select group_id, group_address from own_memberships where have_joined = 1;";
+
+
 /**
  *  @internal
  *
@@ -2613,6 +2661,109 @@ DYNAMIC_API PEP_STATUS init(
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
+    /* Groups */
+    int_result = sqlite3_prepare_v2(_session->db, sql_create_group,
+                                    (int)strlen(sql_create_group), &_session->create_group, NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_enable_group,
+                                    (int)strlen(sql_enable_group), &_session->enable_group, NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_disable_group,
+                                    (int)strlen(sql_disable_group), &_session->disable_group, NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_exists_group_entry,
+                                    (int)strlen(sql_exists_group_entry), &_session->exists_group_entry, NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_group_add_member,
+                                    (int)strlen(sql_group_add_member), &_session->group_add_member, NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_group_activate_member,
+                                    (int)strlen(sql_group_activate_member), &_session->group_activate_member, NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_group_deactivate_member,
+                                    (int)strlen(sql_group_deactivate_member), &_session->group_deactivate_member, NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_join_group,
+                                    (int)strlen(sql_join_group), &_session->join_group, NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_leave_group,
+                                    (int)strlen(sql_leave_group), &_session->leave_group, NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_all_members,
+                                    (int)strlen(sql_get_all_members), &_session->get_all_members, NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_active_members,
+                                    (int)strlen(sql_get_active_members), &_session->get_active_members, NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_all_groups,
+                                    (int)strlen(sql_get_all_groups), &_session->get_all_groups, NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_active_groups,
+                                    (int)strlen(sql_get_active_groups), &_session->get_active_groups, NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
+    /* End groups */
 
     status = init_cryptotech(_session, in_first);
     if (status != PEP_STATUS_OK)
@@ -2813,7 +2964,33 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->delete_mistrusted_key);
             if (session->is_mistrusted_key)
                 sqlite3_finalize(session->is_mistrusted_key);
-                
+            if (session->create_group)
+                sqlite3_finalize(session->create_group);
+            if (session->enable_group)
+                sqlite3_finalize(session->enable_group);
+            if (session->disable_group)
+                sqlite3_finalize(session->disable_group);
+            if (session->exists_group_entry)
+                sqlite3_finalize(session->exists_group_entry);
+            if (session->group_add_member)
+                sqlite3_finalize(session->group_add_member);
+            if (session->group_activate_member)
+                sqlite3_finalize(session->group_activate_member);
+            if (session->group_deactivate_member)
+                sqlite3_finalize(session->group_deactivate_member);
+            if (session->join_group)
+                sqlite3_finalize(session->join_group);
+            if (session->leave_group)
+                sqlite3_finalize(session->leave_group);
+            if (session->get_all_members)
+                sqlite3_finalize(session->get_all_members);
+            if (session->get_active_members)
+                sqlite3_finalize(session->get_active_members);
+            if (session->get_active_groups)
+                sqlite3_finalize(session->get_active_groups);
+            if (session->get_all_groups)
+                sqlite3_finalize(session->get_all_groups);
+
             if (session->db) {
                 if (out_last) {
                     sqlite3_exec(        
