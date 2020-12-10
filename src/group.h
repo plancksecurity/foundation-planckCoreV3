@@ -147,6 +147,16 @@ PEP_STATUS exists_group(
         bool* exists
 );
 
+PEP_STATUS retrieve_full_group_membership(
+        PEP_SESSION session,
+        pEp_identity* group_identity,
+        member_list** members);
+
+PEP_STATUS retrieve_active_group_membership(
+        PEP_SESSION session,
+        pEp_identity* group_identity,
+        member_list** members);
+
 #ifdef __cplusplus
 }
 #endif

@@ -517,10 +517,10 @@ static const char *sql_leave_group =
         "          own_id = ?3 and own_address = ?4; ";
 static const char *sql_get_all_members =
         "select member_id, member_address, active_member from own_groups_members "
-        "    where group_id = ?1 and group_address = ?1; ";
+        "    where group_id = ?1 and group_address = ?2; ";
 static const char *sql_get_active_members =
         "select member_id, member_address from own_groups_members "
-        "    where group_id = ?1 and group_address = ?1 and active_member = 1; ";
+        "    where group_id = ?1 and group_address = ?2 and active_member = 1; ";
 static const char *sql_get_all_groups =
         "select group_id, group_address from own_memberships;";
 static const char *sql_get_active_groups =
