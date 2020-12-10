@@ -252,3 +252,47 @@ TEST_F(GroupEncryptionTest, check_new_group) {
 
     free_group(group);
 }
+
+TEST_F(GroupEncryptionTest, check_create_group) {
+    pEp_identity* group_leader = new_identity("alistair@lost.pants", NULL, PEP_OWN_USERID, "Alistair Theirin");
+    PEP_STATUS status = myself(session, group_leader);
+    ASSERT_OK;
+
+    pEp_identity* group_ident = new_identity("groupies@group.group", NULL, PEP_OWN_USERID, "Bad group");
+    status = myself(session, group_ident);
+    ASSERT_OK;
+
+    // Create member list
+    pEp_identity* carol = new_identity("carol@bob.bob", NULL, "CAROL_ID", "Carol");
+    ASSERT_NE(carol, nullptr);
+    pEp_member* carol_mem = new_member(carol);
+    status = update_identity(session, carol);
+    ASSERT_OK;
+
+    member_list* list = new_memberlist(carol_mem);
+    ASSERT_NE(list, nullptr);
+
+    pEp_identity* bob = new_identity("bob@bob.bob", NULL, "BOB_ID", NULL);
+    status = update_identity(session, bob);
+    ASSERT_OK;
+    pEp_member* bob_mem = new_member(bob);
+    ASSERT_NE(memberlist_add(list, bob_mem), nullptr);
+
+    pEp_identity* solas = new_identity("solas@solas.solas", NULL, "SOLAS_ID", "The Dread Wolf, Betrayer of All");
+    status = update_identity(session, solas);
+    ASSERT_OK;
+    pEp_member* solas_mem = new_member(solas);
+    ASSERT_NE(memberlist_add(list, solas_mem), nullptr);
+
+    pEp_group* group = NULL;
+    status = group_create(session, group_ident, group_leader, list, &group);
+    ASSERT_OK;
+    ASSERT_NE(group, nullptr);
+    ASSERT_EQ(group->group_identity, group_ident);
+    ASSERT_NE(group->group_identity->flags & PEP_idf_group_ident, 0);
+    ASSERT_EQ(group->manager, group_leader);
+    ASSERT_EQ(group->manager->flags & PEP_idf_group_ident, 0);
+    ASSERT_EQ(group->members, list); // We don't do anything to this list, so....
+
+    free_group(group);
+}

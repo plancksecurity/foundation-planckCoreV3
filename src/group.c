@@ -672,9 +672,9 @@ PEP_STATUS exists_group(
     PEP_STATUS status = PEP_STATUS_OK;
 
     sqlite3_reset(session->exists_group_entry);
-    sqlite3_bind_text(session->exists_group_entry, 1, group_identity->address, -1,
+    sqlite3_bind_text(session->exists_group_entry, 1, group_identity->user_id, -1,
                       SQLITE_STATIC);
-    sqlite3_bind_text(session->exists_group_entry, 2, group_identity->user_id, -1,
+    sqlite3_bind_text(session->exists_group_entry, 2, group_identity->address, -1,
                       SQLITE_STATIC);
 
     int result = sqlite3_step(session->exists_group_entry);
