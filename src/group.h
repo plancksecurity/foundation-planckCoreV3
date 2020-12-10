@@ -77,35 +77,48 @@ PEP_STATUS group_create(
     );
 
 
-// group_adopt() - adopt group as member
+// join_group() - adopt group as member
 //
 //  params:
 //      group_identity (in)
 //      as_member (in)          own identity
 
-PEP_STATUS group_adopt(
+PEP_STATUS join_group(
         PEP_SESSION session,
         pEp_identity *group_identity,
         pEp_identity *as_member
     );
 
+// leave_group() - leave group as member
+//
+//  params:
+//      group_identity (in)
+//      as_member (in)          own identity
+
+PEP_STATUS leave_group(
+        PEP_SESSION session,
+        pEp_identity *group_identity,
+        pEp_identity *member_identity
+);
 
 // group_dissolve() - dissolve a group and marks it as being inactive
 
 PEP_STATUS group_dissolve(
         PEP_SESSION session,
-        pEp_identity *group_identity,
-        pEp_identity *manager
+        pEp_identity *group_identity
     );
 
+PEP_STATUS group_enable(
+        PEP_SESSION session,
+        pEp_identity *group_identity
+);
 
 // group_add_member() - add group member
 
 PEP_STATUS group_add_member(
         PEP_SESSION session,
         pEp_identity *group_identity,
-        pEp_identity *group_member,
-        pEp_identity *manager
+        pEp_identity *group_member
     );
 
 
@@ -114,8 +127,7 @@ PEP_STATUS group_add_member(
 PEP_STATUS group_remove_member(
         PEP_SESSION session,
         pEp_identity *group_identity,
-        pEp_identity *group_member,
-        pEp_identity *manager
+        pEp_identity *group_member
     );
 
 
@@ -129,6 +141,11 @@ PEP_STATUS group_rating(
         PEP_rating *rating
     );
 
+PEP_STATUS exists_group(
+        PEP_SESSION session,
+        pEp_identity* group_identity,
+        bool* exists
+);
 
 #ifdef __cplusplus
 }

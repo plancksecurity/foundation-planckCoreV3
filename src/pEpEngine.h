@@ -143,6 +143,16 @@ typedef enum {
     PEP_WRONG_PASSPHRASE                            = 0x0a01,
     PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED            = 0x0a02,
 
+    PEP_CANNOT_CREATE_GROUP                         = 0x0b00,
+    PEP_CANNOT_FIND_GROUP_ENTRY                     = 0x0b01,
+    PEP_GROUP_EXISTS                                = 0x0b02,
+    PEP_GROUP_NOT_FOUND                             = 0x0b03,
+    PEP_CANNOT_ENABLE_GROUP                         = 0x0b04,
+    PEP_CANNOT_DISABLE_GROUP                        = 0x0b05,
+    PEP_CANNOT_ADD_GROUP_MEMBER                     = 0x0b06,
+    PEP_CANNOT_DEACTIVATE_GROUP_MEMBER              = 0x0b07,
+    PEP_NO_MEMBERSHIP_STATUS_FOUND                  = 0x0b08,
+
     PEP_DISTRIBUTION_ILLEGAL_MESSAGE                = 0x1002,
 
     PEP_COMMIT_FAILED                               = 0xff01,

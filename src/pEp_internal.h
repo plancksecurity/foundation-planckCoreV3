@@ -252,6 +252,8 @@ struct _pEpSession {
     sqlite3_stmt *get_active_members;
     sqlite3_stmt *get_active_groups;
     sqlite3_stmt *get_all_groups;
+    sqlite3_stmt *add_own_membership_entry;
+    sqlite3_stmt *get_own_membership_status;
 
 //    sqlite3_stmt *set_own_key;
 
