@@ -157,6 +157,17 @@ PEP_STATUS retrieve_active_group_membership(
         pEp_identity* group_identity,
         member_list** members);
 
+PEP_STATUS create_group_entry(PEP_SESSION session,
+                              pEp_group* group);
+
+PEP_STATUS add_own_membership_entry(PEP_SESSION session,
+                                    pEp_group* group,
+                                    pEp_identity* own_identity_recip);
+
+PEP_STATUS retrieve_own_membership_info_for_group_and_identity(PEP_SESSION session,
+                                                     pEp_group* group,
+                                                     pEp_identity* own_identity);
+
 #ifdef __cplusplus
 }
 #endif

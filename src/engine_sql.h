@@ -522,17 +522,34 @@ static const char *sql_get_active_members =
         "select member_id, member_address from own_groups_members "
         "    where group_id = ?1 and group_address = ?2 and active_member = 1; ";
 static const char *sql_get_all_groups =
-        "select group_id, group_address from own_memberships;";
+        "select group_id, group_address from own_memberships; ";
 static const char *sql_get_active_groups =
-        "select group_id, group_address from own_memberships where have_joined = 1;";
+        "select group_id, group_address from own_memberships where have_joined = 1; ";
 static const char *sql_add_own_membership_entry =
         "insert or replace into own_memberships (group_id, group_address, own_id, own_address, have_joined) "
-        "    values (?1, ?2, ?3, ?4, 0) ;";
-//static const char *sql_group_invite_exists =
-//        "select count(*) from own_memberships "
-//        "    where group_id = ?1 and group_address = ?2 and "
-//        "          own_id = ?3 and own_address = ?4 ;";
+        "    values (?1, ?2, ?3, ?4, 0) ; ";
+
+// This below can return multiple entries for multiple idents in same group
+static const char *sql_retrieve_own_membership_info_for_group =
+        "select group_id, group_address, own_id, own_address, have_joined, manager_id, manager_address, active "
+        "    from own_memberships "
+        "    inner join using (group_id, group_address) "
+        "        where group_address = ?1; ";
+
+// This below will return a single entry -- is this a bad shortcut not also querying on ID? It's always OWN.
+static const char *sql_retrieve_own_membership_info_for_group_and_ident =
+        "select have_joined, manager_userid, manager_address, active "
+        "    from own_memberships "
+        "    inner join groups using (group_id, group_address) "
+        "        where group_id = ?1 and group_address = ?2 and own_id = ?3 and own_address = ?4; ";
+
+// This will return all membership info for all identities
+static const char *sql_retrieve_all_own_membership_info =
+        "select group_id, group_address, own_id, own_address, have_joined, manager_id, manager_address, active "
+        "    from own_memberships "
+        "    inner join using (group_id, group_address); ";
+
 static const char* sql_get_own_membership_status =
         "select have_joined from own_memberships "
         "    where group_id = ?1 and group_address = ?2 and "
-        "          own_id = ?2 and own_address = ?4 ;";
+        "          own_id = ?3 and own_address = ?4; ";

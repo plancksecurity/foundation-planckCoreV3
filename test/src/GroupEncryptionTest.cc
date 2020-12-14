@@ -341,6 +341,179 @@ TEST_F(GroupEncryptionTest, check_membership_from_create_group) {
     ASSERT_OK;
     ASSERT_NE(retrieved_members, nullptr);
 
+    for (member_list* curr_node = retrieved_members; curr_node && curr_node->member; curr_node = curr_node->next) {
+        if (!curr_node->member->ident)
+            break;
+        pEp_identity* ident = curr_node->member->ident;
+        if ((strcmp(ident->user_id, carol->user_id) == 0) && strcmp(ident->address, carol->address) == 0)
+            carol_found = true;
+        else if ((strcmp(ident->user_id, bob->user_id) == 0) && strcmp(ident->address, bob->address) == 0)
+            bob_found = true;
+        else if ((strcmp(ident->user_id, solas->user_id) == 0) && strcmp(ident->address, solas->address) == 0)
+            solas_found = true;
+        else
+            ASSERT_STREQ("This message is just to make the test fail and give a message, we found an unexpected member node.", "FAIL");
+        ASSERT_FALSE(curr_node->member->adopted);
+    }
+
+    ASSERT_TRUE(carol_found);
+    ASSERT_TRUE(bob_found);
+    ASSERT_TRUE(solas_found);
 
     free_group(group);
 }
+
+TEST_F(GroupEncryptionTest, check_null_membership_from_create_group) {
+    pEp_identity* group_leader = new_identity("alistair@lost.pants", NULL, PEP_OWN_USERID, "Alistair Theirin");
+    PEP_STATUS status = myself(session, group_leader);
+    ASSERT_OK;
+
+    pEp_identity* group_ident = new_identity("groupies@group.group", NULL, PEP_OWN_USERID, "Bad group");
+    status = myself(session, group_ident);
+    ASSERT_OK;
+
+    pEp_group* group = NULL;
+    status = group_create(session, group_ident, group_leader, NULL, &group);
+    ASSERT_OK;
+
+    member_list* retrieved_members = NULL;
+    status = retrieve_full_group_membership(session, group_ident, &retrieved_members);
+    ASSERT_OK;
+    ASSERT_EQ(retrieved_members, nullptr);
+
+    free_group(group);
+}
+
+TEST_F(GroupEncryptionTest, check_null_manager_from_create_group) {
+
+    pEp_identity* group_ident = new_identity("groupies@group.group", NULL, PEP_OWN_USERID, "Bad group");
+    PEP_STATUS status = myself(session, group_ident);
+    ASSERT_OK;
+
+    pEp_group* group = NULL;
+    status = group_create(session, group_ident, NULL, NULL, &group);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+    ASSERT_EQ(group, nullptr);
+}
+
+TEST_F(GroupEncryptionTest, check_null_group_ident_from_create_group) {
+    pEp_identity* group_leader = new_identity("alistair@lost.pants", NULL, PEP_OWN_USERID, "Alistair Theirin");
+    PEP_STATUS status = myself(session, group_leader);
+    ASSERT_OK;
+
+    pEp_group* group = NULL;
+    status = group_create(session, NULL, group_leader, NULL, &group);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+    ASSERT_EQ(group, nullptr);
+}
+
+TEST_F(GroupEncryptionTest, check_null_group_address_from_create_group) {
+    pEp_identity* group_leader = new_identity("alistair@lost.pants", NULL, PEP_OWN_USERID, "Alistair Theirin");
+    PEP_STATUS status = myself(session, group_leader);
+    ASSERT_OK;
+
+    pEp_identity* group_ident = new_identity("groupies@group.group", NULL, PEP_OWN_USERID, "Bad group");
+    status = myself(session, group_ident);
+    ASSERT_OK;
+    free(group_ident->address);
+    group_ident->address = NULL;
+
+    pEp_group* group = NULL;
+    status = group_create(session, group_ident, group_leader, NULL, &group);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+    ASSERT_EQ(group, nullptr);
+}
+
+TEST_F(GroupEncryptionTest, check_null_manager_address_from_create_group) {
+    pEp_identity* group_leader = new_identity("alistair@lost.pants", NULL, PEP_OWN_USERID, "Alistair Theirin");
+    PEP_STATUS status = myself(session, group_leader);
+    ASSERT_OK;
+    free(group_leader->address);
+    group_leader->address = NULL;
+
+    pEp_identity* group_ident = new_identity("groupies@group.group", NULL, PEP_OWN_USERID, "Bad group");
+    status = myself(session, group_ident);
+    ASSERT_OK;
+
+    pEp_group* group = NULL;
+    status = group_create(session, group_ident, group_leader, NULL, &group);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+    ASSERT_EQ(group, nullptr);
+}
+
+TEST_F(GroupEncryptionTest, check_add_invite) {
+    pEp_identity* own_ident = new_identity("alistair@lost.pants", NULL, PEP_OWN_USERID, "Alistair Theirin");
+    PEP_STATUS status = myself(session, own_ident);
+    ASSERT_OK;
+
+    pEp_identity* group_ident = new_identity("groupies@group.group", NULL, PEP_OWN_USERID, "Bad group");
+    status = myself(session, group_ident);
+    ASSERT_OK;
+    status = set_identity_flags(session, group_ident, group_ident->flags | PEP_idf_group_ident);
+    ASSERT_OK;
+
+    pEp_identity* manager = new_identity("bad_manager@bad.bad", NULL, "BAD_MANAGER", "bad_manager");
+    status = update_identity(session, manager);
+    ASSERT_OK;
+
+    pEp_group* group = NULL;
+
+    status = group_create(session, group_ident, manager, NULL, &group);
+    ASSERT_OK;
+
+    status = group_enable(session, group_ident);
+    ASSERT_OK;
+
+    status = add_own_membership_entry(session, group, own_ident);
+    ASSERT_OK;
+
+    status = retrieve_own_membership_info_for_group_and_identity(session, group, own_ident);
+    ASSERT_OK;
+
+    ASSERT_STREQ(group->manager->user_id, manager->user_id);
+    ASSERT_STREQ(group->manager->address, manager->address);
+    ASSERT_TRUE(group->active);
+    ASSERT_FALSE(group->members->member->adopted);
+    ASSERT_EQ(group->members->next, nullptr);
+}
+
+TEST_F(GroupEncryptionTest, check_join_group) {
+    pEp_identity* own_ident = new_identity("alistair@lost.pants", NULL, PEP_OWN_USERID, "Alistair Theirin");
+    PEP_STATUS status = myself(session, own_ident);
+    ASSERT_OK;
+
+    pEp_identity* group_ident = new_identity("groupies@group.group", NULL, PEP_OWN_USERID, "Bad group");
+    status = myself(session, group_ident);
+    ASSERT_OK;
+    status = set_identity_flags(session, group_ident, group_ident->flags | PEP_idf_group_ident);
+    ASSERT_OK;
+
+    pEp_identity* manager = new_identity("bad_manager@bad.bad", NULL, "BAD_MANAGER", "bad_manager");
+    status = update_identity(session, manager);
+    ASSERT_OK;
+
+    pEp_group* group = NULL;
+
+    status = group_create(session, group_ident, manager, NULL, &group);
+    ASSERT_OK;
+
+    status = group_enable(session, group_ident);
+    ASSERT_OK;
+
+    status = add_own_membership_entry(session, group, own_ident);
+    ASSERT_OK;
+
+    status = join_group(session, group_ident, own_ident);
+    ASSERT_OK;
+
+    status = retrieve_own_membership_info_for_group_and_identity(session, group, own_ident);
+    ASSERT_OK;
+
+    ASSERT_STREQ(group->manager->user_id, manager->user_id);
+    ASSERT_STREQ(group->manager->address, manager->address);
+    ASSERT_TRUE(group->active);
+    ASSERT_TRUE(group->members->member->adopted);
+    ASSERT_EQ(group->members->next, nullptr);
+}
+
+// join_group(session, *group_identity, *as_member);

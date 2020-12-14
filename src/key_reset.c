@@ -1674,8 +1674,8 @@ pEp_free:
  *  
  *  @brief			TODO
  *  
- *  @param[in]	*command_list		constkeyreset_command_list
- *  @param[in]	*dist		Distribution_t
+ *  @param[in]	*command_list		keyreset_command_list
+ *  @param[in]	*dist		        Distribution_t
  *  
  */
 Distribution_t *Distribution_from_keyreset_command_list(

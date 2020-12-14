@@ -88,8 +88,8 @@ void free_group(pEp_group *group) {
 // group_identity MUST have been myself'd.
 // Called only from create_group and PRESUMES group, group->identity (user_id and address),
 // group->manager (user_id and address) are there AND VALIDATED. This is JUST the DB call factored out.
-static PEP_STATUS create_group_entry(PEP_SESSION session,
-                                     pEp_group* group) {
+PEP_STATUS create_group_entry(PEP_SESSION session,
+                              pEp_group* group) {
     pEp_identity* group_identity = group->group_identity;
     pEp_identity* manager = group->manager;
 
@@ -126,9 +126,6 @@ PEP_STATUS group_create(
     if (!group_identity->address || !manager->address)
         return PEP_ILLEGAL_VALUE;
 
-    if (!is_me(session, manager))
-        return PEP_ILLEGAL_VALUE;
-
     PEP_STATUS status = PEP_STATUS_OK;
 
     if (!group_identity->user_id || !is_me(session, group_identity)) {
@@ -158,7 +155,10 @@ PEP_STATUS group_create(
         return status;
 
     // update the manager ident
-    status = myself(session, manager);
+    if (is_me(session, manager))
+        status = myself(session, manager);
+    else
+        status = update_identity(session, manager);
     if (status != PEP_STATUS_OK)
         return status;
 
@@ -214,12 +214,15 @@ pEp_free:
 
 // This presumes these values have been checked!!!!!!!!
 PEP_STATUS add_own_membership_entry(PEP_SESSION session,
-                            pEp_identity* group_identity,
-                            pEp_identity* own_identity_recip) {
-    if (!session || !group_identity || !own_identity_recip)
+                                    pEp_group* group,
+                                    pEp_identity* own_identity_recip) {
+    if (!session || !group || !group->group_identity || !group->manager || !own_identity_recip)
         return PEP_ILLEGAL_VALUE;
 
-    if (EMPTYSTR(group_identity->user_id) || EMPTYSTR(group_identity->address))
+    if (EMPTYSTR(group->group_identity->user_id) || EMPTYSTR(group->group_identity->address))
+        return PEP_ILLEGAL_VALUE;
+
+    if (EMPTYSTR(group->manager->user_id) || EMPTYSTR(group->manager->address))
         return PEP_ILLEGAL_VALUE;
 
     if (EMPTYSTR(own_identity_recip->user_id) || EMPTYSTR(own_identity_recip->address))
@@ -227,9 +230,9 @@ PEP_STATUS add_own_membership_entry(PEP_SESSION session,
 
     int result = 0;
 
-    sqlite3_bind_text(session->add_own_membership_entry, 1, group_identity->user_id, -1,
+    sqlite3_bind_text(session->add_own_membership_entry, 1, group->group_identity->user_id, -1,
                       SQLITE_STATIC);
-    sqlite3_bind_text(session->add_own_membership_entry, 2, group_identity->address, -1,
+    sqlite3_bind_text(session->add_own_membership_entry, 2, group->group_identity->address, -1,
                       SQLITE_STATIC);
     sqlite3_bind_text(session->add_own_membership_entry, 3, own_identity_recip->user_id, -1,
                       SQLITE_STATIC);
@@ -252,9 +255,9 @@ PEP_STATUS get_own_membership_status(PEP_SESSION session,
     PEP_STATUS status = PEP_STATUS_OK;
 
     sqlite3_reset(session->get_own_membership_status);
-    sqlite3_bind_text(session->get_own_membership_status, 1, group_identity->address, -1,
+    sqlite3_bind_text(session->get_own_membership_status, 1, group_identity->user_id, -1,
                       SQLITE_STATIC);
-    sqlite3_bind_text(session->get_own_membership_status, 2, group_identity->user_id, -1,
+    sqlite3_bind_text(session->get_own_membership_status, 2, group_identity->address, -1,
                       SQLITE_STATIC);
     sqlite3_bind_text(session->get_own_membership_status, 3, own_identity->user_id, -1,
                       SQLITE_STATIC);
@@ -273,6 +276,51 @@ PEP_STATUS get_own_membership_status(PEP_SESSION session,
     }
 
     sqlite3_reset(session->get_own_membership_status);
+
+    return status;
+}
+
+PEP_STATUS retrieve_own_membership_info_for_group_and_identity(PEP_SESSION session,
+                                                     pEp_group* group,
+                                                     pEp_identity* own_identity) {
+
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    sqlite3_reset(session->retrieve_own_membership_info_for_group_and_ident);
+    sqlite3_bind_text(session->retrieve_own_membership_info_for_group_and_ident, 1, group->group_identity->user_id, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_text(session->retrieve_own_membership_info_for_group_and_ident, 2, group->group_identity->address, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_text(session->retrieve_own_membership_info_for_group_and_ident, 3, own_identity->user_id, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_text(session->retrieve_own_membership_info_for_group_and_ident, 4, own_identity->address, -1,
+                      SQLITE_STATIC);
+
+    int result = sqlite3_step(session->retrieve_own_membership_info_for_group_and_ident);
+
+    switch (result) {
+        case SQLITE_ROW: {
+            pEp_member* me_mem = new_member(own_identity);
+            if (!me_mem)
+                return PEP_OUT_OF_MEMORY;
+            me_mem->adopted = sqlite3_column_int(session->retrieve_own_membership_info_for_group_and_ident, 0);
+            member_list* memberlist = new_memberlist(me_mem);
+            if (!memberlist)
+                return PEP_OUT_OF_MEMORY;;
+
+            group->members = memberlist;
+            group->manager = new_identity((const char *) sqlite3_column_text(session->retrieve_own_membership_info_for_group_and_ident, 2),
+                                                NULL,
+                                                (const char *) sqlite3_column_text(session->retrieve_own_membership_info_for_group_and_ident, 1),
+                                                NULL);
+            if (!group->manager)
+                return PEP_OUT_OF_MEMORY;
+            group->active = sqlite3_column_int(session->retrieve_own_membership_info_for_group_and_ident, 3);
+            break;
+        }
+        default:
+            status = PEP_NO_MEMBERSHIP_STATUS_FOUND;
+    }
 
     return status;
 }
