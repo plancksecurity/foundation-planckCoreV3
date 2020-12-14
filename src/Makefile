@@ -5,6 +5,8 @@
 
 include ../Makefile.conf
 
+PEP_MIME=Arrr
+
 ifdef PER_USER_DIRECTORY
 	EXTRA_MACROS+= -DPER_USER_DIRECTORY=$(PER_USER_DIRECTORY)
 endif
@@ -77,7 +79,7 @@ ifneq ($(MAKECMDGOALS),clean)
 endif
 
 $(TARGET): libpEpEngine.a
-	$(CC) $(CFLAGS) $(ALL_OBJECTS) $(LDFLAGS) $(LDLIBS) -o $@
+	$(CXX) $(CFLAGS) $(ALL_OBJECTS) $(LDFLAGS) $(LDLIBS) -o $@
 
 .PHONY: objects clean install_headers install uninstall beinstall
 
