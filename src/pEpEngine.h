@@ -4,7 +4,8 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef PEP_ENGINE_H
+#define PEP_ENGINE_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -2265,4 +2266,5 @@ PEP_STATUS has_partner_contacted_address(PEP_SESSION session, const char* partne
                                                                                   
 #ifdef __cplusplus
 }
+#endif
 #endif

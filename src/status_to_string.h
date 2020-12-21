@@ -4,6 +4,10 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  * @todo    generate this file
  */
+
+#ifndef STATUS_TO_STRING_H
+#define STATUS_TO_STRING_H
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -177,4 +181,5 @@ static inline const char *pEp_comm_type_to_string(PEP_comm_type ct) {
 
 #ifdef __cplusplus
 } // "C"
+#endif
 #endif

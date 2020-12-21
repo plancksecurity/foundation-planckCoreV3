@@ -4,7 +4,8 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef IDENTITY_LIST_H
+#define IDENTITY_LIST_H
 
 #include "pEpEngine.h"
 
@@ -119,4 +120,6 @@ PEP_STATUS set_all_userids_in_list(identity_list* id_list, const char* user_id);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
