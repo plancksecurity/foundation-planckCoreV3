@@ -3,6 +3,9 @@
 
 // maximum attachment size to import as key 1MB, maximum of 20 attachments
 
+#ifndef PEP_INTERNAL_H
+#define PEP_INTERNAL_H
+
 #define MAX_KEY_SIZE (25 * 1024 * 1024)
 #define MAX_KEYS_TO_IMPORT  20
 
@@ -563,3 +566,5 @@ static inline int Sqlite3_step(sqlite3_stmt* stmt)
     } while (rc == SQLITE_BUSY || rc == SQLITE_LOCKED);
     return rc;
 }
+
+#endif

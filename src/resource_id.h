@@ -1,7 +1,8 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#pragma once
+#ifndef RESOURCE_ID_H
+#define RESOURCE_ID_H
 
 /* structs to contain info about parsed resource ids (filenames, uids) */
 typedef enum _resource_id_type {
@@ -32,3 +33,5 @@ char* get_resource(char* uri);
 bool is_file_uri(char* str);
 
 bool is_cid_uri(const char* str);
+
+#endif

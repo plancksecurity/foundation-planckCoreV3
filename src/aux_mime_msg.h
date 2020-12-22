@@ -1,7 +1,8 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#pragma once
+#ifndef AUX_MIME_MSG_H
+#define AUX_MIME_MSG_H
 
 #ifdef ENIGMAIL_MAY_USE_THIS
 
@@ -145,6 +146,8 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

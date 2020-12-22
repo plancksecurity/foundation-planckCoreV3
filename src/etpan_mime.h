@@ -1,7 +1,8 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#pragma once
+#ifndef ETPAN_MIME_H
+#define ETPAN_MIME_H
 
 #define _EXPORT_PEP_ENGINE_DLL
 
@@ -93,3 +94,6 @@ int _get_content_type(
         char **type,
         char **charset
     );
+
+
+#endif

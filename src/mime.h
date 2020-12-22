@@ -1,7 +1,8 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#pragma once
+#ifndef MIME_H
+#define MIME_H
 
 #include "message.h"
 
@@ -101,4 +102,6 @@ DYNAMIC_API PEP_STATUS mime_decode_message(
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

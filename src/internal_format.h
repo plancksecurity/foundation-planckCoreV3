@@ -1,7 +1,9 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#pragma once
+
+#ifndef INTERNAL_FORMAT_H
+#define INTERNAL_FORMAT_H
 
 #include "message.h"
 #include "cryptotech.h"
@@ -69,4 +71,6 @@ DYNAMIC_API PEP_STATUS decode_internal(
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
