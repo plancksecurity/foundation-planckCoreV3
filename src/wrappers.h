@@ -4,7 +4,8 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef WRAPPERS_H
+#define WRAPPERS_H
 
 #include "platform.h"
 
@@ -260,3 +261,5 @@ static inline int Close(int fildes)
 
     return r;
 }
+
+#endif

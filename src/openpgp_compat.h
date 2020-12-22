@@ -5,7 +5,8 @@
  * @license  GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef OPENPGP_COMPAT_H
+#define OPENPGP_COMPAT_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,4 +43,6 @@ DYNAMIC_API PEP_STATUS OpenPGP_list_keyinfo (
     
 #ifdef __cplusplus
 }
+#endif
+
 #endif

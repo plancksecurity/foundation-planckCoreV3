@@ -4,7 +4,8 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef SYNC_API_H
+#define SYNC_API_H
 
 
 #include "message.h"
@@ -307,4 +308,6 @@ DYNAMIC_API PEP_STATUS disable_identity_for_sync(PEP_SESSION session,
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

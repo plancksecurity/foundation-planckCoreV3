@@ -24,7 +24,8 @@ tstylesheet {
          * @license   GNU General Public License 3.0 - see LICENSE.txt
          */
 
-        #pragma once
+        #ifndef «yml:ucase(@name)»_EVENT_H
+        #define «yml:ucase(@name)»_EVENT_H
 
         #include "pEpEngine.h"
 
@@ -87,6 +88,7 @@ tstylesheet {
 
         #ifdef __cplusplus
         }
+        #endif
         #endif
 
         ||
@@ -156,7 +158,8 @@ tstylesheet {
              * @license   GNU General Public License 3.0 - see LICENSE.txt
              */
 
-            #pragma once
+            #ifndef «yml:ucase(@name)»_IMPL_H
+            #define «yml:ucase(@name)»_IMPL_H
 
             #include "fsm_common.h"
             #include "«@name»_event.h"
@@ -329,6 +332,7 @@ tstylesheet {
 
             #ifdef __cplusplus
             }
+            #endif
             #endif
 
             ||
@@ -1393,7 +1397,8 @@ tstylesheet {
          * @license   GNU General Public License 3.0 - see LICENSE.txt
          */
 
-        #pragma once
+        #ifndef «yml:ucase(@name)»_FSM_H
+        #define «yml:ucase(@name)»_FSM_H
 
         #include "«../@name»_impl.h"
 
@@ -1490,6 +1495,7 @@ tstylesheet {
 
         #ifdef __cplusplus
         }
+        #endif
         #endif
 
         ||
@@ -1769,3 +1775,4 @@ tstylesheet {
         | }
     }
 }
+

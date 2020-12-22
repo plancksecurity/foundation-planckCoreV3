@@ -26,8 +26,9 @@ tstylesheet {
          * @license     GNU General Public License 3.0 - see LICENSE.txt
          */
 
-        #pragma once
-
+        
+        #ifndef «yml:ucase(@name)»_CODEC_H
+        #define «yml:ucase(@name)»_CODEC_H
 
         #include "pEpEngine.h"
 
@@ -115,6 +116,7 @@ tstylesheet {
 
         #ifdef __cplusplus
         }
+        #endif
         #endif
 
         ||

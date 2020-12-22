@@ -4,7 +4,8 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef STRINGLIST_H
+#define STRINGLIST_H
 
 #include "dynamic_api.h"
 
@@ -210,4 +211,6 @@ void dedup_stringlist(stringlist_t* stringlist);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
