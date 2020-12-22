@@ -1,8 +1,8 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#ifndef PeP_STRING_H
-#define PeP_STRING_H
+#ifndef PEP_STRING_H
+#define PEP_STRING_H
 
 #include <string.h>
 #include "dynamic_api.h"
