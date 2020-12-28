@@ -4,7 +4,9 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+
+#ifndef KEYMANAGEMENT_H
+#define KEYMANAGEMENT_H
 
 #include "pEpEngine.h"
 
@@ -575,4 +577,6 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

@@ -4,7 +4,8 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef TIMESTAMP_H
+#define TIMESTAMP_H
 
 #include <time.h>
 #include "dynamic_api.h"
@@ -93,3 +94,4 @@ DYNAMIC_API timestamp * timestamp_dup(const timestamp *src);
 }
 #endif
 
+#endif

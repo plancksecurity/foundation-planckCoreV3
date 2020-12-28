@@ -7,7 +7,8 @@
  * @license  GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef BASEPROTOCOL_H
+#define BASEPROTOCOL_H
 
 #include "message.h"
 
@@ -174,3 +175,4 @@ PEP_STATUS try_base_prepare_message(
 }
 #endif
 
+#endif
