@@ -113,7 +113,7 @@ DYNAMIC_API PEP_STATUS rating_of_existing_channel_to_identity(
     }
 
     if (ident->comm_type == PEP_ct_unknown) {
-
+        
     }
 
     return status;
