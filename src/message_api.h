@@ -12,6 +12,7 @@
 #include "keymanagement.h"
 #include "message.h"
 #include "cryptotech.h"
+#include "rating_api.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -234,40 +235,6 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         PEP_enc_format enc_format,
         PEP_encrypt_flags_t flags
     );
-
-/**
- *  @enum    PEP_rating
- *
- *  @brief    TODO
- *
- */
-typedef enum _PEP_rating {
-    PEP_rating_undefined = 0,
-
-    // no color
-
-    PEP_rating_cannot_decrypt = 1,
-    PEP_rating_have_no_key = 2,
-    PEP_rating_unencrypted = 3,
-    PEP_rating_unreliable = 5,
-
-    PEP_rating_b0rken = -2,
-
-    // yellow
-
-    PEP_rating_reliable = 6,
-
-    // green
-
-    PEP_rating_trusted = 7,
-    PEP_rating_trusted_and_anonymized = 8,
-    PEP_rating_fully_anonymous = 9, 
-
-    // red
-
-    PEP_rating_mistrust = -1,
-    PEP_rating_under_attack = -3
-} PEP_rating;
 
 /**
  *  @enum    PEP_color
