@@ -51,6 +51,88 @@ typedef enum _PEP_rating {
 } PEP_rating;
 
 
+/**
+ *  <!--       rating_from_comm_type()       -->
+ *
+ *  @brief Get the rating for a comm type
+ *
+ *  @param[in]   ct    the comm type to deliver the rating for
+ *
+ *  @retval PEP_rating    rating value for comm type ct
+ *
+ *
+ */
+
+DYNAMIC_API PEP_rating rating_from_comm_type(PEP_comm_type ct);
+
+
+/**
+ *  <!--       rating_of_new_channel_to_identity()       -->
+ *
+ *  @brief get the rating for a new channel to a communication partner
+ *
+ *  @param[in]      session     session handle
+ *  @param[in,out]  ident       identity to calculate the rating for
+ *  @param[out]     rating      calculated rating
+ *
+ *  @retval error status or PEP_STATUS_OK on success
+ *
+ *  @warning this function calls update_identity() on the stored identity
+*/
+
+DYNAMIC_API PEP_STATUS rating_of_new_channel_to_identity(
+            PEP_SESSION session,
+            pEp_identity *ident,
+            PEP_rating *rating
+        );
+
+
+/**
+ *  <!--       last_rating_of_channel_to_identity()       -->
+ *
+ *  @brief get the rating of a channel to a communication partner based on last
+ *         calculated comm_type
+ *
+ *  @param[in]      session     session handle
+ *  @param[in,out]  ident       identity to calculate the rating for
+ *  @param[out]     rating      calculated rating
+ *
+ *  @retval error status or PEP_STATUS_OK on success
+ *
+ *  @warning this function calls get_identity() to retrieve the stored identity
+ *           .address and .user_id must be given for a contact
+ *           .address must be given if the identity is not from a stored contact
+*/
+
+DYNAMIC_API PEP_STATUS last_rating_of_channel_to_identity(
+            PEP_SESSION session,
+            const pEp_identity *ident,
+            PEP_rating *rating
+        );
+
+
+/**
+ *  <!--       rating_of_existing_channel_to_identity()       -->
+ *
+ *  @brief get the rating for an existing channel to a communication partner
+ *
+ *  @param[in]      session     session handle
+ *  @param[in]      ident       identity to calculate the rating for
+ *  @param[out]     rating      calculated rating
+ *
+ *  @retval error status or PEP_STATUS_OK on success
+ *
+ *  @warning this function does not call update_identity() and expects .fpr
+ *           being set to comm_partner's key used in this channel
+*/
+
+DYNAMIC_API PEP_STATUS rating_of_existing_channel_to_identity(
+            PEP_SESSION session,
+            const pEp_identity *ident,
+            PEP_rating *rating
+        );
+
+
 #ifdef __cplusplus
 }
 #endif

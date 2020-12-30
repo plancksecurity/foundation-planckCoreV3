@@ -618,20 +618,6 @@ DYNAMIC_API PEP_STATUS get_key_rating_for_user(
     );
 
 /**
- *  <!--       rating_from_comm_type()       -->
- *
- *  @brief Get the rating for a comm type
- *
- *  @param[in]   ct    the comm type to deliver the rating for
- *
- *  @retval PEP_rating    rating value for comm type ct
- *
- *
- */
-
-DYNAMIC_API PEP_rating rating_from_comm_type(PEP_comm_type ct);
-
-/**
  *  @internal
  *
  *  <!--       try_encrypt_message()       -->
