@@ -211,7 +211,6 @@ DYNAMIC_API stringpair_list_t *stringpair_list_delete_by_key(
         const char *key
     )
 {
-    assert(sp_list);
     assert(key);
 
     if (!key || !sp_list)
