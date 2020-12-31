@@ -66,7 +66,7 @@ DYNAMIC_API PEP_STATUS rating_of_new_channel(
     return PEP_STATUS_OK;
 }
 
-DYNAMIC_API PEP_STATUS last_rating_of_channel(
+DYNAMIC_API PEP_STATUS last_rating_of_new_channel(
             PEP_SESSION session,
             const pEp_identity *ident,
             PEP_rating *rating
@@ -116,7 +116,23 @@ static PEP_STATUS trust_between_user_and_key(
 
     *rating = PEP_rating_undefined;
 
-    PEP_STATUS status = PEP_STATUS_OK;
+    pEp_identity *ident = new_identity(NULL, fpr, user_id, NULL);
+    if (!ident)
+        return PEP_OUT_OF_MEMORY;
+
+    PEP_STATUS status = get_trust(session, ident);
+    if (status == PEP_CANNOT_FIND_IDENTITY)
+        status = PEP_STATUS_OK;
+    else if (status)
+        goto the_end;
+
+    if (ident->comm_type == PEP_ct_unknown)
+        *rating = PEP_rating_unreliable;
+    else
+        *rating = rating_from_comm_type(ident->comm_type);
+
+the_end:
+    free_identity(ident);
     return status;
 }
 
