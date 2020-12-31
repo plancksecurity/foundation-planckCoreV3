@@ -67,9 +67,26 @@ DYNAMIC_API PEP_rating rating_from_comm_type(PEP_comm_type ct);
 
 
 /**
- *  <!--       rating_of_new_channel_to_identity()       -->
+ *  <!--       add_rating()       -->
+ *
+ *  @brief add two ratings together
+ *
+ *  @param[in]   rating1    rating to add to
+ *  @param[in]   rating2    rating added
+ *
+ *  @retval PEP_rating    rating value for rating1 + rating2
+ *
+ *
+ */
+
+DYNAMIC_API PEP_rating add_rating(PEP_rating rating1, PEP_rating rating2);
+
+
+/**
+ *  <!--       rating_of_new_channel()       -->
  *
  *  @brief get the rating for a new channel to a communication partner
+ *         outgoing messages are rated using this
  *
  *  @param[in]      session     session handle
  *  @param[in,out]  ident       identity to calculate the rating for
@@ -80,7 +97,7 @@ DYNAMIC_API PEP_rating rating_from_comm_type(PEP_comm_type ct);
  *  @warning this function calls update_identity() on the stored identity
 */
 
-DYNAMIC_API PEP_STATUS rating_of_new_channel_to_identity(
+DYNAMIC_API PEP_STATUS rating_of_new_channel(
             PEP_SESSION session,
             pEp_identity *ident,
             PEP_rating *rating
@@ -88,10 +105,11 @@ DYNAMIC_API PEP_STATUS rating_of_new_channel_to_identity(
 
 
 /**
- *  <!--       last_rating_of_channel_to_identity()       -->
+ *  <!--       last_rating_of_channel()       -->
  *
  *  @brief get the rating of a channel to a communication partner based on last
  *         calculated comm_type
+ *         this is for fast outgoing message ratings
  *
  *  @param[in]      session     session handle
  *  @param[in,out]  ident       identity to calculate the rating for
@@ -104,7 +122,7 @@ DYNAMIC_API PEP_STATUS rating_of_new_channel_to_identity(
  *           .address must be given if the identity is not from a stored contact
 */
 
-DYNAMIC_API PEP_STATUS last_rating_of_channel_to_identity(
+DYNAMIC_API PEP_STATUS last_rating_of_channel(
             PEP_SESSION session,
             const pEp_identity *ident,
             PEP_rating *rating
@@ -112,9 +130,10 @@ DYNAMIC_API PEP_STATUS last_rating_of_channel_to_identity(
 
 
 /**
- *  <!--       rating_of_existing_channel_to_identity()       -->
+ *  <!--       rating_of_existing_channel()       -->
  *
  *  @brief get the rating for an existing channel to a communication partner
+ *         incoming messages are rated using this
  *
  *  @param[in]      session     session handle
  *  @param[in]      ident       identity to calculate the rating for
@@ -123,10 +142,12 @@ DYNAMIC_API PEP_STATUS last_rating_of_channel_to_identity(
  *  @retval error status or PEP_STATUS_OK on success
  *
  *  @warning this function does not call update_identity() and expects .fpr
- *           being set to comm_partner's key used in this channel
+ *           being preset to comm_partner's key used in this channel
+ *           .address and .user_id must be given for a contact
+ *           .address must be given if the identity is not from a stored contact
 */
 
-DYNAMIC_API PEP_STATUS rating_of_existing_channel_to_identity(
+DYNAMIC_API PEP_STATUS rating_of_existing_channel(
             PEP_SESSION session,
             const pEp_identity *ident,
             PEP_rating *rating
