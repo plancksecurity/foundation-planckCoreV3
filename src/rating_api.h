@@ -117,7 +117,8 @@ DYNAMIC_API PEP_STATUS rating_of_new_channel(
  *
  *  @retval error status or PEP_STATUS_OK on success
  *
- *  @warning this function calls get_identity() to retrieve the stored identity
+ *  @warning this function uses a given .comm_type
+ *           this function calls get_identity() if .comm_type is not given
  *           .address and .user_id must be given for a stored contact
  *           .address must be given if the identity is not from a stored contact
 */
