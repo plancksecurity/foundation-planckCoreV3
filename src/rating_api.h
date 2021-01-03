@@ -82,6 +82,9 @@ DYNAMIC_API PEP_rating rating_from_comm_type(PEP_comm_type ct);
 DYNAMIC_API PEP_rating add_rating(PEP_rating rating1, PEP_rating rating2);
 
 
+typedef PEP_STATUS (*channel_rating_t)(
+        PEP_SESSION session, pEp_identity *ident, PEP_rating *rating);
+
 /**
  *  <!--       rating_of_new_channel()       -->
  *
@@ -125,7 +128,7 @@ DYNAMIC_API PEP_STATUS rating_of_new_channel(
 
 DYNAMIC_API PEP_STATUS last_rating_of_new_channel(
             PEP_SESSION session,
-            const pEp_identity *ident,
+            pEp_identity *ident,
             PEP_rating *rating
         );
 
@@ -150,9 +153,83 @@ DYNAMIC_API PEP_STATUS last_rating_of_new_channel(
 
 DYNAMIC_API PEP_STATUS rating_of_existing_channel(
             PEP_SESSION session,
-            const pEp_identity *ident,
+            pEp_identity *ident,
             PEP_rating *rating
         );
+
+
+/**
+ *  <!--       outgoing_message_rating()       -->
+ *
+ *  @brief Get rating for an outgoing message
+ *
+ *  @param[in]   session    session handle
+ *  @param[in]   msg        message to get the rating for
+ *  @param[out]  rating     rating for the message
+ *
+ *  @retval error status or PEP_STATUS_OK on success
+ *
+ *  @warning msg->from must point to a valid pEp_identity
+ *           msg->dir must be PEP_dir_outgoing
+ *           the ownership of msg remains with the caller
+ *
+ */
+
+DYNAMIC_API PEP_STATUS outgoing_message_rating(
+        PEP_SESSION session,
+        message *msg,
+        PEP_rating *rating
+    );
+
+
+/**
+ *  <!--       outgoing_message_rating_preview()       -->
+ *
+ *  @brief Get rating preview
+ *
+ *  @param[in]   session    session handle
+ *  @param[in]   msg        message to get the rating for
+ *  @param[out]  rating     rating preview for the message
+ *
+ *  @retval error status or PEP_STATUS_OK on success
+ *
+ *  @warning msg->from must point to a valid pEp_identity
+ *           msg->dir must be PEP_dir_outgoing
+ *           the ownership of msg remains with the caller
+ *
+ */
+
+DYNAMIC_API PEP_STATUS outgoing_message_rating_preview(
+        PEP_SESSION session,
+        message *msg,
+        PEP_rating *rating
+    );
+
+
+/**
+ *  <!--       incoming_message_rating_for_identities()       -->
+ *
+ *  @brief Get rating of the identities of an incoming message
+ *
+ *  @param[in]   session    session handle
+ *  @param[in]   msg        message to get the rating for
+ *  @param[out]  rating     rating for the message
+ *
+ *  @retval error status or PEP_STATUS_OK on success
+ *
+ *  @warning msg->from must point to a valid pEp_identity
+ *           msg->dir must be PEP_dir_incoming
+ *           the ownership of msg remains with the caller
+ *           to actually calculate the rating of an incoming message this must
+ *           be added to the crypto rating of the incoming message to calculate
+ *           the rating of an incoming message
+ */
+
+DYNAMIC_API PEP_STATUS incoming_message_rating_for_identities(
+        PEP_SESSION session,
+        message *msg,
+        PEP_rating *rating
+    );
 
 
 #ifdef __cplusplus

@@ -384,51 +384,6 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
 
 
 /**
- *  <!--       outgoing_message_rating()       -->
- *
- *  @brief Get rating for an outgoing message
- *
- *  @param[in]   session    session handle
- *  @param[in]   msg        message to get the rating for
- *  @param[out]  rating     rating for the message
- *
- *  @retval error status or PEP_STATUS_OK on success
- *
- *  @warning msg->from must point to a valid pEp_identity
- *           msg->dir must be PEP_dir_outgoing
- *           the ownership of msg remains with the caller
- *
- */
-DYNAMIC_API PEP_STATUS outgoing_message_rating(
-        PEP_SESSION session,
-        message *msg,
-        PEP_rating *rating
-    );
-
-
-/**
- *  <!--       outgoing_message_rating_preview()       -->
- *
- *  @brief Get rating preview
- *
- *  @param[in]   session    session handle
- *  @param[in]   msg        message to get the rating for
- *  @param[out]  rating     rating preview for the message
- *
- *  @retval error status or PEP_STATUS_OK on success
- *
- *  @warning msg->from must point to a valid pEp_identity
- *           msg->dir must be PEP_dir_outgoing
- *           the ownership of msg remains with the caller
- *
- */
-DYNAMIC_API PEP_STATUS outgoing_message_rating_preview(
-        PEP_SESSION session,
-        message *msg,
-        PEP_rating *rating
-    );
-
-/**
  *  <!--       identity_rating()       -->
  *
  *  @brief Get rating for a single identity
