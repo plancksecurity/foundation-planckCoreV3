@@ -207,27 +207,27 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating_preview(
 
 
 /**
- *  <!--       incoming_message_rating_for_identities()       -->
+ *  <!--       incoming_message_rating()       -->
  *
- *  @brief Get rating of the identities of an incoming message
+ *  @brief Get rating of an incoming message
  *
  *  @param[in]   session    session handle
- *  @param[in]   msg        message to get the rating for
+ *  @param[in]   src        encrypted version of message to get the rating for
+ *  @param[in]   dst        decrypted version of message to get the rating for
  *  @param[out]  rating     rating for the message
  *
  *  @retval error status or PEP_STATUS_OK on success
  *
- *  @warning msg->from must point to a valid pEp_identity
- *           msg->dir must be PEP_dir_incoming
- *           the ownership of msg remains with the caller
- *           to actually calculate the rating of an incoming message this must
- *           be added to the crypto rating of the incoming message to calculate
- *           the rating of an incoming message
+ *  @warning src->from must point to a valid pEp_identity
+ *           src->dir must be PEP_dir_incoming
+ *           src->enc_format must be set to the actual encryption format
+ *           dst->_sender_fpr must be set if available
  */
 
-DYNAMIC_API PEP_STATUS incoming_message_rating_for_identities(
+DYNAMIC_API PEP_STATUS incoming_message_rating(
         PEP_SESSION session,
-        message *msg,
+        const message *src,
+        const message *dst,
         PEP_rating *rating
     );
 

@@ -379,9 +379,9 @@ the_end:
     return status;
 }
 
-DYNAMIC_API PEP_STATUS incoming_message_rating_for_identities(
+static PEP_STATUS incoming_message_rating_for_identities(
         PEP_SESSION session,
-        message *msg,
+        const message *msg,
         PEP_rating *rating
     )
 {
@@ -408,5 +408,121 @@ DYNAMIC_API PEP_STATUS incoming_message_rating_for_identities(
 
 the_end:
     return status;
+}
+
+static PEP_STATUS sender_fpr_rating(
+        PEP_SESSION session,
+        const pEp_identity *from,
+        const char *sender_fpr,
+        PEP_rating *rating
+    )
+{
+    assert(session && from && from->user_id && rating);
+    if (!(session && from && from->user_id && rating))
+        return PEP_ILLEGAL_VALUE;
+
+    PEP_STATUS status = PEP_STATUS_OK;
+    PEP_rating _rating = PEP_rating_undefined;
+
+    if (EMPTYSTR(sender_fpr))
+        _rating = PEP_rating_unreliable;   
+    else
+        status = trust_between_user_and_key(session, from->user_id, sender_fpr, &_rating);
+
+    if (status)
+        return status;
+
+    *rating = _rating == PEP_rating_undefined ? PEP_rating_unreliable : _rating;
+    return PEP_STATUS_OK;
+}
+
+static PEP_STATUS incoming_message_crypto_rating(
+        PEP_SESSION session,
+        const message *src,
+        const message *dst,
+        PEP_rating *rating
+    )
+{
+    assert(session && src && rating);
+    if (!(session && src && rating))
+        return PEP_ILLEGAL_VALUE;
+
+    if (!src->from || src->dir != PEP_dir_incoming)
+        return PEP_ILLEGAL_VALUE;
+
+    if (src->enc_format != PEP_enc_none && !dst) {
+        *rating = PEP_rating_cannot_decrypt;
+        return PEP_STATUS_OK;
+    }
+
+    *rating = PEP_rating_undefined;
+    PEP_rating enc_rating = PEP_rating_undefined;
+
+    switch (src->enc_format) {
+        case PEP_enc_none:
+            enc_rating = PEP_rating_unencrypted;
+            break;
+
+        case PEP_enc_pieces:
+        case PEP_enc_inline_EA:
+            // if there are no attachments this can be trusted
+            if (!(src->attachments && src->attachments->value))
+                enc_rating = PEP_rating_trusted;
+            // in case there are attachments then we cannot check reliability
+            else
+                enc_rating = PEP_rating_unreliable;
+            break;
+
+        case PEP_enc_S_MIME:
+            // S/MIME is broken since efail, but we're polite
+            enc_rating = PEP_rating_unreliable;
+            break;
+
+        case PEP_enc_PGP_MIME:
+        case PEP_enc_PEP:
+        case PEP_enc_PGP_MIME_Outlook1:
+            // this can be trusted
+            enc_rating = PEP_rating_trusted;
+            break;
+
+        default:
+            return PEP_ILLEGAL_VALUE;
+    }
+
+    PEP_rating sender_rating = PEP_rating_undefined;
+    PEP_STATUS status = sender_fpr_rating(session, src->from, dst->_sender_fpr, &sender_rating);
+    if (status)
+        return status;
+
+    *rating = add_rating(enc_rating, sender_rating);
+    return PEP_STATUS_OK;
+}
+
+DYNAMIC_API PEP_STATUS incoming_message_rating(
+        PEP_SESSION session,
+        const message *src,
+        const message *dst,
+        PEP_rating *rating
+    )
+{
+    assert(session && src && rating);
+    if (!(session && src && rating))
+        return PEP_ILLEGAL_VALUE;
+
+    if (!src->from || src->dir != PEP_dir_incoming)
+        return PEP_ILLEGAL_VALUE;
+
+    PEP_rating crypto_rating = PEP_rating_undefined;
+    PEP_STATUS status = incoming_message_crypto_rating(session, src, dst, &crypto_rating);
+    if (status)
+        return status;
+
+    PEP_rating identities_rating = PEP_rating_undefined;
+    status = incoming_message_rating_for_identities(session, dst, &identities_rating);
+    if (status)
+        return status;
+
+    *rating = add_rating(crypto_rating, identities_rating);
+    return PEP_STATUS_OK;
 }
 
