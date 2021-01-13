@@ -20,12 +20,15 @@ LDFLAGS+= $(ETPAN_LIB) $(PEP_MIME_LIB) -L../asn.1 -shared
 LDLIBS+= -lc -lasn1
 NO_SOURCE=
 
-ifndef PEP_MIME
-LDLIBS+= -letpan
+ifeq ($(MIME_LIB),etpan)
+    LDLIBS+=-letpan
+else ifeq ($(MIME_LIB),pEpMIME)
+    LDLUBS+=-lpEpMIME
+    NO_SOURCE+= etpan_mime.c
 else
-LDLIBS+= -lpEpMIME
-NO_SOURCE+= etpan_mime.c
+    $(error "You must set MIME_LIB to 'etpan' or 'pEpMIME'!" )
 endif
+
 
 ifeq ($(BUILD_ON),Darwin)
     ifeq ($(BUILD_FOR),Darwin)
