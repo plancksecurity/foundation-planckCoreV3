@@ -17,6 +17,8 @@
 #include "resource_id.h"
 #include "internal_format.h"
 #include "sync_codec.h"
+#include "distribution_codec.h"
+#include "group.h"
 
 #include <assert.h>
 #include <string.h>
@@ -4623,6 +4625,30 @@ enomem:
     
 }
 
+static PEP_STATUS process_Distribution_message(PEP_SESSION session,
+                                               message* msg,
+                                               PEP_rating rating,
+                                               const char* data, size_t size,
+                                               char* sender_fpr) {
+
+    Distribution_t *dist = NULL;
+    PEP_STATUS status = decode_Distribution_message(data, size, &dist);
+    if (status != PEP_STATUS_OK || !dist)
+        return status;
+
+    switch(dist->present) {
+        case Distribution_PR_keyreset:
+            break; // We'll do something later here on refactor!
+        case Distribution_PR_managedgroup:
+            // Set the group stuff in motion!
+            status = receive_managed_group_message(session, msg, rating, dist);
+            break;
+        default:
+            status = PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
+    }
+    return status;
+}
+
 static PEP_STATUS _decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -5560,20 +5586,34 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
     message *msg = *dst ? *dst : src;
 
-    if (session->inject_sync_event && msg && msg->from &&
-            !(*flags & PEP_decrypt_flag_dont_trigger_sync)) {
+    // Ok, now we check to see if it was an administrative message. We do this by testing base_extract for success
+    // with protocol families.
+    if (msg && msg->from) {
         size_t size;
         const char *data;
         char *sender_fpr = NULL;
-        PEP_STATUS tmpstatus = base_extract_message(session, msg, BASE_SYNC, &size, &data, &sender_fpr);
-        if (!tmpstatus && size && data) {
-            if (sender_fpr)
-                signal_Sync_message(session, *rating, data, size, msg->from, sender_fpr);
-            // FIXME: this must be changed to sender_fpr
-            else if (*keylist)
-                signal_Sync_message(session, *rating, data, size, msg->from, (*keylist)->value);
+
+        PEP_STATUS tmp_status = PEP_UNKNOWN_ERROR; // We start with error because OK means we successfully matched
+
+        if (session->inject_sync_event && !(*flags & PEP_decrypt_flag_dont_trigger_sync)) {
+            tmp_status = base_extract_message(session, msg, BASE_SYNC, &size, &data, &sender_fpr);
+            if (!tmp_status && size && data) {
+                if (sender_fpr)
+                    signal_Sync_message(session, *rating, data, size, msg->from, sender_fpr);
+                  // FIXME: this must be changed to sender_fpr
+                else if (*keylist)
+                    signal_Sync_message(session, *rating, data, size, msg->from, (*keylist)->value);
+            }
+            free(sender_fpr);
         }
-        free(sender_fpr);
+        if (tmp_status != PEP_STATUS_OK) {
+            // Try the rest
+            PEP_STATUS tmpstatus = base_extract_message(session, msg, BASE_DISTRIBUTION, &size, &data, &sender_fpr);
+            if (!tmpstatus && size && data) {
+                process_Distribution_message(session, msg, *rating, data, size, sender_fpr);
+            }
+            free(sender_fpr);
+        }
     }
 
     // Removed for now - partial fix in ENGINE-647, but we have sync issues. Need to 

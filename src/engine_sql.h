@@ -521,6 +521,12 @@ static const char *sql_get_all_members =
 static const char *sql_get_active_members =
         "select member_id, member_address from own_groups_members "
         "    where group_id = ?1 and group_address = ?2 and active_member = 1; ";
+static const char *sql_get_group_manager =
+        "select manager_id, manager_address from groups "
+        "   where group_id = ?1 and group_address = ?2; ";
+static const char *sql_is_invited_group_member =
+        "select count(*) from own_groups_members "
+        "   where group_id = ?1 and group_address = ?2 and member_id = ?3 and member_address = ?4; ";
 static const char *sql_get_all_groups =
         "select group_id, group_address from own_memberships; ";
 static const char *sql_get_active_groups =
@@ -530,13 +536,13 @@ static const char *sql_add_own_membership_entry =
         "    values (?1, ?2, ?3, ?4, 0) ; ";
 
 // This below can return multiple entries for multiple idents in same group
+// FIXME: decide what we really need here
 static const char *sql_retrieve_own_membership_info_for_group =
-        "select group_id, group_address, own_id, own_address, have_joined, manager_id, manager_address, active "
+        "select own_id, own_address, have_joined "
         "    from own_memberships "
         "    inner join using (group_id, group_address) "
-        "        where group_address = ?1; ";
+        "        where group_id = ?1 and group_address = ?2; ";
 
-// This below will return a single entry -- is this a bad shortcut not also querying on ID? It's always OWN.
 static const char *sql_retrieve_own_membership_info_for_group_and_ident =
         "select have_joined, manager_userid, manager_address, active "
         "    from own_memberships "

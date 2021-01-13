@@ -152,6 +152,9 @@ typedef enum {
     PEP_CANNOT_ADD_GROUP_MEMBER                     = 0x0b06,
     PEP_CANNOT_DEACTIVATE_GROUP_MEMBER              = 0x0b07,
     PEP_NO_MEMBERSHIP_STATUS_FOUND                  = 0x0b08,
+    PEP_CANNOT_LEAVE_GROUP                          = 0x0b09,
+    PEP_CANNOT_JOIN_GROUP                           = 0x0b0a,
+    PEP_CANNOT_RETRIEVE_MEMBERSHIP_INFO             = 0x0b0b,
 
     PEP_DISTRIBUTION_ILLEGAL_MESSAGE                = 0x1002,
 
@@ -2273,6 +2276,9 @@ PEP_STATUS set_all_userids_to_own(PEP_SESSION session,
 PEP_STATUS has_partner_contacted_address(PEP_SESSION session, const char* partner_id,
                                          const char* own_address, bool* was_contacted);
                                                                                   
+
+PEP_STATUS exists_identity_entry(PEP_SESSION session, pEp_identity* identity,
+                                 bool* exists);
 #ifdef __cplusplus
 }
 #endif

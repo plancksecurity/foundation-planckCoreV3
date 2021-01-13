@@ -255,6 +255,9 @@ struct _pEpSession {
     sqlite3_stmt *add_own_membership_entry;
     sqlite3_stmt *get_own_membership_status;
     sqlite3_stmt *retrieve_own_membership_info_for_group_and_ident;
+    sqlite3_stmt *retrieve_own_membership_info_for_group;
+    sqlite3_stmt *get_group_manager;
+    sqlite3_stmt *is_invited_group_member;
 
 //    sqlite3_stmt *set_own_key;
 
@@ -826,3 +829,19 @@ static inline int Sqlite3_step(sqlite3_stmt* stmt)
     } while (rc == SQLITE_BUSY || rc == SQLITE_LOCKED);
     return rc;
 }
+
+/**
+ *  @internal
+ *
+ *  <!--       _add_auto_consume()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*msg		message
+ *
+ */
+static inline void _add_auto_consume(message* msg) {
+    add_opt_field(msg, "pEp-auto-consume", "yes");
+    msg->in_reply_to = stringlist_add(msg->in_reply_to, "pEp-auto-consume@pEp.foundation");
+}
+

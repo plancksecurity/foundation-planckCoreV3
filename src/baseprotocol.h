@@ -28,7 +28,7 @@ extern "C" {
 typedef enum _base_protocol_type {
     BASE_SIGN = 0,
     BASE_SYNC = 1,
-    BASE_KEYRESET = 2
+    BASE_DISTRIBUTION = 2
 } base_protocol_type;
 
 

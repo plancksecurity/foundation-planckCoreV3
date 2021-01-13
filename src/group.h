@@ -4,6 +4,7 @@
 #pragma once
 
 #include "message_api.h"
+#include "../asn.1/Distribution.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -105,7 +106,8 @@ PEP_STATUS leave_group(
 
 PEP_STATUS group_dissolve(
         PEP_SESSION session,
-        pEp_identity *group_identity
+        pEp_identity *group_identity,
+        pEp_identity *manager
     );
 
 PEP_STATUS group_enable(
@@ -167,6 +169,16 @@ PEP_STATUS add_own_membership_entry(PEP_SESSION session,
 PEP_STATUS retrieve_own_membership_info_for_group_and_identity(PEP_SESSION session,
                                                      pEp_group* group,
                                                      pEp_identity* own_identity);
+
+PEP_STATUS receive_managed_group_message(PEP_SESSION session, message* msg, PEP_rating rating, Distribution_t* dist);
+
+PEP_STATUS send_GroupCreate(PEP_SESSION session, pEp_group* group);
+PEP_STATUS send_GroupDissolve(PEP_SESSION session, pEp_group* group);
+
+PEP_STATUS retrieve_active_member_list(
+        PEP_SESSION session,
+        pEp_identity* group_identity,
+        member_list** mbr_idents);
 
 #ifdef __cplusplus
 }

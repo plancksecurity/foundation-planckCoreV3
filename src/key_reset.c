@@ -23,20 +23,6 @@
 #define KEY_RESET_MAJOR_VERSION 1L
 #define KEY_RESET_MINOR_VERSION 0L
 
-/**
- *  @internal
- *  
- *  <!--       _add_auto_consume()       -->
- *  
- *  @brief			TODO
- *  
- *  @param[in]	*msg		message
- *  
- */
-static void _add_auto_consume(message* msg) {
-    add_opt_field(msg, "pEp-auto-consume", "yes");
-    msg->in_reply_to = stringlist_add(msg->in_reply_to, "pEp-auto-consume@pEp.foundation");
-}
 
 /**
  *  @internal
@@ -219,7 +205,7 @@ static PEP_STATUS _generate_own_commandlist_msg(PEP_SESSION session,
     pEp_identity* from = identity_dup(from_idents->ident);
     pEp_identity* to = identity_dup(from);    
     status = base_prepare_message(session, from, to,
-                                  BASE_KEYRESET, payload, size, NULL,
+                                  BASE_DISTRIBUTION, payload, size, NULL,
                                   &msg);
 
     if (status != PEP_STATUS_OK)
@@ -329,7 +315,7 @@ static PEP_STATUS _generate_keyreset_command_message(PEP_SESSION session,
         return status;
         
     status = base_prepare_message(session, outgoing_ident, to_ident,
-                                  BASE_KEYRESET, payload, size, NULL,
+                                  BASE_DISTRIBUTION, payload, size, NULL,
                                   &msg);
                                   
     if (status != PEP_STATUS_OK) {
@@ -536,7 +522,7 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
     char* not_used_fpr = NULL;
     status = base_extract_message(session,
                                   reset_msg,
-                                  BASE_KEYRESET,
+                                  BASE_DISTRIBUTION,
                                   &size,
                                   &payload,
                                   &not_used_fpr);
@@ -1683,13 +1669,13 @@ Distribution_t *Distribution_from_keyreset_command_list(
         Distribution_t *dist
     )
 {
-    bool allocated = !dist;
+    bool allocated = dist;
 
     assert(command_list);
     if (!command_list)
         return NULL;
 
-    if (allocated)
+    if (!allocated)
         dist = (Distribution_t *) calloc(1, sizeof(Distribution_t));
 
     assert(dist);
@@ -1790,7 +1776,7 @@ the_end:
  *  
  *  @brief			TODO
  *  
- *  @param[in]	*dist		Distribution_t
+ *  @param[in]	*dist		        Distribution_t
  *  @param[in]	*command_list		keyreset_command_list
  *  
  */
