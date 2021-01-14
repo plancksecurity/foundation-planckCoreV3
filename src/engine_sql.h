@@ -522,7 +522,7 @@ static const char *sql_get_active_members =
         "select member_id, member_address from own_groups_members "
         "    where group_id = ?1 and group_address = ?2 and active_member = 1; ";
 static const char *sql_get_group_manager =
-        "select manager_id, manager_address from groups "
+        "select manager_userid, manager_address from groups "
         "   where group_id = ?1 and group_address = ?2; ";
 static const char *sql_is_invited_group_member =
         "select count(*) from own_groups_members "
@@ -540,7 +540,7 @@ static const char *sql_add_own_membership_entry =
 static const char *sql_retrieve_own_membership_info_for_group =
         "select own_id, own_address, have_joined "
         "    from own_memberships "
-        "    inner join using (group_id, group_address) "
+        "    inner join groups using (group_id, group_address) "
         "        where group_id = ?1 and group_address = ?2; ";
 
 static const char *sql_retrieve_own_membership_info_for_group_and_ident =
