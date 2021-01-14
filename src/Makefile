@@ -23,7 +23,7 @@ NO_SOURCE=
 ifeq ($(MIME_LIB),etpan)
     LDLIBS+=-letpan
 else ifeq ($(MIME_LIB),pEpMIME)
-    LDLUBS+=-lpEpMIME
+    LDLIBS+=-lpEpMIME
     NO_SOURCE+= etpan_mime.c
 else
     $(error "You must set MIME_LIB to 'etpan' or 'pEpMIME'!" )
