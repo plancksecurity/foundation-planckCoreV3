@@ -10,6 +10,10 @@
 
 #include <gtest/gtest.h>
 
+PEP_STATUS GECT_message_send_callback(message* msg);
+PEP_STATUS GECT_ensure_passphrase_callback(PEP_SESSION session, const char* key);
+
+static void* GECT_fake_this;
 
 namespace {
 
@@ -18,6 +22,9 @@ namespace {
         public:
             Engine* engine;
             PEP_SESSION session;
+
+            vector<message*> m_queue;
+            vector<string> pass_list;
 
         protected:
             // You can remove any or all of the following functions if its body
@@ -33,12 +40,51 @@ namespace {
                 // You can do clean-up work that doesn't throw exceptions here.
             }
 
+            // yeah yeah, I played a lot of ESO over break.
+            const char* manager_1_address = "fennarion@ravenwatch.house";
+            const char* manager_1_name = "Fennarion of House Ravenwatch";
+            const char* manager_1_fpr = "53A63A8DD7BB86C0D5D5DF92743FCA3C268B111B";
+            const char* manager_1_prefix = "fennarion_0x268B111B";
+            const char* manager_2_address = "vanus.galerion@mage.guild";
+            const char* manager_2_name = "Vanus Galerion, the GOAT";
+            const char* manager_2_fpr = "9800C0D0DCFBF7C7537E9E936A8A9FE79C875C78";
+            const char* manager_2_prefix = "vanus.galerion_0x9C875C78";
+            const char* member_1_address = "lyris@titanborn.skyrim";
+            const char* member_1_name = "Lyris Titanborn";
+            const char* member_1_fpr = "5824AAA2931821BDCDCD722F0FD5D60500E3D05A";
+            const char* member_1_prefix = "lyris_0x00E3D05A";
+            const char* member_2_address = "emperor@aquilarios.cyrodiil";
+            const char* member_2_name = "The Prophet";
+            const char* member_2_fpr = "A0FAE720349589348BD097C7B2A754FED1AC4929";
+            const char* member_2_prefix = "emperor_0xD1AC4929";
+            const char* member_3_address = "abner@tharn.cool";
+            const char* member_3_name = "Go away, peasants!";
+            const char* member_3_fpr = "39119E7972E36604F8D4C8815CC7EA7175909622";
+            const char* member_3_prefix = "abner_0x75909622";
+            const char* member_4_address = "sai_sahan@blades.hammerfall";
+            const char* member_4_name = "Snow Lily Fan 20X6";
+            const char* member_4_fpr = "1CD438E516506CCA9393933CBEFFD2F8FD070276";
+            const char* member_4_prefix = "sai_sahan_0xFD070276";
+            const char* group_1_address = "not_bad_vampires@ravenwatch.house";
+            const char* group_1_name = "Totally Not Evil Vampires";
+            const char* group_1_fpr = "1444A86CD0AEE6EA40F5C4ECDB4C2E8D0A7893F2";
+            const char* group_1_prefix = "not_bad_vampires_0x0A7893F2";
+            const char* group_2_address = "vanus_for_archmage@mage.guild";
+            const char* group_2_name = "Vanus for Best Mage Ever Campaign";
+            const char* group_2_fpr = "A39A9EE41E9D6380C8E5220E6DC64C166456E7C7";
+            const char* group_2_prefix = "vanus_for_archmage_0x6456E7C7";
+            
+            string kf_name(const char* prefix, bool priv) {
+                return string("test_keys/") + (priv ? "priv/" : "pub/") + prefix + (priv ? "_priv.asc" : "_pub.asc");
+            }
+
             // If the constructor and destructor are not enough for setting up
             // and cleaning up each test, you can define the following methods:
 
             void SetUp() override {
                 // Code here will be called immediately after the constructor (right
                 // before each test).
+                GECT_fake_this = (void*)this;
 
                 // Leave this empty if there are no files to copy to the home directory path
                 std::vector<std::pair<std::string, std::string>> init_files = std::vector<std::pair<std::string, std::string>>();
@@ -48,7 +94,7 @@ namespace {
                 ASSERT_NE(engine, nullptr);
 
                 // Ok, let's initialize test directories etc.
-                engine->prep(NULL, NULL, NULL, init_files);
+                engine->prep(&GECT_message_send_callback, NULL, &GECT_ensure_passphrase_callback, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
@@ -56,11 +102,14 @@ namespace {
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
+                m_queue.clear();
+                pass_list.clear();
             }
 
             void TearDown() override {
                 // Code here will be called immediately after each test (right
                 // before the destructor).
+                GECT_fake_this = NULL;
                 engine->shut_down();
                 delete engine;
                 engine = NULL;
@@ -77,6 +126,14 @@ namespace {
 
 }  // namespace
 
+PEP_STATUS GECT_message_send_callback(message* msg) {
+    ((GroupEncryptionTest*)GECT_fake_this)->m_queue.push_back(msg);
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS GECT_ensure_passphrase_callback(PEP_SESSION session, const char* fpr) {
+    return config_valid_passphrase(session, fpr, ((GroupEncryptionTest*)GECT_fake_this)->pass_list);
+}
 
 TEST_F(GroupEncryptionTest, check_member_create_w_ident) {
     pEp_identity* bob = new_identity("bob@bob.bob", NULL, "BOB_ID", NULL);
@@ -516,4 +573,35 @@ TEST_F(GroupEncryptionTest, check_join_group) {
     ASSERT_EQ(group->members->next, nullptr);
 }
 
-// join_group(session, *group_identity, *as_member);
+TEST_F(GroupEncryptionTest, check_protocol_group_create) {
+    pEp_identity* me = new_identity(manager_1_address, NULL, PEP_OWN_USERID, manager_1_name);
+    read_file_and_import_key(session, kf_name(manager_1_prefix, false).c_str());
+    read_file_and_import_key(session, kf_name(manager_1_prefix, true).c_str());
+    PEP_STATUS status = set_own_key(session, me, manager_1_fpr);
+    ASSERT_OK;
+
+    pEp_identity* member_1 = new_identity(member_1_address, NULL, PEP_OWN_USERID, member_1_name);
+    read_file_and_import_key(session, kf_name(member_1_prefix, false).c_str());
+    pEp_identity* member_2 = new_identity(member_2_address, NULL, PEP_OWN_USERID, member_2_name);
+    read_file_and_import_key(session, kf_name(member_2_prefix, false).c_str());
+    pEp_identity* member_3 = new_identity(member_3_address, NULL, PEP_OWN_USERID, member_3_name);
+    read_file_and_import_key(session, kf_name(member_3_prefix, false).c_str());
+    pEp_identity* member_4 = new_identity(member_4_address, NULL, PEP_OWN_USERID, member_4_name);
+    read_file_and_import_key(session, kf_name(member_4_prefix, false).c_str());
+
+    member_list* new_members = new_memberlist(new_member(member_1));
+    ASSERT_NE(new_members, nullptr);
+    memberlist_add(new_members, new_member(member_2));
+    memberlist_add(new_members, new_member(member_3));
+    memberlist_add(new_members, new_member(member_4));
+
+    pEp_identity* group_ident = new_identity(group_1_address, NULL, PEP_OWN_USERID, group_1_name);
+
+    pEp_group* group = NULL;
+    status = group_create(session, group_ident, me, new_members, &group);
+    ASSERT_OK;
+
+
+    // Ok, we now have a bunch of messages to check.
+
+}
