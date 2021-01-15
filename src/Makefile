@@ -24,6 +24,7 @@ ifeq ($(MIME_LIB),etpan)
     LDLIBS+=-letpan
 else ifeq ($(MIME_LIB),pEpMIME)
     LDLIBS+=-lpEpMIME
+    CFLAGS+=-fsanitize=address  # TODO: is it supported on all compilers, e.g. on Apple's XCode compiler?
     NO_SOURCE+= etpan_mime.c
 else
     $(error "You must set MIME_LIB to 'etpan' or 'pEpMIME'!" )
