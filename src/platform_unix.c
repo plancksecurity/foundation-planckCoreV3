@@ -4,7 +4,9 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
+#ifndef ZOS
 #define _POSIX_C_SOURCE 200809L
+#endif
 
 #ifdef ANDROID
 #ifndef __LP64__ 
@@ -37,9 +39,55 @@
 #endif
 #define SYSTEM_DB_FILENAME "system.db"
 
-#ifdef ANDROID
-#include <uuid.h>
+#ifndef strndup
+char *strndup (const char *s, size_t n)
+{
+     char *result;
+     size_t len = strnlen (s, n);
 
+     result = (char *) malloc (len + 1);
+     if (!result)
+        return 0;
+
+    result[len] = '\0';
+    return (char *) memcpy (result, s, len);
+}
+#endif
+
+#ifndef strnlen
+size_t strnlen (const char *s, size_t maxlen)
+{
+    size_t i;
+
+    for (i = 0; i < maxlen; ++i)
+        if (s[i] == '\0')
+            break;
+    return i;
+}
+#endif
+
+#ifndef stpcpy
+char *stpcpy(char *dst, const char *src)
+{
+    for (;; ++dst, ++src) {
+        *dst = *src;
+        if (*dst == 0)
+            break;
+    }
+    return dst;
+}
+#endif
+
+#ifndef alloca
+#pragma linkage(__alloca,builtin)
+void *__alloca(unsigned long x);
+void *alloca(unsigned long x)
+{
+    return __alloca(x);
+}
+#endif
+
+#if defined(ANDROID) || defined(ZOS)
 /* FIXME : timegm will miss when linking for x86_64 on android, when supported */
 #ifndef __LP64__ 
 time_t timegm(struct tm* const t) {
@@ -70,16 +118,6 @@ char *stpncpy(char *dst, const char *src, size_t n)
         } while (--n != 0);
     }
     return (dst);
-}
-
-char *stpcpy(char *dst, const char *src)
-{
-    for (;; ++dst, ++src) {
-        *dst = *src;
-        if (*dst == 0)
-            break;
-    }
-    return dst;
 }
 
 /*
@@ -125,8 +163,36 @@ const char *android_system_db(void)
     }
     return buffer;
 }
+#endif
+
+#ifdef ZOS
+char * e2as(const char * str)
+{
+    char *ret = (char *)malloc(strlen(str));
+    strcpy(ret, str);
+    __e2a_s(ret);
+    return ret;
+}
+
+char * as2e(const char * str)
+{
+    char *ret = (char *)malloc(strlen(str));
+    strcpy(ret, str);
+    __a2e_s(ret);
+    return ret;
+}
+
+void uuid_generate_random(pEpUUID out)
+{
+}
+
+void uuid_unparse_upper(pEpUUID uu, uuid_string_t out)
+{
+}
+#endif
 
 
+#ifdef ANDROID
 void uuid_generate_random(pEpUUID out)
 {
     uuid_t *uuid;
@@ -146,7 +212,6 @@ void uuid_generate_random(pEpUUID out)
         uuid_destroy(uuid);
     }
 }
-
 
 void uuid_unparse_upper(pEpUUID uu, uuid_string_t out)
 {
@@ -171,7 +236,6 @@ void uuid_unparse_upper(pEpUUID uu, uuid_string_t out)
         uuid_destroy(uuid);
     }
 }
-
 #endif
 
 #if !defined(BSD) && !defined(__APPLE__)
