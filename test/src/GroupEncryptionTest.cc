@@ -73,7 +73,7 @@ namespace {
             const char* group_2_name = "Vanus for Best Mage Ever Campaign";
             const char* group_2_fpr = "A39A9EE41E9D6380C8E5220E6DC64C166456E7C7";
             const char* group_2_prefix = "vanus_for_archmage_0x6456E7C7";
-            
+
             string kf_name(const char* prefix, bool priv) {
                 return string("test_keys/") + (priv ? "priv/" : "pub/") + prefix + (priv ? "_priv.asc" : "_pub.asc");
             }
@@ -601,7 +601,46 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create) {
     status = group_create(session, group_ident, me, new_members, &group);
     ASSERT_OK;
 
-
     // Ok, we now have a bunch of messages to check.
+    ASSERT_GT(m_queue.size(), 4);
+
+    message* msg = m_queue[0];
+    ASSERT_NE(msg, nullptr);
+    ASSERT_NE(msg->from, nullptr);
+    ASSERT_NE(msg->to, nullptr);
+    ASSERT_NE(msg->to->ident, nullptr);
+    ASSERT_EQ(msg->to->next, nullptr);
+    ASSERT_STREQ(msg->from->address, manager_1_address);
+    ASSERT_STREQ(msg->to->ident->address, member_1_address);
+
+    msg = m_queue[1];
+    ASSERT_NE(msg, nullptr);
+    ASSERT_NE(msg->from, nullptr);
+    ASSERT_NE(msg->to, nullptr);
+    ASSERT_NE(msg->to->ident, nullptr);
+    ASSERT_EQ(msg->to->next, nullptr);
+    ASSERT_STREQ(msg->from->address, manager_1_address);
+    ASSERT_STREQ(msg->to->ident->address, member_2_address);
+
+    msg = m_queue[2];
+    ASSERT_NE(msg, nullptr);
+    ASSERT_NE(msg->from, nullptr);
+    ASSERT_NE(msg->to, nullptr);
+    ASSERT_NE(msg->to->ident, nullptr);
+    ASSERT_EQ(msg->to->next, nullptr);
+    ASSERT_STREQ(msg->from->address, manager_1_address);
+    ASSERT_STREQ(msg->to->ident->address, member_3_address);
+
+    msg = m_queue[3];
+    ASSERT_NE(msg, nullptr);
+    ASSERT_NE(msg->from, nullptr);
+    ASSERT_NE(msg->to, nullptr);
+    ASSERT_NE(msg->to->ident, nullptr);
+    ASSERT_EQ(msg->to->next, nullptr);
+    ASSERT_STREQ(msg->from->address, manager_1_address);
+    ASSERT_STREQ(msg->to->ident->address, member_4_address);
+
+    // MESSAGE LIST NOW INVALID.
+    m_queue.clear();
 
 }
