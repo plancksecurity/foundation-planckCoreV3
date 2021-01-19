@@ -6,6 +6,7 @@
 
 #define _EXPORT_PEP_ENGINE_DLL
 #include "mime.h"
+#include "pEp_internal.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -38,7 +39,7 @@ static bool is_whitespace(char c)
 
 DYNAMIC_API bool is_PGP_message_text(const char *text)
 {
-    if (text == NULL)
+    if (EMPTYSTR(text))
         return false;
 
     for (; *text && is_whitespace(*text); text++);
