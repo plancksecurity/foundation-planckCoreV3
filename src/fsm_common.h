@@ -8,7 +8,9 @@
 // Written by Volker Birk
 
 
-#pragma once
+
+#ifndef FSM_COMMON_H
+#define FSM_COMMON_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,3 +49,4 @@ enum {
 }
 #endif
 
+#endif

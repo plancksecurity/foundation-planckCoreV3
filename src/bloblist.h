@@ -1,7 +1,8 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#pragma once
+#ifndef BLOBLIST_H
+#define BLOBLIST_H
 
 #include <stddef.h> 
 
@@ -145,4 +146,6 @@ DYNAMIC_API bloblist_t* bloblist_join(bloblist_t* first, bloblist_t* second);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

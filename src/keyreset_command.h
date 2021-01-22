@@ -1,7 +1,8 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#pragma once
+#ifndef KEYRESET_COMMAND_H
+#define KEYRESET_COMMAND_H
 
 #include "dynamic_api.h"
 #include "pEpEngine.h"
@@ -145,5 +146,7 @@ DYNAMIC_API void free_keyreset_command_list(keyreset_command_list * command_list
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 

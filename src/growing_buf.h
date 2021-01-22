@@ -1,8 +1,9 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#pragma once
 
+#ifndef GROWING_BUF_H
+#define GROWING_BUF_H
 
 #include "pEpEngine.h"
 
@@ -52,5 +53,7 @@ int growing_buf_consume(const void *src, size_t size, growing_buf_t *dst);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 

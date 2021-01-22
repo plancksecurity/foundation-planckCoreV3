@@ -1,7 +1,8 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#pragma once
+#ifndef KEY_RESET_H
+#define KEY_RESET_H
 
 #include "pEpEngine.h"
 #include "keymanagement.h"
@@ -174,4 +175,6 @@ PEP_STATUS PER_to_key_reset_commands(const char *cmds, size_t size, keyreset_com
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

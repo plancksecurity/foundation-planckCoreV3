@@ -1,7 +1,8 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#pragma once
+#ifndef TRANSPORT_H
+#define TRANSPORT_H
 
 #include "pEpEngine.h"
 #include "message.h"
@@ -44,3 +45,4 @@ typedef uint64_t transports_mask;
 }
 #endif
 
+#endif

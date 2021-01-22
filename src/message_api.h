@@ -1,7 +1,8 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#pragma once
+#ifndef MESSAGE_API_H
+#define MESSAGE_API_H
 
 #include "pEpEngine.h"
 #include "keymanagement.h"
@@ -576,4 +577,6 @@ DYNAMIC_API PEP_STATUS probe_encrypt(PEP_SESSION session, const char *fpr);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
