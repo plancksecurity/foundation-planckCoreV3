@@ -21,7 +21,7 @@ endif
 
 .PHONY: all sync asn1 build install dbinstall uninstall clean tags test package db
 
-build: asn1
+build: asn1 pepmime
 	$(MAKE) -C src
 
 all: build
@@ -34,9 +34,13 @@ sync:
 asn1: sync
 	$(MAKE) -C asn.1
 
+pepmime:
+	$(MAKE) -C pEpMIME lib
+
 install: build
 	$(MAKE) -C src install
 	$(MAKE) -C asn.1 install
+	$(MAKE) -C pEpMIME engine_install
 
 beinstall:
 	$(MAKE) -C src beinstall

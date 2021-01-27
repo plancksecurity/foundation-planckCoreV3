@@ -13,17 +13,21 @@ ifdef PER_MACHINE_DIRECTORY
 	EXTRA_MACROS+= -DPER_MACHINE_DIRECTORY=\"$(PER_MACHINE_DIRECTORY)\"
 endif
 
-CFLAGS+= $(ETPAN_INC) $(PEP_MIME_INC) -I../asn.1 $(EXTRA_MACROS)
-LDFLAGS+= $(ETPAN_LIB) $(PEP_MIME_LIB) -L../asn.1 -shared
-LDLIBS+= -lc -lasn1
 NO_SOURCE=
 
 ifndef PEP_MIME
-LDLIBS+= -letpan
+    CFLAGS+= $(ETPAN_INC)
+    LDFLAGS+= $(ETPAN_LIB)
+    LDLIBS+= -letpan
 else
-LDLIBS+= -lpEpMIME
-NO_SOURCE+= etpan_mime.c
+    LDFLAGS+= -L../pEpMIME -shared
+    LDLIBS+= -lpEpMIME
+    NO_SOURCE+= etpan_mime.c
 endif
+    
+CFLAGS+= -I../asn.1 $(EXTRA_MACROS)
+LDFLAGS+= -L../asn.1 -shared
+LDLIBS+= -lc -lasn1
 
 ifeq ($(BUILD_ON),Darwin)
     ifeq ($(BUILD_FOR),Darwin)
