@@ -776,7 +776,7 @@ static inline void _fix_asn1_constraint(asn_TYPE_descriptor_t* lang_def) {
     fixed_vals->value.range_bits = 0;
     fixed_vals->value.effective_bits = 0;
     fixed_vals->value.lower_bound = 0;
-    fixed_vals->value.upper_bound = 0;
+    fixed_vals->value.upper_bound = 1; // I am nervous about this...
 
     // We don't free the lang_def previous value because it was stack-allocated
     lang_def->per_constraints = fixed_vals;

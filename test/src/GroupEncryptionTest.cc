@@ -7,8 +7,12 @@
 #include "TestConstants.h"
 #include "Engine.h"
 #include "group.h"
+#include "message_api.h"
+#include "test_util.h"
 
 #include <gtest/gtest.h>
+
+#define GECT_WRITEOUT 1
 
 PEP_STATUS GECT_message_send_callback(message* msg);
 PEP_STATUS GECT_ensure_passphrase_callback(PEP_SESSION session, const char* key);
@@ -115,6 +119,19 @@ namespace {
                 engine = NULL;
                 session = NULL;
             }
+
+            const char* get_prefix_from_address(const char* address) {
+                if (strcmp(address, member_1_address) == 0)
+                    return member_1_prefix;
+                if (strcmp(address, member_2_address) == 0)
+                    return member_2_prefix;
+                if (strcmp(address, member_3_address) == 0)
+                    return member_3_prefix;
+                if (strcmp(address, member_4_address) == 0)
+                    return member_4_prefix;
+                return NULL;
+            }
+
 
         private:
             const char* test_suite_name;
@@ -350,6 +367,7 @@ TEST_F(GroupEncryptionTest, check_create_group) {
     ASSERT_EQ(group->manager, group_leader);
     ASSERT_EQ(group->manager->flags & PEP_idf_group_ident, 0);
     ASSERT_EQ(group->members, list); // We don't do anything to this list, so....
+    ASSERT_STRNEQ(group_ident->fpr, group_leader->fpr);
 
     free_group(group);
 }
@@ -580,13 +598,13 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create) {
     PEP_STATUS status = set_own_key(session, me, manager_1_fpr);
     ASSERT_OK;
 
-    pEp_identity* member_1 = new_identity(member_1_address, NULL, PEP_OWN_USERID, member_1_name);
+    pEp_identity* member_1 = new_identity(member_1_address, NULL, "MEMBER1", member_1_name);
     read_file_and_import_key(session, kf_name(member_1_prefix, false).c_str());
-    pEp_identity* member_2 = new_identity(member_2_address, NULL, PEP_OWN_USERID, member_2_name);
+    pEp_identity* member_2 = new_identity(member_2_address, NULL, "MEMBER2", member_2_name);
     read_file_and_import_key(session, kf_name(member_2_prefix, false).c_str());
-    pEp_identity* member_3 = new_identity(member_3_address, NULL, PEP_OWN_USERID, member_3_name);
+    pEp_identity* member_3 = new_identity(member_3_address, NULL, "MEMBER3", member_3_name);
     read_file_and_import_key(session, kf_name(member_3_prefix, false).c_str());
-    pEp_identity* member_4 = new_identity(member_4_address, NULL, PEP_OWN_USERID, member_4_name);
+    pEp_identity* member_4 = new_identity(member_4_address, NULL, "MEMBER4", member_4_name);
     read_file_and_import_key(session, kf_name(member_4_prefix, false).c_str());
 
     member_list* new_members = new_memberlist(new_member(member_1));
@@ -602,45 +620,168 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create) {
     ASSERT_OK;
 
     // Ok, we now have a bunch of messages to check.
-    ASSERT_GT(m_queue.size(), 4);
+    ASSERT_EQ(m_queue.size(), 4);
 
-    message* msg = m_queue[0];
-    ASSERT_NE(msg, nullptr);
-    ASSERT_NE(msg->from, nullptr);
-    ASSERT_NE(msg->to, nullptr);
-    ASSERT_NE(msg->to->ident, nullptr);
-    ASSERT_EQ(msg->to->next, nullptr);
-    ASSERT_STREQ(msg->from->address, manager_1_address);
-    ASSERT_STREQ(msg->to->ident->address, member_1_address);
+    for (int i = 0; i < 4; i++) {
+        message* msg = m_queue[i];
+        ASSERT_NE(msg, nullptr);
+        ASSERT_NE(msg->from, nullptr);
+        ASSERT_NE(msg->to, nullptr);
+        ASSERT_NE(msg->to->ident, nullptr);
+        ASSERT_EQ(msg->to->next, nullptr);
+        ASSERT_STREQ(msg->from->address, manager_1_address);
 
-    msg = m_queue[1];
-    ASSERT_NE(msg, nullptr);
-    ASSERT_NE(msg->from, nullptr);
-    ASSERT_NE(msg->to, nullptr);
-    ASSERT_NE(msg->to->ident, nullptr);
-    ASSERT_EQ(msg->to->next, nullptr);
-    ASSERT_STREQ(msg->from->address, manager_1_address);
-    ASSERT_STREQ(msg->to->ident->address, member_2_address);
+#if GECT_WRITEOUT
+            char* outdata = NULL;
+            mime_encode_message(msg, false, &outdata, false);
+            ASSERT_NE(outdata, nullptr);
+            dump_out((string("test_mails/group_create_") + get_prefix_from_address(msg->to->ident->address) + ".eml").c_str(), outdata);
+            free(outdata);
+#endif
+    }
 
-    msg = m_queue[2];
-    ASSERT_NE(msg, nullptr);
-    ASSERT_NE(msg->from, nullptr);
-    ASSERT_NE(msg->to, nullptr);
-    ASSERT_NE(msg->to->ident, nullptr);
-    ASSERT_EQ(msg->to->next, nullptr);
-    ASSERT_STREQ(msg->from->address, manager_1_address);
-    ASSERT_STREQ(msg->to->ident->address, member_3_address);
-
-    msg = m_queue[3];
-    ASSERT_NE(msg, nullptr);
-    ASSERT_NE(msg->from, nullptr);
-    ASSERT_NE(msg->to, nullptr);
-    ASSERT_NE(msg->to->ident, nullptr);
-    ASSERT_EQ(msg->to->next, nullptr);
-    ASSERT_STREQ(msg->from->address, manager_1_address);
-    ASSERT_STREQ(msg->to->ident->address, member_4_address);
 
     // MESSAGE LIST NOW INVALID.
     m_queue.clear();
 
+    // FIXME: Check all of the DB stuff, etc
+
 }
+
+TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_1) {
+    const char* own_id = "DIFFERENT_OWN_ID_FOR_KICKS";
+    pEp_identity* me = new_identity(member_1_address, NULL, own_id, member_1_name);
+    read_file_and_import_key(session, kf_name(member_1_prefix, false).c_str());
+    read_file_and_import_key(session, kf_name(member_1_prefix, true).c_str());
+    PEP_STATUS status = set_own_key(session, me, member_1_fpr);
+    ASSERT_OK;
+
+    status = myself(session, me);
+
+    ASSERT_STREQ(me->fpr, member_1_fpr);
+
+    read_file_and_import_key(session, kf_name(manager_1_prefix, false).c_str());
+
+    string msg_str = slurp(string("test_mails/group_create_") + member_1_prefix + ".eml");
+    ASSERT_FALSE(msg_str.empty());
+
+    message* msg = NULL;
+
+    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
+    ASSERT_NE(msg, nullptr);
+
+    message* dec_msg = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_OK;
+
+    // Ok, so that worked.
+    stringlist_t* autoconsume = stringlist_find(msg->opt_fields, "pEp-auto-consume");
+    ASSERT_NE(autoconsume, nullptr);
+
+    // Let's see if the message did the right thing:
+    pEp_identity group_identity = update_identity(group_1_address, NULL, NULL, NULL);
+    status = update_identity(group_identity);
+    ASSERT_OK;
+    ASSERT_TRUE(is_me(session, group_identity));
+    ASSERT_NE(group_identity->flags & PEP_idf_group_ident, 0);
+    ASSERT_STREQ(group_identity->username, group_1_name);
+    ASSERT_STRNEQ(group_identity->user_id, PEP_OWN_USERID);
+
+
+}
+
+TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_2) {
+    pEp_identity* me = new_identity(member_2_address, NULL, PEP_OWN_USERID, member_2_name);
+    read_file_and_import_key(session, kf_name(member_2_prefix, false).c_str());
+    read_file_and_import_key(session, kf_name(member_2_prefix, true).c_str());
+    PEP_STATUS status = set_own_key(session, me, member_2_fpr);
+    ASSERT_OK;
+
+    status = myself(session, me);
+
+    ASSERT_STREQ(me->fpr, member_2_fpr);
+
+    read_file_and_import_key(session, kf_name(manager_1_prefix, false).c_str());
+
+    string msg_str = slurp(string("test_mails/group_create_") + member_2_prefix + ".eml");
+    ASSERT_FALSE(msg_str.empty());
+
+    message* msg = NULL;
+
+    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
+    ASSERT_NE(msg, nullptr);
+
+    message* dec_msg = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_OK;
+}
+
+TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_3) {
+    pEp_identity* me = new_identity(member_3_address, NULL, "DIFFERENT_OWN_ID_FOR_KICKS", member_3_name);
+    read_file_and_import_key(session, kf_name(member_3_prefix, false).c_str());
+    read_file_and_import_key(session, kf_name(member_3_prefix, true).c_str());
+    PEP_STATUS status = set_own_key(session, me, member_3_fpr);
+    ASSERT_OK;
+
+    status = myself(session, me);
+
+    ASSERT_STREQ(me->fpr, member_3_fpr);
+
+    read_file_and_import_key(session, kf_name(manager_1_prefix, false).c_str());
+
+    string msg_str = slurp(string("test_mails/group_create_") + member_3_prefix + ".eml");
+    ASSERT_FALSE(msg_str.empty());
+
+    message* msg = NULL;
+
+    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
+    ASSERT_NE(msg, nullptr);
+
+    message* dec_msg = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_OK;
+}
+
+TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_4) {
+    pEp_identity* me = new_identity(member_4_address, NULL, "DIFFERENT_OWN_ID_FOR_KICKS", member_4_name);
+    read_file_and_import_key(session, kf_name(member_4_prefix, false).c_str());
+    read_file_and_import_key(session, kf_name(member_4_prefix, true).c_str());
+    PEP_STATUS status = set_own_key(session, me, member_4_fpr);
+    ASSERT_OK;
+
+    status = myself(session, me);
+
+    ASSERT_STREQ(me->fpr, member_4_fpr);
+
+    read_file_and_import_key(session, kf_name(manager_1_prefix, false).c_str());
+
+    string msg_str = slurp(string("test_mails/group_create_") + member_4_prefix + ".eml");
+    ASSERT_FALSE(msg_str.empty());
+
+    message* msg = NULL;
+
+    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
+    ASSERT_NE(msg, nullptr);
+
+    message* dec_msg = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_OK;
+}
+
+
