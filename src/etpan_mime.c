@@ -2361,35 +2361,38 @@ static identity_list * mal_to_identity_list(
         pEp_identity *ident;
 
         struct mailimf_address *addr = clist_content(cur);
-        switch(addr->ad_type) {
-            case MAILIMF_ADDRESS_MAILBOX:
-                ident = mailbox_to_identity(addr->ad_data.ad_mailbox);
-                if (ident == NULL)
-                    goto enomem;
-                _il = identity_list_add(_il, ident);
-                if (_il == NULL)
-                    goto enomem;
-                break;
+        if (addr) {
+            switch (addr->ad_type) {
+                case MAILIMF_ADDRESS_MAILBOX:
+                    ident = mailbox_to_identity(addr->ad_data.ad_mailbox);
+                    if (ident == NULL)
+                        goto enomem;
+                    _il = identity_list_add(_il, ident);
+                    if (_il == NULL)
+                        goto enomem;
+                    break;
 
-            case MAILIMF_ADDRESS_GROUP:
-                {
-                    struct mailimf_mailbox_list * mbl =
+                case MAILIMF_ADDRESS_GROUP: {
+                    struct mailimf_mailbox_list *mbl =
                             addr->ad_data.ad_group->grp_mb_list;
-                    for (clistiter *cur2 = clist_begin(mbl->mb_list); cur2 != NULL;
-                            cur2 = clist_next(cur2)) {
-                        ident = mailbox_to_identity(clist_content(cur));
-                        if (ident == NULL)
-                            goto enomem;
-                        _il = identity_list_add(_il, ident);
-                        if (_il == NULL)
-                            goto enomem;
+                    if (mbl) {
+                        for (clistiter *cur2 = clist_begin(mbl->mb_list); cur2 != NULL;
+                             cur2 = clist_next(cur2)) {
+                            ident = mailbox_to_identity(clist_content(cur));
+                            if (ident == NULL)
+                                goto enomem;
+                            _il = identity_list_add(_il, ident);
+                            if (_il == NULL)
+                                goto enomem;
+                        }
                     }
                 }
-                break;
+                    break;
 
-            default:
-                assert(0);
-                goto enomem;
+                default:
+                    assert(0);
+                    goto enomem;
+            }
         }
     }
 
@@ -2529,7 +2532,7 @@ static PEP_STATUS read_fields(message *msg, clist *fieldlist)
                 {
                     struct mailimf_address_list *mal =
                             _field->fld_data.fld_to->to_addr_list;
-                    identity_list *il = mal_to_identity_list(mal);
+                    identity_list *il = mal ? mal_to_identity_list(mal) : new_identity_list(NULL);
                     if (il == NULL)
                         goto enomem;
 
