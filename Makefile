@@ -19,23 +19,23 @@ ifdef BUILD_CONFIG
     $(info ================================================)
 endif
 
-.PHONY: all sync asn1 build install dbinstall uninstall clean tags test package db
+.PHONY: all pepmime sync asn1 build install dbinstall uninstall clean tags test package db
 
-build: asn1 pepmime
+build: pepmime asn1
 	$(MAKE) -C src
 
 all: build
 # `make all` is not for tests, that's what `make test` is for
 #	$(MAKE) -C test
 
+pepmime:
+	$(MAKE) -C pEpMIME lib
 sync:
 	$(MAKE) -C sync
 
 asn1: sync
 	$(MAKE) -C asn.1
 
-pepmime:
-	$(MAKE) -C pEpMIME lib
 
 install: build
 	$(MAKE) -C src install

@@ -86,6 +86,7 @@ lldb-history
 test/EngineTests
 test/googletest
 test/tmp/*
+.idea/
 
 # ignore generated test data
 

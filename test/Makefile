@@ -34,7 +34,13 @@ else ifeq ($(OPENPGP),NETPGP)
     LDFLAGS+= $(NETGPG_LIB)
 endif
 
-LDLIBS+= -letpan -lpEpEngine -lstdc++ -lasn1
+ifdef PEP_MIME
+LDLIBS+= -lpEpMIME -liconv
+else
+LDLIBS_= -letpan
+endif
+
+LDLIBS+= -lpEpEngine -lstdc++ -lasn1
 
 ifeq ($(BUILD_FOR),Linux)
     LDLIBS+= -luuid
@@ -72,9 +78,12 @@ else ifeq ($(OPENPGP),NETPGP)
 endif
 
 EXTRA_LIB_PATHS=.:../src:
+ifndef PEP_MIME
 ifdef ETPAN_LIB
     EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(ETPAN_LIB)):
 endif
+endif
+
 ifdef GPGME_LIB
     EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(GPGME_LIB)):
 endif
