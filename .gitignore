@@ -1,14 +1,12 @@
-syntax: regexp
-^asn\.1/.*\.(c|h)$
-^asn\.1/libasn1\.a$
-.*xcuserdata/
-^build/
-^local.conf
-^test_home/
-
-syntax: glob
 asn.1/Makefile.am.*
 asn.1/converter-example.mk
+asn.1/libasn1.a
+local.conf
+build/
+test_home/
+asn.1/*.c
+asn.1/*.h
+xcuserdata/
 *.orig
 *.old
 *.d
