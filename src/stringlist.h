@@ -177,7 +177,7 @@ DYNAMIC_API void free_stringlist(stringlist_t *stringlist);
  *  @param[in]  value        const char*
  *  
  */
-stringlist_t* stringlist_search(stringlist_t* head, const char* value);
+const stringlist_t* stringlist_search(const stringlist_t* head, const char* value);
 
 // create comma-separated string
 /**

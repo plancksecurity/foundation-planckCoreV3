@@ -105,6 +105,7 @@ typedef enum {
     PEP_VERIFIED_AND_TRUSTED                        = 0x0408,
     PEP_CANNOT_REENCRYPT                            = 0x0409,
     PEP_VERIFY_SIGNER_KEY_REVOKED                   = 0x040a,
+    PEP_VERFIY_DIFFERENT_KEYS                       = 0x040b,
     PEP_CANNOT_DECRYPT_UNKNOWN                      = 0x04ff,
 
 
@@ -406,6 +407,40 @@ typedef enum {
 
 DYNAMIC_API PEP_STATUS config_cipher_suite(PEP_SESSION session,
         PEP_CIPHER_SUITE suite);
+
+
+/**
+ *  @enum    PEP_HONOR_EXTRA_KEYS
+*/
+
+typedef enum _PEP_HONOR_EXTRA_KEYS {
+    PEP_honor_incoming = 0,
+    PEP_honor_incoming_and_outgoing = 1,
+    PEP_honor_none = 2
+} PEP_HONOR_EXTRA_KEYS;
+
+
+/**
+ *  <!--       config_honor_extra_keys()       -->
+ *  
+ *  @brief      Honor extra keys in incoming messages, in both directions or
+ *              none of them
+ *
+ *  @param[in]   session            session handle
+ *  @param[in]   honor_extra_keys
+ *
+ *  @warning pEp engine's standard is to accept that comm partners are using BCC
+ *           and extra keys. If switched off by delivering PEP_honor_none no
+ *           green rating can be achieved anymore if the usage of BCC or extra
+ *           keys is detected
+ *           incoming and outgoing means that pEp engine uses extra keys in
+ *           replies on request of the communication partner
+ *           pEp applications may set PEP_honor_incoming_and_outgoing by
+ *           default but are required to clearly mark this to the user
+ */
+
+DYNAMIC_API PEP_STATUS config_honor_extra_keys(PEP_SESSION session,
+        PEP_HONOR_EXTRA_KEYS honor_extra_keys);
 
 
 /**

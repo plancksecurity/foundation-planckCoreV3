@@ -1676,45 +1676,6 @@ static char * without_double_ending(const char *filename)
 /**
  *  @internal
  *
- *  <!--       decrypt_rating()       -->
- *
- *  @brief			TODO
- *
- *  @param[in]	status		PEP_STATUS
- *
- */
-static PEP_rating decrypt_rating(PEP_STATUS status)
-{
-    switch (status) {
-    case PEP_UNENCRYPTED:
-    case PEP_VERIFIED:
-    case PEP_VERIFY_NO_KEY:
-    case PEP_VERIFIED_AND_TRUSTED:
-        return PEP_rating_unencrypted;
-
-    case PEP_DECRYPTED:
-    case PEP_VERIFY_SIGNER_KEY_REVOKED:
-    case PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH:
-        return PEP_rating_unreliable;
-
-    case PEP_DECRYPTED_AND_VERIFIED:
-        return PEP_rating_reliable;
-
-    case PEP_DECRYPT_NO_KEY:
-        return PEP_rating_have_no_key;
-
-    case PEP_DECRYPT_WRONG_FORMAT:
-    case PEP_CANNOT_DECRYPT_UNKNOWN:
-        return PEP_rating_cannot_decrypt;
-
-    default:
-        return PEP_rating_undefined;
-    }
-}
-
-/**
- *  @internal
- *
  *  <!--       key_rating()       -->
  *
  *  @brief			TODO
@@ -5207,7 +5168,7 @@ static PEP_STATUS _decrypt_message(
                 if (extra) {
                     stringlist_t* curr_key = NULL;
                     for (curr_key = extra; curr_key && curr_key->value; curr_key = curr_key->next) {
-                        stringlist_t* found = stringlist_search(_keylist, curr_key->value);
+                        const stringlist_t* found = stringlist_search(_keylist, curr_key->value);
                         if (!found) {
                             key_missing = true;
                             break;

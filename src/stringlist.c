@@ -128,12 +128,12 @@ DYNAMIC_API stringlist_t *stringlist_add(
     return list_curr->next;
 }
 
-stringlist_t* stringlist_search(stringlist_t* head, const char* value) {
+const stringlist_t* stringlist_search(const stringlist_t* head, const char* value) {
     if (!head || !value || !head->value)
         return NULL;
-    stringlist_t* retval = NULL;
+    const stringlist_t* retval = NULL;
     
-    stringlist_t* curr = head;
+    const stringlist_t* curr = head;
     for (; curr ; curr = curr->next) {
         if (strcmp(curr->value, value) == 0) {
             retval = curr;

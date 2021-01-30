@@ -5544,6 +5544,18 @@ DYNAMIC_API PEP_STATUS config_cipher_suite(PEP_SESSION session,
     return session->cryptotech[PEP_crypt_OpenPGP].config_cipher_suite(session, suite);
 }
 
+
+DYNAMIC_API PEP_STATUS config_honor_extra_keys(PEP_SESSION session,
+        PEP_HONOR_EXTRA_KEYS honor_extra_keys)
+{
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    session->honor_extra_keys = honor_extra_keys;
+    return PEP_STATUS_OK;
+}
+
+
 /**
  *  @internal
  *

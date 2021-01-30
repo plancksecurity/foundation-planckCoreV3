@@ -498,10 +498,80 @@ static PEP_STATUS incoming_message_crypto_rating(
     return PEP_STATUS_OK;
 }
 
+PEP_rating decrypt_rating(PEP_STATUS status)
+{
+    switch (status) {
+    case PEP_UNENCRYPTED:
+    case PEP_VERIFIED:
+    case PEP_VERIFY_NO_KEY:
+    case PEP_VERIFIED_AND_TRUSTED:
+        return PEP_rating_unencrypted;
+
+    case PEP_DECRYPTED:
+    case PEP_VERIFY_SIGNER_KEY_REVOKED:
+    case PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH:
+    case PEP_VERFIY_DIFFERENT_KEYS:
+        return PEP_rating_unreliable;
+
+    case PEP_DECRYPTED_AND_VERIFIED:
+        return PEP_rating_reliable;
+
+    case PEP_DECRYPT_NO_KEY:
+        return PEP_rating_have_no_key;
+
+    case PEP_DECRYPT_WRONG_FORMAT:
+    case PEP_CANNOT_DECRYPT_UNKNOWN:
+        return PEP_rating_cannot_decrypt;
+
+    default:
+        return PEP_rating_undefined;
+    }
+}
+
+static bool all_known_keys_are_legit(const message *dst,
+        const stringlist_t *known_keys)
+{
+    if (!known_keys)
+        return true;
+    else if (!dst)
+        return false;
+
+    for (const stringlist_t *_nk = known_keys; _nk && !EMPTYSTR(_nk->value);
+            _nk = _nk->next) {
+        bool found = false;
+        for (const identity_list *il = dst->to; il && il->ident;
+                il = il->next) {
+            if (!EMPTYSTR(il->ident->fpr) && stringlist_search(_nk, il->ident->fpr)) {
+                found = true;
+                break;
+            }
+        }
+        if (found)
+            continue;
+
+        for (const identity_list *il = dst->cc; il && il->ident;
+                il = il->next) {
+            if (!EMPTYSTR(il->ident->fpr) && stringlist_search(_nk, il->ident->fpr)) {
+                found = true;
+                break;
+            }
+        }
+        if (found)
+            continue;
+        else
+            return false;
+    }
+
+    return true;
+}
+
 DYNAMIC_API PEP_STATUS incoming_message_rating(
         PEP_SESSION session,
         const message *src,
         const message *dst,
+        const stringlist_t *known_keys,
+        const stringpair_list_t *extra_keys,
+        PEP_STATUS decrypt_status,
         PEP_rating *rating
     )
 {
@@ -512,17 +582,40 @@ DYNAMIC_API PEP_STATUS incoming_message_rating(
     if (!src->from || src->dir != PEP_dir_incoming)
         return PEP_ILLEGAL_VALUE;
 
+    if (extra_keys && extra_keys->value) {
+        if (EMPTYSTR(extra_keys->value->key) ||
+                EMPTYSTR(extra_keys->value->value))
+            return PEP_ILLEGAL_VALUE;
+    }
+
+    *rating = PEP_rating_undefined;
+    PEP_rating _rating = decrypt_rating(decrypt_status);;
+
+    if (session->honor_extra_keys == PEP_honor_none) {
+        if (extra_keys && extra_keys->value) {
+            _rating = add_rating(_rating, PEP_rating_unreliable);
+        }
+        else if (known_keys && known_keys->value) {
+            if (!all_known_keys_are_legit(dst, known_keys))
+                _rating = add_rating(_rating, PEP_rating_unreliable);
+        }
+    }
+
     PEP_rating crypto_rating = PEP_rating_undefined;
-    PEP_STATUS status = incoming_message_crypto_rating(session, src, dst, &crypto_rating);
+    PEP_STATUS status = incoming_message_crypto_rating(session, src, dst,
+            &crypto_rating);
     if (status)
         return status;
+    _rating = add_rating(_rating, crypto_rating);
 
     PEP_rating identities_rating = PEP_rating_undefined;
-    status = incoming_message_rating_for_identities(session, dst, &identities_rating);
+    status = incoming_message_rating_for_identities(session, dst,
+            &identities_rating);
     if (status)
         return status;
+    _rating = add_rating(_rating, identities_rating);
 
-    *rating = add_rating(crypto_rating, identities_rating);
+    *rating = _rating;
     return PEP_STATUS_OK;
 }
 

@@ -279,7 +279,11 @@ struct _pEpSession {
     bool passive_mode;
     bool unencrypted_subject;
     bool service_log;
+
+    // if extra keys are honored
     
+    PEP_HONOR_EXTRA_KEYS honor_extra_keys;
+
 #ifndef NDEBUG
     int debug_color;
 #endif
