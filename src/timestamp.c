@@ -22,13 +22,21 @@ DYNAMIC_API time_t timegm_with_gmtoff(const timestamp* ts)
     if (!_ts)
         return -1;
 
+#if defined(ZOS)
+    const time_t raw_time = mktime(_ts);
+#else
     const time_t raw_time = timegm(_ts);
+#endif
     if(raw_time==-1)
         return -1;
  
     free_timestamp(_ts);
 
+#if defined(ZOS)
+    return raw_time;
+#else
     return raw_time - ts->tm_gmtoff;
+#endif
 }
 
 

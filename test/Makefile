@@ -16,6 +16,10 @@ SRCS:=$(wildcard src/*.cc) $(wildcard src/*/*.cc)
 OBJS:=$(addsuffix .o,$(basename $(SRCS)))
 DEPS:=$(OBJS:.o=.d)
 
+ifeq ($(BUILD_ON),OS/390)
+    OBJS+=../src/libpEpEngine.x
+endif
+
 LDFLAGS+= -L../asn.1 -L../src $(ETPAN_LIB) $(GTEST_LDFLAGS)
 
 TARGET:=EngineTests
@@ -34,7 +38,12 @@ else
     LDLIBS+= -letpan
 endif
 
-LDLIBS+= -lpEpEngine -lstdc++ -lasn1
+ifeq ($(BUILD_ON),OS/390)
+    LDLIBS+= -letpan-no-mt
+else
+    LDLIBS+= -letpan -lpEpEngine -lstdc++
+endif
+LDLIBS+= -lasn1
 
 ifeq ($(BUILD_FOR),Linux)
     LDLIBS+= -luuid
@@ -52,8 +61,19 @@ ifdef SQLITE3_FROM_OS
     LDLIBS+= -lsqlite3
 endif
 
-CXXFLAGS:=$(filter-out -DNDEBUG,$(CXXFLAGS)) -I$(GTEST_INC_DIR)
-CPPFLAGS:=$(filter-out -DNDEBUG,$(CPPFLAGS))
+ifeq ($(OPENPGP),GPG)
+    #LDLIBS+= -lgpgme
+else ifeq ($(OPENPGP),NETPGP)
+    LDLIBS+= -lnetpgp
+    ifeq ($(BUILD_FOR),Linux)
+        LDLIBS+= -ltre
+    endif
+endif
+
+CXXFLAGS:=$(filter-out -DNDEBUG,$(CXXFLAGS))
+
+# FIXME Possibly missing incdirs: ASN1C_INC
+CXXFLAGS+= -I$(GTEST_INC_DIR) -I./src -I../sync $(INC_FLAGS) -Wno-deprecated -Wno-unused-variable
 
 CXXFLAGS+= -I./src -I../src -I ../asn.1 -I../sync $(INC_FLAGS) -Wno-deprecated -Wno-unused-variable
 
@@ -88,8 +108,13 @@ all:
 %.d: %.cc
 	$(CXX) -MM $(CXXFLAGS) $(CPPFLAGS) $< | sed -e 's,\($*\)\.o[ :]*,\1.o $@: ,g' > $@
 
+LDLIBS+=-lgtest -lgtest_main
+ifneq ($(BUILD_ON),OS/390)
+    LDLIBS+=-lsequoia_openpgp_ffi 
+endif
+
 $(TARGET): $(OBJS)
-	${CXX} ${CXXFLAGS} ${CPPFLAGS} ${LDFLAGS} -L${PREFIX}/lib -o $@ $^ -lpEpEngine -lgtest -lgtest_main $(LDLIBS)
+	${CXX} ${LDFLAGS} -L${PREFIX}/lib -o $@ $^ $(LDLIBS)
 
 test: all
 	$(RM) -rf ./pEp_test_home/*

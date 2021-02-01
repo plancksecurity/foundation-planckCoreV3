@@ -566,7 +566,9 @@ struct mailimf_date_time * timestamp_to_etpantime(const timestamp *ts)
     result->dt_day = ts->tm_mday;
     result->dt_month = ts->tm_mon + 1;
     result->dt_year = ts->tm_year + 1900;
+#ifndef ZOS
     result->dt_zone = (int) (ts->tm_gmtoff / 36L);
+#endif
     return result;
 }
 
@@ -585,13 +587,16 @@ timestamp * etpantime_to_timestamp(const struct mailimf_date_time *et)
     result->tm_mday = et->dt_day;
     result->tm_mon = et->dt_month - 1;
     result->tm_year = et->dt_year - 1900;
+#ifndef ZOS
     result->tm_gmtoff = 36L * (long) et->dt_zone;
+#endif
 
     // Normalize to UTC and then forget the offset.
     time_t t = timegm_with_gmtoff(result);
     gmtime_r(&t, result);
+#ifndef ZOS
     result->tm_gmtoff = 0;
-
+#endif
     return result;
 }
 

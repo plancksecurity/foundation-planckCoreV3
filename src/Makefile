@@ -5,22 +5,21 @@
 
 include ../Makefile.conf
 
-ifdef PER_USER_DIRECTORY
-	EXTRA_MACROS+= -DPER_USER_DIRECTORY=$(PER_USER_DIRECTORY)
+CFLAGS+= $(ETPAN_INC) $(PEP_MIME_INC) -I../asn.1 $(EXTRA_MACROS)
+LDFLAGS+= $(ETPAN_LIB) $(PEP_MIME_LIB) -L../asn.1
+ifneq ($(BUILD_ON),OS/390)
+LDFLAGS+= -shared
 endif
-
-ifdef PER_MACHINE_DIRECTORY
-	EXTRA_MACROS+= -DPER_MACHINE_DIRECTORY=\"$(PER_MACHINE_DIRECTORY)\"
-endif
-
+LDLIBS+= -lc -lasn1
 NO_SOURCE=
 
 ifndef PEP_MIME
-    CFLAGS+= $(ETPAN_INC)
-    LDFLAGS+= $(ETPAN_LIB)
-    LDLIBS+= -letpan
+ifeq ($(BUILD_ON),OS/390)
+    LDLIBS+= -letpan-no-mt
 else
-    LDFLAGS+= -L../pEpMIME -shared
+    LDLIBS+= -letpan
+endif
+else
     LDLIBS+= -lpEpMIME
     NO_SOURCE+= etpan_mime.c
 endif
@@ -31,7 +30,11 @@ CPPFLAGS+= -DSQLITE_THREADSAFE=1
 LDFLAGS+= -L../asn.1 -shared
 LDLIBS+= -lc -lasn1
 
-ifeq ($(BUILD_ON),Darwin)
+
+ifeq ($(BUILD_ON),OS/390)
+    OPENPGP=ZOS
+    SQLITE3_FROM_OS=1
+else ifeq ($(BUILD_ON),Darwin)
     ifeq ($(BUILD_FOR),Darwin)
         LDLIBS+= -lz -liconv -mmacosx-version-min=10.10
     else
@@ -73,6 +76,9 @@ endif
 ALL_SOURCE=$(filter-out $(NO_SOURCE),$(wildcard *.c))
 DEPENDS=$(subst .c,.d,$(ALL_SOURCE))
 ALL_OBJECTS=$(subst .c,.o,$(ALL_SOURCE))
+ifeq ($(BUILD_ON),OS/390)
+    ALL_OBJECTS+=/usr/lpp/java/J8.0_64/bin/classic/libjvm.x 
+endif
 
 all: $(TARGET)
 
@@ -90,7 +96,7 @@ ifneq ($(MAKECMDGOALS),clean)
 endif
 
 $(TARGET): libpEpEngine.a
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(ALL_OBJECTS) $(LDFLAGS) $(LDLIBS) -o $@
+	$(CC) -o $@ $(CPPFLAGS) $(LDFLAGS) $(CFLAGS) $(ALL_OBJECTS) $(LDLIBS)
 
 .PHONY: objects clean install_headers install uninstall beinstall
 
