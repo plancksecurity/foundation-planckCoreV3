@@ -13,7 +13,8 @@
  * @todo    tidy up tabs
  */
 
-#pragma once
+#ifndef PGP_SEQUOIA_H
+#define PGP_SEQUOIA_H
 
 #include "pEpEngine.h"
 
@@ -423,3 +424,5 @@ PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
         PEP_CIPHER_SUITE suite);
 
 #define PGP_BINARY_PATH pgp_binary
+
+#endif

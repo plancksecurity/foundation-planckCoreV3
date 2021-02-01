@@ -4,7 +4,8 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef RESOURCE_ID_H
+#define RESOURCE_ID_H
 
 /* structs to contain info about parsed resource ids (filenames, uids) */
 /**
@@ -104,3 +105,5 @@ bool is_file_uri(char* str);
  *  
  */
 bool is_cid_uri(const char* str);
+
+#endif

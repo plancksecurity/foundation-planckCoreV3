@@ -5,7 +5,8 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef CRYPTOTECH_H
+#define CRYPTOTECH_H
 
 #include "pEpEngine.h"
 #include "bloblist.h"
@@ -279,3 +280,5 @@ PEP_STATUS init_cryptotech(PEP_SESSION session, bool in_first);
  *  
  */
 void release_cryptotech(PEP_SESSION session, bool out_last);
+
+#endif

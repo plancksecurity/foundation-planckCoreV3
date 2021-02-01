@@ -5,7 +5,8 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef BLOBLIST_H
+#define BLOBLIST_H
 
 #include <stddef.h> 
 
@@ -169,14 +170,24 @@ DYNAMIC_API void set_blob_disposition(bloblist_t* blob,
 /**
  *  <!--       bloblist_join()       -->
  *  
- *  @brief            TODO
+ *  @brief            append second list to the first.
  *  
- *  @param[in]  first         bloblist_t*
- *  @param[in]  second        bloblist_t*
- *  
+ *  @param[in]  first         first bloblist, to be head of list if not NULL
+ *  @param[in]  second        bloblist to append to first bloblist; if first
+ *                            bloblist is NULL, this will be the head of the list
+ *
+ *  @return     head          of the joined bloblist
+ *
+ *  @ownership  This function appends the actual bloblist to the end of the first - ownership
+ *              of the second bloblist goes to the list. THERE IS NO COPYING.
+ *
+ *  @warning    if the same pointer is sent in twice, there is no join - the original
+ *              list will be returned as is.
  */
 DYNAMIC_API bloblist_t* bloblist_join(bloblist_t* first, bloblist_t* second);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

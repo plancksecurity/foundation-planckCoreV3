@@ -6,7 +6,8 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef MESSAGE_H
+#define MESSAGE_H
 
 #include <time.h>
 
@@ -234,4 +235,6 @@ DYNAMIC_API message_ref_list *message_ref_list_add(message_ref_list *msg_list,
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

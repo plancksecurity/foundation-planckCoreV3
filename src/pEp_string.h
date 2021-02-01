@@ -4,7 +4,8 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef PEP_STRING_H
+#define PEP_STRING_H
 
 #include <string.h>
 #include "dynamic_api.h"
@@ -66,3 +67,4 @@ DYNAMIC_API char * string_dup(const char *src, size_t len);
 }
 #endif
 
+#endif

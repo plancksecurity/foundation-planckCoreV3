@@ -7,7 +7,8 @@
  * @license  GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef BASEPROTOCOL_H
+#define BASEPROTOCOL_H
 
 #include "message.h"
 
@@ -28,7 +29,7 @@ extern "C" {
 typedef enum _base_protocol_type {
     BASE_SIGN = 0,
     BASE_SYNC = 1,
-    BASE_KEYRESET = 2
+    BASE_DISTRIBUTION = 2
 } base_protocol_type;
 
 
@@ -174,3 +175,4 @@ PEP_STATUS try_base_prepare_message(
 }
 #endif
 
+#endif

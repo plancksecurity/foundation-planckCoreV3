@@ -13,7 +13,8 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef BLACKLIST_H
+#define BLACKLIST_H
 
 #include "pEpEngine.h"
 
@@ -103,3 +104,4 @@ DYNAMIC_API PEP_STATUS blacklist_retrieve(
 }
 #endif
 
+#endif
