@@ -28,9 +28,13 @@ ifneq ($(BUILD_ON),$(BUILD_FOR))
     $(error I don't know how to build for $(BUILD_FOR) on $(BUILD_ON).)
 endif
 
+SED=
 # MacOS needs -liconv, Linix don't.
 ifeq ($(BUILD_FOR),Darwin)
     LDLIBS+= -liconv
+    SED=sed -i ''
+else
+    SED=sed -i	
 endif
 
 PEPMIME_SRC_FILES:= $(wildcard $(PEP_MIME_SRC)/*.cc) $(wildcard $(PEP_MIME_SRC)/*.hh) $(wildcard $(PEP_MIME_SRC)/*.hxx)
@@ -46,15 +50,15 @@ mimesrc: ${LOCAL_PEPMIME_SRC}
 
 %.hh : $(PEP_MIME_SRC)/%.hh
 	cp -p $< $@
-	sed -i '' 's/#include <pEp\/\(.*\)>/#include "..\/src\/\1"/g' $@
+	$(SED) 's/#include <pEp\/\(.*\)>/#include "..\/src\/\1"/g' $@
 
 %.cc : $(PEP_MIME_SRC)/%.cc
 	cp -p $< $@
-	sed -i '' 's/#include <pEp\/\(.*\)>/#include "..\/src\/\1"/g' $@
+	$(SED) 's/#include <pEp\/\(.*\)>/#include "..\/src\/\1"/g' $@
 
 %.hxx : $(PEP_MIME_SRC)/%.hxx
 	cp -p $< $@
-	sed -i '' 's/#include <pEp\/\(.*\)>/#include "..\/src\/\1"/g' $@
+	$(SED) 's/#include <pEp\/\(.*\)>/#include "..\/src\/\1"/g' $@
 
 LIB_OBJ=pEpMIME.o pEpMIME_internal.o rules.o bodyparser.o \
    attachment.o bodygenerator.o \
