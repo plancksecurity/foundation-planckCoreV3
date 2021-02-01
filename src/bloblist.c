@@ -1,8 +1,9 @@
-/** @file */
-/** @brief File description for doxygen missing. FIXME */
-
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/** 
+ * @file    bloblist.c
+ * @brief   implemantation of functions for list structure to hold data of unspecified 
+ *          format (hence, "blob list"); can contain addition format information in structure's mime info
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+*/
 
 #include <stdbool.h>
 #include <stdlib.h>
