@@ -70,10 +70,10 @@ libpEpMIME.a: $(LIB_OBJ)
 	${AR} rcs $@ $^
 
 %.o : %.cc %.hh
-	${CXX} ${CXXFLAGS} -I${PREFIX}/include -o $@ -c $<
+	${CXX} ${CXXFLAGS} ${CPPFLAGS} -I${PREFIX}/include -o $@ -c $<
 
 %.o : %.cc
-	${CXX} ${CXXFLAGS} -I${PREFIX}/include -o $@ -c $<
+	${CXX} ${CXXFLAGS} ${CPPFLAGS} -I${PREFIX}/include -o $@ -c $<
 
 clean:
 	rm -vf *.o *.a
