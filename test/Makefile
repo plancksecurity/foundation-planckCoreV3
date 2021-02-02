@@ -35,7 +35,7 @@ else ifeq ($(OPENPGP),NETPGP)
 endif
 
 ifdef PEP_MIME
-LDLIBS+= -lpEpMIME -liconv
+LDLIBS+= -lpEpMIME
 else
 LDLIBS_= -letpan
 endif

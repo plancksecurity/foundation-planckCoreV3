@@ -47,7 +47,7 @@ asn1: sync
 install: build
 	$(MAKE) -C src install
 	$(MAKE) -C asn.1 install
-	$(MAKE) -C pEpMIME engine_install
+	$(MAKE) -C pEpMIME install
 
 beinstall:
 	$(MAKE) -C src beinstall
