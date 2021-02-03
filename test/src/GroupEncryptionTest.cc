@@ -9,6 +9,7 @@
 #include "group.h"
 #include "message_api.h"
 #include "test_util.h"
+#include "pEp_internal.h"
 
 #include <gtest/gtest.h>
 
@@ -367,7 +368,7 @@ TEST_F(GroupEncryptionTest, check_create_group) {
     ASSERT_EQ(group->manager, group_leader);
     ASSERT_EQ(group->manager->flags & PEP_idf_group_ident, 0);
     ASSERT_EQ(group->members, list); // We don't do anything to this list, so....
-    ASSERT_STRNEQ(group_ident->fpr, group_leader->fpr);
+    ASSERT_STRNE(group_ident->fpr, group_leader->fpr);
 
     free_group(group);
 }
@@ -679,17 +680,17 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_1) {
     ASSERT_OK;
 
     // Ok, so that worked.
-    stringlist_t* autoconsume = stringlist_find(msg->opt_fields, "pEp-auto-consume");
+    stringpair_list_t* autoconsume = stringpair_list_find(msg->opt_fields, "pEp-auto-consume");
     ASSERT_NE(autoconsume, nullptr);
 
     // Let's see if the message did the right thing:
-    pEp_identity group_identity = update_identity(group_1_address, NULL, NULL, NULL);
-    status = update_identity(group_identity);
+    pEp_identity* group_identity = new_identity(group_1_address, NULL, NULL, NULL);
+    status = update_identity(session, group_identity);
     ASSERT_OK;
     ASSERT_TRUE(is_me(session, group_identity));
     ASSERT_NE(group_identity->flags & PEP_idf_group_ident, 0);
     ASSERT_STREQ(group_identity->username, group_1_name);
-    ASSERT_STRNEQ(group_identity->user_id, PEP_OWN_USERID);
+    ASSERT_STRNE(group_identity->user_id, PEP_OWN_USERID);
 
 
 }
