@@ -26,19 +26,20 @@ else
 endif
     
 CFLAGS+= -I../asn.1 $(EXTRA_MACROS)
+CPPFLAGS+= -DSQLITE_THREADSAFE=1
+
 LDFLAGS+= -L../asn.1 -shared
 LDLIBS+= -lc -lasn1
 
 ifeq ($(BUILD_ON),Darwin)
     ifeq ($(BUILD_FOR),Darwin)
-        CPPFLAGS+= -DSQLITE_THREADSAFE=1
         LDLIBS+= -lz -liconv -mmacosx-version-min=10.10
     else
         $(error I do not know how to make for $(BUILD_FOR) on $(BUILD_ON))
     endif
 else ifeq ($(BUILD_ON),Linux)
     ifeq ($(BUILD_FOR),Linux)
-        CPPFLAGS+= -DSQLITE_THREADSAFE=1 -D_GNU_SOURCE
+        CPPFLAGS+= -D_GNU_SOURCE
         LDLIBS+= -ldl -luuid
     else
         $(error I do not know how to make for $(BUILD_FOR) on $(BUILD_ON))
