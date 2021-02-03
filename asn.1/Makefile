@@ -5,7 +5,7 @@ include ../Makefile.conf
 
 ALL_SOURCE=$(subst $(NO_SOURCE),,$(wildcard *.c))
 ALL_OBJECTS=$(subst .c,.o,$(ALL_SOURCE))
-CPPFLAGS+=$(CFLAGS_GENERATED)
+CPPFLAGS+=$(CPPFLAGS_GENERATED)
 ASN1C_INC+= -I.
 
 .PHONY: all clean install uninstall

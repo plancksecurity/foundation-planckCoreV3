@@ -31,14 +31,14 @@ LDLIBS+= -lc -lasn1
 
 ifeq ($(BUILD_ON),Darwin)
     ifeq ($(BUILD_FOR),Darwin)
-        CFLAGS+= -DSQLITE_THREADSAFE=1
+        CPPFLAGS+= -DSQLITE_THREADSAFE=1
         LDLIBS+= -lz -liconv -mmacosx-version-min=10.10
     else
         $(error I do not know how to make for $(BUILD_FOR) on $(BUILD_ON))
     endif
 else ifeq ($(BUILD_ON),Linux)
     ifeq ($(BUILD_FOR),Linux)
-        CFLAGS+= -DSQLITE_THREADSAFE=1 -D_GNU_SOURCE
+        CPPFLAGS+= -DSQLITE_THREADSAFE=1 -D_GNU_SOURCE
         LDLIBS+= -ldl -luuid
     else
         $(error I do not know how to make for $(BUILD_FOR) on $(BUILD_ON))
@@ -49,12 +49,13 @@ endif
 
 ifdef SQLITE3_FROM_OS
     NO_SOURCE+= sqlite3.c
-    CFLAGS+= -DSQLITE3_FROM_OS
+    CPPFLAGS+= -DSQLITE3_FROM_OS
     LDLIBS+= -lsqlite3
 endif
 
 ifeq ($(OPENPGP),SEQUOIA)
-    CFLAGS+= -DUSE_SEQUOIA $(SEQUOIA_CFLAGS) $(SEQUOIA_INC)
+    CPPFLAGS+= -DUSE_SEQUOIA
+    CFLAGS+= $(SEQUOIA_CFLAGS) $(SEQUOIA_INC)
     LDFLAGS+= $(SEQUOIA_LDFLAGS)
     LDLIBS+= $(SEQUOIA_LIB)
 else
@@ -81,7 +82,7 @@ ifneq ($(MAKECMDGOALS),clean)
 endif
 
 $(TARGET): libpEpEngine.a
-	$(CC) $(CFLAGS) $(ALL_OBJECTS) $(LDFLAGS) $(LDLIBS) -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(ALL_OBJECTS) $(LDFLAGS) $(LDLIBS) -o $@
 
 .PHONY: objects clean install_headers install uninstall beinstall
 
@@ -96,7 +97,7 @@ clean:
 	rm -f KeySync_fsm.* Sync_actions.c Sync_event.* Sync_func.* Sync_impl.* sync_codec.* distribution_codec.*
 
 # CAVEAT:
-# install_headers is needed for building pEp MIME
+# install_headers is needed for building *STANDALONE* pEp MIME - it is NOT used for built-in functionality!!!
 
 install_headers: $(TARGET)
 	mkdir -p $(PREFIX)/include/pEp
@@ -107,6 +108,7 @@ install_headers: $(TARGET)
 	   status_to_string.h aux_mime_msg.h keyreset_command.h platform.h platform_unix.h ../asn.1/*.h \
  	   $(PREFIX)/include/pEp/
 
+# FIXME: Does anyone but Roker use install_headers? Otherwise, remove the dependency.
 install: $(TARGET) install_headers
 	mkdir -p "$(PREFIX)/lib/"
 	cp -v $< $(PREFIX)/lib/

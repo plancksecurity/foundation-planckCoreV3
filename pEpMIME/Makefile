@@ -37,10 +37,21 @@ else
     SED=sed -i	
 endif
 
+######################################################################
+#
+# libpEpMIME can be built as a separate library in its own repository.
+#
+# However, it is dependent on the engine, which obviously does not
+# work within the engine, as the engine is dependent upon IT.
+# Because header files within the engine are local and not defined
+# to exist in some installed library under pEp/header_file.h, we simply
+# copy them into this directory and build/modify them as needed.
+#
+######################################################################
+# Repo source
 PEPMIME_SRC_FILES:= $(wildcard $(PEP_MIME_SRC)/*.cc) $(wildcard $(PEP_MIME_SRC)/*.hh) $(wildcard $(PEP_MIME_SRC)/*.hxx)
+# Stripped filenames
 LOCAL_PEPMIME_SRC:= $(subst $(PEP_MIME_SRC)/,,$(PEPMIME_SRC_FILES))
-
-#$(error $(PEP_MIME_SRC) BOB $(PEPMIME_SRC_FILES) ********************   $(LOCAL_PEPMIME_SRC))
 
 all: lib
 
@@ -48,6 +59,7 @@ lib: mimesrc libpEpMIME.a
 
 mimesrc: ${LOCAL_PEPMIME_SRC}
 
+# Copy the files to the local directory and change their engine header references to quoted references
 %.hh : $(PEP_MIME_SRC)/%.hh
 	cp -p $< $@
 	$(SED) 's/#include <pEp\/\(.*\)>/#include "..\/src\/\1"/g' $@

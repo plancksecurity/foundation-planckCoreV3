@@ -26,7 +26,7 @@ ifeq ($(shell grep -c $(GTEST_SUITE_SYM) $(GTEST_SRC_DIR)/src/gtest.cc),0)
     GTEST_SUITE_SYM=test_case_name
 endif
 
-CXXFLAGS+= -DGTEST_SUITE_SYM=$(GTEST_SUITE_SYM)
+CPPFLAGS+= -DGTEST_SUITE_SYM=$(GTEST_SUITE_SYM)
 
 ifeq ($(OPENPGP),GPG)
     LDFLAGS+= $(GPGME_LIB)
@@ -49,7 +49,8 @@ endif
 ifeq ($(OPENPGP),SEQUOIA)
     LDFLAGS+= $(SEQUOIA_LDFLAGS)
     LDLIBS+= $(SEQUOIA_LIB)
-    CXXFLAGS+= $(SEQUOIA_CFLAGS) -DUSE_SEQUOIA
+    CXXFLAGS+= $(SEQUOIA_CFLAGS) 
+    CPPFLAGS+= -DUSE_SEQUOIA
     INC_FLAGS+= $(SEQUOIA_INC)
 endif
 
@@ -57,38 +58,17 @@ ifdef SQLITE3_FROM_OS
     LDLIBS+= -lsqlite3
 endif
 
-ifeq ($(OPENPGP),GPG)
-    #LDLIBS+= -lgpgme
-else ifeq ($(OPENPGP),NETPGP)
-    LDLIBS+= -lnetpgp
-    ifeq ($(BUILD_FOR),Linux)
-        LDLIBS+= -ltre
-    endif
-endif
-
 CXXFLAGS:=-I$(GTEST_INC_DIR) $(filter-out -DNDEBUG,$(CXXFLAGS))
+CPPFLAGS:=$(filter-out -DNDEBUG,$(CPPFLAGS))
 
 # FIXME Possibly missing incdirs: ASN1C_INC
 CXXFLAGS+= -I./src -I../src -I ../asn.1 -I../sync $(INC_FLAGS) -Wno-deprecated -Wno-unused-variable
-
-ifeq ($(OPENPGP),GPG)
-    CXXFLAGS+= -DUSE_GPG $(GPGME_INC)
-else ifeq ($(OPENPGP),NETPGP)
-    CXXFLAGS+= -DUSE_NETPGP $(NETPGP_INC)
-endif
 
 EXTRA_LIB_PATHS=.:../src:
 ifndef PEP_MIME
 ifdef ETPAN_LIB
     EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(ETPAN_LIB)):
 endif
-endif
-
-ifdef GPGME_LIB
-    EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(GPGME_LIB)):
-endif
-ifdef NETPGP_LIB
-    EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(NETPGP_LIB)):
 endif
 
 # Remove trailing ':'
@@ -114,7 +94,7 @@ all:
 	$(CXX) -MM $(CPPFLAGS) $(CXXFLAGS) $< | sed -e 's,\($*\)\.o[ :]*,\1.o $@: ,g' > $@
 
 $(TARGET): $(OBJS)
-	${CXX} ${LDFLAGS} -L${PREFIX}/lib -o $@ $^ -lpEpEngine -lgtest -lgtest_main -lsequoia_openpgp_ffi $(LDLIBS)
+	${CXX} ${CPPFLAGS} ${LDFLAGS} -L${PREFIX}/lib -o $@ $^ -lpEpEngine -lgtest -lgtest_main -lsequoia_openpgp_ffi $(LDLIBS)
 
 
 test: all
