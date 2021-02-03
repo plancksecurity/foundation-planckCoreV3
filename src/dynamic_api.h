@@ -4,7 +4,8 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef DYNAMIC_API_H
+#define DYNAMIC_API_H
 
 #ifdef WIN32
 #ifdef _EXPORT_PEP_ENGINE_DLL
@@ -14,5 +15,7 @@
 #endif
 #else
 #define DYNAMIC_API
+#endif
+
 #endif
 

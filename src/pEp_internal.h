@@ -1,13 +1,13 @@
-#pragma once
-
 /**
  * @file    pEp_internal.h
  * @brief   pEp internal structs, functions, defines, and values
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-// maximum attachment size to import as key 25MB, maximum of 20 attachments
+#ifndef PEP_INTERNAL_H
+#define PEP_INTERNAL_H
 
+// maximum attachment size to import as key 25MB, maximum of 20 attachments
 #define MAX_KEY_SIZE (25 * 1024 * 1024)
 #define MAX_KEYS_TO_IMPORT  20
 
@@ -845,3 +845,5 @@ static inline void _add_auto_consume(message* msg) {
     msg->in_reply_to = stringlist_add(msg->in_reply_to, "pEp-auto-consume@pEp.foundation");
 }
 
+
+#endif

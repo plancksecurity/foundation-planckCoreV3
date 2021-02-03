@@ -4,7 +4,8 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef PEP_ENGINE_H
+#define PEP_ENGINE_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -2281,4 +2282,5 @@ PEP_STATUS exists_identity_entry(PEP_SESSION session, pEp_identity* identity,
                                  bool* exists);
 #ifdef __cplusplus
 }
+#endif
 #endif

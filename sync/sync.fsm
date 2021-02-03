@@ -685,7 +685,7 @@ protocol Sync 1 {
         // decrypt_message() to mark a previously computed rating. It is only
         // valid when signed with an own key.
 
-        message ReceiverRating 22, security=unencrypted {
+        message ReceiverRating 22, security=ignore {
             field Rating rating;
         }
     }

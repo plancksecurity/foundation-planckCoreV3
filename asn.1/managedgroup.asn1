@@ -1,0 +1,40 @@
+-- This file is under BSD License 2.0
+
+-- ManagedGroup protocol for p≡p
+-- Copyleft 2016-2020 by p≡p foundation
+
+-- Written by Volker Birk
+
+MANAGEDGROUP
+    { iso(1) org(3) dod(6) internet(1) private(4) enterprise(1) pEp(47878) distribution(2) managedgroup(2) }
+
+DEFINITIONS AUTOMATIC TAGS EXTENSIBILITY IMPLIED ::=
+
+BEGIN
+
+EXPORTS ManagedGroup;
+IMPORTS Version, Identity, IdentityList, TID, Hash, Rating FROM PEP;
+
+GroupCreate ::= SEQUENCE {
+    groupIdentity Identity,
+    manager Identity
+}
+
+GroupAdopted ::= SEQUENCE {
+    groupIdentity Identity,
+    member Identity
+}
+
+GroupDissolve ::= SEQUENCE {
+    groupIdentity Identity,
+    manager Identity
+}
+
+ManagedGroup ::= CHOICE {
+    groupCreate [APPLICATION 2] GroupCreate,
+    groupAdopted [APPLICATION 3] GroupAdopted,
+    groupDissolve [APPLICATION 4] GroupDissolve
+}
+
+END
+

@@ -30,7 +30,8 @@ template "protocol", mode=header
  * @license     GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef «yml:ucase(@name)»_FUNC_H
+#define «yml:ucase(@name)»_FUNC_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -171,6 +172,7 @@ PEP_STATUS update_«@name»_message(PEP_SESSION session, «@name»_t *msg);
 
 #ifdef __cplusplus
 }
+#endif
 #endif
 
 ||

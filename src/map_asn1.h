@@ -4,7 +4,8 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef MAP_ASN1_H
+#define MAP_ASN1_H
 
 #include "pEpEngine.h"
 #include "identity_list.h"
@@ -94,4 +95,6 @@ identity_list *IdentityList_to_identity_list(IdentityList_t *list, identity_list
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

@@ -4,6 +4,9 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
+#ifndef PLATFORM_UNIX_H
+#define PLATFORM_UNIX_H
+
 #ifndef __APPLE__
 #define _POSIX_C_SOURCE 200809L
 #endif
@@ -151,4 +154,5 @@ typedef uuid_t pEpUUID;
 
 #ifdef __cplusplus
 }
+#endif
 #endif
