@@ -73,7 +73,7 @@ all: $(TARGET)
 
 %.d: %.c
 	@set -e; rm -f $@; \
-	$(CC) -MM $(CPPFLAGS) $(CFLAGS) $< > $@.$$$$; \
+	$(CC) -MM $(CFLAGS) $(CPPFLAGS) $< > $@.$$$$; \
 	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
@@ -83,7 +83,7 @@ ifneq ($(MAKECMDGOALS),clean)
 endif
 
 $(TARGET): libpEpEngine.a
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(ALL_OBJECTS) $(LDFLAGS) $(LDLIBS) -o $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(ALL_OBJECTS) $(LDFLAGS) $(LDLIBS) -o $@
 
 .PHONY: objects clean install_headers install uninstall beinstall
 

@@ -28,16 +28,10 @@ endif
 
 CPPFLAGS+= -DGTEST_SUITE_SYM=$(GTEST_SUITE_SYM)
 
-ifeq ($(OPENPGP),GPG)
-    LDFLAGS+= $(GPGME_LIB)
-else ifeq ($(OPENPGP),NETPGP)
-    LDFLAGS+= $(NETGPG_LIB)
-endif
-
 ifdef PEP_MIME
-LDLIBS+= -lpEpMIME
+    LDLIBS+= -lpEpMIME
 else
-LDLIBS_= -letpan
+    LDLIBS+= -letpan
 endif
 
 LDLIBS+= -lpEpEngine -lstdc++ -lasn1
@@ -58,10 +52,9 @@ ifdef SQLITE3_FROM_OS
     LDLIBS+= -lsqlite3
 endif
 
-CXXFLAGS:=-I$(GTEST_INC_DIR) $(filter-out -DNDEBUG,$(CXXFLAGS))
+CXXFLAGS:=$(filter-out -DNDEBUG,$(CXXFLAGS)) -I$(GTEST_INC_DIR)
 CPPFLAGS:=$(filter-out -DNDEBUG,$(CPPFLAGS))
 
-# FIXME Possibly missing incdirs: ASN1C_INC
 CXXFLAGS+= -I./src -I../src -I ../asn.1 -I../sync $(INC_FLAGS) -Wno-deprecated -Wno-unused-variable
 
 EXTRA_LIB_PATHS=.:../src:
@@ -91,10 +84,10 @@ all:
 	make $(TARGET)
 
 %.d: %.cc
-	$(CXX) -MM $(CPPFLAGS) $(CXXFLAGS) $< | sed -e 's,\($*\)\.o[ :]*,\1.o $@: ,g' > $@
+	$(CXX) -MM $(CXXFLAGS) $(CPPFLAGS) $< | sed -e 's,\($*\)\.o[ :]*,\1.o $@: ,g' > $@
 
 $(TARGET): $(OBJS)
-	${CXX} ${CPPFLAGS} ${LDFLAGS} -L${PREFIX}/lib -o $@ $^ -lpEpEngine -lgtest -lgtest_main -lsequoia_openpgp_ffi $(LDLIBS)
+	${CXX} ${CXXFLAGS} ${CPPFLAGS} ${LDFLAGS} -L${PREFIX}/lib -o $@ $^ -lpEpEngine -lgtest -lgtest_main -lsequoia_openpgp_ffi $(LDLIBS)
 
 
 test: all
