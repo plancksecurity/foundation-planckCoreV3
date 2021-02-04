@@ -1093,7 +1093,7 @@ PEP_STATUS send_GroupCreate(PEP_SESSION session, pEp_group* group) {
 
         // encrypt this baby and get out
         // extra keys???
-        status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_auto, PEP_encrypt_flag_key_reset_only); // FIXME
+        status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_auto, 0); // FIXME
 
         if (status != PEP_STATUS_OK)
             goto pEp_error;
@@ -1223,7 +1223,7 @@ PEP_STATUS send_GroupDissolve(PEP_SESSION session, pEp_group* group) {
 
         // encrypt this baby and get out
         // extra keys???
-        status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_auto, PEP_encrypt_flag_key_reset_only); // FIXME
+        status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_auto, 0); // FIXME
 
         if (status != PEP_STATUS_OK)
             goto pEp_error;
@@ -1319,7 +1319,7 @@ PEP_STATUS send_GroupAdopted(PEP_SESSION session, pEp_group* group, pEp_identity
 
     // encrypt this baby and get out
     // extra keys???
-    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_auto, PEP_encrypt_flag_key_reset_only); // FIXME
+    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_auto, 0); // FIXME
 
     if (status != PEP_STATUS_OK)
         goto pEp_error;
@@ -1341,6 +1341,7 @@ pEp_error:
 }
 
 PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rating, GroupCreate_t* gc) {
+    PEP_STATUS status = PEP_STATUS_OK;
     if (rating < PEP_rating_reliable)
         return PEP_NO_TRUST; // Find better error
 
@@ -1351,7 +1352,15 @@ PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rat
     if (!gc || !msg->to || !msg->to->ident || msg->to->next)
         return PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
 
-    // this will be hard without address aliases
+    // this will be hard without address aliases.
+
+    // We will probably always have to do this, but if something changes externally we need this check.
+    if (!msg->to->ident->me) {
+        status = update_identity(session, msg->to->ident);
+        if (status != PEP_STATUS_OK)
+            return status;
+    }
+
     if (!is_me(session, msg->to->ident))
         return PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
 
@@ -1363,7 +1372,12 @@ PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rat
     if (!manager)
         return PEP_UNKNOWN_ERROR;
 
-    PEP_STATUS status = update_identity(session, manager);
+    free(manager->user_id);
+    manager->user_id = NULL;
+    free(group_identity->user_id);
+    group_identity->user_id = NULL;
+
+    status = update_identity(session, manager);
     if (!manager->fpr) // at some point, we can require this to be the sender fpr I think - FIXME
         return PEP_KEY_NOT_FOUND;
 
@@ -1371,11 +1385,10 @@ PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rat
     // First, we need to ensure the group_ident has an own ident instead
     char* own_id = NULL;
     status = get_default_own_userid(session, &own_id);
-    if (!status || !own_id) {
+    if (status != PEP_STATUS_OK || !own_id) {
         free(own_id);
         return status;
     }
-    free(group_identity->user_id);
     group_identity->user_id = own_id;
 
     // Ok, let's ensure we HAVE the key for this group:

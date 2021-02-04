@@ -102,4 +102,4 @@ test/703_key_valid.asc
 test/test_keys/736_a.asc
 test/test_keys/736_b.asc
 test/test_mails/ENGINE-654_bob_mail.eml
-
+test/test_mails/group_create*.eml

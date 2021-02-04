@@ -5075,7 +5075,7 @@ static PEP_STATUS _decrypt_message(
                             searched = stringpair_list_find(inner_message->opt_fields, X_PEP_MSG_WRAP_KEY);
                             if (searched && searched->value && searched->value->value) {
                                 is_inner = (strcmp(searched->value->value, "INNER") == 0);
-                                if (!is_inner)
+                                if (!is_inner && major_ver == 2 && minor_ver == 1)
                                     is_key_reset = (strcmp(searched->value->value, "KEY_RESET") == 0);
                                 if (is_inner || is_key_reset)
                                     inner_message->opt_fields = stringpair_list_delete_by_key(inner_message->opt_fields, X_PEP_MSG_WRAP_KEY);
