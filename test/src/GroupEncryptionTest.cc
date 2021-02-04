@@ -731,7 +731,8 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_1) {
 }
 
 TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_2) {
-    pEp_identity* me = new_identity(member_2_address, NULL, PEP_OWN_USERID, member_2_name);
+    const char* own_id = PEP_OWN_USERID;
+    pEp_identity* me = new_identity(member_2_address, NULL, own_id, member_2_name);
     read_file_and_import_key(session, kf_name(member_2_prefix, false).c_str());
     read_file_and_import_key(session, kf_name(member_2_prefix, true).c_str());
     PEP_STATUS status = set_own_key(session, me, member_2_fpr);
@@ -758,10 +759,36 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_2) {
 
     status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_OK;
+
+    // Ok, so that worked.
+    stringpair_list_t* autoconsume = stringpair_list_find(msg->opt_fields, "pEp-auto-consume");
+    ASSERT_NE(autoconsume, nullptr);
+
+    // Let's see if the message did the right thing:
+    pEp_identity* group_identity = new_identity(group_1_address, NULL, NULL, NULL);
+    status = update_identity(session, group_identity);
+    ASSERT_OK;
+    ASSERT_TRUE(is_me(session, group_identity));
+    ASSERT_NE(group_identity->flags & PEP_idf_group_ident, 0);
+    // FIXME: Uncomment after ENGINE-878 is resolved
+    //    ASSERT_STREQ(group_identity->username, group_1_name);
+    pEp_identity* manager = new_identity(manager_1_address, NULL, NULL, NULL);
+    status = update_identity(session, manager);
+    ASSERT_OK;
+    ASSERT_TRUE(!is_me(session, manager));
+    ASSERT_EQ(manager->flags & PEP_idf_group_ident, 0);
+    if (!is_me(session, msg->to->ident)) {
+        status = update_identity(session, msg->to->ident);
+        ASSERT_OK;
+    }
+    ASSERT_TRUE(is_me(session,msg->to->ident));
+    ASSERT_STREQ(msg->to->ident->username, member_2_name);
+    ASSERT_STREQ(msg->to->ident->address, member_2_address);
 }
 
 TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_3) {
-    pEp_identity* me = new_identity(member_3_address, NULL, "DIFFERENT_OWN_ID_FOR_KICKS", member_3_name);
+    const char* own_id = PEP_OWN_USERID;
+    pEp_identity* me = new_identity(member_3_address, NULL, own_id, member_3_name);
     read_file_and_import_key(session, kf_name(member_3_prefix, false).c_str());
     read_file_and_import_key(session, kf_name(member_3_prefix, true).c_str());
     PEP_STATUS status = set_own_key(session, me, member_3_fpr);
@@ -788,10 +815,36 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_3) {
 
     status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_OK;
+
+    // Ok, so that worked.
+    stringpair_list_t* autoconsume = stringpair_list_find(msg->opt_fields, "pEp-auto-consume");
+    ASSERT_NE(autoconsume, nullptr);
+
+    // Let's see if the message did the right thing:
+    pEp_identity* group_identity = new_identity(group_1_address, NULL, NULL, NULL);
+    status = update_identity(session, group_identity);
+    ASSERT_OK;
+    ASSERT_TRUE(is_me(session, group_identity));
+    ASSERT_NE(group_identity->flags & PEP_idf_group_ident, 0);
+    // FIXME: Uncomment after ENGINE-878 is resolved
+    //    ASSERT_STREQ(group_identity->username, group_1_name);
+    pEp_identity* manager = new_identity(manager_1_address, NULL, NULL, NULL);
+    status = update_identity(session, manager);
+    ASSERT_OK;
+    ASSERT_TRUE(!is_me(session, manager));
+    ASSERT_EQ(manager->flags & PEP_idf_group_ident, 0);
+    if (!is_me(session, msg->to->ident)) {
+        status = update_identity(session, msg->to->ident);
+        ASSERT_OK;
+    }
+    ASSERT_TRUE(is_me(session,msg->to->ident));
+    ASSERT_STREQ(msg->to->ident->username, member_3_name);
+    ASSERT_STREQ(msg->to->ident->address, member_3_address);
 }
 
 TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_4) {
-    pEp_identity* me = new_identity(member_4_address, NULL, "DIFFERENT_OWN_ID_FOR_KICKS", member_4_name);
+    const char* own_id = PEP_OWN_USERID;
+    pEp_identity* me = new_identity(member_4_address, NULL, own_id, member_4_name);
     read_file_and_import_key(session, kf_name(member_4_prefix, false).c_str());
     read_file_and_import_key(session, kf_name(member_4_prefix, true).c_str());
     PEP_STATUS status = set_own_key(session, me, member_4_fpr);
@@ -818,6 +871,31 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_4) {
 
     status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_OK;
+
+    // Ok, so that worked.
+    stringpair_list_t* autoconsume = stringpair_list_find(msg->opt_fields, "pEp-auto-consume");
+    ASSERT_NE(autoconsume, nullptr);
+
+    // Let's see if the message did the right thing:
+    pEp_identity* group_identity = new_identity(group_1_address, NULL, NULL, NULL);
+    status = update_identity(session, group_identity);
+    ASSERT_OK;
+    ASSERT_TRUE(is_me(session, group_identity));
+    ASSERT_NE(group_identity->flags & PEP_idf_group_ident, 0);
+    // FIXME: Uncomment after ENGINE-878 is resolved
+    //    ASSERT_STREQ(group_identity->username, group_1_name);
+    pEp_identity* manager = new_identity(manager_1_address, NULL, NULL, NULL);
+    status = update_identity(session, manager);
+    ASSERT_OK;
+    ASSERT_TRUE(!is_me(session, manager));
+    ASSERT_EQ(manager->flags & PEP_idf_group_ident, 0);
+    if (!is_me(session, msg->to->ident)) {
+        status = update_identity(session, msg->to->ident);
+        ASSERT_OK;
+    }
+    ASSERT_TRUE(is_me(session,msg->to->ident));
+    ASSERT_STREQ(msg->to->ident->username, member_4_name);
+    ASSERT_STREQ(msg->to->ident->address, member_4_address);
 }
 
 
