@@ -12,7 +12,7 @@ extern "C" {
 
 
 // struct for holding group data in memory
-// groups are persistant, therefore they're living in management.db
+// groups are persistent, therefore they're living in management.db
 
 typedef struct _pEp_member {
     pEp_identity *ident;
@@ -147,6 +147,13 @@ PEP_STATUS exists_group(
         PEP_SESSION session,
         pEp_identity* group_identity,
         bool* exists
+);
+
+// if status is PEP_STATUS_OK, group_identity is transferred to group.
+PEP_STATUS retrieve_group_info(
+        PEP_SESSION session,
+        pEp_identity* group_identity,
+        pEp_group** group_info
 );
 
 PEP_STATUS retrieve_full_group_membership(

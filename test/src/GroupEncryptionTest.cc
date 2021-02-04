@@ -670,7 +670,79 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create) {
     m_queue.clear();
 
     // FIXME: Check all of the DB stuff, etc
+    // Ok, now let's see what's inside the box
+    pEp_group* group_info = NULL;
+    status = retrieve_group_info(session, group_ident, &group_info);
+    ASSERT_OK;
+    ASSERT_NE(group_info, nullptr);
 
+    // This should literally be true - I'm comparing the pointers on purpose
+    ASSERT_EQ(group_ident, group_info->group_identity);
+
+    ASSERT_NE(group_info->manager, nullptr);
+    ASSERT_STREQ(group_info->manager->user_id, me->user_id);
+    ASSERT_STREQ(group_info->manager->address, me->address);
+
+    status = myself(session, group_info->manager);
+    ASSERT_OK;
+    ASSERT_NE(group_info->manager->fpr, nullptr);
+    ASSERT_STREQ(group_info->manager->fpr, manager_1_fpr);
+    ASSERT_STREQ(group_info->manager->username, me->username);
+    ASSERT_STREQ(group_info->manager->username, manager_1_name);
+
+    ASSERT_TRUE(group_info->active);
+
+    // Ok, time to check the member list. Tricky...
+    const char* member_names[] = {member_1_name, member_2_name, member_3_name, member_4_name};
+    const char* member_addrs[] = {member_1_address, member_2_address, member_3_address, member_4_address};
+    const char* member_fprs[] = {member_1_fpr, member_2_fpr, member_3_fpr, member_4_fpr};
+
+    bool found[] = {false, false, false, false};
+
+    int count = 0;
+    for (member_list* curr_member = group_info->members;
+            curr_member && curr_member->member && curr_member->member->ident;
+            curr_member = curr_member->next) {
+
+        pEp_member* memb = curr_member->member;
+        pEp_identity* ident = memb->ident;
+        const char* userid = ident->user_id;
+        const char* address = ident->address;
+        ASSERT_NE(userid, nullptr);
+        ASSERT_NE(address, nullptr);
+
+        status = update_identity(session, ident);
+        ASSERT_OK;
+
+        const char* fpr = ident->fpr;
+        const char* name = ident->username;
+        ASSERT_NE(name, nullptr);
+        ASSERT_NE(fpr, nullptr);
+
+        ASSERT_FALSE(memb->adopted);
+
+        int index = -1;
+
+        for (int i = 0; i < 4; i++) {
+            if (strcmp(member_names[i], name) == 0) {
+                index = i;
+                break;
+            }
+        }
+        ASSERT_GT(index, -1);
+        ASSERT_LT(index, 5);
+        ASSERT_STREQ(member_addrs[index], address);
+        ASSERT_STREQ(member_fprs[index], fpr);
+        found[index] = true;
+        count++;
+    }
+
+    ASSERT_EQ(count, 4);
+    for (int i = 0; i < 4; i++) {
+        ASSERT_TRUE(found[i]);
+    }
+
+    free_group(group);
 }
 
 TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_1) {
@@ -728,6 +800,32 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_1) {
     ASSERT_TRUE(is_me(session,msg->to->ident));
     ASSERT_STREQ(msg->to->ident->username, member_1_name);
     ASSERT_STREQ(msg->to->ident->address, member_1_address);
+
+    // Ok, now let's see what's inside the box
+    pEp_group* group_info = NULL;
+    status = retrieve_group_info(session, group_identity, &group_info);
+    ASSERT_OK;
+    ASSERT_NE(group_info, nullptr);
+
+    // This should literally be true - I'm comparing the pointers on purpose
+    ASSERT_EQ(group_identity, group_info->group_identity);
+
+    ASSERT_NE(group_info->manager, nullptr);
+    ASSERT_STREQ(group_info->manager->user_id, manager->user_id);
+    ASSERT_STREQ(group_info->manager->address, manager->address);
+    ASSERT_STREQ(group_info->manager->user_id, manager->user_id);
+
+    status = update_identity(session, group_info->manager);
+    ASSERT_OK;
+    ASSERT_NE(group_info->manager->fpr, nullptr);
+    ASSERT_STREQ(group_info->manager->fpr, manager_1_fpr);
+    ASSERT_STREQ(group_info->manager->username, manager->username);
+    ASSERT_STREQ(group_info->manager->username, manager_1_name);
+
+    // Are all non-mine groups are "inactive" (meaning it doesn't mean anything), or
+    // they stay inactive until I am an active member? Ask vb. I think it's meaningless on
+    // This end, but it appears we make it true when we create the group. Hmmm.
+    // ASSERT_FALSE(group_info->active);
 }
 
 TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_2) {

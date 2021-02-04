@@ -534,6 +534,9 @@ static const char *sql_get_active_groups =
 static const char *sql_add_own_membership_entry =
         "insert or replace into own_memberships (group_id, group_address, own_id, own_address, have_joined) "
         "    values (?1, ?2, ?3, ?4, 0) ; ";
+static const char *sql_is_group_active =
+        "select count(*) from groups "
+        "   where group_id = ?1 and group_address = ?2 and active = 1; ";
 
 // This below can return multiple entries for multiple idents in same group
 // FIXME: decide what we really need here

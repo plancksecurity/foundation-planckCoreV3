@@ -146,6 +146,35 @@ PEP_STATUS get_group_manager(PEP_SESSION session,
     return status;
 }
 
+PEP_STATUS is_group_active(PEP_SESSION session, pEp_identity* group_identity, bool* active) {
+    if (!group_identity || EMPTYSTR(group_identity->address) || EMPTYSTR(group_identity->user_id) || !active)
+        return PEP_ILLEGAL_VALUE;
+
+    PEP_STATUS status = PEP_STATUS_OK;
+    *active = false;
+
+    sqlite3_reset(session->is_group_active);
+    sqlite3_bind_text(session->is_group_active, 1, group_identity->user_id, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_text(session->is_group_active, 2, group_identity->address, -1,
+                      SQLITE_STATIC);
+
+    int result = sqlite3_step(session->is_group_active);
+
+    switch (result) {
+        case SQLITE_ROW: {
+            *active = (sqlite3_column_int(session->is_group_active, 0) != 0);
+            break;
+        }
+        default:
+            status = PEP_UNKNOWN_DB_ERROR;
+    }
+
+    sqlite3_reset(session->is_group_active);
+
+    return status;
+}
+
 PEP_STATUS is_group_mine(PEP_SESSION session, pEp_identity* group_identity, bool* own_manager) {
     if (!own_manager)
         return PEP_ILLEGAL_VALUE;
@@ -1657,4 +1686,55 @@ PEP_STATUS receive_managed_group_message(PEP_SESSION session, message* msg, PEP_
             return PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
     }
     return PEP_STATUS_OK;
+}
+
+PEP_STATUS retrieve_group_info(PEP_SESSION session, pEp_identity* group_identity, pEp_group** group_info) {
+    if (!session || !group_identity || EMPTYSTR(group_identity->address) || !group_info)
+        return PEP_ILLEGAL_VALUE;
+
+    pEp_group* group = NULL;
+    pEp_identity* manager = NULL;
+    member_list* members = NULL;
+
+    PEP_STATUS status = PEP_STATUS_OK;
+    *group_info = NULL;
+
+    status = _myself(session, group_identity, false, false, false, true);
+
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    status = retrieve_full_group_membership(session, group_identity, &members);
+
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
+
+    status = get_group_manager(session, group_identity, &manager);
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
+
+    group = new_group(group_identity, manager, members);
+    if (!group)
+        return PEP_OUT_OF_MEMORY;
+
+    bool active = false;
+    status = is_group_active(session, group_identity, &active);
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
+
+    group->active = active;
+    *group_info = group;
+
+    return status;
+
+pEp_error:
+    if (!group) {
+        free_memberlist(members);
+        free_identity(manager);
+    }
+    else {
+        group->group_identity = NULL; // input belongs to caller in case of error
+        free_group(group);
+    }
+    return status;
 }
