@@ -246,12 +246,12 @@ static PEP_STATUS rating_sum(PEP_SESSION session, const message *msg,
         goto the_end;
 
     PEP_rating cc_rating = PEP_rating_undefined;
-    status = _rating_sum(session, msg->to, channel_rating, &cc_rating);
+    status = _rating_sum(session, msg->cc, channel_rating, &cc_rating);
     if (status)
         goto the_end;
 
     PEP_rating bcc_rating = PEP_rating_undefined;
-    status = _rating_sum(session, msg->to, channel_rating, &bcc_rating);
+    status = _rating_sum(session, msg->bcc, channel_rating, &bcc_rating);
     if (status)
         goto the_end;
 
