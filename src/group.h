@@ -149,7 +149,7 @@ PEP_STATUS exists_group(
         bool* exists
 );
 
-// if status is PEP_STATUS_OK, group_identity is transferred to group.
+// group_identity stays with caller now - FIXME: adapt assumptions
 PEP_STATUS retrieve_group_info(
         PEP_SESSION session,
         pEp_identity* group_identity,

@@ -363,9 +363,13 @@ TEST_F(GroupEncryptionTest, check_create_group) {
     status = group_create(session, group_ident, group_leader, list, &group);
     ASSERT_OK;
     ASSERT_NE(group, nullptr);
-    ASSERT_EQ(group->group_identity, group_ident);
+    ASSERT_NE(group->group_identity, nullptr);
+    ASSERT_STREQ(group->group_identity->address, group_ident->address);
+    ASSERT_STREQ(group->group_identity->user_id, group_ident->user_id);
     ASSERT_NE(group->group_identity->flags & PEP_idf_group_ident, 0);
-    ASSERT_EQ(group->manager, group_leader);
+    ASSERT_NE(group->manager, nullptr);
+    ASSERT_STREQ(group->manager->address, group_leader->address);
+    ASSERT_STREQ(group->manager->user_id, group_leader->user_id);
     ASSERT_EQ(group->manager->flags & PEP_idf_group_ident, 0);
     ASSERT_EQ(group->members, list); // We don't do anything to this list, so....
     ASSERT_STRNE(group_ident->fpr, group_leader->fpr);
@@ -598,6 +602,8 @@ TEST_F(GroupEncryptionTest, check_join_group) {
     ASSERT_TRUE(group->active);
     ASSERT_TRUE(group->members->member->adopted);
     ASSERT_EQ(group->members->next, nullptr);
+
+    m_queue.clear();
 }
 
 TEST_F(GroupEncryptionTest, check_join_group_no_key) {
@@ -635,6 +641,8 @@ TEST_F(GroupEncryptionTest, check_join_group_no_key) {
     ASSERT_TRUE(group->active); // ?
     ASSERT_FALSE(group->members->member->adopted);
     ASSERT_EQ(group->members->next, nullptr);
+
+    m_queue.clear();
 }
 
 TEST_F(GroupEncryptionTest, check_protocol_group_create) {
@@ -721,8 +729,9 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create) {
     ASSERT_OK;
     ASSERT_NE(group_info, nullptr);
 
-    // This should literally be true - I'm comparing the pointers on purpose
-    ASSERT_EQ(group_ident, group_info->group_identity);
+    ASSERT_NE(group_info->group_identity, nullptr);
+    ASSERT_STREQ(group_ident->address, group_info->group_identity->address);
+    ASSERT_STREQ(group_ident->user_id, group_info->group_identity->user_id);
 
     ASSERT_NE(group_info->manager, nullptr);
     ASSERT_STREQ(group_info->manager->user_id, me->user_id);
@@ -852,8 +861,9 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_1) {
     ASSERT_OK;
     ASSERT_NE(group_info, nullptr);
 
-    // This should literally be true - I'm comparing the pointers on purpose
-    ASSERT_EQ(group_identity, group_info->group_identity);
+    ASSERT_NE(group_info->group_identity, nullptr);
+    ASSERT_STREQ(group_identity->address, group_info->group_identity->address);
+    ASSERT_STREQ(group_identity->user_id, group_info->group_identity->user_id);
 
     ASSERT_NE(group_info->manager, nullptr);
     ASSERT_STREQ(group_info->manager->user_id, manager->user_id);
@@ -1155,4 +1165,95 @@ TEST_F(GroupEncryptionTest, check_protocol_join_group) {
     ASSERT_STREQ(msg->from->address, member_1_address);
     ASSERT_STREQ(msg->to->ident->address, manager_1_address);
 
+#if GECT_WRITEOUT
+    char* outdata = NULL;
+    mime_encode_message(msg, false, &outdata, false);
+    ASSERT_NE(outdata, nullptr);
+    dump_out((string("test_mails/group_join_") + member_1_prefix + ".eml").c_str(), outdata);
+    free(outdata);
+#endif
+
+    m_queue.clear();
+}
+
+TEST_F(GroupEncryptionTest, check_protocol_join_group_receive) {
+
+    // We have to replicate the whole group creation business in order to receive the message.
+    pEp_identity* me = new_identity(manager_1_address, NULL, PEP_OWN_USERID, manager_1_name);
+    read_file_and_import_key(session, kf_name(manager_1_prefix, false).c_str());
+    read_file_and_import_key(session, kf_name(manager_1_prefix, true).c_str());
+    PEP_STATUS status = set_own_key(session, me, manager_1_fpr);
+    ASSERT_OK;
+
+    pEp_identity* group_ident = new_identity(group_1_address, group_1_fpr, PEP_OWN_USERID, group_1_name);
+    read_file_and_import_key(session, kf_name(group_1_prefix, false).c_str());
+    read_file_and_import_key(session, kf_name(group_1_prefix, true).c_str());
+    status = set_own_key(session, group_ident, group_1_fpr);
+    ASSERT_OK;
+
+    pEp_identity* member_1 = new_identity(member_1_address, NULL, "MEMBER1", member_1_name);
+    read_file_and_import_key(session, kf_name(member_1_prefix, false).c_str());
+    status = update_identity(session, member_1);
+    ASSERT_OK;
+    status = set_pEp_version(session, member_1, 2, 2);
+    ASSERT_OK;
+    status = set_as_pEp_user(session, member_1);
+    ASSERT_OK;
+
+    member_list* new_members = new_memberlist(new_member(member_1));
+    ASSERT_NE(new_members, nullptr);
+
+    pEp_group* group = NULL;
+    status = group_create(session, group_ident, me, new_members, &group);
+    ASSERT_OK;
+
+    // MESSAGE LIST NOW INVALID.
+    m_queue.clear();
+
+    // Make sure they aren't an active part of the group.
+    free_group(group);
+    group = NULL;
+
+    // We lose ownership of group_ident here - maybe we shouldn't?
+    status = retrieve_group_info(session, group_ident, &group);
+    ASSERT_NE(group, nullptr);
+    ASSERT_NE(group->members, nullptr);
+    ASSERT_NE(group->members->member, nullptr);
+    ASSERT_NE(group->members->member->ident, nullptr);
+    ASSERT_EQ(group->members->next, nullptr);
+    ASSERT_STREQ(group->members->member->ident->user_id, "MEMBER1");
+    ASSERT_STREQ(group->members->member->ident->address, member_1_address);
+    ASSERT_FALSE(group->members->member->adopted);
+    free_group(group);
+    group = NULL;
+
+    // Ok, group exists. Now... let's get the "response email"
+    string msg_str = slurp(string("test_mails/group_join_") + member_1_prefix + ".eml");
+    message* msg = NULL;
+    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
+
+    message* dec_msg = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_OK;
+
+    // Ok, so that worked.
+    stringpair_list_t* autoconsume = stringpair_list_find(msg->opt_fields, "pEp-auto-consume");
+    ASSERT_NE(autoconsume, nullptr);
+
+    // Now let's see if our friend is part of the group.
+    status = retrieve_group_info(session, group_ident, &group);
+    ASSERT_NE(group, nullptr);
+    ASSERT_NE(group->members, nullptr);
+    ASSERT_NE(group->members->member, nullptr);
+    ASSERT_NE(group->members->member->ident, nullptr);
+    ASSERT_EQ(group->members->next, nullptr);
+    ASSERT_STREQ(group->members->member->ident->user_id, "MEMBER1");
+    ASSERT_STREQ(group->members->member->ident->address, member_1_address);
+    ASSERT_TRUE(group->members->member->adopted);
+
+    // HOORAY.
 }

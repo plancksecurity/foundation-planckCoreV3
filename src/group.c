@@ -89,7 +89,33 @@ void free_group(pEp_group *group) {
     free_memberlist(group->members);
 }
 
+
 static PEP_STATUS _set_member_status_joined(PEP_SESSION session,
+                                            pEp_identity* group_identity,
+                                            pEp_identity* as_member) {
+    int result = 0;
+
+    sqlite3_reset(session->group_activate_member);
+
+    sqlite3_bind_text(session->group_activate_member, 1, group_identity->user_id, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_text(session->group_activate_member, 2, group_identity->address, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_text(session->group_activate_member, 3, as_member->user_id, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_text(session->group_activate_member, 4, as_member->address, -1,
+                      SQLITE_STATIC);
+    result = sqlite3_step(session->group_activate_member);
+
+    sqlite3_reset(session->group_activate_member);
+
+    if (result != SQLITE_DONE)
+        return PEP_CANNOT_CREATE_GROUP;
+
+    return PEP_STATUS_OK;
+}
+
+static PEP_STATUS _set_own_status_joined(PEP_SESSION session,
                                             pEp_identity* group_identity,
                                             pEp_identity* as_member) {
     int result = 0;
@@ -226,6 +252,7 @@ PEP_STATUS create_group_entry(PEP_SESSION session,
     return PEP_STATUS_OK;
 }
 
+// FIXME: group_ident_clone on error
 PEP_STATUS group_create(
         PEP_SESSION session,
         pEp_identity *group_identity,
@@ -262,8 +289,13 @@ PEP_STATUS group_create(
     if (already_exists)
         return PEP_GROUP_EXISTS;
 
+    // from here on out: group_identity still belongs to the caller. So we dup it.
+    pEp_identity* group_ident_clone = identity_dup(group_identity);
+    if (!group_ident_clone)
+        return PEP_OUT_OF_MEMORY;
+
     // set it as a group_identity
-    status = set_identity_flags(session, group_identity, group_identity->flags | PEP_idf_group_ident);
+    status = set_identity_flags(session, group_ident_clone, group_ident_clone->flags | PEP_idf_group_ident);
     if (status != PEP_STATUS_OK)
         return status;
 
@@ -279,7 +311,7 @@ PEP_STATUS group_create(
         return PEP_ILLEGAL_VALUE;
 
     // Ok, we're ready to do DB stuff. Do some allocation:
-    pEp_group* _group = new_group(group_identity, manager, memberlist);
+    pEp_group* _group = new_group(group_ident_clone, manager, memberlist);
     if (!_group)
         return PEP_OUT_OF_MEMORY;
 
@@ -306,7 +338,7 @@ PEP_STATUS group_create(
     status = create_group_entry(session, _group);
 
     if (status == PEP_STATUS_OK) {
-        status = group_enable(session, group_identity);
+        status = group_enable(session, group_ident_clone);
     }
 
     if (status == PEP_STATUS_OK) {
@@ -321,7 +353,7 @@ PEP_STATUS group_create(
                 if (EMPTYSTR(member->user_id) || EMPTYSTR(member->address)) {
                     status = PEP_ILLEGAL_VALUE;
                 } else {
-                    status = group_add_member(session, group_identity, member);
+                    status = group_add_member(session, group_ident_clone, member);
                     if (status == PEP_STATUS_OK) {
                         if (is_me(session, member)) {
                             status = add_own_membership_entry(session, _group, member);
@@ -1457,6 +1489,8 @@ PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rat
 }
 
 PEP_STATUS receive_GroupDissolve(PEP_SESSION session, message* msg, PEP_rating rating, GroupDissolve_t* gd) {
+    PEP_STATUS status = PEP_STATUS_OK;
+
     if (rating < PEP_rating_reliable)
         return PEP_NO_TRUST; // Find better error
 
@@ -1466,6 +1500,13 @@ PEP_STATUS receive_GroupDissolve(PEP_SESSION session, message* msg, PEP_rating r
     // Make sure everything's there are enforce exactly one recip
     if (!gd || !msg->to || !msg->to->ident || msg->to->next)
         return PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
+
+    // We will probably always have to do this, but if something changes externally we need this check.
+    if (!msg->to->ident->me) {
+        status = update_identity(session, msg->to->ident);
+        if (status != PEP_STATUS_OK)
+            return status;
+    }
 
     // this will be hard without address aliases
     if (!is_me(session, msg->to->ident))
@@ -1483,7 +1524,7 @@ PEP_STATUS receive_GroupDissolve(PEP_SESSION session, message* msg, PEP_rating r
 
     free(manager->user_id);
     manager->user_id = NULL;
-    PEP_STATUS status = update_identity(session, manager);
+    status = update_identity(session, manager);
     if (status != PEP_STATUS_OK)
         return status;
 
@@ -1591,6 +1632,8 @@ static PEP_STATUS is_invited_group_member(PEP_SESSION session, pEp_identity* gro
 }
 
 PEP_STATUS receive_GroupAdopted(PEP_SESSION session, message* msg, PEP_rating rating, GroupAdopted_t* ga) {
+    PEP_STATUS status = PEP_STATUS_OK;
+
     if (rating < PEP_rating_reliable)
         return PEP_NO_TRUST; // Find better error
 
@@ -1600,6 +1643,13 @@ PEP_STATUS receive_GroupAdopted(PEP_SESSION session, message* msg, PEP_rating ra
     // Make sure everything's there are enforce exactly one recip
     if (!ga || !msg->to || !msg->to->ident || msg->to->next)
         return PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
+
+    // We will probably always have to do this, but if something changes externally we need this check.
+    if (!msg->to->ident->me) {
+        status = update_identity(session, msg->to->ident);
+        if (status != PEP_STATUS_OK)
+            return status;
+    }
 
     // this will be hard without address aliases
     if (!is_me(session, msg->to->ident))
@@ -1616,19 +1666,23 @@ PEP_STATUS receive_GroupAdopted(PEP_SESSION session, message* msg, PEP_rating ra
         return PEP_UNKNOWN_ERROR;
 
     char* own_id = NULL;
-    PEP_STATUS status = get_default_own_userid(session, &own_id);
+    status = get_default_own_userid(session, &own_id);
     if (status != PEP_STATUS_OK || EMPTYSTR(own_id))
         return PEP_UNKNOWN_ERROR;
 
-    // is this even our group? If so, ignore.
+    // is this even our group? If not, ignore.
     pEp_identity* db_group_ident = NULL;
-    status = get_identity(session, own_id, group_identity->address, &db_group_ident);
+    status = get_identity(session, group_identity->address, own_id, &db_group_ident);
     if (status != PEP_STATUS_OK)
         return status;
 
     // Fixme, free above
     if (!db_group_ident)
         return PEP_CANNOT_FIND_IDENTITY;
+
+    // There's nothing in the group_identity we care about actually other than the address, so free and replace
+    free_identity(group_identity);
+    group_identity = db_group_ident;
 
     bool is_mine = NULL;
     status = is_group_mine(session, group_identity, &is_mine);
@@ -1641,6 +1695,13 @@ PEP_STATUS receive_GroupAdopted(PEP_SESSION session, message* msg, PEP_rating ra
 
     // is this even someone we invited? If not, ignore.
     bool invited = false;
+
+    // Ok, first off, the user_id will be wrong.
+    free(member->user_id);
+    member->user_id = NULL;
+    status = update_identity(session, member);
+    if (status != PEP_STATUS_OK)
+        return status; // FIXME - please sort out memory!!!
 
     status = is_invited_group_member(session, group_identity, member, &invited);
     if (status != PEP_STATUS_OK)
@@ -1696,7 +1757,7 @@ PEP_STATUS join_group(
     if (status != PEP_STATUS_OK)
         return status;
 
-    status = _set_member_status_joined(session, group_identity, as_member);
+    status = _set_own_status_joined(session, group_identity, as_member);
 
     return PEP_STATUS_OK;
 }
@@ -1706,9 +1767,7 @@ PEP_STATUS receive_managed_group_message(PEP_SESSION session, message* msg, PEP_
     if (!session || !msg || !msg->_sender_fpr || !dist)
         return PEP_ILLEGAL_VALUE;
 
-
 //    char* sender_fpr = msg->_sender_fpr;
-
     switch (dist->choice.managedgroup.present) {
         case ManagedGroup_PR_groupCreate:
             return receive_GroupCreate(session, msg, rating, &(dist->choice.managedgroup.choice.groupCreate));
@@ -1748,7 +1807,11 @@ PEP_STATUS retrieve_group_info(PEP_SESSION session, pEp_identity* group_identity
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
-    group = new_group(group_identity, manager, members);
+    pEp_identity* group_ident_clone = identity_dup(group_identity);
+    if (!group_ident_clone)
+        return PEP_OUT_OF_MEMORY;
+
+    group = new_group(group_ident_clone, manager, members);
     if (!group)
         return PEP_OUT_OF_MEMORY;
 
