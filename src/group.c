@@ -473,38 +473,6 @@ PEP_STATUS retrieve_own_membership_info_for_group_and_identity(PEP_SESSION sessi
     return status;
 }
 
-PEP_STATUS join_group(
-        PEP_SESSION session,
-        pEp_identity *group_identity,
-        pEp_identity *as_member
-) {
-
-    if (!session || !group_identity || !as_member)
-        return PEP_ILLEGAL_VALUE;
-
-    if (EMPTYSTR(group_identity->user_id) || EMPTYSTR(as_member->user_id) ||
-        EMPTYSTR(group_identity->address) || EMPTYSTR(as_member->address)) {
-        return PEP_ILLEGAL_VALUE;
-    }
-
-    // get our status, if there is any
-    bool am_member = false;
-    // FIXME: differentiate between no records and DB error in call
-    PEP_STATUS status = get_own_membership_status(session, group_identity, as_member, &am_member);
-
-    if (status != PEP_STATUS_OK)
-        return status;
-
-    if (am_member)
-        return PEP_STATUS_OK; // FIXME: ask Volker if there is a reason to do this, like the message wasn't sent
-
-    // Ok, group invite exists. Do it.
-    
-    status = _set_member_status_joined(session, group_identity, as_member);
-
-    return PEP_STATUS_OK;
-}
-
 PEP_STATUS leave_group(
         PEP_SESSION session,
         pEp_identity *group_identity,
@@ -1275,28 +1243,58 @@ pEp_error:
 
 }
 
-PEP_STATUS send_GroupAdopted(PEP_SESSION session, pEp_group* group, pEp_identity* from) {
+PEP_STATUS send_GroupAdopted(PEP_SESSION session, pEp_identity* group_identity, pEp_identity* from) {
+
+    PEP_STATUS status = PEP_STATUS_OK;
+    pEp_identity* manager = NULL;
+    message* enc_msg = NULL;
+
     if (!session->messageToSend)
         return PEP_SEND_FUNCTION_NOT_REGISTERED;
 
-    if (!session || !group || !group->group_identity || !group->manager || !from)
+    if (!session || !group_identity || !from)
         return PEP_ILLEGAL_VALUE;
 
-    if (EMPTYSTR(group->group_identity->user_id) ||
-        EMPTYSTR(group->group_identity->address)  ||
-        EMPTYSTR(group->manager->user_id) ||
-        EMPTYSTR(group->manager->address) ||
+    if (EMPTYSTR(group_identity->user_id) ||
+        EMPTYSTR(group_identity->address)  ||
         EMPTYSTR(from->user_id) ||
         EMPTYSTR(from->address)) {
         return PEP_ILLEGAL_VALUE;
     }
 
-    if (!is_me(session, group->manager))
+    if (!is_me(session, group_identity))
+        status = update_identity(session, group_identity);
+    else
+        status = _myself(session, group_identity, false, false, false, true);
+
+    if (status != PEP_STATUS_OK)
+        return status;
+    else if (!(is_me(session, group_identity) && group_identity->flags & PEP_idf_group_ident)) {
+        return PEP_ILLEGAL_VALUE;
+    }
+
+    // Get the manager
+
+    status = get_group_manager(session, group_identity, &manager);
+    if (status != PEP_STATUS_OK)
+        return status;
+    else if (!manager)
+        return PEP_OUT_OF_MEMORY;
+    else if (EMPTYSTR(manager->address) || EMPTYSTR(manager->user_id)) {
+        status = PEP_UNKNOWN_ERROR;
+        goto pEp_free;
+    }
+
+    // ?? Is this really necessary? It's an internal call. Well, anything can mess up, no?
+    if (is_me(session, manager))
         return PEP_ILLEGAL_VALUE;
 
-    message* enc_msg = NULL;
+    status = update_identity(session, manager);
+    if (status != PEP_STATUS_OK)
+        goto pEp_free;
+    // ??
 
-    // Ok, let's get the payload set up, because we can duplicate this for each message.
+    // Ok, let's get the payload set up.
     Distribution_t* outdist = (Distribution_t *) calloc(1, sizeof(Distribution_t));
     if (!outdist)
         return PEP_OUT_OF_MEMORY;
@@ -1305,7 +1303,7 @@ PEP_STATUS send_GroupAdopted(PEP_SESSION session, pEp_group* group, pEp_identity
     outdist->choice.managedgroup.present = ManagedGroup_PR_groupAdopted;
     GroupAdopted_t* ga = &(outdist->choice.managedgroup.choice.groupAdopted);
 
-    if (!Identity_from_Struct(group->group_identity, &ga->groupIdentity)) {
+    if (!Identity_from_Struct(group_identity, &ga->groupIdentity)) {
         free(ga);
         return PEP_OUT_OF_MEMORY;
     }
@@ -1318,15 +1316,15 @@ PEP_STATUS send_GroupAdopted(PEP_SESSION session, pEp_group* group, pEp_identity
     // Man, I hope this is it.
     char *_data;
     size_t _size;
-    PEP_STATUS status = encode_Distribution_message(outdist, &_data, &_size);
+    status = encode_Distribution_message(outdist, &_data, &_size);
     if (status != PEP_STATUS_OK)
         return status; // FIXME - memory
 
-    pEp_identity* recip = group->manager; // This will be duped in base_prepare_message
+    pEp_identity* recip = manager; // This will be duped in base_prepare_message
     PEP_rating recip_rating;
     status = identity_rating(session, recip, &recip_rating);
     if (status != PEP_STATUS_OK)
-        goto pEp_error;
+        goto pEp_free;
     if (recip_rating < PEP_rating_reliable)
         return PEP_NO_TRUST; // ??? FIXME
 
@@ -1335,15 +1333,15 @@ PEP_STATUS send_GroupAdopted(PEP_SESSION session, pEp_group* group, pEp_identity
     status = base_prepare_message(session, from, recip, BASE_DISTRIBUTION,
                                   _data, _size, from->fpr, &msg);
     if (status != PEP_STATUS_OK)
-        goto pEp_error;
+        goto pEp_free;
 
     if (!msg) {
         status = PEP_OUT_OF_MEMORY;
-        goto pEp_error;
+        goto pEp_free;
     }
     if (!msg->attachments) {
         status = PEP_UNKNOWN_ERROR;
-        goto pEp_error;
+        goto pEp_free;
     }
 
     // encrypt this baby and get out
@@ -1351,7 +1349,7 @@ PEP_STATUS send_GroupAdopted(PEP_SESSION session, pEp_group* group, pEp_identity
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_auto, 0); // FIXME
 
     if (status != PEP_STATUS_OK)
-        goto pEp_error;
+        goto pEp_free;
 
     _add_auto_consume(enc_msg);
 
@@ -1359,12 +1357,13 @@ PEP_STATUS send_GroupAdopted(PEP_SESSION session, pEp_group* group, pEp_identity
     status = session->messageToSend(enc_msg);
 
     if (status != PEP_STATUS_OK)
-        goto pEp_error;
+        goto pEp_free;
 
     free_message(msg);
     msg = NULL;
 
-pEp_error:
+pEp_free:
+    free_identity(manager);
     return status;
 
 }
@@ -1667,6 +1666,42 @@ PEP_STATUS receive_GroupAdopted(PEP_SESSION session, message* msg, PEP_rating ra
     // FIXME: free stuff
 }
 
+PEP_STATUS join_group(
+        PEP_SESSION session,
+        pEp_identity *group_identity,
+        pEp_identity *as_member
+) {
+
+    if (!session || !group_identity || !as_member)
+        return PEP_ILLEGAL_VALUE;
+
+    if (EMPTYSTR(group_identity->user_id) || EMPTYSTR(as_member->user_id) ||
+        EMPTYSTR(group_identity->address) || EMPTYSTR(as_member->address)) {
+        return PEP_ILLEGAL_VALUE;
+    }
+
+    // get our status, if there is any
+    bool am_member = false;
+    // FIXME: differentiate between no records and DB error in call
+    PEP_STATUS status = get_own_membership_status(session, group_identity, as_member, &am_member);
+
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    if (am_member)
+        return PEP_STATUS_OK; // FIXME: ask Volker if there is a reason to do this, like the message wasn't sent
+
+    // Ok, group invite exists. Do it.
+    status = send_GroupAdopted(session, group_identity, as_member);
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    status = _set_member_status_joined(session, group_identity, as_member);
+
+    return PEP_STATUS_OK;
+}
+
+
 PEP_STATUS receive_managed_group_message(PEP_SESSION session, message* msg, PEP_rating rating, Distribution_t* dist) {
     if (!session || !msg || !msg->_sender_fpr || !dist)
         return PEP_ILLEGAL_VALUE;
@@ -1738,3 +1773,4 @@ pEp_error:
     }
     return status;
 }
+
