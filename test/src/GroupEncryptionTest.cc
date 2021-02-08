@@ -1051,6 +1051,8 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_4) {
     ASSERT_STREQ(msg->to->ident->address, member_4_address);
 }
 
+// Redundant, but we need this for various fun and games - we need a group key that
+// stays consistent so we can check later protocol steps.
 TEST_F(GroupEncryptionTest, check_protocol_group_create_extant_key) {
     pEp_identity* me = new_identity(manager_1_address, NULL, PEP_OWN_USERID, manager_1_name);
     read_file_and_import_key(session, kf_name(manager_1_prefix, false).c_str());
@@ -1072,9 +1074,36 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_extant_key) {
     ASSERT_OK;
     status = set_as_pEp_user(session, member_1);
     ASSERT_OK;
+    pEp_identity* member_2 = new_identity(member_2_address, NULL, "MEMBER2", member_2_name);
+    read_file_and_import_key(session, kf_name(member_2_prefix, false).c_str());
+    status = update_identity(session, member_2);
+    ASSERT_OK;
+    status = set_pEp_version(session, member_2, 2, 2);
+    ASSERT_OK;
+    status = set_as_pEp_user(session, member_2);
+    ASSERT_OK;
+    pEp_identity* member_3 = new_identity(member_3_address, NULL, "MEMBER3", member_3_name);
+    read_file_and_import_key(session, kf_name(member_3_prefix, false).c_str());
+    status = update_identity(session, member_3);
+    ASSERT_OK;
+    status = set_pEp_version(session, member_3, 2, 2);
+    ASSERT_OK;
+    status = set_as_pEp_user(session, member_3);
+    ASSERT_OK;
+    pEp_identity* member_4 = new_identity(member_4_address, NULL, "MEMBER4", member_4_name);
+    read_file_and_import_key(session, kf_name(member_4_prefix, false).c_str());
+    status = update_identity(session, member_4);
+    ASSERT_OK;
+    status = set_pEp_version(session, member_4, 2, 2);
+    ASSERT_OK;
+    status = set_as_pEp_user(session, member_4);
+    ASSERT_OK;
 
     member_list* new_members = new_memberlist(new_member(member_1));
     ASSERT_NE(new_members, nullptr);
+    memberlist_add(new_members, new_member(member_2));
+    memberlist_add(new_members, new_member(member_3));
+    memberlist_add(new_members, new_member(member_4));
 
     pEp_group* group = NULL;
     status = group_create(session, group_ident, me, new_members, &group);
@@ -1083,30 +1112,108 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_extant_key) {
     ASSERT_STREQ(group->manager->fpr, manager_1_fpr);
     ASSERT_STREQ(group->group_identity->fpr, group_1_fpr);
 
-    ASSERT_EQ(m_queue.size(), 1);
+    // Ok, we now have a bunch of messages to check.
+    ASSERT_EQ(m_queue.size(), 4);
 
-    message* msg = m_queue[0];
-    ASSERT_NE(msg, nullptr);
-    ASSERT_NE(msg->from, nullptr);
-    ASSERT_NE(msg->to, nullptr);
-    ASSERT_NE(msg->to->ident, nullptr);
-    ASSERT_EQ(msg->to->next, nullptr);
-    ASSERT_STREQ(msg->from->address, manager_1_address);
+    for (int i = 0; i < 4; i++) {
+        message* msg = m_queue[i];
+        ASSERT_NE(msg, nullptr);
+        ASSERT_NE(msg->from, nullptr);
+        ASSERT_NE(msg->to, nullptr);
+        ASSERT_NE(msg->to->ident, nullptr);
+        ASSERT_EQ(msg->to->next, nullptr);
+        ASSERT_STREQ(msg->from->address, manager_1_address);
 
 #if GECT_WRITEOUT
-    char* outdata = NULL;
-    mime_encode_message(msg, false, &outdata, false);
-    ASSERT_NE(outdata, nullptr);
-    dump_out((string("test_mails/group_create_extant_key_") + get_prefix_from_address(msg->to->ident->address) + ".eml").c_str(), outdata);
-    free(outdata);
+            char* outdata = NULL;
+            mime_encode_message(msg, false, &outdata, false);
+            ASSERT_NE(outdata, nullptr);
+            dump_out((string("test_mails/group_create_extant_key_") + get_prefix_from_address(msg->to->ident->address) + ".eml").c_str(), outdata);
+            free(outdata);
 #endif
+    }
 
     // MESSAGE LIST NOW INVALID.
     m_queue.clear();
+
+    // FIXME: Check all of the DB stuff, etc
+    // Ok, now let's see what's inside the box
+    pEp_group* group_info = NULL;
+    status = retrieve_group_info(session, group_ident, &group_info);
+    ASSERT_OK;
+    ASSERT_NE(group_info, nullptr);
+
+    ASSERT_NE(group_info->group_identity, nullptr);
+    ASSERT_STREQ(group_ident->address, group_info->group_identity->address);
+    ASSERT_STREQ(group_ident->user_id, group_info->group_identity->user_id);
+
+    ASSERT_NE(group_info->manager, nullptr);
+    ASSERT_STREQ(group_info->manager->user_id, me->user_id);
+    ASSERT_STREQ(group_info->manager->address, me->address);
+
+    status = myself(session, group_info->manager);
+    ASSERT_OK;
+    ASSERT_NE(group_info->manager->fpr, nullptr);
+    ASSERT_STREQ(group_info->manager->fpr, manager_1_fpr);
+    ASSERT_STREQ(group_info->manager->username, me->username);
+    ASSERT_STREQ(group_info->manager->username, manager_1_name);
+
+    ASSERT_TRUE(group_info->active);
+
+    // Ok, time to check the member list. Tricky...
+    const char* member_names[] = {member_1_name, member_2_name, member_3_name, member_4_name};
+    const char* member_addrs[] = {member_1_address, member_2_address, member_3_address, member_4_address};
+    const char* member_fprs[] = {member_1_fpr, member_2_fpr, member_3_fpr, member_4_fpr};
+
+    bool found[] = {false, false, false, false};
+
+    int count = 0;
+    for (member_list* curr_member = group_info->members;
+            curr_member && curr_member->member && curr_member->member->ident;
+            curr_member = curr_member->next) {
+
+        pEp_member* memb = curr_member->member;
+        pEp_identity* ident = memb->ident;
+        const char* userid = ident->user_id;
+        const char* address = ident->address;
+        ASSERT_NE(userid, nullptr);
+        ASSERT_NE(address, nullptr);
+
+        status = update_identity(session, ident);
+        ASSERT_OK;
+
+        const char* fpr = ident->fpr;
+        const char* name = ident->username;
+        ASSERT_NE(name, nullptr);
+        ASSERT_NE(fpr, nullptr);
+
+        ASSERT_FALSE(memb->adopted);
+
+        int index = -1;
+
+        for (int i = 0; i < 4; i++) {
+            if (strcmp(member_names[i], name) == 0) {
+                index = i;
+                break;
+            }
+        }
+        ASSERT_GT(index, -1);
+        ASSERT_LT(index, 5);
+        ASSERT_STREQ(member_addrs[index], address);
+        ASSERT_STREQ(member_fprs[index], fpr);
+        found[index] = true;
+        count++;
+    }
+
+    ASSERT_EQ(count, 4);
+    for (int i = 0; i < 4; i++) {
+        ASSERT_TRUE(found[i]);
+    }
+
+    free_group(group);
 }
 
-
-TEST_F(GroupEncryptionTest, check_protocol_join_group) {
+TEST_F(GroupEncryptionTest, check_protocol_join_group_member_1) {
     const char* own_id = "DIFFERENT_OWN_ID_FOR_KICKS";
     pEp_identity* me = new_identity(member_1_address, NULL, own_id, member_1_name);
     read_file_and_import_key(session, kf_name(member_1_prefix, false).c_str());
@@ -1175,6 +1282,188 @@ TEST_F(GroupEncryptionTest, check_protocol_join_group) {
 
     m_queue.clear();
 }
+
+TEST_F(GroupEncryptionTest, join_group_member_2) {
+    const char* own_id = "PEP_OWN_USERID"; // on purpose, little joke here
+    pEp_identity* me = new_identity(member_2_address, NULL, own_id, member_1_name);
+    read_file_and_import_key(session, kf_name(member_2_prefix, false).c_str());
+    read_file_and_import_key(session, kf_name(member_2_prefix, true).c_str());
+    PEP_STATUS status = set_own_key(session, me, member_2_fpr);
+    ASSERT_OK;
+
+    status = myself(session, me);
+
+    ASSERT_STREQ(me->fpr, member_2_fpr);
+
+    read_file_and_import_key(session, kf_name(manager_1_prefix, false).c_str());
+
+    string msg_str = slurp(string("test_mails/group_create_extant_key_") + member_2_prefix + ".eml");
+    ASSERT_FALSE(msg_str.empty());
+
+    message* msg = NULL;
+
+    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
+    ASSERT_NE(msg, nullptr);
+
+    message* dec_msg = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_OK;
+
+    pEp_identity* group_identity = new_identity(group_1_address, NULL, own_id, NULL);
+    status = myself(session, group_identity);
+    pEp_group* group = new_group(group_identity, NULL, NULL);
+    status = retrieve_own_membership_info_for_group_and_identity(session, group, me);
+    ASSERT_OK;
+    status = join_group(session, group_identity, me);
+    ASSERT_OK;
+
+    ASSERT_EQ(m_queue.size(), 1);
+
+    msg = m_queue[0];
+    ASSERT_NE(msg, nullptr);
+    ASSERT_NE(msg->from, nullptr);
+    ASSERT_NE(msg->to, nullptr);
+    ASSERT_NE(msg->to->ident, nullptr);
+    ASSERT_EQ(msg->to->next, nullptr);
+    ASSERT_STREQ(msg->from->address, member_2_address);
+    ASSERT_STREQ(msg->to->ident->address, manager_1_address);
+
+#if GECT_WRITEOUT
+    char* outdata = NULL;
+    mime_encode_message(msg, false, &outdata, false);
+    ASSERT_NE(outdata, nullptr);
+    dump_out((string("test_mails/group_join_") + member_2_prefix + ".eml").c_str(), outdata);
+    free(outdata);
+#endif
+
+    m_queue.clear();
+}
+
+TEST_F(GroupEncryptionTest, join_group_member_3) {
+    const char* own_id = "BAH";
+    pEp_identity* me = new_identity(member_3_address, NULL, own_id, member_1_name);
+    read_file_and_import_key(session, kf_name(member_3_prefix, false).c_str());
+    read_file_and_import_key(session, kf_name(member_3_prefix, true).c_str());
+    PEP_STATUS status = set_own_key(session, me, member_3_fpr);
+    ASSERT_OK;
+
+    status = myself(session, me);
+
+    ASSERT_STREQ(me->fpr, member_3_fpr);
+
+    read_file_and_import_key(session, kf_name(manager_1_prefix, false).c_str());
+
+    string msg_str = slurp(string("test_mails/group_create_extant_key_") + member_3_prefix + ".eml");
+    ASSERT_FALSE(msg_str.empty());
+
+    message* msg = NULL;
+
+    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
+    ASSERT_NE(msg, nullptr);
+
+    message* dec_msg = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_OK;
+
+    pEp_identity* group_identity = new_identity(group_1_address, NULL, own_id, NULL);
+    status = myself(session, group_identity);
+    pEp_group* group = new_group(group_identity, NULL, NULL);
+    status = retrieve_own_membership_info_for_group_and_identity(session, group, me);
+    ASSERT_OK;
+    status = join_group(session, group_identity, me);
+    ASSERT_OK;
+
+    ASSERT_EQ(m_queue.size(), 1);
+
+    msg = m_queue[0];
+    ASSERT_NE(msg, nullptr);
+    ASSERT_NE(msg->from, nullptr);
+    ASSERT_NE(msg->to, nullptr);
+    ASSERT_NE(msg->to->ident, nullptr);
+    ASSERT_EQ(msg->to->next, nullptr);
+    ASSERT_STREQ(msg->from->address, member_3_address);
+    ASSERT_STREQ(msg->to->ident->address, manager_1_address);
+
+#if GECT_WRITEOUT
+    char* outdata = NULL;
+    mime_encode_message(msg, false, &outdata, false);
+    ASSERT_NE(outdata, nullptr);
+    dump_out((string("test_mails/group_join_") + member_3_prefix + ".eml").c_str(), outdata);
+    free(outdata);
+#endif
+
+    m_queue.clear();
+}
+
+TEST_F(GroupEncryptionTest, join_group_member_4) {
+    const char* own_id = PEP_OWN_USERID;
+    pEp_identity* me = new_identity(member_4_address, NULL, own_id, member_1_name);
+    read_file_and_import_key(session, kf_name(member_4_prefix, false).c_str());
+    read_file_and_import_key(session, kf_name(member_4_prefix, true).c_str());
+    PEP_STATUS status = set_own_key(session, me, member_4_fpr);
+    ASSERT_OK;
+
+    status = myself(session, me);
+
+    ASSERT_STREQ(me->fpr, member_4_fpr);
+
+    read_file_and_import_key(session, kf_name(manager_1_prefix, false).c_str());
+
+    string msg_str = slurp(string("test_mails/group_create_extant_key_") + member_4_prefix + ".eml");
+    ASSERT_FALSE(msg_str.empty());
+
+    message* msg = NULL;
+
+    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
+    ASSERT_NE(msg, nullptr);
+
+    message* dec_msg = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_OK;
+
+    pEp_identity* group_identity = new_identity(group_1_address, NULL, own_id, NULL);
+    status = myself(session, group_identity);
+    pEp_group* group = new_group(group_identity, NULL, NULL);
+    status = retrieve_own_membership_info_for_group_and_identity(session, group, me);
+    ASSERT_OK;
+    status = join_group(session, group_identity, me);
+    ASSERT_OK;
+
+    ASSERT_EQ(m_queue.size(), 1);
+
+    msg = m_queue[0];
+    ASSERT_NE(msg, nullptr);
+    ASSERT_NE(msg->from, nullptr);
+    ASSERT_NE(msg->to, nullptr);
+    ASSERT_NE(msg->to->ident, nullptr);
+    ASSERT_EQ(msg->to->next, nullptr);
+    ASSERT_STREQ(msg->from->address, member_4_address);
+    ASSERT_STREQ(msg->to->ident->address, manager_1_address);
+
+#if GECT_WRITEOUT
+    char* outdata = NULL;
+    mime_encode_message(msg, false, &outdata, false);
+    ASSERT_NE(outdata, nullptr);
+    dump_out((string("test_mails/group_join_") + member_4_prefix + ".eml").c_str(), outdata);
+    free(outdata);
+#endif
+
+    m_queue.clear();
+}
+
+
 
 TEST_F(GroupEncryptionTest, check_protocol_join_group_receive) {
 
@@ -1257,3 +1546,5 @@ TEST_F(GroupEncryptionTest, check_protocol_join_group_receive) {
 
     // HOORAY.
 }
+
+// N.B. These are mostly for generation, less for testing, but it doesn't hurt
