@@ -763,6 +763,10 @@ extern double _pEp_log2_36;
  *  @internal
  *
  *  @brief      Re-initialise necessary asn.1 globals which are falsely set by the asn1c compiler for non-GCC
+ *              Note: changing the bound in the first place is a kludge, left here because we were no longer
+ *                    making the call, not because changing the bound was the right idea.
+ *                    If you're going to put it in as an arg, put in all of the values that are
+ *                    being changed here.
  *
  *  @see        Distribution.c:11
  */
@@ -802,12 +806,13 @@ static inline void _patch_asn1_codec() {
  *
  *  @brief            TODO
  *  
- *  
+ *  Please leave _patch_asn1_codec COMMENTED OUT unless you're working
+ *  in a branch or patching the asn1 is a solution
  */
 static inline void _init_globals() {
     _pEp_rand_max_bits = (int) ceil(log2((double) RAND_MAX));
     _pEp_log2_36 = log2(36);
-    _patch_asn1_codec();
+//    _patch_asn1_codec();
 }
 
 
