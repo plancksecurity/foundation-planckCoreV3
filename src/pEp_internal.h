@@ -246,8 +246,7 @@ struct _pEpSession {
     sqlite3_stmt *group_add_member;
     sqlite3_stmt *join_group;
     sqlite3_stmt *leave_group;
-    sqlite3_stmt *group_activate_member;
-    sqlite3_stmt *group_deactivate_member;
+    sqlite3_stmt *set_group_member_status;
     sqlite3_stmt *get_all_members;
     sqlite3_stmt *get_active_members;
     sqlite3_stmt *get_active_groups;

@@ -1285,7 +1285,7 @@ TEST_F(GroupEncryptionTest, check_protocol_join_group_member_1) {
 
 TEST_F(GroupEncryptionTest, join_group_member_2) {
     const char* own_id = "PEP_OWN_USERID"; // on purpose, little joke here
-    pEp_identity* me = new_identity(member_2_address, NULL, own_id, member_1_name);
+    pEp_identity* me = new_identity(member_2_address, NULL, own_id, member_2_name);
     read_file_and_import_key(session, kf_name(member_2_prefix, false).c_str());
     read_file_and_import_key(session, kf_name(member_2_prefix, true).c_str());
     PEP_STATUS status = set_own_key(session, me, member_2_fpr);
@@ -1345,7 +1345,7 @@ TEST_F(GroupEncryptionTest, join_group_member_2) {
 
 TEST_F(GroupEncryptionTest, join_group_member_3) {
     const char* own_id = "BAH";
-    pEp_identity* me = new_identity(member_3_address, NULL, own_id, member_1_name);
+    pEp_identity* me = new_identity(member_3_address, NULL, own_id, member_3_name);
     read_file_and_import_key(session, kf_name(member_3_prefix, false).c_str());
     read_file_and_import_key(session, kf_name(member_3_prefix, true).c_str());
     PEP_STATUS status = set_own_key(session, me, member_3_fpr);
@@ -1405,7 +1405,7 @@ TEST_F(GroupEncryptionTest, join_group_member_3) {
 
 TEST_F(GroupEncryptionTest, join_group_member_4) {
     const char* own_id = PEP_OWN_USERID;
-    pEp_identity* me = new_identity(member_4_address, NULL, own_id, member_1_name);
+    pEp_identity* me = new_identity(member_4_address, NULL, own_id, member_4_name);
     read_file_and_import_key(session, kf_name(member_4_prefix, false).c_str());
     read_file_and_import_key(session, kf_name(member_4_prefix, true).c_str());
     PEP_STATUS status = set_own_key(session, me, member_4_fpr);
@@ -1462,7 +1462,6 @@ TEST_F(GroupEncryptionTest, join_group_member_4) {
 
     m_queue.clear();
 }
-
 
 
 TEST_F(GroupEncryptionTest, check_protocol_join_group_receive) {
@@ -1547,4 +1546,241 @@ TEST_F(GroupEncryptionTest, check_protocol_join_group_receive) {
     // HOORAY.
 }
 
-// N.B. These are mostly for generation, less for testing, but it doesn't hurt
+TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_send) {
+    pEp_identity* me = new_identity(manager_1_address, NULL, PEP_OWN_USERID, manager_1_name);
+    read_file_and_import_key(session, kf_name(manager_1_prefix, false).c_str());
+    read_file_and_import_key(session, kf_name(manager_1_prefix, true).c_str());
+    PEP_STATUS status = set_own_key(session, me, manager_1_fpr);
+    ASSERT_OK;
+
+    pEp_identity* group_ident = new_identity(group_1_address, group_1_fpr, PEP_OWN_USERID, group_1_name);
+    read_file_and_import_key(session, kf_name(group_1_prefix, false).c_str());
+    read_file_and_import_key(session, kf_name(group_1_prefix, true).c_str());
+    status = set_own_key(session, group_ident, group_1_fpr);
+    ASSERT_OK;
+
+    pEp_identity* member_1 = new_identity(member_1_address, NULL, "MEMBER1", member_1_name);
+    read_file_and_import_key(session, kf_name(member_1_prefix, false).c_str());
+    status = update_identity(session, member_1);
+    ASSERT_OK;
+    status = set_pEp_version(session, member_1, 2, 2);
+    ASSERT_OK;
+    status = set_as_pEp_user(session, member_1);
+    ASSERT_OK;
+    pEp_identity* member_2 = new_identity(member_2_address, NULL, "MEMBER2", member_2_name);
+    read_file_and_import_key(session, kf_name(member_2_prefix, false).c_str());
+    status = update_identity(session, member_2);
+    ASSERT_OK;
+    status = set_pEp_version(session, member_2, 2, 2);
+    ASSERT_OK;
+    status = set_as_pEp_user(session, member_2);
+    ASSERT_OK;
+    pEp_identity* member_3 = new_identity(member_3_address, NULL, "MEMBER3", member_3_name);
+    read_file_and_import_key(session, kf_name(member_3_prefix, false).c_str());
+    status = update_identity(session, member_3);
+    ASSERT_OK;
+    status = set_pEp_version(session, member_3, 2, 2);
+    ASSERT_OK;
+    status = set_as_pEp_user(session, member_3);
+    ASSERT_OK;
+    pEp_identity* member_4 = new_identity(member_4_address, NULL, "MEMBER4", member_4_name);
+    read_file_and_import_key(session, kf_name(member_4_prefix, false).c_str());
+    status = update_identity(session, member_4);
+    ASSERT_OK;
+    status = set_pEp_version(session, member_4, 2, 2);
+    ASSERT_OK;
+    status = set_as_pEp_user(session, member_4);
+    ASSERT_OK;
+
+    member_list* new_members = new_memberlist(new_member(member_1));
+    ASSERT_NE(new_members, nullptr);
+    memberlist_add(new_members, new_member(member_2));
+    memberlist_add(new_members, new_member(member_3));
+    memberlist_add(new_members, new_member(member_4));
+
+    pEp_group* group = NULL;
+    status = group_create(session, group_ident, me, new_members, &group);
+    ASSERT_OK;
+
+    // Ok, so we've actually already got the messages for this written out elsewhere - this was all DB setup.
+    // Let's move on to importing the acceptances - we'll decide only three are going to accept - and then
+    // dissolving the group.
+    m_queue.clear();
+
+    // Get mails - out of order, just because
+    // Member 4
+    string msg_str = slurp(string("test_mails/group_join_") + member_4_prefix + ".eml");
+    message* msg = NULL;
+    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
+    message* dec_msg = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_OK;
+
+    // Member 1
+    msg_str = slurp(string("test_mails/group_join_") + member_1_prefix + ".eml");
+    free_message(msg);
+    msg = NULL;
+    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
+    free_message(dec_msg);
+    dec_msg = NULL;
+    free_stringlist(keylist);
+    keylist = NULL;
+    rating = PEP_rating_undefined;
+    flags = 0;
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_OK;
+
+    // Member 2
+    msg_str = slurp(string("test_mails/group_join_") + member_2_prefix + ".eml");
+    free_message(msg);
+    msg = NULL;
+    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
+    free_message(dec_msg);
+    dec_msg = NULL;
+    free_stringlist(keylist);
+    keylist = NULL;
+    rating = PEP_rating_undefined;
+    flags = 0;
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_OK;
+    
+    free_message(msg);
+    msg = NULL;
+    free_message(dec_msg);
+    dec_msg = NULL;
+    free_stringlist(keylist);
+    keylist = NULL;
+
+    // Ok, we've now got acceptances from member 1, member 2, and member 4.
+
+    // First, make sure that's who's in our group, eh?
+    member_list* members = NULL;
+    status = retrieve_active_member_list(session, group_ident, &members);
+    const char* member_names[] = {member_1_name, member_2_name, member_4_name};
+    const char* member_addrs[] = {member_1_address, member_2_address, member_4_address};
+    const char* member_fprs[] = {member_1_fpr, member_2_fpr, member_4_fpr};
+    const char* member_prefixes[] = {member_1_prefix, member_2_prefix, member_4_prefix};
+
+    bool found[] = {false, false, false};
+
+    int count = 0;
+    for (member_list* curr_member = members;
+            curr_member && curr_member->member && curr_member->member->ident;
+            curr_member = curr_member->next) {
+
+        pEp_member* memb = curr_member->member;
+        pEp_identity* ident = memb->ident;
+        const char* userid = ident->user_id;
+        const char* address = ident->address;
+        ASSERT_NE(userid, nullptr);
+        ASSERT_NE(address, nullptr);
+
+        status = update_identity(session, ident);
+        ASSERT_OK;
+
+        const char* fpr = ident->fpr;
+        const char* name = ident->username;
+        ASSERT_NE(name, nullptr);
+        ASSERT_NE(fpr, nullptr);
+
+        ASSERT_TRUE(memb->adopted);
+
+        int index = -1;
+
+        for (int i = 0; i < 3; i++) {
+            if (strcmp(member_names[i], name) == 0) {
+                index = i;
+                break;
+            }
+        }
+        ASSERT_GT(index, -1);
+        ASSERT_LT(index, 4);
+        ASSERT_STREQ(member_addrs[index], address);
+        ASSERT_STREQ(member_fprs[index], fpr);
+        found[index] = true;
+        count++;
+    }
+    ASSERT_EQ(count, 3);
+    for (int i = 0; i < 3; i++) {
+        ASSERT_TRUE(found[i]);
+    }
+
+    // Ok, group has all the members. Now we can dissolve the group.
+    m_queue.clear(); // Just in case
+
+    status = group_dissolve(session, group_ident, me);
+    ASSERT_OK;
+
+    member_list* list = NULL;
+    status = retrieve_active_member_list(session, group_ident, &list);
+    ASSERT_EQ(list, nullptr);
+    ASSERT_OK;
+
+    ASSERT_EQ(m_queue.size(), 3);
+
+    // Make sure we sent them to the right people:
+    for (int i = 0; i < 3; i++)
+        found[i] = false;
+
+    for (count = 0; count < 3; count++) {
+        msg = m_queue[count];
+        ASSERT_NE(msg->from, nullptr);
+        ASSERT_NE(msg->from->address, nullptr);
+        ASSERT_STREQ(msg->from->address, manager_1_address);
+        ASSERT_STREQ(msg->from->user_id, PEP_OWN_USERID);
+
+        ASSERT_NE(msg->to, nullptr);
+        pEp_identity* dissolve_to = msg->to->ident;
+        ASSERT_NE(dissolve_to, nullptr);
+        ASSERT_NE(dissolve_to->user_id, nullptr);
+        ASSERT_NE(dissolve_to->address, nullptr);
+
+        status = update_identity(session, dissolve_to);
+        ASSERT_OK;
+
+        const char* fpr = dissolve_to->fpr;
+        const char* name = dissolve_to->username;
+        const char* d_addr = dissolve_to->address;
+        const char* d_id = dissolve_to->user_id;
+        ASSERT_NE(name, nullptr);
+        ASSERT_NE(fpr, nullptr);
+        ASSERT_NE(d_addr, nullptr);
+        ASSERT_NE(d_id, nullptr);
+
+        int index = -1;
+
+        if (strcmp(d_id, "MEMBER1") == 0)
+            index = 0;
+        else if (strcmp(d_id, "MEMBER2") == 0)
+            index = 1;
+        else if (strcmp(d_id, "MEMBER4") == 0)
+            index = 2;
+        else
+            ASSERT_STREQ("This message is just to make the test fail and give a message - unexpected user id in group_dissolve sent mails", d_id);
+
+        ASSERT_STREQ(name, member_names[index]);
+        ASSERT_STREQ(d_addr, member_addrs[index]);
+        ASSERT_STREQ(member_fprs[index], fpr);
+        found[index] = true;
+
+#if GECT_WRITEOUT
+        char* outdata = NULL;
+        mime_encode_message(msg, false, &outdata, false);
+        ASSERT_NE(outdata, nullptr);
+        dump_out((string("test_mails/group_dissolve_") + member_prefixes[index] + ".eml").c_str(), outdata);
+        free(outdata);
+#endif
+    }
+    ASSERT_EQ(count, 3);
+    for (int i = 0; i < 3; i++) {
+        ASSERT_TRUE(found[i]);
+    }
+
+    // Ok, group has all the members. Now we can dissolve the group.
+    m_queue.clear(); // Just in case
+
+    free_group(group);
+}

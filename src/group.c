@@ -89,25 +89,26 @@ void free_group(pEp_group *group) {
     free_memberlist(group->members);
 }
 
-
-static PEP_STATUS _set_member_status_joined(PEP_SESSION session,
+static PEP_STATUS _set_membership_status(PEP_SESSION session,
                                             pEp_identity* group_identity,
-                                            pEp_identity* as_member) {
+                                            pEp_identity* as_member,
+                                            bool active) {
     int result = 0;
 
-    sqlite3_reset(session->group_activate_member);
+    sqlite3_reset(session->set_group_member_status);
 
-    sqlite3_bind_text(session->group_activate_member, 1, group_identity->user_id, -1,
+    sqlite3_bind_int(session->set_group_member_status, 1, active);
+    sqlite3_bind_text(session->set_group_member_status, 2, group_identity->user_id, -1,
                       SQLITE_STATIC);
-    sqlite3_bind_text(session->group_activate_member, 2, group_identity->address, -1,
+    sqlite3_bind_text(session->set_group_member_status, 3, group_identity->address, -1,
                       SQLITE_STATIC);
-    sqlite3_bind_text(session->group_activate_member, 3, as_member->user_id, -1,
+    sqlite3_bind_text(session->set_group_member_status, 4, as_member->user_id, -1,
                       SQLITE_STATIC);
-    sqlite3_bind_text(session->group_activate_member, 4, as_member->address, -1,
+    sqlite3_bind_text(session->set_group_member_status, 5, as_member->address, -1,
                       SQLITE_STATIC);
-    result = sqlite3_step(session->group_activate_member);
+    result = sqlite3_step(session->set_group_member_status);
 
-    sqlite3_reset(session->group_activate_member);
+    sqlite3_reset(session->set_group_member_status);
 
     if (result != SQLITE_DONE)
         return PEP_CANNOT_CREATE_GROUP;
@@ -139,7 +140,6 @@ static PEP_STATUS _set_own_status_joined(PEP_SESSION session,
 
     return PEP_STATUS_OK;
 }
-
 
 PEP_STATUS get_group_manager(PEP_SESSION session,
                              pEp_identity* group_identity,
@@ -698,6 +698,7 @@ PEP_STATUS group_dissolve(
         status = revoke_key(session, group_identity->fpr, NULL);
         if (status != PEP_STATUS_OK)
             return status;
+
         // You'd better get all the group info here
         member_list* list = NULL;
 
@@ -712,6 +713,20 @@ PEP_STATUS group_dissolve(
         status = send_GroupDissolve(session, group);
         if (status != PEP_STATUS_OK)
             return status; // fixme
+
+        // deactivate members
+        member_list* memb = group->members;
+
+        while (memb && memb->member && memb->member->ident) {
+            pEp_identity* memb_ident = memb->member->ident;
+            if (EMPTYSTR(memb_ident->user_id) || EMPTYSTR(memb_ident->address))
+                return PEP_UNKNOWN_ERROR;
+            status = _set_membership_status(session, group_identity, memb->member->ident, false);
+            memb = memb->next;
+        }
+        // We don't own the group_ident or manager that comes in here, so we need to set them to NULL.
+        group->group_identity = NULL;
+        group->manager = NULL;
 
         free_group(group);
     }
@@ -786,41 +801,22 @@ PEP_STATUS group_add_member(
     return status;
 }
 
-PEP_STATUS group_remove_member(
-        PEP_SESSION session,
-        pEp_identity *group_identity,
-        pEp_identity *group_member
-) {
-    bool exists = false;
-    PEP_STATUS status = exists_group(session, group_identity, &exists);
-    if (status != PEP_STATUS_OK)
-        return status;
-
-    if (!exists)
-        return PEP_GROUP_NOT_FOUND;
-
-    int result = 0;
-
-    sqlite3_reset(session->group_deactivate_member);
-
-    sqlite3_bind_text(session->group_deactivate_member, 1, group_identity->user_id, -1,
-                      SQLITE_STATIC);
-    sqlite3_bind_text(session->group_deactivate_member, 2, group_identity->address, -1,
-                      SQLITE_STATIC);
-    sqlite3_bind_text(session->group_deactivate_member, 3, group_member->user_id, -1,
-                      SQLITE_STATIC);
-    sqlite3_bind_text(session->group_deactivate_member, 4, group_member->address, -1,
-                      SQLITE_STATIC);
-
-    result = sqlite3_step(session->group_deactivate_member);
-
-    sqlite3_reset(session->group_deactivate_member);
-
-    if (result != SQLITE_DONE)
-        status = PEP_CANNOT_DEACTIVATE_GROUP_MEMBER;
-
-    return status;
-}
+// Do we even want to use this function??? FIXME
+//PEP_STATUS group_remove_member(
+//        PEP_SESSION session,
+//        pEp_identity *group_identity,
+//        pEp_identity *group_member
+//) {
+//    bool exists = false;
+//    PEP_STATUS status = exists_group(session, group_identity, &exists);
+//    if (status != PEP_STATUS_OK)
+//        return status;
+//
+//    if (!exists)
+//        return PEP_GROUP_NOT_FOUND;
+//
+//    return _set_membership_status(session, group_identity, group_member, false);
+//}
 
 PEP_STATUS retrieve_full_group_membership(
         PEP_SESSION session,
@@ -1144,6 +1140,8 @@ pEp_error:
 
 }
 
+// This ALREADY has a list of active members attached to the group by
+// group_dissolve. So don't do it again.
 PEP_STATUS send_GroupDissolve(PEP_SESSION session, pEp_group* group) {
     if (!session->messageToSend)
         return PEP_SEND_FUNCTION_NOT_REGISTERED;
@@ -1189,17 +1187,12 @@ PEP_STATUS send_GroupDissolve(PEP_SESSION session, pEp_group* group) {
     if (status != PEP_STATUS_OK)
         return status; // FIXME - memory
 
-    // Ok, for every member in the member list, send away.
-    // (We'll copy in for now. It's small and quick.)
-    member_list* list = NULL;
-    status = retrieve_full_group_membership(session, group->group_identity, &list);
-    if (status != PEP_STATUS_OK)
-        return status; // FIXME
-
+    // Ok, for every member in the active member list, which came in attached to the group argument, send away.
+    member_list* list = group->members;
     if (!list)
-        return PEP_STATUS_OK; // DOH, empty, I guess
+        return PEP_STATUS_OK; // no members to send to
 
-    member_list* curr_invite = NULL;
+    member_list* curr_mem = NULL;
 
     message* msg = NULL;
 
@@ -1213,8 +1206,8 @@ PEP_STATUS send_GroupDissolve(PEP_SESSION session, pEp_group* group) {
     if (key_material_size == 0 || !key_material)
         return PEP_UNKNOWN_ERROR;
 
-    for (curr_invite = list; curr_invite && curr_invite->member && curr_invite->member->ident; curr_invite = curr_invite->next) {
-        pEp_identity* recip = curr_invite->member->ident; // This will be duped in base_prepare_message
+    for (curr_mem = list; curr_mem && curr_mem->member && curr_mem->member->ident; curr_mem = curr_mem->next) {
+        pEp_identity* recip = curr_mem->member->ident; // This will be duped in base_prepare_message
         PEP_rating recip_rating;
         status = identity_rating(session, recip, &recip_rating);
         if (status != PEP_STATUS_OK)
@@ -1269,7 +1262,6 @@ PEP_STATUS send_GroupDissolve(PEP_SESSION session, pEp_group* group) {
         msg = NULL;
     }
 
-    free_memberlist(list);
 pEp_error:
     return status;
 
@@ -1720,7 +1712,7 @@ PEP_STATUS receive_GroupAdopted(PEP_SESSION session, message* msg, PEP_rating ra
         return PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
 
     // Ok, we invited them. Set their status to "joined".
-    status = _set_member_status_joined(session, group_identity, member);
+    status = _set_membership_status(session, group_identity, member, true);
 
     return status;
 
