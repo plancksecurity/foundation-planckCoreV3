@@ -43,11 +43,12 @@ sync:
 asn1: sync
 	$(MAKE) -C asn.1
 
-
 install: build
 	$(MAKE) -C src install
 	$(MAKE) -C asn.1 install
+ifeq ($(BUILT_IN_MIME),pepmime)
 	$(MAKE) -C pEpMIME install
+endif
 
 beinstall:
 	$(MAKE) -C src beinstall

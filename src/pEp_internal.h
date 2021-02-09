@@ -767,7 +767,7 @@ extern double _pEp_log2_36;
  *
  *  @see        Distribution.c:11
  */
-static inline void _fix_asn1_constraint(asn_TYPE_descriptor_t* lang_def) {
+static inline void _fix_asn1_constraint(asn_TYPE_descriptor_t* lang_def, int bound) {
     struct asn_per_constraints_s* fixed_vals =
             (struct asn_per_constraints_s*)malloc(sizeof(struct asn_per_constraints_s));
 
@@ -777,7 +777,7 @@ static inline void _fix_asn1_constraint(asn_TYPE_descriptor_t* lang_def) {
     fixed_vals->value.range_bits = 0;
     fixed_vals->value.effective_bits = 0;
     fixed_vals->value.lower_bound = 0;
-    fixed_vals->value.upper_bound = 1; // I am nervous about this...
+    fixed_vals->value.upper_bound = bound;
 
     // We don't free the lang_def previous value because it was stack-allocated
     lang_def->per_constraints = fixed_vals;
@@ -792,8 +792,8 @@ static inline void _fix_asn1_constraint(asn_TYPE_descriptor_t* lang_def) {
  *
  */
 static inline void _patch_asn1_codec() {
-    _fix_asn1_constraint(&asn_DEF_Distribution);
-    _fix_asn1_constraint(&asn_DEF_Sync);
+    _fix_asn1_constraint(&asn_DEF_Distribution, 2);
+    _fix_asn1_constraint(&asn_DEF_Sync, 1);
 }
 
 /**
@@ -808,7 +808,7 @@ static inline void _patch_asn1_codec() {
 static inline void _init_globals() {
     _pEp_rand_max_bits = (int) ceil(log2((double) RAND_MAX));
     _pEp_log2_36 = log2(36);
-//    _patch_asn1_codec();
+    _patch_asn1_codec();
 }
 
 
