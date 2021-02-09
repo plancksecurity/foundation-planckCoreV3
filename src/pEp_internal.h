@@ -852,5 +852,3 @@ static inline void _add_auto_consume(message* msg) {
 
 
 #endif
-
-#endif
