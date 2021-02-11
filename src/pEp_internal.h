@@ -755,50 +755,6 @@ static inline void set_max_version(unsigned int first_maj, unsigned int first_mi
 extern int _pEp_rand_max_bits;
 extern double _pEp_log2_36;
 
-
-
-/**
- *  <!--         _fix_asn1_constraint()        -->
- *
- *  @internal
- *
- *  @brief      Re-initialise necessary asn.1 globals which are falsely set by the asn1c compiler for non-GCC
- *              Note: changing the bound in the first place is a kludge, left here because we were no longer
- *                    making the call, not because changing the bound was the right idea.
- *                    If you're going to put it in as an arg, put in all of the values that are
- *                    being changed here.
- *
- *  @see        Distribution.c:11
- */
-static inline void _fix_asn1_constraint(asn_TYPE_descriptor_t* lang_def, int bound) {
-    struct asn_per_constraints_s* fixed_vals =
-            (struct asn_per_constraints_s*)malloc(sizeof(struct asn_per_constraints_s));
-
-    if (!memcpy(fixed_vals, lang_def->per_constraints, sizeof(struct asn_per_constraints_s)))
-        return;
-
-    fixed_vals->value.range_bits = 0;
-    fixed_vals->value.effective_bits = 0;
-    fixed_vals->value.lower_bound = 0;
-    fixed_vals->value.upper_bound = bound;
-
-    // We don't free the lang_def previous value because it was stack-allocated
-    lang_def->per_constraints = fixed_vals;
-}
-
-/**
- *  <!--         _patch_asn1_codec()        -->
- *
- *  @internal
- *
- *  @brief      Re-initialise necessary asn.1 globals which are falsely set by the asn1c compiler
- *
- */
-static inline void _patch_asn1_codec() {
-    _fix_asn1_constraint(&asn_DEF_Distribution, 2);
-    _fix_asn1_constraint(&asn_DEF_Sync, 1);
-}
-
 /**
  *  <!--       _init_globals()       -->
  *
@@ -812,7 +768,6 @@ static inline void _patch_asn1_codec() {
 static inline void _init_globals() {
     _pEp_rand_max_bits = (int) ceil(log2((double) RAND_MAX));
     _pEp_log2_36 = log2(36);
-//    _patch_asn1_codec();
 }
 
 
