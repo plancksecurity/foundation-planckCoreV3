@@ -31,6 +31,7 @@ build-android/pEpEngine-android-1.zip
 build-android/third-party
 build-android/pEpEngine-android-1
 build-linux/*
+build-windows/libpEpasn1/libpEpasn1.vcxproj.user
 *.dSYM*
 *_test
 msg4.asc
