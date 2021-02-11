@@ -1281,6 +1281,10 @@ TEST_F(GroupEncryptionTest, check_protocol_join_group_member_1) {
 #endif
 
     m_queue.clear();
+
+    status = retrieve_own_membership_info_for_group_and_identity(session, group, me);
+    ASSERT_OK;
+    ASSERT_TRUE(group->members->member->adopted);
 }
 
 TEST_F(GroupEncryptionTest, join_group_member_2) {
@@ -1783,4 +1787,79 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_send) {
     m_queue.clear(); // Just in case
 
     free_group(group);
+}
+
+TEST_F(GroupEncryptionTest, check_group_dissolve_receive) {
+    // Set up the receive and join actions
+    const char* own_id = "PEP_OWN_USERID"; // on purpose, little joke here
+    pEp_identity* me = new_identity(member_2_address, NULL, own_id, member_2_name);
+    read_file_and_import_key(session, kf_name(member_2_prefix, false).c_str());
+    read_file_and_import_key(session, kf_name(member_2_prefix, true).c_str());
+    PEP_STATUS status = set_own_key(session, me, member_2_fpr);
+    ASSERT_OK;
+
+    // Receive the group creation message
+    status = myself(session, me);
+    ASSERT_STREQ(me->fpr, member_2_fpr);
+    read_file_and_import_key(session, kf_name(manager_1_prefix, false).c_str());
+    string msg_str = slurp(string("test_mails/group_create_extant_key_") + member_2_prefix + ".eml");
+    ASSERT_FALSE(msg_str.empty());
+
+    message* msg = NULL;
+    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
+    ASSERT_NE(msg, nullptr);
+
+    message* dec_msg = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_OK;
+
+
+    // Join the group
+    pEp_identity* group_identity = new_identity(group_1_address, NULL, own_id, NULL);
+    status = myself(session, group_identity);
+
+    bool active = false;
+    status = is_group_active(session, group_identity, &active);
+    ASSERT_OK;
+    ASSERT_TRUE(active);
+
+    pEp_group* group = new_group(group_identity, NULL, NULL);
+    status = retrieve_own_membership_info_for_group_and_identity(session, group, me);
+    ASSERT_OK;
+    status = join_group(session, group_identity, me);
+    ASSERT_OK;
+
+    status = retrieve_own_membership_info_for_group_and_identity(session, group, me);
+    ASSERT_OK;
+    ASSERT_TRUE(group->members->member->adopted);
+
+    ASSERT_EQ(m_queue.size(), 1);
+    m_queue.clear();
+
+    // Now we "receive" a dissolution message from the manager. Make sure it works.
+    msg_str = slurp(string("test_mails/group_dissolve_") + member_2_prefix + ".eml");
+    ASSERT_FALSE(msg_str.empty());
+    free_message(msg);
+    msg = NULL;
+    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
+    ASSERT_NE(msg, nullptr);
+
+    free_message(dec_msg);
+    dec_msg = NULL;
+    keylist = NULL;
+    flags = 0;
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_OK;
+
+    status = retrieve_own_membership_info_for_group_and_identity(session, group, me);
+    ASSERT_OK;
+    ASSERT_FALSE(group->members->member->adopted);
+
+    active = false;
+    status = is_group_active(session, group_identity, &active);
+    ASSERT_OK;
+    ASSERT_FALSE(active);
 }

@@ -156,6 +156,12 @@ PEP_STATUS retrieve_group_info(
         pEp_group** group_info
 );
 
+PEP_STATUS is_group_active(
+        PEP_SESSION session,
+        pEp_identity*
+        group_identity,
+        bool* active);
+
 PEP_STATUS retrieve_full_group_membership(
         PEP_SESSION session,
         pEp_identity* group_identity,
