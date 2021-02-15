@@ -671,8 +671,9 @@ static PEP_STATUS _retrieve_own_membership_info_for_group(PEP_SESSION session, p
 
     if (result != SQLITE_DONE)
         return PEP_CANNOT_DISABLE_GROUP;
-    else
-        return PEP_STATUS_OK;
+
+    *memberlist = _mbr_list_head;
+    return PEP_STATUS_OK;
 
 }
 
@@ -1184,6 +1185,7 @@ PEP_STATUS send_GroupDissolve(PEP_SESSION session, pEp_group* group) {
     char *_data;
     size_t _size;
     PEP_STATUS status = encode_Distribution_message(outdist, &_data, &_size);
+
     if (status != PEP_STATUS_OK)
         return status; // FIXME - memory
 
@@ -1544,13 +1546,14 @@ PEP_STATUS receive_GroupDissolve(PEP_SESSION session, message* msg, PEP_rating r
     // Update group identity id
     char* own_id = NULL;
     status = get_default_own_userid(session, &own_id);
-    if (!status || !own_id) {
+    if (status != PEP_STATUS_OK || EMPTYSTR(own_id)) {
         free(own_id);
         return status;
     }
     free(group_identity->user_id);
     group_identity->user_id = own_id;
 
+    // FIXME: I think maybe this check belongs in group_dissolve and we can omit this. Maybe?
     // The real check, for now. Later, the check will be manager->fpr against
     // DB fpr.
     // Shell, not full info - I guess we've verified the manager claim here
@@ -1559,6 +1562,12 @@ PEP_STATUS receive_GroupDissolve(PEP_SESSION session, message* msg, PEP_rating r
     status = retrieve_own_membership_info_for_group_and_identity(session, group, own_identity);
     if (status != PEP_STATUS_OK)
         return status;
+
+    // If none of these are true, then we don't know about it. FIXME: check against above
+    // This shouldn't be fatal, and perhaps is just ok - "receive group we don't know about? Ignore"
+    // FIXME: I think this is just OK.
+    if (!group->members || !group->members->member || !group->members->member->ident)
+        return PEP_GROUP_NOT_FOUND;
 
     // Ok, so we have a group with this manager and we have received info about it from our own
     // membership info. We've at least been invited.
