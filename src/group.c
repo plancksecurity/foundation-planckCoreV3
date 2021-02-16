@@ -1564,10 +1564,9 @@ PEP_STATUS receive_GroupDissolve(PEP_SESSION session, message* msg, PEP_rating r
         return status;
 
     // If none of these are true, then we don't know about it. FIXME: check against above
-    // This shouldn't be fatal, and perhaps is just ok - "receive group we don't know about? Ignore"
-    // FIXME: I think this is just OK.
+    // This shouldn't be fatal - "receive group we don't know about? Ignore"
     if (!group->members || !group->members->member || !group->members->member->ident)
-        return PEP_GROUP_NOT_FOUND;
+        return PEP_STATUS_OK;
 
     // Ok, so we have a group with this manager and we have received info about it from our own
     // membership info. We've at least been invited.
@@ -1709,7 +1708,7 @@ PEP_STATUS receive_GroupAdopted(PEP_SESSION session, message* msg, PEP_rating ra
         return status;
 
     if (!invited)
-        return PEP_STATUS_OK; // Nice try, NSA Bob!
+        return PEP_STATUS_OK; // Nice try, NSA Bob! But we ignore it.
 
     // Ok. So. Do we need to check sender's FPR? I think we do.
     // It would be stupid to lie here, but form and all.. FIXME: Change when signature delivery is
