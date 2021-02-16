@@ -46,11 +46,7 @@ DYNAMIC_API PEP_rating add_rating(PEP_rating rating1, PEP_rating rating2)
     if (rating1 == PEP_rating_undefined || rating2 == PEP_rating_undefined)
         return PEP_rating_undefined;
 
-    PEP_rating min = rating1 > rating2 ? rating2 : rating1;
-    if (min >= PEP_rating_reliable) // return max
-        return rating1 > rating2 ? rating1 : rating2;
-    else
-        return min;
+    return rating1 > rating2 ? rating2 : rating1;
 }
 
 DYNAMIC_API PEP_STATUS rating_of_new_channel(
@@ -179,6 +175,9 @@ DYNAMIC_API PEP_STATUS rating_of_existing_channel(
     }
     else {
         keyrating = rating_from_comm_type(keycomm_type);
+        // if this is reliable then we could have green in case there is trust
+        if (keyrating >= PEP_rating_reliable)
+            keyrating = PEP_rating_trusted_and_anonymized;
     }
 
     status = trust_between_user_and_key(session, ident->user_id, ident->fpr, &trustrating);
