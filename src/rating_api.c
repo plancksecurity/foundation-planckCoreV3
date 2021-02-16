@@ -46,7 +46,11 @@ DYNAMIC_API PEP_rating add_rating(PEP_rating rating1, PEP_rating rating2)
     if (rating1 == PEP_rating_undefined || rating2 == PEP_rating_undefined)
         return PEP_rating_undefined;
 
-    return rating1 > rating2 ? rating2 : rating1;
+    PEP_rating min = rating1 > rating2 ? rating2 : rating1;
+    if (min >= PEP_rating_reliable) // return max
+        return rating1 > rating2 ? rating1 : rating2;
+    else
+        return min;
 }
 
 DYNAMIC_API PEP_STATUS rating_of_new_channel(

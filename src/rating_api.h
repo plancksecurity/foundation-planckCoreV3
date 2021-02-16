@@ -234,7 +234,7 @@ PEP_rating decrypt_rating(PEP_STATUS status);
  *           src->dir must be PEP_dir_incoming
  *           src->enc_format must be set to the actual encryption format
  *           dst->_sender_fpr must be set if available
- *           dst->to->fpr and dst->cc->fpr should be set to the keys used for
+ *           dst->to[*].fpr and dst[*].fpr should be set to the keys used for
  *           recipients, respectively
  *           extra_keys are pairs (name, fpr)
  *           decrypt_status must be PEP_VERFIY_DIFFERENT_KEYS in case of a
