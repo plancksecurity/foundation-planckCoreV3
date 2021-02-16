@@ -1,8 +1,9 @@
-/** @file */
-/** @brief File description for doxygen missing. FIXME */
-
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    keyreset_command.c
+ * @brief   implementation of keyreset command structure and list memory,
+ *          manipulation and informational functions
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #include "pEp_internal.h"
 

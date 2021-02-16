@@ -40,6 +40,10 @@ extern "C" {
  *                          Note: ident->fpr field will be ignored.
  *  
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  */
 DYNAMIC_API PEP_STATUS key_reset_identity(
         PEP_SESSION session,
@@ -71,6 +75,10 @@ DYNAMIC_API PEP_STATUS key_reset_identity(
  *                          call key_reset_all_own_keys ***
  *  
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  */
 
 //
@@ -108,7 +116,7 @@ DYNAMIC_API PEP_STATUS key_reset_all_own_keys(PEP_SESSION session);
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session     PEP_SESSION
+ *  @param[in]  session     session handle 
  *  
  */
 DYNAMIC_API PEP_STATUS key_reset_own_grouped_keys(PEP_SESSION session);
@@ -146,6 +154,10 @@ DYNAMIC_API PEP_STATUS key_reset_own_grouped_keys(PEP_SESSION session);
  *                            and this function should probably be removed from the dynamic api
  *  
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  */
 PEP_STATUS key_reset(
         PEP_SESSION session,
@@ -165,12 +177,15 @@ PEP_STATUS key_reset_own_and_deliver_revocations(PEP_SESSION session,
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session        PEP_SESSION
+ *  @param[in]  session        session handle 
  *  @param[in]  from_addr      const char*
  *  @param[in]  user_id        const char*
  *  @param[in]  revoked_fpr    const char*
  *  @param[in]  contacted      bool*
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval any other value on error
  */
 PEP_STATUS has_key_reset_been_sent(
         PEP_SESSION session, 
@@ -184,11 +199,14 @@ PEP_STATUS has_key_reset_been_sent(
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session        PEP_SESSION
+ *  @param[in]  session        session handle
  *  @param[in]  own_address    const char*
  *  @param[in]  revoke_fpr     const char*
  *  @param[in]  contact_id     const char*
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_UNKNOWN_DB_ERROR 
  */
 PEP_STATUS set_reset_contact_notified(
         PEP_SESSION session,
@@ -202,10 +220,18 @@ PEP_STATUS set_reset_contact_notified(
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session        PEP_SESSION
+ *  @param[in]  session        session handle
  *  @param[in]  reset_msg      message*
  *  
- */
+ *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval PEP_MALFORMED_KEY_RESET_MSG
+ *  @retval PEP_KEY_NOT_RESET
+ *  @retval PEP_UNKNOWN_ERROR
+ *  @retval any other value on error
+ *  */
 PEP_STATUS receive_key_reset(PEP_SESSION session,
                              message* reset_msg);
 
@@ -214,13 +240,17 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session        PEP_SESSION
+ *  @param[in]  session        session handle
  *  @param[in]  dst            message**
  *  @param[in]  own_identity   pEp_identity*
  *  @param[in]  recip          pEp_identity*
  *  @param[in]  old_fpr        const char*
  *  @param[in]  new_fpr        const char*
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_UNKNOWN_ERROR
+ *  @retval any other value on error
  */
 PEP_STATUS create_standalone_key_reset_message(PEP_SESSION session,
                                                message** dst, 
@@ -235,11 +265,15 @@ PEP_STATUS create_standalone_key_reset_message(PEP_SESSION session,
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session        PEP_SESSION
+ *  @param[in]  session        session handle
  *  @param[in]  from_ident     pEp_identity*
  *  @param[in]  old_fpr        const char*
  *  @param[in]  new_fpr        const char*
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_SYNC_NO_MESSAGE_SEND_CALLBACK
+ *  @retval any other value on error
  */
 PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
                                      pEp_identity* from_ident,
@@ -255,6 +289,9 @@ PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
  *  @param[in]  cmds            char**
  *  @param[in]  size            size_t*
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval any other value on error
  */
 PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, char **cmds, size_t *size);
 /**
@@ -266,6 +303,9 @@ PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, 
  *  @param[in]  size             size_t
  *  @param[in]  command_list     keyreset_command_list**
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval any other value on error
  */
 PEP_STATUS PER_to_key_reset_commands(const char *cmds, size_t size, keyreset_command_list **command_list);
 

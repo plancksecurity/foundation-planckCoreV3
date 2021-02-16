@@ -2700,7 +2700,7 @@ pEp_error:
  *  @param[in]	*size		size_t
  *  
  *  @retval PEP_STATUS_OK
- *  @retval PEP_ILLEGAL_VALUE   illegal or missing parameter values
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
  *  @retval PEP_OUT_OF_MEMORY   out of memory
  *  @retval any other value on error
  */
@@ -2844,7 +2844,7 @@ static PEP_STATUS interpret_protected_headers(
  *  @param[in]	*msg		message
  *
  *  @retval PEP_STATUS_OK
- *  @retval PEP_ILLEGAL_VALUE   illegal or missing parameter values
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
  *  @retval any other value on error
  *  
  */
@@ -2946,7 +2946,7 @@ static bool _is_marked_as_attachment(struct mailmime_fields *fields)
  *  @param[in]	*has_possible_pEp_msg		bool
  *  
  *  @retval PEP_STATUS_OK
- *  @retval PEP_ILLEGAL_VALUE   illegal or missing parameter values
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
  *  @retval PEP_OUT_OF_MEMORY   out of memory
  *  @retval any other value on error
  */

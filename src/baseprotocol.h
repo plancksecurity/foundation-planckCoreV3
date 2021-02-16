@@ -80,7 +80,7 @@ PEP_STATUS base_decorate_message(
  *  
  *  @retval PEP_STATUS_OK       on success
  *  @retval PEP_OUT_OF_MEMORY   out of memory
- *  @retval PEP_ILLEGAL_VALUE   illegal or missing parameter values
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
  *  @retval any other value     on failure
  *  
  *  @ownership 
@@ -117,7 +117,7 @@ PEP_STATUS base_prepare_message(
  *  
  *  @retval PEP_STATUS_OK       jif no error occurred, whether or not sync message was found
  *  @retval PEP_OUT_OF_MEMORY   out of memory
- *  @retval PEP_ILLEGAL_VALUE   illegal or missing parameter values
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
  *  @retval error_status        any other value on error
  *  
  *  @ownership
@@ -157,7 +157,7 @@ PEP_STATUS base_extract_message(
  *  
  *  @retval PEP_STATUS_OK       if no error occurred, whether or not sync message was found
  *  @retval PEP_OUT_OF_MEMORY   out of memory
- *  @retval PEP_ILLEGAL_VALUE   illegal or missing parameter values
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
  *  @retval error_status        any other value on error
  *
  *  @ownership 

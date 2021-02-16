@@ -1,8 +1,9 @@
-/** @file */
-/** @brief File description for doxygen missing. FIXME */
-
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    key_reset.c
+ * @brief   Implementation of functions for resetting partner key defaults and trust and mistrusting and revoking own keys, 
+ *          as well as of functions to inform partners of own revoked keys and their replacements
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #include "pEp_internal.h"
 #include "dynamic_api.h"
@@ -45,14 +46,18 @@ static void _add_auto_consume(message* msg) {
  *  
  *  @brief			TODO
  *  
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session		        session handle 
  *  @param[in]	*reset_ident		constpEp_identity
- *  @param[in]	*old_fpr		constchar
- *  @param[in]	*new_fpr		constchar
- *  @param[in]	**key_attachments		bloblist_t
+ *  @param[in]	*old_fpr		    constchar
+ *  @param[in]	*new_fpr		    constchar
+ *  @param[in]	**key_attachments	bloblist_t
  *  @param[in]	**command_list		keyreset_command_list
  *  @param[in]	include_secret		bool
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  */
 static PEP_STATUS _generate_reset_structs(PEP_SESSION session,
                                           const pEp_identity* reset_ident,
@@ -172,6 +177,8 @@ pEp_error:
  *  @param[in]	*old_fpr		constchar
  *  @param[in]	**dst		message
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval any other value on error
  */
 static PEP_STATUS _generate_own_commandlist_msg(PEP_SESSION session,
                                                 identity_list* from_idents,
@@ -264,7 +271,7 @@ pEp_error:
  *  
  *  @brief			TODO
  *  
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session	        session handle
  *  @param[in]	*from_ident		constpEp_identity
  *  @param[in]	*to_ident		constpEp_identity
  *  @param[in]	*old_fpr		constchar
@@ -272,6 +279,10 @@ pEp_error:
  *  @param[in]	is_private		bool
  *  @param[in]	**dst		message
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  */
 static PEP_STATUS _generate_keyreset_command_message(PEP_SESSION session,
                                                      const pEp_identity* from_ident,
@@ -1007,6 +1018,9 @@ DYNAMIC_API PEP_STATUS key_reset_all_own_keys(PEP_SESSION session) {
  *  @param[in]	*idents		identity_list
  *  @param[in]	**filtered		identity_list
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  */
 static PEP_STATUS _dup_grouped_only(identity_list* idents, identity_list** filtered) {
     if (!idents)
@@ -1048,9 +1062,13 @@ static PEP_STATUS _dup_grouped_only(identity_list* idents, identity_list** filte
  *  
  *  @brief			TODO
  *  
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session	    session handle	
  *  @param[in]	*key		constchar
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED
+ *  @retval PEP_KEY_NOT_FOUND
+ *  @retval any other value on error
  */
 static PEP_STATUS _check_own_reset_passphrase_readiness(PEP_SESSION session,
                                                         const char* key) { 
@@ -1120,11 +1138,15 @@ static PEP_STATUS _check_own_reset_passphrase_readiness(PEP_SESSION session,
  *  
  *  @brief			TODO
  *  
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session         session handle	
  *  @param[in]	*key_idents		identity_list
  *  @param[in]	*old_key		constchar
  *  @param[in]	grouped_only		bool
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_SYNC_NO_MESSAGE_SEND_CALLBACK
+ *  @retval any other value on error
  */
 static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session, 
                                                          identity_list* key_idents, 
@@ -1882,5 +1904,5 @@ enomem:
 
 the_end:
     ASN_STRUCT_FREE(asn_DEF_Distribution, dist);
-    return status;
+    return status
 }

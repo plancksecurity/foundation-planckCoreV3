@@ -1,8 +1,9 @@
-/** @file */
-/** @brief File description for doxygen missing. FIXME */
-
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/** 
+ * @file     openpgp_compat.c 
+ * @brief    Exposes functions that provide non-generic PGP-specific functionality (largely related to PGP
+ *           keyrings) to adapters that need them without polluting the engine interface.
+ * @license  GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #include "pEp_internal.h"
 #include "dynamic_api.h"

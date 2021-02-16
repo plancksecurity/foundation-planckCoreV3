@@ -399,6 +399,7 @@ typedef enum {
  *  
  *  @retval PEP_STATUS_OK           cipher suite configured
  *  @retval PEP_CANNOT_CONFIG       configuration failed; falling back to default
+ *  @retval PEP_ILLEGAL_VALUE       illegal parameter values
  *  
  *  @warning the default ciphersuite for a crypt tech implementation is implementation defined
  *  
@@ -435,7 +436,8 @@ DYNAMIC_API PEP_STATUS config_cipher_suite(PEP_SESSION session,
  *  @retval PEP_DECRYPT_WRONG_FORMAT      message has wrong format to handle
  *  @retval PEP_DECRYPT_NO_KEY            key not available to decrypt and/or verify
  *  @retval PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH    wrong signature
- *  
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *
  *  @warning the ownerships of ptext as well as keylist are going to the caller
  *           the caller must use free() (or an Windoze pEp_free()) and
  *           free_stringlist() to free them
@@ -469,7 +471,7 @@ DYNAMIC_API PEP_STATUS decrypt_and_verify(
  *  @retval PEP_VERIFIED                message was unencrypted, signature matches
  *  @retval PEP_DECRYPT_NO_KEY          key not available to decrypt and/or verify
  *  @retval PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH    wrong signature
- *  
+ *  @retval PEP_ILLEGAL_VALUE           illegal parameter values
  *  
  */
 
@@ -497,6 +499,7 @@ DYNAMIC_API PEP_STATUS verify_text(
  *  @retval PEP_KEY_HAS_AMBIG_NAME       at least one of the recipient keys has
  *                                           an ambiguous name
  *  @retval PEP_GET_KEY_FAILED           cannot retrieve key
+ *  @retval PEP_ILLEGAL_VALUE           illegal parameter values
  *  
  *  @warning the ownership of ctext goes to the caller
  *           the caller is responsible to free() it (on Windoze use pEp_free())
@@ -608,6 +611,7 @@ DYNAMIC_API void _service_error_log(PEP_SESSION session, const char *entity,
  *  @retval PEP_STATUS_OK            trustword retrieved
  *  @retval PEP_TRUSTWORD_NOT_FOUND  trustword not found
  *  @retval PEP_OUT_OF_MEMORY        out of memory 
+ *  @retval PEP_ILLEGAL_VALUE        illegal parameter values
  *  
  *  @warning the word pointer goes to the ownership of the caller
  *           the caller is responsible to free() it (on Windoze use pEp_free())
@@ -639,6 +643,7 @@ DYNAMIC_API PEP_STATUS trustword(
  *  @retval PEP_STATUS_OK            trustwords retrieved
  *  @retval PEP_OUT_OF_MEMORY        out of memory
  *  @retval PEP_TRUSTWORD_NOT_FOUND  at least one trustword not found
+ *  @retval PEP_ILLEGAL_VALUE        illegal parameter values
  *  
  *  @warning the word pointer goes to the ownership of the caller
  *           the caller is responsible to free() it (on Windoze use pEp_free())
@@ -1090,6 +1095,8 @@ DYNAMIC_API PEP_STATUS mark_as_compromized(
  *  @retval PEP_STATUS_OK           encryption and signing succeeded
  *  @retval PEP_ILLEGAL_VALUE       illegal values for identity fields given
  *  @retval PEP_CANNOT_CREATE_KEY   key engine is on strike
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  *  
  *  @warning address must be set to UTF-8 string
  *           the fpr field must be set to NULL
@@ -1286,8 +1293,8 @@ DYNAMIC_API PEP_STATUS recv_key(PEP_SESSION session, const char *pattern);
  *                            UTF-8 string
  *  @param[out]    keylist    list of fingerprints found or NULL on error
  *  
- *  @retval        PEP_ILLEGAL_VALUE    illegal parametres
  *  @retval        PEP_STATUS_OK        
+ *  @retval        PEP_ILLEGAL_VALUE    illegal parametres
  *
  *  @warning the ownership of keylist and its elements go to the caller
  *           the caller must use free_stringlist() to free it
@@ -1381,9 +1388,11 @@ DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity);
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session        PEP_SESSION
+ *  @param[in]  session        session handle
  *  @param[in]  identity       pEp_identity*
  *
+ *  @retval PEP_STATUS_OK
+ *  @retval any other value on error
  */
 PEP_STATUS set_trust(PEP_SESSION session, 
                      pEp_identity* identity);
@@ -1393,7 +1402,7 @@ PEP_STATUS set_trust(PEP_SESSION session,
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session       PEP_SESSION
+ *  @param[in]  session       session handle
  *  @param[in]  fpr           const char*
  *  @param[in]  comm_type     PEP_comm_type
  *
@@ -1661,6 +1670,7 @@ DYNAMIC_API PEP_STATUS get_phrase(
  *  @retval PEP_CANNOT_INCREASE_SEQUENCE    if sequence cannot be increased
  *  @retval PEP_OWN_SEQUENCE                if own sequence
  *  @retval PEP_COMMIT_FAILED
+ *  @retval PEP_ILLEGAL_VALUE       illegal parameter value
  *  
  *  
  */
@@ -1949,6 +1959,12 @@ DYNAMIC_API PEP_STATUS set_ident_enc_format(PEP_SESSION session,
  *  @param[in]  session          session handle
  *  @param[in]  identity         pEp_identity*
  *  @param[in]  suppress_event   bool
+ *
+ *  @retval PEP_STATUS_OK           encryption and signing succeeded
+ *  @retval PEP_ILLEGAL_VALUE       illegal values for identity fields given
+ *  @retval PEP_CANNOT_CREATE_KEY   key engine is on strike
+ *  @retval PEP_OUT_OF_MEMORY       out of memory
+ *  @retval any other value on error
  *  
  */
 PEP_STATUS _generate_keypair(PEP_SESSION session, 
@@ -2169,6 +2185,10 @@ PEP_STATUS replace_main_user_fpr_if_equal(PEP_SESSION session, const char* user_
  *  @param[in]  revoked_fpr      char**
  *  @param[in]  revocation_date  uint64_t*
  *  
+ *  @retval     PEP_STATUS_OK
+ *  @retval     PEP_ILLEGAL_VALUE           illegal parameter value
+ *  @retval     PEP_CANNOT_FIND_IDENTITY
+ *  @retval     PEP_OUT_OF_MEMORY           out of memory
  *
  */
 DYNAMIC_API PEP_STATUS get_replacement_fpr(
@@ -2307,6 +2327,8 @@ PEP_STATUS upgrade_pEp_version_by_user_id(PEP_SESSION session,
  *  @param[in]  identity           pEp_identity*
  *  @param[in]  guard_transaction  bool
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval any other value on error
  */
 PEP_STATUS set_person(PEP_SESSION session, pEp_identity* identity,
                       bool guard_transaction);

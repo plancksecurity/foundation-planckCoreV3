@@ -1,8 +1,9 @@
-/** @file */
-/** @brief File description for doxygen missing. FIXME */
-
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    keymanagement.c
+ * @brief   Implementation of functions to manage keys 
+ *          (and identities when in relation to keys)
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #include "platform.h"
 
@@ -51,10 +52,12 @@ static bool key_matches_address(PEP_SESSION session, const char* address,
  *  
  *  @brief			TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*identity		pEp_identity
+ *  @param[in]	session             session handle
+ *  @param[in]	*identity		    pEp_identity
  *  @param[in]	check_blacklist		bool
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
  */
 PEP_STATUS elect_pubkey(
         PEP_SESSION session, pEp_identity * identity, bool check_blacklist
@@ -131,12 +134,20 @@ PEP_STATUS elect_pubkey(
  *  
  *  @brief			TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*ident		pEp_identity
- *  @param[in]	check_blacklist		bool
- *  @param[in]	own_must_contain_private		bool
- *  @param[in]	renew_private		bool
+ *  @param[in]	session                     session handle             			
+ *  @param[in]	*ident	                	pEp_identity
+ *  @param[in]	check_blacklist		        bool
+ *  @param[in]	own_must_contain_private	bool
+ *  @param[in]	renew_private		        bool
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval PEP_KEY_UNSUITABLE
+ *  @retval PEP_PASSPHRASE_REQUIRED
+ *  @retval PEP_WRONG_PASSPHRASE
+ *  @retval any other value on error
+ *
  */
 static PEP_STATUS validate_fpr(PEP_SESSION session, 
                                pEp_identity* ident,
@@ -548,7 +559,7 @@ static void transfer_ident_lang_and_flags(pEp_identity* new_ident,
  *  
  *  @brief			TODO
  *  
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session	        session handle	
  *  @param[in]	*identity		pEp_identity
  *  
  */
@@ -588,11 +599,14 @@ static void adjust_pEp_trust_status(PEP_SESSION session, pEp_identity* identity)
  *  
  *  @brief			TODO
  *  
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session         session handle	
  *  @param[in]	*return_id		pEp_identity
- *  @param[in]	*stored_ident		pEp_identity
- *  @param[in]	store		bool
+ *  @param[in]	*stored_ident	pEp_identity
+ *  @param[in]	store		    bool
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval any other value on error
  */
 static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
                                                  pEp_identity* return_id,
@@ -1128,9 +1142,13 @@ pEp_free:
  *  
  *  @brief			TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*identity		pEp_identity
+ *  @param[in]	session     session handle	
+ *  @param[in]	*identity	pEp_identity
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  */
 PEP_STATUS elect_ownkey(
         PEP_SESSION session, pEp_identity * identity
@@ -1212,10 +1230,13 @@ PEP_STATUS elect_ownkey(
  *  
  *  @brief			TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*fpr		char
+ *  @param[in]	session	        session handle	
+ *  @param[in]	*fpr		    char
  *  @param[in]	*is_usable		bool
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval any other value on error
  */
 PEP_STATUS _has_usable_priv_key(PEP_SESSION session, char* fpr,
                                 bool* is_usable) {
@@ -2245,9 +2266,13 @@ PEP_STATUS is_mistrusted_key(PEP_SESSION session, const char* fpr,
  *  
  *  @brief			TODO
  *  
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session	    session handle	
  *  @param[in]	*ident		pEp_identity
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  */
 static PEP_STATUS _wipe_default_key_if_invalid(PEP_SESSION session,
                                          pEp_identity* ident) {
