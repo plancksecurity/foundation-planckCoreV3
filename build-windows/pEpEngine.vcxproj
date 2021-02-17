@@ -86,7 +86,7 @@
       <SuppressStartupBanner>false</SuppressStartupBanner>
     </Link>
     <PreBuildEvent>
-      <Command>cargo build --manifest-path="$(SolutionDir)sequoia\Cargo.toml" -p sequoia-openpgp-ffi</Command>
+      <Command>cargo build --manifest-path="$(SolutionDir)sequoia\Cargo.toml"</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>xcopy "$(SolutionDir)sequoia\target\debug\sequoia_openpgp_ffi.dll" "$(TargetDir)" /Y</Command>
@@ -118,7 +118,7 @@
       <AdditionalLibraryDirectories>$(SolutionDir)sequoia\target\release;C:\msys64\mingw32\lib</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
-      <Command>cargo build --manifest-path="$(SolutionDir)sequoia\Cargo.toml" --release -p sequoia-openpgp-ffi</Command>
+      <Command>cargo build --manifest-path="$(SolutionDir)sequoia\Cargo.toml" --release</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>xcopy "$(SolutionDir)sequoia\target\release\sequoia_openpgp_ffi.dll" "$(TargetDir)" /Y</Command>
