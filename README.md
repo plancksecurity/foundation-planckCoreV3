@@ -43,7 +43,7 @@ It is under active development by several full-time employees of the p≡p found
 The most recent version of the source code can be obtained here: <https://pep.foundation/dev/repos>.
 This is the only offical way to obtain a copy of the source code.
 
-# I would like to contribute to the p≡p Engine or a realated project, where do I start?
+# I would like to contribute to the p≡p Engine or a related project, where do I start?
 First of all, excellent! You can find further information here: <https://contribution.pep.foundation/>
 
 # Legal notes
