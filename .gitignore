@@ -88,6 +88,23 @@ test/EngineTests
 test/googletest
 test/tmp/*
 
+# Xcode related ignores
+build/
+DerivedData/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.moved-aside
+*.xccheckout
+*.xcscmblueprint
+xcshareddata
+
 # ignore generated test data
 
 test/655_16F07F382FB3CF5DF977005D1069C7CACF9C23C6.asc
