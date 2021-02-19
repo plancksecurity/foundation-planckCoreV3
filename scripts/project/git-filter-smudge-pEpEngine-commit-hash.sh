@@ -13,5 +13,5 @@ fi
 commit_hash="$(git rev-parse HEAD)"
 echo "Replacing PEP_CURRENT_COMMIT_HASH value in src/commit_hash.h with current HEAD commit hash, $commit_hash. Will clean on commit or checkout."
 
-$($SED "s/\(PEP_CURRENT_COMMIT_HASH=\).*/\1\"$commit_hash\"/" $1)
+$($SED "s/\(PEP_CURRENT_COMMIT_HASH=\).*/\1\"$commit_hash\"/" commit_hash.h)
 
