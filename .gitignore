@@ -90,6 +90,8 @@ test/tmp/*
 pEpMIME/*.hh
 pEpMIME/*.cc
 pEpMIME/*.hxx
+cleangit.py
+venv*/
 
 # ignore generated test data
 
