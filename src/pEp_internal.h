@@ -7,6 +7,8 @@
 #ifndef PEP_INTERNAL_H
 #define PEP_INTERNAL_H
 
+#include "commit_hash.h" // We need this everywhere. So.
+
 // maximum attachment size to import as key 25MB, maximum of 20 attachments
 #define MAX_KEY_SIZE (25 * 1024 * 1024)
 #define MAX_KEYS_TO_IMPORT  20
