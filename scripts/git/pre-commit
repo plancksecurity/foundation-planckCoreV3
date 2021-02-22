@@ -1,0 +1,11 @@
+#! /bin/sh
+
+grep "DUMMY_COMMIT_HASH_ERROR" src/commit_hash.h 1>/dev/null
+if [ $? -eq 1 ]; then
+    staged_files=$(git diff-index --cached HEAD)
+    if [[ $staged_files == *commit_hash.h* ]]; then
+        echo "ERROR: You are checking in a modified src/commit_hash.h file which contains an unauthorised commit hash value - you shouldn't be. Please unstage it." >&2
+        echo "(Hint: git restore --staged src/commit_hash.h)"
+        exit 1
+    fi
+fi
