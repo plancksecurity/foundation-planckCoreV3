@@ -11,13 +11,15 @@ else
 fi
 
 
-commit_hash="$(git rev-parse HEAD)"
-echo "Replacing PEP_CURRENT_COMMIT_HASH value in src/commit_hash.h with current HEAD commit hash, $commit_hash. Will clean on commit or checkout."
+if test -f "src/commit_hash.h"; then
+    commit_hash="$(git rev-parse HEAD)"
+    echo "Replacing PEP_CURRENT_COMMIT_HASH value in src/commit_hash.h with current HEAD commit hash, $commit_hash. Will clean on commit or checkout."
 
-$($SED "s/\(PEP_CURRENT_COMMIT_HASH=\).*/\1\"$commit_hash\"/" src/commit_hash.h)
+    $($SED "s/\(PEP_CURRENT_COMMIT_HASH=\).*/\1\"$commit_hash\"/" src/commit_hash.h)
 
-# Whatever. You win, MacOS. You win.
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    rm src/commit_hash.h"'""'"
+    # Whatever. You win, MacOS. You win.
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        rm src/commit_hash.h"'""'"
+    fi
 fi
 
