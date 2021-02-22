@@ -1170,7 +1170,7 @@ DYNAMIC_API PEP_STATUS init(
     sqlite3_busy_timeout(_session->system_db, 1000);
 
 // increment this when patching DDL
-#define _DDL_USER_VERSION "14"
+#define _DDL_USER_VERSION "15"
 
     if (in_first) {
 
@@ -1204,7 +1204,8 @@ DYNAMIC_API PEP_STATUS init(
                 "   created integer,\n"
                 "   expires integer,\n"
                 "   comment text,\n"
-                "   flags integer default 0\n"
+                "   flags integer default 0,\n"
+                "   manually_set integer default 0\n"
                 ");\n"
                 "create index if not exists pgp_keypair_expires on pgp_keypair (\n"
                 "   expires\n"
@@ -1360,7 +1361,10 @@ DYNAMIC_API PEP_STATUS init(
         // Sometimes the user_version wasn't set correctly. 
         if (version == 1) {
             bool version_changed = true;
-            if (table_contains_column(_session, "identity", "enc_format")) {
+            if (table_contains_column(_session, "pgp_keypair", "manually_set")) {
+                version = 15;
+            }
+            else if (table_contains_column(_session, "identity", "enc_format")) {
                 version = 14;
             }
             else if (table_contains_column(_session, "revocation_contact_list", "own_address")) {
@@ -1903,7 +1907,21 @@ DYNAMIC_API PEP_STATUS init(
                     return PEP_UNKNOWN_DB_ERROR;
 
             }
-                    
+            if (version < 15) {
+                int_result = sqlite3_exec(
+                        _session->db,
+                        "alter table pgp_keypair\n"
+                        "   add column manually_set integer default 0;\n",
+                        NULL,
+                        NULL,
+                        NULL
+                );
+                assert(int_result == SQLITE_OK);
+
+                if (int_result != SQLITE_OK)
+                    return PEP_UNKNOWN_DB_ERROR;
+
+            }
         }        
         else { 
             // Version from DB was 0, it means this is initial setup.
