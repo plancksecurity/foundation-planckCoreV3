@@ -44,7 +44,7 @@ asn1: sync
 	$(MAKE) -C asn.1
 
 
-install:
+install: build
 	$(MAKE) -C src install
 	$(MAKE) -C asn.1 install
 ifeq ($(BUILT_IN_MIME),pepmime)
