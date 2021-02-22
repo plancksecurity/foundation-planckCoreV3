@@ -89,6 +89,10 @@ test/googletest
 test/tmp/*
 
 src/commit_hash.h
+.idea/
+venv/
+venv2/
+cleangit.py
 
 # ignore generated test data
 

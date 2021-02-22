@@ -43,6 +43,10 @@ else
     $(error I do not know how to make for $(BUILD_FOR) on $(BUILD_ON))
 endif
 
+ifeq (,$(wildcard commit_hash.h))
+    $(shell cp ../templates/commit_hash.h ./commit_hash.h)
+endif
+
 ifdef SQLITE3_FROM_OS
     NO_SOURCE+= sqlite3.c
     CFLAGS+= -DSQLITE3_FROM_OS
