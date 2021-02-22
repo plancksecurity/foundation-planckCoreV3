@@ -679,7 +679,8 @@ static PEP_STATUS _create_core_tables(PEP_SESSION session) {
             "   created integer,\n"
             "   expires integer,\n"
             "   comment text,\n"
-            "   flags integer default 0\n"
+            "   flags integer default 0,\n"
+            "   manually_set integer default 0\n"
             ");\n"
             "create index if not exists pgp_keypair_expires on pgp_keypair (\n"
             "   expires\n"
@@ -927,12 +928,17 @@ PEP_STATUS get_db_user_version(PEP_SESSION session, int* version) {
     return PEP_STATUS_OK;
 }
 
-// FIXME for 15
 static PEP_STATUS _verify_version(PEP_SESSION session, int* version) {
     // Sometimes the user_version wasn't set correctly.
     bool version_changed = true;
     int int_result;
-    if (table_contains_column(session, "identity", "enc_format")) {
+    if (table_contains_column(_session, "pgp_keypair", "manually_set")) {
+        *version = 16;
+    }
+    else if (table_contains_column(_session, "groups", "group_identity")) {
+        *version = 15;
+    }
+    else if (table_contains_column(_session, "identity", "enc_format")) {
         *version = 14;
     } else if (table_contains_column(session, "revocation_contact_list", "own_address")) {
         *version = 13;
@@ -1461,11 +1467,39 @@ static PEP_STATUS _upgrade_DB_to_ver_14(PEP_SESSION session) {
 }
 
 static PEP_STATUS _upgrade_DB_to_ver_15(PEP_SESSION session) {
+//    int  int_result = sqlite3_exec(
+//            session->db,
+//            "alter table pgp_keypair\n"
+//            "   add column manually_set integer default 0;\n",
+//            NULL,
+//            NULL,
+//            NULL
+//    );
 //
 //    assert(int_result == SQLITE_OK);
 //
 //    if (int_result != SQLITE_OK)
 //        return PEP_UNKNOWN_DB_ERROR;
+
+    // FIXME! DO THIS!
+    return PEP_STATUS_OK;
+}
+
+static PEP_STATUS _upgrade_DB_to_ver_16(PEP_SESSION session) {
+    int  int_result = sqlite3_exec(
+            session->db,
+        "alter table pgp_keypair\n"
+            "   add column manually_set integer default 0;\n",
+            NULL,
+            NULL,
+            NULL
+    );
+
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
     return PEP_STATUS_OK;
 }
 
@@ -1487,46 +1521,52 @@ static PEP_STATUS _check_and_execute_upgrades(PEP_SESSION session, int version) 
             status = _upgrade_DB_to_ver_6(session);
             if (status != PEP_STATUS_OK)
                 return status;
-        case 7:
+        case 6:
             status = _upgrade_DB_to_ver_7(session);
             if (status != PEP_STATUS_OK)
                 return status;
-        case 8:
+        case 7:
             status = _upgrade_DB_to_ver_8(session);
             if (status != PEP_STATUS_OK)
                 return status;
-        case 9:
+        case 8:
             status = _upgrade_DB_to_ver_9(session);
             if (status != PEP_STATUS_OK)
                 return status;
-        case 10:
+        case 9:
             if (version > 1) {
                 status = _upgrade_DB_to_ver_10(session);
                 if (status != PEP_STATUS_OK)
                     return status;
             }
-        case 11:
+        case 10:
             status = repair_altered_tables(session);
             assert(status == PEP_STATUS_OK);
             if (status != PEP_STATUS_OK)
                 return status;
-        case 12:
+        case 11:
             status = _upgrade_DB_to_ver_12(session);
             if (status != PEP_STATUS_OK)
                 return status;
-        case 13:
+        case 12:
             status = upgrade_revoc_contact_to_13(session);
             assert(status == PEP_STATUS_OK);
             if (status != PEP_STATUS_OK)
                 return status;
-        case 14:
+        case 13:
             status = _upgrade_DB_to_ver_14(session);
             if (status != PEP_STATUS_OK)
                 return status;
-        case 15:
+        case 14:
             status = _upgrade_DB_to_ver_15(session);
             if (status != PEP_STATUS_OK)
                 return status;
+        case 15:
+            status = _upgrade_DB_to_ver_16(session);
+            if (status != PEP_STATUS_OK)
+                return status;
+        case 16:
+            break;
         default:
             return PEP_ILLEGAL_VALUE;
     }

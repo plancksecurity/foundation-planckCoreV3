@@ -31,6 +31,7 @@ build-android/pEpEngine-android-1.zip
 build-android/third-party
 build-android/pEpEngine-android-1
 build-linux/*
+build-windows/libpEpasn1/libpEpasn1.vcxproj.user
 *.dSYM*
 *_test
 msg4.asc
@@ -86,10 +87,12 @@ lldb-history
 test/EngineTests
 test/googletest
 test/tmp/*
+
+src/commit_hash.h
 .idea/
-pEpMIME/*.hh
-pEpMIME/*.cc
-pEpMIME/*.hxx
+venv/
+venv2/
+cleangit.py
 
 # ignore generated test data
 
@@ -102,4 +105,4 @@ test/703_key_valid.asc
 test/test_keys/736_a.asc
 test/test_keys/736_b.asc
 test/test_mails/ENGINE-654_bob_mail.eml
-test/test_mails/group_*.eml
+
