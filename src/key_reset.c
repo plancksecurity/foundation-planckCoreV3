@@ -26,21 +26,6 @@
 /**
  *  @internal
  *  
- *  <!--       _add_auto_consume()       -->
- *  
- *  @brief			TODO
- *  
- *  @param[in]	*msg		message
- *  
- */
-static void _add_auto_consume(message* msg) {
-    add_opt_field(msg, "pEp-auto-consume", "yes");
-    msg->in_reply_to = stringlist_add(msg->in_reply_to, "pEp-auto-consume@pEp.foundation");
-}
-
-/**
- *  @internal
- *  
  *  <!--       _generate_reset_structs()       -->
  *  
  *  @brief			TODO
