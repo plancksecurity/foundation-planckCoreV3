@@ -1,1 +1,1 @@
-commit_hash.h filter=commit_hash
+*.h filter=commit_hash
