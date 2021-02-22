@@ -88,6 +88,8 @@ test/EngineTests
 test/googletest
 test/tmp/*
 
+src/commit_hash.h
+
 # ignore generated test data
 
 test/655_16F07F382FB3CF5DF977005D1069C7CACF9C23C6.asc
