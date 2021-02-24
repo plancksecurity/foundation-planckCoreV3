@@ -2,7 +2,7 @@
 set -exo
 
 ### YML2
-cd $BUILDROOT
+cd $INSTPREFIX
 wget https://fdik.org/yml2.tar.bz2
 tar -xf yml2.tar.bz2
 rm yml2.tar.bz2

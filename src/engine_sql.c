@@ -932,10 +932,7 @@ static PEP_STATUS _verify_version(PEP_SESSION session, int* version) {
     // Sometimes the user_version wasn't set correctly.
     bool version_changed = true;
     int int_result;
-    if (table_contains_column(session, "pgp_keypair", "manually_set")) {
-        *version = 16;
-    }
-    else if (table_contains_column(session, "groups", "group_identity")) {
+    if (table_contains_column(session, "groups", "group_identity")) {
         *version = 15;
     }
     else if (table_contains_column(session, "identity", "enc_format")) {
@@ -1467,40 +1464,7 @@ static PEP_STATUS _upgrade_DB_to_ver_14(PEP_SESSION session) {
 }
 
 static PEP_STATUS _upgrade_DB_to_ver_15(PEP_SESSION session) {
-//    int  int_result = sqlite3_exec(
-//            session->db,
-//            "alter table pgp_keypair\n"
-//            "   add column manually_set integer default 0;\n",
-//            NULL,
-//            NULL,
-//            NULL
-//    );
-//
-//    assert(int_result == SQLITE_OK);
-//
-//    if (int_result != SQLITE_OK)
-//        return PEP_UNKNOWN_DB_ERROR;
-
-    // FIXME! DO THIS!
-    return PEP_STATUS_OK;
-}
-
-static PEP_STATUS _upgrade_DB_to_ver_16(PEP_SESSION session) {
-    int  int_result = sqlite3_exec(
-            session->db,
-        "alter table pgp_keypair\n"
-            "   add column manually_set integer default 0;\n",
-            NULL,
-            NULL,
-            NULL
-    );
-
-    assert(int_result == SQLITE_OK);
-
-    if (int_result != SQLITE_OK)
-        return PEP_UNKNOWN_DB_ERROR;
-
-    return PEP_STATUS_OK;
+    return _create_group_tables(session);
 }
 
 static PEP_STATUS _check_and_execute_upgrades(PEP_SESSION session, int version) {
@@ -1562,10 +1526,6 @@ static PEP_STATUS _check_and_execute_upgrades(PEP_SESSION session, int version) 
             if (status != PEP_STATUS_OK)
                 return status;
         case 15:
-            status = _upgrade_DB_to_ver_16(session);
-            if (status != PEP_STATUS_OK)
-                return status;
-        case 16:
             break;
         default:
             return PEP_ILLEGAL_VALUE;
