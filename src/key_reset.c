@@ -23,7 +23,6 @@
 #define KEY_RESET_MAJOR_VERSION 1L
 #define KEY_RESET_MINOR_VERSION 0L
 
-
 /**
  *  @internal
  *  
