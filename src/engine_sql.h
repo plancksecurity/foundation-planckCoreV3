@@ -3,7 +3,7 @@
 #include "pEp_internal.h"
 
 // increment this when patching DDL
-#define _DDL_USER_VERSION "16"
+#define _DDL_USER_VERSION "15"
 
 PEP_STATUS init_databases(PEP_SESSION session);
 PEP_STATUS pEp_sql_init(PEP_SESSION session);
