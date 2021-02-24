@@ -22,9 +22,12 @@ static const char *sql_trustword =
         "and id = ?2 ;";
 
 // FIXME?: problems if we don't have a key for the user - we get nothing
+// Also: we've never used pgp_keypair.flags before now, but it seems to me that
+// having combination of those flags is a road to ruin. Changing this for now.
 static const char *sql_get_identity =
         "select identity.main_key_id, username, comm_type, lang,"
-        "   identity.flags | pgp_keypair.flags,"
+        "   identity.flags,"
+//        "   identity.flags | pgp_keypair.flags,"
         "   is_own, pEp_version_major, pEp_version_minor, enc_format"
         "   from identity"
         "   join person on id = identity.user_id"
@@ -42,7 +45,8 @@ static const char *sql_get_identity =
 
 static const char *sql_get_identities_by_main_key_id =
         "select address, identity.user_id, username, comm_type, lang,"
-        "   identity.flags | pgp_keypair.flags,"
+        "   identity.flags,"
+//        "   identity.flags | pgp_keypair.flags,"
         "   is_own, pEp_version_major, pEp_version_minor, enc_format"
         "   from identity"
         "   join person on id = identity.user_id"
@@ -82,7 +86,8 @@ static const char *sql_get_identities_by_address =
 
 static const char *sql_get_identities_by_userid =
         "select address, identity.main_key_id, username, comm_type, lang,"
-        "   identity.flags | pgp_keypair.flags,"
+        "   identity.flags,"
+//        "   identity.flags | pgp_keypair.flags,"
         "   is_own, pEp_version_major, pEp_version_minor, enc_format"
         "   from identity"
         "   join person on id = identity.user_id"
@@ -385,7 +390,10 @@ static const char *sql_is_own_address =
 
 static const char *sql_own_identities_retrieve =
         "select address, identity.main_key_id, identity.user_id, username,"
-        "   lang, identity.flags | pgp_keypair.flags, pEp_version_major, pEp_version_minor"
+        "   lang,"
+        "   identity.flags,"
+//        "   identity.flags | pgp_keypair.flags,"
+        "   pEp_version_major, pEp_version_minor"
         "   from identity"
         "   join person on id = identity.user_id"
         "   left join pgp_keypair on fpr = identity.main_key_id"

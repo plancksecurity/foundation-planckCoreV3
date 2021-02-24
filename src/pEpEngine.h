@@ -741,8 +741,9 @@ typedef enum _identity_flags {
 
 typedef unsigned int identity_flags_t;
 
-// typedef enum _keypair_flags {
-// } keypair_flags;
+typedef enum _keypair_flags {
+    PEP_kpf_manually_set = 0x0001;
+} keypair_flags;
 
 typedef unsigned int keypair_flags_t;
 
