@@ -53,6 +53,19 @@ typedef enum _PEP_rating {
 
 
 /**
+ *  @internal
+ *
+ *  <!--       rating_to_string()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	rating		PEP_rating
+ *
+ */
+const char * rating_to_string(PEP_rating rating);
+
+
+/**
  *  <!--       rating_from_comm_type()       -->
  *
  *  @brief Get the rating for a comm type
@@ -213,6 +226,36 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating_preview(
 */
 
 PEP_rating decrypt_rating(PEP_STATUS status);
+
+
+/**
+ *  @internal
+ *
+ *  <!--       get_receiverRating()       -->
+ *
+ *  @brief	   get a precalculated and stored rating from trusted server
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*msg		message
+ *  @param[in]	*rating		PEP_rating
+ *
+ */
+PEP_STATUS get_receiverRating(PEP_SESSION session, message *msg, PEP_rating *rating);
+
+
+/**
+ *  @internal
+ *
+ *  <!--       set_receiverRating()       -->
+ *
+ *  @brief	   set a precalculated rating for storing on trusted server
+ *
+ *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*msg		message
+ *  @param[in]	rating		PEP_rating
+ *
+ */
+PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rating);
 
 
 /**

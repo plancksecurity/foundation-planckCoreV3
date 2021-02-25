@@ -9,6 +9,39 @@
 #include "rating_api.h"
 #include "keymanagement.h"
 #include "blacklist.h"
+#include "baseprotocol.h"
+#include "KeySync_fsm.h"
+#include "sync_codec.h"
+
+const char * rating_to_string(PEP_rating rating)
+{
+    switch (rating) {
+    case PEP_rating_cannot_decrypt:
+        return "cannot_decrypt";
+    case PEP_rating_have_no_key:
+        return "have_no_key";
+    case PEP_rating_unencrypted:
+        return "unencrypted";
+    case PEP_rating_unreliable:
+        return "unreliable";
+    case PEP_rating_reliable:
+        return "reliable";
+    case PEP_rating_trusted:
+        return "trusted";
+    case PEP_rating_trusted_and_anonymized:
+        return "trusted_and_anonymized";
+    case PEP_rating_fully_anonymous:
+        return "fully_anonymous";
+    case PEP_rating_mistrust:
+        return "mistrust";
+    case PEP_rating_b0rken:
+        return "b0rken";
+    case PEP_rating_under_attack:
+        return "under_attack";
+    default:
+        return "undefined";
+    }
+}
 
 DYNAMIC_API PEP_rating rating_from_comm_type(PEP_comm_type ct)
 {
@@ -155,6 +188,10 @@ DYNAMIC_API PEP_STATUS rating_of_existing_channel(
 
     if (EMPTYSTR(ident->user_id)) {
         free(ident->user_id);
+        ident->user_id = malloc(strlen(ident->address) + 7);
+        assert(ident->user_id);
+        if (!ident->user_id)
+            return PEP_OUT_OF_MEMORY;
         int r = snprintf(ident->user_id, strlen(ident->address) + 6, "TOFU_%s",
                 ident->address);
         if (r<0)
@@ -415,22 +452,29 @@ the_end:
 
 static PEP_STATUS sender_fpr_rating(
         PEP_SESSION session,
-        const pEp_identity *from,
+        pEp_identity *from,
         const char *sender_fpr,
         PEP_rating *rating
     )
 {
-    assert(session && from && from->user_id && rating);
-    if (!(session && from && from->user_id && rating))
+    assert(session && from && rating);
+    if (!(session && from && rating))
         return PEP_ILLEGAL_VALUE;
 
     PEP_STATUS status = PEP_STATUS_OK;
     PEP_rating _rating = PEP_rating_undefined;
 
-    if (EMPTYSTR(sender_fpr))
+    if (EMPTYSTR(sender_fpr)) {
         _rating = PEP_rating_unreliable;   
-    else
+    }
+    else {
+        if (EMPTYSTR(from->user_id)) {
+            status = update_identity(session, from);
+            if (status)
+                return status;
+        }
         status = trust_between_user_and_key(session, from->user_id, sender_fpr, &_rating);
+    }
 
     if (status)
         return status;
@@ -492,12 +536,15 @@ static PEP_STATUS incoming_message_crypto_rating(
             return PEP_ILLEGAL_VALUE;
     }
 
-    PEP_rating sender_rating = PEP_rating_undefined;
-    PEP_STATUS status = sender_fpr_rating(session, src->from, dst->_sender_fpr, &sender_rating);
-    if (status)
-        return status;
+    if (dst) {
+        PEP_rating sender_rating = PEP_rating_undefined;
+        PEP_STATUS status = sender_fpr_rating(session, src->from, dst->_sender_fpr, &sender_rating);
+        if (status)
+            return status;
 
-    *rating = add_rating(enc_rating, sender_rating);
+        *rating = add_rating(enc_rating, sender_rating);
+    }
+
     return PEP_STATUS_OK;
 }
 
@@ -568,6 +615,91 @@ static bool all_known_keys_are_legit(const message *dst,
     return true;
 }
 
+void replace_opt_field(message *msg,
+                       const char *name, 
+                       const char *value,
+                       bool clobber);
+
+PEP_STATUS get_receiverRating(PEP_SESSION session, message *msg, PEP_rating *rating)
+{
+    if (!(session && msg && rating))
+        return PEP_ILLEGAL_VALUE;
+
+    *rating = PEP_rating_undefined;
+
+    size_t size;
+    const char *payload;
+    char *fpr;
+    PEP_STATUS status = base_extract_message(session, msg, BASE_SYNC, &size, &payload, &fpr);
+    if (status)
+        return status;
+    if (!fpr)
+        return PEP_SYNC_NO_CHANNEL;
+
+    bool own_key;
+    status = is_own_key(session, fpr, &own_key);
+    free(fpr);
+    if (status)
+        return status;
+    if (!own_key)
+        return PEP_SYNC_NO_CHANNEL;
+
+    Sync_t *res;
+    status = decode_Sync_message(payload, size, &res);
+    if (status)
+        return status;
+
+    if (!(res->present == Sync_PR_keysync && res->choice.keysync.present == KeySync_PR_receiverRating)) {
+        free_Sync_message(res);
+        return PEP_SYNC_NO_CHANNEL;
+    }
+
+    *rating = res->choice.keysync.choice.receiverRating.rating;
+    replace_opt_field(msg, "X-EncStatus", rating_to_string(*rating), true);
+    return PEP_STATUS_OK;
+}
+
+static bool sync_message_attached(message *msg)
+{
+    if (!(msg && msg->attachments))
+        return false;
+
+    for (bloblist_t *a = msg->attachments; a && a->value ; a = a->next) {
+        if (a->mime_type && strcasecmp(a->mime_type, "application/pEp.sync") == 0)
+            return true;
+    }
+
+    return false;
+}
+
+PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rating)
+{
+    if (!(session && msg && rating))
+        return PEP_ILLEGAL_VALUE;
+
+    if (!(msg->recv_by && msg->recv_by->fpr && msg->recv_by->fpr[0]))
+        return PEP_SYNC_NO_CHANNEL;
+
+    // don't add a second sync message
+    if (sync_message_attached(msg))
+        return PEP_STATUS_OK;
+
+    Sync_t *res = new_Sync_message(Sync_PR_keysync, KeySync_PR_receiverRating);
+    if (!res)
+        return PEP_OUT_OF_MEMORY;
+
+    res->choice.keysync.choice.receiverRating.rating = (Rating_t) rating;
+
+    char *payload;
+    size_t size;
+    PEP_STATUS status = encode_Sync_message(res, &payload, &size);
+    free_Sync_message(res);
+    if (status)
+        return status;
+
+    return base_decorate_message(session, msg, BASE_SYNC, payload, size, msg->recv_by->fpr);
+}
+
 DYNAMIC_API PEP_STATUS incoming_message_rating(
         PEP_SESSION session,
         const message *src,
@@ -611,12 +743,14 @@ DYNAMIC_API PEP_STATUS incoming_message_rating(
         return status;
     _rating = add_rating(_rating, crypto_rating);
 
-    PEP_rating identities_rating = PEP_rating_undefined;
-    status = incoming_message_rating_for_identities(session, dst,
-            &identities_rating);
-    if (status)
-        return status;
-    _rating = add_rating(_rating, identities_rating);
+    if (dst) {
+        PEP_rating identities_rating = PEP_rating_undefined;
+        status = incoming_message_rating_for_identities(session, dst,
+                &identities_rating);
+        if (status)
+            return status;
+        _rating = add_rating(_rating, identities_rating);
+    }
 
     *rating = _rating;
     return PEP_STATUS_OK;
