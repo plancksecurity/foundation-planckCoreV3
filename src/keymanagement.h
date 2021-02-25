@@ -460,6 +460,13 @@ DYNAMIC_API PEP_STATUS set_own_key(
        const char *fpr
     );
 
+
+DYNAMIC_API PEP_STATUS set_own_imported_key(
+        PEP_SESSION session,
+        pEp_identity* me,
+        const char* fpr
+    );
+
 //
 // clean_own_key_defaults()
 //
@@ -574,6 +581,12 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
                             bool* is_user_default,
                             bool* is_address_default,
                             bool check_blacklist);
+
+
+PEP_STATUS get_key_sticky_bit_for_user(PEP_SESSION session,
+                                       pEp_identity* ident,
+                                       const char* fpr,
+                                       bool* is_sticky);
 
 #ifdef __cplusplus
 }

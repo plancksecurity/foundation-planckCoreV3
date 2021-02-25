@@ -3,7 +3,7 @@
 #include "pEp_internal.h"
 
 // increment this when patching DDL
-#define _DDL_USER_VERSION "15"
+#define _DDL_USER_VERSION "16"
 
 PEP_STATUS init_databases(PEP_SESSION session);
 PEP_STATUS pEp_sql_init(PEP_SESSION session);
@@ -181,7 +181,17 @@ static const char *sql_set_pgp_keypair =
         "insert or ignore into pgp_keypair (fpr) "
         "values (upper(replace(?1,' ',''))) ;";
 
+static const char *sql_set_pgp_keypair_flags =
+        "update pgp_keypair set flags = "
+        "    ((?1 & 65535) | (select flags from pgp_keypair "
+        "                     where fpr = (upper(replace(?2,' ',''))))) "
+        "    where fpr = (upper(replace(?2,' ',''))) ;";
 
+static const char *sql_unset_pgp_keypair_flags =
+        "update pgp_keypair set flags = "
+        "    ( ~(?1 & 65535) & (select flags from pgp_keypair"
+        "                       where fpr = (upper(replace(?2,' ',''))))) "
+        "    where fpr = (upper(replace(?2,' ',''))) ;";
 
 static const char* sql_exists_identity_entry =
         "select count(*) from identity "
@@ -335,6 +345,14 @@ static const char *sql_least_trust =
         " pgp_keypair_fpr = upper(replace(?1,' ',''))"
         " and comm_type != 0;"; // ignores PEP_ct_unknown
 // returns PEP_ct_unknown only when no known trust is recorded
+
+static const char *sql_update_key_sticky_bit_for_user =
+        "update trust set sticky = ?1 "
+        "   where user_id = ?2 and pgp_keypair_fpr = upper(replace(?3,' ','')) ;";
+
+static const char *sql_is_key_sticky_for_user =
+        "select sticky from trust "
+        "    where user_id = ?1 and pgp_keypair_fpr = upper(replace(?2,' ','')) ; ";
 
 static const char *sql_mark_as_compromised =
         "update trust not indexed set comm_type = 15"

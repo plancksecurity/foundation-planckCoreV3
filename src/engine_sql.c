@@ -679,8 +679,7 @@ static PEP_STATUS _create_core_tables(PEP_SESSION session) {
             "   created integer,\n"
             "   expires integer,\n"
             "   comment text,\n"
-            "   flags integer default 0,\n"
-            "   manually_set integer default 0\n"
+            "   flags integer default 0\n"
             ");\n"
             "create index if not exists pgp_keypair_expires on pgp_keypair (\n"
             "   expires\n"
@@ -723,6 +722,7 @@ static PEP_STATUS _create_core_tables(PEP_SESSION session) {
             "       on delete cascade,\n"
             "   comm_type integer not null,\n"
             "   comment text,\n"
+            "   sticky integer default 0,\n"
             "   primary key (user_id, pgp_keypair_fpr)\n"
             ");\n"
             ,
@@ -1467,6 +1467,23 @@ static PEP_STATUS _upgrade_DB_to_ver_15(PEP_SESSION session) {
     return _create_group_tables(session);
 }
 
+static PEP_STATUS _upgrade_DB_to_ver_16(PEP_SESSION session) {
+    int int_result = sqlite3_exec(
+        session->db,
+        "alter table trust\n"
+        "   add column sticky integer default 0;\n",
+        NULL,
+        NULL,
+        NULL
+    );
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+    return PEP_STATUS_OK;
+}
+
 static PEP_STATUS _check_and_execute_upgrades(PEP_SESSION session, int version) {
     PEP_STATUS status = PEP_STATUS_OK;
 
@@ -1526,6 +1543,10 @@ static PEP_STATUS _check_and_execute_upgrades(PEP_SESSION session, int version) 
             if (status != PEP_STATUS_OK)
                 return status;
         case 15:
+            status = _upgrade_DB_to_ver_16(session);
+            if (status != PEP_STATUS_OK)
+                return status;
+        case 16:
             break;
         default:
             return PEP_ILLEGAL_VALUE;
@@ -1927,7 +1948,22 @@ PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session) {
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
+    int_result = sqlite3_prepare_v2(session->db, sql_set_pgp_keypair_flags,
+                                    (int)strlen(sql_set_pgp_keypair_flags), &session->set_pgp_keypair_flags,
+                                    NULL);
+    assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+    int_result = sqlite3_prepare_v2(session->db, sql_unset_pgp_keypair_flags,
+                                    (int)strlen(sql_unset_pgp_keypair_flags), &session->unset_pgp_keypair_flags,
+                                    NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+    
     int_result = sqlite3_prepare_v2(session->db, sql_set_identity_entry,
                                     (int)strlen(sql_set_identity_entry), &session->set_identity_entry, NULL);
     assert(int_result == SQLITE_OK);
@@ -2068,6 +2104,23 @@ PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session) {
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
+
+    int_result = sqlite3_prepare_v2(session->db, sql_update_key_sticky_bit_for_user,
+                                    (int)strlen(sql_update_key_sticky_bit_for_user),
+                                    &session->update_key_sticky_bit_for_user, NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+    int_result = sqlite3_prepare_v2(session->db, sql_is_key_sticky_for_user,
+                                    (int)strlen(sql_is_key_sticky_for_user),
+                                    &session->is_key_sticky_for_user, NULL);
+    assert(int_result == SQLITE_OK);
+
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
 
     int_result = sqlite3_prepare_v2(session->db, sql_mark_as_compromised,
                                     (int)strlen(sql_mark_as_compromised), &session->mark_compromised,
@@ -2503,6 +2556,10 @@ PEP_STATUS pEp_finalize_sql_stmts(PEP_SESSION session) {
         sqlite3_finalize(session->get_trust_by_userid);
     if (session->least_trust)
         sqlite3_finalize(session->least_trust);
+    if (session->update_key_sticky_bit_for_user)
+        sqlite3_finalize(session->update_key_sticky_bit_for_user);
+    if (session->is_key_sticky_for_user)
+        sqlite3_finalize(session->is_key_sticky_for_user);
     if (session->mark_compromised)
         sqlite3_finalize(session->mark_compromised);
     if (session->crashdump)
@@ -2595,6 +2652,10 @@ PEP_STATUS pEp_finalize_sql_stmts(PEP_SESSION session) {
         sqlite3_finalize(session->is_invited_group_member);
     if (session->is_group_active)
         sqlite3_finalize(session->is_group_active);
+    if (session->set_pgp_keypair_flags)
+        sqlite3_finalize(session->set_pgp_keypair_flags);
+    if (session->unset_pgp_keypair_flags)
+        sqlite3_finalize(session->unset_pgp_keypair_flags);
     // retrieve_own_membership_info_for_group_and_ident
     //    if (session->group_invite_exists)
 //        sqlite3_finalize(session->group_invite_exists);

@@ -2091,6 +2091,58 @@ DYNAMIC_API PEP_STATUS own_keys_retrieve(PEP_SESSION session, stringlist_t **key
     return _own_keys_retrieve(session, keylist, 0, true);
 }
 
+
+PEP_STATUS update_key_sticky_bit_for_user(PEP_SESSION session,
+                                          pEp_identity* ident,
+                                          const char* fpr,
+                                          bool sticky) {
+    if (!session || !ident || EMPTYSTR(ident->user_id) || EMPTYSTR(fpr))
+        return PEP_ILLEGAL_VALUE;
+
+    sqlite3_reset(session->update_key_sticky_bit_for_user);
+    sqlite3_bind_int(session->update_key_sticky_bit_for_user, 1, sticky);
+    sqlite3_bind_text(session->update_key_sticky_bit_for_user, 2, ident->user_id, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(session->update_key_sticky_bit_for_user, 3, fpr, -1,
+            SQLITE_STATIC);
+    int result = sqlite3_step(session->update_key_sticky_bit_for_user);
+    sqlite3_reset(session->update_key_sticky_bit_for_user);
+    if (result != SQLITE_DONE) {
+        return PEP_CANNOT_SET_TRUST;
+    }
+
+    return PEP_STATUS_OK;
+
+}
+
+PEP_STATUS get_key_sticky_bit_for_user(PEP_SESSION session,
+                                       pEp_identity* ident,
+                                       const char* fpr,
+                                       bool* is_sticky) {
+
+    PEP_STATUS status = PEP_STATUS_OK;
+    if (!session || !ident || !is_sticky || EMPTYSTR(ident->user_id) || EMPTYSTR(fpr))
+        return PEP_ILLEGAL_VALUE;
+
+    sqlite3_reset(session->is_key_sticky_for_user);
+    sqlite3_bind_text(session->is_key_sticky_for_user, 1, ident->user_id, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(session->is_key_sticky_for_user, 2, fpr, -1,
+            SQLITE_STATIC);
+
+    int result = sqlite3_step(session->is_key_sticky_for_user);
+    switch (result) {
+    case SQLITE_ROW: {
+        *is_sticky = sqlite3_column_int(session->is_key_sticky_for_user, 0);
+        break;
+    }
+    default:
+        status = PEP_KEY_NOT_FOUND;
+    }
+
+    return status;
+}
+
 // Returns PASSPHRASE errors when necessary
 DYNAMIC_API PEP_STATUS set_own_key(
        PEP_SESSION session,
@@ -2115,7 +2167,7 @@ DYNAMIC_API PEP_STATUS set_own_key(
 
     // renew if needed, but do not generate
     status = _myself(session, me, false, true, true, false);
-    // we do not need a valid key but dislike other errors
+    // Pass through invalidity errors, and reject other errors
     if (status != PEP_STATUS_OK && status != PEP_GET_KEY_FAILED && status != PEP_KEY_UNSUITABLE)
         return status;
     status = PEP_STATUS_OK;
@@ -2147,6 +2199,39 @@ DYNAMIC_API PEP_STATUS set_own_key(
 
     return status;
 }
+
+// This differs from set_own_key because it sets a manually-imported bit in the trust DB
+DYNAMIC_API PEP_STATUS set_own_imported_key(
+        PEP_SESSION session,
+        pEp_identity* me,
+        const char* fpr) {
+
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session && me);
+    assert(!EMPTYSTR(fpr));
+    assert(!EMPTYSTR(me->address));
+    assert(!EMPTYSTR(me->user_id));
+    assert(!EMPTYSTR(me->username));
+
+    if (!session || !me || EMPTYSTR(fpr) || EMPTYSTR(me->address) ||
+            EMPTYSTR(me->user_id) || EMPTYSTR(me->username))
+        return PEP_ILLEGAL_VALUE;
+
+    // Last, but not least, be sure we can encrypt with it
+    status = probe_encrypt(session, fpr);
+    if (status)
+        return status;
+
+    status = set_own_key(session, me, fpr);
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    status = update_key_sticky_bit_for_user(session, me, fpr, true);
+
+    return status;
+}
+
 
 PEP_STATUS contains_priv_key(PEP_SESSION session, const char *fpr,
                              bool *has_private) {
