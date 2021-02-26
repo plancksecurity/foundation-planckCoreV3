@@ -92,7 +92,7 @@ TEST_F(StickyBitTest, check_set_sticky_bit_normal) {
     status = myself(session, me);
     ASSERT_EQ(status , PEP_STATUS_OK);
     bool sticky = false;
-    status = get_key_sticky_bit_for_user(session, me, bob_fpr, &sticky);
+    status = get_key_sticky_bit_for_user(session, me->user_id, bob_fpr, &sticky);
     ASSERT_TRUE(sticky);
     free_identity(me);
 }

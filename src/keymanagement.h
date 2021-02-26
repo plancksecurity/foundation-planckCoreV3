@@ -584,7 +584,7 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
 
 
 PEP_STATUS get_key_sticky_bit_for_user(PEP_SESSION session,
-                                       pEp_identity* ident,
+                                       const char* user_id,
                                        const char* fpr,
                                        bool* is_sticky);
 

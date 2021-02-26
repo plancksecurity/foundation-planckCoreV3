@@ -2116,16 +2116,16 @@ PEP_STATUS update_key_sticky_bit_for_user(PEP_SESSION session,
 }
 
 PEP_STATUS get_key_sticky_bit_for_user(PEP_SESSION session,
-                                       pEp_identity* ident,
+                                       const char* user_id,
                                        const char* fpr,
                                        bool* is_sticky) {
 
     PEP_STATUS status = PEP_STATUS_OK;
-    if (!session || !ident || !is_sticky || EMPTYSTR(ident->user_id) || EMPTYSTR(fpr))
+    if (!session || !is_sticky || EMPTYSTR(user_id) || EMPTYSTR(fpr))
         return PEP_ILLEGAL_VALUE;
 
     sqlite3_reset(session->is_key_sticky_for_user);
-    sqlite3_bind_text(session->is_key_sticky_for_user, 1, ident->user_id, -1,
+    sqlite3_bind_text(session->is_key_sticky_for_user, 1, user_id, -1,
             SQLITE_STATIC);
     sqlite3_bind_text(session->is_key_sticky_for_user, 2, fpr, -1,
             SQLITE_STATIC);
