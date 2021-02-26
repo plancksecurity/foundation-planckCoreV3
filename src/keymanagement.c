@@ -2200,11 +2200,13 @@ DYNAMIC_API PEP_STATUS set_own_key(
     return status;
 }
 
-// This differs from set_own_key because it sets a manually-imported bit in the trust DB
+// This differs from set_own_key because it can set a manually-imported bit in the trust DB
+// and tests to see if the key will encrypt
 DYNAMIC_API PEP_STATUS set_own_imported_key(
         PEP_SESSION session,
         pEp_identity* me,
-        const char* fpr) {
+        const char* fpr,
+        bool sticky) {
 
     PEP_STATUS status = PEP_STATUS_OK;
 
@@ -2227,7 +2229,7 @@ DYNAMIC_API PEP_STATUS set_own_imported_key(
     if (status != PEP_STATUS_OK)
         return status;
 
-    status = update_key_sticky_bit_for_user(session, me, fpr, true);
+    status = update_key_sticky_bit_for_user(session, me, fpr, sticky);
 
     return status;
 }

@@ -1138,14 +1138,14 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_grouped_with_sticky) {
 
     // sticky - true
     alex_id2->me = true;
-    status = set_own_imported_key(session, alex_id2, pubkey2);
+    status = set_own_imported_key(session, alex_id2, pubkey2, true);
     ASSERT_EQ(status, PEP_STATUS_OK);
     status = set_identity_flags(session, alex_id2, alex_id2->flags | PEP_idf_not_for_sync);
     ASSERT_EQ(status , PEP_STATUS_OK);
 
     // sticky - true
     alex_id3->me = true;
-    status = set_own_imported_key(session, alex_id3, pubkey3);
+    status = set_own_imported_key(session, alex_id3, pubkey3, true);
     ASSERT_EQ(status, PEP_STATUS_OK);
     status = set_identity_flags(session, alex_id3, alex_id3->flags | PEP_idf_devicegroup);
     ASSERT_EQ(status , PEP_STATUS_OK);

@@ -460,11 +460,38 @@ DYNAMIC_API PEP_STATUS set_own_key(
        const char *fpr
     );
 
-
+/**
+ *  <!--       set_own_imported_key()       -->
+ *
+ *  @brief Mark a key as an own default key, test to be sure the private key is
+ *         present and can be used, and
+ *
+ *  @param[in]      session    session to use
+ *  @param[in,out]  me         own identity this key is used for
+ *  @param[in]      fpr        fingerprint of the key to mark as own key
+ *  @param[in]      sticky     boolean, true if we should set a sticky bit so
+ *                             it will not be automatically reset by sync and should
+ *                             win sync key elections if no other competing key
+ *                             for the same identity has its sticky bit set,
+ *                             false otherwise
+ *
+ *  @warning the key has to be in the key ring already
+ *           me->address, me->user_id and me->username must be set to valid data
+ *           myself() is called by set_own_key() from within this call without key generation
+ *           me->flags are ignored
+ *           me->address must not be an alias
+ *           me->fpr will be ignored and replaced by fpr, but
+ *           caller MUST surrender ownership of the me->fpr reference, because
+ *           it may be freed and replaced within the myself call. caller owns
+ *           me->fpr memory again upon return.
+ *           CAN GENERATE A PASSPHRASE REQUEST
+ *
+ */
 DYNAMIC_API PEP_STATUS set_own_imported_key(
         PEP_SESSION session,
         pEp_identity* me,
-        const char* fpr
+        const char* fpr,
+        bool sticky
     );
 
 //

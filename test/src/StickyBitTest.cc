@@ -87,7 +87,7 @@ TEST_F(StickyBitTest, check_set_sticky_bit_normal) {
     const char* bob_name = "STOP MESSING WITH ME ALICE";
     const char* bob_fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
     pEp_identity* me = new_identity("pep.test.bob@pep-project.org", NULL, PEP_OWN_USERID, bob_name);
-    status = set_own_imported_key(session, me, bob_fpr);
+    status = set_own_imported_key(session, me, bob_fpr, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     status = myself(session, me);
     ASSERT_EQ(status , PEP_STATUS_OK);
