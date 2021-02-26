@@ -609,7 +609,18 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
                             bool* is_address_default,
                             bool check_blacklist);
 
-
+/**
+ *  <!--       get_key_sticky_bit_for_user()       -->
+ *
+ *  @brief     Get value of sticky bit for this user and key
+ *
+ *  @param[in]  session       PEP_SESSION
+ *  @param[in]  user_id       user_id of key owner to get the sticky bit for
+ *  @param[in]  fpr           fingerprint of user's key to consider
+ *  @param[out] is_sticky     (by reference) true if sticky bit is set for this user and fpr,
+ *                            else false
+ *
+ */
 PEP_STATUS get_key_sticky_bit_for_user(PEP_SESSION session,
                                        const char* user_id,
                                        const char* fpr,
