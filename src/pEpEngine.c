@@ -2661,6 +2661,23 @@ PEP_STATUS sign_only(PEP_SESSION session,
                          
 }
 
+DYNAMIC_API PEP_STATUS probe_encrypt(PEP_SESSION session, const char *fpr)
+{
+    assert(session);
+    if (!session || EMPTYSTR(fpr))
+        return PEP_ILLEGAL_VALUE;
+
+    stringlist_t *keylist = new_stringlist(fpr);
+    if (!keylist)
+        return PEP_OUT_OF_MEMORY;
+
+    char *ctext = NULL;
+    size_t csize = 0;
+    PEP_STATUS status = encrypt_and_sign(session, keylist, "pEp", 4, &ctext, &csize);
+    free(ctext);
+
+    return status;
+}
 
 
 DYNAMIC_API PEP_STATUS verify_text(

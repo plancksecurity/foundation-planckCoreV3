@@ -603,6 +603,7 @@ action disable
 
 action resetOwnGroupedKeys
 ||
+    // Will NOT reset keys with the sticky bit set
     return key_reset_own_grouped_keys(session);
 ||
 
