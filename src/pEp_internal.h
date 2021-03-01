@@ -208,6 +208,8 @@ struct _pEpSession {
     // sqlite3_stmt *set_device_group;
     // sqlite3_stmt *get_device_group;
     sqlite3_stmt *set_pgp_keypair;
+    sqlite3_stmt *set_pgp_keypair_flags;
+    sqlite3_stmt *unset_pgp_keypair_flags;
     sqlite3_stmt *set_identity_entry;
     sqlite3_stmt *update_identity_entry;
     sqlite3_stmt *exists_identity_entry;        
@@ -224,6 +226,8 @@ struct _pEpSession {
     sqlite3_stmt *get_trust;
     sqlite3_stmt *get_trust_by_userid;
     sqlite3_stmt *least_trust;
+    sqlite3_stmt *update_key_sticky_bit_for_user;
+    sqlite3_stmt *is_key_sticky_for_user;
     sqlite3_stmt *mark_compromised;
     sqlite3_stmt *reset_trust;
     sqlite3_stmt *crashdump;

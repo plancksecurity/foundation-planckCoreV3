@@ -93,6 +93,7 @@ src/commit_hash.h
 venv/
 venv2/
 cleangit.py
+newgit
 
 # ignore generated test data
 

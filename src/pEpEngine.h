@@ -523,6 +523,22 @@ DYNAMIC_API PEP_STATUS encrypt_and_sign(
         size_t psize, char **ctext, size_t *csize
     );
 
+/**
+ *  <!--       probe_encrypt()       -->
+ *
+ *  @brief Test if passphrase for a key is working in current session
+ *
+ *  @param[in]   session    session handle
+ *  @param[in]   fpr        fingerprint of key to test
+ *
+ *  @retval PEP_STATUS_OK           in case passphrase works
+ *  @retval error                   if not
+ *
+ *
+ */
+
+DYNAMIC_API PEP_STATUS probe_encrypt(PEP_SESSION session, const char *fpr);
+
 
 /**
  *  <!--       set_debug_color()       -->
@@ -754,10 +770,10 @@ typedef enum _identity_flags {
 
 typedef unsigned int identity_flags_t;
 
-// typedef enum _keypair_flags {
-// } keypair_flags;
-
-typedef unsigned int keypair_flags_t;
+//typedef enum _keypair_flags {
+//} keypair_flags;
+//
+//typedef unsigned int keypair_flags_t;
 
 /**
  *  @struct    pEp_identity
