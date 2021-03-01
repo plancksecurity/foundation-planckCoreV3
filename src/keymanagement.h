@@ -464,7 +464,9 @@ DYNAMIC_API PEP_STATUS set_own_key(
  *  <!--       set_own_imported_key()       -->
  *
  *  @brief Mark a key as an own default key, test to be sure the private key is
- *         present and can be used, and
+ *         present and can be used, and set or unset the sticky bit as indicated by the boolean
+ *         value. The sticky bit is intended to tell the engine to not automatically remove this
+ *         key as a default through protocols like sync, for example.
  *
  *  @param[in]      session    session to use
  *  @param[in,out]  me         own identity this key is used for
