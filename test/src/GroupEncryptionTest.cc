@@ -2058,77 +2058,40 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_different_own_identity_m
     ASSERT_STREQ(group1->manager->fpr, manager_1_fpr);
     ASSERT_STREQ(group1->group_identity->fpr, group_1_fpr);
 
-    member_list* g2_new_members = new_memberlist(new_member(member_2));
-    ASSERT_NE(g2_new_members, nullptr);
-    memberlist_add(g2_new_members, new_member(member_2));
-    memberlist_add(g2_new_members, new_member(member_3));
-    memberlist_add(g2_new_members, new_member(member_4));
-
-    pEp_group* group2 = NULL;
-    status = group_create(session, group2_ident, me2, g2_new_members, &group2);
-    ASSERT_OK;
-
-    ASSERT_STREQ(group2->manager->fpr, manager_2_fpr);
-    ASSERT_STREQ(group2->group_identity->fpr, group_2_fpr);
-
-    
-    // Ok, we now have a bunch of messages to check.
     ASSERT_EQ(m_queue.size(), 4);
 
-    for (int i = 0; i < 4; i++) {
-        message* msg = m_queue[i];
-        ASSERT_NE(msg, nullptr);
-        ASSERT_NE(msg->from, nullptr);
-        ASSERT_NE(msg->to, nullptr);
-        ASSERT_NE(msg->to->ident, nullptr);
-        ASSERT_EQ(msg->to->next, nullptr);
-        ASSERT_STREQ(msg->from->address, manager_1_address);
-
-#if GECT_WRITEOUT
-            char* outdata = NULL;
-            mime_encode_message(msg, false, &outdata, false);
-            ASSERT_NE(outdata, nullptr);
-            dump_out((string("test_mails/group_create_extant_key_") + get_prefix_from_address(msg->to->ident->address) + ".eml").c_str(), outdata);
-            free(outdata);
-#endif
-    }
-
-    // MESSAGE LIST NOW INVALID.
-    m_queue.clear();
-
-    // FIXME: Check all of the DB stuff, etc
     // Ok, now let's see what's inside the box
-    pEp_group* group_info = NULL;
-    status = retrieve_group_info(session, group_ident, &group_info);
+    pEp_group* group1_info = NULL;
+    status = retrieve_group_info(session, group1_ident, &group1_info);
     ASSERT_OK;
-    ASSERT_NE(group_info, nullptr);
+    ASSERT_NE(group1_info, nullptr);
 
-    ASSERT_NE(group_info->group_identity, nullptr);
-    ASSERT_STREQ(group_ident->address, group_info->group_identity->address);
-    ASSERT_STREQ(group_ident->user_id, group_info->group_identity->user_id);
+    ASSERT_NE(group1_info->group_identity, nullptr);
+    ASSERT_STREQ(group1_ident->address, group1_info->group_identity->address);
+    ASSERT_STREQ(group1_ident->user_id, group1_info->group_identity->user_id);
 
-    ASSERT_NE(group_info->manager, nullptr);
-    ASSERT_STREQ(group_info->manager->user_id, me->user_id);
-    ASSERT_STREQ(group_info->manager->address, me->address);
+    ASSERT_NE(group1_info->manager, nullptr);
+    ASSERT_STREQ(group1_info->manager->user_id, me1->user_id);
+    ASSERT_STREQ(group1_info->manager->address, me1->address);
 
-    status = myself(session, group_info->manager);
+    status = myself(session, group1_info->manager);
     ASSERT_OK;
-    ASSERT_NE(group_info->manager->fpr, nullptr);
-    ASSERT_STREQ(group_info->manager->fpr, manager_1_fpr);
-    ASSERT_STREQ(group_info->manager->username, me->username);
-    ASSERT_STREQ(group_info->manager->username, manager_1_name);
+    ASSERT_NE(group1_info->manager->fpr, nullptr);
+    ASSERT_STREQ(group1_info->manager->fpr, manager_1_fpr);
+    ASSERT_STREQ(group1_info->manager->username, me1->username);
+    ASSERT_STREQ(group1_info->manager->username, manager_1_name);
 
-    ASSERT_TRUE(group_info->active);
+    ASSERT_TRUE(group1_info->active);
 
     // Ok, time to check the member list. Tricky...
     const char* member_names[] = {member_1_name, member_2_name, member_3_name, member_4_name};
     const char* member_addrs[] = {member_1_address, member_2_address, member_3_address, member_4_address};
     const char* member_fprs[] = {member_1_fpr, member_2_fpr, member_3_fpr, member_4_fpr};
 
-    bool found[] = {false, false, false, false};
+    bool found[] = {false, false, false};
 
     int count = 0;
-    for (member_list* curr_member = group_info->members;
+    for (member_list* curr_member = group1_info->members;
             curr_member && curr_member->member && curr_member->member->ident;
             curr_member = curr_member->next) {
 
@@ -2166,11 +2129,141 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_different_own_identity_m
     }
 
     ASSERT_EQ(count, 4);
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 3; i++) {
         ASSERT_TRUE(found[i]);
     }
 
-    free_group(group);
+    ASSERT_EQ(m_queue.size(), 4);
+    for (int i = 0; i < 4; i++) {
+        message* msg = m_queue[i];
+        ASSERT_NE(msg, nullptr);
+        ASSERT_NE(msg->from, nullptr);
+        ASSERT_NE(msg->to, nullptr);
+        ASSERT_NE(msg->to->ident, nullptr);
+        ASSERT_EQ(msg->to->next, nullptr);
+        ASSERT_STREQ(msg->from->address, manager_1_address);
+
+#if GECT_WRITEOUT
+            char* outdata = NULL;
+            mime_encode_message(msg, false, &outdata, false);
+            ASSERT_NE(outdata, nullptr);
+            dump_out((string("test_mails/group_create_different_own_identity_managers_group_1_") + get_prefix_from_address(msg->to->ident->address) + ".eml").c_str(), outdata);
+            free(outdata);
+#endif
+    }
+
+    // MESSAGE LIST NOW INVALID.
+    m_queue.clear();
+
+    ASSERT_EQ(m_queue.size(), 0);
+    member_list* g2_new_members = new_memberlist(new_member(member_2));
+    ASSERT_NE(g2_new_members, nullptr);
+    memberlist_add(g2_new_members, new_member(member_3));
+    memberlist_add(g2_new_members, new_member(member_4));
+
+    pEp_group* group2 = NULL;
+    status = group_create(session, group2_ident, me2, g2_new_members, &group2);
+    ASSERT_OK;
+
+    ASSERT_STREQ(group2->manager->fpr, manager_2_fpr);
+    ASSERT_STREQ(group2->group_identity->fpr, group_2_fpr);
+
+    // Ok, we now have a bunch of messages to check.
+    ASSERT_EQ(m_queue.size(), 3);
+
+    for (int i = 0; i < 3; i++) {
+        message* msg = m_queue[i];
+        ASSERT_NE(msg, nullptr);
+        ASSERT_NE(msg->from, nullptr);
+        ASSERT_NE(msg->to, nullptr);
+        ASSERT_NE(msg->to->ident, nullptr);
+        ASSERT_EQ(msg->to->next, nullptr);
+        ASSERT_STREQ(msg->from->address, manager_2_address);
+
+#if GECT_WRITEOUT
+            char* outdata = NULL;
+            mime_encode_message(msg, false, &outdata, false);
+            ASSERT_NE(outdata, nullptr);
+            dump_out((string("test_mails/group_create_different_own_identity_managers_group_2_") + get_prefix_from_address(msg->to->ident->address) + ".eml").c_str(), outdata);
+            free(outdata);
+#endif
+    }
+
+    // MESSAGE LIST NOW INVALID.
+    m_queue.clear();
+
+    // Ok, now let's see what's inside the box
+    pEp_group* group2_info = NULL;
+    status = retrieve_group_info(session, group2_ident, &group2_info);
+    ASSERT_OK;
+    ASSERT_NE(group2_info, nullptr);
+
+    ASSERT_NE(group2_info->group_identity, nullptr);
+    ASSERT_STREQ(group2_ident->address, group2_info->group_identity->address);
+    ASSERT_STREQ(group2_ident->user_id, group2_info->group_identity->user_id);
+
+    ASSERT_NE(group2_info->manager, nullptr);
+    ASSERT_STREQ(group2_info->manager->user_id, me2->user_id);
+    ASSERT_STREQ(group2_info->manager->address, me2->address);
+
+    status = myself(session, group2_info->manager);
+    ASSERT_OK;
+    ASSERT_NE(group2_info->manager->fpr, nullptr);
+    ASSERT_STREQ(group2_info->manager->fpr, manager_2_fpr);
+    ASSERT_STREQ(group2_info->manager->username, me2->username);
+    ASSERT_STREQ(group2_info->manager->username, manager_2_name);
+
+    ASSERT_TRUE(group2_info->active);
+
+    for (int i = 0; i < 4; i++)
+        found[i] = false;
+
+    count = 0;
+    for (member_list* curr_member = group2_info->members;
+            curr_member && curr_member->member && curr_member->member->ident;
+            curr_member = curr_member->next) {
+
+        pEp_member* memb = curr_member->member;
+        pEp_identity* ident = memb->ident;
+        const char* userid = ident->user_id;
+        const char* address = ident->address;
+        ASSERT_NE(userid, nullptr);
+        ASSERT_NE(address, nullptr);
+
+        status = update_identity(session, ident);
+        ASSERT_OK;
+
+        const char* fpr = ident->fpr;
+        const char* name = ident->username;
+        ASSERT_NE(name, nullptr);
+        ASSERT_NE(fpr, nullptr);
+
+        ASSERT_FALSE(memb->adopted);
+
+        int index = -1;
+
+        for (int i = 0; i < 4; i++) {
+            if (strcmp(member_names[i], name) == 0) {
+                index = i;
+                break;
+            }
+        }
+        ASSERT_GT(index, -1);
+        ASSERT_LT(index, 5);
+        ASSERT_STREQ(member_addrs[index], address);
+        ASSERT_STREQ(member_fprs[index], fpr);
+        found[index] = true;
+        count++;
+    }
+
+    ASSERT_EQ(count, 3);
+    ASSERT_FALSE(found[0]);
+    for (int i = 1; i < 4; i++) {
+        ASSERT_TRUE(found[i]);
+    }
+
+    free_group(group1_info);
+    free_group(group2_info);
 }
 
 
@@ -2178,7 +2271,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_different_own_identity_m
 
 TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_not_manager) {
     // Set up the receive and join actions
-    const char* own_id = "PEP_OWN_USERID"; // on purpose, little joke here
+    const char* own_id = PEP_OWN_USERID;
     pEp_identity* me = new_identity(member_2_address, NULL, own_id, member_2_name);
     read_file_and_import_key(session, kf_name(member_2_prefix, false).c_str());
     read_file_and_import_key(session, kf_name(member_2_prefix, true).c_str());
