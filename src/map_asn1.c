@@ -216,6 +216,8 @@ PEP_STATUS set_new_own_key_if_not_sticky(PEP_SESSION session, Identity_t *ident)
     status = get_identity(session, _new->address, own_user_id, &_old);
     switch (status) {
         case PEP_STATUS_OK: {
+            assert(_old);
+
             if (!EMPTYSTR(_old->fpr)) {
                 if (!new_is_sticky && strcasecmp(_new->fpr, _old->fpr) == 0)
                     break;
@@ -236,10 +238,15 @@ PEP_STATUS set_new_own_key_if_not_sticky(PEP_SESSION session, Identity_t *ident)
                 if (old_is_sticky)
                     break;
             }
+
+            status = set_own_imported_key(session, _old, _new->fpr, new_is_sticky);
+            if (status)
+                goto error;
+            break;
         }
 
         case PEP_CANNOT_FIND_IDENTITY:
-            status = set_own_imported_key(session, _old, _new->fpr, new_is_sticky);
+            status = set_own_imported_key(session, _new, _new->fpr, new_is_sticky);
             if (status)
                 goto error;
 
