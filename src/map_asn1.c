@@ -206,7 +206,7 @@ PEP_STATUS set_new_own_key_if_not_sticky(PEP_SESSION session, Identity_t *ident)
                     break;
             }
 
-            bool old_is_sticky;
+            bool old_is_sticky = false;
             status = get_key_sticky_bit_for_user(session, _old->user_id, _old->fpr, &old_is_sticky);
             if (status) {
                 if (status == PEP_KEY_NOT_FOUND) {
@@ -217,19 +217,16 @@ PEP_STATUS set_new_own_key_if_not_sticky(PEP_SESSION session, Identity_t *ident)
                     goto error;
                 }
             }
-            if (!old_is_sticky) {
-                status = set_own_key(session, _old, _new->fpr);
-                if (status)
-                    goto error;
-            }
-            break;
+            if (old_is_sticky)
+                break;
         }
                     
-        case PEP_CANNOT_FIND_IDENTITY:
-            status = set_own_key(session, _old, _new->fpr);
+        case PEP_CANNOT_FIND_IDENTITY: {
+            bool new_is_sticky = ident->sticky && *ident->sticky;
+            status = set_own_imported_key(session, _old, _new->fpr, new_is_sticky);
             if (status)
                 goto error;
-            break;
+        }
 
         default:
             goto error;
