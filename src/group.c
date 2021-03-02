@@ -1,4 +1,5 @@
 // This file is under GNU General Public License 3.0
+// This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
 #include "group.h"
@@ -89,7 +90,8 @@ void free_group(pEp_group *group) {
     free_memberlist(group->members);
 }
 
-static PEP_STATUS _set_membership_status(PEP_SESSION session,
+// Exposed for testing.
+PEP_STATUS set_membership_status(PEP_SESSION session,
                                             pEp_identity* group_identity,
                                             pEp_identity* as_member,
                                             bool active) {
@@ -690,6 +692,23 @@ PEP_STATUS group_dissolve(
     if (!exists)
         return PEP_GROUP_NOT_FOUND;
 
+    // Ok, do we have the right manager? If not, don't do it.
+    pEp_identity* stored_manager = NULL;
+    status = get_group_manager(session, group_identity, &stored_manager);
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    if (!stored_manager)
+        return PEP_OUT_OF_MEMORY;
+
+    if (!stored_manager->user_id || !stored_manager->address)
+        return PEP_UNKNOWN_DB_ERROR;
+
+    if ((strcmp(stored_manager->user_id, manager->user_id) != 0) ||
+        (strcmp(stored_manager->address, manager->address) != 0)) {
+        return PEP_CANNOT_DISABLE_GROUP;
+    }
+
     status = _set_group_as_disabled(session, group_identity);
     if (status != PEP_STATUS_OK)
         return status;
@@ -722,7 +741,7 @@ PEP_STATUS group_dissolve(
             pEp_identity* memb_ident = memb->member->ident;
             if (EMPTYSTR(memb_ident->user_id) || EMPTYSTR(memb_ident->address))
                 return PEP_UNKNOWN_ERROR;
-            status = _set_membership_status(session, group_identity, memb->member->ident, false);
+            status = set_membership_status(session, group_identity, memb->member->ident, false);
             memb = memb->next;
         }
         // We don't own the group_ident or manager that comes in here, so we need to set them to NULL.
@@ -816,7 +835,7 @@ PEP_STATUS group_add_member(
 //    if (!exists)
 //        return PEP_GROUP_NOT_FOUND;
 //
-//    return _set_membership_status(session, group_identity, group_member, false);
+//    return set_membership_status(session, group_identity, group_member, false);
 //}
 
 PEP_STATUS retrieve_full_group_membership(
@@ -1491,6 +1510,9 @@ PEP_STATUS receive_GroupDissolve(PEP_SESSION session, message* msg, PEP_rating r
     if (!msg)
         return PEP_ILLEGAL_VALUE;
 
+    if (!msg->_sender_fpr) // We'll never be able to verify. Reject
+        return PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
+
     // Make sure everything's there are enforce exactly one recip
     if (!gd || !msg->to || !msg->to->ident || msg->to->next)
         return PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
@@ -1527,7 +1549,6 @@ PEP_STATUS receive_GroupDissolve(PEP_SESSION session, message* msg, PEP_rating r
         return PEP_STATUS_OK;
     }
 
-    // FIXME - we'll have to check that it matches A sender key, not "THE" sender key.
     if (!manager->fpr)
         return PEP_KEY_NOT_FOUND;
 
@@ -1538,10 +1559,33 @@ PEP_STATUS receive_GroupDissolve(PEP_SESSION session, message* msg, PEP_rating r
     // It would be stupid to lie here, but form and all.. FIXME: Change when signature delivery is
     // implemented as in https://dev.pep.foundation/Engine/GroupEncryption#design - this will no longer
     // be sufficient or entirely correct
-    if (strcmp(manager->fpr, msg->_sender_fpr) != 0)
-        return PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
+    // FIXME - we'll have to check that it matches A sender key, not "THE" sender key.
+    // FIXME AGAIN - actually, this is a problem. It could match a GREEN sender key, sure.
+    //               but yellow won't do (I guess unless it was once a default?)
+    // 1. is manager->fpr the same as the sender key? If not, look for other previous defaults for this user...
+    if (strcmp(manager->fpr, msg->_sender_fpr) != 0) {
+        // 2. See if there exists a trust entry in the DB for this key and user
+        pEp_identity* tmp_ident = identity_dup(manager);
+        if (!tmp_ident)
+            return PEP_OUT_OF_MEMORY;
+        free(tmp_ident->fpr);
+        tmp_ident->fpr = strdup(msg->_sender_fpr);
+        if (!tmp_ident->fpr)
+            return PEP_OUT_OF_MEMORY;
+        tmp_ident->comm_type = PEP_ct_unknown;
+        status = get_trust(session, tmp_ident);
+
+        if (status != PEP_STATUS_OK)
+            return status;
+
+        if (tmp_ident->comm_type < PEP_ct_strong_but_unconfirmed)
+            return PEP_MESSAGE_IGNORE; // ????
+    }
+
     if (strcmp(manager->address, msg->from->address) != 0) // ???? FIXME
         return PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
+
+    // We'd better make sure that this is a
 
     // Update group identity id
     char* own_id = NULL;
@@ -1553,11 +1597,11 @@ PEP_STATUS receive_GroupDissolve(PEP_SESSION session, message* msg, PEP_rating r
     free(group_identity->user_id);
     group_identity->user_id = own_id;
 
-    // FIXME: I think maybe this check belongs in group_dissolve and we can omit this. Maybe?
-    // The real check, for now. Later, the check will be manager->fpr against
-    // DB fpr.
-    // Shell, not full info - I guess we've verified the manager claim here
-    pEp_group* group = new_group(group_identity, manager, NULL);
+    pEp_group* group = NULL;
+
+    status = retrieve_group_info(session, group_identity, &group);
+    if (status != PEP_STATUS_OK)
+        return status;
 
     status = retrieve_own_membership_info_for_group_and_identity(session, group, own_identity);
     if (status != PEP_STATUS_OK)
@@ -1720,7 +1764,7 @@ PEP_STATUS receive_GroupAdopted(PEP_SESSION session, message* msg, PEP_rating ra
         return PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
 
     // Ok, we invited them. Set their status to "joined".
-    status = _set_membership_status(session, group_identity, member, true);
+    status = set_membership_status(session, group_identity, member, true);
 
     return status;
 
@@ -1793,25 +1837,25 @@ PEP_STATUS retrieve_group_info(PEP_SESSION session, pEp_identity* group_identity
     PEP_STATUS status = PEP_STATUS_OK;
     *group_info = NULL;
 
-    status = _myself(session, group_identity, false, false, false, true);
+    pEp_identity* stored_identity = NULL;
 
+    status = get_identity(session, group_identity->address, group_identity->user_id, &stored_identity);
     if (status != PEP_STATUS_OK)
         return status;
 
-    status = retrieve_full_group_membership(session, group_identity, &members);
+    if (!stored_identity)
+        return PEP_CANNOT_FIND_IDENTITY;
+
+    status = retrieve_full_group_membership(session, stored_identity, &members);
 
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
-    status = get_group_manager(session, group_identity, &manager);
+    status = get_group_manager(session, stored_identity, &manager);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
-    pEp_identity* group_ident_clone = identity_dup(group_identity);
-    if (!group_ident_clone)
-        return PEP_OUT_OF_MEMORY;
-
-    group = new_group(group_ident_clone, manager, members);
+    group = new_group(stored_identity, manager, members);
     if (!group)
         return PEP_OUT_OF_MEMORY;
 
@@ -1831,7 +1875,6 @@ pEp_error:
         free_identity(manager);
     }
     else {
-        group->group_identity = NULL; // input belongs to caller in case of error
         free_group(group);
     }
     return status;

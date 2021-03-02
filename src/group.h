@@ -193,6 +193,12 @@ PEP_STATUS retrieve_active_member_list(
         pEp_identity* group_identity,
         member_list** mbr_idents);
 
+PEP_STATUS set_membership_status(PEP_SESSION session,
+                                 pEp_identity* group_identity,
+                                 pEp_identity* as_member,
+                                 bool active);
+
+
 #ifdef __cplusplus
 }
 #endif

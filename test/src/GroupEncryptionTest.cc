@@ -2266,8 +2266,66 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_different_own_identity_m
     free_group(group2_info);
 }
 
+#if GECT_WRITEOUT
+// The idea is the next test will import the create from the previous manager and the dissolve from this one.
+TEST_F(GroupEncryptionTest, not_a_test_message_gen_for_group_dissolve_not_manager) {
+    pEp_identity* me2 = new_identity(manager_2_address, NULL, PEP_OWN_USERID, manager_1_name);
+    read_file_and_import_key(session, kf_name(manager_2_prefix, false).c_str());
+    read_file_and_import_key(session, kf_name(manager_2_prefix, true).c_str());
+    PEP_STATUS status = set_own_key(session, me2, manager_2_fpr);
+    ASSERT_OK;
 
+    pEp_identity* group1_ident = new_identity(group_1_address, group_1_fpr, PEP_OWN_USERID, group_1_name);
+    read_file_and_import_key(session, kf_name(group_1_prefix, false).c_str());
+    read_file_and_import_key(session, kf_name(group_1_prefix, true).c_str());
+    status = set_own_key(session, group1_ident, group_1_fpr);
+    ASSERT_OK;
+    
+    pEp_identity* member_2 = new_identity(member_2_address, NULL, "MEMBER2", member_2_name);
+    read_file_and_import_key(session, kf_name(member_2_prefix, false).c_str());
+    status = update_identity(session, member_2);
+    ASSERT_OK;
+    status = set_pEp_version(session, member_2, 2, 2);
+    ASSERT_OK;
+    status = set_as_pEp_user(session, member_2);
+    ASSERT_OK;
+    
+    member_list* g1_new_members = new_memberlist(new_member(member_2));
+    ASSERT_NE(g1_new_members, nullptr);
 
+    pEp_group* group1 = NULL;
+    status = group_create(session, group1_ident, me2, g1_new_members, &group1);
+    ASSERT_OK;
+
+    ASSERT_STREQ(group1->manager->fpr, manager_2_fpr);
+    ASSERT_STREQ(group1->group_identity->fpr, group_1_fpr);
+
+    // We'll get set member2 as joined
+    status = set_membership_status(session, group1_ident, member_2, true);
+    ASSERT_OK;
+
+    m_queue.clear();
+    status = group_dissolve(session, group1_ident, me2);
+    ASSERT_EQ(m_queue.size(), 1);
+
+    message* msg = m_queue[0];
+    ASSERT_NE(msg, nullptr);
+    ASSERT_NE(msg->from, nullptr);
+    ASSERT_NE(msg->to, nullptr);
+    ASSERT_NE(msg->to->ident, nullptr);
+    ASSERT_EQ(msg->to->next, nullptr);
+    ASSERT_STREQ(msg->from->address, manager_2_address);
+
+    char* outdata = NULL;
+    mime_encode_message(msg, false, &outdata, false);
+    ASSERT_NE(outdata, nullptr);
+    dump_out((string("test_mails/group_dissolve_not_manager_") + get_prefix_from_address(msg->to->ident->address) + ".eml").c_str(), outdata);
+    free(outdata);
+
+    free_message(msg);
+
+}
+#endif
 
 TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_not_manager) {
     // Set up the receive and join actions
@@ -2278,6 +2336,73 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_not_manager) {
     PEP_STATUS status = set_own_key(session, me, member_2_fpr);
     ASSERT_OK;
 
+    string msg_str = slurp(string("test_mails/group_create_different_own_identity_managers_group_1_") + member_2_prefix + ".eml");
+    ASSERT_FALSE(msg_str.empty());
+    message* msg = NULL;
+    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
+    ASSERT_NE(msg, nullptr);
+
+    message* dec_msg = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_OK;
+
+    free_message(msg);
+    free_message(dec_msg);
+
+    msg_str = slurp(string("test_mails/group_create_different_own_identity_managers_group_2_") + member_2_prefix + ".eml");
+    ASSERT_FALSE(msg_str.empty());
+    msg = NULL;
+    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
+    ASSERT_NE(msg, nullptr);
+
+    dec_msg = NULL;
+    keylist = NULL;
+    flags = 0;
+
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    free_message(msg);
+    ASSERT_OK;
+    free_message(dec_msg);
+
+    pEp_identity* group1_ident = new_identity(group_1_address, NULL, PEP_OWN_USERID, NULL);
+    pEp_identity* group2_ident = new_identity(group_2_address, NULL, PEP_OWN_USERID, NULL);
+
+    status = join_group(session, group1_ident, me);
+    ASSERT_OK;
+    status = join_group(session, group2_ident, me);
+    ASSERT_OK;
+
+    m_queue.clear();
+    // Now to receive a group dissolve for a group from someone who is not the manager.
+
+    msg_str = slurp(string("test_mails/group_dissolve_not_manager_") + member_2_prefix + ".eml");
+    ASSERT_FALSE(msg_str.empty());
+    msg = NULL;
+    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
+    ASSERT_NE(msg, nullptr);
+
+    dec_msg = NULL;
+    keylist = NULL;
+    flags = 0;
+
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    free_message(msg);
+    free_message(dec_msg);
+    ASSERT_OK;
+
+    bool active = false;
+    status = is_group_active(session, group1_ident, &active);
+    ASSERT_OK;
+    ASSERT_TRUE(active);
+
+    active = false;
+    status = is_group_active(session, group2_ident, &active);
+    ASSERT_OK;
+    ASSERT_TRUE(active);
 }
 
 TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_own_group_receive) {
