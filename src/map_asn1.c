@@ -97,8 +97,12 @@ PEP_STATUS add_sticky_bit_to_Identity(PEP_SESSION session, Identity_t *ident)
 
     bool _sticky = false;
     status = get_key_sticky_bit_for_user(session, user_id, fpr, &_sticky);
-    if (status)
-        goto error;
+    if (status) {
+        if (status == PEP_KEY_NOT_FOUND)
+            _sticky = false;
+        else
+            goto error;
+    }
 
     *sticky = _sticky;
 
