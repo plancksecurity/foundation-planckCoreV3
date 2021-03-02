@@ -188,6 +188,7 @@ PEP_STATUS set_new_own_key_if_not_sticky(PEP_SESSION session, Identity_t *ident)
 
     pEp_identity *_new = NULL;
     pEp_identity *_old = NULL;
+    char *own_user_id = NULL;
 
     _new = Identity_to_Struct(ident, NULL);
     if (!_new)
@@ -209,7 +210,11 @@ PEP_STATUS set_new_own_key_if_not_sticky(PEP_SESSION session, Identity_t *ident)
 
             bool old_is_sticky = false;
             if (!EMPTYSTR(_old->fpr)) {
-                status = get_key_sticky_bit_for_user(session, _old->user_id, _old->fpr, &old_is_sticky);
+                status = get_default_own_userid(session, &own_user_id);
+                if (status)
+                    goto error;
+
+                status = get_key_sticky_bit_for_user(session, own_user_id, _old->fpr, &old_is_sticky);
                 if (status) {
                     if (status == PEP_KEY_NOT_FOUND) {
                         old_is_sticky = false;
@@ -235,6 +240,7 @@ PEP_STATUS set_new_own_key_if_not_sticky(PEP_SESSION session, Identity_t *ident)
 
     free_identity(_new);
     free_identity(_old);
+    free(own_user_id);
 
     return PEP_STATUS_OK;
 
@@ -244,6 +250,7 @@ enomem:
 error:
     free_identity(_new);
     free_identity(_old);
+    free(own_user_id);
 
     return status;
 }
