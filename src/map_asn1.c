@@ -192,6 +192,7 @@ PEP_STATUS set_new_own_key_if_not_sticky(PEP_SESSION session, Identity_t *ident)
     _new = Identity_to_Struct(ident, NULL);
     if (!_new)
         goto enomem;
+    bool new_is_sticky = ident->sticky && *ident->sticky;
 
     if (EMPTYSTR(_new->address) || EMPTYSTR(_new->user_id) || EMPTYSTR(_new->fpr)) {
         status = PEP_ILLEGAL_VALUE;
@@ -202,31 +203,31 @@ PEP_STATUS set_new_own_key_if_not_sticky(PEP_SESSION session, Identity_t *ident)
     switch (status) {
         case PEP_STATUS_OK: {
             if (!EMPTYSTR(_old->fpr)) {
-                if (strcasecmp(_new->fpr, _old->fpr) == 0)
+                if (!new_is_sticky && strcasecmp(_new->fpr, _old->fpr) == 0)
                     break;
             }
 
             bool old_is_sticky = false;
-            status = get_key_sticky_bit_for_user(session, _old->user_id, _old->fpr, &old_is_sticky);
-            if (status) {
-                if (status == PEP_KEY_NOT_FOUND) {
-                    old_is_sticky = false;
-                    status = PEP_STATUS_OK;
+            if (!EMPTYSTR(_old->fpr)) {
+                status = get_key_sticky_bit_for_user(session, _old->user_id, _old->fpr, &old_is_sticky);
+                if (status) {
+                    if (status == PEP_KEY_NOT_FOUND) {
+                        old_is_sticky = false;
+                        status = PEP_STATUS_OK;
+                    }
+                    else {
+                        goto error;
+                    }
                 }
-                else {
-                    goto error;
-                }
+                if (old_is_sticky)
+                    break;
             }
-            if (old_is_sticky)
-                break;
         }
-                    
-        case PEP_CANNOT_FIND_IDENTITY: {
-            bool new_is_sticky = ident->sticky && *ident->sticky;
+
+        case PEP_CANNOT_FIND_IDENTITY:
             status = set_own_imported_key(session, _old, _new->fpr, new_is_sticky);
             if (status)
                 goto error;
-        }
 
         default:
             goto error;
