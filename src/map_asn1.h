@@ -80,8 +80,8 @@ pEp_identity *Identity_to_Struct(Identity_t *ident, pEp_identity *result);
  *  
  *  params:
  *  session (in)        pEp session to use
- *  ident (in)          Identity_t to set own key; ident->address,
- *                      ident->user_id and ident->fpr must be set
+ *  ident (in)          Identity_t to set own key; ident->address and
+ *                      ident->fpr must be set
  *  
  *  @retval pointer to updated or allocated result
  *  

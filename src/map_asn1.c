@@ -195,12 +195,16 @@ PEP_STATUS set_new_own_key_if_not_sticky(PEP_SESSION session, Identity_t *ident)
         goto enomem;
     bool new_is_sticky = ident->sticky && *ident->sticky;
 
-    if (EMPTYSTR(_new->address) || EMPTYSTR(_new->user_id) || EMPTYSTR(_new->fpr)) {
+    if (EMPTYSTR(_new->address) || EMPTYSTR(_new->fpr)) {
         status = PEP_ILLEGAL_VALUE;
         goto error;
     }
 
-    status = get_identity(session, _new->address, _new->user_id, &_old);
+    status = get_default_own_userid(session, &own_user_id);
+    if (status)
+        goto error;
+
+    status = get_identity(session, _new->address, own_user_id, &_old);
     switch (status) {
         case PEP_STATUS_OK: {
             if (!EMPTYSTR(_old->fpr)) {
@@ -210,10 +214,6 @@ PEP_STATUS set_new_own_key_if_not_sticky(PEP_SESSION session, Identity_t *ident)
 
             bool old_is_sticky = false;
             if (!EMPTYSTR(_old->fpr)) {
-                status = get_default_own_userid(session, &own_user_id);
-                if (status)
-                    goto error;
-
                 status = get_key_sticky_bit_for_user(session, own_user_id, _old->fpr, &old_is_sticky);
                 if (status) {
                     if (status == PEP_KEY_NOT_FOUND) {
