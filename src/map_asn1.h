@@ -39,6 +39,22 @@ Identity_t *Identity_from_Struct(
 
 
 /**
+ *  <!--       add_sticky_bit_to_Identity()     -->
+ *  
+ *  @brief retrieve the sticky bit of a key for sending with Identity
+ *  
+ *  params:
+ *  session (in)        pEp session to use
+ *  ident (inout)       Identity_t to convert
+ *  
+ *  @retval error status
+ *  
+ */
+
+PEP_STATUS add_sticky_bit_to_Identity(PEP_SESSION session, Identity_t *ident);
+
+
+/**
  *  <!--       Identity_to_Struct()       -->
  *  
  *  @brief Convert ASN.1 Identity_t into pEp_identity

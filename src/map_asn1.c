@@ -72,6 +72,52 @@ enomem:
     return NULL;
 }
 
+PEP_STATUS add_sticky_bit_to_Identity(PEP_SESSION session, Identity_t *ident)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    char *fpr = NULL;
+    char *user_id = NULL;
+    BOOLEAN_t *sticky = NULL;
+
+    fpr = strndup((char *) ident->fpr.buf, ident->fpr.size);
+    assert(fpr);
+    if (!fpr)
+        goto enomem;
+
+    user_id = strndup((char *) ident->user_id.buf, ident->user_id.size);
+    assert(user_id);
+    if (!user_id)
+        goto enomem;
+
+    sticky = (BOOLEAN_t *) calloc(1, sizeof(BOOLEAN_t));
+    assert(sticky);
+    if (!sticky)
+        goto enomem;
+
+    bool _sticky = false;
+    status = get_key_sticky_bit_for_user(session, user_id, fpr, &_sticky);
+    if (status)
+        goto error;
+
+    *sticky = _sticky;
+
+    ident->sticky = sticky;
+    free(fpr);
+    free(user_id);
+
+    return PEP_STATUS_OK;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+error:
+    free(fpr);
+    free(user_id);
+    free(sticky);
+    return status;
+}
+
 pEp_identity *Identity_to_Struct(Identity_t *ident, pEp_identity *result)
 {
     bool allocated = !result;
