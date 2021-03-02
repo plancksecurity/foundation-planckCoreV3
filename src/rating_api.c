@@ -92,7 +92,11 @@ DYNAMIC_API PEP_STATUS rating_of_new_channel(
     if (!(session && ident && rating))
         return PEP_ILLEGAL_VALUE;
 
-    PEP_STATUS status = update_identity(session, ident);
+    PEP_STATUS status = PEP_STATUS_OK;
+    if (ident->me)
+        status = myself(session, ident);
+    else
+        status = update_identity(session, ident);
     if (status)
         return status;
 
@@ -186,16 +190,9 @@ DYNAMIC_API PEP_STATUS rating_of_existing_channel(
 
     *rating = PEP_rating_undefined;
 
-    if (EMPTYSTR(ident->user_id)) {
-        free(ident->user_id);
-        ident->user_id = malloc(strlen(ident->address) + 7);
-        assert(ident->user_id);
-        if (!ident->user_id)
-            return PEP_OUT_OF_MEMORY;
-        int r = snprintf(ident->user_id, strlen(ident->address) + 6, "TOFU_%s",
-                ident->address);
-        if (r<0)
-            return PEP_OUT_OF_MEMORY;
+    if (EMPTYSTR(ident->fpr)) {
+        *rating = PEP_rating_have_no_key;
+        return PEP_STATUS_OK;
     }
 
     PEP_rating keyrating = PEP_rating_undefined;
@@ -419,7 +416,7 @@ the_end:
     return status;
 }
 
-static PEP_STATUS incoming_message_rating_for_identities(
+static PEP_STATUS message_rating_for_identities(
         PEP_SESSION session,
         const message *msg,
         PEP_rating *rating
@@ -429,11 +426,20 @@ static PEP_STATUS incoming_message_rating_for_identities(
     if (!(session && msg && msg->from && rating))
         return PEP_ILLEGAL_VALUE;
 
-    if (msg->dir != PEP_dir_incoming)
-        return PEP_ILLEGAL_VALUE;
-
     PEP_STATUS status = PEP_STATUS_OK;
     *rating = PEP_rating_undefined;
+
+    if (msg->dir == PEP_dir_incoming) {
+        if (msg->from->me)
+            status = myself(session, msg->from);
+        else
+            status = update_identity(session, msg->from);
+    }
+    else {
+        status = myself(session, msg->from);
+    }
+    if (status)
+        return status;
 
     PEP_rating from_rating = rating_from_comm_type(msg->from->comm_type);
     if (!from_rating)
@@ -457,19 +463,25 @@ static PEP_STATUS sender_fpr_rating(
         PEP_rating *rating
     )
 {
-    assert(session && from && rating);
-    if (!(session && from && rating))
+    assert(session && rating);
+    if (!(session && rating))
         return PEP_ILLEGAL_VALUE;
 
     PEP_STATUS status = PEP_STATUS_OK;
     PEP_rating _rating = PEP_rating_undefined;
 
-    if (EMPTYSTR(sender_fpr)) {
+    if (!from) {
+        _rating = PEP_rating_unreliable;
+    }
+    else if (EMPTYSTR(sender_fpr)) {
         _rating = PEP_rating_unreliable;   
     }
     else {
         if (EMPTYSTR(from->user_id)) {
-            status = update_identity(session, from);
+            if (from->me)
+                status = myself(session, from);
+            else
+                status = update_identity(session, from);
             if (status)
                 return status;
         }
@@ -494,7 +506,7 @@ static PEP_STATUS incoming_message_crypto_rating(
     if (!(session && src && rating))
         return PEP_ILLEGAL_VALUE;
 
-    if (!src->from || src->dir != PEP_dir_incoming)
+    if (src->dir != PEP_dir_incoming)
         return PEP_ILLEGAL_VALUE;
 
     if (src->enc_format != PEP_enc_none && !dst) {
@@ -564,7 +576,8 @@ PEP_rating decrypt_rating(PEP_STATUS status)
         return PEP_rating_unreliable;
 
     case PEP_DECRYPTED_AND_VERIFIED:
-        return PEP_rating_reliable;
+    case PEP_STATUS_OK:
+        return PEP_rating_trusted_and_anonymized;
 
     case PEP_DECRYPT_NO_KEY:
         return PEP_rating_have_no_key;
@@ -714,7 +727,68 @@ DYNAMIC_API PEP_STATUS incoming_message_rating(
     if (!(session && src && rating))
         return PEP_ILLEGAL_VALUE;
 
-    if (!src->from || src->dir != PEP_dir_incoming)
+    if (src->dir != PEP_dir_incoming)
+        return PEP_ILLEGAL_VALUE;
+
+    if (extra_keys && extra_keys->value) {
+        if (EMPTYSTR(extra_keys->value->key) ||
+                EMPTYSTR(extra_keys->value->value))
+            return PEP_ILLEGAL_VALUE;
+    }
+
+    *rating = PEP_rating_undefined;
+    PEP_rating _rating = decrypt_rating(decrypt_status);;
+
+    if (!dst) {
+        *rating = _rating;
+        return PEP_STATUS_OK;
+    }
+
+    if (session->honor_extra_keys == PEP_honor_none) {
+        if (extra_keys && extra_keys->value) {
+            _rating = add_rating(_rating, PEP_rating_unreliable);
+        }
+        else if (known_keys && known_keys->value) {
+            if (!all_known_keys_are_legit(dst, known_keys))
+                _rating = add_rating(_rating, PEP_rating_unreliable);
+        }
+    }
+
+    PEP_rating crypto_rating = PEP_rating_undefined;
+    PEP_STATUS status = incoming_message_crypto_rating(session, src, dst,
+            &crypto_rating);
+    if (status)
+        return status;
+    _rating = add_rating(_rating, crypto_rating);
+
+    if (dst) {
+        PEP_rating identities_rating = PEP_rating_undefined;
+        status = message_rating_for_identities(session, dst,
+                &identities_rating);
+        if (status)
+            return status;
+        _rating = add_rating(_rating, identities_rating);
+    }
+
+    *rating = _rating;
+    return PEP_STATUS_OK;
+}
+
+DYNAMIC_API PEP_STATUS sent_message_rating(
+        PEP_SESSION session,
+        const message *src,
+        const message *dst,
+        const stringlist_t *known_keys,
+        const stringpair_list_t *extra_keys,
+        PEP_STATUS decrypt_status,
+        PEP_rating *rating
+    )
+{
+    assert(session && src && src->from && rating);
+    if (!(session && src && src->from && rating))
+        return PEP_ILLEGAL_VALUE;
+
+    if (src->dir != PEP_dir_outgoing)
         return PEP_ILLEGAL_VALUE;
 
     if (extra_keys && extra_keys->value) {
@@ -745,7 +819,7 @@ DYNAMIC_API PEP_STATUS incoming_message_rating(
 
     if (dst) {
         PEP_rating identities_rating = PEP_rating_undefined;
-        status = incoming_message_rating_for_identities(session, dst,
+        status = message_rating_for_identities(session, dst,
                 &identities_rating);
         if (status)
             return status;

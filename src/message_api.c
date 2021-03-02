@@ -5159,8 +5159,11 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                                          rating, flags, NULL,
                                          &imported_key_fprs, &changed_key_bitvec);
 
-    PEP_rating ratingr = PEP_rating_undefined;
-    PEP_STATUS status2 = incoming_message_rating(session, src, *dst, *keylist, NULL, status, &ratingr);
+    if (src->dir == PEP_dir_incoming) {
+        PEP_rating rating2;
+        PEP_STATUS status2 = incoming_message_rating(session, src, *dst, *keylist, NULL, status, rating);
+        assert(status2 != PEP_ILLEGAL_VALUE);
+    }
 
     message *msg = *dst ? *dst : src;
 

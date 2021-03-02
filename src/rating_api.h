@@ -297,6 +297,45 @@ DYNAMIC_API PEP_STATUS incoming_message_rating(
     );
 
 
+/**
+ *  <!--       sent_message_rating()       -->
+ *
+ *  @brief Get rating of a message, which was encrypted to be sent
+ *
+ *  @param[in]   session            session handle
+ *  @param[in]   src                encrypted version of message to get the rating for
+ *  @param[in]   dst                decrypted version of message to get the rating for
+ *  @param[in]   known_keys         list of fprs of keys known to be used to encrypt src
+ *  @param[in]   extra_keys         extra keys declared by the sender
+ *  @param[in]   decrypt_status     return value of decrypt_and_verify()
+ *  @param[out]  rating             rating for the message
+ *
+ *  @retval error status or PEP_STATUS_OK on success
+ *
+ *  @warning src->from must point to a valid pEp_identity
+ *           src->dir must be PEP_dir_outgoing
+ *           src->enc_format must be set to the actual encryption format
+ *           dst->_sender_fpr must be set if available
+ *           dst->to[*].fpr and dst[*].fpr should be set to the keys used for
+ *           recipients, respectively
+ *           extra_keys are pairs (name, fpr)
+ *           decrypt_status must be PEP_VERFIY_DIFFERENT_KEYS in case of a
+ *           partitioned format and there is no guarantee that the sender key
+ *           was being used to sign all partitions
+ *
+ */
+
+DYNAMIC_API PEP_STATUS sent_message_rating(
+        PEP_SESSION session,
+        const message *src,
+        const message *dst,
+        const stringlist_t *known_keys,
+        const stringpair_list_t *extra_keys,
+        PEP_STATUS decrypt_status,
+        PEP_rating *rating
+    );
+
+
 #ifdef __cplusplus
 }
 #endif
