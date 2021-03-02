@@ -45,7 +45,8 @@ Identity_t *Identity_from_Struct(
  *  
  *  params:
  *  session (in)        pEp session to use
- *  ident (inout)       Identity_t to convert
+ *  ident (inout)       Identity_t to convert; ident->user_id and ident->fpr
+ *                      must be set
  *  
  *  @retval error status
  *  

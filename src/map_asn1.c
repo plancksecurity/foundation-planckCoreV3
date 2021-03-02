@@ -74,6 +74,10 @@ enomem:
 
 PEP_STATUS add_sticky_bit_to_Identity(PEP_SESSION session, Identity_t *ident)
 {
+    assert(session && ident);
+    if (!(session && ident))
+        return PEP_ILLEGAL_VALUE;
+
     PEP_STATUS status = PEP_STATUS_OK;
 
     char *fpr = NULL;
