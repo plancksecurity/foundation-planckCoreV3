@@ -201,8 +201,17 @@ PEP_STATUS set_new_own_key_if_not_sticky(PEP_SESSION session, Identity_t *ident)
     }
 
     status = get_default_own_userid(session, &own_user_id);
-    if (status)
-        goto error;
+    if (status) {
+        if (status == PEP_CANNOT_FIND_IDENTITY) {
+            own_user_id = strdup(PEP_OWN_USERID);
+            assert(own_user_id);
+            if (!own_user_id)
+                goto enomem;
+        }
+        else {
+            goto error;
+        }
+    }
 
     status = get_identity(session, _new->address, own_user_id, &_old);
     switch (status) {
