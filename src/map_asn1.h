@@ -74,6 +74,25 @@ pEp_identity *Identity_to_Struct(Identity_t *ident, pEp_identity *result);
 
 
 /**
+ *  <!--       set_new_own_key_if_not_sticky()       -->
+ *  
+ *  @brief set a new own key if the old one is not sticky
+ *  
+ *  params:
+ *  session (in)        pEp session to use
+ *  ident (in)          Identity_t to set own key; ident->address,
+ *                      ident->user_id and ident->fpr must be set
+ *  
+ *  @retval pointer to updated or allocated result
+ *  
+ *  @warning if a new struct is allocated, the ownership goes to the caller
+ *  
+ */
+
+PEP_STATUS set_new_own_key_if_not_sticky(PEP_SESSION session, Identity_t *ident);
+
+
+/**
  *  <!--       IdentityList_from_identity_list()       -->
  *  
  *  @brief Convert identity_list_t into ASN.1 IdentityList_t

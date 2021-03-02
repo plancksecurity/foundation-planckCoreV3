@@ -178,6 +178,78 @@ enomem:
     return NULL;
 }
 
+PEP_STATUS set_new_own_key_if_not_sticky(PEP_SESSION session, Identity_t *ident)
+{
+    assert(session && ident);
+    if (!(session && ident))
+        return PEP_ILLEGAL_VALUE;
+
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    pEp_identity *_new = NULL;
+    pEp_identity *_old = NULL;
+
+    _new = Identity_to_Struct(ident, NULL);
+    if (!_new)
+        goto enomem;
+
+    if (EMPTYSTR(_new->address) || EMPTYSTR(_new->user_id) || EMPTYSTR(_new->fpr)) {
+        status = PEP_ILLEGAL_VALUE;
+        goto error;
+    }
+
+    status = get_identity(session, _new->address, _new->user_id, &_old);
+    switch (status) {
+        case PEP_STATUS_OK: {
+            if (!EMPTYSTR(_old->fpr)) {
+                if (strcasecmp(_new->fpr, _old->fpr) == 0)
+                    break;
+            }
+
+            bool old_is_sticky;
+            status = get_key_sticky_bit_for_user(session, _old->user_id, _old->fpr, &old_is_sticky);
+            if (status) {
+                if (status == PEP_KEY_NOT_FOUND) {
+                    old_is_sticky = false;
+                    status = PEP_STATUS_OK;
+                }
+                else {
+                    goto error;
+                }
+            }
+            if (!old_is_sticky) {
+                status = set_own_key(session, _old, _new->fpr);
+                if (status)
+                    goto error;
+            }
+            break;
+        }
+                    
+        case PEP_CANNOT_FIND_IDENTITY:
+            status = set_own_key(session, _old, _new->fpr);
+            if (status)
+                goto error;
+            break;
+
+        default:
+            goto error;
+    }
+
+    free_identity(_new);
+    free_identity(_old);
+
+    return PEP_STATUS_OK;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+error:
+    free_identity(_new);
+    free_identity(_old);
+
+    return status;
+}
+
 IdentityList_t *IdentityList_from_identity_list(
         const identity_list *list,
         IdentityList_t *result

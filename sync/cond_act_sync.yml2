@@ -386,6 +386,13 @@ action prepareOwnKeys
 
     IdentityList_from_identity_list(il, &session->sync_state.keysync.ownIdentities);
     free_identity_list(il);
+
+    for (int i=0; i<session->sync_state.keysync.ownIdentities.list.count; ++i) {
+        status = add_sticky_bit_to_Identity(session,
+                session->sync_state.keysync.ownIdentities.list.array[i]);
+        if (status)
+            break;
+    }
 ||
 
 action saveGroupKeys
