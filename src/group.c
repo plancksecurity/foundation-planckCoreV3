@@ -9,6 +9,208 @@
 #include "map_asn1.h"
 #include "baseprotocol.h"
 
+// ** Static functions
+
+static PEP_STATUS _build_managed_group_message_payload(PEP_SESSION session,
+                                                       const pEp_identity* group_identity,
+                                                       const pEp_identity* manager,
+                                                       char** data, size_t* size,
+                                                       ManagedGroup_PR managed_group_msg_type
+) {
+    // Ok, let's get the payload set up
+    Distribution_t *outdist = (Distribution_t *) calloc(1, sizeof(Distribution_t));
+    if (!outdist)
+        return PEP_OUT_OF_MEMORY;
+
+    outdist->present = Distribution_PR_managedgroup;
+    outdist->choice.managedgroup.present = managed_group_msg_type;
+
+    Identity_t* group_identity_Ident = NULL;
+    Identity_t* other_identity_Ident = NULL;
+
+    switch (managed_group_msg_type) {
+        case ManagedGroup_PR_groupCreate:
+            group_identity_Ident = &(outdist->choice.managedgroup.choice.groupCreate.groupIdentity);
+            other_identity_Ident = &(outdist->choice.managedgroup.choice.groupCreate.manager);
+            break;
+        case ManagedGroup_PR_groupDissolve:
+            group_identity_Ident = &(outdist->choice.managedgroup.choice.groupDissolve.groupIdentity);
+            other_identity_Ident = &(outdist->choice.managedgroup.choice.groupDissolve.manager);
+            break;
+        case ManagedGroup_PR_groupAdopted:
+            group_identity_Ident = &(outdist->choice.managedgroup.choice.groupAdopted.groupIdentity);
+            other_identity_Ident = &(outdist->choice.managedgroup.choice.groupAdopted.member);
+            break;
+        default:
+            return PEP_ILLEGAL_VALUE;
+    }
+    // We don't free anything here because PEP_OUT_OF_MEMORY is always fatal up the stack
+    if (!Identity_from_Struct(group_identity, group_identity_Ident))
+        return PEP_OUT_OF_MEMORY;
+    if (!Identity_from_Struct(manager, other_identity_Ident))
+        return PEP_OUT_OF_MEMORY;
+
+    // Man, I hope this is it.
+    char *_data = NULL;
+    size_t _size = 0;
+    PEP_STATUS status = encode_Distribution_message(outdist, &_data, &_size);
+
+    if (status != PEP_STATUS_OK) {
+        free(_data);
+        _size = 0;
+        goto pEp_free;
+    }
+
+    *data = _data;
+    *size = _size;
+
+pEp_free:
+    return status;
+}
+
+static PEP_STATUS _create_and_send_managed_group_message(PEP_SESSION session,
+                                                         pEp_identity* from,
+                                                         pEp_identity* recip,
+                                                         char* data,
+                                                         size_t size,
+                                                         bloblist_t* attachments
+) {
+
+    if (!session || !from || !recip || EMPTYSTR(from->user_id) || EMPTYSTR(from->address) ||
+        EMPTYSTR(recip->user_id) || EMPTYSTR(recip->address))
+        return PEP_ILLEGAL_VALUE;
+
+    if (EMPTYSTR(from->fpr))
+        return PEP_ILLEGAL_VALUE;
+
+    message* msg = NULL;
+    message* enc_msg = NULL;
+
+    PEP_STATUS status = base_prepare_message(session, from, recip, BASE_DISTRIBUTION,
+                                             data, size, from->fpr, &msg);
+
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
+
+    // Fatal, bail
+    if (!msg)
+        return PEP_OUT_OF_MEMORY;
+
+    if (!msg->attachments) {
+        status = PEP_UNKNOWN_ERROR;
+        goto pEp_error;
+    }
+
+    if (attachments)
+        msg->attachments = bloblist_join(msg->attachments, attachments);
+
+    // encrypt this baby and get out
+    // extra keys???
+    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_auto, 0); // FIXME
+
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
+
+    _add_auto_consume(enc_msg);
+
+    // insert into queue
+    status = session->messageToSend(enc_msg);
+
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
+
+    free_message(msg);
+    msg = NULL;
+
+pEp_error:
+    free(msg);
+    return status;
+}
+
+static PEP_STATUS _send_managed_group_message_to_list(PEP_SESSION session,
+                                                      pEp_group* group,
+                                                      ManagedGroup_PR message_type) {
+    if (!session->messageToSend)
+        return PEP_SEND_FUNCTION_NOT_REGISTERED;
+
+    if (!session || !group || !group->group_identity || !group->manager)
+        return PEP_ILLEGAL_VALUE;
+
+    if (EMPTYSTR(group->group_identity->user_id) ||
+        EMPTYSTR(group->group_identity->address)  ||
+        EMPTYSTR(group->manager->user_id) ||
+        EMPTYSTR(group->manager->address)) {
+        return PEP_ILLEGAL_VALUE;
+    }
+
+    if (!is_me(session, group->manager))
+        return PEP_ILLEGAL_VALUE;
+
+    char *_data = NULL;
+    size_t _size = 0;
+
+    // Ok, let's get the payload set up, because we can duplicate this for each message.
+    PEP_STATUS status = _build_managed_group_message_payload(session, group->group_identity,
+                                                             group->manager, &_data, &_size,
+                                                             message_type);
+
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    // Let's also get the private key for the group we want to distribute and set up a bloblist element to
+    // dup
+    char* key_material_priv = NULL;
+    size_t key_material_size = 0;
+
+    status = export_secret_key(session, group->group_identity->fpr, &key_material_priv, &key_material_size);
+    if (status != PEP_STATUS_OK)
+        return status;
+    if (key_material_size == 0 || !key_material_priv)
+        return PEP_UNKNOWN_ERROR;
+
+    bloblist_t* keycopyblob = new_bloblist(key_material_priv, key_material_size,
+                                           "application/pgp-keys",
+                                           "file://pEpkey_group_priv.asc");
+
+    // Ok, for every member in the member list, send away.
+    // (We'll copy in for now. It's small and quick.)
+    member_list* curr_member = NULL;
+
+    message* msg = NULL;
+
+    for (curr_member = group->members; curr_member && curr_member->member && curr_member->member->ident; curr_member = curr_member->next) {
+        pEp_identity* recip = curr_member->member->ident; // This will be duped in base_prepare_message
+        PEP_rating recip_rating;
+        status = identity_rating(session, recip, &recip_rating);
+        if (status != PEP_STATUS_OK)
+            goto pEp_error;
+        if (recip_rating < PEP_rating_reliable)
+            continue;
+
+        // Copy the data to send in as an argument
+        char* data_copy = (char*)malloc(_size);
+        if (!data_copy)
+            return PEP_OUT_OF_MEMORY;
+        memcpy(data_copy, _data, _size);
+
+        bloblist_t* key_attachment = bloblist_dup(keycopyblob);
+
+        // encrypt and send this baby and get out
+        status = _create_and_send_managed_group_message(session, group->manager, recip, data_copy, _size, key_attachment);
+
+        if (status != PEP_STATUS_OK)
+            goto pEp_error;
+
+        free_message(msg);
+        msg = NULL;
+    }
+
+pEp_error:
+    return status;
+}
+
+
+//
 
 pEp_member *new_member(pEp_identity *ident) {
     if (!ident)
@@ -254,7 +456,6 @@ PEP_STATUS create_group_entry(PEP_SESSION session,
     return PEP_STATUS_OK;
 }
 
-// FIXME: group_ident_clone on error
 PEP_STATUS group_create(
         PEP_SESSION session,
         pEp_identity *group_identity,
@@ -269,6 +470,9 @@ PEP_STATUS group_create(
         return PEP_ILLEGAL_VALUE;
 
     PEP_STATUS status = PEP_STATUS_OK;
+    pEp_group* _group = NULL;
+    pEp_identity* group_ident_clone = NULL;
+    pEp_identity* manager_clone = NULL;
 
     if (!group_identity->user_id || !is_me(session, group_identity)) {
         char* own_id = NULL;
@@ -292,14 +496,16 @@ PEP_STATUS group_create(
         return PEP_GROUP_EXISTS;
 
     // from here on out: group_identity still belongs to the caller. So we dup it.
-    pEp_identity* group_ident_clone = identity_dup(group_identity);
+    group_ident_clone = identity_dup(group_identity);
+    manager_clone = identity_dup(manager);
+
     if (!group_ident_clone)
         return PEP_OUT_OF_MEMORY;
 
     // set it as a group_identity
     status = set_identity_flags(session, group_ident_clone, group_ident_clone->flags | PEP_idf_group_ident);
     if (status != PEP_STATUS_OK)
-        return status;
+        goto pEp_error;
 
     // update the manager ident
     if (is_me(session, manager))
@@ -307,13 +513,15 @@ PEP_STATUS group_create(
     else
         status = update_identity(session, manager);
     if (status != PEP_STATUS_OK)
-        return status;
+        goto pEp_error;
 
-    if (manager->flags & PEP_idf_group_ident)
-        return PEP_ILLEGAL_VALUE;
+    if (manager->flags & PEP_idf_group_ident) {
+        status = PEP_ILLEGAL_VALUE;
+        goto pEp_error;
+    }
 
     // Ok, we're ready to do DB stuff. Do some allocation:
-    pEp_group* _group = new_group(group_ident_clone, manager, memberlist);
+    _group = new_group(group_ident_clone, manager_clone, memberlist);
     if (!_group)
         return PEP_OUT_OF_MEMORY;
 
@@ -332,7 +540,7 @@ PEP_STATUS group_create(
             status = update_identity(session, member);
 
         if (status != PEP_STATUS_OK)
-            return status;
+            goto pEp_error;
     }
 
     sqlite3_exec(session->db, "BEGIN TRANSACTION ;", NULL, NULL, NULL);
@@ -358,11 +566,11 @@ PEP_STATUS group_create(
                     status = group_add_member(session, group_ident_clone, member);
                     if (status == PEP_STATUS_OK) {
                         if (is_me(session, member)) {
-                            status = add_own_membership_entry(session, _group, member);
+                            status = add_own_membership_entry(session, group_ident_clone, manager, member);
                         }
                     }
                     if (status != PEP_STATUS_OK)
-                        goto pEp_free;
+                        goto pEp_error;
                 }
             }
         }
@@ -371,24 +579,27 @@ PEP_STATUS group_create(
 
     if (status != PEP_STATUS_OK) {
         sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
-        goto pEp_free;
+        goto pEp_error;
     }
     sqlite3_exec(session->db, "COMMIT ;", NULL, NULL, NULL);
 
     // Ok, mail em.
     if (is_me(session, manager)) {
-        status = send_GroupCreate(session, _group);
+        status = _send_managed_group_message_to_list(session, _group, ManagedGroup_PR_groupCreate);
     }
-    // FIXME: What do we do with failure?
 
     if (group)
         *group = _group;
     else
         free_group(_group);
 
-    return PEP_STATUS_OK;
+    return status;
 
-pEp_free:
+pEp_error:
+    if (!_group) {
+        free_identity(group_ident_clone);
+        free_identity(manager_clone);
+    }
     free_group(_group);
     *group = NULL;
     return status;
@@ -396,15 +607,16 @@ pEp_free:
 
 // This presumes these values have been checked!!!!!!!!
 PEP_STATUS add_own_membership_entry(PEP_SESSION session,
-                                    pEp_group* group,
+                                    pEp_identity* group_identity,
+                                    pEp_identity* manager,
                                     pEp_identity* own_identity_recip) {
-    if (!session || !group || !group->group_identity || !group->manager || !own_identity_recip)
+    if (!session || !group_identity || !manager || !own_identity_recip)
         return PEP_ILLEGAL_VALUE;
 
-    if (EMPTYSTR(group->group_identity->user_id) || EMPTYSTR(group->group_identity->address))
+    if (EMPTYSTR(group_identity->user_id) || EMPTYSTR(group_identity->address))
         return PEP_ILLEGAL_VALUE;
 
-    if (EMPTYSTR(group->manager->user_id) || EMPTYSTR(group->manager->address))
+    if (EMPTYSTR(manager->user_id) || EMPTYSTR(manager->address))
         return PEP_ILLEGAL_VALUE;
 
     if (EMPTYSTR(own_identity_recip->user_id) || EMPTYSTR(own_identity_recip->address))
@@ -412,9 +624,9 @@ PEP_STATUS add_own_membership_entry(PEP_SESSION session,
 
     int result = 0;
 
-    sqlite3_bind_text(session->add_own_membership_entry, 1, group->group_identity->user_id, -1,
+    sqlite3_bind_text(session->add_own_membership_entry, 1, group_identity->user_id, -1,
                       SQLITE_STATIC);
-    sqlite3_bind_text(session->add_own_membership_entry, 2, group->group_identity->address, -1,
+    sqlite3_bind_text(session->add_own_membership_entry, 2, group_identity->address, -1,
                       SQLITE_STATIC);
     sqlite3_bind_text(session->add_own_membership_entry, 3, own_identity_recip->user_id, -1,
                       SQLITE_STATIC);
@@ -730,7 +942,7 @@ PEP_STATUS group_dissolve(
         if (!list)
             return PEP_OUT_OF_MEMORY;
 
-        status = send_GroupDissolve(session, group);
+        status = _send_managed_group_message_to_list(session, group, ManagedGroup_PR_groupDissolve);
         if (status != PEP_STATUS_OK)
             return status; // fixme
 
@@ -780,6 +992,71 @@ PEP_STATUS group_dissolve(
         }
     }
 
+    return status;
+}
+
+PEP_STATUS group_invite_member(
+        PEP_SESSION session,
+        pEp_identity *group_identity,
+        pEp_identity *group_member
+) {
+    if (!session || !group_identity || !group_member)
+        return PEP_ILLEGAL_VALUE;
+
+    PEP_STATUS status = PEP_STATUS_OK;
+    pEp_identity* manager = NULL;
+    status = get_group_manager(session, group_identity, &manager);
+    if (status != PEP_STATUS_OK)
+        return status;
+    if (!manager)
+        return PEP_OUT_OF_MEMORY; // ??
+
+    status = group_add_member(session, group_identity, group_member);
+    if (status == PEP_STATUS_OK) {
+        if (is_me(session, group_member)) {
+            status = add_own_membership_entry(session, group_identity, manager, group_member);
+            if (status == PEP_STATUS_OK)
+                status = join_group(session, group_identity, group_member);
+        }
+        else {
+            pEp_identity* manager = NULL;
+            char* data = NULL;
+            size_t size = 0;
+
+            status = _build_managed_group_message_payload(session, group_identity,
+                                                          manager, &data, &size,
+                                                          ManagedGroup_PR_groupCreate);
+
+            if (status != PEP_STATUS_OK)
+                return status;
+
+            // Let's also get the private key for the group we want to distribute
+            char* key_material_priv = NULL;
+            size_t key_material_size = 0;
+
+            status = export_secret_key(session, group_identity->fpr, &key_material_priv, &key_material_size);
+            if (status != PEP_STATUS_OK)
+                return status;
+            if (key_material_size == 0 || !key_material_priv)
+                return PEP_UNKNOWN_ERROR;
+
+            bloblist_t* key_attachment = new_bloblist(key_material_priv, key_material_size,
+                                                      "application/pgp-keys",
+                                                      "file://pEpkey_group_priv.asc");
+
+            PEP_rating recip_rating;
+            status = identity_rating(session, group_member, &recip_rating);
+            if (status == PEP_STATUS_OK) {
+                if (recip_rating < PEP_rating_reliable)
+                    return PEP_CANNOT_ADD_GROUP_MEMBER;
+
+                // encrypt and send this baby and get out
+                // FIXME: mem?
+                status = _create_and_send_managed_group_message(session, manager, group_member, data, size,
+                                                                key_attachment);
+            }
+        }
+    }
     return status;
 }
 
@@ -952,7 +1229,7 @@ PEP_STATUS retrieve_active_member_list(
     }
 
     *mbr_list = retval;
-    
+
     return PEP_STATUS_OK;
 }
 
@@ -1037,262 +1314,10 @@ PEP_STATUS exists_group(
     return status;
 }
 
-
-// member list is updated PRIOR to call.
-PEP_STATUS send_GroupCreate(PEP_SESSION session, pEp_group* group) {
-    if (!session->messageToSend)
-        return PEP_SEND_FUNCTION_NOT_REGISTERED;
-
-    if (!session || !group || !group->group_identity || !group->manager)
-        return PEP_ILLEGAL_VALUE;
-
-    if (EMPTYSTR(group->group_identity->user_id) ||
-        EMPTYSTR(group->group_identity->address)  ||
-        EMPTYSTR(group->manager->user_id) ||
-        EMPTYSTR(group->manager->address)) {
-        return PEP_ILLEGAL_VALUE;
-    }
-
-    if (!is_me(session, group->manager))
-        return PEP_ILLEGAL_VALUE;
-
-    message* enc_msg = NULL;
-
-    // Ok, let's get the payload set up, because we can duplicate this for each message.
-    Distribution_t* outdist = (Distribution_t *) calloc(1, sizeof(Distribution_t));
-    if (!outdist)
-        return PEP_OUT_OF_MEMORY;
-
-    outdist->present = Distribution_PR_managedgroup;
-    outdist->choice.managedgroup.present = ManagedGroup_PR_groupCreate;
-    GroupCreate_t* gc = &(outdist->choice.managedgroup.choice.groupCreate);
-
-    if (!Identity_from_Struct(group->group_identity, &gc->groupIdentity)) {
-        free(gc);
-        return PEP_OUT_OF_MEMORY;
-    }
-
-    if (!Identity_from_Struct(group->manager, &gc->manager)) {
-        free(gc);
-        return PEP_OUT_OF_MEMORY;
-    }
-
-    // Man, I hope this is it.
-    char *_data;
-    size_t _size;
-    PEP_STATUS status = encode_Distribution_message(outdist, &_data, &_size);
-    if (status != PEP_STATUS_OK)
-        return status; // FIXME - memory
-
-    // Ok, for every member in the member list, send away.
-    // (We'll copy in for now. It's small and quick.)
-    member_list* curr_invite = NULL;
-
-    message* msg = NULL;
-
-    char* key_material_priv = NULL;
-    size_t key_material_size = 0;
-
-    status = export_secret_key(session, group->group_identity->fpr, &key_material_priv, &key_material_size);
-    if (status != PEP_STATUS_OK)
-        return status;
-    if (key_material_size == 0 || !key_material_priv)
-        return PEP_UNKNOWN_ERROR;
-
-    for (curr_invite = group->members; curr_invite && curr_invite->member && curr_invite->member->ident; curr_invite = curr_invite->next) {
-        pEp_identity* recip = curr_invite->member->ident; // This will be duped in base_prepare_message
-        PEP_rating recip_rating;
-        status = identity_rating(session, recip, &recip_rating);
-        if (status != PEP_STATUS_OK)
-            goto pEp_error;
-        if (recip_rating < PEP_rating_reliable)
-            continue;
-
-        char* data_copy = (char*)malloc(_size);
-        if (!data_copy)
-            return PEP_OUT_OF_MEMORY;
-        memcpy(data_copy, _data, _size);
-
-        status = base_prepare_message(session, group->manager, recip, BASE_DISTRIBUTION,
-                                      data_copy, _size, group->manager->fpr, &msg);
-        if (status != PEP_STATUS_OK)
-            goto pEp_error;
-
-        if (!msg) {
-            status = PEP_OUT_OF_MEMORY;
-            goto pEp_error;
-        }
-        if (!msg->attachments) {
-            status = PEP_UNKNOWN_ERROR;
-            goto pEp_error;
-        }
-
-        char* key_material_copy = malloc(key_material_size);
-        if (!key_material_copy)
-            return PEP_OUT_OF_MEMORY;
-
-        memcpy(key_material_copy, key_material_priv, key_material_size);
-
-        bloblist_add(msg->attachments, key_material_copy, key_material_size, "application/pgp-keys",
-                                                                             "file://pEpkey_group_priv.asc");
-
-        // encrypt this baby and get out
-        // extra keys???
-        status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_auto, 0); // FIXME
-
-        if (status != PEP_STATUS_OK)
-            goto pEp_error;
-
-        _add_auto_consume(enc_msg);
-
-        // insert into queue
-        status = session->messageToSend(enc_msg);
-
-        if (status != PEP_STATUS_OK)
-            goto pEp_error;
-
-        free_message(msg);
-        msg = NULL;
-    }
-
-pEp_error:
-    return status;
-
-}
-
-// This ALREADY has a list of active members attached to the group by
-// group_dissolve. So don't do it again.
-PEP_STATUS send_GroupDissolve(PEP_SESSION session, pEp_group* group) {
-    if (!session->messageToSend)
-        return PEP_SEND_FUNCTION_NOT_REGISTERED;
-
-    if (!session || !group || !group->group_identity || !group->manager)
-        return PEP_ILLEGAL_VALUE;
-
-    if (EMPTYSTR(group->group_identity->user_id) ||
-        EMPTYSTR(group->group_identity->address)  ||
-        EMPTYSTR(group->manager->user_id) ||
-        EMPTYSTR(group->manager->address)) {
-        return PEP_ILLEGAL_VALUE;
-    }
-
-    if (!is_me(session, group->manager))
-        return PEP_ILLEGAL_VALUE;
-
-    message* enc_msg = NULL;
-
-    // Ok, let's get the payload set up, because we can duplicate this for each message.
-    Distribution_t* outdist = (Distribution_t *) calloc(1, sizeof(Distribution_t));
-    if (!outdist)
-        return PEP_OUT_OF_MEMORY;
-
-    outdist->present = Distribution_PR_managedgroup;
-    outdist->choice.managedgroup.present = ManagedGroup_PR_groupDissolve;
-    GroupDissolve_t* gd = &(outdist->choice.managedgroup.choice.groupDissolve);
-
-    if (!Identity_from_Struct(group->group_identity, &gd->groupIdentity)) {
-        free(gd);
-        return PEP_OUT_OF_MEMORY;
-    }
-
-    if (!Identity_from_Struct(group->manager, &gd->manager)) {
-        free(gd);
-        return PEP_OUT_OF_MEMORY;
-    }
-
-    // Man, I hope this is it.
-    char *_data;
-    size_t _size;
-    PEP_STATUS status = encode_Distribution_message(outdist, &_data, &_size);
-
-    if (status != PEP_STATUS_OK)
-        return status; // FIXME - memory
-
-    // Ok, for every member in the active member list, which came in attached to the group argument, send away.
-    member_list* list = group->members;
-    if (!list)
-        return PEP_STATUS_OK; // no members to send to
-
-    member_list* curr_mem = NULL;
-
-    message* msg = NULL;
-
-    char* key_material= NULL;
-    size_t key_material_size = 0;
-
-    // Get revocation
-    status = export_key(session, group->group_identity->fpr, &key_material, &key_material_size);
-    if (status != PEP_STATUS_OK)
-        return status;
-    if (key_material_size == 0 || !key_material)
-        return PEP_UNKNOWN_ERROR;
-
-    for (curr_mem = list; curr_mem && curr_mem->member && curr_mem->member->ident; curr_mem = curr_mem->next) {
-        pEp_identity* recip = curr_mem->member->ident; // This will be duped in base_prepare_message
-        PEP_rating recip_rating;
-        status = identity_rating(session, recip, &recip_rating);
-        if (status != PEP_STATUS_OK)
-            goto pEp_error;
-        if (recip_rating < PEP_rating_reliable)
-            continue;
-
-        char* data_copy = (char*)malloc(_size);
-        if (!data_copy)
-            return PEP_OUT_OF_MEMORY;
-        memcpy(data_copy, _data, _size);
-
-        status = base_prepare_message(session, group->manager, recip, BASE_DISTRIBUTION,
-                                      data_copy, _size, group->manager->fpr, &msg);
-        if (status != PEP_STATUS_OK)
-            goto pEp_error;
-
-        if (!msg) {
-            status = PEP_OUT_OF_MEMORY;
-            goto pEp_error;
-        }
-        if (!msg->attachments) {
-            status = PEP_UNKNOWN_ERROR;
-            goto pEp_error;
-        }
-
-        char* key_material_copy = malloc(key_material_size);
-        if (!key_material_copy)
-            return PEP_OUT_OF_MEMORY;
-
-        memcpy(key_material_copy, key_material, key_material_size);
-
-        bloblist_add(msg->attachments, key_material_copy, key_material_size, "application/pgp-keys",
-                                                                             "file://pEpkey_group_revoke.asc");
-
-        // encrypt this baby and get out
-        // extra keys???
-        status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_auto, 0); // FIXME
-
-        if (status != PEP_STATUS_OK)
-            goto pEp_error;
-
-        _add_auto_consume(enc_msg);
-
-        // insert into queue
-        status = session->messageToSend(enc_msg);
-
-        if (status != PEP_STATUS_OK)
-            goto pEp_error;
-
-        free_message(msg);
-        msg = NULL;
-    }
-
-pEp_error:
-    return status;
-
-}
-
 PEP_STATUS send_GroupAdopted(PEP_SESSION session, pEp_identity* group_identity, pEp_identity* from) {
 
     PEP_STATUS status = PEP_STATUS_OK;
     pEp_identity* manager = NULL;
-    message* enc_msg = NULL;
 
     if (!session->messageToSend)
         return PEP_SEND_FUNCTION_NOT_REGISTERED;
@@ -1327,7 +1352,7 @@ PEP_STATUS send_GroupAdopted(PEP_SESSION session, pEp_identity* group_identity, 
         return PEP_OUT_OF_MEMORY;
     else if (EMPTYSTR(manager->address) || EMPTYSTR(manager->user_id)) {
         status = PEP_UNKNOWN_ERROR;
-        goto pEp_free;
+        goto pEp_error;
     }
 
     // ?? Is this really necessary? It's an internal call. Well, anything can mess up, no?
@@ -1336,81 +1361,39 @@ PEP_STATUS send_GroupAdopted(PEP_SESSION session, pEp_identity* group_identity, 
 
     status = update_identity(session, manager);
     if (status != PEP_STATUS_OK)
-        goto pEp_free;
+        goto pEp_error;
     // ??
 
-    // Ok, let's get the payload set up.
-    Distribution_t* outdist = (Distribution_t *) calloc(1, sizeof(Distribution_t));
-    if (!outdist)
-        return PEP_OUT_OF_MEMORY;
+    char* _data = NULL;
+    size_t _size = 0;
 
-    outdist->present = Distribution_PR_managedgroup;
-    outdist->choice.managedgroup.present = ManagedGroup_PR_groupAdopted;
-    GroupAdopted_t* ga = &(outdist->choice.managedgroup.choice.groupAdopted);
+    // Ok, let's get the payload set up, because we can duplicate this for each message.
+    status = _build_managed_group_message_payload(session, group_identity,
+                                                  from, &_data, &_size,
+                                                  ManagedGroup_PR_groupAdopted);
 
-    if (!Identity_from_Struct(group_identity, &ga->groupIdentity)) {
-        free(ga);
-        return PEP_OUT_OF_MEMORY;
-    }
-
-    if (!Identity_from_Struct(from, &ga->member)) {
-        free(ga);
-        return PEP_OUT_OF_MEMORY;
-    }
-
-    // Man, I hope this is it.
-    char *_data;
-    size_t _size;
-    status = encode_Distribution_message(outdist, &_data, &_size);
     if (status != PEP_STATUS_OK)
-        return status; // FIXME - memory
+        return status;
 
     pEp_identity* recip = manager; // This will be duped in base_prepare_message
     PEP_rating recip_rating;
     status = identity_rating(session, recip, &recip_rating);
     if (status != PEP_STATUS_OK)
-        goto pEp_free;
+        goto pEp_error;
     if (recip_rating < PEP_rating_reliable)
         return PEP_NO_TRUST; // ??? FIXME
 
-    message* msg = NULL;
-
-    status = base_prepare_message(session, from, recip, BASE_DISTRIBUTION,
-                                  _data, _size, from->fpr, &msg);
-    if (status != PEP_STATUS_OK)
-        goto pEp_free;
-
-    if (!msg) {
-        status = PEP_OUT_OF_MEMORY;
-        goto pEp_free;
-    }
-    if (!msg->attachments) {
-        status = PEP_UNKNOWN_ERROR;
-        goto pEp_free;
-    }
-
-    // encrypt this baby and get out
-    // extra keys???
-    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_auto, 0); // FIXME
+    // encrypt and send this baby and get out
+    status = _create_and_send_managed_group_message(session, from, recip, _data, _size, NULL);
 
     if (status != PEP_STATUS_OK)
-        goto pEp_free;
+        goto pEp_error;
 
-    _add_auto_consume(enc_msg);
-
-    // insert into queue
-    status = session->messageToSend(enc_msg);
-
-    if (status != PEP_STATUS_OK)
-        goto pEp_free;
-
-    free_message(msg);
-    msg = NULL;
-
-pEp_free:
+    return status;
+    
+pEp_error:
     free_identity(manager);
     return status;
-
 }
 
 PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rating, GroupCreate_t* gc) {
@@ -1495,7 +1478,7 @@ PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rat
         return status;
     }
 
-    status = add_own_membership_entry(session, group, msg->to->ident);
+    status = add_own_membership_entry(session, group_identity, manager, msg->to->ident);
 
     free_group(group);
     return status;
@@ -1699,7 +1682,7 @@ PEP_STATUS receive_GroupAdopted(PEP_SESSION session, message* msg, PEP_rating ra
     if (!is_me(session, msg->to->ident))
         return PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
 
-    pEp_identity* own_identity = msg->to->ident;
+//    pEp_identity* own_identity = msg->to->ident;
 
     pEp_identity* group_identity = Identity_to_Struct(&(ga->groupIdentity), NULL);
     if (!group_identity)

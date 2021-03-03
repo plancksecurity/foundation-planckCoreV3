@@ -544,7 +544,7 @@ TEST_F(GroupEncryptionTest, check_add_invite) {
     status = group_enable(session, group_ident);
     ASSERT_OK;
 
-    status = add_own_membership_entry(session, group, own_ident);
+    status = add_own_membership_entry(session, group_ident, manager, own_ident);
     ASSERT_OK;
 
     status = retrieve_own_membership_info_for_group_and_identity(session, group, own_ident);
@@ -588,7 +588,7 @@ TEST_F(GroupEncryptionTest, check_join_group) {
     status = group_enable(session, group_ident);
     ASSERT_OK;
 
-    status = add_own_membership_entry(session, group, own_ident);
+    status = add_own_membership_entry(session, group_ident, manager, own_ident);
     ASSERT_OK;
 
     status = join_group(session, group_ident, own_ident);
@@ -629,7 +629,7 @@ TEST_F(GroupEncryptionTest, check_join_group_no_key) {
     status = group_enable(session, group_ident);
     ASSERT_OK;
 
-    status = add_own_membership_entry(session, group, own_ident);
+    status = add_own_membership_entry(session, group_ident, manager, own_ident);
     ASSERT_OK;
 
     status = join_group(session, group_ident, own_ident);
@@ -2377,8 +2377,8 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_not_manager) {
     ASSERT_OK;
 
     m_queue.clear();
-    // Now to receive a group dissolve for a group from someone who is not the manager.
 
+    // Now to receive a group dissolve for a group from someone who is not the manager.
     msg_str = slurp(string("test_mails/group_dissolve_not_manager_") + member_2_prefix + ".eml");
     ASSERT_FALSE(msg_str.empty());
     msg = NULL;

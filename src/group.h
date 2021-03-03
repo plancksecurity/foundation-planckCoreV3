@@ -48,7 +48,7 @@ typedef struct _pEp_group {
 //      memberlist (in, optional)
 //
 //  caveat:
-//      the ownership of all parameters groes to the struct; data is not copied
+//      the ownership of all parameters goes to the struct; data is not copied
 
 pEp_group *new_group(
         pEp_identity *group_identity,
@@ -176,7 +176,8 @@ PEP_STATUS create_group_entry(PEP_SESSION session,
                               pEp_group* group);
 
 PEP_STATUS add_own_membership_entry(PEP_SESSION session,
-                                    pEp_group* group,
+                                    pEp_identity* group_identity,
+                                    pEp_identity* manager,
                                     pEp_identity* own_identity_recip);
 
 PEP_STATUS retrieve_own_membership_info_for_group_and_identity(PEP_SESSION session,
