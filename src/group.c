@@ -732,6 +732,36 @@ PEP_STATUS leave_group(
     return PEP_STATUS_OK;
 }
 
+PEP_STATUS group_enable(
+        PEP_SESSION session,
+        pEp_identity *group_identity
+) {
+    bool exists = false;
+    PEP_STATUS status = exists_group(session, group_identity, &exists);
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    if (!exists)
+        return PEP_GROUP_NOT_FOUND;
+
+    int result = 0;
+
+    sqlite3_reset(session->enable_group);
+
+    sqlite3_bind_text(session->enable_group, 1, group_identity->user_id, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_text(session->enable_group, 2, group_identity->address, -1,
+                      SQLITE_STATIC);
+    result = sqlite3_step(session->enable_group);
+
+    sqlite3_reset(session->enable_group);
+
+    if (result != SQLITE_DONE)
+        status = PEP_CANNOT_ENABLE_GROUP;
+
+    return status;
+}
+
 PEP_STATUS exists_group(
         PEP_SESSION session,
         pEp_identity* group_identity,
@@ -801,23 +831,6 @@ PEP_STATUS group_add_member(
     return status;
 }
 
-
-// Do we even want to use this function??? FIXME
-//DYNAMIC_API PEP_STATUS group_remove_member(
-//        PEP_SESSION session,
-//        pEp_identity *group_identity,
-//        pEp_identity *group_member
-//) {
-//    bool exists = false;
-//    PEP_STATUS status = exists_group(session, group_identity, &exists);
-//    if (status != PEP_STATUS_OK)
-//        return status;
-//
-//    if (!exists)
-//        return PEP_GROUP_NOT_FOUND;
-//
-//    return set_membership_status(session, group_identity, group_member, false);
-//}
 
 PEP_STATUS retrieve_full_group_membership(
         PEP_SESSION session,
@@ -1399,11 +1412,33 @@ PEP_STATUS receive_GroupAdopted(PEP_SESSION session, message* msg, PEP_rating ra
     // FIXME: free stuff
 }
 
+
+
+PEP_STATUS receive_managed_group_message(PEP_SESSION session, message* msg, PEP_rating rating, Distribution_t* dist) {
+    if (!session || !msg || !msg->_sender_fpr || !dist)
+        return PEP_ILLEGAL_VALUE;
+
+//    char* sender_fpr = msg->_sender_fpr;
+    switch (dist->choice.managedgroup.present) {
+        case ManagedGroup_PR_groupCreate:
+            return receive_GroupCreate(session, msg, rating, &(dist->choice.managedgroup.choice.groupCreate));
+        case ManagedGroup_PR_groupDissolve:
+            return receive_GroupDissolve(session, msg, rating, &(dist->choice.managedgroup.choice.groupDissolve));
+        case ManagedGroup_PR_groupAdopted:
+            return receive_GroupAdopted(session, msg, rating, &(dist->choice.managedgroup.choice.groupAdopted));
+            break;
+        default:
+            return PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
+    }
+    return PEP_STATUS_OK;
+}
+
+
 /******************************************************************************************
  * API FUNCTIONS
  ******************************************************************************************/
 
-pEp_member *new_member(pEp_identity *ident) {
+DYNAMIC_API pEp_member *new_member(pEp_identity *ident) {
     if (!ident)
         return NULL;
     pEp_member* member = (pEp_member*)calloc(1, sizeof(pEp_member));
@@ -1411,14 +1446,14 @@ pEp_member *new_member(pEp_identity *ident) {
     return member;
 }
 
-void free_member(pEp_member *member) {
+DYNAMIC_API void free_member(pEp_member *member) {
     if (member) {
         free_identity(member->ident);
         free(member);
     }
 }
 
-member_list *new_memberlist(pEp_member *member) {
+DYNAMIC_API member_list *new_memberlist(pEp_member *member) {
     member_list* retval = (member_list*)(calloc(1, sizeof(member_list)));
     if (!retval)
         return NULL;
@@ -1426,7 +1461,7 @@ member_list *new_memberlist(pEp_member *member) {
     return retval;
 }
 
-void free_memberlist(member_list *list) {
+DYNAMIC_API void free_memberlist(member_list *list) {
     member_list* curr = list;
 
     while (curr) {
@@ -1437,7 +1472,7 @@ void free_memberlist(member_list *list) {
     }
 }
 
-member_list *memberlist_add(member_list *list, pEp_member *member) {
+DYNAMIC_API member_list *memberlist_add(member_list *list, pEp_member *member) {
     if (!list)
         return new_memberlist(member);
 
@@ -1458,7 +1493,7 @@ member_list *memberlist_add(member_list *list, pEp_member *member) {
 
 }
 
-pEp_group *new_group(
+DYNAMIC_API pEp_group *new_group(
         pEp_identity *group_identity,
         pEp_identity *manager,
         member_list *memberlist
@@ -1477,14 +1512,14 @@ pEp_group *new_group(
     return retval;
 }
 
-void free_group(pEp_group *group) {
+DYNAMIC_API void free_group(pEp_group *group) {
     free_identity(group->group_identity);
     free_identity(group->manager);
     free_memberlist(group->members);
 }
 
 
-PEP_STATUS group_create(
+DYNAMIC_API PEP_STATUS group_create(
         PEP_SESSION session,
         pEp_identity *group_identity,
         pEp_identity *manager,
@@ -1633,37 +1668,42 @@ pEp_error:
     return status;
 }
 
-PEP_STATUS group_enable(
+DYNAMIC_API PEP_STATUS group_join(
         PEP_SESSION session,
-        pEp_identity *group_identity
+        pEp_identity *group_identity,
+        pEp_identity *as_member
 ) {
-    bool exists = false;
-    PEP_STATUS status = exists_group(session, group_identity, &exists);
+
+    if (!session || !group_identity || !as_member)
+        return PEP_ILLEGAL_VALUE;
+
+    if (EMPTYSTR(group_identity->user_id) || EMPTYSTR(as_member->user_id) ||
+        EMPTYSTR(group_identity->address) || EMPTYSTR(as_member->address)) {
+        return PEP_ILLEGAL_VALUE;
+    }
+
+    // get our status, if there is any
+    bool am_member = false;
+    // FIXME: differentiate between no records and DB error in call
+    PEP_STATUS status = get_own_membership_status(session, group_identity, as_member, &am_member);
+
     if (status != PEP_STATUS_OK)
         return status;
 
-    if (!exists)
-        return PEP_GROUP_NOT_FOUND;
+    if (am_member)
+        return PEP_STATUS_OK; // FIXME: ask Volker if there is a reason to do this, like the message wasn't sent
 
-    int result = 0;
+    // Ok, group invite exists. Do it.
+    status = send_GroupAdopted(session, group_identity, as_member);
+    if (status != PEP_STATUS_OK)
+        return status;
 
-    sqlite3_reset(session->enable_group);
+    status = _set_own_status_joined(session, group_identity, as_member);
 
-    sqlite3_bind_text(session->enable_group, 1, group_identity->user_id, -1,
-                      SQLITE_STATIC);
-    sqlite3_bind_text(session->enable_group, 2, group_identity->address, -1,
-                      SQLITE_STATIC);
-    result = sqlite3_step(session->enable_group);
-
-    sqlite3_reset(session->enable_group);
-
-    if (result != SQLITE_DONE)
-        status = PEP_CANNOT_ENABLE_GROUP;
-
-    return status;
+    return PEP_STATUS_OK;
 }
 
-PEP_STATUS group_dissolve(
+DYNAMIC_API PEP_STATUS group_dissolve(
         PEP_SESSION session,
         pEp_identity *group_identity,
         pEp_identity *manager
@@ -1767,7 +1807,7 @@ PEP_STATUS group_dissolve(
     return status;
 }
 
-PEP_STATUS group_invite_member(
+DYNAMIC_API PEP_STATUS group_invite_member(
         PEP_SESSION session,
         pEp_identity *group_identity,
         pEp_identity *group_member
@@ -1832,7 +1872,23 @@ PEP_STATUS group_invite_member(
     return status;
 }
 
-PEP_STATUS group_rating(
+//DYNAMIC_API PEP_STATUS group_remove_member(
+//        PEP_SESSION session,
+//        pEp_identity *group_identity,
+//        pEp_identity *group_member
+//) {
+//    bool exists = false;
+//    PEP_STATUS status = exists_group(session, group_identity, &exists);
+//    if (status != PEP_STATUS_OK)
+//        return status;
+//
+//    if (!exists)
+//        return PEP_GROUP_NOT_FOUND;
+//
+//    return set_membership_status(session, group_identity, group_member, false);
+//}
+
+DYNAMIC_API PEP_STATUS group_rating(
         PEP_SESSION session,
         pEp_identity *group_identity,
         pEp_identity *manager,
@@ -1881,60 +1937,3 @@ PEP_STATUS group_rating(
 
     return PEP_STATUS_OK;
 }
-
-
-PEP_STATUS group_join(
-        PEP_SESSION session,
-        pEp_identity *group_identity,
-        pEp_identity *as_member
-) {
-
-    if (!session || !group_identity || !as_member)
-        return PEP_ILLEGAL_VALUE;
-
-    if (EMPTYSTR(group_identity->user_id) || EMPTYSTR(as_member->user_id) ||
-        EMPTYSTR(group_identity->address) || EMPTYSTR(as_member->address)) {
-        return PEP_ILLEGAL_VALUE;
-    }
-
-    // get our status, if there is any
-    bool am_member = false;
-    // FIXME: differentiate between no records and DB error in call
-    PEP_STATUS status = get_own_membership_status(session, group_identity, as_member, &am_member);
-
-    if (status != PEP_STATUS_OK)
-        return status;
-
-    if (am_member)
-        return PEP_STATUS_OK; // FIXME: ask Volker if there is a reason to do this, like the message wasn't sent
-
-    // Ok, group invite exists. Do it.
-    status = send_GroupAdopted(session, group_identity, as_member);
-    if (status != PEP_STATUS_OK)
-        return status;
-
-    status = _set_own_status_joined(session, group_identity, as_member);
-
-    return PEP_STATUS_OK;
-}
-
-
-PEP_STATUS receive_managed_group_message(PEP_SESSION session, message* msg, PEP_rating rating, Distribution_t* dist) {
-    if (!session || !msg || !msg->_sender_fpr || !dist)
-        return PEP_ILLEGAL_VALUE;
-
-//    char* sender_fpr = msg->_sender_fpr;
-    switch (dist->choice.managedgroup.present) {
-        case ManagedGroup_PR_groupCreate:
-            return receive_GroupCreate(session, msg, rating, &(dist->choice.managedgroup.choice.groupCreate));
-        case ManagedGroup_PR_groupDissolve:
-            return receive_GroupDissolve(session, msg, rating, &(dist->choice.managedgroup.choice.groupDissolve));
-        case ManagedGroup_PR_groupAdopted:
-            return receive_GroupAdopted(session, msg, rating, &(dist->choice.managedgroup.choice.groupAdopted));
-            break;
-        default:
-            return PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
-    }
-    return PEP_STATUS_OK;
-}
-
