@@ -10,7 +10,20 @@
 #include "baseprotocol.h"
 
 // ** Static functions
+/******************************************************************************************
+ * STATIC FUNCTIONS
+ ******************************************************************************************/
 
+/******************************************************************************************
+ *
+ * @param session
+ * @param group_identity
+ * @param manager
+ * @param data
+ * @param size
+ * @param managed_group_msg_type
+ * @return
+ */
 static PEP_STATUS _build_managed_group_message_payload(PEP_SESSION session,
                                                        const pEp_identity* group_identity,
                                                        const pEp_identity* manager,
@@ -68,6 +81,16 @@ pEp_free:
     return status;
 }
 
+/******************************************************************************************
+ *
+ * @param session
+ * @param from
+ * @param recip
+ * @param data
+ * @param size
+ * @param attachments
+ * @return
+ */
 static PEP_STATUS _create_and_send_managed_group_message(PEP_SESSION session,
                                                          pEp_identity* from,
                                                          pEp_identity* recip,
@@ -127,6 +150,13 @@ pEp_error:
     return status;
 }
 
+/******************************************************************************************
+ *
+ * @param session
+ * @param group
+ * @param message_type
+ * @return
+ */
 static PEP_STATUS _send_managed_group_message_to_list(PEP_SESSION session,
                                                       pEp_group* group,
                                                       ManagedGroup_PR message_type) {
@@ -209,24 +239,31 @@ pEp_error:
     return status;
 }
 
+/******************************************************************************************
+ *
+ * @param session
+ * @param group_identity
+ * @param as_member
+ * @return
+ */
 static PEP_STATUS _set_own_status_joined(PEP_SESSION session,
                                             pEp_identity* group_identity,
                                             pEp_identity* as_member) {
     int result = 0;
 
-    sqlite3_reset(session->join_group);
+    sqlite3_reset(session->group_join);
 
-    sqlite3_bind_text(session->join_group, 1, group_identity->user_id, -1,
+    sqlite3_bind_text(session->group_join, 1, group_identity->user_id, -1,
                       SQLITE_STATIC);
-    sqlite3_bind_text(session->join_group, 2, group_identity->address, -1,
+    sqlite3_bind_text(session->group_join, 2, group_identity->address, -1,
                       SQLITE_STATIC);
-    sqlite3_bind_text(session->join_group, 3, as_member->user_id, -1,
+    sqlite3_bind_text(session->group_join, 3, as_member->user_id, -1,
                       SQLITE_STATIC);
-    sqlite3_bind_text(session->join_group, 4, as_member->address, -1,
+    sqlite3_bind_text(session->group_join, 4, as_member->address, -1,
                       SQLITE_STATIC);
-    result = sqlite3_step(session->join_group);
+    result = sqlite3_step(session->group_join);
 
-    sqlite3_reset(session->join_group);
+    sqlite3_reset(session->group_join);
 
     if (result != SQLITE_DONE)
         return PEP_CANNOT_CREATE_GROUP;
@@ -234,6 +271,13 @@ static PEP_STATUS _set_own_status_joined(PEP_SESSION session,
     return PEP_STATUS_OK;
 }
 
+/******************************************************************************************
+ *
+ * @param session
+ * @param group_identity
+ * @param leaver
+ * @return
+ */
 static PEP_STATUS _set_leave_group_status(PEP_SESSION session, pEp_identity* group_identity, pEp_identity* leaver) {
 
     sqlite3_reset(session->leave_group);
@@ -257,6 +301,12 @@ static PEP_STATUS _set_leave_group_status(PEP_SESSION session, pEp_identity* gro
         return PEP_STATUS_OK;
 }
 
+/******************************************************************************************
+ *
+ * @param session
+ * @param group_identity
+ * @return
+ */
 static PEP_STATUS _set_group_as_disabled(PEP_SESSION session, pEp_identity* group_identity) {
     int result = 0;
 
@@ -278,6 +328,13 @@ static PEP_STATUS _set_group_as_disabled(PEP_SESSION session, pEp_identity* grou
 
 }
 
+/******************************************************************************************
+ *
+ * @param session
+ * @param group_identity
+ * @param memberlist
+ * @return
+ */
 static PEP_STATUS _retrieve_own_membership_info_for_group(PEP_SESSION session, pEp_identity* group_identity,
                                                           member_list** memberlist) {
     int result = 0;
@@ -308,7 +365,7 @@ static PEP_STATUS _retrieve_own_membership_info_for_group(PEP_SESSION session, p
             sqlite3_reset(session->retrieve_own_membership_info_for_group);
             return PEP_OUT_OF_MEMORY;
         }
-        member->adopted = sqlite3_column_int(session->retrieve_own_membership_info_for_group, 2);
+        member->joined = sqlite3_column_int(session->retrieve_own_membership_info_for_group, 2);
 
         *_mbr_list_next = new_memberlist(member);
         if (!(*_mbr_list_next)) {
@@ -328,6 +385,14 @@ static PEP_STATUS _retrieve_own_membership_info_for_group(PEP_SESSION session, p
 
 }
 
+/******************************************************************************************
+ *
+ * @param session
+ * @param group_identity
+ * @param member
+ * @param is_member
+ * @return
+ */
 static PEP_STATUS is_invited_group_member(PEP_SESSION session, pEp_identity* group_identity,
                                           pEp_identity* member, bool* is_member) {
     if (!session || !is_member)
@@ -360,7 +425,9 @@ static PEP_STATUS is_invited_group_member(PEP_SESSION session, pEp_identity* gro
     return PEP_STATUS_OK;
 }
 
-// Utility functions
+/******************************************************************************************
+ * UTILITY FUNCTIONS
+ ******************************************************************************************/
 
 // Exposed for testing.
 PEP_STATUS set_membership_status(PEP_SESSION session,
@@ -594,7 +661,7 @@ PEP_STATUS retrieve_own_membership_info_for_group_and_identity(PEP_SESSION sessi
             pEp_member* me_mem = new_member(own_identity);
             if (!me_mem)
                 return PEP_OUT_OF_MEMORY;
-            me_mem->adopted = sqlite3_column_int(session->retrieve_own_membership_info_for_group_and_ident, 0);
+            me_mem->joined = sqlite3_column_int(session->retrieve_own_membership_info_for_group_and_ident, 0);
             member_list* memberlist = new_memberlist(me_mem);
             if (!memberlist)
                 return PEP_OUT_OF_MEMORY;;
@@ -736,7 +803,7 @@ PEP_STATUS group_add_member(
 
 
 // Do we even want to use this function??? FIXME
-//PEP_STATUS group_remove_member(
+//DYNAMIC_API PEP_STATUS group_remove_member(
 //        PEP_SESSION session,
 //        pEp_identity *group_identity,
 //        pEp_identity *group_member
@@ -786,7 +853,7 @@ PEP_STATUS retrieve_full_group_membership(
         }
 
         pEp_member* new_mem = new_member(ident);
-        new_mem->adopted = sqlite3_column_int(session->get_all_members, 2);
+        new_mem->joined = sqlite3_column_int(session->get_all_members, 2);
         member_list* new_node = new_memberlist(new_mem);
         if (!new_node)
             return PEP_OUT_OF_MEMORY;
@@ -850,7 +917,7 @@ PEP_STATUS retrieve_active_member_list(
         if (!new_node)
             return PEP_OUT_OF_MEMORY;
 
-        new_node->member->adopted = true;
+        new_node->member->joined = true;
 
         *mbr_list_next = new_node;
         mbr_list_next = &(new_node->next);
@@ -867,26 +934,6 @@ PEP_STATUS retrieve_active_member_list(
 
     *mbr_list = retval;
 
-    return PEP_STATUS_OK;
-}
-
-
-PEP_STATUS receive_managed_group_message(PEP_SESSION session, message* msg, PEP_rating rating, Distribution_t* dist) {
-    if (!session || !msg || !msg->_sender_fpr || !dist)
-        return PEP_ILLEGAL_VALUE;
-
-//    char* sender_fpr = msg->_sender_fpr;
-    switch (dist->choice.managedgroup.present) {
-        case ManagedGroup_PR_groupCreate:
-            return receive_GroupCreate(session, msg, rating, &(dist->choice.managedgroup.choice.groupCreate));
-        case ManagedGroup_PR_groupDissolve:
-            return receive_GroupDissolve(session, msg, rating, &(dist->choice.managedgroup.choice.groupDissolve));
-        case ManagedGroup_PR_groupAdopted:
-            return receive_GroupAdopted(session, msg, rating, &(dist->choice.managedgroup.choice.groupAdopted));
-            break;
-        default:
-            return PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
-    }
     return PEP_STATUS_OK;
 }
 
@@ -1352,7 +1399,9 @@ PEP_STATUS receive_GroupAdopted(PEP_SESSION session, message* msg, PEP_rating ra
     // FIXME: free stuff
 }
 
-// API Functions
+/******************************************************************************************
+ * API FUNCTIONS
+ ******************************************************************************************/
 
 pEp_member *new_member(pEp_identity *ident) {
     if (!ident)
@@ -1739,7 +1788,7 @@ PEP_STATUS group_invite_member(
         if (is_me(session, group_member)) {
             status = add_own_membership_entry(session, group_identity, manager, group_member);
             if (status == PEP_STATUS_OK)
-                status = join_group(session, group_identity, group_member);
+                status = group_join(session, group_identity, group_member);
         }
         else {
             pEp_identity* manager = NULL;
@@ -1834,7 +1883,7 @@ PEP_STATUS group_rating(
 }
 
 
-PEP_STATUS join_group(
+PEP_STATUS group_join(
         PEP_SESSION session,
         pEp_identity *group_identity,
         pEp_identity *as_member
@@ -1868,3 +1917,24 @@ PEP_STATUS join_group(
 
     return PEP_STATUS_OK;
 }
+
+
+PEP_STATUS receive_managed_group_message(PEP_SESSION session, message* msg, PEP_rating rating, Distribution_t* dist) {
+    if (!session || !msg || !msg->_sender_fpr || !dist)
+        return PEP_ILLEGAL_VALUE;
+
+//    char* sender_fpr = msg->_sender_fpr;
+    switch (dist->choice.managedgroup.present) {
+        case ManagedGroup_PR_groupCreate:
+            return receive_GroupCreate(session, msg, rating, &(dist->choice.managedgroup.choice.groupCreate));
+        case ManagedGroup_PR_groupDissolve:
+            return receive_GroupDissolve(session, msg, rating, &(dist->choice.managedgroup.choice.groupDissolve));
+        case ManagedGroup_PR_groupAdopted:
+            return receive_GroupAdopted(session, msg, rating, &(dist->choice.managedgroup.choice.groupAdopted));
+            break;
+        default:
+            return PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
+    }
+    return PEP_STATUS_OK;
+}
+

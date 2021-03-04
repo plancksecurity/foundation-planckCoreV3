@@ -159,7 +159,7 @@ TEST_F(GroupEncryptionTest, check_member_create_w_ident) {
     pEp_member* bob_mem = new_member(bob);
     ASSERT_NE(bob_mem, nullptr);
     ASSERT_EQ(bob, bob_mem->ident);
-    ASSERT_EQ(bob_mem->adopted, false);
+    ASSERT_EQ(bob_mem->joined, false);
 
     free_member(bob_mem);
 }
@@ -179,7 +179,7 @@ TEST_F(GroupEncryptionTest, check_new_memberlist_w_member) {
     pEp_member* bob_mem = new_member(bob);
     ASSERT_NE(bob_mem, nullptr);
     ASSERT_EQ(bob, bob_mem->ident);
-    ASSERT_EQ(bob_mem->adopted, false);
+    ASSERT_EQ(bob_mem->joined, false);
 
     member_list* list = new_memberlist(bob_mem);
     ASSERT_NE(list, nullptr);
@@ -214,7 +214,7 @@ TEST_F(GroupEncryptionTest, check_memberlist_add_to_null) {
     bob_mem = new_member(bob);
     ASSERT_NE(bob_mem, nullptr);
     ASSERT_EQ(bob, bob_mem->ident);
-    ASSERT_EQ(bob_mem->adopted, false);
+    ASSERT_EQ(bob_mem->joined, false);
 
     member_list* check = memberlist_add(list, bob_mem);
 
@@ -241,7 +241,7 @@ TEST_F(GroupEncryptionTest, check_memberlist_add_to_real_list) {
     pEp_member* bob_mem = new_member(bob);
     ASSERT_NE(bob_mem, nullptr);
     ASSERT_EQ(bob, bob_mem->ident);
-    ASSERT_EQ(bob_mem->adopted, false);
+    ASSERT_EQ(bob_mem->joined, false);
 
     member_list* check = memberlist_add(list, bob_mem);
 
@@ -270,7 +270,7 @@ TEST_F(GroupEncryptionTest, check_memberlist_add_to_list_three) {
     pEp_member* bob_mem = new_member(bob);
     ASSERT_NE(bob_mem, nullptr);
     ASSERT_EQ(bob, bob_mem->ident);
-    ASSERT_EQ(bob_mem->adopted, false);
+    ASSERT_EQ(bob_mem->joined, false);
 
     member_list* check = memberlist_add(list, bob_mem);
     ASSERT_NE(nullptr, check);
@@ -280,7 +280,7 @@ TEST_F(GroupEncryptionTest, check_memberlist_add_to_list_three) {
     pEp_member* solas_mem = new_member(solas);
     ASSERT_NE(solas_mem, nullptr);
     ASSERT_EQ(solas, solas_mem->ident);
-    ASSERT_EQ(solas_mem->adopted, false);
+    ASSERT_EQ(solas_mem->joined, false);
 
     ASSERT_NE(check, memberlist_add(list, solas_mem));
     
@@ -433,7 +433,7 @@ TEST_F(GroupEncryptionTest, check_membership_from_create_group) {
             solas_found = true;
         else
             ASSERT_STREQ("This message is just to make the test fail and give a message, we found an unexpected member node.", "FAIL");
-        ASSERT_FALSE(curr_node->member->adopted);
+        ASSERT_FALSE(curr_node->member->joined);
     }
 
     ASSERT_TRUE(carol_found);
@@ -553,11 +553,11 @@ TEST_F(GroupEncryptionTest, check_add_invite) {
     ASSERT_STREQ(group->manager->user_id, manager->user_id);
     ASSERT_STREQ(group->manager->address, manager->address);
     ASSERT_TRUE(group->active);
-    ASSERT_FALSE(group->members->member->adopted);
+    ASSERT_FALSE(group->members->member->joined);
     ASSERT_EQ(group->members->next, nullptr);
 }
 
-TEST_F(GroupEncryptionTest, check_join_group) {
+TEST_F(GroupEncryptionTest, check_group_join) {
     pEp_identity* own_ident = new_identity("alistair@lost.pants", NULL, PEP_OWN_USERID, "Alistair Theirin");
     PEP_STATUS status = myself(session, own_ident);
     ASSERT_OK;
@@ -568,7 +568,7 @@ TEST_F(GroupEncryptionTest, check_join_group) {
     status = set_identity_flags(session, group_ident, group_ident->flags | PEP_idf_group_ident);
     ASSERT_OK;
 
-    // We'll need a key if we're to get a good response from join_group...
+    // We'll need a key if we're to get a good response from group_join...
     const char* manager_fpr = "5B8B5FBEF04CEAA42BD7CE630E92A012F4F44414";
     status = read_file_and_import_key(session, "test_keys/pub/bad_manager_0xF4F44414_pub.asc");
     ASSERT_EQ(status, PEP_KEY_IMPORTED);
@@ -591,7 +591,7 @@ TEST_F(GroupEncryptionTest, check_join_group) {
     status = add_own_membership_entry(session, group_ident, manager, own_ident);
     ASSERT_OK;
 
-    status = join_group(session, group_ident, own_ident);
+    status = group_join(session, group_ident, own_ident);
     ASSERT_OK;
 
     status = retrieve_own_membership_info_for_group_and_identity(session, group, own_ident);
@@ -600,13 +600,13 @@ TEST_F(GroupEncryptionTest, check_join_group) {
     ASSERT_STREQ(group->manager->user_id, manager->user_id);
     ASSERT_STREQ(group->manager->address, manager->address);
     ASSERT_TRUE(group->active);
-    ASSERT_TRUE(group->members->member->adopted);
+    ASSERT_TRUE(group->members->member->joined);
     ASSERT_EQ(group->members->next, nullptr);
 
     m_queue.clear();
 }
 
-TEST_F(GroupEncryptionTest, check_join_group_no_key) {
+TEST_F(GroupEncryptionTest, check_group_join_no_key) {
     pEp_identity* own_ident = new_identity("alistair@lost.pants", NULL, PEP_OWN_USERID, "Alistair Theirin");
     PEP_STATUS status = myself(session, own_ident);
     ASSERT_OK;
@@ -632,14 +632,14 @@ TEST_F(GroupEncryptionTest, check_join_group_no_key) {
     status = add_own_membership_entry(session, group_ident, manager, own_ident);
     ASSERT_OK;
 
-    status = join_group(session, group_ident, own_ident);
+    status = group_join(session, group_ident, own_ident);
     ASSERT_EQ(status, PEP_NO_TRUST);
 
     status = retrieve_own_membership_info_for_group_and_identity(session, group, own_ident);
     ASSERT_OK;
 
     ASSERT_TRUE(group->active); // ?
-    ASSERT_FALSE(group->members->member->adopted);
+    ASSERT_FALSE(group->members->member->joined);
     ASSERT_EQ(group->members->next, nullptr);
 
     m_queue.clear();
@@ -773,7 +773,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create) {
         ASSERT_NE(name, nullptr);
         ASSERT_NE(fpr, nullptr);
 
-        ASSERT_FALSE(memb->adopted);
+        ASSERT_FALSE(memb->joined);
 
         int index = -1;
 
@@ -1187,7 +1187,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_extant_key) {
         ASSERT_NE(name, nullptr);
         ASSERT_NE(fpr, nullptr);
 
-        ASSERT_FALSE(memb->adopted);
+        ASSERT_FALSE(memb->joined);
 
         int index = -1;
 
@@ -1213,7 +1213,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_extant_key) {
     free_group(group);
 }
 
-TEST_F(GroupEncryptionTest, check_protocol_join_group_member_1) {
+TEST_F(GroupEncryptionTest, check_protocol_group_join_member_1) {
     const char* own_id = "DIFFERENT_OWN_ID_FOR_KICKS";
     pEp_identity* me = new_identity(member_1_address, NULL, own_id, member_1_name);
     read_file_and_import_key(session, kf_name(member_1_prefix, false).c_str());
@@ -1253,12 +1253,12 @@ TEST_F(GroupEncryptionTest, check_protocol_join_group_member_1) {
     pEp_group* group = new_group(group_identity, NULL, NULL);
     status = retrieve_own_membership_info_for_group_and_identity(session, group, me);
     ASSERT_OK;
-    ASSERT_FALSE(group->members->member->adopted);
+    ASSERT_FALSE(group->members->member->joined);
 
     // Ok, we know groups get created or other tests above would fail. Let's accept
     // the request
 
-    status = join_group(session, group_identity, me);
+    status = group_join(session, group_identity, me);
     ASSERT_OK;
 
     ASSERT_EQ(m_queue.size(), 1);
@@ -1284,10 +1284,10 @@ TEST_F(GroupEncryptionTest, check_protocol_join_group_member_1) {
 
     status = retrieve_own_membership_info_for_group_and_identity(session, group, me);
     ASSERT_OK;
-    ASSERT_TRUE(group->members->member->adopted);
+    ASSERT_TRUE(group->members->member->joined);
 }
 
-TEST_F(GroupEncryptionTest, join_group_member_2) {
+TEST_F(GroupEncryptionTest, group_join_member_2) {
     const char* own_id = "PEP_OWN_USERID"; // on purpose, little joke here
     pEp_identity* me = new_identity(member_2_address, NULL, own_id, member_2_name);
     read_file_and_import_key(session, kf_name(member_2_prefix, false).c_str());
@@ -1322,7 +1322,7 @@ TEST_F(GroupEncryptionTest, join_group_member_2) {
     pEp_group* group = new_group(group_identity, NULL, NULL);
     status = retrieve_own_membership_info_for_group_and_identity(session, group, me);
     ASSERT_OK;
-    status = join_group(session, group_identity, me);
+    status = group_join(session, group_identity, me);
     ASSERT_OK;
 
     ASSERT_EQ(m_queue.size(), 1);
@@ -1347,7 +1347,7 @@ TEST_F(GroupEncryptionTest, join_group_member_2) {
     m_queue.clear();
 }
 
-TEST_F(GroupEncryptionTest, join_group_member_3) {
+TEST_F(GroupEncryptionTest, group_join_member_3) {
     const char* own_id = "BAH";
     pEp_identity* me = new_identity(member_3_address, NULL, own_id, member_3_name);
     read_file_and_import_key(session, kf_name(member_3_prefix, false).c_str());
@@ -1382,7 +1382,7 @@ TEST_F(GroupEncryptionTest, join_group_member_3) {
     pEp_group* group = new_group(group_identity, NULL, NULL);
     status = retrieve_own_membership_info_for_group_and_identity(session, group, me);
     ASSERT_OK;
-    status = join_group(session, group_identity, me);
+    status = group_join(session, group_identity, me);
     ASSERT_OK;
 
     ASSERT_EQ(m_queue.size(), 1);
@@ -1407,7 +1407,7 @@ TEST_F(GroupEncryptionTest, join_group_member_3) {
     m_queue.clear();
 }
 
-TEST_F(GroupEncryptionTest, join_group_member_4) {
+TEST_F(GroupEncryptionTest, group_join_member_4) {
     const char* own_id = PEP_OWN_USERID;
     pEp_identity* me = new_identity(member_4_address, NULL, own_id, member_4_name);
     read_file_and_import_key(session, kf_name(member_4_prefix, false).c_str());
@@ -1442,7 +1442,7 @@ TEST_F(GroupEncryptionTest, join_group_member_4) {
     pEp_group* group = new_group(group_identity, NULL, NULL);
     status = retrieve_own_membership_info_for_group_and_identity(session, group, me);
     ASSERT_OK;
-    status = join_group(session, group_identity, me);
+    status = group_join(session, group_identity, me);
     ASSERT_OK;
 
     ASSERT_EQ(m_queue.size(), 1);
@@ -1468,7 +1468,7 @@ TEST_F(GroupEncryptionTest, join_group_member_4) {
 }
 
 
-TEST_F(GroupEncryptionTest, check_protocol_join_group_receive) {
+TEST_F(GroupEncryptionTest, check_protocol_group_join_receive) {
 
     // We have to replicate the whole group creation business in order to receive the message.
     pEp_identity* me = new_identity(manager_1_address, NULL, PEP_OWN_USERID, manager_1_name);
@@ -1515,7 +1515,7 @@ TEST_F(GroupEncryptionTest, check_protocol_join_group_receive) {
     ASSERT_EQ(group->members->next, nullptr);
     ASSERT_STREQ(group->members->member->ident->user_id, "MEMBER1");
     ASSERT_STREQ(group->members->member->ident->address, member_1_address);
-    ASSERT_FALSE(group->members->member->adopted);
+    ASSERT_FALSE(group->members->member->joined);
     free_group(group);
     group = NULL;
 
@@ -1545,7 +1545,7 @@ TEST_F(GroupEncryptionTest, check_protocol_join_group_receive) {
     ASSERT_EQ(group->members->next, nullptr);
     ASSERT_STREQ(group->members->member->ident->user_id, "MEMBER1");
     ASSERT_STREQ(group->members->member->ident->address, member_1_address);
-    ASSERT_TRUE(group->members->member->adopted);
+    ASSERT_TRUE(group->members->member->joined);
 
     // HOORAY.
 }
@@ -1690,7 +1690,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_send) {
         ASSERT_NE(name, nullptr);
         ASSERT_NE(fpr, nullptr);
 
-        ASSERT_TRUE(memb->adopted);
+        ASSERT_TRUE(memb->joined);
 
         int index = -1;
 
@@ -1829,12 +1829,12 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_receive) {
     pEp_group* group = new_group(group_identity, NULL, NULL);
     status = retrieve_own_membership_info_for_group_and_identity(session, group, me);
     ASSERT_OK;
-    status = join_group(session, group_identity, me);
+    status = group_join(session, group_identity, me);
     ASSERT_OK;
 
     status = retrieve_own_membership_info_for_group_and_identity(session, group, me);
     ASSERT_OK;
-    ASSERT_TRUE(group->members->member->adopted);
+    ASSERT_TRUE(group->members->member->joined);
 
     ASSERT_EQ(m_queue.size(), 1);
     m_queue.clear();
@@ -1856,7 +1856,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_receive) {
 
     status = retrieve_own_membership_info_for_group_and_identity(session, group, me);
     ASSERT_OK;
-    ASSERT_FALSE(group->members->member->adopted);
+    ASSERT_FALSE(group->members->member->joined);
 
     active = false;
     status = is_group_active(session, group_identity, &active);
@@ -2110,7 +2110,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_different_own_identity_m
         ASSERT_NE(name, nullptr);
         ASSERT_NE(fpr, nullptr);
 
-        ASSERT_FALSE(memb->adopted);
+        ASSERT_FALSE(memb->joined);
 
         int index = -1;
 
@@ -2238,7 +2238,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_different_own_identity_m
         ASSERT_NE(name, nullptr);
         ASSERT_NE(fpr, nullptr);
 
-        ASSERT_FALSE(memb->adopted);
+        ASSERT_FALSE(memb->joined);
 
         int index = -1;
 
@@ -2371,9 +2371,9 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_not_manager) {
     pEp_identity* group1_ident = new_identity(group_1_address, NULL, PEP_OWN_USERID, NULL);
     pEp_identity* group2_ident = new_identity(group_2_address, NULL, PEP_OWN_USERID, NULL);
 
-    status = join_group(session, group1_ident, me);
+    status = group_join(session, group1_ident, me);
     ASSERT_OK;
-    status = join_group(session, group2_ident, me);
+    status = group_join(session, group2_ident, me);
     ASSERT_OK;
 
     m_queue.clear();

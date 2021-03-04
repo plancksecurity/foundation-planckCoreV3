@@ -529,7 +529,7 @@ static const char *sql_set_group_member_status =
         "update own_groups_members set active_member = ?1 "
         "    where group_id = ?2 and group_address = ?3 and "
         "          member_id = ?4 and member_address = ?5; ";
-static const char *sql_join_group =
+static const char *sql_group_join =
         "update own_memberships set have_joined = 1 "
         "    where group_id = ?1 and group_address = ?2 and "
         "          own_id = ?3 and own_address = ?4; ";
