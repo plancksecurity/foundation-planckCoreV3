@@ -1418,6 +1418,8 @@
 			);
 			name = "Generate src files";
 			outputFileListPaths = (
+				"$(SRCROOT)/generated-files-asn1.txt",
+				"$(SRCROOT)/generated-files-sync.txt",
 			);
 			outputPaths = (
 			);
