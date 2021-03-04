@@ -1255,6 +1255,7 @@
 				1552DB0D2577D4F100A92F71 /* Headers */,
 				1552DB0E2577D4F100A92F71 /* Sources */,
 				1552DB0F2577D4F100A92F71 /* Frameworks */,
+				1508455925F0E0ED00D46DA6 /* Copy Build Artefacts To Custom Build Dir */,
 			);
 			buildRules = (
 			);
@@ -1386,6 +1387,24 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		1508455925F0E0ED00D46DA6 /* Copy Build Artefacts To Custom Build Dir */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Build Artefacts To Custom Build Dir";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "CUSTOM_BUILD_DIR=${PROJECT_DIR}/build\nmkdir -p ${CUSTOM_BUILD_DIR}\ncp -r \"${BUILD_DIR}/${CONFIGURATION}/libpEpEngine_macOS.a\" ${CUSTOM_BUILD_DIR}\n";
+		};
 		1552DB1D2577D53D00A92F71 /* Generate src files */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
