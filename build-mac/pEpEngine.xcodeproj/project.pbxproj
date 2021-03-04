@@ -234,7 +234,6 @@
 		159EF42722B6D3E900149C0C /* pgp_sequoia.c in Sources */ = {isa = PBXBuildFile; fileRef = 159EF42422B6D3E900149C0C /* pgp_sequoia.c */; };
 		159EF42822B6D3E900149C0C /* pgp_sequoia.h in Headers */ = {isa = PBXBuildFile; fileRef = 159EF42522B6D3E900149C0C /* pgp_sequoia.h */; };
 		159EF42922B6D3E900149C0C /* pgp_sequoia_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 159EF42622B6D3E900149C0C /* pgp_sequoia_internal.h */; };
-		15A5507225DEC50F00BC6673 /* libetpan.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64289E351B8B630200FC617B /* libetpan.a */; };
 		15B037AA22B2B822002D664C /* ber_tlv_length.c in Sources */ = {isa = PBXBuildFile; fileRef = 15B0373F22B2B816002D664C /* ber_tlv_length.c */; };
 		15B037AC22B2B822002D664C /* CommitAccept.c in Sources */ = {isa = PBXBuildFile; fileRef = 15B0374122B2B817002D664C /* CommitAccept.c */; };
 		15B037AD22B2B822002D664C /* Rollback.h in Headers */ = {isa = PBXBuildFile; fileRef = 15B0374222B2B817002D664C /* Rollback.h */; };
@@ -702,7 +701,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				15A5507225DEC50F00BC6673 /* libetpan.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
