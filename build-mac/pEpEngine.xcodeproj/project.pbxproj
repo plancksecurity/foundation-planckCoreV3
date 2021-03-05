@@ -427,6 +427,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		1508460625F24D1100D46DA6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 64796A371B455AA5004B1C24 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 644297BE1BE11C65002BC73B;
+			remoteInfo = pEpTrustWords;
+		};
 		43D47AA0225CC82400E97C5B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 64796A371B455AA5004B1C24 /* Project object */;
@@ -1273,6 +1280,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				1508460725F24D1100D46DA6 /* PBXTargetDependency */,
 			);
 			name = pEpEngine_macOS;
 			productName = pEpEngine_macOS;
@@ -1710,6 +1718,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		1508460725F24D1100D46DA6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 644297BE1BE11C65002BC73B /* pEpTrustWords */;
+			targetProxy = 1508460625F24D1100D46DA6 /* PBXContainerItemProxy */;
+		};
 		43D47AA1225CC82400E97C5B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 644297BE1BE11C65002BC73B /* pEpTrustWords */;
