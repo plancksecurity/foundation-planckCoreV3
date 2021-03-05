@@ -561,6 +561,23 @@ PEP_STATUS set_membership_status(PEP_SESSION session,
                                  pEp_identity* as_member,
                                  bool active);
 
+/**
+ * @internal
+ *
+ * @param session
+ * @param group_identity
+ * @param is_own
+ * @return
+ */
+PEP_STATUS is_own_group_identity(PEP_SESSION session, pEp_identity* group_identity, bool* is_own);
+
+/**
+ * @internal
+ *
+ * @param memberlist
+ * @return
+ */
+identity_list* member_list_to_identity_list(member_list* memberlist);
 
 #ifdef __cplusplus
 }

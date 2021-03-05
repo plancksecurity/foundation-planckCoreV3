@@ -275,6 +275,39 @@ static PEP_STATUS _set_own_status_joined(PEP_SESSION session,
  *
  * @param session
  * @param group_identity
+ * @param as_member
+ * @return
+ */
+static PEP_STATUS _remove_member_from_group(PEP_SESSION session,
+                                            pEp_identity* group_identity,
+                                            pEp_identity* member) {
+    int result = 0;
+
+    sqlite3_reset(session->group_delete_member);
+
+    sqlite3_bind_text(session->group_delete_member, 1, group_identity->user_id, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_text(session->group_delete_member, 2, group_identity->address, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_text(session->group_delete_member, 3, member->user_id, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_text(session->group_delete_member, 4, member->address, -1,
+                      SQLITE_STATIC);
+    result = sqlite3_step(session->group_delete_member);
+
+    sqlite3_reset(session->group_delete_member);
+
+    if (result != SQLITE_DONE)
+        return PEP_UNKNOWN_ERROR;
+
+    return PEP_STATUS_OK;
+}
+
+
+/******************************************************************************************
+ *
+ * @param session
+ * @param group_identity
  * @param leaver
  * @return
  */
@@ -428,6 +461,18 @@ static PEP_STATUS is_invited_group_member(PEP_SESSION session, pEp_identity* gro
 /******************************************************************************************
  * UTILITY FUNCTIONS
  ******************************************************************************************/
+
+identity_list* member_list_to_identity_list(member_list* memberlist) {
+    memberlist* curr_mem = memberlist;
+    identity_list* head = NULL;
+    identity_list** id_list_curr_ptr = &head;
+
+    for ( ; curr_mem && curr_mem->member && curr_mem->member->ident; curr_mem = curr_mem->next,
+            id_list_curr_ptr = &((*id_list_curr_ptr)->next)) {
+        *id_list_curr_ptr = identity_dup(curr_mem->member->ident);
+    }
+    return head;
+}
 
 // Exposed for testing.
 PEP_STATUS set_membership_status(PEP_SESSION session,
@@ -1433,6 +1478,25 @@ PEP_STATUS receive_managed_group_message(PEP_SESSION session, message* msg, PEP_
     return PEP_STATUS_OK;
 }
 
+PEP_STATUS is_own_group_identity(PEP_SESSION session, pEp_identity* group_identity, bool* is_own) {
+    if (!session || !group_identity || EMPTYSTR(group_identity->user_id) || EMPTYSTR(group_identity->address))
+        return PEP_ILLEGAL_VALUE;
+
+    *is_own = false;
+
+    pEp_identity* manager = NULL;
+
+    PEP_STATUS status = get_group_manager(session, group_identity, &manager);
+
+    if (status == PEP_STATUS_OK && manager) {
+        if (is_me(session, manager))
+            *is_own = true;
+    }
+
+    free(manager);
+    return status;
+}
+
 
 /******************************************************************************************
  * API FUNCTIONS
@@ -1872,21 +1936,37 @@ DYNAMIC_API PEP_STATUS group_invite_member(
     return status;
 }
 
-//DYNAMIC_API PEP_STATUS group_remove_member(
-//        PEP_SESSION session,
-//        pEp_identity *group_identity,
-//        pEp_identity *group_member
-//) {
-//    bool exists = false;
-//    PEP_STATUS status = exists_group(session, group_identity, &exists);
-//    if (status != PEP_STATUS_OK)
-//        return status;
-//
-//    if (!exists)
-//        return PEP_GROUP_NOT_FOUND;
-//
-//    return set_membership_status(session, group_identity, group_member, false);
-//}
+DYNAMIC_API PEP_STATUS group_remove_member(
+        PEP_SESSION session,
+        pEp_identity *group_identity,
+        pEp_identity *group_member
+) {
+    bool exists = false;
+    PEP_STATUS status = exists_group(session, group_identity, &exists);
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    if (!exists)
+        return PEP_GROUP_NOT_FOUND;
+
+    status = _remove_member_from_group(session, group_identity, group_member);
+
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    pEp_identity* manager = NULL;
+
+    status = get_group_manager(session, group_identity, &manager);
+
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    status = key_reset_managed_group(session, group_identity, manager, group_member);
+
+    free_identity(manager);
+
+    return status;
+}
 
 DYNAMIC_API PEP_STATUS group_rating(
         PEP_SESSION session,
