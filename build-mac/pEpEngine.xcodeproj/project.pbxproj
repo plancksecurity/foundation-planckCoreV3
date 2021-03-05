@@ -6,6 +6,20 @@
 	objectVersion = 51;
 	objects = {
 
+/* Begin PBXAggregateTarget section */
+		150845DE25F13CE700D46DA6 /* generate_code */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 150845E525F13CE700D46DA6 /* Build configuration list for PBXAggregateTarget "generate_code" */;
+			buildPhases = (
+				150845EA25F13CF100D46DA6 /* ShellScript */,
+			);
+			dependencies = (
+			);
+			name = generate_code;
+			productName = generate_code;
+		};
+/* End PBXAggregateTarget section */
+
 /* Begin PBXBuildFile section */
 		15147EF0237E9EA7003989FE /* NegotiationRequestGrouped.h in Headers */ = {isa = PBXBuildFile; fileRef = 15147EE8237E9EA7003989FE /* NegotiationRequestGrouped.h */; };
 		15147EF1237E9EA7003989FE /* GroupHandshake.h in Headers */ = {isa = PBXBuildFile; fileRef = 15147EED237E9EA7003989FE /* GroupHandshake.h */; };
@@ -413,6 +427,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		1508460625F24D1100D46DA6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 64796A371B455AA5004B1C24 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 644297BE1BE11C65002BC73B;
+			remoteInfo = pEpTrustWords;
+		};
 		43D47AA0225CC82400E97C5B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 64796A371B455AA5004B1C24 /* Project object */;
@@ -463,6 +484,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1508458825F101FB00D46DA6 /* libetpan.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libetpan.a; path = ../../local/lib/libetpan.a; sourceTree = "<group>"; };
 		15147EE8237E9EA7003989FE /* NegotiationRequestGrouped.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NegotiationRequestGrouped.h; path = ../asn.1/NegotiationRequestGrouped.h; sourceTree = "<group>"; };
 		15147EED237E9EA7003989FE /* GroupHandshake.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GroupHandshake.h; path = ../asn.1/GroupHandshake.h; sourceTree = "<group>"; };
 		15147EEE237E9EA7003989FE /* GroupKeysAndClose.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupKeysAndClose.c; path = ../asn.1/GroupKeysAndClose.c; sourceTree = "<group>"; };
@@ -730,6 +752,7 @@
 		154917EB22B926080091B6D6 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1508458825F101FB00D46DA6 /* libetpan.a */,
 				154917F422B926420091B6D6 /* sequoia4ios */,
 			);
 			name = Frameworks;
@@ -1249,14 +1272,15 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1552DB192577D4F100A92F71 /* Build configuration list for PBXNativeTarget "pEpEngine_macOS" */;
 			buildPhases = (
-				1552DB1D2577D53D00A92F71 /* Generate src files */,
 				1552DB0D2577D4F100A92F71 /* Headers */,
 				1552DB0E2577D4F100A92F71 /* Sources */,
 				1552DB0F2577D4F100A92F71 /* Frameworks */,
+				1508455925F0E0ED00D46DA6 /* Copy Build Artefacts To Custom Build Dir */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				1508460725F24D1100D46DA6 /* PBXTargetDependency */,
 			);
 			name = pEpEngine_macOS;
 			productName = pEpEngine_macOS;
@@ -1311,6 +1335,9 @@
 				LastUpgradeCheck = 1020;
 				ORGANIZATIONNAME = "p≡p Security S.A.";
 				TargetAttributes = {
+					150845DE25F13CE700D46DA6 = {
+						CreatedOnToolsVersion = 12.4;
+					};
 					1552DB102577D4F100A92F71 = {
 						CreatedOnToolsVersion = 12.2;
 					};
@@ -1344,6 +1371,7 @@
 				64796A3E1B455AA5004B1C24 /* pEpEngine */,
 				644297BE1BE11C65002BC73B /* pEpTrustWords */,
 				1552DB102577D4F100A92F71 /* pEpEngine_macOS */,
+				150845DE25F13CE700D46DA6 /* generate_code */,
 			);
 		};
 /* End PBXProject section */
@@ -1384,7 +1412,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		1552DB1D2577D53D00A92F71 /* Generate src files */ = {
+		1508455925F0E0ED00D46DA6 /* Copy Build Artefacts To Custom Build Dir */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1393,8 +1421,27 @@
 			);
 			inputPaths = (
 			);
-			name = "Generate src files";
+			name = "Copy Build Artefacts To Custom Build Dir";
 			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "CUSTOM_BUILD_DIR=${PROJECT_DIR}/build\nmkdir -p ${CUSTOM_BUILD_DIR}\ncp -r \"${BUILD_DIR}/${CONFIGURATION}/libpEpEngine_macOS.a\" ${CUSTOM_BUILD_DIR}\n";
+		};
+		150845EA25F13CF100D46DA6 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+				"$(SRCROOT)/generated-files-asn1.txt",
+				"$(SRCROOT)/generated-files-sync.txt",
 			);
 			outputPaths = (
 			);
@@ -1671,6 +1718,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		1508460725F24D1100D46DA6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 644297BE1BE11C65002BC73B /* pEpTrustWords */;
+			targetProxy = 1508460625F24D1100D46DA6 /* PBXContainerItemProxy */;
+		};
 		43D47AA1225CC82400E97C5B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 644297BE1BE11C65002BC73B /* pEpTrustWords */;
@@ -1684,9 +1736,28 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		150845DF25F13CE700D46DA6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		150845E025F13CE700D46DA6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		1552DB172577D4F100A92F71 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = x86_64;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -1716,6 +1787,7 @@
 		1552DB182577D4F100A92F71 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = x86_64;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -1760,6 +1832,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -1820,6 +1893,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -1932,6 +2006,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		150845E525F13CE700D46DA6 /* Build configuration list for PBXAggregateTarget "generate_code" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				150845DF25F13CE700D46DA6 /* Debug */,
+				150845E025F13CE700D46DA6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		1552DB192577D4F100A92F71 /* Build configuration list for PBXNativeTarget "pEpEngine_macOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

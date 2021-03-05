@@ -14,6 +14,20 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "150845DE25F13CE700D46DA6"
+               BuildableName = "generate_code"
+               BlueprintName = "generate_code"
+               ReferencedContainer = "container:pEpEngine.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "1552DB102577D4F100A92F71"
                BuildableName = "libpEpEngine_macOS.a"
                BlueprintName = "pEpEngine_macOS"
