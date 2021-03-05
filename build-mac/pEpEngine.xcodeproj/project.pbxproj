@@ -21,7 +21,6 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		1508458D25F101FB00D46DA6 /* libetpan.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1508458825F101FB00D46DA6 /* libetpan.a */; };
 		15147EF0237E9EA7003989FE /* NegotiationRequestGrouped.h in Headers */ = {isa = PBXBuildFile; fileRef = 15147EE8237E9EA7003989FE /* NegotiationRequestGrouped.h */; };
 		15147EF1237E9EA7003989FE /* GroupHandshake.h in Headers */ = {isa = PBXBuildFile; fileRef = 15147EED237E9EA7003989FE /* GroupHandshake.h */; };
 		15147EF2237E9EA7003989FE /* GroupKeysAndClose.c in Sources */ = {isa = PBXBuildFile; fileRef = 15147EEE237E9EA7003989FE /* GroupKeysAndClose.c */; };
@@ -717,7 +716,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1508458D25F101FB00D46DA6 /* libetpan.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1766,7 +1764,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
-				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../local/lib/libnettle.a ${PROJECT_DIR}/../../local/lib/libgmp.a ${PROJECT_DIR}/../../local/lib/libhogweed.a ${PROJECT_DIR}/../../local/lib/libsequoia_openpgp_ffi.a";
+				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../local/lib/libnettle.a ${PROJECT_DIR}/../../local/lib/libgmp.a ${PROJECT_DIR}/../../local/lib/libhogweed.a ${PROJECT_DIR}/../../local/lib/libsequoia_openpgp_ffi.a ${PROJECT_DIR}/../../local/lib/libetpan.a";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -1790,7 +1788,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_FAST_MATH = YES;
-				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../local/lib/libnettle.a ${PROJECT_DIR}/../../local/lib/libgmp.a ${PROJECT_DIR}/../../local/lib/libhogweed.a ${PROJECT_DIR}/../../local/lib/libsequoia_openpgp_ffi.a";
+				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../local/lib/libnettle.a ${PROJECT_DIR}/../../local/lib/libgmp.a ${PROJECT_DIR}/../../local/lib/libhogweed.a ${PROJECT_DIR}/../../local/lib/libsequoia_openpgp_ffi.a ${PROJECT_DIR}/../../local/lib/libetpan.a";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
