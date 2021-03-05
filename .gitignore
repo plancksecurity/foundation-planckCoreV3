@@ -88,6 +88,12 @@ test/EngineTests
 test/googletest
 test/tmp/*
 
+src/commit_hash.h
+.idea/
+venv/
+venv2/
+cleangit.py
+
 # Xcode related ignores
 build/
 DerivedData/

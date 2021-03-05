@@ -7,6 +7,21 @@
 #ifndef PEP_INTERNAL_H
 #define PEP_INTERNAL_H
 
+#if defined __has_include
+#  if __has_include ("commit_hash.h")
+#    include "commit_hash.h"
+#  else
+#    define PEP_CURRENT_COMMIT_HASH="DUMMY_COMMIT_HASH_ERROR"
+#  endif
+#else
+// Well, we tried. Better hope the git setup is correct.
+// IF NOT, or you aren't using git, please copy the commit_hash.h file from
+// templates/ into src/ if this include fails.
+#  include "commit_hash.h"
+#endif
+
+#include "commit_hash.h" // We need this everywhere. So.
+
 // maximum attachment size to import as key 25MB, maximum of 20 attachments
 #define MAX_KEY_SIZE (25 * 1024 * 1024)
 #define MAX_KEYS_TO_IMPORT  20

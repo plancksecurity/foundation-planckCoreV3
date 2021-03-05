@@ -1,0 +1,6 @@
+#! /bin/sh
+
+# Commit hash header file - if we don't run this, it won't build.
+commit_hash="$(git rev-parse HEAD)"
+sed "s/\(PEP_CURRENT_COMMIT_HASH\ =\).*/\1\"$commit_hash\"/" templates/commit_hash.h > src/commit_hash.h
+
