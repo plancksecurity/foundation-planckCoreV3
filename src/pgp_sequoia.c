@@ -2724,9 +2724,13 @@ PEP_STATUS _pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity, ti
     assert(identity->fpr == NULL || identity->fpr[0] == 0);
 //    assert(identity->username);
 
-    const char* passphrase = session->generation_passphrase;
+    bool is_group_identity = identity & PEP_idf_group_ident;
 
-    if (session->new_key_pass_enable && (!passphrase || passphrase[0] == '\0'))
+    // NOTE: FOR NOW, NO PASSPHRASE-BASED KEYS WILL BE GENERATED FOR GROUP ENCRYPTION.
+    // VOLKER HAS A PLAN TO FIX THIS.
+    const char* passphrase = is_group_identity ? NULL : session->generation_passphrase;
+
+    if (!is_group_identity && session->new_key_pass_enable && (!passphrase || passphrase[0] == '\0'))
         return PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED;
 
     char* cached_username = identity->username;
@@ -2779,7 +2783,9 @@ PEP_STATUS _pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity, ti
     pgp_cert_builder_t certb = pgp_cert_builder_general_purpose(
         cipher_suite(session->cipher_suite), userid);
 
-    if (session->new_key_pass_enable)        
+    // NOTE: FOR NOW, NO PASSPHRASE-BASED KEYS WILL BE GENERATED FOR GROUP ENCRYPTION.
+    // VOLKER HAS A PLAN TO FIX THIS.
+    if (!is_group_identity && session->new_key_pass_enable)
         pgp_cert_builder_set_password(&certb, (uint8_t*)passphrase, strlen(passphrase));        
 
     pgp_cert_builder_set_creation_time(&certb, when);
