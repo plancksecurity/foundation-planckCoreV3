@@ -13,28 +13,33 @@ ifdef PER_MACHINE_DIRECTORY
 	EXTRA_MACROS+= -DPER_MACHINE_DIRECTORY=\"$(PER_MACHINE_DIRECTORY)\"
 endif
 
-CFLAGS+= $(ETPAN_INC) $(PEP_MIME_INC) -I../asn.1 $(EXTRA_MACROS)
-LDFLAGS+= $(ETPAN_LIB) $(PEP_MIME_LIB) -L../asn.1 -shared
-LDLIBS+= -lc -lasn1
 NO_SOURCE=
 
 ifndef PEP_MIME
-LDLIBS+= -letpan
+    CFLAGS+= $(ETPAN_INC)
+    LDFLAGS+= $(ETPAN_LIB)
+    LDLIBS+= -letpan
 else
-LDLIBS+= -lpEpMIME
-NO_SOURCE+= etpan_mime.c
+    LDFLAGS+= -L../pEpMIME -shared
+    LDLIBS+= -lpEpMIME
+    NO_SOURCE+= etpan_mime.c
 endif
+    
+CFLAGS+= -I../asn.1 $(EXTRA_MACROS)
+CPPFLAGS+= -DSQLITE_THREADSAFE=1
+
+LDFLAGS+= -L../asn.1 -shared
+LDLIBS+= -lc -lasn1
 
 ifeq ($(BUILD_ON),Darwin)
     ifeq ($(BUILD_FOR),Darwin)
-        CFLAGS+= -DSQLITE_THREADSAFE=1
         LDLIBS+= -lz -liconv -mmacosx-version-min=10.10
     else
         $(error I do not know how to make for $(BUILD_FOR) on $(BUILD_ON))
     endif
 else ifeq ($(BUILD_ON),Linux)
     ifeq ($(BUILD_FOR),Linux)
-        CFLAGS+= -DSQLITE_THREADSAFE=1 -D_GNU_SOURCE
+        CPPFLAGS+= -D_GNU_SOURCE
         LDLIBS+= -ldl -luuid
     else
         $(error I do not know how to make for $(BUILD_FOR) on $(BUILD_ON))
@@ -43,18 +48,18 @@ else
     $(error I do not know how to make for $(BUILD_FOR) on $(BUILD_ON))
 endif
 
-ifeq (,$(wildcard commit_hash.h))
-    $(shell cp ../templates/commit_hash.h ./commit_hash.h)
-endif
+# Commit hash header file - if we don't run this, it won't build.
+COMMIT_HASH:=$(shell git rev-parse HEAD)
 
 ifdef SQLITE3_FROM_OS
     NO_SOURCE+= sqlite3.c
-    CFLAGS+= -DSQLITE3_FROM_OS
+    CPPFLAGS+= -DSQLITE3_FROM_OS
     LDLIBS+= -lsqlite3
 endif
 
 ifeq ($(OPENPGP),SEQUOIA)
-    CFLAGS+= -DUSE_SEQUOIA $(SEQUOIA_CFLAGS) $(SEQUOIA_INC)
+    CPPFLAGS+= -DUSE_SEQUOIA
+    CFLAGS+= $(SEQUOIA_CFLAGS) $(SEQUOIA_INC)
     LDFLAGS+= $(SEQUOIA_LDFLAGS)
     LDLIBS+= $(SEQUOIA_LIB)
 else
@@ -69,9 +74,9 @@ all: $(TARGET)
 
 -include Makefile.protocols
 
-%.d: %.c
+%.d: %.c commit_hash.h
 	@set -e; rm -f $@; \
-	$(CC) -MM $(CPPFLAGS) $(CFLAGS) $< > $@.$$$$; \
+	$(CC) -MM $(CFLAGS) $(CPPFLAGS) $< > $@.$$$$; \
 	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
@@ -81,32 +86,41 @@ ifneq ($(MAKECMDGOALS),clean)
 endif
 
 $(TARGET): libpEpEngine.a
-	$(CC) $(CFLAGS) $(ALL_OBJECTS) $(LDFLAGS) $(LDLIBS) -o $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(ALL_OBJECTS) $(LDFLAGS) $(LDLIBS) -o $@
 
 .PHONY: objects clean install_headers install uninstall beinstall
 
-objects: $(ALL_OBJECTS)
+commit_hash.h:
+ifeq (,$(COMMIT_HASH))
+	$(shell cp ../templates/commit_hash.h commit_hash.h)
+else
+	sed "s/\(PEP_CURRENT_COMMIT_HASH\ =\).*/\1\"$(COMMIT_HASH)\"/" ../templates/commit_hash.h > commit_hash.h
+endif
 
-libpEpEngine.a: $(ALL_OBJECTS)
+objects: $(ALL_OBJECTS) commit_hash.h
+
+libpEpEngine.a: $(ALL_OBJECTS) commit_hash.h
 	$(AR) -rc $@ $^
 
 clean:
 	rm -f *.d *.o *.a $(TARGET) *.dll *.so *.zip *.d.* *.def *~
 	rm -Rf $(TARGET).dSYM
 	rm -f KeySync_fsm.* Sync_actions.c Sync_event.* Sync_func.* Sync_impl.* sync_codec.* distribution_codec.*
+	rm -f commit_hash.h
 
 # CAVEAT:
-# install_headers is needed for building pEp MIME
+# install_headers is needed for building *STANDALONE* pEp MIME - it is NOT used for built-in functionality!!!
 
-install_headers: $(TARGET)
+install_headers: $(TARGET) commit_hash.h
 	mkdir -p $(PREFIX)/include/pEp
 	cp pEpEngine.h keymanagement.h message_api.h dynamic_api.h stringlist.h \
 	   timestamp.h identity_list.h bloblist.h stringpair.h message.h mime.h \
-	   cryptotech.h sync_api.h blacklist.h pEp_string.h openpgp_compat.h mime.h \
+	   cryptotech.h sync_api.h blacklist.h pEp_string.h openpgp_compat.h \
 	   labeled_int_list.h key_reset.h base64.h sync_codec.h distribution_codec.h \
 	   status_to_string.h aux_mime_msg.h keyreset_command.h platform.h platform_unix.h ../asn.1/*.h \
  	   $(PREFIX)/include/pEp/
 
+# FIXME: Does anyone but Roker use install_headers? Otherwise, remove the dependency.
 install: $(TARGET) install_headers
 	mkdir -p "$(PREFIX)/lib/"
 	cp -v $< $(PREFIX)/lib/
