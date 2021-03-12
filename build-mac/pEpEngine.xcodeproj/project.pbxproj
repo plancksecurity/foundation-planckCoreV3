@@ -18,6 +18,17 @@
 			name = generate_code;
 			productName = generate_code;
 		};
+		15B21C2225FB8BE70097927A /* create_commit_hash_dot.h */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 15B21C2925FB8BE70097927A /* Build configuration list for PBXAggregateTarget "create_commit_hash_dot.h" */;
+			buildPhases = (
+				15B21C2F25FB8BEC0097927A /* ShellScript */,
+			);
+			dependencies = (
+			);
+			name = create_commit_hash_dot.h;
+			productName = create_commit_hash_dot.h;
+		};
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
@@ -1309,7 +1320,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 64796A531B455AA5004B1C24 /* Build configuration list for PBXNativeTarget "pEpEngine" */;
 			buildPhases = (
-				43D47B08225DEBD600E97C5B /* Generate src files */,
 				64796A3B1B455AA5004B1C24 /* Sources */,
 				64796A3C1B455AA5004B1C24 /* Frameworks */,
 				64796A3D1B455AA5004B1C24 /* CopyFiles */,
@@ -1340,6 +1350,9 @@
 					};
 					1552DB102577D4F100A92F71 = {
 						CreatedOnToolsVersion = 12.2;
+					};
+					15B21C2225FB8BE70097927A = {
+						CreatedOnToolsVersion = 12.4;
 					};
 					644297BE1BE11C65002BC73B = {
 						CreatedOnToolsVersion = 7.1;
@@ -1372,6 +1385,7 @@
 				644297BE1BE11C65002BC73B /* pEpTrustWords */,
 				1552DB102577D4F100A92F71 /* pEpEngine_macOS */,
 				150845DE25F13CE700D46DA6 /* generate_code */,
+				15B21C2225FB8BE70097927A /* create_commit_hash_dot.h */,
 			);
 		};
 /* End PBXProject section */
@@ -1449,7 +1463,7 @@
 			shellPath = /bin/sh;
 			shellScript = "export LANG=en_US.UTF-8\n\necho \"***************************************\"\necho \"*** Generate files: ACTION: $ACTION ***\"\necho \"***************************************\"\n\ncd \"$SRCROOT/..\"\n\nbash -l -c \"gmake -C sync\"\nbash -l -c \"make -C asn.1 Sync.c Distribution.c\"\n";
 		};
-		43D47B08225DEBD600E97C5B /* Generate src files */ = {
+		15B21C2F25FB8BEC0097927A /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1458,16 +1472,13 @@
 			);
 			inputPaths = (
 			);
-			name = "Generate src files";
 			outputFileListPaths = (
-				"$(SRCROOT)/generated-files-asn1.txt",
-				"$(SRCROOT)/generated-files-sync.txt",
 			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/bash;
-			shellScript = "export LANG=en_US.UTF-8\n\necho \"***************************************\"\necho \"*** Generate files: ACTION: $ACTION ***\"\necho \"***************************************\"\n\ncd \"$SRCROOT/..\"\n\nbash -l -c \"gmake -C sync\"\nbash -l -c \"make -C asn.1 Sync.c Distribution.c\"\n";
+			shellPath = /bin/sh;
+			shellScript = "# Creates `commit_hash.h` required by Engine and missing as we do not use the makefile\n\nCOMMIT_HASH=$(git rev-parse HEAD)\necho \"#ifndef COMMIT_HASH_H\\n#define COMMIT_HASH_H\\n#define PEP_CURRENT_COMMIT_HASH = \\\"${COMMIT_HASH}\\\"\\n#endif\\n\" > ${PROJECT_DIR}/../src/commit_hash.h\n";
 		};
 		644297C61BE11D00002BC73B /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1808,6 +1819,24 @@
 			};
 			name = Release;
 		};
+		15B21C2325FB8BE70097927A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		15B21C2425FB8BE70097927A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		644297C31BE11C65002BC73B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -2020,6 +2049,15 @@
 			buildConfigurations = (
 				1552DB172577D4F100A92F71 /* Debug */,
 				1552DB182577D4F100A92F71 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		15B21C2925FB8BE70097927A /* Build configuration list for PBXAggregateTarget "create_commit_hash_dot.h" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				15B21C2325FB8BE70097927A /* Debug */,
+				15B21C2425FB8BE70097927A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
