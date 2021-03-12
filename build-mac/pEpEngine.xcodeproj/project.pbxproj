@@ -445,6 +445,34 @@
 			remoteGlobalIDString = 644297BE1BE11C65002BC73B;
 			remoteInfo = pEpTrustWords;
 		};
+		15B21C3525FB8DD10097927A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 64796A371B455AA5004B1C24 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 150845DE25F13CE700D46DA6;
+			remoteInfo = generate_code;
+		};
+		15B21C3725FB8DDB0097927A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 64796A371B455AA5004B1C24 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 15B21C2225FB8BE70097927A;
+			remoteInfo = create_commit_hash_dot.h;
+		};
+		15B21C3E25FB8E160097927A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 64796A371B455AA5004B1C24 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 150845DE25F13CE700D46DA6;
+			remoteInfo = generate_code;
+		};
+		15B21C4025FB8E1B0097927A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 64796A371B455AA5004B1C24 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 15B21C2225FB8BE70097927A;
+			remoteInfo = create_commit_hash_dot.h;
+		};
 		43D47AA0225CC82400E97C5B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 64796A371B455AA5004B1C24 /* Project object */;
@@ -1291,6 +1319,8 @@
 			buildRules = (
 			);
 			dependencies = (
+				15B21C4125FB8E1B0097927A /* PBXTargetDependency */,
+				15B21C3F25FB8E160097927A /* PBXTargetDependency */,
 				1508460725F24D1100D46DA6 /* PBXTargetDependency */,
 			);
 			name = pEpEngine_macOS;
@@ -1328,6 +1358,8 @@
 			buildRules = (
 			);
 			dependencies = (
+				15B21C3825FB8DDB0097927A /* PBXTargetDependency */,
+				15B21C3625FB8DD10097927A /* PBXTargetDependency */,
 				43D47AA1225CC82400E97C5B /* PBXTargetDependency */,
 				64289E3F1B8B638800FC617B /* PBXTargetDependency */,
 			);
@@ -1733,6 +1765,26 @@
 			isa = PBXTargetDependency;
 			target = 644297BE1BE11C65002BC73B /* pEpTrustWords */;
 			targetProxy = 1508460625F24D1100D46DA6 /* PBXContainerItemProxy */;
+		};
+		15B21C3625FB8DD10097927A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 150845DE25F13CE700D46DA6 /* generate_code */;
+			targetProxy = 15B21C3525FB8DD10097927A /* PBXContainerItemProxy */;
+		};
+		15B21C3825FB8DDB0097927A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 15B21C2225FB8BE70097927A /* create_commit_hash_dot.h */;
+			targetProxy = 15B21C3725FB8DDB0097927A /* PBXContainerItemProxy */;
+		};
+		15B21C3F25FB8E160097927A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 150845DE25F13CE700D46DA6 /* generate_code */;
+			targetProxy = 15B21C3E25FB8E160097927A /* PBXContainerItemProxy */;
+		};
+		15B21C4125FB8E1B0097927A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 15B21C2225FB8BE70097927A /* create_commit_hash_dot.h */;
+			targetProxy = 15B21C4025FB8E1B0097927A /* PBXContainerItemProxy */;
 		};
 		43D47AA1225CC82400E97C5B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
