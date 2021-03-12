@@ -14,20 +14,6 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "159EF1E022B6AB0700149C0C"
-               BuildableName = "sequoia.framework"
-               BlueprintName = "sequoia"
-               ReferencedContainer = "container:../../Sequoia4iOS/Sequoia4iOS.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
                BlueprintIdentifier = "64796A3E1B455AA5004B1C24"
                BuildableName = "libpEpEngine.a"
                BlueprintName = "pEpEngine"
