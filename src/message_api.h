@@ -728,22 +728,6 @@ PEP_STATUS try_encrypt_message(
         PEP_encrypt_flags_t flags
     );
 
-/**
- *  <!--       probe_encrypt()       -->
- *
- *  @brief Test if passphrase for a key is working in current session
- *
- *  @param[in]   session    session handle
- *  @param[in]   fpr        fingerprint of key to test
- *
- *  @retval PEP_STATUS_OK           in case passphrase works
- *  @retval PEP_ILLEGAL_VALUE       illegal parameter values
- *  @retval PEP_OUT_OF_MEMORY       out of memory
- *  @retval any other value on error
- *
- */
-
-DYNAMIC_API PEP_STATUS probe_encrypt(PEP_SESSION session, const char *fpr);
 
 #ifdef __cplusplus
 }

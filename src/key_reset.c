@@ -27,21 +27,6 @@
 /**
  *  @internal
  *  
- *  <!--       _add_auto_consume()       -->
- *  
- *  @brief			TODO
- *  
- *  @param[in]	*msg		message
- *  
- */
-static void _add_auto_consume(message* msg) {
-    add_opt_field(msg, "pEp-auto-consume", "yes");
-    msg->in_reply_to = stringlist_add(msg->in_reply_to, "pEp-auto-consume@pEp.foundation");
-}
-
-/**
- *  @internal
- *  
  *  <!--       _generate_reset_structs()       -->
  *  
  *  @brief			TODO
@@ -1364,6 +1349,13 @@ DYNAMIC_API PEP_STATUS key_reset_own_grouped_keys(PEP_SESSION session) {
         for (curr_key = keys; curr_key && curr_key->value; curr_key = curr_key->next) {
             identity_list* key_idents = NULL;
             const char* own_key = curr_key->value;
+
+            // If the sticky bit is set, ignore this beast
+            bool is_sticky = false;
+            status = get_key_sticky_bit_for_user(session, user_id, own_key, &is_sticky);
+            if (is_sticky)
+                continue;
+
             status = get_identities_by_main_key_id(session, own_key, &key_idents);
             
             if (status == PEP_CANNOT_FIND_IDENTITY) {

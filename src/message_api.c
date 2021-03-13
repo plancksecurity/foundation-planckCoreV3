@@ -1282,7 +1282,7 @@ static message* wrap_message_as_attachment(message* envelope,
         else {
             _envelope->longmsg = strdup(
                 "This message was encrypted with p≡p (https://pep.software). If you are seeing this message,\n" 
-                "your client does not support raising message attachments. Please click on the message attachment to\n"
+                "your client does not support raising message attachments. Please click on the message attachment\n"
                 "to view it, or better yet, consider using p≡p!\n"
             );
         }
@@ -2413,24 +2413,6 @@ static void update_encryption_format(identity_list* id_list, PEP_enc_format* enc
     }
 }
 
-DYNAMIC_API PEP_STATUS probe_encrypt(PEP_SESSION session, const char *fpr)
-{
-    assert(session);
-    if (!session || EMPTYSTR(fpr))
-        return PEP_ILLEGAL_VALUE;
-
-    stringlist_t *keylist = new_stringlist(fpr);
-    if (!keylist)
-        return PEP_OUT_OF_MEMORY;
-
-    char *ctext = NULL;
-    size_t csize = 0;
-    PEP_STATUS status = encrypt_and_sign(session, keylist, "pEp", 4, &ctext, &csize);
-    free(ctext);
-
-    return status;
-}
-
 /**
  *  @internal
  *
@@ -2803,9 +2785,13 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         else {
             // hide subject
             if (enc_format != PEP_enc_inline && enc_format != PEP_enc_inline_EA) {
-                status = replace_subject(_src);
-                if (status == PEP_OUT_OF_MEMORY)
-                    goto enomem;
+                // do not replace subject if message format 1.x and unencrypted
+                // subject is enabled
+                if (!(wrap_type == PEP_message_unwrapped && session->unencrypted_subject)) {
+                    status = replace_subject(_src);
+                    if (status == PEP_OUT_OF_MEMORY)
+                        goto enomem;
+                }
             }
             if (!(flags & PEP_encrypt_flag_force_no_attached_key))
                 added_key_to_real_src = true;            

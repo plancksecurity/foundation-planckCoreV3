@@ -520,6 +520,59 @@ DYNAMIC_API PEP_STATUS set_own_key(
     );
 
 /**
+ *  <!--       set_own_imported_key()       -->
+ *
+ *  @brief Mark a key as an own default key, test to be sure the private key is
+ *         present and can be used, and set or unset the sticky bit as indicated by the boolean
+ *         value. The sticky bit is intended to tell the engine to not automatically remove this
+ *         key as a default through protocols like sync, for example.
+ *
+ *  @param[in]      session    session to use
+ *  @param[in,out]  me         own identity this key is used for
+ *  @param[in]      fpr        fingerprint of the key to mark as own key
+ *  @param[in]      sticky     boolean, true if we should set a sticky bit so
+ *                             it will not be automatically reset by sync and should
+ *                             win sync key elections if no other competing key
+ *                             for the same identity has its sticky bit set,
+ *                             false otherwise
+ *
+ *  @warning the key has to be in the key ring already
+ *           me->address, me->user_id and me->username must be set to valid data
+ *           myself() is called by set_own_key() from within this call without key generation
+ *           me->flags are ignored
+ *           me->address must not be an alias
+ *           me->fpr will be ignored and replaced by fpr, but
+ *           caller MUST surrender ownership of the me->fpr reference, because
+ *           it may be freed and replaced within the myself call. caller owns
+ *           me->fpr memory again upon return.
+ *           CAN GENERATE A PASSPHRASE REQUEST
+ *
+ */
+DYNAMIC_API PEP_STATUS set_own_imported_key(
+        PEP_SESSION session,
+        pEp_identity* me,
+        const char* fpr,
+        bool sticky
+    );
+
+//
+// clean_own_key_defaults()
+//
+// Remove any broken, unrenewable expired, or revoked 
+// own keys from identity and user defaults in the database.
+//  
+//  parameters:
+//      session (in)          session to use
+//
+//  return value:
+//      PEP_STATUS_OK if all went well
+//      PEP_PASSPHRASE_REQUIRED if a key needs to be renewed 
+//                              but cached passphrase isn't present 
+//      PEP_WRONG_PASSPHRASE if passphrase required for expired key renewal 
+//                           but passphrase is the wrong one
+//      Otherwise, database and keyring errors as appropriate 
+//
+/**
  *  <!--       clean_own_key_defaults()       -->
  *  
  *  @brief  Remove any broken, unrenewable expired, or revoked 
@@ -647,6 +700,23 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
                             bool* is_user_default,
                             bool* is_address_default,
                             bool check_blacklist);
+
+/**
+ *  <!--       get_key_sticky_bit_for_user()       -->
+ *
+ *  @brief     Get value of sticky bit for this user and key
+ *
+ *  @param[in]  session       PEP_SESSION
+ *  @param[in]  user_id       user_id of key owner to get the sticky bit for
+ *  @param[in]  fpr           fingerprint of user's key to consider
+ *  @param[out] is_sticky     (by reference) true if sticky bit is set for this user and fpr,
+ *                            else false
+ *
+ */
+PEP_STATUS get_key_sticky_bit_for_user(PEP_SESSION session,
+                                       const char* user_id,
+                                       const char* fpr,
+                                       bool* is_sticky);
 
 #ifdef __cplusplus
 }

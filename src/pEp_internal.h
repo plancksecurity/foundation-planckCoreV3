@@ -7,6 +7,16 @@
 #ifndef PEP_INTERNAL_H
 #define PEP_INTERNAL_H
 
+#if defined __has_include
+#  if __has_include ("commit_hash.h")
+#    include "commit_hash.h"
+#  else
+#    define PEP_CURRENT_COMMIT_HASH = "DUMMY_COMMIT_HASH_ERROR"
+#  endif
+#else
+#  include "commit_hash.h"
+#endif
+
 // maximum attachment size to import as key 25MB, maximum of 20 attachments
 #define MAX_KEY_SIZE (25 * 1024 * 1024)
 #define MAX_KEYS_TO_IMPORT  20
@@ -106,6 +116,9 @@
 #include "pgp_sequoia_internal.h"
 #endif
 
+#include "../asn.1/Distribution.h"
+#include "../asn.1/Sync.h"
+
 #include "keymanagement.h"
 #include "cryptotech.h"
 #include "transport.h"
@@ -195,6 +208,8 @@ struct _pEpSession {
     // sqlite3_stmt *set_device_group;
     // sqlite3_stmt *get_device_group;
     sqlite3_stmt *set_pgp_keypair;
+    sqlite3_stmt *set_pgp_keypair_flags;
+    sqlite3_stmt *unset_pgp_keypair_flags;
     sqlite3_stmt *set_identity_entry;
     sqlite3_stmt *update_identity_entry;
     sqlite3_stmt *exists_identity_entry;        
@@ -211,6 +226,8 @@ struct _pEpSession {
     sqlite3_stmt *get_trust;
     sqlite3_stmt *get_trust_by_userid;
     sqlite3_stmt *least_trust;
+    sqlite3_stmt *update_key_sticky_bit_for_user;
+    sqlite3_stmt *is_key_sticky_for_user;
     sqlite3_stmt *mark_compromised;
     sqlite3_stmt *reset_trust;
     sqlite3_stmt *crashdump;
@@ -235,6 +252,26 @@ struct _pEpSession {
         
     sqlite3_stmt *get_default_own_userid;
 
+    // groups
+    sqlite3_stmt *create_group;
+    sqlite3_stmt *enable_group;
+    sqlite3_stmt *disable_group;
+    sqlite3_stmt *exists_group_entry;
+    sqlite3_stmt *group_add_member;
+    sqlite3_stmt *join_group;
+    sqlite3_stmt *leave_group;
+    sqlite3_stmt *set_group_member_status;
+    sqlite3_stmt *get_all_members;
+    sqlite3_stmt *get_active_members;
+    sqlite3_stmt *get_active_groups;
+    sqlite3_stmt *get_all_groups;
+    sqlite3_stmt *add_own_membership_entry;
+    sqlite3_stmt *get_own_membership_status;
+    sqlite3_stmt *retrieve_own_membership_info_for_group_and_ident;
+    sqlite3_stmt *retrieve_own_membership_info_for_group;
+    sqlite3_stmt *get_group_manager;
+    sqlite3_stmt *is_invited_group_member;
+    sqlite3_stmt *is_group_active;
 
 //    sqlite3_stmt *set_own_key;
 
@@ -734,15 +771,19 @@ extern double _pEp_log2_36;
 
 /**
  *  <!--       _init_globals()       -->
- *  
+ *
+ *  @internal
+ *
  *  @brief            TODO
  *  
- *  
+ *  Please leave _patch_asn1_codec COMMENTED OUT unless you're working
+ *  in a branch or patching the asn1 is a solution
  */
 static inline void _init_globals() {
     _pEp_rand_max_bits = (int) ceil(log2((double) RAND_MAX));
     _pEp_log2_36 = log2(36);
 }
+
 
 // spinlock implementation
 
@@ -762,5 +803,21 @@ static inline int Sqlite3_step(sqlite3_stmt* stmt)
     } while (rc == SQLITE_BUSY || rc == SQLITE_LOCKED);
     return rc;
 }
+
+/**
+ *  @internal
+ *
+ *  <!--       _add_auto_consume()       -->
+ *
+ *  @brief			TODO
+ *
+ *  @param[in]	*msg		message
+ *
+ */
+static inline void _add_auto_consume(message* msg) {
+    add_opt_field(msg, "pEp-auto-consume", "yes");
+    msg->in_reply_to = stringlist_add(msg->in_reply_to, "pEp-auto-consume@pEp.foundation");
+}
+
 
 #endif

@@ -31,6 +31,7 @@ build-android/pEpEngine-android-1.zip
 build-android/third-party
 build-android/pEpEngine-android-1
 build-linux/*
+build-windows/libpEpasn1/libpEpasn1.vcxproj.user
 *.dSYM*
 *_test
 msg4.asc
@@ -86,6 +87,13 @@ lldb-history
 test/EngineTests
 test/googletest
 test/tmp/*
+
+src/commit_hash.h
+.idea/
+venv/
+venv2/
+cleangit.py
+newgit
 
 # ignore generated test data
 
