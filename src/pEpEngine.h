@@ -224,6 +224,7 @@ typedef int (*inject_sync_event_t)(SYNC_EVENT ev, void *management);
 //
 typedef PEP_STATUS (*ensure_passphrase_t)(PEP_SESSION session, const char* fpr);
 
+
 // INIT_STATUS init() - initialize pEpEngine for a thread
 //
 //  parameters:
@@ -443,6 +444,13 @@ DYNAMIC_API PEP_STATUS encrypt_and_sign(
         PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
         size_t psize, char **ctext, size_t *csize
     );
+
+// get_commit_hash() - get the commit hash of this build
+//
+//    return value:
+//        commit_hash       string constant referring to the commit hash
+//
+DYNAMIC_API const char* get_commit_hash();
 
 
 DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color);
