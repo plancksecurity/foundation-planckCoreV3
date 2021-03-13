@@ -1075,7 +1075,7 @@ tstylesheet {
                                 );
                             if (status) {
                                 free(_data);
-                                if (status == PEP_OUT_OF_MEMORY);
+                                if (status == PEP_OUT_OF_MEMORY)
                                     goto the_end;
                                 continue;
                             }
@@ -1083,7 +1083,7 @@ tstylesheet {
                             status = try_encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
                             if (status) {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
-                                if (status == PEP_OUT_OF_MEMORY);
+                                if (status == PEP_OUT_OF_MEMORY)
                                     goto the_end;
                                 continue;
                             }

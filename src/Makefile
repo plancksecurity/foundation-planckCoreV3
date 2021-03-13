@@ -94,7 +94,7 @@ commit_hash.h:
 ifeq (,$(COMMIT_HASH))
 	$(shell cp ../templates/commit_hash.h commit_hash.h)
 else
-	sed "s/\(PEP_CURRENT_COMMIT_HASH\ =\).*/\1\"$(COMMIT_HASH)\"/" ../templates/commit_hash.h > commit_hash.h
+	sed "s/\(PEP_CURRENT_COMMIT_HASH\ \).*/\1\"$(COMMIT_HASH)\"/" ../templates/commit_hash.h > commit_hash.h
 endif
 
 objects: $(ALL_OBJECTS) commit_hash.h

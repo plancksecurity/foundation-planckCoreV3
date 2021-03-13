@@ -526,6 +526,15 @@ DYNAMIC_API PEP_STATUS encrypt_and_sign(
 
 DYNAMIC_API PEP_STATUS probe_encrypt(PEP_SESSION session, const char *fpr);
 
+/**
+ *  <!--      get_commit_hash()        -->
+ *
+ *  @brief Get the commit hash of this build
+ *
+ *  @retval commit_hash             string constant referring to the commit hash
+ *
+ */
+DYNAMIC_API const char* get_commit_hash();
 
 /**
  *  <!--       set_debug_color()       -->
