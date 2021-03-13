@@ -225,6 +225,10 @@ DYNAMIC_API void config_service_log(PEP_SESSION session, bool enable)
         session->service_log = enable;
 }
 
+DYNAMIC_API const char* get_commit_hash() {
+    return PEP_CURRENT_COMMIT_HASH;
+}
+
 DYNAMIC_API PEP_STATUS log_event(
         PEP_SESSION session,
         const char *title,

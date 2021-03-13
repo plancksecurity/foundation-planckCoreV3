@@ -1,6 +1,3 @@
 #! /bin/sh
 
-if test -f "src/commit_hash.h"; then
-    rm src/commit_hash.h
-fi
-
+rm src/commit_hash.h
