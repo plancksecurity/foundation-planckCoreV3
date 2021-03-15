@@ -273,6 +273,14 @@ PEP_STATUS key_reset_managed_group(PEP_SESSION session,
                                    pEp_identity* group_identity,
                                    pEp_identity* manager);
 
+PEP_STATUS generate_own_commandlist_msg(PEP_SESSION session,
+                                        identity_list* reset_idents,
+                                        bool ignore_ungrouped,
+                                        pEp_identity* alt_sender,
+                                        pEp_identity* alt_recip,
+                                        const char* old_fpr,
+                                        message** dst);
+
 #ifdef __cplusplus
 }
 #endif

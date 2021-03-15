@@ -272,6 +272,7 @@ struct _pEpSession {
     sqlite3_stmt *retrieve_own_membership_info_for_group;
     sqlite3_stmt *get_group_manager;
     sqlite3_stmt *is_invited_group_member;
+    sqlite3_stmt *is_active_group_member;
     sqlite3_stmt *is_group_active;
 
 //    sqlite3_stmt *set_own_key;

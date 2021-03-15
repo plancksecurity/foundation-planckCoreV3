@@ -2026,3 +2026,37 @@ DYNAMIC_API PEP_STATUS group_rating(
 
     return PEP_STATUS_OK;
 }
+
+PEP_STATUS is_active_group_member(PEP_SESSION session, pEp_identity* group_identity,
+                                  pEp_identity* member, bool* is_active) {
+    if (!session || !is_active)
+        return PEP_ILLEGAL_VALUE;
+
+    if (!group_identity || EMPTYSTR(group_identity->user_id) || EMPTYSTR(group_identity->address))
+        return PEP_ILLEGAL_VALUE;
+
+    if (!member || EMPTYSTR(member->user_id) || EMPTYSTR(member->address))
+        return PEP_ILLEGAL_VALUE;
+
+    sqlite3_bind_text(session->is_active_group_member, 1, group_identity->user_id, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_text(session->is_active_group_member, 2, group_identity->address, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_text(session->is_active_group_member, 3, member->user_id, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_text(session->is_active_group_member, 4, member->address, -1,
+                      SQLITE_STATIC);
+
+    int result = sqlite3_step(session->is_active_group_member);
+
+    if (result == SQLITE_ROW)
+        *is_active = sqlite3_column_int(session->is_active_group_member, 0);
+    else if (result == SQLITE_DONE)
+        return PEP_NO_MEMBERSHIP_STATUS_FOUND;
+    else
+        return PEP_UNKNOWN_DB_ERROR;
+
+    sqlite3_reset(session->is_active_group_member);
+
+    return PEP_STATUS_OK;
+}

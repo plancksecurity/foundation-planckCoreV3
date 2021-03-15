@@ -589,6 +589,26 @@ identity_list* member_list_to_identity_list(member_list* memberlist);
 PEP_STATUS get_group_manager(PEP_SESSION session,
                              pEp_identity* group_identity,
                              pEp_identity** manager);
+
+/**
+ *
+ * @param session
+ * @param group_identity
+ * @param own_manager
+ * @return
+ */
+PEP_STATUS is_group_mine(PEP_SESSION session, pEp_identity* group_identity, bool* own_manager);
+
+/**
+ *
+ * @param session
+ * @param group_identity
+ * @param member
+ * @param is_active
+ * @return
+ */
+PEP_STATUS is_active_group_member(PEP_SESSION session, pEp_identity* group_identity,
+                                  pEp_identity* member, bool* is_active);
 #ifdef __cplusplus
 }
 #endif

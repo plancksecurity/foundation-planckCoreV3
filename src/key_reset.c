@@ -149,7 +149,7 @@ pEp_error:
 /**
  *  @internal
  *  
- *  <!--       _generate_own_commandlist_msg()       -->
+ *  <!--       generate_own_commandlist_msg()       -->
  *  
  *  @brief			TODO
  *  
@@ -160,13 +160,13 @@ pEp_error:
  *  @param[in]	**dst		message
  *  
  */
-static PEP_STATUS _generate_own_commandlist_msg(PEP_SESSION session,
-                                                identity_list* reset_idents,
-                                                bool ignore_ungrouped,
-                                                pEp_identity* alt_sender,
-                                                pEp_identity* alt_recip,
-                                                const char* old_fpr,
-                                                message** dst) {                                                
+PEP_STATUS generate_own_commandlist_msg(PEP_SESSION session,
+                                        identity_list* reset_idents,
+                                        bool ignore_ungrouped,
+                                        pEp_identity* alt_sender,
+                                        pEp_identity* alt_recip,
+                                        const char* old_fpr,
+                                        message** dst) {
     PEP_STATUS status = PEP_STATUS_OK;
     message* msg = NULL;                                                
     identity_list* list_curr = NULL;
@@ -880,7 +880,7 @@ static PEP_STATUS send_key_reset_to_active_group_members(PEP_SESSION session,
 
             // FIXME: this is a little expensive - we should refactor so that
             // we cache the command list and prepare the messages in a loop with a copy
-            status = _generate_own_commandlist_msg(session,
+            status = generate_own_commandlist_msg(session,
                                                    reset_ident_list,
                                                    false,
                                                    manager,
@@ -926,13 +926,15 @@ PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
     assert(session);
 //    assert(session->messageToSend); NO. Don't assert this, FFS.
     
-    if (!session || !old_fpr || !new_fpr)
+    if (!session || !old_fpr || !new_fpr || !from_ident || EMPTYSTR(from_ident->address) || EMPTYSTR(from_ident->user_id))
         return PEP_ILLEGAL_VALUE;
 
     messageToSend_t send_cb = session->messageToSend;
     if (!send_cb)
         return PEP_SYNC_NO_MESSAGE_SEND_CALLBACK;
-        
+
+    bool is_group_ident = (from_ident->flags & PEP_idf_group_ident);
+
     identity_list* recent_contacts = NULL;
     message* reset_msg = NULL;
 
@@ -958,7 +960,16 @@ PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
         // Check if it's us - if so, pointless...
         if (is_me(session, curr_id))
             continue;
-            
+
+        // If this is a from a group identity AND the curr_id_ptr points to an active member,
+        // move on
+        if (is_group_ident) {
+            bool is_member = false;
+            status = is_active_group_member(session, from_ident, curr_id, &is_member);
+            if (is_member)
+                continue;
+        }
+
         // Also, don't bother to send it to non-pEp-users 
         bool pEp_user = false;
         status = is_pEp_user(session, curr_id, &pEp_user);
@@ -1382,7 +1393,7 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
         // FIXME: I think group encryption keys probably have to do something different here anyway...
         config_passphrase(session, session->generation_passphrase);
 
-        status = _generate_own_commandlist_msg(session,
+        status = generate_own_commandlist_msg(session,
                                                grouped_idents,
                                                true,
                                                NULL,

@@ -2446,7 +2446,14 @@ PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session) {
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
+    int_result = sqlite3_prepare_v2(session->db, sql_is_active_group_member,
+                                    (int)strlen(sql_is_active_group_member), &session->is_active_group_member, NULL);
+    assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+    
     int_result = sqlite3_prepare_v2(session->db, sql_is_group_active,
                                     (int)strlen(sql_is_group_active), &session->is_group_active, NULL);
     assert(int_result == SQLITE_OK);
@@ -2659,6 +2666,8 @@ PEP_STATUS pEp_finalize_sql_stmts(PEP_SESSION session) {
         sqlite3_finalize(session->get_group_manager);
     if (session->is_invited_group_member)
         sqlite3_finalize(session->is_invited_group_member);
+    if (session->is_active_group_member)
+        sqlite3_finalize(session->is_active_group_member);
     if (session->is_group_active)
         sqlite3_finalize(session->is_group_active);
     if (session->set_pgp_keypair_flags)

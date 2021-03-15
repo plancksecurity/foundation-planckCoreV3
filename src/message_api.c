@@ -5341,11 +5341,84 @@ static PEP_STATUS _decrypt_message(
                                 used_ids_for_key = identity_list_join(used_ids_for_key, used_cc_ids);
                                 
                                 identity_list* curr_recip = used_ids_for_key;
-                                
+
+                                // We have all possible recips that use our revoked key.
                                 for ( ; curr_recip && curr_recip->ident; curr_recip = curr_recip->next) {
                                     if (!is_me(session, curr_recip->ident))
                                         continue;
-                                
+
+                                    // If this is a group identity, we'd better be the manager - otherwise,
+                                    // ignore this.
+                                    if (curr_recip->ident->flags & PEP_idf_group_ident) {
+                                        bool is_my_group = false;
+                                        status = is_group_mine(session, curr_recip->ident, &is_my_group);
+                                        if (status == PEP_OUT_OF_MEMORY)
+                                            goto pEp_error;
+                                        else if (status != PEP_STATUS_OK || !is_my_group)
+                                            continue;
+
+                                        // Ok, it's my group. Is this from a member, or an outsider?
+                                        bool active_member = false;
+                                        status = is_active_group_member(session, curr_recip->ident, msg->from, &active_member);
+                                        if (active_member) {
+                                            pEp_identity* group_ident = curr_recip->ident;
+
+                                            // FIXME: Factor out of send_key_reset_to_active_group_members
+                                            message* outmsg = NULL;
+                                            identity_list* reset_ident_list = new_identity_list(group_ident);
+                                            if (!group_ident)
+                                                return PEP_OUT_OF_MEMORY;
+
+                                            pEp_identity* manager = NULL;
+                                            status = get_group_manager(session, group_ident, &manager);
+                                            // FIXME: what kind of error behaviour do we want here?
+                                            // It really is an error - we've identified the group as ours,
+                                            // so if we can't get the manager, something internal broke.
+                                            if (status != PEP_STATUS_OK)
+                                                goto pEp_error;
+                                            if (!manager) {
+                                                status = PEP_UNKNOWN_ERROR;
+                                                goto pEp_error;
+                                            }
+
+                                            status = generate_own_commandlist_msg(session,
+                                                                                  reset_ident_list,
+                                                                                  false,
+                                                                                  manager,
+                                                                                  msg->from,
+                                                                                  curr_pair->value,
+                                                                                  &outmsg);
+
+                                            if (status != PEP_STATUS_OK) // FIXME: mem
+                                                goto pEp_error;
+
+                                            if (outmsg) {
+
+                                                message* enc_group_reset_msg = NULL;
+
+                                                // encrypt this baby and get out
+                                                // extra keys???
+                                                status = encrypt_message(session, outmsg, NULL, &enc_group_reset_msg, PEP_enc_auto, PEP_encrypt_flag_key_reset_only);
+
+                                                if (status != PEP_STATUS_OK)
+                                                    return status;
+
+                                                _add_auto_consume(enc_group_reset_msg);
+
+                                                // insert into queue
+                                                if (session->messageToSend)
+                                                    status = session->messageToSend(enc_group_reset_msg);
+                                                else
+                                                    status = PEP_SYNC_NO_MESSAGE_SEND_CALLBACK;
+                                            }
+                                            continue;
+                                        }
+                                        else if (status != PEP_STATUS_OK && status != PEP_NO_MEMBERSHIP_STATUS_FOUND)
+                                            goto pEp_error;
+
+                                        // Otherwise, normal reset...
+                                    }
+
                                     status = create_standalone_key_reset_message(session,
                                         &reset_msg,
                                         curr_recip->ident,

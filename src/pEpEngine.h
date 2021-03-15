@@ -154,7 +154,7 @@ typedef enum {
     PEP_CANNOT_DEACTIVATE_GROUP_MEMBER              = 0x0b07,
     PEP_NO_MEMBERSHIP_STATUS_FOUND                  = 0x0b08,
     PEP_CANNOT_LEAVE_GROUP                          = 0x0b09,
-    PEP_CANNOT_group_join                           = 0x0b0a,
+    PEP_CANNOT_JOIN_GROUP                           = 0x0b0a,
     PEP_CANNOT_RETRIEVE_MEMBERSHIP_INFO             = 0x0b0b,
 
     PEP_DISTRIBUTION_ILLEGAL_MESSAGE                = 0x1002,

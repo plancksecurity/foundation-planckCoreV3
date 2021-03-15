@@ -553,6 +553,9 @@ static const char *sql_get_group_manager =
 static const char *sql_is_invited_group_member =
         "select count(*) from own_groups_members "
         "   where group_id = ?1 and group_address = ?2 and member_id = ?3 and member_address = ?4; ";
+static const char *sql_is_active_group_member =
+        "select active_member from own_groups_members "
+        "   where group_id = ?1 and group_address = ?2 and member_id = ?3 and member_address = ?4; ";
 static const char *sql_get_all_groups =
         "select group_id, group_address from own_memberships; ";
 static const char *sql_get_active_groups =
