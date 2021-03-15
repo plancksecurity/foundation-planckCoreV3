@@ -765,7 +765,7 @@ typedef enum _identity_flags {
     // the second octet flags are calculated
     PEP_idf_devicegroup = 0x0100,     // identity of a device group member
     PEP_idf_org_ident = 0x0200,       // identity is associated with an org (i.e. NOT a private account - could be company email)
-    PEP_idf_group_ident = 0x0300      // identity is a group identity (e.g. mailing list) - N.B. not related to device group!
+    PEP_idf_group_ident = 0x0400      // identity is a group identity (e.g. mailing list) - N.B. not related to device group!
 } identity_flags;
 
 typedef unsigned int identity_flags_t;
