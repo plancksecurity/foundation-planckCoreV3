@@ -87,7 +87,7 @@ static size_t subtract_whitespace(const char* input, int length) {
  *              trailing whitespace characters	
  *  
  *  @param[in]  	*input      C string to check	    	
- *  @param[in,out]	*length		returns the resulting lenght
+ *  @param[out]	*length		returns the resulting lenght
  *  
  */
 static void trim_end(const char* input, int* length) {

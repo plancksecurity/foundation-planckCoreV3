@@ -1,8 +1,7 @@
-/** @file */
-/** @brief File description for doxygen missing. FIXME */
-
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/** @file pEpEngine.c 
+ * @brief implementation of the pEp Engine API
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #include "pEp_internal.h"
 #include "dynamic_api.h"
@@ -982,11 +981,11 @@ PEP_STATUS get_identities_by_address(
  *
  *  <!--       exists_identity_entry()       -->
  *
- *  @brief			TODO
+ *  @brief      checks if an identity entry already exists in the DB	
  *
  *  @param[in]	session	        session handle	
  *  @param[in]	*identity		pEp_identity
- *  @param[in]	*exists		    bool
+ *  @param[out]	*exists		    bool
  *
  *  @retval     PEP_STATUS_OK
  *  @retval     PEP_ILLEGAL_VALUE       illegal parameter value 
@@ -1979,7 +1978,8 @@ PEP_STATUS get_trust_by_userid(PEP_SESSION session, const char* user_id,
  *
  *  @param[in]	t_old		PEP_comm_type
  *  @param[in]	t_new		PEP_comm_type
- *
+ *  
+ *  @retval     PEP_comm_type   result     
  */
 PEP_comm_type reconcile_trust(PEP_comm_type t_old, PEP_comm_type t_new) {
     switch (t_new) {
@@ -3013,7 +3013,7 @@ static void _clean_log_value(char *text)
  *  @param[in]	*str1		char
  *  @param[in]	*str2		const char
  *  @param[in]	delim		char
- *
+ *  
  */
 static char *_concat_string(char *str1, const char *str2, char delim)
 {

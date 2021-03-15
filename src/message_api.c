@@ -3298,8 +3298,8 @@ static PEP_STATUS _get_detached_signature(message* msg,
  *
  *  @param[in]	    *ptext		constchar
  *  @param[in]	    psize		constsize_t
- *  @param[in,out]	**stext		char
- *  @param[in,out]	*ssize		size_t
+ *  @param[out] 	**stext		char
+ *  @param[out]	    *ssize		size_t
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_UNKNOWN_ERROR 
@@ -3389,8 +3389,8 @@ static PEP_STATUS _get_signed_text(const char* ptext, const size_t psize,
  *
  *  @param[in]	    session	            session handle	
  *  @param[in]	    **verify_in		    stringlist_t
- *  @param[in,out]	**keylist_in_out	stringlist_t
- *  @param[in,out]	*from		        pEp_identity
+ *  @param[out] 	**keylist_in_out	stringlist_t
+ *  @param[in] 	    *from		        pEp_identity
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_KEY_NOT_FOUND

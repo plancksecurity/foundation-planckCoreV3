@@ -436,7 +436,7 @@ DYNAMIC_API PEP_STATUS config_cipher_suite(PEP_SESSION session,
  *  @retval PEP_DECRYPT_WRONG_FORMAT      message has wrong format to handle
  *  @retval PEP_DECRYPT_NO_KEY            key not available to decrypt and/or verify
  *  @retval PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH    wrong signature
- *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_ILLEGAL_VALUE             illegal parameter values
  *
  *  @warning the ownerships of ptext as well as keylist are going to the caller
  *           the caller must use free() (or an Windoze pEp_free()) and
