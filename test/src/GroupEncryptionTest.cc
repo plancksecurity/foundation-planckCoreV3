@@ -2470,26 +2470,6 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_no_recents) {
 
     status = myself(session, group_ident);
     ASSERT_EQ(group_ident->flags, PEP_idf_group_ident);
-    // Ok, we now have a bunch of messages to check.
-//    ASSERT_EQ(m_queue.size(), 4);
-//
-//    for (int i = 0; i < 4; i++) {
-//        message* msg = m_queue[i];
-//        ASSERT_NE(msg, nullptr);
-//        ASSERT_NE(msg->from, nullptr);
-//        ASSERT_NE(msg->to, nullptr);
-//        ASSERT_NE(msg->to->ident, nullptr);
-//        ASSERT_EQ(msg->to->next, nullptr);
-//        ASSERT_STREQ(msg->from->address, manager_1_address);
-//
-////#if GECT_WRITEOUT
-////            char* outdata = NULL;
-////            mime_encode_message(msg, false, &outdata, false);
-////            ASSERT_NE(outdata, nullptr);
-////            dump_out((string("test_mails/group_create_extant_key_") + get_prefix_from_address(msg->to->ident->address) + ".eml").c_str(), outdata);
-////            free(outdata);
-////#endif
-//    }
 
     // MESSAGE LIST NOW INVALID.
     m_queue.clear();
@@ -2510,57 +2490,346 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_no_recents) {
 
     ASSERT_EQ(m_queue.size(), 4);
 
-//    // Ok, time to check the member list. Tricky...
-//    const char* member_names[] = {member_1_name, member_2_name, member_3_name, member_4_name};
-//    const char* member_addrs[] = {member_1_address, member_2_address, member_3_address, member_4_address};
-//    const char* member_fprs[] = {member_1_fpr, member_2_fpr, member_3_fpr, member_4_fpr};
-//
-//    bool found[] = {false, false, false, false};
-//
-//    int count = 0;
-//    for (member_list* curr_member = group_info->members;
-//            curr_member && curr_member->member && curr_member->member->ident;
-//            curr_member = curr_member->next) {
-//
-//        pEp_member* memb = curr_member->member;
-//        pEp_identity* ident = memb->ident;
-//        const char* userid = ident->user_id;
-//        const char* address = ident->address;
-//        ASSERT_NE(userid, nullptr);
-//        ASSERT_NE(address, nullptr);
-//
-//        status = update_identity(session, ident);
-//        ASSERT_OK;
-//
-//        const char* fpr = ident->fpr;
-//        const char* name = ident->username;
-//        ASSERT_NE(name, nullptr);
-//        ASSERT_NE(fpr, nullptr);
-//
-//        ASSERT_FALSE(memb->joined);
-//
-//        int index = -1;
-//
-//        for (int i = 0; i < 4; i++) {
-//            if (strcmp(member_names[i], name) == 0) {
-//                index = i;
-//                break;
-//            }
-//        }
-//        ASSERT_GT(index, -1);
-//        ASSERT_LT(index, 5);
-//        ASSERT_STREQ(member_addrs[index], address);
-//        ASSERT_STREQ(member_fprs[index], fpr);
-//        found[index] = true;
-//        count++;
-//    }
-//
-//    ASSERT_EQ(count, 4);
-//    for (int i = 0; i < 4; i++) {
-//        ASSERT_TRUE(found[i]);
-//    }
-//
-//    free_group(group);
+    bool found[] = {false, false, false, false};
+    for (int i = 0; i < 4; i++) {
+        message* msg = m_queue[i];
+        ASSERT_NE(msg, nullptr);
+        ASSERT_NE(msg->from, nullptr);
+        ASSERT_NE(msg->to, nullptr);
+        ASSERT_NE(msg->to->ident, nullptr);
+        ASSERT_EQ(msg->to->next, nullptr);
+        ASSERT_STREQ(msg->from->address, manager_1_address);
+
+        if (strcmp(msg->to->ident->address, member_1_address) == 0)
+            found[0] = true;
+        else if (strcmp(msg->to->ident->address, member_2_address) == 0)
+            found[1] = true;
+        else if (strcmp(msg->to->ident->address, member_3_address) == 0)
+            found[2] = true;
+        else if (strcmp(msg->to->ident->address, member_4_address) == 0)
+            found[3] = true;
+        else
+            ASSERT_STREQ(msg->to->ident->address, "ADDRESS_ERROR_STRING_FOR_FAILURE_OUTPUT");
+
+#if GECT_WRITEOUT
+            char* outdata = NULL;
+            mime_encode_message(msg, false, &outdata, false);
+            ASSERT_NE(outdata, nullptr);
+            dump_out((string("test_mails/group_key_reset_simple_to_member_") + get_prefix_from_address(msg->to->ident->address) + ".eml").c_str(), outdata);
+            free(outdata);
+#endif
+    }
+
+    for (int i = 0; i < 4; i++) {
+        ASSERT_TRUE(found[i]);
+    }
+
+}
+
+TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_no_recents_two_active) {
+    pEp_identity* me = new_identity(manager_1_address, NULL, PEP_OWN_USERID, manager_1_name);
+    read_file_and_import_key(session, kf_name(manager_1_prefix, false).c_str());
+    read_file_and_import_key(session, kf_name(manager_1_prefix, true).c_str());
+    PEP_STATUS status = set_own_key(session, me, manager_1_fpr);
+    ASSERT_OK;
+
+    pEp_identity* group_ident = new_identity(group_1_address, group_1_fpr, PEP_OWN_USERID, group_1_name);
+    read_file_and_import_key(session, kf_name(group_1_prefix, false).c_str());
+    read_file_and_import_key(session, kf_name(group_1_prefix, true).c_str());
+    status = set_own_key(session, group_ident, group_1_fpr);
+    ASSERT_OK;
+
+    pEp_identity* member_1 = new_identity(member_1_address, NULL, "MEMBER1", member_1_name);
+    read_file_and_import_key(session, kf_name(member_1_prefix, false).c_str());
+    status = update_identity(session, member_1);
+    ASSERT_OK;
+    status = set_pEp_version(session, member_1, 2, 2);
+    ASSERT_OK;
+    status = set_as_pEp_user(session, member_1);
+    ASSERT_OK;
+    pEp_identity* member_2 = new_identity(member_2_address, NULL, "MEMBER2", member_2_name);
+    read_file_and_import_key(session, kf_name(member_2_prefix, false).c_str());
+    status = update_identity(session, member_2);
+    ASSERT_OK;
+    status = set_pEp_version(session, member_2, 2, 2);
+    ASSERT_OK;
+    status = set_as_pEp_user(session, member_2);
+    ASSERT_OK;
+    pEp_identity* member_3 = new_identity(member_3_address, NULL, "MEMBER3", member_3_name);
+    read_file_and_import_key(session, kf_name(member_3_prefix, false).c_str());
+    status = update_identity(session, member_3);
+    ASSERT_OK;
+    status = set_pEp_version(session, member_3, 2, 2);
+    ASSERT_OK;
+    status = set_as_pEp_user(session, member_3);
+    ASSERT_OK;
+    pEp_identity* member_4 = new_identity(member_4_address, NULL, "MEMBER4", member_4_name);
+    read_file_and_import_key(session, kf_name(member_4_prefix, false).c_str());
+    status = update_identity(session, member_4);
+    ASSERT_OK;
+    status = set_pEp_version(session, member_4, 2, 2);
+    ASSERT_OK;
+    status = set_as_pEp_user(session, member_4);
+    ASSERT_OK;
+
+    member_list* new_members = new_memberlist(new_member(member_1));
+    ASSERT_NE(new_members, nullptr);
+    memberlist_add(new_members, new_member(member_2));
+    memberlist_add(new_members, new_member(member_3));
+    memberlist_add(new_members, new_member(member_4));
+
+    pEp_group* group = NULL;
+    status = group_create(session, group_ident, me, new_members, &group);
+    ASSERT_OK;
+
+    ASSERT_STREQ(group->manager->fpr, manager_1_fpr);
+    ASSERT_STREQ(group->group_identity->fpr, group_1_fpr);
+
+    status = myself(session, group_ident);
+    ASSERT_EQ(group_ident->flags, PEP_idf_group_ident);
+
+    // MESSAGE LIST NOW INVALID.
+    m_queue.clear();
+
+    // Let's manually set those guys to joined
+    status = set_membership_status(session, group_ident, member_1, true);
+    ASSERT_OK;
+    status = set_membership_status(session, group_ident, member_3, true);
+    ASSERT_OK;
+
+    // Ok, now reset the group key
+    status = key_reset(session, group_1_fpr, group_ident);
+    ASSERT_OK;
+
+    ASSERT_EQ(m_queue.size(), 2);
+
+    bool found[] = {false, false};
+    for (int i = 0; i < 2; i++) {
+        message* msg = m_queue[i];
+        ASSERT_NE(msg, nullptr);
+        ASSERT_NE(msg->from, nullptr);
+        ASSERT_NE(msg->to, nullptr);
+        ASSERT_NE(msg->to->ident, nullptr);
+        ASSERT_EQ(msg->to->next, nullptr);
+        ASSERT_STREQ(msg->from->address, manager_1_address);
+
+        if (strcmp(msg->to->ident->address, member_1_address) == 0)
+            found[0] = true;
+        else if (strcmp(msg->to->ident->address, member_3_address) == 0)
+            found[1] = true;
+        else
+            ASSERT_STREQ(msg->to->ident->address, "ADDRESS_ERROR_STRING_FOR_FAILURE_OUTPUT");
+    }
+
+    for (int i = 0; i < 2; i++) {
+        ASSERT_TRUE(found[i]);
+    }
+
+}
+
+#if GECT_WRITEOUT
+TEST_F(GroupEncryptionTest, generate_mail_for_recents) {
+    // This is NOT the manager - this is just "some guy"
+    pEp_identity* me = new_identity(manager_2_address, NULL, PEP_OWN_USERID, manager_2_name);
+    read_file_and_import_key(session, kf_name(manager_2_prefix, false).c_str());
+    read_file_and_import_key(session, kf_name(manager_2_prefix, true).c_str());
+    PEP_STATUS status = set_own_key(session, me, manager_2_fpr);
+    ASSERT_OK;
+
+    const char* bob_fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
+    pEp_identity* me2 = new_identity("pep.test.bob@pep-project.org", NULL, PEP_OWN_USERID, "Bob Dog");
+    read_file_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");
+    read_file_and_import_key(session, "test_keys/priv/pep-test-bob-0xC9C2EE39_priv.asc");
+    status = set_own_key(session, me2, bob_fpr);
+    ASSERT_OK;
+
+    // This is NOT a group address as far as this guy is concerned.
+    pEp_identity* group_ident = new_identity(group_1_address, group_1_fpr, "groupie", group_1_name);
+    read_file_and_import_key(session, kf_name(group_1_prefix, false).c_str());
+    status = set_identity(session, group_ident);
+    ASSERT_OK;
+
+    message* msg = new_message(PEP_dir_outgoing);
+
+    msg->from = me;
+    msg->to = new_identity_list(group_ident);
+    msg->shortmsg = strdup("Boom shaka laka");
+    msg->longmsg = strdup("Don't you get sick of these?");
+
+    message* msg2 = message_dup(msg);
+    ASSERT_NE(msg2, nullptr);
+    free_identity(msg2->from);
+    msg2->from = me2;
+
+    message* enc_msg = NULL;
+
+    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+    ASSERT_OK;
+
+    char* outdata = NULL;
+    mime_encode_message(enc_msg, false, &outdata, false);
+    ASSERT_NE(outdata, nullptr);
+    dump_out((string("test_mails/group_key_reset_receive_to_group_from_") + group_2_prefix + ".eml").c_str(), outdata);
+    free(outdata);
+    free_message(enc_msg);
+    outdata = NULL;
+    enc_msg = NULL;
+    status = encrypt_message(session, msg2, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+    ASSERT_OK;
+    mime_encode_message(enc_msg, false, &outdata, false);
+    ASSERT_NE(outdata, nullptr);
+    dump_out("test_mails/group_key_reset_receive_to_group_from_bob_0xC9C2EE39.eml", outdata);
+    free(outdata);
+    free_message(enc_msg);
+}
+#endif
+
+TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_two_recents) {
+    pEp_identity* me = new_identity(manager_1_address, NULL, PEP_OWN_USERID, manager_1_name);
+    read_file_and_import_key(session, kf_name(manager_1_prefix, false).c_str());
+    read_file_and_import_key(session, kf_name(manager_1_prefix, true).c_str());
+    PEP_STATUS status = set_own_key(session, me, manager_1_fpr);
+    ASSERT_OK;
+
+    pEp_identity* group_ident = new_identity(group_1_address, group_1_fpr, PEP_OWN_USERID, group_1_name);
+    read_file_and_import_key(session, kf_name(group_1_prefix, false).c_str());
+    read_file_and_import_key(session, kf_name(group_1_prefix, true).c_str());
+    status = set_own_key(session, group_ident, group_1_fpr);
+    ASSERT_OK;
+
+    pEp_identity* member_1 = new_identity(member_1_address, NULL, "MEMBER1", member_1_name);
+    read_file_and_import_key(session, kf_name(member_1_prefix, false).c_str());
+    status = update_identity(session, member_1);
+    ASSERT_OK;
+    status = set_pEp_version(session, member_1, 2, 2);
+    ASSERT_OK;
+    status = set_as_pEp_user(session, member_1);
+    ASSERT_OK;
+    pEp_identity* member_2 = new_identity(member_2_address, NULL, "MEMBER2", member_2_name);
+    read_file_and_import_key(session, kf_name(member_2_prefix, false).c_str());
+    status = update_identity(session, member_2);
+    ASSERT_OK;
+    status = set_pEp_version(session, member_2, 2, 2);
+    ASSERT_OK;
+    status = set_as_pEp_user(session, member_2);
+    ASSERT_OK;
+    pEp_identity* member_3 = new_identity(member_3_address, NULL, "MEMBER3", member_3_name);
+    read_file_and_import_key(session, kf_name(member_3_prefix, false).c_str());
+    status = update_identity(session, member_3);
+    ASSERT_OK;
+    status = set_pEp_version(session, member_3, 2, 2);
+    ASSERT_OK;
+    status = set_as_pEp_user(session, member_3);
+    ASSERT_OK;
+    pEp_identity* member_4 = new_identity(member_4_address, NULL, "MEMBER4", member_4_name);
+    read_file_and_import_key(session, kf_name(member_4_prefix, false).c_str());
+    status = update_identity(session, member_4);
+    ASSERT_OK;
+    status = set_pEp_version(session, member_4, 2, 2);
+    ASSERT_OK;
+    status = set_as_pEp_user(session, member_4);
+    ASSERT_OK;
+
+    member_list* new_members = new_memberlist(new_member(member_1));
+    ASSERT_NE(new_members, nullptr);
+    memberlist_add(new_members, new_member(member_2));
+    memberlist_add(new_members, new_member(member_3));
+    memberlist_add(new_members, new_member(member_4));
+
+    pEp_group* group = NULL;
+    status = group_create(session, group_ident, me, new_members, &group);
+    ASSERT_OK;
+
+    ASSERT_STREQ(group->manager->fpr, manager_1_fpr);
+    ASSERT_STREQ(group->group_identity->fpr, group_1_fpr);
+
+    status = myself(session, group_ident);
+    ASSERT_EQ(group_ident->flags, PEP_idf_group_ident);
+
+    // MESSAGE LIST NOW INVALID.
+    m_queue.clear();
+
+    // Let's manually set those guys to joined
+    status = set_membership_status(session, group_ident, member_1, true);
+    ASSERT_OK;
+    status = set_membership_status(session, group_ident, member_2, true);
+    ASSERT_OK;
+    status = set_membership_status(session, group_ident, member_3, true);
+    ASSERT_OK;
+    status = set_membership_status(session, group_ident, member_4, true);
+    ASSERT_OK;
+
+    // Let's get a couple of mails
+    string msg1 = slurp((string("test_mails/group_key_reset_receive_to_group_from_") + group_2_prefix + ".eml").c_str());
+    string msg2 = slurp("test_mails/group_key_reset_receive_to_group_from_bob_0xC9C2EE39.eml");
+
+    message* message_1 = NULL;
+    message* message_2 = NULL;
+
+    mime_decode_message(msg1.c_str(), msg1.size(), &message_1, NULL);
+    mime_decode_message(msg2.c_str(), msg2.size(), &message_2, NULL);
+    ASSERT_NE(message_1, nullptr);
+    ASSERT_NE(message_2, nullptr);
+
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+
+    message* dec_msg = NULL;
+    status = decrypt_message(session, message_1, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_OK;
+    free_message(dec_msg);
+    dec_msg = NULL;
+    status = decrypt_message(session, message_2, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_OK;
+    free_message(dec_msg);
+    dec_msg = NULL;
+    free_message(message_1);
+    free_message(message_2);
+
+    // Ok, now reset the group key
+    status = key_reset(session, group_1_fpr, group_ident);
+    ASSERT_OK;
+
+    ASSERT_EQ(m_queue.size(), 6);
+
+    bool found[] = {false, false, false, false, false, false};
+    for (int i = 0; i < 6; i++) {
+        message* msg = m_queue[i];
+        ASSERT_NE(msg, nullptr);
+        ASSERT_NE(msg->from, nullptr);
+        ASSERT_NE(msg->to, nullptr);
+        ASSERT_NE(msg->to->ident, nullptr);
+        ASSERT_EQ(msg->to->next, nullptr);
+        ASSERT_STREQ(msg->from->address, manager_1_address);
+
+        if (strcmp(msg->to->ident->address, member_1_address) == 0)
+            found[0] = true;
+        else if (strcmp(msg->to->ident->address, member_2_address) == 0)
+            found[1] = true;
+        else if (strcmp(msg->to->ident->address, member_3_address) == 0)
+            found[2] = true;
+        else if (strcmp(msg->to->ident->address, member_4_address) == 0)
+            found[3] = true;
+        else if (strcmp(msg->to->ident->address, group_2_address) == 0)
+            found[4] = true;
+        else if (strcmp(msg->to->ident->address, "pep.test.bob@pep-project.org") == 0)
+            found[5] = true;
+        else
+            ASSERT_STREQ(msg->to->ident->address, "ADDRESS_ERROR_STRING_FOR_FAILURE_OUTPUT");
+
+#if GECT_WRITEOUT
+        char* outdata = NULL;
+        mime_encode_message(msg, false, &outdata, false);
+        ASSERT_NE(outdata, nullptr);
+        dump_out((string("test_mails/group_key_reset_mixed_members_and_recents_") + msg->to->ident->address + ".eml").c_str(), outdata);
+        free(outdata);
+#endif
+    }
+
+    for (int i = 0; i < 6; i++) {
+        ASSERT_TRUE(found[i]);
+    }
 
 }
 
