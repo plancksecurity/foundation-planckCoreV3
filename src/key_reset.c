@@ -1358,157 +1358,163 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
         
     // each of these has the same key and needs a new one.
     identity_list* curr_ident;
-    for (curr_ident = grouped_idents; curr_ident && curr_ident->ident; curr_ident = curr_ident->next) {
-        pEp_identity* ident = curr_ident->ident;
-        free(ident->fpr);
-        ident->fpr = NULL;
-        status = _generate_keypair(session, ident, true);
-        if (status != PEP_STATUS_OK)
-            goto pEp_error;            
-    }
-        
-    // Ok, everyone who's grouped has got a new keypair. Hoorah!
-    // generate, sign, and push messages into queue
-    //
-    
-    // Because we have to export the NEW secret keys,
-    // we have to switch in the passgen key 
-    // as the configured key. We'll switch it back
-    // afterward (no revocation, decrypt, or signing 
-    // with the old key happens in here)
-    // (N.B. For now, group encryption keys will ignore this
-    // FIXME: I think group encryption keys probably have to do something different here anyway...
-    config_passphrase(session, session->generation_passphrase);
-    
-    status = _generate_own_commandlist_msg(session,
-                                           grouped_idents,
-                                           true,
-                                           NULL,
-                                           NULL,
-                                           old_key,
-                                           &outmsg);
 
-    config_passphrase(session, cached_passphrase);
-    
-    // Key-based errors here shouldn't happen.
-    if (status != PEP_STATUS_OK)
-        goto pEp_error;
-
-    // Following will only be true if some idents were grouped,
-    // and will only include grouped idents!
-    // Will be signed with old signing key.
-    // (Again, see the FIXME - we need to figure out what
-    //  happens if it got revoked externally)
-    if (outmsg) {
-
-        // encrypt this baby and get out
-        // extra keys???
-        status = encrypt_message(session, outmsg, NULL, &enc_msg, PEP_enc_auto, PEP_encrypt_flag_key_reset_only);
-
-        if (status != PEP_STATUS_OK)
-            goto pEp_error;
-
-        _add_auto_consume(enc_msg);
-
-        // insert into queue
-        status = send_cb(enc_msg);
-
-        if (status != PEP_STATUS_OK)
-            goto pEp_error;
-    }
-
-    // Ok, we've signed everything we need to with the old key,
-    // Revoke that baby, in case we haven't already.
-    status = revoke_key(session, old_key, NULL);
-
-    // again, we should not have key-related issues here,
-    // as we ensured the correct password earlier
-    if (status != PEP_STATUS_OK)
-        goto pEp_error;
-
-    // Ok, NOW - the current password needs to be swapped out 
-    // because we're going to sign with keys using it.
-    //
-    // All new keys have the same passphrase, if any
-    //
-    config_passphrase(session, session->generation_passphrase);
-    
-    for (curr_ident = grouped_idents; curr_ident && curr_ident->ident; curr_ident = curr_ident->next) {
-        pEp_identity* ident = curr_ident->ident;
-
-        // set own key, you fool.
-        // Grab ownership first.
-        char* new_key = ident->fpr;
-        ident->fpr = NULL;
-        status = set_own_key(session, ident, new_key);
-        if (status != PEP_STATUS_OK)
-            // scream loudly and cry, then hang head in shame
-            goto pEp_error;
-
-        free(ident->fpr);
-
-        // release ownership to the struct again
-        ident->fpr = new_key;
-
-        // N.B. This sort of sucks because we overwrite this every time.
-        // But this case is infrequent and we don't rely on the binding.
-        if (status == PEP_STATUS_OK)
-            status = set_revoked(session, old_key, new_key, time(NULL));
-
-        if (status != PEP_STATUS_OK)
-            goto pEp_error;
-
-        // Whether new_key is NULL or not, if this key is equal to the current user default, we
-        // replace it.
-        status = replace_main_user_fpr_if_equal(session,
-                                                ident->user_id,
-                                                new_key,
-                                                old_key);
-
-        if (status != PEP_STATUS_OK)
-            goto pEp_error;
-
-        pEp_identity* tmp_ident = identity_dup(ident);
-        if (!tmp_ident) {
-            status = PEP_OUT_OF_MEMORY;
-            goto pEp_error;
-        }
-        free(tmp_ident->fpr);
-
-        // for all active communication partners:
-        //      active_send revocation
-        tmp_ident->fpr = strdup(old_key); // freed in free_identity
-        if (status == PEP_STATUS_OK)
-            status = send_key_reset_to_recents(session, tmp_ident, old_key, ident->fpr);
-
-        if (status != PEP_STATUS_OK)
-            goto pEp_error;
-
-        free_identity(tmp_ident);
-    }
-
-    config_passphrase(session, cached_passphrase);
-
-    // Make sure non-grouped idents with this key get reset (this probably happens almost never, but
-    // it's a legitimate use case.
-    for (curr_ident = key_idents; curr_ident && curr_ident->ident; curr_ident = curr_ident->next) {
-        if (!(curr_ident->ident->flags & PEP_idf_devicegroup)) {
-            status = _do_full_reset_on_single_own_ungrouped_identity(session, curr_ident->ident, old_key);
+    if (grouped_idents) {
+        for (curr_ident = grouped_idents; curr_ident && curr_ident->ident; curr_ident = curr_ident->next) {
+            pEp_identity *ident = curr_ident->ident;
+            free(ident->fpr);
+            ident->fpr = NULL;
+            status = _generate_keypair(session, ident, true);
             if (status != PEP_STATUS_OK)
                 goto pEp_error;
         }
+
+        // Ok, everyone who's grouped has got a new keypair. Hoorah!
+        // generate, sign, and push messages into queue
+        //
+
+        // Because we have to export the NEW secret keys,
+        // we have to switch in the passgen key
+        // as the configured key. We'll switch it back
+        // afterward (no revocation, decrypt, or signing
+        // with the old key happens in here)
+        // (N.B. For now, group encryption keys will ignore this
+        // FIXME: I think group encryption keys probably have to do something different here anyway...
+        config_passphrase(session, session->generation_passphrase);
+
+        status = _generate_own_commandlist_msg(session,
+                                               grouped_idents,
+                                               true,
+                                               NULL,
+                                               NULL,
+                                               old_key,
+                                               &outmsg);
+
+        config_passphrase(session, cached_passphrase);
+
+        // Key-based errors here shouldn't happen.
+        if (status != PEP_STATUS_OK)
+            goto pEp_error;
+
+        // Following will only be true if some idents were grouped,
+        // and will only include grouped idents!
+        // Will be signed with old signing key.
+        // (Again, see the FIXME - we need to figure out what
+        //  happens if it got revoked externally)
+        if (outmsg) {
+
+            // encrypt this baby and get out
+            // extra keys???
+            status = encrypt_message(session, outmsg, NULL, &enc_msg, PEP_enc_auto, PEP_encrypt_flag_key_reset_only);
+
+            if (status != PEP_STATUS_OK)
+                goto pEp_error;
+
+            _add_auto_consume(enc_msg);
+
+            // insert into queue
+            status = send_cb(enc_msg);
+
+            if (status != PEP_STATUS_OK)
+                goto pEp_error;
+        }
+
+        // Ok, we've signed everything we need to with the old key,
+        // Revoke that baby, in case we haven't already.
+        status = revoke_key(session, old_key, NULL);
+
+        // again, we should not have key-related issues here,
+        // as we ensured the correct password earlier
+        if (status != PEP_STATUS_OK)
+            goto pEp_error;
+
+        // Ok, NOW - the current password needs to be swapped out
+        // because we're going to sign with keys using it.
+        //
+        // All new keys have the same passphrase, if any
+        //
+        config_passphrase(session, session->generation_passphrase);
+
+        for (curr_ident = grouped_idents; curr_ident && curr_ident->ident; curr_ident = curr_ident->next) {
+            pEp_identity *ident = curr_ident->ident;
+
+            // set own key, you fool.
+            // Grab ownership first.
+            char *new_key = ident->fpr;
+            ident->fpr = NULL;
+            status = set_own_key(session, ident, new_key);
+            if (status != PEP_STATUS_OK)
+                // scream loudly and cry, then hang head in shame
+                goto pEp_error;
+
+            free(ident->fpr);
+
+            // release ownership to the struct again
+            ident->fpr = new_key;
+
+            // N.B. This sort of sucks because we overwrite this every time.
+            // But this case is infrequent and we don't rely on the binding.
+            if (status == PEP_STATUS_OK)
+                status = set_revoked(session, old_key, new_key, time(NULL));
+
+            if (status != PEP_STATUS_OK)
+                goto pEp_error;
+
+            // Whether new_key is NULL or not, if this key is equal to the current user default, we
+            // replace it.
+            status = replace_main_user_fpr_if_equal(session,
+                                                    ident->user_id,
+                                                    new_key,
+                                                    old_key);
+
+            if (status != PEP_STATUS_OK)
+                goto pEp_error;
+
+            pEp_identity *tmp_ident = identity_dup(ident);
+            if (!tmp_ident) {
+                status = PEP_OUT_OF_MEMORY;
+                goto pEp_error;
+            }
+            free(tmp_ident->fpr);
+
+            // for all active communication partners:
+            //      active_send revocation
+            tmp_ident->fpr = strdup(old_key); // freed in free_identity
+            if (status == PEP_STATUS_OK)
+                status = send_key_reset_to_recents(session, tmp_ident, old_key, ident->fpr);
+
+            if (status != PEP_STATUS_OK)
+                goto pEp_error;
+
+            free_identity(tmp_ident);
+        }
+
+        config_passphrase(session, cached_passphrase);
+
+        if (status == PEP_STATUS_OK)
+            // cascade that mistrust for anyone using this key
+            status = mark_as_compromised(session, old_key);
+        if (status == PEP_STATUS_OK)
+            status = remove_fpr_as_default(session, old_key);
+        if (status == PEP_STATUS_OK)
+            status = add_mistrusted_key(session, old_key);
+
     }
-    
-    if (status == PEP_STATUS_OK)
-        // cascade that mistrust for anyone using this key
-        status = mark_as_compromised(session, old_key);        
-    if (status == PEP_STATUS_OK)
-        status = remove_fpr_as_default(session, old_key);
-    if (status == PEP_STATUS_OK)
-        status = add_mistrusted_key(session, old_key);
-    
+
+    // Make sure non-grouped idents with this key get reset (this probably happens almost never, but
+    // it's a legitimate use case.)
+    if (status == PEP_STATUS_OK && !grouped_only) {
+        for (curr_ident = key_idents; curr_ident && curr_ident->ident; curr_ident = curr_ident->next) {
+            if (!(curr_ident->ident->flags & PEP_idf_devicegroup)) {
+                status = _do_full_reset_on_single_own_ungrouped_identity(session, curr_ident->ident, old_key);
+                if (status != PEP_STATUS_OK)
+                    goto pEp_error;
+            }
+        }
+    }
+
     return status;
-    
+
 pEp_error:
     // Just in case
     config_passphrase(session, cached_passphrase);
