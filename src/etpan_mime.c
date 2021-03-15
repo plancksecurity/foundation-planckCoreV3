@@ -22,6 +22,28 @@
 
 #define MAX_MESSAGE_ID 128
 
+#define MAX_IMF_LINE_LEN 998
+
+static bool ascii_exceeds_line_length(const char* data, size_t size) {
+
+    const char* curr_pos = data;
+    const char* last_pos = data;
+    const char* end_pos = data + size;
+    const char* crlf = "\r\n";
+
+    while ((curr_pos + MAX_IMF_LINE_LEN) < end_pos) {
+        last_pos = curr_pos;
+        curr_pos = strnstr(curr_pos, crlf, end_pos - curr_pos);
+        if (!curr_pos)
+            return true;
+        if (curr_pos - last_pos > MAX_IMF_LINE_LEN)
+            return true;
+        curr_pos += 2;
+    }
+
+    return false;
+}
+
 /**
  *  @internal
  *  
@@ -31,6 +53,7 @@
  *  
  *  
  */
+
 static char * generate_boundary(void)
 {
     char id[MAX_MESSAGE_ID];
@@ -385,6 +408,9 @@ struct mailmime * get_file_part(
     encoding = NULL;
 
     bool already_ascii = !(must_chunk_be_encoded(data, length, true));
+
+    // check to be sure, if it is already ascii, that line lengths aren't also
+    // exceeded. Otherwise, we should base64-encode anyway.
     
     if (!is_nf_message_attachment && !already_ascii) {
         encoding_type = MAILMIME_MECHANISM_BASE64;
@@ -1051,8 +1077,9 @@ bool must_chunk_be_encoded(const void* value, size_t size, bool ignore_fws) {
             }
         }
         cur_char_ptr++;
-    }    
-    return false;
+    }
+
+    return ascii_exceeds_line_length(value, size);
 }
 
 #define TMP_TEMPLATE "pEp.XXXXXXXXXXXXXXXXXXXX"
