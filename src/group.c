@@ -463,13 +463,15 @@ static PEP_STATUS is_invited_group_member(PEP_SESSION session, pEp_identity* gro
  ******************************************************************************************/
 
 identity_list* member_list_to_identity_list(member_list* memberlist) {
-    memberlist* curr_mem = memberlist;
+    member_list* curr_mem = memberlist;
     identity_list* head = NULL;
     identity_list** id_list_curr_ptr = &head;
 
     for ( ; curr_mem && curr_mem->member && curr_mem->member->ident; curr_mem = curr_mem->next,
             id_list_curr_ptr = &((*id_list_curr_ptr)->next)) {
-        *id_list_curr_ptr = identity_dup(curr_mem->member->ident);
+        *id_list_curr_ptr = new_identity_list(identity_dup(curr_mem->member->ident));
+        if (!(*id_list_curr_ptr))
+            return NULL; // Out of memory - FIXME: can we be cleaner here?
     }
     return head;
 }
@@ -1961,8 +1963,15 @@ DYNAMIC_API PEP_STATUS group_remove_member(
     if (status != PEP_STATUS_OK)
         return status;
 
-    status = key_reset_managed_group(session, group_identity, manager, group_member);
+    // We dup this because I'm not sure about ownership on the group identity.
+    // FIXME: maybe we shouldn't
+    char* group_key_to_revoke = strdup(group_identity->fpr);
+    if (!group_key_to_revoke)
+        return PEP_OUT_OF_MEMORY;
 
+    status = key_reset(session, group_key_to_revoke, group_identity);
+
+    free(group_key_to_revoke);
     free_identity(manager);
 
     return status;

@@ -269,6 +269,10 @@ PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, 
  */
 PEP_STATUS PER_to_key_reset_commands(const char *cmds, size_t size, keyreset_command_list **command_list);
 
+PEP_STATUS key_reset_managed_group(PEP_SESSION session,
+                                   pEp_identity* group_identity,
+                                   pEp_identity* manager);
+
 #ifdef __cplusplus
 }
 #endif

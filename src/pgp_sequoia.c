@@ -2724,7 +2724,7 @@ PEP_STATUS _pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity, ti
     assert(identity->fpr == NULL || identity->fpr[0] == 0);
 //    assert(identity->username);
 
-    bool is_group_identity = identity & PEP_idf_group_ident;
+    bool is_group_identity = identity->flags & PEP_idf_group_ident;
 
     // NOTE: FOR NOW, NO PASSPHRASE-BASED KEYS WILL BE GENERATED FOR GROUP ENCRYPTION.
     // VOLKER HAS A PLAN TO FIX THIS.

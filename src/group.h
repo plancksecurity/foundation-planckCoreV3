@@ -579,6 +579,16 @@ PEP_STATUS is_own_group_identity(PEP_SESSION session, pEp_identity* group_identi
  */
 identity_list* member_list_to_identity_list(member_list* memberlist);
 
+/**
+ *
+ * @param session
+ * @param group_identity
+ * @param manager
+ * @return
+ */
+PEP_STATUS get_group_manager(PEP_SESSION session,
+                             pEp_identity* group_identity,
+                             pEp_identity** manager);
 #ifdef __cplusplus
 }
 #endif
