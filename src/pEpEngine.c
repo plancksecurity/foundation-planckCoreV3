@@ -217,7 +217,6 @@ DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys(PEP_SESSION session, bool 
     return status;    
 }
 
-
 DYNAMIC_API void config_service_log(PEP_SESSION session, bool enable)
 {
     assert(session);
