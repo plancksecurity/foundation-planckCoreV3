@@ -445,14 +445,6 @@ DYNAMIC_API PEP_STATUS encrypt_and_sign(
         size_t psize, char **ctext, size_t *csize
     );
 
-// get_commit_hash() - get the commit hash of this build
-//
-//    return value:
-//        commit_hash       string constant referring to the commit hash
-//
-DYNAMIC_API const char* get_commit_hash();
-
-
 DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color);
 
 // log_event() - log a user defined event defined by UTF-8 encoded strings into
