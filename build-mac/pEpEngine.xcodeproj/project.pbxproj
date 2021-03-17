@@ -1840,7 +1840,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
-				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../local/lib/libnettle.a ${PROJECT_DIR}/../../local/lib/libgmp.a ${PROJECT_DIR}/../../local/lib/libhogweed.a ${PROJECT_DIR}/../../local/lib/libsequoia_openpgp_ffi.a ${PROJECT_DIR}/../../local/lib/libetpan.a";
+				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../sequoia4macos/lib/libnettle.a ${PROJECT_DIR}/../../sequoia4macos/lib/libgmp.a ${PROJECT_DIR}/../../sequoia4macos/lib/libhogweed.a ${PROJECT_DIR}/../../sequoia4macos/lib/libsequoia_openpgp_ffi.a ${PROJECT_DIR}/../../local/lib/libetpan.a";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -1864,7 +1864,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_FAST_MATH = YES;
-				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../local/lib/libnettle.a ${PROJECT_DIR}/../../local/lib/libgmp.a ${PROJECT_DIR}/../../local/lib/libhogweed.a ${PROJECT_DIR}/../../local/lib/libsequoia_openpgp_ffi.a ${PROJECT_DIR}/../../local/lib/libetpan.a";
+				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../sequoia4macos/lib/libnettle.a ${PROJECT_DIR}/../../sequoia4macos/lib/libgmp.a ${PROJECT_DIR}/../../sequoia4macos/lib/libhogweed.a ${PROJECT_DIR}/../../sequoia4macos/lib/libsequoia_openpgp_ffi.a ${PROJECT_DIR}/../../local/lib/libetpan.a";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -1959,7 +1959,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"${PROJECT_DIR}/../../local/include/**",
-					"$(PROJECT_DIR)/../../sequoia4ios/build/include",
+					"$(PROJECT_DIR)/../../sequoia4macos/build/include",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
@@ -2020,7 +2020,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"${PROJECT_DIR}/../../local/include/**",
-					"$(PROJECT_DIR)/../../sequoia4ios/build/include",
+					"$(PROJECT_DIR)/../../sequoia4macos/build/include",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
