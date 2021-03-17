@@ -48,9 +48,6 @@ else
     $(error I do not know how to make for $(BUILD_FOR) on $(BUILD_ON))
 endif
 
-# Commit hash header file - if we don't run this, it won't build.
-COMMIT_HASH:=$(shell git rev-parse HEAD)
-
 ifdef SQLITE3_FROM_OS
     NO_SOURCE+= sqlite3.c
     CPPFLAGS+= -DSQLITE3_FROM_OS
@@ -74,7 +71,7 @@ all: $(TARGET)
 
 -include Makefile.protocols
 
-%.d: %.c commit_hash.h
+%.d: %.c
 	@set -e; rm -f $@; \
 	$(CC) -MM $(CFLAGS) $(CPPFLAGS) $< > $@.$$$$; \
 	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
@@ -90,28 +87,20 @@ $(TARGET): libpEpEngine.a
 
 .PHONY: objects clean install_headers install uninstall beinstall
 
-commit_hash.h:
-ifeq (,$(COMMIT_HASH))
-	$(shell cp ../templates/commit_hash.h commit_hash.h)
-else
-	sed "s/\(PEP_CURRENT_COMMIT_HASH\ \).*/\1\"$(COMMIT_HASH)\"/" ../templates/commit_hash.h > commit_hash.h
-endif
+objects: $(ALL_OBJECTS)
 
-objects: $(ALL_OBJECTS) commit_hash.h
-
-libpEpEngine.a: $(ALL_OBJECTS) commit_hash.h
+libpEpEngine.a: $(ALL_OBJECTS)
 	$(AR) -rc $@ $^
 
 clean:
 	rm -f *.d *.o *.a $(TARGET) *.dll *.so *.zip *.d.* *.def *~
 	rm -Rf $(TARGET).dSYM
 	rm -f KeySync_fsm.* Sync_actions.c Sync_event.* Sync_func.* Sync_impl.* sync_codec.* distribution_codec.*
-	rm -f commit_hash.h
 
 # CAVEAT:
 # install_headers is needed for building *STANDALONE* pEp MIME - it is NOT used for built-in functionality!!!
 
-install_headers: $(TARGET) commit_hash.h
+install_headers: $(TARGET)
 	mkdir -p $(PREFIX)/include/pEp
 	cp pEpEngine.h keymanagement.h message_api.h dynamic_api.h stringlist.h \
 	   timestamp.h identity_list.h bloblist.h stringpair.h message.h mime.h \
