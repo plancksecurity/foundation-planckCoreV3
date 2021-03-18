@@ -1,7 +1,0 @@
-#ifndef COMMIT_HASH_H
-#define COMMIT_HASH_H
-
-#define PEP_CURRENT_COMMIT_HASH = "DUMMY_COMMIT_HASH_ERROR"
-
-#endif
-

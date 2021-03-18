@@ -718,7 +718,9 @@ tstylesheet {
                                 );
                             if (status) {
                                 free(_data);
-                                goto the_end;
+                                if (status == PEP_OUT_OF_MEMORY)
+                                    goto the_end;
+                                continue;
                             }
                             attach_own_key(session, _m);
                             decorate_message(session, _m, PEP_rating_undefined, NULL, true, true);
@@ -729,10 +731,9 @@ tstylesheet {
                     `` for "fsm/message[@security='untrusted' and ../@name='KeySync']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
                             // add fpr of key of comm partner
 
-                            assert(session->«yml:lcase(@name)»_state.transport.sender_fpr);
                             if (!session->«yml:lcase(@name)»_state.transport.sender_fpr) {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
-                                goto the_end;
+                                continue;
                             }
 
                             extra = new_stringlist(session->«yml:lcase(@name)»_state.transport.sender_fpr);
@@ -752,14 +753,18 @@ tstylesheet {
                                     &_m
                                 );
                             if (status) {
+                                if (status == PEP_OUT_OF_MEMORY)
+                                    goto the_end;
                                 free(_data);
-                                goto the_end;
+                                continue;
                             }
 
                             status = try_encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
                             if (status) {
+                                if (status == PEP_OUT_OF_MEMORY)
+                                    goto the_end;
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
-                                goto the_end;
+                                continue;
                             }
                             add_opt_field(m, "pEp-auto-consume", "yes");
                             m->in_reply_to = stringlist_add(m->in_reply_to, "pEp-auto-consume@pEp.foundation");
@@ -785,15 +790,12 @@ tstylesheet {
                             // secret keys
 
                             if (transaction) {
-                                assert(session->«yml:lcase(@name)»_state.comm_partner.sender_fpr &&
-                                    session->«yml:lcase(@name)»_state.transport.from &&
-                                    session->«yml:lcase(@name)»_state.transport.from->user_id);
                                 if (!(session->«yml:lcase(@name)»_state.comm_partner.sender_fpr &&
                                         session->«yml:lcase(@name)»_state.transport.from &&
                                         session->«yml:lcase(@name)»_state.transport.from->user_id))
                                 {
                                     status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
-                                    goto the_end;
+                                    continue;
                                 }
                             
                                 // test if this is a green channel
@@ -816,7 +818,7 @@ tstylesheet {
                                 if (ident->comm_type != PEP_ct_pEp) {
                                     free_identity(ident);
                                     status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
-                                    goto the_end;
+                                    continue;
                                 }
                                 free_identity(ident);
 
@@ -829,10 +831,9 @@ tstylesheet {
                                 assert(!status);
                                 if (status)
                                     goto the_end;
-                                assert(is_own_key);
                                 if (!is_own_key) {
                                     status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
-                                    goto the_end;
+                                    continue;
                                 }
 
                                 // if so add key of comm partner to extra keys
@@ -856,7 +857,9 @@ tstylesheet {
                                 );
                             if (status) {
                                 free(_data);
-                                goto the_end;
+                                if (status == PEP_OUT_OF_MEMORY)
+                                    goto the_end;
+                                continue;
                             }
 
                             // export secret keys into memory
@@ -939,8 +942,10 @@ tstylesheet {
 
                             status = try_encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
                             if (status) {
+                                if (status == PEP_OUT_OF_MEMORY)
+                                    goto the_end;
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
-                                goto the_end;
+                                continue;
                             }
                             add_opt_field(m, "pEp-auto-consume", "yes");
                             m->in_reply_to = stringlist_add(m->in_reply_to, "pEp-auto-consume@pEp.foundation");
@@ -961,7 +966,9 @@ tstylesheet {
                                 );
                             if (status) {
                                 free(_data);
-                                goto the_end;
+                                if (status == PEP_OUT_OF_MEMORY)
+                                    goto the_end;
+                                continue;
                             }
 
                             // export secret keys into memory
@@ -1045,8 +1052,10 @@ tstylesheet {
                             // we do not support extra keys here and will only encrypt to ourselves
                             status = try_encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
                             if (status) {
+                                if (status == PEP_OUT_OF_MEMORY)
+                                    goto the_end;
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
-                                goto the_end;
+                                continue;
                             }
                             add_opt_field(m, "pEp-auto-consume", "yes");
                             m->in_reply_to = stringlist_add(m->in_reply_to, "pEp-auto-consume@pEp.foundation");
@@ -1066,13 +1075,17 @@ tstylesheet {
                                 );
                             if (status) {
                                 free(_data);
-                                goto the_end;
+                                if (status == PEP_OUT_OF_MEMORY)
+                                    goto the_end;
+                                continue;
                             }
 
                             status = try_encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
                             if (status) {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
-                                goto the_end;
+                                if (status == PEP_OUT_OF_MEMORY)
+                                    goto the_end;
+                                continue;
                             }
                             add_opt_field(m, "pEp-auto-consume", "yes");
                             m->in_reply_to = stringlist_add(m->in_reply_to, "pEp-auto-consume@pEp.foundation");

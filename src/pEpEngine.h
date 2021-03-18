@@ -539,7 +539,6 @@ DYNAMIC_API PEP_STATUS encrypt_and_sign(
 
 DYNAMIC_API PEP_STATUS probe_encrypt(PEP_SESSION session, const char *fpr);
 
-
 /**
  *  <!--       set_debug_color()       -->
  *  
