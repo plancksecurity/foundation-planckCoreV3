@@ -278,9 +278,6 @@
     <ClInclude Include="..\src\internal_format.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\commit_hash.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\aux_mime_msg.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
