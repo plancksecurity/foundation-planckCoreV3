@@ -173,7 +173,6 @@
     <ClInclude Include="..\src\baseprotocol.h" />
     <ClInclude Include="..\src\blacklist.h" />
     <ClInclude Include="..\src\bloblist.h" />
-    <ClInclude Include="..\src\commit_hash.h" />
     <ClInclude Include="..\src\cryptotech.h" />
     <ClInclude Include="..\src\distribution_codec.h" />
     <ClInclude Include="..\src\dynamic_api.h" />
