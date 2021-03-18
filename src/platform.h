@@ -8,7 +8,7 @@
 extern "C" {
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
 #include "platform_windows.h"
 #else
 #include "platform_unix.h"
