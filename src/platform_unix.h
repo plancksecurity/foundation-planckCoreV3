@@ -81,10 +81,12 @@ const char *android_system_db(void);
 #elif __APPLE__
 #include "TargetConditionals.h"
 #include <string.h>
+#if TARGET_OS_IPHONE //read as `if iOS`
     extern char* perMachineDirectory;
 #define PER_MACHINE_DIRECTORY perMachineDirectory
     // It has been decided not to define PER_USER_DIRECTORY for iOS but HOME (which is defined by
     // the OS), at least temporarely.
+#endif
 #endif
 
 #if !defined(BSD) && !defined(__APPLE__)
