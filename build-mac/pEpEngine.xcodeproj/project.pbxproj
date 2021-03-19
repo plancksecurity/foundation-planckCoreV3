@@ -1779,6 +1779,11 @@
 					"DEBUG=1",
 					"$(inherited)",
 				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/../../sequoia4macos/build/include",
+					"$(PROJECT_DIR)/../../local/include/**",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -1804,6 +1809,11 @@
 				DEVELOPMENT_TEAM = NQLYU6MGPN;
 				EXECUTABLE_PREFIX = lib;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/../../sequoia4macos/build/include",
+					"$(PROJECT_DIR)/../../local/include/**",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_FAST_MATH = YES;
 				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../sequoia4macos/build/lib/libnettle.a ${PROJECT_DIR}/../../sequoia4macos/build/lib/libgmp.a ${PROJECT_DIR}/../../sequoia4macos/build/lib/libhogweed.a ${PROJECT_DIR}/../../sequoia4macos/build/lib/libsequoia_openpgp_ffi.a ${PROJECT_DIR}/../../local/lib/libetpan.a";
@@ -1880,11 +1890,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					"${PROJECT_DIR}/../../local/include/**",
-					"$(PROJECT_DIR)/../../sequoia4macos/build/include",
-				);
+				HEADER_SEARCH_PATHS = "$(inherited)";
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -1941,11 +1947,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					"${PROJECT_DIR}/../../local/include/**",
-					"$(PROJECT_DIR)/../../sequoia4macos/build/include",
-				);
+				HEADER_SEARCH_PATHS = "$(inherited)";
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
@@ -1963,7 +1965,10 @@
 					"$(inherited)",
 					"DEBUG=1",
 				);
-				HEADER_SEARCH_PATHS = "$(inherited)";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/../../sequoia4ios/build/include",
+				);
 				IPHONEOS_DEPLOYMENT_TARGET = "${inherited}";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1988,7 +1993,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
-				HEADER_SEARCH_PATHS = "$(inherited)";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/../../sequoia4ios/build/include",
+				);
 				IPHONEOS_DEPLOYMENT_TARGET = "${inherited}";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
