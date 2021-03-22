@@ -4624,6 +4624,7 @@ static PEP_STATUS process_Distribution_message(PEP_SESSION session,
 
     switch(dist->present) {
         case Distribution_PR_keyreset:
+            status = receive_key_reset(session, msg);
             break; // We'll do something later here on refactor!
         case Distribution_PR_managedgroup:
             // Set the group stuff in motion!
@@ -4831,7 +4832,7 @@ static PEP_STATUS _decrypt_message(
     
     bool imported_private_key_address = false;
     bool has_inner = false;
-    bool is_key_reset = false;
+    bool is_deprecated_key_reset = false;
 
     if (ptext) { 
         /* we got a plaintext from decryption */
@@ -5061,16 +5062,20 @@ static PEP_STATUS _decrypt_message(
                             searched = stringpair_list_find(inner_message->opt_fields, X_PEP_MSG_WRAP_KEY);
                             if (searched && searched->value && searched->value->value) {
                                 is_inner = (strcmp(searched->value->value, "INNER") == 0);
-                                if (!is_inner && major_ver == 2 && minor_ver == 1)
-                                    is_key_reset = (strcmp(searched->value->value, "KEY_RESET") == 0);
-                                if (is_inner || is_key_reset)
+                                // FIXME: This is a mess, but we need to keep backwards compat before refactor
+                                is_deprecated_key_reset = (strcmp(searched->value->value, "KEY_RESET") == 0);
+                                if (is_inner || (is_deprecated_key_reset && (major_ver != 2 || minor_ver != 1))) {
+                                    is_deprecated_key_reset = false;
+                                    is_inner = true; // I know this is messy, just trust me... this goes out in the refactor
+                                }
+                                if (is_inner || is_deprecated_key_reset)
                                     inner_message->opt_fields = stringpair_list_delete_by_key(inner_message->opt_fields, X_PEP_MSG_WRAP_KEY);
                             }
                         }
                         else {
                             is_inner = (strcmp(wrap_info, "INNER") == 0);
                             if (!is_inner)
-                                is_key_reset = (strcmp(wrap_info, "KEY_RESET") == 0);
+                                is_deprecated_key_reset = (strcmp(wrap_info, "KEY_RESET") == 0);
                         }                        
                             
                         // check for private key in decrypted message attachment while importing
@@ -5083,7 +5088,7 @@ static PEP_STATUS _decrypt_message(
                                                         
                         bool ignore_msg = false;
                             
-                        if (is_key_reset) {
+                        if (is_deprecated_key_reset) {
                             if (decrypt_status == PEP_VERIFY_SIGNER_KEY_REVOKED)
                                 ignore_msg = true;
                             else if (inner_message->_sender_fpr) {
@@ -5128,7 +5133,7 @@ static PEP_STATUS _decrypt_message(
                             status = decrypt_status;    
                             goto pEp_error;
                         }
-                        if (is_key_reset) {
+                        if (is_deprecated_key_reset) {
                             if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
                                 status = receive_key_reset(session,
                                                            inner_message);
@@ -5215,14 +5220,14 @@ static PEP_STATUS _decrypt_message(
         // Ok, so if it was signed and it's all verified, we can update
         // eligible signer comm_types to PEP_ct_pEp_*
         // This also sets and upgrades pEp version
-        if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED && !is_key_reset && is_pEp_msg && calculated_src->from)
+        if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED && !is_deprecated_key_reset && is_pEp_msg && calculated_src->from)
             status = update_sender_to_pEp_trust(session, msg->from, _keylist, major_ver, minor_ver);
 
         /* Ok, now we have a keylist used for decryption/verification.
            now we need to update the message rating with the 
            sender and recipients in mind */
            
-        if (!is_key_reset) { // key reset messages invalidate some of the ratings in the DB by now.
+        if (!is_deprecated_key_reset) { // key reset messages invalidate some of the ratings in the DB by now.
             status = amend_rating_according_to_sender_and_recipients(session,
                      rating, msg->from, _keylist);
             if (status != PEP_STATUS_OK)
@@ -5663,16 +5668,28 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                 else if (*keylist)
                     signal_Sync_message(session, *rating, data, size, msg->from, (*keylist)->value);
             }
-            free(sender_fpr);
         }
         if (tmp_status != PEP_STATUS_OK) {
-            // Try the rest
-            PEP_STATUS tmpstatus = base_extract_message(session, msg, BASE_DISTRIBUTION, &size, &data, &sender_fpr);
-            if (!tmpstatus && size && data) {
-                process_Distribution_message(session, msg, *rating, data, size, sender_fpr);
+            // We process key resets differently in other versions and won't get these kind of resets
+            // until this min version anyway, so:
+            if (msg && msg->opt_fields) {
+                const stringpair_list_t *pEp_protocol_version = NULL;
+                unsigned int major_ver = 0;
+                unsigned int minor_ver = 0;
+                pEp_protocol_version = stringpair_list_find(msg->opt_fields, "X-pEp-Version");
+                if (pEp_protocol_version && pEp_protocol_version->value)
+                    pEp_version_major_minor(pEp_protocol_version->value->value, &major_ver, &minor_ver);
+                if (major_ver > 2 || (major_ver == 2 && minor_ver > 1)) {
+                    // Try the rest
+                    PEP_STATUS tmpstatus = base_extract_message(session, msg, BASE_DISTRIBUTION, &size, &data,
+                                                                &sender_fpr);
+                    if (!tmpstatus && size && data) {
+                        process_Distribution_message(session, msg, *rating, data, size, sender_fpr);
+                    }
+                }
             }
-            free(sender_fpr);
         }
+        free(sender_fpr);
     }
 
     // Removed for now - partial fix in ENGINE-647, but we have sync issues. Need to 

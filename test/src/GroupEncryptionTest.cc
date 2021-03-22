@@ -13,7 +13,7 @@
 
 #include <gtest/gtest.h>
 
-#define GECT_WRITEOUT 1
+#define GECT_WRITEOUT 0
 
 PEP_STATUS GECT_message_send_callback(message* msg);
 PEP_STATUS GECT_ensure_passphrase_callback(PEP_SESSION session, const char* key);
@@ -78,6 +78,7 @@ namespace {
             const char* group_2_name = "Vanus for Best Mage Ever Campaign";
             const char* group_2_fpr = "A39A9EE41E9D6380C8E5220E6DC64C166456E7C7";
             const char* group_2_prefix = "vanus_for_archmage_0x6456E7C7";
+            const char* group_1_replacement_revoke_1 = "B913BE8404BD67307028E682D0B93FBF57CA7D00"; // CHANGE ME
 
             string kf_name(const char* prefix, bool priv) {
                 return string("test_keys/") + (priv ? "priv/" : "pub/") + prefix + (priv ? "_priv.asc" : "_pub.asc");
@@ -2822,45 +2823,132 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_two_recents) {
     status = key_reset(session, group_1_fpr, group_ident);
     ASSERT_OK;
 
+    status = myself(session, group_ident);
+    ASSERT_OK;
+    ASSERT_STRNE(group_ident->fpr, group_1_fpr);
+#if GECT_WRITEOUT
+    cout << "ATTENTION: New group key at this run is " << group_ident->fpr << ". Since test mails are being rewritten, expect failure in later cases. Please change the test file when GECT_WRITEOUT is reset to false."     << endl;
+    group_1_replacement_revoke_1 = strdup(group_ident->fpr);
+#endif
+
     ASSERT_EQ(m_queue.size(), 6);
 
-//    bool found[] = {false, false, false, false, false, false};
-//    for (int i = 0; i < 6; i++) {
-//        message* msg = m_queue[i];
-//        ASSERT_NE(msg, nullptr);
-//        ASSERT_NE(msg->from, nullptr);
-//        ASSERT_NE(msg->to, nullptr);
-//        ASSERT_NE(msg->to->ident, nullptr);
-//        ASSERT_EQ(msg->to->next, nullptr);
-//        ASSERT_STREQ(msg->from->address, manager_1_address);
-//
-//        if (strcmp(msg->to->ident->address, member_1_address) == 0)
-//            found[0] = true;
-//        else if (strcmp(msg->to->ident->address, member_2_address) == 0)
-//            found[1] = true;
-//        else if (strcmp(msg->to->ident->address, member_3_address) == 0)
-//            found[2] = true;
-//        else if (strcmp(msg->to->ident->address, member_4_address) == 0)
-//            found[3] = true;
-//        else if (strcmp(msg->to->ident->address, group_2_address) == 0)
-//            found[4] = true;
-//        else if (strcmp(msg->to->ident->address, "pep.test.bob@pep-project.org") == 0)
-//            found[5] = true;
-//        else
-//            ASSERT_STREQ(msg->to->ident->address, "ADDRESS_ERROR_STRING_FOR_FAILURE_OUTPUT");
-//
-//#if GECT_WRITEOUT
-//        char* outdata = NULL;
-//        mime_encode_message(msg, false, &outdata, false);
-//        ASSERT_NE(outdata, nullptr);
-//        dump_out((string("test_mails/group_key_reset_mixed_members_and_recents_") + msg->to->ident->address + ".eml").c_str(), outdata);
-//        free(outdata);
-//#endif
-//    }
-//
-//    for (int i = 0; i < 6; i++) {
-//        ASSERT_TRUE(found[i]);
-//    }
+    bool found[] = {false, false, false, false, false, false};
+    for (int i = 0; i < 6; i++) {
+        message* msg = m_queue[i];
+        ASSERT_NE(msg, nullptr);
+        ASSERT_NE(msg->from, nullptr);
+        ASSERT_NE(msg->to, nullptr);
+        ASSERT_NE(msg->to->ident, nullptr);
+        ASSERT_EQ(msg->to->next, nullptr);
+
+        bool is_member = false;
+        if (strcmp(msg->to->ident->address, member_1_address) == 0) {
+            found[0] = true;
+            is_member = true;
+        }
+        else if (strcmp(msg->to->ident->address, member_2_address) == 0) {
+            found[1] = true;
+            is_member = true;
+        }
+        else if (strcmp(msg->to->ident->address, member_3_address) == 0) {
+            found[2] = true;
+            is_member = true;
+        }
+        else if (strcmp(msg->to->ident->address, member_4_address) == 0) {
+            found[3] = true;
+            is_member = true;
+        }
+        else if (strcmp(msg->to->ident->address, manager_2_address) == 0) {
+            found[4] = true;
+            is_member = false;
+        }
+        else if (strcmp(msg->to->ident->address, "pep.test.bob@pep-project.org") == 0) {
+            found[5] = true;
+            is_member = false;
+        }
+        else
+            ASSERT_STREQ(msg->to->ident->address, "ADDRESS_ERROR_STRING_FOR_FAILURE_OUTPUT");
+
+        if (is_member)
+            ASSERT_STREQ(msg->from->address, manager_1_address);
+        else
+            ASSERT_STREQ(msg->from->address, group_1_address);
+
+#if GECT_WRITEOUT
+        char* outdata = NULL;
+        mime_encode_message(msg, false, &outdata, false);
+        ASSERT_NE(outdata, nullptr);
+        dump_out((string("test_mails/group_key_reset_mixed_output_") +
+                 (is_member ? "to_member_private_" : "to_partner_public_") +
+                 msg->to->ident->address + ".eml").c_str(), outdata);
+        free(outdata);
+#endif
+    }
+
+    for (int i = 0; i < 6; i++) {
+        ASSERT_TRUE(found[i]);
+    }
 
 }
 
+
+TEST_F(GroupEncryptionTest, check_group_key_reset_receive_member_2) {
+    pEp_identity* me = new_identity(member_2_address, NULL, "MEMBER2", member_2_name);
+    read_file_and_import_key(session, kf_name(member_2_prefix, false).c_str());
+    read_file_and_import_key(session, kf_name(member_2_prefix, true).c_str());
+    PEP_STATUS status = set_own_key(session, me, member_2_fpr);
+    ASSERT_OK;
+
+    string invite = slurp(string("test_mails/group_create_extant_key_") + member_2_prefix + ".eml");
+    message* enc_msg = NULL;
+    message* dec_msg = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+
+    enc_msg = string_to_msg(invite);
+    ASSERT_NE(enc_msg, nullptr);
+
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_OK;
+
+    pEp_identity* group_ident = new_identity(group_1_address, NULL, "MEMBER2", group_1_name);
+    status = myself(session, group_ident);
+    ASSERT_OK;
+    ASSERT_STREQ(group_1_fpr, group_ident->fpr);
+    ASSERT_NE(group_ident->flags & PEP_idf_group_ident, 0);
+
+    status = group_join(session, group_ident, me);
+    ASSERT_OK;
+
+    m_queue.clear();
+
+    string resetmsg = slurp(string("test_mails/group_key_reset_mixed_output_to_member_private_") + member_2_address + ".eml");
+    free_message(enc_msg);
+    enc_msg = string_to_msg(resetmsg);
+    ASSERT_NE(enc_msg, nullptr);
+    free_message(dec_msg);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_OK;
+
+    bool is_revoked;
+    status = key_revoked(session, group_1_fpr, &is_revoked);
+    ASSERT_OK;
+    EXPECT_TRUE(is_revoked);
+
+    status = myself(session, group_ident);
+    EXPECT_STREQ(group_ident->fpr, group_1_replacement_revoke_1);
+    bool has_private = false;
+    contains_priv_key(session, group_ident->fpr, &has_private);
+    ASSERT_TRUE(has_private);
+    // I guess that's all we need to test here at the moment.
+}
+
+TEST_F(GroupEncryptionTest, check_group_key_reset_receive_partner_1) {
+
+}
+
+TEST_F(GroupEncryptionTest, check_group_key_reset_receive_partner_2) {
+
+}

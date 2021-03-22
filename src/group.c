@@ -2038,6 +2038,10 @@ PEP_STATUS is_active_group_member(PEP_SESSION session, pEp_identity* group_ident
     if (!member || EMPTYSTR(member->user_id) || EMPTYSTR(member->address))
         return PEP_ILLEGAL_VALUE;
 
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    sqlite3_reset(session->is_active_group_member);
+
     sqlite3_bind_text(session->is_active_group_member, 1, group_identity->user_id, -1,
                       SQLITE_STATIC);
     sqlite3_bind_text(session->is_active_group_member, 2, group_identity->address, -1,
@@ -2052,11 +2056,11 @@ PEP_STATUS is_active_group_member(PEP_SESSION session, pEp_identity* group_ident
     if (result == SQLITE_ROW)
         *is_active = sqlite3_column_int(session->is_active_group_member, 0);
     else if (result == SQLITE_DONE)
-        return PEP_NO_MEMBERSHIP_STATUS_FOUND;
+        status = PEP_NO_MEMBERSHIP_STATUS_FOUND;
     else
-        return PEP_UNKNOWN_DB_ERROR;
+        status = PEP_UNKNOWN_DB_ERROR;
 
     sqlite3_reset(session->is_active_group_member);
 
-    return PEP_STATUS_OK;
+    return status;
 }

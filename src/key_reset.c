@@ -455,11 +455,10 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
     if (status != PEP_STATUS_OK)
         return status;
 
-    // Bail if revoked
+    // Bail if *sender fpr* revoked or mistrusted (i.e. red channel)
     if (revoked) {
         return PEP_ILLEGAL_VALUE; // could be an attack            
     }
-    // Otherwise, bail
     else {
         bool mistrusted = false;
         status = is_mistrusted_key(session, sender_fpr, &mistrusted);
@@ -473,15 +472,14 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
 
     
     // Parse reset message
-    
     pEp_identity* sender_id = reset_msg->from;
-                            
+
     if (!sender_id)
         return PEP_MALFORMED_KEY_RESET_MSG;
 
     if (is_me(session, sender_id)) {
         // first off, we need to make sure we're up-to-date
-        status = myself(session, sender_id);        
+        status = myself(session, sender_id);
     }
     else {    
         status = update_identity(session, sender_id);
@@ -490,11 +488,12 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
     }
     if (status != PEP_STATUS_OK) // Do we need to be more specific??
         return status;
-    
+
+
     bool sender_own_key = false;
     bool from_me = is_me(session, sender_id);
     
-    if (is_me(session, sender_id)) {
+    if (from_me) {
         // Do own-reset-checks
         status = is_own_key(session, sender_fpr, &sender_own_key);
         
@@ -560,12 +559,41 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
             return PEP_MALFORMED_KEY_RESET_MSG;        
         }
         pEp_identity* curr_ident = curr_cmd->ident;
-        
+
+
         old_fpr = curr_ident->fpr;
         new_fpr = strdup(curr_cmd->new_key);
-        
+
+        // Ok, we have to do this earlier now because we need group ident info
+
+        // We need to update the identity to get the user_id
+        curr_ident->fpr = NULL; // ensure old_fpr is preserved
+        free(curr_ident->user_id);
+        curr_ident->user_id = NULL;
+        status = update_identity(session, curr_ident); // Won't gen key, so safe
+        if (status != PEP_STATUS_OK && status != PEP_GET_KEY_FAILED)
+            return status;
+
+        bool is_group_identity = curr_ident->flags & PEP_idf_group_ident; // sender_own_key will be false
+        // If it's a group ident (that we are a member of), let's make sure the manager sent it
+        if (is_group_identity) {
+            pEp_identity* manager = NULL;
+            status = get_group_manager(session, curr_ident, &manager);
+            if (status != PEP_STATUS_OK)
+                goto pEp_free;
+            if (!manager) {
+                status = PEP_KEY_NOT_RESET;
+                goto pEp_free;
+            }
+            if (strcmp(manager->address, reset_msg->from->address) != 0 ||
+                strcmp(manager->user_id, reset_msg->from->user_id) != 0) {
+                status = PEP_KEY_NOT_RESET;
+                goto pEp_free;
+            }
+        }
+
         bool is_old_own = false;
-        // if it's our key and the old one is revoked, we skip it.
+        // if the SENDER key is our key and the old one is revoked, we skip it.
         // Sorry, them's the rules/
         if (sender_own_key) {
             status = is_own_key(session, old_fpr, &is_old_own);
@@ -581,7 +609,6 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         // with the sender. FIXME: check key election interaction
         // N.B. If we ever allow ourselves to send resets to ourselves
         // for not-own stuff, this will have to be revised
-        
         status = find_keys(session, new_fpr, &keylist);
         if (status != PEP_STATUS_OK)
             goto pEp_free;
@@ -589,15 +616,18 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
             status = PEP_MALFORMED_KEY_RESET_MSG;
             goto pEp_free;
         }
-        
-        // We need to update the identity to get the user_id
-        curr_ident->fpr = NULL; // ensure old_fpr is preserved
-        free(curr_ident->user_id);
-        curr_ident->user_id = NULL;
-        status = update_identity(session, curr_ident);
-        if (status != PEP_STATUS_OK)
-            return status;
-            
+
+        if (is_group_identity) {
+            bool has_private = false;
+            status = contains_priv_key(session, new_fpr, &has_private);
+            if (status != PEP_STATUS_OK)
+                goto pEp_free;
+            if (!has_private) {
+                status = PEP_KEY_NOT_RESET;
+                goto pEp_free;
+            }
+        }
+
         // Ok, now check the old fpr to see if we have an entry for it
         // temp fpr set for function call
         curr_ident->fpr = old_fpr;
@@ -657,7 +687,7 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         // Hooray! We apparently now are dealing with keys 
         // belonging to the user from a message at least marginally
         // from the user
-        if (!sender_own_key) {
+        if (!sender_own_key && !is_group_identity)   {
             // Clear all info (ALSO REMOVES OLD KEY RIGHT NOW!!!)            
             status = key_reset(session, old_fpr, curr_ident);
             if (status != PEP_STATUS_OK)
@@ -868,6 +898,7 @@ static PEP_STATUS send_key_reset_to_active_group_members(PEP_SESSION session,
 
     if (members) {
         member_list* curr_member = members;
+
         for ( ; curr_member && curr_member->member && curr_member->member->ident; curr_member = curr_member->next) {
             pEp_identity* member_ident = curr_member->member->ident;
             if (EMPTYSTR(member_ident->user_id) || EMPTYSTR(member_ident->address))
@@ -1162,10 +1193,9 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
         config_passphrase(session, session->generation_passphrase);
 
         // generate new key
-        if (status == PEP_STATUS_OK) {
-            ident->fpr = NULL;
-            status = myself(session, ident);
-        }
+        ident->fpr = NULL;
+        status = myself(session, ident);
+
         if (status == PEP_STATUS_OK && ident->fpr && strcmp(old_fpr, ident->fpr) != 0)
             new_key = strdup(ident->fpr);
         // Error handling?
@@ -1182,6 +1212,8 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
             // Generate new key
             status = myself(session, ident);
         }
+        else
+            return status; // FIXME: MEM
     }
 
     if (status == PEP_STATUS_OK)
@@ -1203,7 +1235,7 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
         // for all active communication partners:
         //      active_send revocation
 
-        ident->fpr = old_fpr;
+        //ident->fpr = old_fpr; ???????
         if (status == PEP_STATUS_OK) {
             if (is_own_identity_group) {
                 pEp_identity* manager = NULL;
