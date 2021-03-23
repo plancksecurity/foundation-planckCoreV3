@@ -922,25 +922,35 @@ static PEP_STATUS send_key_reset_to_active_group_members(PEP_SESSION session,
             if (status != PEP_STATUS_OK) // FIXME: mem
                 return status;
 
-            if (outmsg) {
+            if (!outmsg || !outmsg->attachments) // Must have keys
+                return PEP_UNKNOWN_ERROR;
 
-                message* enc_msg = NULL;
+            // Attach key revocation
+            char* revoked_key_material = NULL;
+            size_t revoked_key_size = NULL;
+            status = export_key(session, old_fpr, &revoked_key_material, &revoked_key_size);
+            if (status != PEP_STATUS_OK)
+                return status; // FIXME: mem
 
-                // encrypt this baby and get out
-                // extra keys???
-                status = encrypt_message(session, outmsg, NULL, &enc_msg, PEP_enc_auto, PEP_encrypt_flag_key_reset_only);
+            bloblist_add(outmsg->attachments, revoked_key_material, revoked_key_size,
+                         "application/pgp-keys","file://pEpkey_revoked.asc");
 
-                if (status != PEP_STATUS_OK)
-                    return status;
+            message* enc_msg = NULL;
 
-                _add_auto_consume(enc_msg);
+            // encrypt this baby and get out
+            // extra keys???
+            status = encrypt_message(session, outmsg, NULL, &enc_msg, PEP_enc_auto, PEP_encrypt_flag_key_reset_only);
 
-                // insert into queue
-                status = send_cb(enc_msg);
+            if (status != PEP_STATUS_OK)
+                return status;
 
-                if (status != PEP_STATUS_OK)
-                    return status;
-            }
+            _add_auto_consume(enc_msg);
+
+            // insert into queue
+            status = send_cb(enc_msg);
+
+            if (status != PEP_STATUS_OK)
+                return status;
         }
     }
 
