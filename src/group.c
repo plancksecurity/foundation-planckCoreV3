@@ -1951,6 +1951,12 @@ DYNAMIC_API PEP_STATUS group_remove_member(
     if (!exists)
         return PEP_GROUP_NOT_FOUND;
 
+    // Make sure this person was ever invited to the group
+    bool is_invited = false;
+    status = is_invited_group_member(session, group_identity, group_member, &is_invited);
+    if (!is_invited)
+        return PEP_NO_MEMBERSHIP_STATUS_FOUND;
+
     status = _remove_member_from_group(session, group_identity, group_member);
 
     if (status != PEP_STATUS_OK)
