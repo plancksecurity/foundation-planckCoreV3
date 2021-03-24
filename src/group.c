@@ -746,17 +746,18 @@ PEP_STATUS leave_group(
 
     // get our status, if there is any
     bool am_member = false;
-    // FIXME: differentiate between no records and DB error in call
     PEP_STATUS status = get_own_membership_status(session, group_identity, member_identity, &am_member);
+
+    if (status == PEP_NO_MEMBERSHIP_STATUS_FOUND)
+        return PEP_STATUS_OK;
 
     if (status != PEP_STATUS_OK)
         return status;
 
     if (!am_member)
-        return PEP_STATUS_OK; // FIXME: ask Volker if there is a reason to do this, like the message wasn't sent
+        return PEP_STATUS_OK;
 
-    // Ok, group invite exists. Do it.
-
+    // Ok, we clearly joined the group at some point.
     int result = 0;
 
     sqlite3_reset(session->leave_group);
@@ -907,33 +908,39 @@ PEP_STATUS retrieve_full_group_membership(
                                            NULL,(const char *) sqlite3_column_text(session->get_all_members, 0),
                                            NULL);
         assert(ident);
-        if (ident == NULL) {
-            sqlite3_reset(session->get_all_members);
-            return PEP_OUT_OF_MEMORY;
-        }
+        if (ident == NULL)
+            goto enomem;
 
         pEp_member* new_mem = new_member(ident);
         new_mem->joined = sqlite3_column_int(session->get_all_members, 2);
         member_list* new_node = new_memberlist(new_mem);
         if (!new_node)
-            return PEP_OUT_OF_MEMORY;
+            goto enomem;
 
         *member_list_next = new_node;
         member_list_next = &(new_node->next);
     }
-    sqlite3_reset(session->get_all_members);
 
     member_list* curr = retval;
 
     for ( ; curr ; curr = curr->next) {
         if (!(curr->member && curr->member->ident))
-            return PEP_UNKNOWN_ERROR; // FIXME, free
+            goto enomem;
         status = update_identity(session, curr->member->ident);
     }
 
+    sqlite3_reset(session->get_all_members);
     *members = retval;
 
     return PEP_STATUS_OK;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+pEp_error:
+    sqlite3_reset(session->get_all_members);
+    free_memberlist(members);
+    return status;
 }
 
 PEP_STATUS retrieve_active_member_list(
@@ -964,37 +971,45 @@ PEP_STATUS retrieve_active_member_list(
                 NULL,(const char *) sqlite3_column_text(session->get_active_members, 0),
                 NULL);
         assert(ident);
-        if (ident == NULL) {
-            sqlite3_reset(session->get_active_members);
-            return PEP_OUT_OF_MEMORY;
-        }
+        if (ident == NULL)
+            goto enomem;
 
         pEp_member* member = new_member(ident);
         if (!member)
-            return PEP_OUT_OF_MEMORY;
+            goto enomem;
 
         member_list* new_node = new_memberlist(member);
-        if (!new_node)
-            return PEP_OUT_OF_MEMORY;
+        if (!new_node) {
+            free_member(member);
+            goto enomem;
+        }
 
         new_node->member->joined = true;
 
         *mbr_list_next = new_node;
         mbr_list_next = &(new_node->next);
     }
-    sqlite3_reset(session->get_active_members);
 
     member_list* curr = retval;
 
     for ( ; curr && curr->member && curr->member->ident; curr = curr->next) {
         if (!curr->member->ident)
-            return PEP_UNKNOWN_ERROR; // FIXME, free
+            goto enomem;
         status = update_identity(session, curr->member->ident);
     }
 
-    *mbr_list = retval;
+    sqlite3_reset(session->get_active_members);
 
+    *mbr_list = retval;
     return PEP_STATUS_OK;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+pEp_error:
+    sqlite3_reset(session->get_active_members);
+    free_memberlist(mbr_list);
+    return status;
 }
 
 PEP_STATUS retrieve_group_info(PEP_SESSION session, pEp_identity* group_identity, pEp_group** group_info) {
@@ -1028,7 +1043,7 @@ PEP_STATUS retrieve_group_info(PEP_SESSION session, pEp_identity* group_identity
 
     group = new_group(stored_identity, manager, members);
     if (!group)
-        return PEP_OUT_OF_MEMORY;
+        goto enomem;
 
     bool active = false;
     status = is_group_active(session, group_identity, &active);
@@ -1039,6 +1054,9 @@ PEP_STATUS retrieve_group_info(PEP_SESSION session, pEp_identity* group_identity
     *group_info = group;
 
     return status;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
 
 pEp_error:
     if (!group) {
@@ -1145,7 +1163,7 @@ PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rat
     if (!gc || !msg->to || !msg->to->ident || msg->to->next)
         return PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
 
-    // this will be hard without address aliases.
+    // FIXME: this will be hard without address aliases.
 
     // We will probably always have to do this, but if something changes externally we need this check.
     if (!msg->to->ident->me) {
@@ -1161,7 +1179,12 @@ PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rat
     if (!group_identity)
         return PEP_UNKNOWN_ERROR; // we really don't know why
 
-    pEp_identity* manager = Identity_to_Struct(&(gc->manager), NULL);
+    pEp_group* group = NULL;
+    pEp_identity* manager = NULL;
+    char* own_id = NULL;
+    stringlist_t* keylist = NULL;
+
+    manager = Identity_to_Struct(&(gc->manager), NULL);
     if (!manager)
         return PEP_UNKNOWN_ERROR;
 
@@ -1171,53 +1194,67 @@ PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rat
     group_identity->user_id = NULL;
 
     status = update_identity(session, manager);
-    if (!manager->fpr) // at some point, we can require this to be the sender fpr I think - FIXME
-        return PEP_KEY_NOT_FOUND;
+    if (!manager->fpr) {// at some point, we can require this to be the sender fpr I think - FIXME
+        status = PEP_KEY_NOT_FOUND;
+        goto pEp_free;
+    }
 
     // Ok then - let's do this:
     // First, we need to ensure the group_ident has an own ident instead
-    char* own_id = NULL;
     status = get_default_own_userid(session, &own_id);
-    if (status != PEP_STATUS_OK || !own_id) {
-        free(own_id);
-        return status;
+    if (status != PEP_STATUS_OK)
+        goto pEp_free;
+
+    if (!own_id) {
+        status = PEP_NO_OWN_USERID_FOUND;
+        goto pEp_free;
     }
+
+    // Takes ownership here, which is why we DON'T free own_id at the end
     group_identity->user_id = own_id;
 
     // Ok, let's ensure we HAVE the key for this group:
-    stringlist_t* keylist = NULL;
     status = find_private_keys(session, group_identity->fpr, &keylist);
 
     if (status != PEP_STATUS_OK)
-        return status;
+        goto pEp_free;
 
-    if (!keylist)
-        return PEP_KEY_NOT_FOUND;
+    if (!keylist) {
+        status = PEP_KEY_NOT_FOUND;
+        goto pEp_free;
+    }
 
     status = set_own_key(session, group_identity, group_identity->fpr);
 
     if (status != PEP_STATUS_OK)
-        return status;
+        goto pEp_free;
 
     pEp_member* member = new_member(identity_dup(msg->to->ident));
-    if (!member || !member->ident)
-        return PEP_OUT_OF_MEMORY;
+    if (!member || !member->ident) {
+        status = PEP_OUT_OF_MEMORY;
+        goto pEp_free;
+    }
 
     member_list* list = new_memberlist(member);
-    if (!list)
-        return PEP_OUT_OF_MEMORY;
+    if (!list) {
+        status = PEP_OUT_OF_MEMORY;
+        goto pEp_free;
+    }
 
-    pEp_group* group = NULL;
     status = group_create(session, group_identity, manager, list, &group);
 
-    if (status != PEP_STATUS_OK) {
-        free_group(group);
-        return status;
-    }
+    if (status != PEP_STATUS_OK)
+        goto pEp_free;
 
     status = add_own_membership_entry(session, group_identity, manager, msg->to->ident);
 
-    free_group(group);
+pEp_free:
+    if (!group)
+        free_identity(manager);
+    else
+        free_group(group);
+    free_stringlist(keylist);
+
     return status;
 }
 

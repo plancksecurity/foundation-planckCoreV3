@@ -93,6 +93,7 @@ typedef enum {
     
     PEP_CANNOT_FIND_ALIAS                           = 0x0391,
     PEP_CANNOT_SET_ALIAS                            = 0x0392,
+    PEP_NO_OWN_USERID_FOUND                         = 0x0393,
     
     PEP_UNENCRYPTED                                 = 0x0400,
     PEP_VERIFIED                                    = 0x0401,
