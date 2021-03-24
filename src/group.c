@@ -1366,6 +1366,11 @@ PEP_STATUS receive_GroupDissolve(PEP_SESSION session, message* msg, PEP_rating r
 PEP_STATUS receive_GroupAdopted(PEP_SESSION session, message* msg, PEP_rating rating, GroupAdopted_t* ga) {
     PEP_STATUS status = PEP_STATUS_OK;
 
+    pEp_identity* db_group_ident = NULL;
+    char* own_id = NULL;
+    pEp_identity* group_identity = NULL;
+    pEp_identity* member = NULL;
+
     if (rating < PEP_rating_reliable)
         return PEP_NO_TRUST; // Find better error
 
@@ -1380,50 +1385,60 @@ PEP_STATUS receive_GroupAdopted(PEP_SESSION session, message* msg, PEP_rating ra
     if (!msg->to->ident->me) {
         status = update_identity(session, msg->to->ident);
         if (status != PEP_STATUS_OK)
-            return status;
+            goto pEp_free;
     }
 
     // this will be hard without address aliases
-    if (!is_me(session, msg->to->ident))
-        return PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
+    if (!is_me(session, msg->to->ident)) {
+        status = PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
+        goto pEp_free;
+    }
 
-//    pEp_identity* own_identity = msg->to->ident;
+    // FIXME: is there a check we need to do here?
+    //    pEp_identity* own_identity = msg->to->ident;
 
-    pEp_identity* group_identity = Identity_to_Struct(&(ga->groupIdentity), NULL);
-    if (!group_identity)
-        return PEP_UNKNOWN_ERROR; // we really don't know why
+    group_identity = Identity_to_Struct(&(ga->groupIdentity), NULL);
+    if (!group_identity) {
+        status = PEP_UNKNOWN_ERROR; // we really don't know why
+        goto pEp_free;
+    }
 
-    pEp_identity* member = Identity_to_Struct(&(ga->member), NULL);
-    if (!member)
-        return PEP_UNKNOWN_ERROR;
+    member = Identity_to_Struct(&(ga->member), NULL);
+    if (!member) {
+        status = PEP_UNKNOWN_ERROR; // we really don't know why
+        goto pEp_free;
+    }
 
-    char* own_id = NULL;
     status = get_default_own_userid(session, &own_id);
-    if (status != PEP_STATUS_OK || EMPTYSTR(own_id))
-        return PEP_UNKNOWN_ERROR;
+    if (status != PEP_STATUS_OK || EMPTYSTR(own_id)) {
+        if (status == PEP_STATUS_OK)
+            status = PEP_UNKNOWN_ERROR;
+        goto pEp_free;
+    }
 
     // is this even our group? If not, ignore.
-    pEp_identity* db_group_ident = NULL;
     status = get_identity(session, group_identity->address, own_id, &db_group_ident);
     if (status != PEP_STATUS_OK)
-        return status;
+        goto pEp_free;
 
-    // Fixme, free above
-    if (!db_group_ident)
-        return PEP_CANNOT_FIND_IDENTITY;
+    if (!db_group_ident) {
+        status = PEP_CANNOT_FIND_IDENTITY;
+        goto pEp_free;
+    }
 
     // There's nothing in the group_identity we care about actually other than the address, so free and replace
     free_identity(group_identity);
     group_identity = db_group_ident;
+    db_group_ident = NULL; // prevent double-free!!
 
     bool is_mine = NULL;
     status = is_group_mine(session, group_identity, &is_mine);
 
     if (status != PEP_STATUS_OK)
-        return status;
+        goto pEp_free;
 
-    if (!is_mine)
-        return PEP_STATUS_OK; // Ignore? FIXME
+    if (!is_mine) // If it's not my group, I don't care and will ignore it.
+        goto pEp_free;
 
     // is this even someone we invited? If not, ignore.
     bool invited = false;
@@ -1433,30 +1448,34 @@ PEP_STATUS receive_GroupAdopted(PEP_SESSION session, message* msg, PEP_rating ra
     member->user_id = NULL;
     status = update_identity(session, member);
     if (status != PEP_STATUS_OK)
-        return status; // FIXME - please sort out memory!!!
+        goto pEp_free;
 
     status = is_invited_group_member(session, group_identity, member, &invited);
     if (status != PEP_STATUS_OK)
-        return status;
+        goto pEp_free;
 
     if (!invited)
-        return PEP_STATUS_OK; // Nice try, NSA Bob! But we ignore it.
+        goto pEp_free; // Nice try, NSA Bob! But we ignore it.
 
     // Ok. So. Do we need to check sender's FPR? I think we do.
     // It would be stupid to lie here, but form and all.. FIXME: Change when signature delivery is
     // implemented as in https://dev.pep.foundation/Engine/GroupEncryption#design - this will no longer
     // be sufficient or entirely correct
-    if (strcmp(member->fpr, msg->_sender_fpr) != 0)
-        return PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
-    if (strcmp(member->address, msg->from->address) != 0) // ???? FIXME
-        return PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
+    if ((strcmp(member->fpr, msg->_sender_fpr) != 0) || (strcmp(member->address, msg->from->address) != 0)) {
+        status = PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
+        goto pEp_free;
+    }
 
     // Ok, we invited them. Set their status to "joined".
     status = set_membership_status(session, group_identity, member, true);
 
-    return status;
+pEp_free:
+    free_identity(db_group_ident);
+    free(own_id);
+    free_identity(group_identity);
+    free_identity(member);
 
-    // FIXME: free stuff
+    return status;
 }
 
 
