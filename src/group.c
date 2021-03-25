@@ -703,18 +703,22 @@ PEP_STATUS retrieve_own_membership_info_for_group_and_identity(PEP_SESSION sessi
 
     int result = sqlite3_step(session->retrieve_own_membership_info_for_group_and_ident);
 
+    pEp_identity* my_member_ident = NULL;
+    pEp_member* me_mem = NULL;
+    member_list* memberlist = NULL;
+
     switch (result) {
         case SQLITE_ROW: {
-            pEp_identity* my_member_ident = identity_dup(own_identity);
+            my_member_ident = identity_dup(own_identity);
             if (!my_member_ident)
-                return PEP_OUT_OF_MEMORY;
-            pEp_member* me_mem = new_member(my_member_ident);
+                goto enomem;
+            me_mem = new_member(my_member_ident);
             if (!me_mem)
-                return PEP_OUT_OF_MEMORY; // FIXME: mem?
+                goto enomem;
             me_mem->joined = sqlite3_column_int(session->retrieve_own_membership_info_for_group_and_ident, 0);
-            member_list* memberlist = new_memberlist(me_mem);
+            memberlist = new_memberlist(me_mem);
             if (!memberlist)
-                return PEP_OUT_OF_MEMORY; // FIXME: mem?
+                goto enomem;
 
             group->members = memberlist;
             group->manager = new_identity((const char *) sqlite3_column_text(session->retrieve_own_membership_info_for_group_and_ident, 2),
@@ -722,7 +726,7 @@ PEP_STATUS retrieve_own_membership_info_for_group_and_identity(PEP_SESSION sessi
                                                 (const char *) sqlite3_column_text(session->retrieve_own_membership_info_for_group_and_ident, 1),
                                                 NULL);
             if (!group->manager)
-                return PEP_OUT_OF_MEMORY;
+                goto enomem;
             group->active = sqlite3_column_int(session->retrieve_own_membership_info_for_group_and_ident, 3);
             break;
         }
@@ -731,6 +735,17 @@ PEP_STATUS retrieve_own_membership_info_for_group_and_identity(PEP_SESSION sessi
     }
 
     return status;
+
+enomem:
+    if (!memberlist) {
+        if (!me_mem)
+            free_identity(my_member_ident);
+        else
+            free_member(me_mem);
+    }
+    else
+        free_memberlist(memberlist);
+    return PEP_OUT_OF_MEMORY;
 }
 
 
