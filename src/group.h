@@ -200,12 +200,12 @@ DYNAMIC_API void free_group(pEp_group *group);
  *              The manager
  *
  *  @param[in]      session             associated session object
- *  @param[in]      group_identity      the pEp_identity object representing the group. Must contain at least
+ *  @param[in,out]  group_identity      the pEp_identity object representing the group. Must contain at least
  *                                      a user_id and address
- *  @param[in]      manager             the pEp_identity object representing the group's manager. Must contain
+ *  @param[in,out]  manager             the pEp_identity object representing the group's manager. Must contain
  *                                      a user_id and address, and there must be a default key for the manager
  *                                      present in the database
- *  @param[in]      memberlist          list of group members
+ *  @param[in,out]  memberlist          list of group members
  *  @param[in,out]  group               Optional reference for pointer to group object
  *                                      representing the created group.
  *                                      (When input is NULL, no object is created)
@@ -213,8 +213,14 @@ DYNAMIC_API void free_group(pEp_group *group);
  *  @retval         PEP_STATUS_OK       on success
  *                  error               on failure
  *
- *  @ownership      FIXME
+ *  @ownership      group_identity and manager stay with the caller
  *
+ *  @warning        starts a DB transaction - do not call from within a function which
+ *                  is already in the middle of another one.
+ *
+ *  @note           in,out fields are labelled as such because they get updated by update_identity()/myself()
+ *                  and have group flags added. group_identity may have its user_id freed and replaced
+ *                  with the canonical own user id.
  *
  */
 DYNAMIC_API PEP_STATUS group_create(
