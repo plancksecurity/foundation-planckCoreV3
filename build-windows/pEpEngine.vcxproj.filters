@@ -129,6 +129,12 @@
     <ClCompile Include="..\src\internal_format.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\aux_mime_msg.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\security_checks.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\keymanagement.h">
@@ -292,8 +298,6 @@
     <Text Include="..\LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="generate_code.cmd">
-      <Filter>Quelldateien</Filter>
-    </None>
+    <None Include="generate_code.cmd" />
   </ItemGroup>
 </Project>
