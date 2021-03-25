@@ -90,6 +90,7 @@
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>xcopy "$(SolutionDir)sequoia\target\debug\sequoia_openpgp_ffi.dll" "$(TargetDir)" /Y</Command>
+      <Command>xcopy "$(SolutionDir)sequoia\target\debug\sq.exe" "$(TargetDir)" /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -122,6 +123,7 @@
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>xcopy "$(SolutionDir)sequoia\target\release\sequoia_openpgp_ffi.dll" "$(TargetDir)" /Y</Command>
+      <Command>xcopy "$(SolutionDir)sequoia\target\release\sq.exe" "$(TargetDir)" /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
