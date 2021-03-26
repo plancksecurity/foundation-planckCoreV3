@@ -1070,6 +1070,7 @@
 				15A3205A260E0345009D07EB /* Sources */,
 				15A3205B260E0345009D07EB /* Frameworks */,
 				15A3205C260E0345009D07EB /* CopyFiles */,
+				15A322D5260E065D009D07EB /* Copy Artefacts & Headers to Custom Build Dir */,
 			);
 			buildRules = (
 			);
@@ -1149,7 +1150,25 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nCUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include\"\nmkdir -p ${CUSTOM_INCLUDE_DIR}\necho \"{BUILD_DIR}: ${BUILD_DIR}\"\n#REAL_BUILD_DIR=${BUILD_DIR}/${CONFIGURATION}${EFFECTIVE_PLATFORM_NAME}\necho \"{REAL_BUILD_DIR}: ${REAL_BUILD_DIR}\"\necho \"{TARGET_BUILD_DIR}: ${TARGET_BUILD_DIR}\"\ncp -R \"${TARGET_BUILD_DIR}\"/usr/local/include/* ${CUSTOM_INCLUDE_DIR}\ncp  \"${TARGET_BUILD_DIR}/libpEpASN1_macOS.a\" ${CUSTOM_BUILD_DIR}\n\n";
+			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nCUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include\"\nmkdir -p ${CUSTOM_INCLUDE_DIR}\ncp -R \"${TARGET_BUILD_DIR}\"/usr/local/include/* ${CUSTOM_INCLUDE_DIR}\ncp  \"${TARGET_BUILD_DIR}/libpEpASN1_macOS.a\" ${CUSTOM_BUILD_DIR}\n\n";
+		};
+		15A322D5260E065D009D07EB /* Copy Artefacts & Headers to Custom Build Dir */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Artefacts & Headers to Custom Build Dir";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nCUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include\"\nmkdir -p ${CUSTOM_INCLUDE_DIR}\ncp -R \"${TARGET_BUILD_DIR}\"/usr/local/include/* ${CUSTOM_INCLUDE_DIR}\ncp  \"${TARGET_BUILD_DIR}/libpEpASN1_iOS.a\" ${CUSTOM_BUILD_DIR}\n\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
