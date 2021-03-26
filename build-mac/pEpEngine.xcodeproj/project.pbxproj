@@ -168,6 +168,13 @@
 			remoteGlobalIDString = 644297BE1BE11C65002BC73B;
 			remoteInfo = pEpTrustWords;
 		};
+		15A3203F260E030B009D07EB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 15A3203B260E030B009D07EB /* pEpASN1.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 15A3201F260E02AA009D07EB;
+			remoteInfo = pEpASN1;
+		};
 		15B21C3525FB8DD10097927A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 64796A371B455AA5004B1C24 /* Project object */;
@@ -252,6 +259,7 @@
 		159EF42422B6D3E900149C0C /* pgp_sequoia.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pgp_sequoia.c; path = ../src/pgp_sequoia.c; sourceTree = "<group>"; };
 		159EF42522B6D3E900149C0C /* pgp_sequoia.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pgp_sequoia.h; path = ../src/pgp_sequoia.h; sourceTree = "<group>"; };
 		159EF42622B6D3E900149C0C /* pgp_sequoia_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pgp_sequoia_internal.h; path = ../src/pgp_sequoia_internal.h; sourceTree = "<group>"; };
+		15A3203B260E030B009D07EB /* pEpASN1.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = pEpASN1.xcodeproj; path = Subprojects/pEpASN1/pEpASN1.xcodeproj; sourceTree = "<group>"; };
 		430BCC462015EE800077E998 /* pEp_string.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pEp_string.h; path = ../src/pEp_string.h; sourceTree = "<group>"; };
 		430BCC472015EE800077E998 /* pEp_string.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pEp_string.c; path = ../src/pEp_string.c; sourceTree = "<group>"; };
 		430D258A1C9ED75A00B94535 /* blacklist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = blacklist.c; path = ../src/blacklist.c; sourceTree = "<group>"; };
@@ -393,6 +401,14 @@
 			path = pEpEngine_macOS;
 			sourceTree = "<group>";
 		};
+		15A3203C260E030B009D07EB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				15A32040260E030B009D07EB /* pEpASN1.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		43188A5523C4A7F8008EF79C /* sync-generated */ = {
 			isa = PBXGroup;
 			children = (
@@ -432,6 +448,7 @@
 		64796A361B455AA5004B1C24 = {
 			isa = PBXGroup;
 			children = (
+				15A3203B260E030B009D07EB /* pEpASN1.xcodeproj */,
 				1549180D22B92EA20091B6D6 /* libiconv.2.tbd */,
 				64951A1B1BE0FCD800B10E71 /* system.db */,
 				64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */,
@@ -704,6 +721,10 @@
 					ProductGroup = 64289E2B1B8B630200FC617B /* Products */;
 					ProjectRef = 64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */;
 				},
+				{
+					ProductGroup = 15A3203C260E030B009D07EB /* Products */;
+					ProjectRef = 15A3203B260E030B009D07EB /* pEpASN1.xcodeproj */;
+				},
 			);
 			projectRoot = "";
 			targets = (
@@ -716,6 +737,13 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
+		15A32040260E030B009D07EB /* pEpASN1.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = pEpASN1.framework;
+			remoteRef = 15A3203F260E030B009D07EB /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		64289E331B8B630200FC617B /* libetpan.framework */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.framework;
