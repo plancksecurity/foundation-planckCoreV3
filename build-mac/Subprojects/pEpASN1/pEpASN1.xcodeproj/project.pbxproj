@@ -1,0 +1,1259 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		15A32052260E0330009D07EB /* pEpASN1_macOS.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32051260E0330009D07EB /* pEpASN1_macOS.h */; };
+		15A32054260E0330009D07EB /* pEpASN1_macOS.m in Sources */ = {isa = PBXBuildFile; fileRef = 15A32053260E0330009D07EB /* pEpASN1_macOS.m */; };
+		15A32062260E0345009D07EB /* pEpASN1_iOS.m in Sources */ = {isa = PBXBuildFile; fileRef = 15A32061260E0345009D07EB /* pEpASN1_iOS.m */; };
+		15A32063260E0345009D07EB /* pEpASN1_iOS.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 15A32060260E0345009D07EB /* pEpASN1_iOS.h */; };
+		15A3217F260E03E3009D07EB /* ElectGroupKeyResetLeader.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A3208B260E03BC009D07EB /* ElectGroupKeyResetLeader.c */; };
+		15A32180260E03E3009D07EB /* asn_SET_OF.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320A4260E03BC009D07EB /* asn_SET_OF.c */; };
+		15A32181260E03E3009D07EB /* ber_tlv_length.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A32078260E03BB009D07EB /* ber_tlv_length.c */; };
+		15A32182260E03E3009D07EB /* constr_SET_OF.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320B4260E03BD009D07EB /* constr_SET_OF.c */; };
+		15A32183260E03E3009D07EB /* ber_tlv_tag.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320BB260E03BD009D07EB /* ber_tlv_tag.c */; };
+		15A32184260E03E3009D07EB /* CommitAcceptRequester.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320ED260E03BE009D07EB /* CommitAcceptRequester.c */; };
+		15A32185260E03E3009D07EB /* constr_CHOICE.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320AE260E03BD009D07EB /* constr_CHOICE.c */; };
+		15A32186260E03E3009D07EB /* GroupKeysForNewMember.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A3207B260E03BB009D07EB /* GroupKeysForNewMember.c */; };
+		15A32187260E03E3009D07EB /* KeyReset.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A3207A260E03BB009D07EB /* KeyReset.c */; };
+		15A32188260E03E3009D07EB /* NegotiationOpen.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320E7260E03BE009D07EB /* NegotiationOpen.c */; };
+		15A32189260E03E3009D07EB /* PrintableString.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320C0260E03BD009D07EB /* PrintableString.c */; };
+		15A3218A260E03E3009D07EB /* OwnKeysOfferer.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320EC260E03BE009D07EB /* OwnKeysOfferer.c */; };
+		15A3218B260E03E3009D07EB /* IdentityList.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320C4260E03BD009D07EB /* IdentityList.c */; };
+		15A3218C260E03E3009D07EB /* CommitAcceptForGroup.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320A3260E03BC009D07EB /* CommitAcceptForGroup.c */; };
+		15A3218D260E03E3009D07EB /* ber_decoder.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A3209E260E03BC009D07EB /* ber_decoder.c */; };
+		15A3218E260E03E3009D07EB /* NegotiationRequestGrouped.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320DE260E03BE009D07EB /* NegotiationRequestGrouped.c */; };
+		15A3218F260E03E3009D07EB /* OCTET_STRING.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A3206C260E03BB009D07EB /* OCTET_STRING.c */; };
+		15A32190260E03E3009D07EB /* asn_codecs_prim.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320E4260E03BE009D07EB /* asn_codecs_prim.c */; };
+		15A32191260E03E3009D07EB /* Commands.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320D6260E03BE009D07EB /* Commands.c */; };
+		15A32192260E03E3009D07EB /* InitUnledGroupKeyReset.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A32082260E03BC009D07EB /* InitUnledGroupKeyReset.c */; };
+		15A32193260E03E3009D07EB /* NativeEnumerated.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320CD260E03BD009D07EB /* NativeEnumerated.c */; };
+		15A32194260E03E3009D07EB /* Beacon.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A3208A260E03BC009D07EB /* Beacon.c */; };
+		15A32195260E03E3009D07EB /* BIT_STRING.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320B7260E03BD009D07EB /* BIT_STRING.c */; };
+		15A32196260E03E3009D07EB /* CommitAcceptOfferer.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320B1260E03BD009D07EB /* CommitAcceptOfferer.c */; };
+		15A32197260E03E3009D07EB /* constr_TYPE.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320F3260E03BE009D07EB /* constr_TYPE.c */; };
+		15A32198260E03E3009D07EB /* per_decoder.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320A9260E03BD009D07EB /* per_decoder.c */; };
+		15A32199260E03E3009D07EB /* per_opentype.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320D4260E03BE009D07EB /* per_opentype.c */; };
+		15A3219A260E03E3009D07EB /* TID.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320A0260E03BC009D07EB /* TID.c */; };
+		15A3219B260E03E3009D07EB /* SynchronizeGroupKeys.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320C9260E03BD009D07EB /* SynchronizeGroupKeys.c */; };
+		15A3219C260E03E3009D07EB /* Sync.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320EE260E03BE009D07EB /* Sync.c */; };
+		15A3219D260E03E3009D07EB /* CommitReject.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A32071260E03BB009D07EB /* CommitReject.c */; };
+		15A3219E260E03E3009D07EB /* Rating.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A32081260E03BB009D07EB /* Rating.c */; };
+		15A3219F260E03E3009D07EB /* asn_SEQUENCE_OF.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320B5260E03BD009D07EB /* asn_SEQUENCE_OF.c */; };
+		15A321A0260E03E3009D07EB /* der_encoder.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A32072260E03BB009D07EB /* der_encoder.c */; };
+		15A321A1260E03E3009D07EB /* KeySync.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320E5260E03BE009D07EB /* KeySync.c */; };
+		15A321A2260E03E3009D07EB /* Command.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320E0260E03BE009D07EB /* Command.c */; };
+		15A321A3260E03E3009D07EB /* Version.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320CE260E03BD009D07EB /* Version.c */; };
+		15A321A4260E03E3009D07EB /* BOOLEAN.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A32091260E03BC009D07EB /* BOOLEAN.c */; };
+		15A321A5260E03E3009D07EB /* GroupTrustThisKey.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320BD260E03BD009D07EB /* GroupTrustThisKey.c */; };
+		15A321A6260E03E3009D07EB /* Hex.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320DD260E03BE009D07EB /* Hex.c */; };
+		15A321A7260E03E3009D07EB /* Distribution.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320DA260E03BE009D07EB /* Distribution.c */; };
+		15A321A8260E03E3009D07EB /* OwnKeysRequester.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A32092260E03BC009D07EB /* OwnKeysRequester.c */; };
+		15A321A9260E03E3009D07EB /* xer_encoder.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320B3260E03BD009D07EB /* xer_encoder.c */; };
+		15A321AA260E03E3009D07EB /* NativeInteger.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A3209A260E03BC009D07EB /* NativeInteger.c */; };
+		15A321AB260E03E3009D07EB /* xer_decoder.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320A8260E03BD009D07EB /* xer_decoder.c */; };
+		15A321AC260E03E3009D07EB /* pdu_collection.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A32083260E03BC009D07EB /* pdu_collection.c */; };
+		15A321AD260E03E3009D07EB /* constr_SEQUENCE.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320AC260E03BD009D07EB /* constr_SEQUENCE.c */; };
+		15A321AE260E03E3009D07EB /* per_encoder.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A3207D260E03BB009D07EB /* per_encoder.c */; };
+		15A321AF260E03E3009D07EB /* ISO639-1.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320DF260E03BE009D07EB /* ISO639-1.c */; };
+		15A321B0260E03E3009D07EB /* CommitAccept.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A32099260E03BC009D07EB /* CommitAccept.c */; };
+		15A321B1260E03E3009D07EB /* Hash.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A3207C260E03BB009D07EB /* Hash.c */; };
+		15A321B2260E03E3009D07EB /* INTEGER.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320D5260E03BE009D07EB /* INTEGER.c */; };
+		15A321B3260E03E3009D07EB /* GroupKeysUpdate.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A32089260E03BC009D07EB /* GroupKeysUpdate.c */; };
+		15A321B4260E03E3009D07EB /* GroupKeysAndClose.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320DC260E03BE009D07EB /* GroupKeysAndClose.c */; };
+		15A321B5260E03E3009D07EB /* xer_support.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320C5260E03BD009D07EB /* xer_support.c */; };
+		15A321B6260E03E3009D07EB /* Identity.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A3208F260E03BC009D07EB /* Identity.c */; };
+		15A321B7260E03E3009D07EB /* per_support.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320BC260E03BD009D07EB /* per_support.c */; };
+		15A321B8260E03E3009D07EB /* ReceiverRating.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320C8260E03BD009D07EB /* ReceiverRating.c */; };
+		15A321B9260E03E3009D07EB /* constraints.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A3207F260E03BB009D07EB /* constraints.c */; };
+		15A321BA260E03E3009D07EB /* NegotiationRequest.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320D0260E03BD009D07EB /* NegotiationRequest.c */; };
+		15A321BB260E03E3009D07EB /* PString.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320AD260E03BD009D07EB /* PString.c */; };
+		15A321BC260E03E3009D07EB /* UTF8String.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320E9260E03BE009D07EB /* UTF8String.c */; };
+		15A321BD260E03E3009D07EB /* Rollback.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320F1260E03BE009D07EB /* Rollback.c */; };
+		15A321BE260E03E3009D07EB /* constr_SEQUENCE_OF.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A3206F260E03BB009D07EB /* constr_SEQUENCE_OF.c */; };
+		15A321BF260E03E3009D07EB /* GroupHandshake.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320D3260E03BD009D07EB /* GroupHandshake.c */; };
+		15A321C0260E03E4009D07EB /* ElectGroupKeyResetLeader.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A3208B260E03BC009D07EB /* ElectGroupKeyResetLeader.c */; };
+		15A321C1260E03E4009D07EB /* asn_SET_OF.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320A4260E03BC009D07EB /* asn_SET_OF.c */; };
+		15A321C2260E03E4009D07EB /* ber_tlv_length.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A32078260E03BB009D07EB /* ber_tlv_length.c */; };
+		15A321C3260E03E4009D07EB /* constr_SET_OF.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320B4260E03BD009D07EB /* constr_SET_OF.c */; };
+		15A321C4260E03E4009D07EB /* ber_tlv_tag.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320BB260E03BD009D07EB /* ber_tlv_tag.c */; };
+		15A321C5260E03E4009D07EB /* CommitAcceptRequester.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320ED260E03BE009D07EB /* CommitAcceptRequester.c */; };
+		15A321C6260E03E4009D07EB /* constr_CHOICE.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320AE260E03BD009D07EB /* constr_CHOICE.c */; };
+		15A321C7260E03E4009D07EB /* GroupKeysForNewMember.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A3207B260E03BB009D07EB /* GroupKeysForNewMember.c */; };
+		15A321C8260E03E4009D07EB /* KeyReset.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A3207A260E03BB009D07EB /* KeyReset.c */; };
+		15A321C9260E03E4009D07EB /* NegotiationOpen.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320E7260E03BE009D07EB /* NegotiationOpen.c */; };
+		15A321CA260E03E4009D07EB /* PrintableString.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320C0260E03BD009D07EB /* PrintableString.c */; };
+		15A321CB260E03E4009D07EB /* OwnKeysOfferer.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320EC260E03BE009D07EB /* OwnKeysOfferer.c */; };
+		15A321CC260E03E4009D07EB /* IdentityList.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320C4260E03BD009D07EB /* IdentityList.c */; };
+		15A321CD260E03E4009D07EB /* CommitAcceptForGroup.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320A3260E03BC009D07EB /* CommitAcceptForGroup.c */; };
+		15A321CE260E03E4009D07EB /* ber_decoder.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A3209E260E03BC009D07EB /* ber_decoder.c */; };
+		15A321CF260E03E4009D07EB /* NegotiationRequestGrouped.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320DE260E03BE009D07EB /* NegotiationRequestGrouped.c */; };
+		15A321D0260E03E4009D07EB /* OCTET_STRING.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A3206C260E03BB009D07EB /* OCTET_STRING.c */; };
+		15A321D1260E03E4009D07EB /* asn_codecs_prim.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320E4260E03BE009D07EB /* asn_codecs_prim.c */; };
+		15A321D2260E03E4009D07EB /* Commands.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320D6260E03BE009D07EB /* Commands.c */; };
+		15A321D3260E03E4009D07EB /* InitUnledGroupKeyReset.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A32082260E03BC009D07EB /* InitUnledGroupKeyReset.c */; };
+		15A321D4260E03E4009D07EB /* NativeEnumerated.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320CD260E03BD009D07EB /* NativeEnumerated.c */; };
+		15A321D5260E03E4009D07EB /* Beacon.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A3208A260E03BC009D07EB /* Beacon.c */; };
+		15A321D6260E03E4009D07EB /* BIT_STRING.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320B7260E03BD009D07EB /* BIT_STRING.c */; };
+		15A321D7260E03E4009D07EB /* CommitAcceptOfferer.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320B1260E03BD009D07EB /* CommitAcceptOfferer.c */; };
+		15A321D8260E03E4009D07EB /* constr_TYPE.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320F3260E03BE009D07EB /* constr_TYPE.c */; };
+		15A321D9260E03E4009D07EB /* per_decoder.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320A9260E03BD009D07EB /* per_decoder.c */; };
+		15A321DA260E03E4009D07EB /* per_opentype.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320D4260E03BE009D07EB /* per_opentype.c */; };
+		15A321DB260E03E4009D07EB /* TID.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320A0260E03BC009D07EB /* TID.c */; };
+		15A321DC260E03E4009D07EB /* SynchronizeGroupKeys.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320C9260E03BD009D07EB /* SynchronizeGroupKeys.c */; };
+		15A321DD260E03E4009D07EB /* Sync.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320EE260E03BE009D07EB /* Sync.c */; };
+		15A321DE260E03E4009D07EB /* CommitReject.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A32071260E03BB009D07EB /* CommitReject.c */; };
+		15A321DF260E03E4009D07EB /* Rating.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A32081260E03BB009D07EB /* Rating.c */; };
+		15A321E0260E03E4009D07EB /* asn_SEQUENCE_OF.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320B5260E03BD009D07EB /* asn_SEQUENCE_OF.c */; };
+		15A321E1260E03E4009D07EB /* der_encoder.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A32072260E03BB009D07EB /* der_encoder.c */; };
+		15A321E2260E03E4009D07EB /* KeySync.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320E5260E03BE009D07EB /* KeySync.c */; };
+		15A321E3260E03E4009D07EB /* Command.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320E0260E03BE009D07EB /* Command.c */; };
+		15A321E4260E03E4009D07EB /* Version.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320CE260E03BD009D07EB /* Version.c */; };
+		15A321E5260E03E4009D07EB /* BOOLEAN.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A32091260E03BC009D07EB /* BOOLEAN.c */; };
+		15A321E6260E03E4009D07EB /* GroupTrustThisKey.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320BD260E03BD009D07EB /* GroupTrustThisKey.c */; };
+		15A321E7260E03E4009D07EB /* Hex.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320DD260E03BE009D07EB /* Hex.c */; };
+		15A321E8260E03E4009D07EB /* Distribution.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320DA260E03BE009D07EB /* Distribution.c */; };
+		15A321E9260E03E4009D07EB /* OwnKeysRequester.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A32092260E03BC009D07EB /* OwnKeysRequester.c */; };
+		15A321EA260E03E4009D07EB /* xer_encoder.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320B3260E03BD009D07EB /* xer_encoder.c */; };
+		15A321EB260E03E4009D07EB /* NativeInteger.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A3209A260E03BC009D07EB /* NativeInteger.c */; };
+		15A321EC260E03E4009D07EB /* xer_decoder.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320A8260E03BD009D07EB /* xer_decoder.c */; };
+		15A321ED260E03E4009D07EB /* pdu_collection.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A32083260E03BC009D07EB /* pdu_collection.c */; };
+		15A321EE260E03E4009D07EB /* constr_SEQUENCE.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320AC260E03BD009D07EB /* constr_SEQUENCE.c */; };
+		15A321EF260E03E4009D07EB /* per_encoder.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A3207D260E03BB009D07EB /* per_encoder.c */; };
+		15A321F0260E03E4009D07EB /* ISO639-1.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320DF260E03BE009D07EB /* ISO639-1.c */; };
+		15A321F1260E03E4009D07EB /* CommitAccept.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A32099260E03BC009D07EB /* CommitAccept.c */; };
+		15A321F2260E03E4009D07EB /* Hash.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A3207C260E03BB009D07EB /* Hash.c */; };
+		15A321F3260E03E4009D07EB /* INTEGER.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320D5260E03BE009D07EB /* INTEGER.c */; };
+		15A321F4260E03E4009D07EB /* GroupKeysUpdate.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A32089260E03BC009D07EB /* GroupKeysUpdate.c */; };
+		15A321F5260E03E4009D07EB /* GroupKeysAndClose.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320DC260E03BE009D07EB /* GroupKeysAndClose.c */; };
+		15A321F6260E03E4009D07EB /* xer_support.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320C5260E03BD009D07EB /* xer_support.c */; };
+		15A321F7260E03E4009D07EB /* Identity.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A3208F260E03BC009D07EB /* Identity.c */; };
+		15A321F8260E03E4009D07EB /* per_support.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320BC260E03BD009D07EB /* per_support.c */; };
+		15A321F9260E03E4009D07EB /* ReceiverRating.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320C8260E03BD009D07EB /* ReceiverRating.c */; };
+		15A321FA260E03E4009D07EB /* constraints.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A3207F260E03BB009D07EB /* constraints.c */; };
+		15A321FB260E03E4009D07EB /* NegotiationRequest.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320D0260E03BD009D07EB /* NegotiationRequest.c */; };
+		15A321FC260E03E4009D07EB /* PString.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320AD260E03BD009D07EB /* PString.c */; };
+		15A321FD260E03E4009D07EB /* UTF8String.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320E9260E03BE009D07EB /* UTF8String.c */; };
+		15A321FE260E03E4009D07EB /* Rollback.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320F1260E03BE009D07EB /* Rollback.c */; };
+		15A321FF260E03E4009D07EB /* constr_SEQUENCE_OF.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A3206F260E03BB009D07EB /* constr_SEQUENCE_OF.c */; };
+		15A32200260E03E4009D07EB /* GroupHandshake.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A320D3260E03BD009D07EB /* GroupHandshake.c */; };
+		15A32204260E03F1009D07EB /* NegotiationOpen.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320BE260E03BD009D07EB /* NegotiationOpen.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32205260E03F1009D07EB /* GroupTrustThisKey.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320B6260E03BD009D07EB /* GroupTrustThisKey.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32206260E03F1009D07EB /* NativeInteger.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320EF260E03BE009D07EB /* NativeInteger.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32207260E03F1009D07EB /* Rollback.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320BF260E03BD009D07EB /* Rollback.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32208260E03F1009D07EB /* asn_SEQUENCE_OF.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320D2260E03BD009D07EB /* asn_SEQUENCE_OF.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32209260E03F1009D07EB /* constr_SEQUENCE_OF.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320D1260E03BD009D07EB /* constr_SEQUENCE_OF.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3220A260E03F1009D07EB /* GroupKeysForNewMember.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320A5260E03BC009D07EB /* GroupKeysForNewMember.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3220B260E03F2009D07EB /* constr_SEQUENCE.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32080260E03BB009D07EB /* constr_SEQUENCE.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3220C260E03F2009D07EB /* xer_support.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320AB260E03BD009D07EB /* xer_support.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3220D260E03F2009D07EB /* OwnKeysOfferer.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320C6260E03BD009D07EB /* OwnKeysOfferer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3220E260E03F2009D07EB /* CommitReject.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32073260E03BB009D07EB /* CommitReject.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3220F260E03F2009D07EB /* constr_SET_OF.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32094260E03BC009D07EB /* constr_SET_OF.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32210260E03F2009D07EB /* InitUnledGroupKeyReset.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A3209C260E03BC009D07EB /* InitUnledGroupKeyReset.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32211260E03F2009D07EB /* NegotiationRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320D8260E03BE009D07EB /* NegotiationRequest.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32212260E03F2009D07EB /* IdentityList.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A3209B260E03BC009D07EB /* IdentityList.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32213260E03F2009D07EB /* constr_TYPE.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32096260E03BC009D07EB /* constr_TYPE.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32214260E03F2009D07EB /* PrintableString.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320C7260E03BD009D07EB /* PrintableString.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32215260E03F2009D07EB /* constraints.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320E6260E03BE009D07EB /* constraints.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32216260E03F2009D07EB /* GroupHandshake.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320D9260E03BE009D07EB /* GroupHandshake.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32217260E03F2009D07EB /* Commands.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A3208C260E03BC009D07EB /* Commands.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32218260E03F2009D07EB /* SynchronizeGroupKeys.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320C1260E03BD009D07EB /* SynchronizeGroupKeys.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32219260E03F2009D07EB /* Hex.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32085260E03BC009D07EB /* Hex.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3221A260E03F2009D07EB /* BOOLEAN.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32098260E03BC009D07EB /* BOOLEAN.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3221B260E03F2009D07EB /* NativeEnumerated.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320CB260E03BD009D07EB /* NativeEnumerated.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3221C260E03F2009D07EB /* ber_tlv_tag.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320BA260E03BD009D07EB /* ber_tlv_tag.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3221D260E03F2009D07EB /* CommitAcceptRequester.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320AF260E03BD009D07EB /* CommitAcceptRequester.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3221E260E03F2009D07EB /* Identity.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320F0260E03BE009D07EB /* Identity.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3221F260E03F2009D07EB /* per_encoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320C3260E03BD009D07EB /* per_encoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32220260E03F2009D07EB /* CommitAccept.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32076260E03BB009D07EB /* CommitAccept.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32221260E03F2009D07EB /* ElectGroupKeyResetLeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A3209F260E03BC009D07EB /* ElectGroupKeyResetLeader.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32222260E03F2009D07EB /* constr_CHOICE.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32097260E03BC009D07EB /* constr_CHOICE.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32223260E03F2009D07EB /* Hash.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320A2260E03BC009D07EB /* Hash.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32224260E03F2009D07EB /* NegotiationRequestGrouped.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320AA260E03BD009D07EB /* NegotiationRequestGrouped.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32225260E03F2009D07EB /* GroupKeysUpdate.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320D7260E03BE009D07EB /* GroupKeysUpdate.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32226260E03F2009D07EB /* per_support.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320E8260E03BE009D07EB /* per_support.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32227260E03F2009D07EB /* asn_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320DB260E03BE009D07EB /* asn_internal.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32228260E03F2009D07EB /* OwnKeysRequester.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32095260E03BC009D07EB /* OwnKeysRequester.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32229260E03F2009D07EB /* xer_decoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320E3260E03BE009D07EB /* xer_decoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3222A260E03F2009D07EB /* Version.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A3208E260E03BC009D07EB /* Version.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3222B260E03F2009D07EB /* TID.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320CC260E03BD009D07EB /* TID.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3222C260E03F2009D07EB /* UTF8String.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32084260E03BC009D07EB /* UTF8String.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3222D260E03F2009D07EB /* KeySync.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32087260E03BC009D07EB /* KeySync.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3222E260E03F2009D07EB /* xer_encoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32088260E03BC009D07EB /* xer_encoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3222F260E03F2009D07EB /* Sync.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320A7260E03BD009D07EB /* Sync.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32230260E03F2009D07EB /* KeyReset.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32090260E03BC009D07EB /* KeyReset.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32231260E03F2009D07EB /* der_encoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A3206D260E03BB009D07EB /* der_encoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32232260E03F2009D07EB /* per_opentype.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320E2260E03BE009D07EB /* per_opentype.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32233260E03F2009D07EB /* asn_codecs_prim.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320B2260E03BD009D07EB /* asn_codecs_prim.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32234260E03F2009D07EB /* Command.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32077260E03BB009D07EB /* Command.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32235260E03F2009D07EB /* ReceiverRating.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32093260E03BC009D07EB /* ReceiverRating.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32236260E03F2009D07EB /* PString.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320A1260E03BC009D07EB /* PString.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32237260E03F2009D07EB /* CommitAcceptOfferer.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320B0260E03BD009D07EB /* CommitAcceptOfferer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32238260E03F2009D07EB /* ber_decoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320EA260E03BE009D07EB /* ber_decoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32239260E03F2009D07EB /* per_decoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320F2260E03BE009D07EB /* per_decoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3223A260E03F2009D07EB /* asn_application.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32075260E03BB009D07EB /* asn_application.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3223B260E03F2009D07EB /* Beacon.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A3207E260E03BB009D07EB /* Beacon.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3223C260E03F2009D07EB /* asn_SET_OF.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320E1260E03BE009D07EB /* asn_SET_OF.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3223D260E03F2009D07EB /* BIT_STRING.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320EB260E03BE009D07EB /* BIT_STRING.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3223E260E03F2009D07EB /* asn_system.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320B8260E03BD009D07EB /* asn_system.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3223F260E03F2009D07EB /* GroupKeysAndClose.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32079260E03BB009D07EB /* GroupKeysAndClose.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32240260E03F2009D07EB /* OCTET_STRING.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320C2260E03BD009D07EB /* OCTET_STRING.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32241260E03F2009D07EB /* asn_codecs.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A3208D260E03BC009D07EB /* asn_codecs.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32242260E03F2009D07EB /* CommitAcceptForGroup.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320CF260E03BD009D07EB /* CommitAcceptForGroup.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32243260E03F2009D07EB /* ber_tlv_length.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A3206E260E03BB009D07EB /* ber_tlv_length.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32244260E03F2009D07EB /* Distribution.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32070260E03BB009D07EB /* Distribution.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32245260E03F2009D07EB /* INTEGER.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32086260E03BC009D07EB /* INTEGER.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32246260E03F2009D07EB /* ISO639-1.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32074260E03BB009D07EB /* ISO639-1.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32247260E03F2009D07EB /* Rating.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A3209D260E03BC009D07EB /* Rating.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32248260E03F3009D07EB /* NegotiationOpen.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320BE260E03BD009D07EB /* NegotiationOpen.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32249260E03F3009D07EB /* GroupTrustThisKey.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320B6260E03BD009D07EB /* GroupTrustThisKey.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3224A260E03F3009D07EB /* NativeInteger.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320EF260E03BE009D07EB /* NativeInteger.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3224B260E03F3009D07EB /* Rollback.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320BF260E03BD009D07EB /* Rollback.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3224C260E03F3009D07EB /* asn_SEQUENCE_OF.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320D2260E03BD009D07EB /* asn_SEQUENCE_OF.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3224D260E03F3009D07EB /* constr_SEQUENCE_OF.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320D1260E03BD009D07EB /* constr_SEQUENCE_OF.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3224E260E03F3009D07EB /* GroupKeysForNewMember.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320A5260E03BC009D07EB /* GroupKeysForNewMember.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3224F260E03F3009D07EB /* constr_SEQUENCE.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32080260E03BB009D07EB /* constr_SEQUENCE.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32250260E03F3009D07EB /* xer_support.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320AB260E03BD009D07EB /* xer_support.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32251260E03F3009D07EB /* OwnKeysOfferer.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320C6260E03BD009D07EB /* OwnKeysOfferer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32252260E03F3009D07EB /* CommitReject.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32073260E03BB009D07EB /* CommitReject.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32253260E03F3009D07EB /* constr_SET_OF.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32094260E03BC009D07EB /* constr_SET_OF.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32254260E03F3009D07EB /* InitUnledGroupKeyReset.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A3209C260E03BC009D07EB /* InitUnledGroupKeyReset.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32255260E03F3009D07EB /* NegotiationRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320D8260E03BE009D07EB /* NegotiationRequest.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32256260E03F3009D07EB /* IdentityList.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A3209B260E03BC009D07EB /* IdentityList.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32257260E03F3009D07EB /* constr_TYPE.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32096260E03BC009D07EB /* constr_TYPE.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32258260E03F3009D07EB /* PrintableString.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320C7260E03BD009D07EB /* PrintableString.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32259260E03F3009D07EB /* constraints.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320E6260E03BE009D07EB /* constraints.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3225A260E03F3009D07EB /* GroupHandshake.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320D9260E03BE009D07EB /* GroupHandshake.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3225B260E03F3009D07EB /* Commands.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A3208C260E03BC009D07EB /* Commands.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3225C260E03F3009D07EB /* SynchronizeGroupKeys.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320C1260E03BD009D07EB /* SynchronizeGroupKeys.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3225D260E03F3009D07EB /* Hex.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32085260E03BC009D07EB /* Hex.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3225E260E03F3009D07EB /* BOOLEAN.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32098260E03BC009D07EB /* BOOLEAN.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3225F260E03F3009D07EB /* NativeEnumerated.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320CB260E03BD009D07EB /* NativeEnumerated.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32260260E03F3009D07EB /* ber_tlv_tag.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320BA260E03BD009D07EB /* ber_tlv_tag.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32261260E03F3009D07EB /* CommitAcceptRequester.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320AF260E03BD009D07EB /* CommitAcceptRequester.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32262260E03F3009D07EB /* Identity.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320F0260E03BE009D07EB /* Identity.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32263260E03F3009D07EB /* per_encoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320C3260E03BD009D07EB /* per_encoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32264260E03F3009D07EB /* CommitAccept.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32076260E03BB009D07EB /* CommitAccept.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32265260E03F3009D07EB /* ElectGroupKeyResetLeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A3209F260E03BC009D07EB /* ElectGroupKeyResetLeader.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32266260E03F3009D07EB /* constr_CHOICE.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32097260E03BC009D07EB /* constr_CHOICE.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32267260E03F3009D07EB /* Hash.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320A2260E03BC009D07EB /* Hash.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32268260E03F3009D07EB /* NegotiationRequestGrouped.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320AA260E03BD009D07EB /* NegotiationRequestGrouped.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32269260E03F3009D07EB /* GroupKeysUpdate.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320D7260E03BE009D07EB /* GroupKeysUpdate.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3226A260E03F3009D07EB /* per_support.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320E8260E03BE009D07EB /* per_support.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3226B260E03F3009D07EB /* asn_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320DB260E03BE009D07EB /* asn_internal.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3226C260E03F3009D07EB /* OwnKeysRequester.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32095260E03BC009D07EB /* OwnKeysRequester.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3226D260E03F3009D07EB /* xer_decoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320E3260E03BE009D07EB /* xer_decoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3226E260E03F3009D07EB /* Version.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A3208E260E03BC009D07EB /* Version.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3226F260E03F3009D07EB /* TID.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320CC260E03BD009D07EB /* TID.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32270260E03F3009D07EB /* UTF8String.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32084260E03BC009D07EB /* UTF8String.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32271260E03F3009D07EB /* KeySync.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32087260E03BC009D07EB /* KeySync.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32272260E03F3009D07EB /* xer_encoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32088260E03BC009D07EB /* xer_encoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32273260E03F3009D07EB /* Sync.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320A7260E03BD009D07EB /* Sync.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32274260E03F3009D07EB /* KeyReset.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32090260E03BC009D07EB /* KeyReset.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32275260E03F3009D07EB /* der_encoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A3206D260E03BB009D07EB /* der_encoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32276260E03F3009D07EB /* per_opentype.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320E2260E03BE009D07EB /* per_opentype.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32277260E03F3009D07EB /* asn_codecs_prim.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320B2260E03BD009D07EB /* asn_codecs_prim.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32278260E03F3009D07EB /* Command.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32077260E03BB009D07EB /* Command.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32279260E03F3009D07EB /* ReceiverRating.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32093260E03BC009D07EB /* ReceiverRating.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3227A260E03F3009D07EB /* PString.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320A1260E03BC009D07EB /* PString.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3227B260E03F3009D07EB /* CommitAcceptOfferer.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320B0260E03BD009D07EB /* CommitAcceptOfferer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3227C260E03F3009D07EB /* ber_decoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320EA260E03BE009D07EB /* ber_decoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3227D260E03F3009D07EB /* per_decoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320F2260E03BE009D07EB /* per_decoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3227E260E03F3009D07EB /* asn_application.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32075260E03BB009D07EB /* asn_application.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3227F260E03F3009D07EB /* Beacon.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A3207E260E03BB009D07EB /* Beacon.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32280260E03F3009D07EB /* asn_SET_OF.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320E1260E03BE009D07EB /* asn_SET_OF.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32281260E03F3009D07EB /* BIT_STRING.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320EB260E03BE009D07EB /* BIT_STRING.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32282260E03F3009D07EB /* asn_system.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320B8260E03BD009D07EB /* asn_system.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32283260E03F3009D07EB /* GroupKeysAndClose.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32079260E03BB009D07EB /* GroupKeysAndClose.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32284260E03F3009D07EB /* OCTET_STRING.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320C2260E03BD009D07EB /* OCTET_STRING.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32285260E03F3009D07EB /* asn_codecs.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A3208D260E03BC009D07EB /* asn_codecs.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32286260E03F3009D07EB /* CommitAcceptForGroup.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A320CF260E03BD009D07EB /* CommitAcceptForGroup.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32287260E03F3009D07EB /* ber_tlv_length.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A3206E260E03BB009D07EB /* ber_tlv_length.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32288260E03F3009D07EB /* Distribution.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32070260E03BB009D07EB /* Distribution.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A32289260E03F3009D07EB /* INTEGER.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32086260E03BC009D07EB /* INTEGER.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3228A260E03F3009D07EB /* ISO639-1.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32074260E03BB009D07EB /* ISO639-1.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3228B260E03F3009D07EB /* Rating.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A3209D260E03BC009D07EB /* Rating.h */; settings = {ATTRIBUTES = (Public, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		15A3205C260E0345009D07EB /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "include/$(PRODUCT_NAME)";
+			dstSubfolderSpec = 16;
+			files = (
+				15A32063260E0345009D07EB /* pEpASN1_iOS.h in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		15A3204F260E0330009D07EB /* libpEpASN1_macOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpEpASN1_macOS.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		15A32051260E0330009D07EB /* pEpASN1_macOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pEpASN1_macOS.h; sourceTree = "<group>"; };
+		15A32053260E0330009D07EB /* pEpASN1_macOS.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = pEpASN1_macOS.m; sourceTree = "<group>"; };
+		15A3205E260E0345009D07EB /* libpEpASN1_iOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpEpASN1_iOS.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		15A32060260E0345009D07EB /* pEpASN1_iOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pEpASN1_iOS.h; sourceTree = "<group>"; };
+		15A32061260E0345009D07EB /* pEpASN1_iOS.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = pEpASN1_iOS.m; sourceTree = "<group>"; };
+		15A3206C260E03BB009D07EB /* OCTET_STRING.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = OCTET_STRING.c; path = ../../../asn.1/OCTET_STRING.c; sourceTree = "<group>"; };
+		15A3206D260E03BB009D07EB /* der_encoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = der_encoder.h; path = ../../../asn.1/der_encoder.h; sourceTree = "<group>"; };
+		15A3206E260E03BB009D07EB /* ber_tlv_length.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ber_tlv_length.h; path = ../../../asn.1/ber_tlv_length.h; sourceTree = "<group>"; };
+		15A3206F260E03BB009D07EB /* constr_SEQUENCE_OF.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = constr_SEQUENCE_OF.c; path = ../../../asn.1/constr_SEQUENCE_OF.c; sourceTree = "<group>"; };
+		15A32070260E03BB009D07EB /* Distribution.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Distribution.h; path = ../../../asn.1/Distribution.h; sourceTree = "<group>"; };
+		15A32071260E03BB009D07EB /* CommitReject.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = CommitReject.c; path = ../../../asn.1/CommitReject.c; sourceTree = "<group>"; };
+		15A32072260E03BB009D07EB /* der_encoder.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = der_encoder.c; path = ../../../asn.1/der_encoder.c; sourceTree = "<group>"; };
+		15A32073260E03BB009D07EB /* CommitReject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommitReject.h; path = ../../../asn.1/CommitReject.h; sourceTree = "<group>"; };
+		15A32074260E03BB009D07EB /* ISO639-1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "ISO639-1.h"; path = "../../../asn.1/ISO639-1.h"; sourceTree = "<group>"; };
+		15A32075260E03BB009D07EB /* asn_application.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = asn_application.h; path = ../../../asn.1/asn_application.h; sourceTree = "<group>"; };
+		15A32076260E03BB009D07EB /* CommitAccept.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommitAccept.h; path = ../../../asn.1/CommitAccept.h; sourceTree = "<group>"; };
+		15A32077260E03BB009D07EB /* Command.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Command.h; path = ../../../asn.1/Command.h; sourceTree = "<group>"; };
+		15A32078260E03BB009D07EB /* ber_tlv_length.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ber_tlv_length.c; path = ../../../asn.1/ber_tlv_length.c; sourceTree = "<group>"; };
+		15A32079260E03BB009D07EB /* GroupKeysAndClose.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GroupKeysAndClose.h; path = ../../../asn.1/GroupKeysAndClose.h; sourceTree = "<group>"; };
+		15A3207A260E03BB009D07EB /* KeyReset.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = KeyReset.c; path = ../../../asn.1/KeyReset.c; sourceTree = "<group>"; };
+		15A3207B260E03BB009D07EB /* GroupKeysForNewMember.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupKeysForNewMember.c; path = ../../../asn.1/GroupKeysForNewMember.c; sourceTree = "<group>"; };
+		15A3207C260E03BB009D07EB /* Hash.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Hash.c; path = ../../../asn.1/Hash.c; sourceTree = "<group>"; };
+		15A3207D260E03BB009D07EB /* per_encoder.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = per_encoder.c; path = ../../../asn.1/per_encoder.c; sourceTree = "<group>"; };
+		15A3207E260E03BB009D07EB /* Beacon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Beacon.h; path = ../../../asn.1/Beacon.h; sourceTree = "<group>"; };
+		15A3207F260E03BB009D07EB /* constraints.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = constraints.c; path = ../../../asn.1/constraints.c; sourceTree = "<group>"; };
+		15A32080260E03BB009D07EB /* constr_SEQUENCE.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = constr_SEQUENCE.h; path = ../../../asn.1/constr_SEQUENCE.h; sourceTree = "<group>"; };
+		15A32081260E03BB009D07EB /* Rating.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Rating.c; path = ../../../asn.1/Rating.c; sourceTree = "<group>"; };
+		15A32082260E03BC009D07EB /* InitUnledGroupKeyReset.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = InitUnledGroupKeyReset.c; path = ../../../asn.1/InitUnledGroupKeyReset.c; sourceTree = "<group>"; };
+		15A32083260E03BC009D07EB /* pdu_collection.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pdu_collection.c; path = ../../../asn.1/pdu_collection.c; sourceTree = "<group>"; };
+		15A32084260E03BC009D07EB /* UTF8String.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UTF8String.h; path = ../../../asn.1/UTF8String.h; sourceTree = "<group>"; };
+		15A32085260E03BC009D07EB /* Hex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Hex.h; path = ../../../asn.1/Hex.h; sourceTree = "<group>"; };
+		15A32086260E03BC009D07EB /* INTEGER.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = INTEGER.h; path = ../../../asn.1/INTEGER.h; sourceTree = "<group>"; };
+		15A32087260E03BC009D07EB /* KeySync.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = KeySync.h; path = ../../../asn.1/KeySync.h; sourceTree = "<group>"; };
+		15A32088260E03BC009D07EB /* xer_encoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = xer_encoder.h; path = ../../../asn.1/xer_encoder.h; sourceTree = "<group>"; };
+		15A32089260E03BC009D07EB /* GroupKeysUpdate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupKeysUpdate.c; path = ../../../asn.1/GroupKeysUpdate.c; sourceTree = "<group>"; };
+		15A3208A260E03BC009D07EB /* Beacon.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Beacon.c; path = ../../../asn.1/Beacon.c; sourceTree = "<group>"; };
+		15A3208B260E03BC009D07EB /* ElectGroupKeyResetLeader.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ElectGroupKeyResetLeader.c; path = ../../../asn.1/ElectGroupKeyResetLeader.c; sourceTree = "<group>"; };
+		15A3208C260E03BC009D07EB /* Commands.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Commands.h; path = ../../../asn.1/Commands.h; sourceTree = "<group>"; };
+		15A3208D260E03BC009D07EB /* asn_codecs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = asn_codecs.h; path = ../../../asn.1/asn_codecs.h; sourceTree = "<group>"; };
+		15A3208E260E03BC009D07EB /* Version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Version.h; path = ../../../asn.1/Version.h; sourceTree = "<group>"; };
+		15A3208F260E03BC009D07EB /* Identity.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Identity.c; path = ../../../asn.1/Identity.c; sourceTree = "<group>"; };
+		15A32090260E03BC009D07EB /* KeyReset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = KeyReset.h; path = ../../../asn.1/KeyReset.h; sourceTree = "<group>"; };
+		15A32091260E03BC009D07EB /* BOOLEAN.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = BOOLEAN.c; path = ../../../asn.1/BOOLEAN.c; sourceTree = "<group>"; };
+		15A32092260E03BC009D07EB /* OwnKeysRequester.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = OwnKeysRequester.c; path = ../../../asn.1/OwnKeysRequester.c; sourceTree = "<group>"; };
+		15A32093260E03BC009D07EB /* ReceiverRating.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ReceiverRating.h; path = ../../../asn.1/ReceiverRating.h; sourceTree = "<group>"; };
+		15A32094260E03BC009D07EB /* constr_SET_OF.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = constr_SET_OF.h; path = ../../../asn.1/constr_SET_OF.h; sourceTree = "<group>"; };
+		15A32095260E03BC009D07EB /* OwnKeysRequester.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OwnKeysRequester.h; path = ../../../asn.1/OwnKeysRequester.h; sourceTree = "<group>"; };
+		15A32096260E03BC009D07EB /* constr_TYPE.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = constr_TYPE.h; path = ../../../asn.1/constr_TYPE.h; sourceTree = "<group>"; };
+		15A32097260E03BC009D07EB /* constr_CHOICE.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = constr_CHOICE.h; path = ../../../asn.1/constr_CHOICE.h; sourceTree = "<group>"; };
+		15A32098260E03BC009D07EB /* BOOLEAN.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BOOLEAN.h; path = ../../../asn.1/BOOLEAN.h; sourceTree = "<group>"; };
+		15A32099260E03BC009D07EB /* CommitAccept.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = CommitAccept.c; path = ../../../asn.1/CommitAccept.c; sourceTree = "<group>"; };
+		15A3209A260E03BC009D07EB /* NativeInteger.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = NativeInteger.c; path = ../../../asn.1/NativeInteger.c; sourceTree = "<group>"; };
+		15A3209B260E03BC009D07EB /* IdentityList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = IdentityList.h; path = ../../../asn.1/IdentityList.h; sourceTree = "<group>"; };
+		15A3209C260E03BC009D07EB /* InitUnledGroupKeyReset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = InitUnledGroupKeyReset.h; path = ../../../asn.1/InitUnledGroupKeyReset.h; sourceTree = "<group>"; };
+		15A3209D260E03BC009D07EB /* Rating.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Rating.h; path = ../../../asn.1/Rating.h; sourceTree = "<group>"; };
+		15A3209E260E03BC009D07EB /* ber_decoder.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ber_decoder.c; path = ../../../asn.1/ber_decoder.c; sourceTree = "<group>"; };
+		15A3209F260E03BC009D07EB /* ElectGroupKeyResetLeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ElectGroupKeyResetLeader.h; path = ../../../asn.1/ElectGroupKeyResetLeader.h; sourceTree = "<group>"; };
+		15A320A0260E03BC009D07EB /* TID.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = TID.c; path = ../../../asn.1/TID.c; sourceTree = "<group>"; };
+		15A320A1260E03BC009D07EB /* PString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PString.h; path = ../../../asn.1/PString.h; sourceTree = "<group>"; };
+		15A320A2260E03BC009D07EB /* Hash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Hash.h; path = ../../../asn.1/Hash.h; sourceTree = "<group>"; };
+		15A320A3260E03BC009D07EB /* CommitAcceptForGroup.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = CommitAcceptForGroup.c; path = ../../../asn.1/CommitAcceptForGroup.c; sourceTree = "<group>"; };
+		15A320A4260E03BC009D07EB /* asn_SET_OF.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = asn_SET_OF.c; path = ../../../asn.1/asn_SET_OF.c; sourceTree = "<group>"; };
+		15A320A5260E03BC009D07EB /* GroupKeysForNewMember.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GroupKeysForNewMember.h; path = ../../../asn.1/GroupKeysForNewMember.h; sourceTree = "<group>"; };
+		15A320A6260E03BC009D07EB /* keysync.asn1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = keysync.asn1; path = ../../../asn.1/keysync.asn1; sourceTree = "<group>"; };
+		15A320A7260E03BD009D07EB /* Sync.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Sync.h; path = ../../../asn.1/Sync.h; sourceTree = "<group>"; };
+		15A320A8260E03BD009D07EB /* xer_decoder.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = xer_decoder.c; path = ../../../asn.1/xer_decoder.c; sourceTree = "<group>"; };
+		15A320A9260E03BD009D07EB /* per_decoder.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = per_decoder.c; path = ../../../asn.1/per_decoder.c; sourceTree = "<group>"; };
+		15A320AA260E03BD009D07EB /* NegotiationRequestGrouped.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NegotiationRequestGrouped.h; path = ../../../asn.1/NegotiationRequestGrouped.h; sourceTree = "<group>"; };
+		15A320AB260E03BD009D07EB /* xer_support.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = xer_support.h; path = ../../../asn.1/xer_support.h; sourceTree = "<group>"; };
+		15A320AC260E03BD009D07EB /* constr_SEQUENCE.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = constr_SEQUENCE.c; path = ../../../asn.1/constr_SEQUENCE.c; sourceTree = "<group>"; };
+		15A320AD260E03BD009D07EB /* PString.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = PString.c; path = ../../../asn.1/PString.c; sourceTree = "<group>"; };
+		15A320AE260E03BD009D07EB /* constr_CHOICE.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = constr_CHOICE.c; path = ../../../asn.1/constr_CHOICE.c; sourceTree = "<group>"; };
+		15A320AF260E03BD009D07EB /* CommitAcceptRequester.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommitAcceptRequester.h; path = ../../../asn.1/CommitAcceptRequester.h; sourceTree = "<group>"; };
+		15A320B0260E03BD009D07EB /* CommitAcceptOfferer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommitAcceptOfferer.h; path = ../../../asn.1/CommitAcceptOfferer.h; sourceTree = "<group>"; };
+		15A320B1260E03BD009D07EB /* CommitAcceptOfferer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = CommitAcceptOfferer.c; path = ../../../asn.1/CommitAcceptOfferer.c; sourceTree = "<group>"; };
+		15A320B2260E03BD009D07EB /* asn_codecs_prim.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = asn_codecs_prim.h; path = ../../../asn.1/asn_codecs_prim.h; sourceTree = "<group>"; };
+		15A320B3260E03BD009D07EB /* xer_encoder.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = xer_encoder.c; path = ../../../asn.1/xer_encoder.c; sourceTree = "<group>"; };
+		15A320B4260E03BD009D07EB /* constr_SET_OF.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = constr_SET_OF.c; path = ../../../asn.1/constr_SET_OF.c; sourceTree = "<group>"; };
+		15A320B5260E03BD009D07EB /* asn_SEQUENCE_OF.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = asn_SEQUENCE_OF.c; path = ../../../asn.1/asn_SEQUENCE_OF.c; sourceTree = "<group>"; };
+		15A320B6260E03BD009D07EB /* GroupTrustThisKey.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GroupTrustThisKey.h; path = ../../../asn.1/GroupTrustThisKey.h; sourceTree = "<group>"; };
+		15A320B7260E03BD009D07EB /* BIT_STRING.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = BIT_STRING.c; path = ../../../asn.1/BIT_STRING.c; sourceTree = "<group>"; };
+		15A320B8260E03BD009D07EB /* asn_system.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = asn_system.h; path = ../../../asn.1/asn_system.h; sourceTree = "<group>"; };
+		15A320B9260E03BD009D07EB /* distribution.asn1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = distribution.asn1; path = ../../../asn.1/distribution.asn1; sourceTree = "<group>"; };
+		15A320BA260E03BD009D07EB /* ber_tlv_tag.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ber_tlv_tag.h; path = ../../../asn.1/ber_tlv_tag.h; sourceTree = "<group>"; };
+		15A320BB260E03BD009D07EB /* ber_tlv_tag.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ber_tlv_tag.c; path = ../../../asn.1/ber_tlv_tag.c; sourceTree = "<group>"; };
+		15A320BC260E03BD009D07EB /* per_support.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = per_support.c; path = ../../../asn.1/per_support.c; sourceTree = "<group>"; };
+		15A320BD260E03BD009D07EB /* GroupTrustThisKey.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupTrustThisKey.c; path = ../../../asn.1/GroupTrustThisKey.c; sourceTree = "<group>"; };
+		15A320BE260E03BD009D07EB /* NegotiationOpen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NegotiationOpen.h; path = ../../../asn.1/NegotiationOpen.h; sourceTree = "<group>"; };
+		15A320BF260E03BD009D07EB /* Rollback.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Rollback.h; path = ../../../asn.1/Rollback.h; sourceTree = "<group>"; };
+		15A320C0260E03BD009D07EB /* PrintableString.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = PrintableString.c; path = ../../../asn.1/PrintableString.c; sourceTree = "<group>"; };
+		15A320C1260E03BD009D07EB /* SynchronizeGroupKeys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SynchronizeGroupKeys.h; path = ../../../asn.1/SynchronizeGroupKeys.h; sourceTree = "<group>"; };
+		15A320C2260E03BD009D07EB /* OCTET_STRING.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OCTET_STRING.h; path = ../../../asn.1/OCTET_STRING.h; sourceTree = "<group>"; };
+		15A320C3260E03BD009D07EB /* per_encoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = per_encoder.h; path = ../../../asn.1/per_encoder.h; sourceTree = "<group>"; };
+		15A320C4260E03BD009D07EB /* IdentityList.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = IdentityList.c; path = ../../../asn.1/IdentityList.c; sourceTree = "<group>"; };
+		15A320C5260E03BD009D07EB /* xer_support.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = xer_support.c; path = ../../../asn.1/xer_support.c; sourceTree = "<group>"; };
+		15A320C6260E03BD009D07EB /* OwnKeysOfferer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OwnKeysOfferer.h; path = ../../../asn.1/OwnKeysOfferer.h; sourceTree = "<group>"; };
+		15A320C7260E03BD009D07EB /* PrintableString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrintableString.h; path = ../../../asn.1/PrintableString.h; sourceTree = "<group>"; };
+		15A320C8260E03BD009D07EB /* ReceiverRating.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ReceiverRating.c; path = ../../../asn.1/ReceiverRating.c; sourceTree = "<group>"; };
+		15A320C9260E03BD009D07EB /* SynchronizeGroupKeys.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = SynchronizeGroupKeys.c; path = ../../../asn.1/SynchronizeGroupKeys.c; sourceTree = "<group>"; };
+		15A320CA260E03BD009D07EB /* keyreset.asn1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = keyreset.asn1; path = ../../../asn.1/keyreset.asn1; sourceTree = "<group>"; };
+		15A320CB260E03BD009D07EB /* NativeEnumerated.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NativeEnumerated.h; path = ../../../asn.1/NativeEnumerated.h; sourceTree = "<group>"; };
+		15A320CC260E03BD009D07EB /* TID.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TID.h; path = ../../../asn.1/TID.h; sourceTree = "<group>"; };
+		15A320CD260E03BD009D07EB /* NativeEnumerated.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = NativeEnumerated.c; path = ../../../asn.1/NativeEnumerated.c; sourceTree = "<group>"; };
+		15A320CE260E03BD009D07EB /* Version.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Version.c; path = ../../../asn.1/Version.c; sourceTree = "<group>"; };
+		15A320CF260E03BD009D07EB /* CommitAcceptForGroup.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommitAcceptForGroup.h; path = ../../../asn.1/CommitAcceptForGroup.h; sourceTree = "<group>"; };
+		15A320D0260E03BD009D07EB /* NegotiationRequest.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = NegotiationRequest.c; path = ../../../asn.1/NegotiationRequest.c; sourceTree = "<group>"; };
+		15A320D1260E03BD009D07EB /* constr_SEQUENCE_OF.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = constr_SEQUENCE_OF.h; path = ../../../asn.1/constr_SEQUENCE_OF.h; sourceTree = "<group>"; };
+		15A320D2260E03BD009D07EB /* asn_SEQUENCE_OF.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = asn_SEQUENCE_OF.h; path = ../../../asn.1/asn_SEQUENCE_OF.h; sourceTree = "<group>"; };
+		15A320D3260E03BD009D07EB /* GroupHandshake.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupHandshake.c; path = ../../../asn.1/GroupHandshake.c; sourceTree = "<group>"; };
+		15A320D4260E03BE009D07EB /* per_opentype.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = per_opentype.c; path = ../../../asn.1/per_opentype.c; sourceTree = "<group>"; };
+		15A320D5260E03BE009D07EB /* INTEGER.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = INTEGER.c; path = ../../../asn.1/INTEGER.c; sourceTree = "<group>"; };
+		15A320D6260E03BE009D07EB /* Commands.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Commands.c; path = ../../../asn.1/Commands.c; sourceTree = "<group>"; };
+		15A320D7260E03BE009D07EB /* GroupKeysUpdate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GroupKeysUpdate.h; path = ../../../asn.1/GroupKeysUpdate.h; sourceTree = "<group>"; };
+		15A320D8260E03BE009D07EB /* NegotiationRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NegotiationRequest.h; path = ../../../asn.1/NegotiationRequest.h; sourceTree = "<group>"; };
+		15A320D9260E03BE009D07EB /* GroupHandshake.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GroupHandshake.h; path = ../../../asn.1/GroupHandshake.h; sourceTree = "<group>"; };
+		15A320DA260E03BE009D07EB /* Distribution.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Distribution.c; path = ../../../asn.1/Distribution.c; sourceTree = "<group>"; };
+		15A320DB260E03BE009D07EB /* asn_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = asn_internal.h; path = ../../../asn.1/asn_internal.h; sourceTree = "<group>"; };
+		15A320DC260E03BE009D07EB /* GroupKeysAndClose.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupKeysAndClose.c; path = ../../../asn.1/GroupKeysAndClose.c; sourceTree = "<group>"; };
+		15A320DD260E03BE009D07EB /* Hex.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Hex.c; path = ../../../asn.1/Hex.c; sourceTree = "<group>"; };
+		15A320DE260E03BE009D07EB /* NegotiationRequestGrouped.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = NegotiationRequestGrouped.c; path = ../../../asn.1/NegotiationRequestGrouped.c; sourceTree = "<group>"; };
+		15A320DF260E03BE009D07EB /* ISO639-1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "ISO639-1.c"; path = "../../../asn.1/ISO639-1.c"; sourceTree = "<group>"; };
+		15A320E0260E03BE009D07EB /* Command.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Command.c; path = ../../../asn.1/Command.c; sourceTree = "<group>"; };
+		15A320E1260E03BE009D07EB /* asn_SET_OF.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = asn_SET_OF.h; path = ../../../asn.1/asn_SET_OF.h; sourceTree = "<group>"; };
+		15A320E2260E03BE009D07EB /* per_opentype.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = per_opentype.h; path = ../../../asn.1/per_opentype.h; sourceTree = "<group>"; };
+		15A320E3260E03BE009D07EB /* xer_decoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = xer_decoder.h; path = ../../../asn.1/xer_decoder.h; sourceTree = "<group>"; };
+		15A320E4260E03BE009D07EB /* asn_codecs_prim.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = asn_codecs_prim.c; path = ../../../asn.1/asn_codecs_prim.c; sourceTree = "<group>"; };
+		15A320E5260E03BE009D07EB /* KeySync.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = KeySync.c; path = ../../../asn.1/KeySync.c; sourceTree = "<group>"; };
+		15A320E6260E03BE009D07EB /* constraints.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = constraints.h; path = ../../../asn.1/constraints.h; sourceTree = "<group>"; };
+		15A320E7260E03BE009D07EB /* NegotiationOpen.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = NegotiationOpen.c; path = ../../../asn.1/NegotiationOpen.c; sourceTree = "<group>"; };
+		15A320E8260E03BE009D07EB /* per_support.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = per_support.h; path = ../../../asn.1/per_support.h; sourceTree = "<group>"; };
+		15A320E9260E03BE009D07EB /* UTF8String.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = UTF8String.c; path = ../../../asn.1/UTF8String.c; sourceTree = "<group>"; };
+		15A320EA260E03BE009D07EB /* ber_decoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ber_decoder.h; path = ../../../asn.1/ber_decoder.h; sourceTree = "<group>"; };
+		15A320EB260E03BE009D07EB /* BIT_STRING.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BIT_STRING.h; path = ../../../asn.1/BIT_STRING.h; sourceTree = "<group>"; };
+		15A320EC260E03BE009D07EB /* OwnKeysOfferer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = OwnKeysOfferer.c; path = ../../../asn.1/OwnKeysOfferer.c; sourceTree = "<group>"; };
+		15A320ED260E03BE009D07EB /* CommitAcceptRequester.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = CommitAcceptRequester.c; path = ../../../asn.1/CommitAcceptRequester.c; sourceTree = "<group>"; };
+		15A320EE260E03BE009D07EB /* Sync.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync.c; path = ../../../asn.1/Sync.c; sourceTree = "<group>"; };
+		15A320EF260E03BE009D07EB /* NativeInteger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NativeInteger.h; path = ../../../asn.1/NativeInteger.h; sourceTree = "<group>"; };
+		15A320F0260E03BE009D07EB /* Identity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Identity.h; path = ../../../asn.1/Identity.h; sourceTree = "<group>"; };
+		15A320F1260E03BE009D07EB /* Rollback.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Rollback.c; path = ../../../asn.1/Rollback.c; sourceTree = "<group>"; };
+		15A320F2260E03BE009D07EB /* per_decoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = per_decoder.h; path = ../../../asn.1/per_decoder.h; sourceTree = "<group>"; };
+		15A320F3260E03BE009D07EB /* constr_TYPE.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = constr_TYPE.c; path = ../../../asn.1/constr_TYPE.c; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		15A3204D260E0330009D07EB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		15A3205B260E0345009D07EB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		15A32015260E02AA009D07EB = {
+			isa = PBXGroup;
+			children = (
+				15A3206B260E0376009D07EB /* src */,
+				15A32050260E0330009D07EB /* pEpASN1_macOS */,
+				15A3205F260E0345009D07EB /* pEpASN1_iOS */,
+				15A32020260E02AA009D07EB /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		15A32020260E02AA009D07EB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				15A3204F260E0330009D07EB /* libpEpASN1_macOS.a */,
+				15A3205E260E0345009D07EB /* libpEpASN1_iOS.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		15A32050260E0330009D07EB /* pEpASN1_macOS */ = {
+			isa = PBXGroup;
+			children = (
+				15A32051260E0330009D07EB /* pEpASN1_macOS.h */,
+				15A32053260E0330009D07EB /* pEpASN1_macOS.m */,
+			);
+			path = pEpASN1_macOS;
+			sourceTree = "<group>";
+		};
+		15A3205F260E0345009D07EB /* pEpASN1_iOS */ = {
+			isa = PBXGroup;
+			children = (
+				15A32060260E0345009D07EB /* pEpASN1_iOS.h */,
+				15A32061260E0345009D07EB /* pEpASN1_iOS.m */,
+			);
+			path = pEpASN1_iOS;
+			sourceTree = "<group>";
+		};
+		15A3206B260E0376009D07EB /* src */ = {
+			isa = PBXGroup;
+			children = (
+				15A32075260E03BB009D07EB /* asn_application.h */,
+				15A320E4260E03BE009D07EB /* asn_codecs_prim.c */,
+				15A320B2260E03BD009D07EB /* asn_codecs_prim.h */,
+				15A3208D260E03BC009D07EB /* asn_codecs.h */,
+				15A320DB260E03BE009D07EB /* asn_internal.h */,
+				15A320B5260E03BD009D07EB /* asn_SEQUENCE_OF.c */,
+				15A320D2260E03BD009D07EB /* asn_SEQUENCE_OF.h */,
+				15A320A4260E03BC009D07EB /* asn_SET_OF.c */,
+				15A320E1260E03BE009D07EB /* asn_SET_OF.h */,
+				15A320B8260E03BD009D07EB /* asn_system.h */,
+				15A3208A260E03BC009D07EB /* Beacon.c */,
+				15A3207E260E03BB009D07EB /* Beacon.h */,
+				15A3209E260E03BC009D07EB /* ber_decoder.c */,
+				15A320EA260E03BE009D07EB /* ber_decoder.h */,
+				15A32078260E03BB009D07EB /* ber_tlv_length.c */,
+				15A3206E260E03BB009D07EB /* ber_tlv_length.h */,
+				15A320BB260E03BD009D07EB /* ber_tlv_tag.c */,
+				15A320BA260E03BD009D07EB /* ber_tlv_tag.h */,
+				15A320B7260E03BD009D07EB /* BIT_STRING.c */,
+				15A320EB260E03BE009D07EB /* BIT_STRING.h */,
+				15A32091260E03BC009D07EB /* BOOLEAN.c */,
+				15A32098260E03BC009D07EB /* BOOLEAN.h */,
+				15A320E0260E03BE009D07EB /* Command.c */,
+				15A32077260E03BB009D07EB /* Command.h */,
+				15A320D6260E03BE009D07EB /* Commands.c */,
+				15A3208C260E03BC009D07EB /* Commands.h */,
+				15A32099260E03BC009D07EB /* CommitAccept.c */,
+				15A32076260E03BB009D07EB /* CommitAccept.h */,
+				15A320A3260E03BC009D07EB /* CommitAcceptForGroup.c */,
+				15A320CF260E03BD009D07EB /* CommitAcceptForGroup.h */,
+				15A320B1260E03BD009D07EB /* CommitAcceptOfferer.c */,
+				15A320B0260E03BD009D07EB /* CommitAcceptOfferer.h */,
+				15A320ED260E03BE009D07EB /* CommitAcceptRequester.c */,
+				15A320AF260E03BD009D07EB /* CommitAcceptRequester.h */,
+				15A32071260E03BB009D07EB /* CommitReject.c */,
+				15A32073260E03BB009D07EB /* CommitReject.h */,
+				15A320AE260E03BD009D07EB /* constr_CHOICE.c */,
+				15A32097260E03BC009D07EB /* constr_CHOICE.h */,
+				15A3206F260E03BB009D07EB /* constr_SEQUENCE_OF.c */,
+				15A320D1260E03BD009D07EB /* constr_SEQUENCE_OF.h */,
+				15A320AC260E03BD009D07EB /* constr_SEQUENCE.c */,
+				15A32080260E03BB009D07EB /* constr_SEQUENCE.h */,
+				15A320B4260E03BD009D07EB /* constr_SET_OF.c */,
+				15A32094260E03BC009D07EB /* constr_SET_OF.h */,
+				15A320F3260E03BE009D07EB /* constr_TYPE.c */,
+				15A32096260E03BC009D07EB /* constr_TYPE.h */,
+				15A3207F260E03BB009D07EB /* constraints.c */,
+				15A320E6260E03BE009D07EB /* constraints.h */,
+				15A32072260E03BB009D07EB /* der_encoder.c */,
+				15A3206D260E03BB009D07EB /* der_encoder.h */,
+				15A320B9260E03BD009D07EB /* distribution.asn1 */,
+				15A320DA260E03BE009D07EB /* Distribution.c */,
+				15A32070260E03BB009D07EB /* Distribution.h */,
+				15A3208B260E03BC009D07EB /* ElectGroupKeyResetLeader.c */,
+				15A3209F260E03BC009D07EB /* ElectGroupKeyResetLeader.h */,
+				15A320D3260E03BD009D07EB /* GroupHandshake.c */,
+				15A320D9260E03BE009D07EB /* GroupHandshake.h */,
+				15A320DC260E03BE009D07EB /* GroupKeysAndClose.c */,
+				15A32079260E03BB009D07EB /* GroupKeysAndClose.h */,
+				15A3207B260E03BB009D07EB /* GroupKeysForNewMember.c */,
+				15A320A5260E03BC009D07EB /* GroupKeysForNewMember.h */,
+				15A32089260E03BC009D07EB /* GroupKeysUpdate.c */,
+				15A320D7260E03BE009D07EB /* GroupKeysUpdate.h */,
+				15A320BD260E03BD009D07EB /* GroupTrustThisKey.c */,
+				15A320B6260E03BD009D07EB /* GroupTrustThisKey.h */,
+				15A3207C260E03BB009D07EB /* Hash.c */,
+				15A320A2260E03BC009D07EB /* Hash.h */,
+				15A320DD260E03BE009D07EB /* Hex.c */,
+				15A32085260E03BC009D07EB /* Hex.h */,
+				15A3208F260E03BC009D07EB /* Identity.c */,
+				15A320F0260E03BE009D07EB /* Identity.h */,
+				15A320C4260E03BD009D07EB /* IdentityList.c */,
+				15A3209B260E03BC009D07EB /* IdentityList.h */,
+				15A32082260E03BC009D07EB /* InitUnledGroupKeyReset.c */,
+				15A3209C260E03BC009D07EB /* InitUnledGroupKeyReset.h */,
+				15A320D5260E03BE009D07EB /* INTEGER.c */,
+				15A32086260E03BC009D07EB /* INTEGER.h */,
+				15A320DF260E03BE009D07EB /* ISO639-1.c */,
+				15A32074260E03BB009D07EB /* ISO639-1.h */,
+				15A320CA260E03BD009D07EB /* keyreset.asn1 */,
+				15A3207A260E03BB009D07EB /* KeyReset.c */,
+				15A32090260E03BC009D07EB /* KeyReset.h */,
+				15A320A6260E03BC009D07EB /* keysync.asn1 */,
+				15A320E5260E03BE009D07EB /* KeySync.c */,
+				15A32087260E03BC009D07EB /* KeySync.h */,
+				15A320CD260E03BD009D07EB /* NativeEnumerated.c */,
+				15A320CB260E03BD009D07EB /* NativeEnumerated.h */,
+				15A3209A260E03BC009D07EB /* NativeInteger.c */,
+				15A320EF260E03BE009D07EB /* NativeInteger.h */,
+				15A320E7260E03BE009D07EB /* NegotiationOpen.c */,
+				15A320BE260E03BD009D07EB /* NegotiationOpen.h */,
+				15A320D0260E03BD009D07EB /* NegotiationRequest.c */,
+				15A320D8260E03BE009D07EB /* NegotiationRequest.h */,
+				15A320DE260E03BE009D07EB /* NegotiationRequestGrouped.c */,
+				15A320AA260E03BD009D07EB /* NegotiationRequestGrouped.h */,
+				15A3206C260E03BB009D07EB /* OCTET_STRING.c */,
+				15A320C2260E03BD009D07EB /* OCTET_STRING.h */,
+				15A320EC260E03BE009D07EB /* OwnKeysOfferer.c */,
+				15A320C6260E03BD009D07EB /* OwnKeysOfferer.h */,
+				15A32092260E03BC009D07EB /* OwnKeysRequester.c */,
+				15A32095260E03BC009D07EB /* OwnKeysRequester.h */,
+				15A32083260E03BC009D07EB /* pdu_collection.c */,
+				15A320A9260E03BD009D07EB /* per_decoder.c */,
+				15A320F2260E03BE009D07EB /* per_decoder.h */,
+				15A3207D260E03BB009D07EB /* per_encoder.c */,
+				15A320C3260E03BD009D07EB /* per_encoder.h */,
+				15A320D4260E03BE009D07EB /* per_opentype.c */,
+				15A320E2260E03BE009D07EB /* per_opentype.h */,
+				15A320BC260E03BD009D07EB /* per_support.c */,
+				15A320E8260E03BE009D07EB /* per_support.h */,
+				15A320C0260E03BD009D07EB /* PrintableString.c */,
+				15A320C7260E03BD009D07EB /* PrintableString.h */,
+				15A320AD260E03BD009D07EB /* PString.c */,
+				15A320A1260E03BC009D07EB /* PString.h */,
+				15A32081260E03BB009D07EB /* Rating.c */,
+				15A3209D260E03BC009D07EB /* Rating.h */,
+				15A320C8260E03BD009D07EB /* ReceiverRating.c */,
+				15A32093260E03BC009D07EB /* ReceiverRating.h */,
+				15A320F1260E03BE009D07EB /* Rollback.c */,
+				15A320BF260E03BD009D07EB /* Rollback.h */,
+				15A320EE260E03BE009D07EB /* Sync.c */,
+				15A320A7260E03BD009D07EB /* Sync.h */,
+				15A320C9260E03BD009D07EB /* SynchronizeGroupKeys.c */,
+				15A320C1260E03BD009D07EB /* SynchronizeGroupKeys.h */,
+				15A320A0260E03BC009D07EB /* TID.c */,
+				15A320CC260E03BD009D07EB /* TID.h */,
+				15A320E9260E03BE009D07EB /* UTF8String.c */,
+				15A32084260E03BC009D07EB /* UTF8String.h */,
+				15A320CE260E03BD009D07EB /* Version.c */,
+				15A3208E260E03BC009D07EB /* Version.h */,
+				15A320A8260E03BD009D07EB /* xer_decoder.c */,
+				15A320E3260E03BE009D07EB /* xer_decoder.h */,
+				15A320B3260E03BD009D07EB /* xer_encoder.c */,
+				15A32088260E03BC009D07EB /* xer_encoder.h */,
+				15A320C5260E03BD009D07EB /* xer_support.c */,
+				15A320AB260E03BD009D07EB /* xer_support.h */,
+			);
+			name = src;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		15A3204B260E0330009D07EB /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				15A32237260E03F2009D07EB /* CommitAcceptOfferer.h in Headers */,
+				15A3221D260E03F2009D07EB /* CommitAcceptRequester.h in Headers */,
+				15A3222E260E03F2009D07EB /* xer_encoder.h in Headers */,
+				15A32236260E03F2009D07EB /* PString.h in Headers */,
+				15A32230260E03F2009D07EB /* KeyReset.h in Headers */,
+				15A32233260E03F2009D07EB /* asn_codecs_prim.h in Headers */,
+				15A32234260E03F2009D07EB /* Command.h in Headers */,
+				15A32238260E03F2009D07EB /* ber_decoder.h in Headers */,
+				15A3220D260E03F2009D07EB /* OwnKeysOfferer.h in Headers */,
+				15A3223C260E03F2009D07EB /* asn_SET_OF.h in Headers */,
+				15A32217260E03F2009D07EB /* Commands.h in Headers */,
+				15A32219260E03F2009D07EB /* Hex.h in Headers */,
+				15A32204260E03F1009D07EB /* NegotiationOpen.h in Headers */,
+				15A32205260E03F1009D07EB /* GroupTrustThisKey.h in Headers */,
+				15A3221B260E03F2009D07EB /* NativeEnumerated.h in Headers */,
+				15A3221C260E03F2009D07EB /* ber_tlv_tag.h in Headers */,
+				15A3223E260E03F2009D07EB /* asn_system.h in Headers */,
+				15A32222260E03F2009D07EB /* constr_CHOICE.h in Headers */,
+				15A32209260E03F1009D07EB /* constr_SEQUENCE_OF.h in Headers */,
+				15A32246260E03F2009D07EB /* ISO639-1.h in Headers */,
+				15A3223D260E03F2009D07EB /* BIT_STRING.h in Headers */,
+				15A32235260E03F2009D07EB /* ReceiverRating.h in Headers */,
+				15A32241260E03F2009D07EB /* asn_codecs.h in Headers */,
+				15A32227260E03F2009D07EB /* asn_internal.h in Headers */,
+				15A32239260E03F2009D07EB /* per_decoder.h in Headers */,
+				15A3220B260E03F2009D07EB /* constr_SEQUENCE.h in Headers */,
+				15A32242260E03F2009D07EB /* CommitAcceptForGroup.h in Headers */,
+				15A3221E260E03F2009D07EB /* Identity.h in Headers */,
+				15A3221A260E03F2009D07EB /* BOOLEAN.h in Headers */,
+				15A3220F260E03F2009D07EB /* constr_SET_OF.h in Headers */,
+				15A32220260E03F2009D07EB /* CommitAccept.h in Headers */,
+				15A32224260E03F2009D07EB /* NegotiationRequestGrouped.h in Headers */,
+				15A32247260E03F2009D07EB /* Rating.h in Headers */,
+				15A32229260E03F2009D07EB /* xer_decoder.h in Headers */,
+				15A32211260E03F2009D07EB /* NegotiationRequest.h in Headers */,
+				15A3223A260E03F2009D07EB /* asn_application.h in Headers */,
+				15A32243260E03F2009D07EB /* ber_tlv_length.h in Headers */,
+				15A3222F260E03F2009D07EB /* Sync.h in Headers */,
+				15A3222D260E03F2009D07EB /* KeySync.h in Headers */,
+				15A3223F260E03F2009D07EB /* GroupKeysAndClose.h in Headers */,
+				15A3222B260E03F2009D07EB /* TID.h in Headers */,
+				15A3220C260E03F2009D07EB /* xer_support.h in Headers */,
+				15A32218260E03F2009D07EB /* SynchronizeGroupKeys.h in Headers */,
+				15A32206260E03F1009D07EB /* NativeInteger.h in Headers */,
+				15A32215260E03F2009D07EB /* constraints.h in Headers */,
+				15A32208260E03F1009D07EB /* asn_SEQUENCE_OF.h in Headers */,
+				15A32212260E03F2009D07EB /* IdentityList.h in Headers */,
+				15A32232260E03F2009D07EB /* per_opentype.h in Headers */,
+				15A32231260E03F2009D07EB /* der_encoder.h in Headers */,
+				15A32052260E0330009D07EB /* pEpASN1_macOS.h in Headers */,
+				15A32240260E03F2009D07EB /* OCTET_STRING.h in Headers */,
+				15A32213260E03F2009D07EB /* constr_TYPE.h in Headers */,
+				15A32245260E03F2009D07EB /* INTEGER.h in Headers */,
+				15A32228260E03F2009D07EB /* OwnKeysRequester.h in Headers */,
+				15A32223260E03F2009D07EB /* Hash.h in Headers */,
+				15A32216260E03F2009D07EB /* GroupHandshake.h in Headers */,
+				15A32207260E03F1009D07EB /* Rollback.h in Headers */,
+				15A32225260E03F2009D07EB /* GroupKeysUpdate.h in Headers */,
+				15A3223B260E03F2009D07EB /* Beacon.h in Headers */,
+				15A32210260E03F2009D07EB /* InitUnledGroupKeyReset.h in Headers */,
+				15A32221260E03F2009D07EB /* ElectGroupKeyResetLeader.h in Headers */,
+				15A3220E260E03F2009D07EB /* CommitReject.h in Headers */,
+				15A3220A260E03F1009D07EB /* GroupKeysForNewMember.h in Headers */,
+				15A32214260E03F2009D07EB /* PrintableString.h in Headers */,
+				15A3222A260E03F2009D07EB /* Version.h in Headers */,
+				15A32226260E03F2009D07EB /* per_support.h in Headers */,
+				15A3222C260E03F2009D07EB /* UTF8String.h in Headers */,
+				15A32244260E03F2009D07EB /* Distribution.h in Headers */,
+				15A3221F260E03F2009D07EB /* per_encoder.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		15A3206A260E035B009D07EB /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				15A32278260E03F3009D07EB /* Command.h in Headers */,
+				15A32277260E03F3009D07EB /* asn_codecs_prim.h in Headers */,
+				15A32288260E03F3009D07EB /* Distribution.h in Headers */,
+				15A32267260E03F3009D07EB /* Hash.h in Headers */,
+				15A3227C260E03F3009D07EB /* ber_decoder.h in Headers */,
+				15A3225D260E03F3009D07EB /* Hex.h in Headers */,
+				15A32284260E03F3009D07EB /* OCTET_STRING.h in Headers */,
+				15A3226B260E03F3009D07EB /* asn_internal.h in Headers */,
+				15A3226D260E03F3009D07EB /* xer_decoder.h in Headers */,
+				15A32274260E03F3009D07EB /* KeyReset.h in Headers */,
+				15A3228A260E03F3009D07EB /* ISO639-1.h in Headers */,
+				15A32265260E03F3009D07EB /* ElectGroupKeyResetLeader.h in Headers */,
+				15A3226E260E03F3009D07EB /* Version.h in Headers */,
+				15A32263260E03F3009D07EB /* per_encoder.h in Headers */,
+				15A32285260E03F3009D07EB /* asn_codecs.h in Headers */,
+				15A32250260E03F3009D07EB /* xer_support.h in Headers */,
+				15A32280260E03F3009D07EB /* asn_SET_OF.h in Headers */,
+				15A32286260E03F3009D07EB /* CommitAcceptForGroup.h in Headers */,
+				15A32253260E03F3009D07EB /* constr_SET_OF.h in Headers */,
+				15A3225C260E03F3009D07EB /* SynchronizeGroupKeys.h in Headers */,
+				15A3227F260E03F3009D07EB /* Beacon.h in Headers */,
+				15A32269260E03F3009D07EB /* GroupKeysUpdate.h in Headers */,
+				15A32251260E03F3009D07EB /* OwnKeysOfferer.h in Headers */,
+				15A32276260E03F3009D07EB /* per_opentype.h in Headers */,
+				15A3224F260E03F3009D07EB /* constr_SEQUENCE.h in Headers */,
+				15A3226C260E03F3009D07EB /* OwnKeysRequester.h in Headers */,
+				15A32275260E03F3009D07EB /* der_encoder.h in Headers */,
+				15A3224A260E03F3009D07EB /* NativeInteger.h in Headers */,
+				15A3224E260E03F3009D07EB /* GroupKeysForNewMember.h in Headers */,
+				15A32252260E03F3009D07EB /* CommitReject.h in Headers */,
+				15A3225F260E03F3009D07EB /* NativeEnumerated.h in Headers */,
+				15A3228B260E03F3009D07EB /* Rating.h in Headers */,
+				15A32248260E03F3009D07EB /* NegotiationOpen.h in Headers */,
+				15A3224B260E03F3009D07EB /* Rollback.h in Headers */,
+				15A3225A260E03F3009D07EB /* GroupHandshake.h in Headers */,
+				15A32281260E03F3009D07EB /* BIT_STRING.h in Headers */,
+				15A3227D260E03F3009D07EB /* per_decoder.h in Headers */,
+				15A32279260E03F3009D07EB /* ReceiverRating.h in Headers */,
+				15A32259260E03F3009D07EB /* constraints.h in Headers */,
+				15A32270260E03F3009D07EB /* UTF8String.h in Headers */,
+				15A32266260E03F3009D07EB /* constr_CHOICE.h in Headers */,
+				15A3224C260E03F3009D07EB /* asn_SEQUENCE_OF.h in Headers */,
+				15A3225E260E03F3009D07EB /* BOOLEAN.h in Headers */,
+				15A32255260E03F3009D07EB /* NegotiationRequest.h in Headers */,
+				15A32258260E03F3009D07EB /* PrintableString.h in Headers */,
+				15A32289260E03F3009D07EB /* INTEGER.h in Headers */,
+				15A3226A260E03F3009D07EB /* per_support.h in Headers */,
+				15A3226F260E03F3009D07EB /* TID.h in Headers */,
+				15A32254260E03F3009D07EB /* InitUnledGroupKeyReset.h in Headers */,
+				15A32256260E03F3009D07EB /* IdentityList.h in Headers */,
+				15A32257260E03F3009D07EB /* constr_TYPE.h in Headers */,
+				15A32273260E03F3009D07EB /* Sync.h in Headers */,
+				15A32268260E03F3009D07EB /* NegotiationRequestGrouped.h in Headers */,
+				15A32249260E03F3009D07EB /* GroupTrustThisKey.h in Headers */,
+				15A32282260E03F3009D07EB /* asn_system.h in Headers */,
+				15A32271260E03F3009D07EB /* KeySync.h in Headers */,
+				15A3227A260E03F3009D07EB /* PString.h in Headers */,
+				15A32287260E03F3009D07EB /* ber_tlv_length.h in Headers */,
+				15A3227E260E03F3009D07EB /* asn_application.h in Headers */,
+				15A32283260E03F3009D07EB /* GroupKeysAndClose.h in Headers */,
+				15A32262260E03F3009D07EB /* Identity.h in Headers */,
+				15A32260260E03F3009D07EB /* ber_tlv_tag.h in Headers */,
+				15A3225B260E03F3009D07EB /* Commands.h in Headers */,
+				15A32264260E03F3009D07EB /* CommitAccept.h in Headers */,
+				15A32261260E03F3009D07EB /* CommitAcceptRequester.h in Headers */,
+				15A3227B260E03F3009D07EB /* CommitAcceptOfferer.h in Headers */,
+				15A32272260E03F3009D07EB /* xer_encoder.h in Headers */,
+				15A3224D260E03F3009D07EB /* constr_SEQUENCE_OF.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		15A3204E260E0330009D07EB /* pEpASN1_macOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 15A32057260E0330009D07EB /* Build configuration list for PBXNativeTarget "pEpASN1_macOS" */;
+			buildPhases = (
+				15A3204B260E0330009D07EB /* Headers */,
+				15A3204C260E0330009D07EB /* Sources */,
+				15A3204D260E0330009D07EB /* Frameworks */,
+				15A32292260E0452009D07EB /* Copy Artefacts & Headers to Custom Build Dir */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = pEpASN1_macOS;
+			productName = pEpASN1_macOS;
+			productReference = 15A3204F260E0330009D07EB /* libpEpASN1_macOS.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		15A3205D260E0345009D07EB /* pEpASN1_iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 15A32064260E0345009D07EB /* Build configuration list for PBXNativeTarget "pEpASN1_iOS" */;
+			buildPhases = (
+				15A3206A260E035B009D07EB /* Headers */,
+				15A3205A260E0345009D07EB /* Sources */,
+				15A3205B260E0345009D07EB /* Frameworks */,
+				15A3205C260E0345009D07EB /* CopyFiles */,
+				15A322D5260E065D009D07EB /* Copy Artefacts & Headers to Custom Build Dir */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = pEpASN1_iOS;
+			productName = pEpASN1_iOS;
+			productReference = 15A3205E260E0345009D07EB /* libpEpASN1_iOS.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		15A32016260E02AA009D07EB /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1240;
+				TargetAttributes = {
+					15A3204E260E0330009D07EB = {
+						CreatedOnToolsVersion = 12.4;
+					};
+					15A3205D260E0345009D07EB = {
+						CreatedOnToolsVersion = 12.4;
+					};
+				};
+			};
+			buildConfigurationList = 15A32019260E02AA009D07EB /* Build configuration list for PBXProject "pEpASN1" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 15A32015260E02AA009D07EB;
+			productRefGroup = 15A32020260E02AA009D07EB /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				15A3204E260E0330009D07EB /* pEpASN1_macOS */,
+				15A3205D260E0345009D07EB /* pEpASN1_iOS */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		15A32292260E0452009D07EB /* Copy Artefacts & Headers to Custom Build Dir */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Artefacts & Headers to Custom Build Dir";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nCUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include\"\nmkdir -p ${CUSTOM_INCLUDE_DIR}\ncp -R \"${TARGET_BUILD_DIR}\"/usr/local/include/* ${CUSTOM_INCLUDE_DIR}\ncp  \"${TARGET_BUILD_DIR}/libpEpASN1_macOS.a\" ${CUSTOM_BUILD_DIR}\n\n";
+		};
+		15A322D5260E065D009D07EB /* Copy Artefacts & Headers to Custom Build Dir */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Artefacts & Headers to Custom Build Dir";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nCUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include\"\nmkdir -p ${CUSTOM_INCLUDE_DIR}\ncp -R \"${TARGET_BUILD_DIR}\"/usr/local/include/* ${CUSTOM_INCLUDE_DIR}\ncp  \"${TARGET_BUILD_DIR}/libpEpASN1_iOS.a\" ${CUSTOM_BUILD_DIR}\n\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		15A3204C260E0330009D07EB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				15A321AE260E03E3009D07EB /* per_encoder.c in Sources */,
+				15A321AB260E03E3009D07EB /* xer_decoder.c in Sources */,
+				15A321B8260E03E3009D07EB /* ReceiverRating.c in Sources */,
+				15A321AA260E03E3009D07EB /* NativeInteger.c in Sources */,
+				15A321A9260E03E3009D07EB /* xer_encoder.c in Sources */,
+				15A321BD260E03E3009D07EB /* Rollback.c in Sources */,
+				15A321AD260E03E3009D07EB /* constr_SEQUENCE.c in Sources */,
+				15A32182260E03E3009D07EB /* constr_SET_OF.c in Sources */,
+				15A321B6260E03E3009D07EB /* Identity.c in Sources */,
+				15A321B3260E03E3009D07EB /* GroupKeysUpdate.c in Sources */,
+				15A3218A260E03E3009D07EB /* OwnKeysOfferer.c in Sources */,
+				15A32194260E03E3009D07EB /* Beacon.c in Sources */,
+				15A32183260E03E3009D07EB /* ber_tlv_tag.c in Sources */,
+				15A321A5260E03E3009D07EB /* GroupTrustThisKey.c in Sources */,
+				15A32189260E03E3009D07EB /* PrintableString.c in Sources */,
+				15A3219D260E03E3009D07EB /* CommitReject.c in Sources */,
+				15A321B0260E03E3009D07EB /* CommitAccept.c in Sources */,
+				15A3218E260E03E3009D07EB /* NegotiationRequestGrouped.c in Sources */,
+				15A32186260E03E3009D07EB /* GroupKeysForNewMember.c in Sources */,
+				15A32181260E03E3009D07EB /* ber_tlv_length.c in Sources */,
+				15A321A2260E03E3009D07EB /* Command.c in Sources */,
+				15A32185260E03E3009D07EB /* constr_CHOICE.c in Sources */,
+				15A321A6260E03E3009D07EB /* Hex.c in Sources */,
+				15A3218B260E03E3009D07EB /* IdentityList.c in Sources */,
+				15A3217F260E03E3009D07EB /* ElectGroupKeyResetLeader.c in Sources */,
+				15A321A7260E03E3009D07EB /* Distribution.c in Sources */,
+				15A321BB260E03E3009D07EB /* PString.c in Sources */,
+				15A32054260E0330009D07EB /* pEpASN1_macOS.m in Sources */,
+				15A32190260E03E3009D07EB /* asn_codecs_prim.c in Sources */,
+				15A32184260E03E3009D07EB /* CommitAcceptRequester.c in Sources */,
+				15A32191260E03E3009D07EB /* Commands.c in Sources */,
+				15A321BC260E03E3009D07EB /* UTF8String.c in Sources */,
+				15A32196260E03E3009D07EB /* CommitAcceptOfferer.c in Sources */,
+				15A3219C260E03E3009D07EB /* Sync.c in Sources */,
+				15A32188260E03E3009D07EB /* NegotiationOpen.c in Sources */,
+				15A32192260E03E3009D07EB /* InitUnledGroupKeyReset.c in Sources */,
+				15A321A1260E03E3009D07EB /* KeySync.c in Sources */,
+				15A321AC260E03E3009D07EB /* pdu_collection.c in Sources */,
+				15A321B5260E03E3009D07EB /* xer_support.c in Sources */,
+				15A321B7260E03E3009D07EB /* per_support.c in Sources */,
+				15A32193260E03E3009D07EB /* NativeEnumerated.c in Sources */,
+				15A32195260E03E3009D07EB /* BIT_STRING.c in Sources */,
+				15A321A3260E03E3009D07EB /* Version.c in Sources */,
+				15A321A4260E03E3009D07EB /* BOOLEAN.c in Sources */,
+				15A3219E260E03E3009D07EB /* Rating.c in Sources */,
+				15A321B9260E03E3009D07EB /* constraints.c in Sources */,
+				15A321AF260E03E3009D07EB /* ISO639-1.c in Sources */,
+				15A32197260E03E3009D07EB /* constr_TYPE.c in Sources */,
+				15A321B1260E03E3009D07EB /* Hash.c in Sources */,
+				15A321B4260E03E3009D07EB /* GroupKeysAndClose.c in Sources */,
+				15A321BA260E03E3009D07EB /* NegotiationRequest.c in Sources */,
+				15A32199260E03E3009D07EB /* per_opentype.c in Sources */,
+				15A3219B260E03E3009D07EB /* SynchronizeGroupKeys.c in Sources */,
+				15A321BF260E03E3009D07EB /* GroupHandshake.c in Sources */,
+				15A321A0260E03E3009D07EB /* der_encoder.c in Sources */,
+				15A321BE260E03E3009D07EB /* constr_SEQUENCE_OF.c in Sources */,
+				15A32198260E03E3009D07EB /* per_decoder.c in Sources */,
+				15A3218D260E03E3009D07EB /* ber_decoder.c in Sources */,
+				15A3219F260E03E3009D07EB /* asn_SEQUENCE_OF.c in Sources */,
+				15A3218F260E03E3009D07EB /* OCTET_STRING.c in Sources */,
+				15A32180260E03E3009D07EB /* asn_SET_OF.c in Sources */,
+				15A32187260E03E3009D07EB /* KeyReset.c in Sources */,
+				15A3219A260E03E3009D07EB /* TID.c in Sources */,
+				15A3218C260E03E3009D07EB /* CommitAcceptForGroup.c in Sources */,
+				15A321B2260E03E3009D07EB /* INTEGER.c in Sources */,
+				15A321A8260E03E3009D07EB /* OwnKeysRequester.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		15A3205A260E0345009D07EB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				15A321EF260E03E4009D07EB /* per_encoder.c in Sources */,
+				15A321EC260E03E4009D07EB /* xer_decoder.c in Sources */,
+				15A321F9260E03E4009D07EB /* ReceiverRating.c in Sources */,
+				15A321EB260E03E4009D07EB /* NativeInteger.c in Sources */,
+				15A321EA260E03E4009D07EB /* xer_encoder.c in Sources */,
+				15A321FE260E03E4009D07EB /* Rollback.c in Sources */,
+				15A321EE260E03E4009D07EB /* constr_SEQUENCE.c in Sources */,
+				15A321C3260E03E4009D07EB /* constr_SET_OF.c in Sources */,
+				15A321F7260E03E4009D07EB /* Identity.c in Sources */,
+				15A321F4260E03E4009D07EB /* GroupKeysUpdate.c in Sources */,
+				15A321CB260E03E4009D07EB /* OwnKeysOfferer.c in Sources */,
+				15A321D5260E03E4009D07EB /* Beacon.c in Sources */,
+				15A321C4260E03E4009D07EB /* ber_tlv_tag.c in Sources */,
+				15A321E6260E03E4009D07EB /* GroupTrustThisKey.c in Sources */,
+				15A321CA260E03E4009D07EB /* PrintableString.c in Sources */,
+				15A321DE260E03E4009D07EB /* CommitReject.c in Sources */,
+				15A321F1260E03E4009D07EB /* CommitAccept.c in Sources */,
+				15A321CF260E03E4009D07EB /* NegotiationRequestGrouped.c in Sources */,
+				15A321C7260E03E4009D07EB /* GroupKeysForNewMember.c in Sources */,
+				15A321C2260E03E4009D07EB /* ber_tlv_length.c in Sources */,
+				15A321E3260E03E4009D07EB /* Command.c in Sources */,
+				15A321C6260E03E4009D07EB /* constr_CHOICE.c in Sources */,
+				15A321E7260E03E4009D07EB /* Hex.c in Sources */,
+				15A321CC260E03E4009D07EB /* IdentityList.c in Sources */,
+				15A321C0260E03E4009D07EB /* ElectGroupKeyResetLeader.c in Sources */,
+				15A321E8260E03E4009D07EB /* Distribution.c in Sources */,
+				15A321FC260E03E4009D07EB /* PString.c in Sources */,
+				15A32062260E0345009D07EB /* pEpASN1_iOS.m in Sources */,
+				15A321D1260E03E4009D07EB /* asn_codecs_prim.c in Sources */,
+				15A321C5260E03E4009D07EB /* CommitAcceptRequester.c in Sources */,
+				15A321D2260E03E4009D07EB /* Commands.c in Sources */,
+				15A321FD260E03E4009D07EB /* UTF8String.c in Sources */,
+				15A321D7260E03E4009D07EB /* CommitAcceptOfferer.c in Sources */,
+				15A321DD260E03E4009D07EB /* Sync.c in Sources */,
+				15A321C9260E03E4009D07EB /* NegotiationOpen.c in Sources */,
+				15A321D3260E03E4009D07EB /* InitUnledGroupKeyReset.c in Sources */,
+				15A321E2260E03E4009D07EB /* KeySync.c in Sources */,
+				15A321ED260E03E4009D07EB /* pdu_collection.c in Sources */,
+				15A321F6260E03E4009D07EB /* xer_support.c in Sources */,
+				15A321F8260E03E4009D07EB /* per_support.c in Sources */,
+				15A321D4260E03E4009D07EB /* NativeEnumerated.c in Sources */,
+				15A321D6260E03E4009D07EB /* BIT_STRING.c in Sources */,
+				15A321E4260E03E4009D07EB /* Version.c in Sources */,
+				15A321E5260E03E4009D07EB /* BOOLEAN.c in Sources */,
+				15A321DF260E03E4009D07EB /* Rating.c in Sources */,
+				15A321FA260E03E4009D07EB /* constraints.c in Sources */,
+				15A321F0260E03E4009D07EB /* ISO639-1.c in Sources */,
+				15A321D8260E03E4009D07EB /* constr_TYPE.c in Sources */,
+				15A321F2260E03E4009D07EB /* Hash.c in Sources */,
+				15A321F5260E03E4009D07EB /* GroupKeysAndClose.c in Sources */,
+				15A321FB260E03E4009D07EB /* NegotiationRequest.c in Sources */,
+				15A321DA260E03E4009D07EB /* per_opentype.c in Sources */,
+				15A321DC260E03E4009D07EB /* SynchronizeGroupKeys.c in Sources */,
+				15A32200260E03E4009D07EB /* GroupHandshake.c in Sources */,
+				15A321E1260E03E4009D07EB /* der_encoder.c in Sources */,
+				15A321FF260E03E4009D07EB /* constr_SEQUENCE_OF.c in Sources */,
+				15A321D9260E03E4009D07EB /* per_decoder.c in Sources */,
+				15A321CE260E03E4009D07EB /* ber_decoder.c in Sources */,
+				15A321E0260E03E4009D07EB /* asn_SEQUENCE_OF.c in Sources */,
+				15A321D0260E03E4009D07EB /* OCTET_STRING.c in Sources */,
+				15A321C1260E03E4009D07EB /* asn_SET_OF.c in Sources */,
+				15A321C8260E03E4009D07EB /* KeyReset.c in Sources */,
+				15A321DB260E03E4009D07EB /* TID.c in Sources */,
+				15A321CD260E03E4009D07EB /* CommitAcceptForGroup.c in Sources */,
+				15A321F3260E03E4009D07EB /* INTEGER.c in Sources */,
+				15A321E9260E03E4009D07EB /* OwnKeysRequester.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		15A32025260E02AA009D07EB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		15A32026260E02AA009D07EB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		15A32055260E0330009D07EB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				EXECUTABLE_PREFIX = lib;
+				MACOSX_DEPLOYMENT_TARGET = "${inherited}";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		15A32056260E0330009D07EB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				EXECUTABLE_PREFIX = lib;
+				MACOSX_DEPLOYMENT_TARGET = "${inherited}";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		15A32065260E0345009D07EB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		15A32066260E0345009D07EB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		15A32019260E02AA009D07EB /* Build configuration list for PBXProject "pEpASN1" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				15A32025260E02AA009D07EB /* Debug */,
+				15A32026260E02AA009D07EB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		15A32057260E0330009D07EB /* Build configuration list for PBXNativeTarget "pEpASN1_macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				15A32055260E0330009D07EB /* Debug */,
+				15A32056260E0330009D07EB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		15A32064260E0345009D07EB /* Build configuration list for PBXNativeTarget "pEpASN1_iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				15A32065260E0345009D07EB /* Debug */,
+				15A32066260E0345009D07EB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 15A32016260E02AA009D07EB /* Project object */;
+}
