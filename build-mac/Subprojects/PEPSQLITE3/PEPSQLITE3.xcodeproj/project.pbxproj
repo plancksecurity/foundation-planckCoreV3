@@ -1,0 +1,485 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		15A326372612055F009D07EB /* PEPSQLITE3_iOS.m in Sources */ = {isa = PBXBuildFile; fileRef = 15A326362612055F009D07EB /* PEPSQLITE3_iOS.m */; };
+		15A326382612055F009D07EB /* PEPSQLITE3_iOS.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 15A326352612055F009D07EB /* PEPSQLITE3_iOS.h */; };
+		15A32656261205E7009D07EB /* PEPSQLITE3_macOS.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32655261205E7009D07EB /* PEPSQLITE3_macOS.h */; };
+		15A32658261205E7009D07EB /* PEPSQLITE3_macOS.m in Sources */ = {isa = PBXBuildFile; fileRef = 15A32657261205E7009D07EB /* PEPSQLITE3_macOS.m */; };
+		15A326722612063B009D07EB /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A326282611F6D3009D07EB /* sqlite3.c */; };
+		15A3267C2612065A009D07EB /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A326292611F6D3009D07EB /* sqlite3.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3268426120671009D07EB /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A326292611F6D3009D07EB /* sqlite3.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A326C626120858009D07EB /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A326282611F6D3009D07EB /* sqlite3.c */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		15A326312612055F009D07EB /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "include/$(PRODUCT_NAME)";
+			dstSubfolderSpec = 16;
+			files = (
+				15A326382612055F009D07EB /* PEPSQLITE3_iOS.h in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		15A3260B2611F646009D07EB /* PEPSQLITE3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PEPSQLITE3.h; sourceTree = "<group>"; };
+		15A3260C2611F646009D07EB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		15A326282611F6D3009D07EB /* sqlite3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sqlite3.c; path = ../../../../../../sqlite/sqlite3.c; sourceTree = "<group>"; };
+		15A326292611F6D3009D07EB /* sqlite3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sqlite3.h; path = ../../../../../../sqlite/sqlite3.h; sourceTree = "<group>"; };
+		15A326332612055F009D07EB /* libPEPSQLITE3_iOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPEPSQLITE3_iOS.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		15A326352612055F009D07EB /* PEPSQLITE3_iOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PEPSQLITE3_iOS.h; sourceTree = "<group>"; };
+		15A326362612055F009D07EB /* PEPSQLITE3_iOS.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PEPSQLITE3_iOS.m; sourceTree = "<group>"; };
+		15A32653261205E7009D07EB /* libPEPSQLITE3_macOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPEPSQLITE3_macOS.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		15A32655261205E7009D07EB /* PEPSQLITE3_macOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PEPSQLITE3_macOS.h; sourceTree = "<group>"; };
+		15A32657261205E7009D07EB /* PEPSQLITE3_macOS.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PEPSQLITE3_macOS.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		15A326302612055F009D07EB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		15A32651261205E7009D07EB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		15A325FE2611F646009D07EB = {
+			isa = PBXGroup;
+			children = (
+				15A3260A2611F646009D07EB /* PEPSQLITE3 */,
+				15A326342612055F009D07EB /* PEPSQLITE3_iOS */,
+				15A32654261205E7009D07EB /* PEPSQLITE3_macOS */,
+				15A326092611F646009D07EB /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		15A326092611F646009D07EB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				15A326332612055F009D07EB /* libPEPSQLITE3_iOS.a */,
+				15A32653261205E7009D07EB /* libPEPSQLITE3_macOS.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		15A3260A2611F646009D07EB /* PEPSQLITE3 */ = {
+			isa = PBXGroup;
+			children = (
+				15A326272611F6BC009D07EB /* src */,
+				15A3260B2611F646009D07EB /* PEPSQLITE3.h */,
+				15A3260C2611F646009D07EB /* Info.plist */,
+			);
+			path = PEPSQLITE3;
+			sourceTree = "<group>";
+		};
+		15A326272611F6BC009D07EB /* src */ = {
+			isa = PBXGroup;
+			children = (
+				15A326292611F6D3009D07EB /* sqlite3.h */,
+				15A326282611F6D3009D07EB /* sqlite3.c */,
+			);
+			path = src;
+			sourceTree = "<group>";
+		};
+		15A326342612055F009D07EB /* PEPSQLITE3_iOS */ = {
+			isa = PBXGroup;
+			children = (
+				15A326352612055F009D07EB /* PEPSQLITE3_iOS.h */,
+				15A326362612055F009D07EB /* PEPSQLITE3_iOS.m */,
+			);
+			path = PEPSQLITE3_iOS;
+			sourceTree = "<group>";
+		};
+		15A32654261205E7009D07EB /* PEPSQLITE3_macOS */ = {
+			isa = PBXGroup;
+			children = (
+				15A32655261205E7009D07EB /* PEPSQLITE3_macOS.h */,
+				15A32657261205E7009D07EB /* PEPSQLITE3_macOS.m */,
+			);
+			path = PEPSQLITE3_macOS;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		15A3264F261205E7009D07EB /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				15A3267C2612065A009D07EB /* sqlite3.h in Headers */,
+				15A32656261205E7009D07EB /* PEPSQLITE3_macOS.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		15A326812612066D009D07EB /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				15A3268426120671009D07EB /* sqlite3.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		15A326322612055F009D07EB /* PEPSQLITE3_iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 15A326392612055F009D07EB /* Build configuration list for PBXNativeTarget "PEPSQLITE3_iOS" */;
+			buildPhases = (
+				15A326812612066D009D07EB /* Headers */,
+				15A3262F2612055F009D07EB /* Sources */,
+				15A326302612055F009D07EB /* Frameworks */,
+				15A326312612055F009D07EB /* CopyFiles */,
+				15A3268926120716009D07EB /* Copy Artefacts & Headers to Custom Build Dir */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PEPSQLITE3_iOS;
+			productName = PEPSQLITE3_iOS;
+			productReference = 15A326332612055F009D07EB /* libPEPSQLITE3_iOS.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		15A32652261205E7009D07EB /* PEPSQLITE3_macOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 15A32659261205E7009D07EB /* Build configuration list for PBXNativeTarget "PEPSQLITE3_macOS" */;
+			buildPhases = (
+				15A3264F261205E7009D07EB /* Headers */,
+				15A32650261205E7009D07EB /* Sources */,
+				15A32651261205E7009D07EB /* Frameworks */,
+				15A3268A26120757009D07EB /* Copy Artefacts & Headers to Custom Build Dir */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PEPSQLITE3_macOS;
+			productName = PEPSQLITE3_macOS;
+			productReference = 15A32653261205E7009D07EB /* libPEPSQLITE3_macOS.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		15A325FF2611F646009D07EB /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1240;
+				TargetAttributes = {
+					15A326322612055F009D07EB = {
+						CreatedOnToolsVersion = 12.4;
+					};
+					15A32652261205E7009D07EB = {
+						CreatedOnToolsVersion = 12.4;
+					};
+				};
+			};
+			buildConfigurationList = 15A326022611F646009D07EB /* Build configuration list for PBXProject "PEPSQLITE3" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 15A325FE2611F646009D07EB;
+			productRefGroup = 15A326092611F646009D07EB /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				15A326322612055F009D07EB /* PEPSQLITE3_iOS */,
+				15A32652261205E7009D07EB /* PEPSQLITE3_macOS */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		15A3268926120716009D07EB /* Copy Artefacts & Headers to Custom Build Dir */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Artefacts & Headers to Custom Build Dir";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nCUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include\"\nmkdir -p ${CUSTOM_INCLUDE_DIR}\ncp -R \"${TARGET_BUILD_DIR}\"/usr/local/include/* ${CUSTOM_INCLUDE_DIR}\ncp  \"${TARGET_BUILD_DIR}/libPEPSQLITE3_iOS.a\" ${CUSTOM_BUILD_DIR}\n\n";
+			showEnvVarsInLog = 0;
+		};
+		15A3268A26120757009D07EB /* Copy Artefacts & Headers to Custom Build Dir */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Artefacts & Headers to Custom Build Dir";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nCUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include\"\nmkdir -p ${CUSTOM_INCLUDE_DIR}\ncp -R \"${TARGET_BUILD_DIR}\"/usr/local/include/* ${CUSTOM_INCLUDE_DIR}\ncp  \"${TARGET_BUILD_DIR}/libPEPSQLITE3_macOS.a\" ${CUSTOM_BUILD_DIR}\necho \"BUFF: debug\"\necho \"{CUSTOM_BUILD_DIR}: ${CUSTOM_BUILD_DIR}\"\necho \"{TARGET_BUILD_DIR}: ${TARGET_BUILD_DIR}\"\n\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		15A3262F2612055F009D07EB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				15A326372612055F009D07EB /* PEPSQLITE3_iOS.m in Sources */,
+				15A326722612063B009D07EB /* sqlite3.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		15A32650261205E7009D07EB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				15A32658261205E7009D07EB /* PEPSQLITE3_macOS.m in Sources */,
+				15A326C626120858009D07EB /* sqlite3.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		15A3260E2611F646009D07EB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				TARGETED_DEVICE_FAMILY = "";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		15A3260F2611F646009D07EB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				TARGETED_DEVICE_FAMILY = "";
+				VALIDATE_PRODUCT = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		15A3263A2612055F009D07EB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		15A3263B2612055F009D07EB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		15A3265A261205E7009D07EB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				EXECUTABLE_PREFIX = lib;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		15A3265B261205E7009D07EB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				EXECUTABLE_PREFIX = lib;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		15A326022611F646009D07EB /* Build configuration list for PBXProject "PEPSQLITE3" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				15A3260E2611F646009D07EB /* Debug */,
+				15A3260F2611F646009D07EB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		15A326392612055F009D07EB /* Build configuration list for PBXNativeTarget "PEPSQLITE3_iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				15A3263A2612055F009D07EB /* Debug */,
+				15A3263B2612055F009D07EB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		15A32659261205E7009D07EB /* Build configuration list for PBXNativeTarget "PEPSQLITE3_macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				15A3265A261205E7009D07EB /* Debug */,
+				15A3265B261205E7009D07EB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 15A325FF2611F646009D07EB /* Project object */;
+}
