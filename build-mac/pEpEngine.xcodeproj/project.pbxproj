@@ -103,6 +103,8 @@
 		159EF42922B6D3E900149C0C /* pgp_sequoia_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 159EF42622B6D3E900149C0C /* pgp_sequoia_internal.h */; };
 		15A3233E260E0D2A009D07EB /* libpEpASN1_iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15A322F7260E0B75009D07EB /* libpEpASN1_iOS.a */; };
 		15A32429260E1873009D07EB /* libpEpASN1_macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15A322F5260E0B75009D07EB /* libpEpASN1_macOS.a */; };
+		15A326E326120AB0009D07EB /* libPEPSQLITE3_iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15A3266426120618009D07EB /* libPEPSQLITE3_iOS.a */; };
+		15A326E826120AB6009D07EB /* libPEPSQLITE3_macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15A3266626120618009D07EB /* libPEPSQLITE3_macOS.a */; };
 		430BCC482015EE800077E998 /* pEp_string.h in Headers */ = {isa = PBXBuildFile; fileRef = 430BCC462015EE800077E998 /* pEp_string.h */; };
 		430BCC492015EE800077E998 /* pEp_string.c in Sources */ = {isa = PBXBuildFile; fileRef = 430BCC472015EE800077E998 /* pEp_string.c */; };
 		430D258B1C9ED75A00B94535 /* blacklist.c in Sources */ = {isa = PBXBuildFile; fileRef = 430D258A1C9ED75A00B94535 /* blacklist.c */; };
@@ -193,13 +195,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 15A3205D260E0345009D07EB;
 			remoteInfo = pEpASN1_iOS;
-		};
-		15A326202611F6B5009D07EB /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 15A3261C2611F6B5009D07EB /* PEPSQLITE3.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 15A326082611F646009D07EB;
-			remoteInfo = PEPSQLITE3;
 		};
 		15A3265F26120618009D07EB /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -399,6 +394,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				15A326E826120AB6009D07EB /* libPEPSQLITE3_macOS.a in Frameworks */,
 				15A32429260E1873009D07EB /* libpEpASN1_macOS.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -415,6 +411,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				15A326E326120AB0009D07EB /* libPEPSQLITE3_iOS.a in Frameworks */,
 				15A3233E260E0D2A009D07EB /* libpEpASN1_iOS.a in Frameworks */,
 				6400FB8B1B8CA1CF005221E3 /* libetpan-ios.a in Frameworks */,
 				1549180022B926700091B6D6 /* libgmp.a in Frameworks */,
@@ -468,7 +465,6 @@
 		15A3261D2611F6B5009D07EB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				15A326212611F6B5009D07EB /* PEPSQLITE3.framework */,
 				15A3266426120618009D07EB /* libPEPSQLITE3_iOS.a */,
 				15A3266626120618009D07EB /* libPEPSQLITE3_macOS.a */,
 			);
@@ -800,8 +796,8 @@
 			projectRoot = "";
 			targets = (
 				64796A3E1B455AA5004B1C24 /* pEpEngine */,
-				644297BE1BE11C65002BC73B /* pEpTrustWords */,
 				1552DB102577D4F100A92F71 /* pEpEngine_macOS */,
+				644297BE1BE11C65002BC73B /* pEpTrustWords */,
 				150845DE25F13CE700D46DA6 /* generate_code */,
 			);
 		};
@@ -820,13 +816,6 @@
 			fileType = archive.ar;
 			path = libpEpASN1_iOS.a;
 			remoteRef = 15A322F6260E0B75009D07EB /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		15A326212611F6B5009D07EB /* PEPSQLITE3.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = PEPSQLITE3.framework;
-			remoteRef = 15A326202611F6B5009D07EB /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		15A3266426120618009D07EB /* libPEPSQLITE3_iOS.a */ = {
@@ -1123,6 +1112,7 @@
 					"$(PROJECT_DIR)/../../sequoia4macos/build/include",
 					"$(PROJECT_DIR)/Subprojects/pEpASN1/build/include",
 					"$(PROJECT_DIR)/../../local/include",
+					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -1155,6 +1145,7 @@
 					"$(PROJECT_DIR)/../../sequoia4macos/build/include",
 					"$(PROJECT_DIR)/Subprojects/pEpASN1/build/include",
 					"$(PROJECT_DIR)/../../local/include",
+					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_FAST_MATH = YES;
@@ -1325,6 +1316,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/../../sequoia4ios/build/include",
 					"$(PROJECT_DIR)/Subprojects/pEpASN1/build/include",
+					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = "${inherited}";
 				LIBRARY_SEARCH_PATHS = (
@@ -1353,6 +1345,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/../../sequoia4ios/build/include",
 					"$(PROJECT_DIR)/Subprojects/pEpASN1/build/include",
+					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = "${inherited}";
 				LIBRARY_SEARCH_PATHS = (
