@@ -1055,6 +1055,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
+				OTHER_CFLAGS = "";
 				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../sequoia4macos/build/lib/libnettle.a ${PROJECT_DIR}/../../sequoia4macos/build/lib/libgmp.a ${PROJECT_DIR}/../../sequoia4macos/build/lib/libhogweed.a ${PROJECT_DIR}/../../sequoia4macos/build/lib/libsequoia_openpgp_ffi.a ${PROJECT_DIR}/../../local/lib/libetpan.a";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
@@ -1085,6 +1086,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_FAST_MATH = YES;
+				OTHER_CFLAGS = "";
 				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../sequoia4macos/build/lib/libnettle.a ${PROJECT_DIR}/../../sequoia4macos/build/lib/libgmp.a ${PROJECT_DIR}/../../sequoia4macos/build/lib/libhogweed.a ${PROJECT_DIR}/../../sequoia4macos/build/lib/libsequoia_openpgp_ffi.a ${PROJECT_DIR}/../../local/lib/libetpan.a";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
