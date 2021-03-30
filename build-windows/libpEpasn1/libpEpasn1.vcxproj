@@ -61,7 +61,7 @@
       <SubSystem>Windows</SubSystem>
     </Link>
     <PreBuildEvent>
-      <Command>IF EXIST ".\Debug\libpEpasn1.tlog\unsuccessfulbuild" CALL ..\generate_code.cmd</Command>
+      <Command>IF NOT EXIST "..\..\..\pEp" CALL ..\generate_code.cmd</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -81,7 +81,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PreBuildEvent>
-      <Command>IF EXIST ".\Release\libpEpasn1.tlog\unsuccessfulbuild" CALL ..\generate_code.cmd</Command>
+      <Command>IF NOT EXIST "..\..\..\pEp" CALL ..\generate_code.cmd</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -98,4 +98,7 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
+  <Target Name="CustomClean" BeforeTargets="Clean">
+    <RemoveDir Directories="..\..\..\pEp" />
+  </Target>
 </Project>

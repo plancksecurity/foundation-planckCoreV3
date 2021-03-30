@@ -20,6 +20,7 @@ MOVE system.db "%ProgramData%\pEp\system.db"
 CD ..\sync
 
 :: Make sure YML2 is installed
+PY -m pip install --upgrade pip
 PY -m pip install wheel
 PY -m pip install yml2
 
@@ -72,10 +73,10 @@ IF %ERRORLEVEL% NEQ 0 GOTO end
 DEL *-sample.c
 
 CD %engine_directory%\..
-RD /S/Q pEp
 MKDIR pEp
 XCOPY pEpEngine\src\*.h pEp\ /Y/F/I
-
+XCOPY libpEpAdapter\*.hh pEp\ /Y/F/I
+XCOPY libpEpAdapter\*.hxx pEp\ /Y/F/I
 
 :end
 
