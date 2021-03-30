@@ -1,7 +1,8 @@
+#ifndef GROUP_H
+#define GROUP_H
+
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
-
-#pragma once
 
 #include "message_api.h"
 #include "../asn.1/Distribution.h"
@@ -617,4 +618,6 @@ PEP_STATUS is_active_group_member(PEP_SESSION session, pEp_identity* group_ident
                                   pEp_identity* member, bool* is_active);
 #ifdef __cplusplus
 }
+#endif
+
 #endif
