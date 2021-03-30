@@ -1,5 +1,4 @@
 // This file is under GNU General Public License 3.0
-// This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
 #include "group.h"
@@ -30,10 +29,19 @@ static PEP_STATUS _build_managed_group_message_payload(PEP_SESSION session,
                                                        char** data, size_t* size,
                                                        ManagedGroup_PR managed_group_msg_type
 ) {
+
+    PEP_STATUS status = PEP_STATUS_OK;
+    char *_data = NULL;
+    size_t _size = 0;
+
     // Ok, let's get the payload set up
     Distribution_t *outdist = (Distribution_t *) calloc(1, sizeof(Distribution_t));
+
     if (!outdist)
         return PEP_OUT_OF_MEMORY;
+
+    *data = NULL;
+    *size = 0;
 
     outdist->present = Distribution_PR_managedgroup;
     outdist->choice.managedgroup.present = managed_group_msg_type;
@@ -55,29 +63,34 @@ static PEP_STATUS _build_managed_group_message_payload(PEP_SESSION session,
             other_identity_Ident = &(outdist->choice.managedgroup.choice.groupAdopted.member);
             break;
         default:
-            return PEP_ILLEGAL_VALUE;
+            status = PEP_ILLEGAL_VALUE;
+            goto pEp_error;
     }
     // We don't free anything here because PEP_OUT_OF_MEMORY is always fatal up the stack
     if (!Identity_from_Struct(group_identity, group_identity_Ident))
-        return PEP_OUT_OF_MEMORY;
+        goto enomem;
     if (!Identity_from_Struct(manager, other_identity_Ident))
-        return PEP_OUT_OF_MEMORY;
+        goto enomem;
 
     // Man, I hope this is it.
-    char *_data = NULL;
-    size_t _size = 0;
-    PEP_STATUS status = encode_Distribution_message(outdist, &_data, &_size);
+    status = encode_Distribution_message(outdist, &_data, &_size);
 
-    if (status != PEP_STATUS_OK) {
-        free(_data);
-        _size = 0;
-        goto pEp_free;
-    }
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
 
     *data = _data;
     *size = _size;
 
-pEp_free:
+    free(outdist);
+
+    return status;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+pEp_error:
+    free(_data);
+    free(outdist);
     return status;
 }
 
@@ -144,9 +157,11 @@ static PEP_STATUS _create_and_send_managed_group_message(PEP_SESSION session,
 
     free_message(msg);
     msg = NULL;
+    return status;
 
 pEp_error:
-    free(msg);
+    free_message(msg);
+    free_message(enc_msg);
     return status;
 }
 
@@ -160,6 +175,15 @@ pEp_error:
 static PEP_STATUS _send_managed_group_message_to_list(PEP_SESSION session,
                                                       pEp_group* group,
                                                       ManagedGroup_PR message_type) {
+
+    char *_data = NULL;
+    size_t _size = 0;
+
+    char* key_material_priv = NULL;
+    size_t key_material_size = 0;
+
+    bloblist_t* keycopyblob = NULL;
+
     if (!session->messageToSend)
         return PEP_SEND_FUNCTION_NOT_REGISTERED;
 
@@ -176,8 +200,6 @@ static PEP_STATUS _send_managed_group_message_to_list(PEP_SESSION session,
     if (!is_me(session, group->manager))
         return PEP_ILLEGAL_VALUE;
 
-    char *_data = NULL;
-    size_t _size = 0;
 
     // Ok, let's get the payload set up, because we can duplicate this for each message.
     PEP_STATUS status = _build_managed_group_message_payload(session, group->group_identity,
@@ -185,28 +207,27 @@ static PEP_STATUS _send_managed_group_message_to_list(PEP_SESSION session,
                                                              message_type);
 
     if (status != PEP_STATUS_OK)
-        return status;
+        goto pEp_error;
 
     // Let's also get the private key for the group we want to distribute and set up a bloblist element to
     // dup
-    char* key_material_priv = NULL;
-    size_t key_material_size = 0;
 
     status = export_secret_key(session, group->group_identity->fpr, &key_material_priv, &key_material_size);
     if (status != PEP_STATUS_OK)
-        return status;
-    if (key_material_size == 0 || !key_material_priv)
-        return PEP_UNKNOWN_ERROR;
+        goto pEp_error;
+    if (key_material_size == 0 || !key_material_priv) {
+        status = PEP_UNKNOWN_ERROR;
+        goto pEp_error;
+    }
 
-    bloblist_t* keycopyblob = new_bloblist(key_material_priv, key_material_size,
-                                           "application/pgp-keys",
-                                           "file://pEpkey_group_priv.asc");
+    keycopyblob = new_bloblist(key_material_priv, key_material_size,
+                               "application/pgp-keys",
+                               "file://pEpkey_group_priv.asc");
 
     // Ok, for every member in the member list, send away.
     // (We'll copy in for now. It's small and quick.)
     member_list* curr_member = NULL;
 
-    message* msg = NULL;
 
     for (curr_member = group->members; curr_member && curr_member->member && curr_member->member->ident; curr_member = curr_member->next) {
         pEp_identity* recip = curr_member->member->ident; // This will be duped in base_prepare_message
@@ -220,7 +241,7 @@ static PEP_STATUS _send_managed_group_message_to_list(PEP_SESSION session,
         // Copy the data to send in as an argument
         char* data_copy = (char*)malloc(_size);
         if (!data_copy)
-            return PEP_OUT_OF_MEMORY;
+            goto enomem;
         memcpy(data_copy, _data, _size);
 
         bloblist_t* key_attachment = bloblist_dup(keycopyblob);
@@ -230,12 +251,16 @@ static PEP_STATUS _send_managed_group_message_to_list(PEP_SESSION session,
 
         if (status != PEP_STATUS_OK)
             goto pEp_error;
-
-        free_message(msg);
-        msg = NULL;
     }
 
+    return status;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
 pEp_error:
+    free(key_material_priv);
+    free(_data);
     return status;
 }
 
@@ -370,10 +395,13 @@ static PEP_STATUS _set_group_as_disabled(PEP_SESSION session, pEp_identity* grou
  */
 static PEP_STATUS _retrieve_own_membership_info_for_group(PEP_SESSION session, pEp_identity* group_identity,
                                                           member_list** memberlist) {
+    PEP_STATUS status = PEP_STATUS_OK;
     int result = 0;
 
     member_list* _mbr_list_head = NULL;
     member_list** _mbr_list_next = &_mbr_list_head;
+    pEp_identity* ident = NULL;
+    pEp_member* member = NULL;
 
     sqlite3_reset(session->retrieve_own_membership_info_for_group);
 
@@ -383,39 +411,55 @@ static PEP_STATUS _retrieve_own_membership_info_for_group(PEP_SESSION session, p
                       SQLITE_STATIC);
 
     while ((result = sqlite3_step(session->retrieve_own_membership_info_for_group)) == SQLITE_ROW) {
-        pEp_identity *ident = new_identity((const char *) sqlite3_column_text(session->retrieve_own_membership_info_for_group, 1),
-                                           NULL,(const char *) sqlite3_column_text(session->retrieve_own_membership_info_for_group, 0),
-                                           NULL);
-        assert(ident);
+            ident = new_identity((const char *) sqlite3_column_text(session->retrieve_own_membership_info_for_group, 1),
+                               NULL,(const char *) sqlite3_column_text(session->retrieve_own_membership_info_for_group, 0),
+                               NULL);
 
-        // FIXME: better exit path, this is just to get it down
-        if (ident == NULL) {
-            sqlite3_reset(session->retrieve_own_membership_info_for_group);
-            return PEP_OUT_OF_MEMORY;
-        }
-        pEp_member* member = new_member(ident);
-        if (!member) {
-            sqlite3_reset(session->retrieve_own_membership_info_for_group);
-            return PEP_OUT_OF_MEMORY;
-        }
+        if (ident == NULL)
+            goto enomem;
+
+        member = new_member(ident);
+        ident = NULL; // prevent double-free on error
+
+        if (!member)
+            goto enomem;
+
         member->joined = sqlite3_column_int(session->retrieve_own_membership_info_for_group, 2);
 
         *_mbr_list_next = new_memberlist(member);
-        if (!(*_mbr_list_next)) {
-            sqlite3_reset(session->retrieve_own_membership_info_for_group);
-            return PEP_OUT_OF_MEMORY;
-        }
+        member = NULL; // prevent double-free on error
+
+        if (!(*_mbr_list_next))
+            goto enomem;
+
         _mbr_list_next = &((*_mbr_list_next)->next);
+    }
+
+    if (result != SQLITE_DONE) {
+        status = PEP_CANNOT_DISABLE_GROUP;
+        goto pEp_error;
     }
 
     sqlite3_reset(session->retrieve_own_membership_info_for_group);
 
-    if (result != SQLITE_DONE)
-        return PEP_CANNOT_DISABLE_GROUP;
-
     *memberlist = _mbr_list_head;
     return PEP_STATUS_OK;
 
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+pEp_error:
+    sqlite3_reset(session->retrieve_own_membership_info_for_group);
+
+    if (ident) // Only true if problem allocating member
+        free_identity(ident);
+
+    if (member) // Only true if problem allocating memberlist node
+        free_member(member);
+
+    free_memberlist(_mbr_list_head);
+
+    return status;
 }
 
 /******************************************************************************************
@@ -428,6 +472,9 @@ static PEP_STATUS _retrieve_own_membership_info_for_group(PEP_SESSION session, p
  */
 static PEP_STATUS is_invited_group_member(PEP_SESSION session, pEp_identity* group_identity,
                                           pEp_identity* member, bool* is_member) {
+
+    PEP_STATUS status = PEP_STATUS_OK;
+
     if (!session || !is_member)
         return PEP_ILLEGAL_VALUE;
 
@@ -449,13 +496,13 @@ static PEP_STATUS is_invited_group_member(PEP_SESSION session, pEp_identity* gro
     int result = sqlite3_step(session->is_invited_group_member);
 
     if (result != SQLITE_ROW)
-        return PEP_UNKNOWN_DB_ERROR;
+        status = PEP_UNKNOWN_DB_ERROR;
     else
         *is_member = sqlite3_column_int(session->is_invited_group_member, 0);
 
     sqlite3_reset(session->is_invited_group_member);
 
-    return PEP_STATUS_OK;
+    return status;
 }
 
 /******************************************************************************************
@@ -521,6 +568,8 @@ PEP_STATUS get_group_manager(PEP_SESSION session,
     sqlite3_bind_text(session->get_group_manager, 2, group_identity->address, -1,
                       SQLITE_STATIC);
 
+    *manager = NULL;
+
     int result = sqlite3_step(session->get_group_manager);
 
     if (result != SQLITE_ROW)
@@ -552,10 +601,9 @@ PEP_STATUS is_group_active(PEP_SESSION session, pEp_identity* group_identity, bo
     int result = sqlite3_step(session->is_group_active);
 
     switch (result) {
-        case SQLITE_ROW: {
+        case SQLITE_ROW:
             *active = (sqlite3_column_int(session->is_group_active, 0) != 0);
             break;
-        }
         default:
             status = PEP_UNKNOWN_DB_ERROR;
     }
@@ -586,6 +634,7 @@ PEP_STATUS is_group_mine(PEP_SESSION session, pEp_identity* group_identity, bool
 
     return PEP_STATUS_OK;
 }
+
 // group_identity MUST have been myself'd.
 // Called only from create_group and PRESUMES group, group->identity (user_id and address),
 // group->manager (user_id and address) are there AND VALIDATED. This is JUST the DB call factored out.
@@ -672,10 +721,9 @@ PEP_STATUS get_own_membership_status(PEP_SESSION session,
     int result = sqlite3_step(session->get_own_membership_status);
 
     switch (result) {
-        case SQLITE_ROW: {
+        case SQLITE_ROW:
             *have_joined = sqlite3_column_int(session->get_own_membership_status, 0);
             break;
-        }
         default:
             status = PEP_NO_MEMBERSHIP_STATUS_FOUND;
     }
@@ -691,6 +739,21 @@ PEP_STATUS retrieve_own_membership_info_for_group_and_identity(PEP_SESSION sessi
 
     PEP_STATUS status = PEP_STATUS_OK;
 
+    if (!group)
+        return PEP_ILLEGAL_VALUE;
+
+    if (!own_identity || EMPTYSTR(own_identity->user_id) || EMPTYSTR(own_identity->address))
+        return PEP_ILLEGAL_VALUE;
+
+    const pEp_identity* group_identity = group->group_identity;
+
+    if (!group_identity || EMPTYSTR(group_identity->user_id) || EMPTYSTR(group_identity->address))
+        return PEP_ILLEGAL_VALUE;
+
+    pEp_identity* my_member_ident = NULL;
+    pEp_member* me_mem = NULL;
+    member_list* memberlist = NULL;
+    
     sqlite3_reset(session->retrieve_own_membership_info_for_group_and_ident);
     sqlite3_bind_text(session->retrieve_own_membership_info_for_group_and_ident, 1, group->group_identity->user_id, -1,
                       SQLITE_STATIC);
@@ -703,9 +766,6 @@ PEP_STATUS retrieve_own_membership_info_for_group_and_identity(PEP_SESSION sessi
 
     int result = sqlite3_step(session->retrieve_own_membership_info_for_group_and_ident);
 
-    pEp_identity* my_member_ident = NULL;
-    pEp_member* me_mem = NULL;
-    member_list* memberlist = NULL;
 
     switch (result) {
         case SQLITE_ROW: {
@@ -1893,6 +1953,14 @@ DYNAMIC_API PEP_STATUS group_dissolve(
         pEp_identity *group_identity,
         pEp_identity *manager
 ) {
+
+    if (!session || !group_identity || !manager)
+        return PEP_ILLEGAL_VALUE;
+
+    pEp_identity* stored_manager = NULL;
+    member_list* list = NULL;
+    pEp_group* group = NULL;
+
     bool exists = false;
     PEP_STATUS status = exists_group(session, group_identity, &exists);
     if (status != PEP_STATUS_OK)
@@ -1902,7 +1970,6 @@ DYNAMIC_API PEP_STATUS group_dissolve(
         return PEP_GROUP_NOT_FOUND;
 
     // Ok, do we have the right manager? If not, don't do it.
-    pEp_identity* stored_manager = NULL;
     status = get_group_manager(session, group_identity, &stored_manager);
     if (status != PEP_STATUS_OK)
         return status;
@@ -1910,54 +1977,54 @@ DYNAMIC_API PEP_STATUS group_dissolve(
     if (!stored_manager)
         return PEP_OUT_OF_MEMORY;
 
-    if (!stored_manager->user_id || !stored_manager->address)
-        return PEP_UNKNOWN_DB_ERROR;
+    if (!stored_manager->user_id || !stored_manager->address) {
+        status = PEP_UNKNOWN_DB_ERROR;
+        goto pEp_free;
+    }
 
     if ((strcmp(stored_manager->user_id, manager->user_id) != 0) ||
         (strcmp(stored_manager->address, manager->address) != 0)) {
-        return PEP_CANNOT_DISABLE_GROUP;
+        status = PEP_CANNOT_DISABLE_GROUP;
+        goto pEp_free;
     }
 
     status = _set_group_as_disabled(session, group_identity);
     if (status != PEP_STATUS_OK)
-        return status;
+        goto pEp_free;
 
     // If I'm the manager, then I have to send out the dissolution stuff and deactivate
     if (is_me(session, manager)) {
         status = revoke_key(session, group_identity->fpr, NULL);
         if (status != PEP_STATUS_OK)
-            return status;
+            goto pEp_free;
 
         // You'd better get all the group info here
-        member_list* list = NULL;
-
         status = retrieve_active_member_list(session, group_identity, &list);
         if (status != PEP_STATUS_OK)
             return status;
 
-        pEp_group* group = new_group(group_identity, manager, list);
-        if (!list)
-            return PEP_OUT_OF_MEMORY;
+        group = new_group(group_identity, manager, list);
+        if (!group) {
+            status = PEP_OUT_OF_MEMORY;
+            goto pEp_free;
+        }
 
         status = _send_managed_group_message_to_list(session, group, ManagedGroup_PR_groupDissolve);
         if (status != PEP_STATUS_OK)
-            return status; // fixme
+            goto pEp_free; // fixme ??
 
         // deactivate members
         member_list* memb = group->members;
 
         while (memb && memb->member && memb->member->ident) {
             pEp_identity* memb_ident = memb->member->ident;
-            if (EMPTYSTR(memb_ident->user_id) || EMPTYSTR(memb_ident->address))
-                return PEP_UNKNOWN_ERROR;
+            if (EMPTYSTR(memb_ident->user_id) || EMPTYSTR(memb_ident->address)) {
+                status = PEP_UNKNOWN_ERROR;
+                goto pEp_free;
+            }
             status = set_membership_status(session, group_identity, memb->member->ident, false);
             memb = memb->next;
         }
-        // We don't own the group_ident or manager that comes in here, so we need to set them to NULL.
-        group->group_identity = NULL;
-        group->manager = NULL;
-
-        free_group(group);
     }
     else {
         // I'm not the manager. So I need to find the identities I have that
@@ -1965,13 +2032,13 @@ DYNAMIC_API PEP_STATUS group_dissolve(
         member_list* my_group_idents = NULL;
         status = _set_group_as_disabled(session, group_identity);
         if (status != PEP_STATUS_OK)
-            return status;
+            goto pEp_free;
 
         // Ok, group is now not usable. Let's get our membership straight.
         status = _retrieve_own_membership_info_for_group(session, group_identity, &my_group_idents);
 
         if (status != PEP_STATUS_OK)
-            return status;
+            goto pEp_free;
 
         member_list* curr_member = my_group_idents;
 
@@ -1983,13 +2050,25 @@ DYNAMIC_API PEP_STATUS group_dissolve(
                 break; // er... this should probably be an error, but given how we do lists, it's acceptable
             status = _set_leave_group_status(session, group_identity, ident);
             if (status != PEP_STATUS_OK)
-                return status;
+                goto pEp_free;
 
             curr_member = curr_member->next;
         }
     }
 
+pEp_free:
+    free_identity(stored_manager);
+    free_memberlist(list);
+
+    if (group) {
+        // We don't own the group_ident or manager that comes in here, so we need to set them to NULL.
+        group->group_identity = NULL;
+        group->manager = NULL;
+        group->members = NULL; // already freed
+        free_group(group);
+    }
     return status;
+
 }
 
 DYNAMIC_API PEP_STATUS group_invite_member(
@@ -2002,11 +2081,18 @@ DYNAMIC_API PEP_STATUS group_invite_member(
 
     PEP_STATUS status = PEP_STATUS_OK;
     pEp_identity* manager = NULL;
+    char* data = NULL;
+    size_t size = 0;
+    char* key_material_priv = NULL;
+    size_t key_material_size = 0;
+    bloblist_t* key_attachment = NULL;
+
+
     status = get_group_manager(session, group_identity, &manager);
     if (status != PEP_STATUS_OK)
         return status;
     if (!manager)
-        return PEP_OUT_OF_MEMORY; // ??
+        return PEP_UNKNOWN_ERROR;
 
     status = group_add_member(session, group_identity, group_member);
     if (status == PEP_STATUS_OK) {
@@ -2014,23 +2100,25 @@ DYNAMIC_API PEP_STATUS group_invite_member(
             status = add_own_membership_entry(session, group_identity, manager, group_member);
             if (status == PEP_STATUS_OK)
                 status = group_join(session, group_identity, group_member);
+            else {
+                status = PEP_UNKNOWN_ERROR;
+                goto pEp_free;
+            }
         }
         else {
-            pEp_identity* manager = NULL;
-            char* data = NULL;
-            size_t size = 0;
+            manager = NULL;
+            data = NULL;
 
             status = _build_managed_group_message_payload(session, group_identity,
                                                           manager, &data, &size,
                                                           ManagedGroup_PR_groupCreate);
 
             if (status != PEP_STATUS_OK)
-                return status;
+                goto pEp_free;
+
+            data = NULL; // avoid double-free
 
             // Let's also get the private key for the group we want to distribute
-            char* key_material_priv = NULL;
-            size_t key_material_size = 0;
-
             status = export_secret_key(session, group_identity->fpr, &key_material_priv, &key_material_size);
             if (status != PEP_STATUS_OK)
                 return status;
@@ -2041,11 +2129,19 @@ DYNAMIC_API PEP_STATUS group_invite_member(
                                                       "application/pgp-keys",
                                                       "file://pEpkey_group_priv.asc");
 
+            if (key_attachment == NULL) {
+                status = PEP_OUT_OF_MEMORY;
+                goto pEp_free;
+            }
+            key_material_priv = NULL; // belongs to attachment now
+
             PEP_rating recip_rating;
             status = identity_rating(session, group_member, &recip_rating);
             if (status == PEP_STATUS_OK) {
-                if (recip_rating < PEP_rating_reliable)
-                    return PEP_CANNOT_ADD_GROUP_MEMBER;
+                if (recip_rating < PEP_rating_reliable) {
+                    status = PEP_CANNOT_ADD_GROUP_MEMBER;
+                    goto pEp_free;
+                }
 
                 // encrypt and send this baby and get out
                 // FIXME: mem?
@@ -2054,6 +2150,15 @@ DYNAMIC_API PEP_STATUS group_invite_member(
             }
         }
     }
+
+pEp_free:
+    free_identity(manager);
+    free(data);
+    if (!key_attachment)
+        free(key_material_priv);
+    else
+        free_bloblist(key_attachment);
+
     return status;
 }
 
@@ -2063,6 +2168,9 @@ DYNAMIC_API PEP_STATUS group_remove_member(
         pEp_identity *group_member
 ) {
     bool exists = false;
+    pEp_identity* manager = NULL;
+    char* group_key_to_revoke = NULL;
+
     PEP_STATUS status = exists_group(session, group_identity, &exists);
     if (status != PEP_STATUS_OK)
         return status;
@@ -2081,24 +2189,27 @@ DYNAMIC_API PEP_STATUS group_remove_member(
     if (status != PEP_STATUS_OK)
         return status;
 
-    pEp_identity* manager = NULL;
-
     status = get_group_manager(session, group_identity, &manager);
 
     if (status != PEP_STATUS_OK)
-        return status;
+        goto pEp_free;
+    else if (!manager)
+        return PEP_UNKNOWN_ERROR; // nothing to deallocate at the moment
 
-    // We dup this because I'm not sure about ownership on the group identity.
-    // FIXME: maybe we shouldn't
-    char* group_key_to_revoke = strdup(group_identity->fpr);
-    if (!group_key_to_revoke)
-        return PEP_OUT_OF_MEMORY;
+    // We dup this because I'm not sure about ownership on the group identity fpr in key reset.
+    // FIXME: check this against key reset and revise if necessarily
+    group_key_to_revoke = strdup(group_identity->fpr);
+    if (!group_key_to_revoke) {
+        status = PEP_OUT_OF_MEMORY;
+        goto pEp_free;
+    }
 
     status = key_reset(session, group_key_to_revoke, group_identity);
 
+
+pEp_free:
     free(group_key_to_revoke);
     free_identity(manager);
-
     return status;
 }
 
@@ -2113,13 +2224,12 @@ DYNAMIC_API PEP_STATUS group_rating(
     if (!is_me(session, manager))
         return identity_rating(session, group_identity, rating);
 
-
     member_list* active_members = NULL;
 
     status = retrieve_active_member_list(session, group_identity, &active_members);
 
     if (status != PEP_STATUS_OK)
-        return status;
+        goto pEp_free;
 
     PEP_rating _rating = PEP_rating_fully_anonymous;
 
@@ -2127,17 +2237,21 @@ DYNAMIC_API PEP_STATUS group_rating(
         member_list* curr;
 
         for (curr = active_members; curr; curr = curr->next) {
-            if (!(curr->member) && curr->next != NULL)
-                return PEP_ILLEGAL_VALUE;
+            if (!(curr->member) && curr->next != NULL) {
+                status = PEP_ILLEGAL_VALUE;
+                goto pEp_free;
+            }
 
-            if (!(curr->member->ident))
-                return PEP_ILLEGAL_VALUE;
+            if (!(curr->member->ident)) {
+                status = PEP_ILLEGAL_VALUE;
+                goto pEp_free;
+            }
 
             PEP_rating tmp_rating = PEP_rating_undefined;
 
             status = identity_rating(session, curr->member->ident, &tmp_rating);
             if (status != PEP_STATUS_OK)
-                return status;  // FIXME: free
+                goto pEp_free;
 
             if (tmp_rating < _rating)
                 _rating = tmp_rating;
@@ -2149,7 +2263,11 @@ DYNAMIC_API PEP_STATUS group_rating(
 
     *rating = _rating;
 
-    return PEP_STATUS_OK;
+    status = PEP_STATUS_OK;
+
+pEp_free:
+    free_memberlist(active_members);
+    return status;
 }
 
 PEP_STATUS is_active_group_member(PEP_SESSION session, pEp_identity* group_identity,
