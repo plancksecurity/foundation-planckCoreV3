@@ -341,24 +341,21 @@ TEST_F(GroupEncryptionTest, check_create_group) {
     // Create member list
     pEp_identity* carol = new_identity("carol@bob.bob", NULL, "CAROL_ID", "Carol");
     ASSERT_NE(carol, nullptr);
-    pEp_member* carol_mem = new_member(carol);
     status = update_identity(session, carol);
     ASSERT_OK;
 
-    member_list* list = new_memberlist(carol_mem);
+    identity_list* list = new_identity_list(carol);
     ASSERT_NE(list, nullptr);
 
     pEp_identity* bob = new_identity("bob@bob.bob", NULL, "BOB_ID", NULL);
     status = update_identity(session, bob);
     ASSERT_OK;
-    pEp_member* bob_mem = new_member(bob);
-    ASSERT_NE(memberlist_add(list, bob_mem), nullptr);
+    ASSERT_NE(identity_list_add(list, bob), nullptr);
 
     pEp_identity* solas = new_identity("solas@solas.solas", NULL, "SOLAS_ID", "The Dread Wolf, Betrayer of All");
     status = update_identity(session, solas);
     ASSERT_OK;
-    pEp_member* solas_mem = new_member(solas);
-    ASSERT_NE(memberlist_add(list, solas_mem), nullptr);
+    ASSERT_NE(identity_list_add(list, solas), nullptr);
 
     pEp_group* group = NULL;
     status = group_create(session, group_ident, group_leader, list, &group);
@@ -372,8 +369,25 @@ TEST_F(GroupEncryptionTest, check_create_group) {
     ASSERT_STREQ(group->manager->address, group_leader->address);
     ASSERT_STREQ(group->manager->user_id, group_leader->user_id);
     ASSERT_EQ(group->manager->flags & PEP_idf_group_ident, 0);
-    ASSERT_EQ(group->members, list); // We don't do anything to this list, so....
     ASSERT_STRNE(group_ident->fpr, group_leader->fpr);
+
+    // We need to check for identity parity in the input ident list and the member list, I guess:
+    identity_list* input_idents = list;
+    member_list* group_members = group->members;
+
+    for ( ; input_idents && group_members && input_idents->ident && group_members->member && group_members->member->ident;
+         group_members = group_members->next, input_idents = input_idents->next) {
+        // Check that the bare essentials match
+        pEp_identity* ident_ident = input_idents->ident;
+        pEp_identity* member_ident = group_members->member->ident;
+
+        ASSERT_STREQ(ident_ident->user_id, member_ident->user_id);
+        ASSERT_STREQ(ident_ident->address, member_ident->address);
+        ASSERT_FALSE(group_members->member->joined);
+    }
+    // Make sure both lists hit their end
+    ASSERT_EQ(input_idents, nullptr);
+    ASSERT_EQ(group_members, nullptr);
 
     free_group(group);
 }
@@ -390,24 +404,21 @@ TEST_F(GroupEncryptionTest, check_membership_from_create_group) {
     // Create member list
     pEp_identity* carol = new_identity("carol@bob.bob", NULL, "CAROL_ID", "Carol");
     ASSERT_NE(carol, nullptr);
-    pEp_member* carol_mem = new_member(carol);
     status = update_identity(session, carol);
     ASSERT_OK;
 
-    member_list* list = new_memberlist(carol_mem);
+    identity_list* list = new_identity_list(carol);
     ASSERT_NE(list, nullptr);
 
     pEp_identity* bob = new_identity("bob@bob.bob", NULL, "BOB_ID", NULL);
     status = update_identity(session, bob);
     ASSERT_OK;
-    pEp_member* bob_mem = new_member(bob);
-    ASSERT_NE(memberlist_add(list, bob_mem), nullptr);
+    ASSERT_NE(identity_list_add(list, bob), nullptr);
 
     pEp_identity* solas = new_identity("solas@solas.solas", NULL, "SOLAS_ID", "The Dread Wolf, Betrayer of All");
     status = update_identity(session, solas);
     ASSERT_OK;
-    pEp_member* solas_mem = new_member(solas);
-    ASSERT_NE(memberlist_add(list, solas_mem), nullptr);
+    ASSERT_NE(identity_list_add(list, solas), nullptr);
 
     pEp_group* group = NULL;
     status = group_create(session, group_ident, group_leader, list, &group);
@@ -686,16 +697,16 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create) {
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
 
-    member_list* new_members = new_memberlist(new_member(member_1));
-    ASSERT_NE(new_members, nullptr);
-    memberlist_add(new_members, new_member(member_2));
-    memberlist_add(new_members, new_member(member_3));
-    memberlist_add(new_members, new_member(member_4));
+    identity_list* new_member_idents = new_identity_list(member_1);
+    ASSERT_NE(new_member_idents, nullptr);
+    identity_list_add(new_member_idents, member_2);
+    identity_list_add(new_member_idents, member_3);
+    identity_list_add(new_member_idents, member_4);
 
     pEp_identity* group_ident = new_identity(group_1_address, NULL, PEP_OWN_USERID, group_1_name);
 
     pEp_group* group = NULL;
-    status = group_create(session, group_ident, me, new_members, &group);
+    status = group_create(session, group_ident, me, new_member_idents, &group);
     ASSERT_OK;
 
     // Ok, we now have a bunch of messages to check.
@@ -1100,14 +1111,14 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_extant_key) {
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
 
-    member_list* new_members = new_memberlist(new_member(member_1));
-    ASSERT_NE(new_members, nullptr);
-    memberlist_add(new_members, new_member(member_2));
-    memberlist_add(new_members, new_member(member_3));
-    memberlist_add(new_members, new_member(member_4));
+    identity_list* new_member_idents = new_identity_list(member_1);
+    ASSERT_NE(new_member_idents, nullptr);
+    identity_list_add(new_member_idents, member_2);
+    identity_list_add(new_member_idents, member_3);
+    identity_list_add(new_member_idents, member_4);
 
     pEp_group* group = NULL;
-    status = group_create(session, group_ident, me, new_members, &group);
+    status = group_create(session, group_ident, me, new_member_idents, &group);
     ASSERT_OK;
 
     ASSERT_STREQ(group->manager->fpr, manager_1_fpr);
@@ -1493,11 +1504,11 @@ TEST_F(GroupEncryptionTest, check_protocol_group_join_receive) {
     status = set_as_pEp_user(session, member_1);
     ASSERT_OK;
 
-    member_list* new_members = new_memberlist(new_member(member_1));
-    ASSERT_NE(new_members, nullptr);
+    identity_list* new_member_idents = new_identity_list(member_1);
+    ASSERT_NE(new_member_idents, nullptr);
 
     pEp_group* group = NULL;
-    status = group_create(session, group_ident, me, new_members, &group);
+    status = group_create(session, group_ident, me, new_member_idents, &group);
     ASSERT_OK;
 
     // MESSAGE LIST NOW INVALID.
@@ -1597,14 +1608,14 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_send) {
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
 
-    member_list* new_members = new_memberlist(new_member(member_1));
-    ASSERT_NE(new_members, nullptr);
-    memberlist_add(new_members, new_member(member_2));
-    memberlist_add(new_members, new_member(member_3));
-    memberlist_add(new_members, new_member(member_4));
+    identity_list* new_member_idents = new_identity_list(member_1);
+    ASSERT_NE(new_member_idents, nullptr);
+    identity_list_add(new_member_idents, member_2);
+    identity_list_add(new_member_idents, member_3);
+    identity_list_add(new_member_idents, member_4);
 
     pEp_group* group = NULL;
-    status = group_create(session, group_ident, me, new_members, &group);
+    status = group_create(session, group_ident, me, new_member_idents, &group);
     ASSERT_OK;
 
     // Ok, so we've actually already got the messages for this written out elsewhere - this was all DB setup.
@@ -1894,12 +1905,12 @@ TEST_F(GroupEncryptionTest, check_protocol_group_join_member_unknown) {
     ASSERT_OK;
     status = set_as_pEp_user(session, member_2);
     ASSERT_OK;
-    member_list* new_members = new_memberlist(new_member(member_1));
-    ASSERT_NE(new_members, nullptr);
-    memberlist_add(new_members, new_member(member_2));
+    identity_list* new_member_idents = new_identity_list(member_1);
+    ASSERT_NE(new_member_idents, nullptr);
+    identity_list_add(new_member_idents, member_2);
 
     pEp_group* group = NULL;
-    status = group_create(session, group_ident, me, new_members, &group);
+    status = group_create(session, group_ident, me, new_member_idents, &group);
     ASSERT_OK;
 
     ASSERT_EQ(m_queue.size(), 2);
@@ -2046,14 +2057,13 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_different_own_identity_m
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
 
-    member_list* g1_new_members = new_memberlist(new_member(member_1));
-    ASSERT_NE(g1_new_members, nullptr);
-    memberlist_add(g1_new_members, new_member(member_2));
-    memberlist_add(g1_new_members, new_member(member_3));
-    memberlist_add(g1_new_members, new_member(member_4));
+    identity_list* g1_new_member_idents = new_identity_list(member_1);
+    identity_list_add(g1_new_member_idents, member_2);
+    identity_list_add(g1_new_member_idents, member_3);
+    identity_list_add(g1_new_member_idents, member_4);
 
     pEp_group* group1 = NULL;
-    status = group_create(session, group1_ident, me1, g1_new_members, &group1);
+    status = group_create(session, group1_ident, me1, g1_new_member_idents, &group1);
     ASSERT_OK;
 
     ASSERT_STREQ(group1->manager->fpr, manager_1_fpr);
@@ -2157,13 +2167,13 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_different_own_identity_m
     m_queue.clear();
 
     ASSERT_EQ(m_queue.size(), 0);
-    member_list* g2_new_members = new_memberlist(new_member(member_2));
-    ASSERT_NE(g2_new_members, nullptr);
-    memberlist_add(g2_new_members, new_member(member_3));
-    memberlist_add(g2_new_members, new_member(member_4));
+    identity_list* g2_new_member_idents = new_identity_list(member_2);
+    ASSERT_NE(g2_new_member_idents, nullptr);
+    identity_list_add(g2_new_member_idents, member_3);
+    identity_list_add(g2_new_member_idents, member_4);
 
     pEp_group* group2 = NULL;
-    status = group_create(session, group2_ident, me2, g2_new_members, &group2);
+    status = group_create(session, group2_ident, me2, g2_new_member_idents, &group2);
     ASSERT_OK;
 
     ASSERT_STREQ(group2->manager->fpr, manager_2_fpr);
@@ -2291,8 +2301,8 @@ TEST_F(GroupEncryptionTest, not_a_test_message_gen_for_group_dissolve_not_manage
     status = set_as_pEp_user(session, member_2);
     ASSERT_OK;
     
-    member_list* g1_new_members = new_memberlist(new_member(member_2));
-    ASSERT_NE(g1_new_members, nullptr);
+    identity_list* g1_new_member_idents = new_identity_list(member_2);
+    ASSERT_NE(g1_new_member_idents, nullptr);
 
     pEp_group* group1 = NULL;
     status = group_create(session, group1_ident, me2, g1_new_members, &group1);
@@ -2456,14 +2466,14 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_no_recents) {
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
 
-    member_list* new_members = new_memberlist(new_member(member_1));
-    ASSERT_NE(new_members, nullptr);
-    memberlist_add(new_members, new_member(member_2));
-    memberlist_add(new_members, new_member(member_3));
-    memberlist_add(new_members, new_member(member_4));
+    identity_list* new_member_idents = new_identity_list(member_1);
+    ASSERT_NE(new_member_idents, nullptr);
+    identity_list_add(new_member_idents, member_2);
+    identity_list_add(new_member_idents, member_3);
+    identity_list_add(new_member_idents, member_4);
 
     pEp_group* group = NULL;
-    status = group_create(session, group_ident, me, new_members, &group);
+    status = group_create(session, group_ident, me, new_member_idents, &group);
     ASSERT_OK;
 
     ASSERT_STREQ(group->manager->fpr, manager_1_fpr);
@@ -2573,14 +2583,14 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_no_recents_two_active
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
 
-    member_list* new_members = new_memberlist(new_member(member_1));
-    ASSERT_NE(new_members, nullptr);
-    memberlist_add(new_members, new_member(member_2));
-    memberlist_add(new_members, new_member(member_3));
-    memberlist_add(new_members, new_member(member_4));
+    identity_list* new_member_idents = new_identity_list(member_1);
+    ASSERT_NE(new_member_idents, nullptr);
+    identity_list_add(new_member_idents, member_2);
+    identity_list_add(new_member_idents, member_3);
+    identity_list_add(new_member_idents, member_4);
 
     pEp_group* group = NULL;
-    status = group_create(session, group_ident, me, new_members, &group);
+    status = group_create(session, group_ident, me, new_member_idents, &group);
     ASSERT_OK;
 
     ASSERT_STREQ(group->manager->fpr, manager_1_fpr);
@@ -2731,14 +2741,14 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_two_recents) {
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
 
-    member_list* new_members = new_memberlist(new_member(member_1));
-    ASSERT_NE(new_members, nullptr);
-    memberlist_add(new_members, new_member(member_2));
-    memberlist_add(new_members, new_member(member_3));
-    memberlist_add(new_members, new_member(member_4));
+    identity_list* new_member_idents = new_identity_list(member_1);
+    ASSERT_NE(new_member_idents, nullptr);
+    identity_list_add(new_member_idents, member_2);
+    identity_list_add(new_member_idents, member_3);
+    identity_list_add(new_member_idents, member_4);
 
     pEp_group* group = NULL;
-    status = group_create(session, group_ident, me, new_members, &group);
+    status = group_create(session, group_ident, me, new_member_idents, &group);
     ASSERT_OK;
 
     ASSERT_STREQ(group->manager->fpr, manager_1_fpr);
@@ -3075,14 +3085,14 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_two_recents_two_missi
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
 
-    member_list* new_members = new_memberlist(new_member(member_1));
-    ASSERT_NE(new_members, nullptr);
-    memberlist_add(new_members, new_member(member_2));
-    memberlist_add(new_members, new_member(member_3));
-    memberlist_add(new_members, new_member(member_4));
+    identity_list* new_member_idents = new_identity_list(member_1);
+    ASSERT_NE(new_member_idents, nullptr);
+    identity_list_add(new_member_idents, member_2);
+    identity_list_add(new_member_idents, member_3);
+    identity_list_add(new_member_idents, member_4);
 
     pEp_group* group = NULL;
-    status = group_create(session, group_ident, me, new_members, &group);
+    status = group_create(session, group_ident, me, new_member_idents, &group);
     ASSERT_OK;
 
     ASSERT_STREQ(group->manager->fpr, manager_1_fpr);
@@ -3256,14 +3266,14 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_one_recent_all_missin
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
 
-    member_list* new_members = new_memberlist(new_member(member_1));
-    ASSERT_NE(new_members, nullptr);
-    memberlist_add(new_members, new_member(member_2));
-    memberlist_add(new_members, new_member(member_3));
-    memberlist_add(new_members, new_member(member_4));
+    identity_list* new_member_idents = new_identity_list(member_1);
+    ASSERT_NE(new_member_idents, nullptr);
+    identity_list_add(new_member_idents, member_2);
+    identity_list_add(new_member_idents, member_3);
+    identity_list_add(new_member_idents, member_4);
 
     pEp_group* group = NULL;
-    status = group_create(session, group_ident, me, new_members, &group);
+    status = group_create(session, group_ident, me, new_member_idents, &group);
     ASSERT_OK;
 
     ASSERT_STREQ(group->manager->fpr, manager_1_fpr);
@@ -3394,14 +3404,14 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_no_recents_all_missin
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
 
-    member_list* new_members = new_memberlist(new_member(member_1));
-    ASSERT_NE(new_members, nullptr);
-    memberlist_add(new_members, new_member(member_2));
-    memberlist_add(new_members, new_member(member_3));
-    memberlist_add(new_members, new_member(member_4));
+    identity_list* new_member_idents = new_identity_list(member_1);
+    ASSERT_NE(new_member_idents, nullptr);
+    identity_list_add(new_member_idents, member_2);
+    identity_list_add(new_member_idents, member_3);
+    identity_list_add(new_member_idents, member_4);
 
     pEp_group* group = NULL;
-    status = group_create(session, group_ident, me, new_members, &group);
+    status = group_create(session, group_ident, me, new_member_idents, &group);
     ASSERT_OK;
 
     ASSERT_STREQ(group->manager->fpr, manager_1_fpr);
@@ -3470,14 +3480,14 @@ TEST_F(GroupEncryptionTest, check_protocol_remove_member_from_group_two_recents)
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
 
-    member_list* new_members = new_memberlist(new_member(member_1));
-    ASSERT_NE(new_members, nullptr);
-    memberlist_add(new_members, new_member(member_2));
-    memberlist_add(new_members, new_member(member_3));
-    memberlist_add(new_members, new_member(member_4));
+    identity_list* new_member_idents = new_identity_list(member_1);
+    ASSERT_NE(new_member_idents, nullptr);
+    identity_list_add(new_member_idents, member_2);
+    identity_list_add(new_member_idents, member_3);
+    identity_list_add(new_member_idents, member_4);
 
     pEp_group* group = NULL;
-    status = group_create(session, group_ident, me, new_members, &group);
+    status = group_create(session, group_ident, me, new_member_idents, &group);
     ASSERT_OK;
 
     ASSERT_STREQ(group->manager->fpr, manager_1_fpr);
@@ -3673,14 +3683,14 @@ TEST_F(GroupEncryptionTest, check_protocol_remove_member_not_joined_from_group_t
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
 
-    member_list* new_members = new_memberlist(new_member(member_1));
-    ASSERT_NE(new_members, nullptr);
-    memberlist_add(new_members, new_member(member_2));
-    memberlist_add(new_members, new_member(member_3));
-    memberlist_add(new_members, new_member(member_4));
+    identity_list* new_member_idents = new_identity_list(member_1);
+    ASSERT_NE(new_member_idents, nullptr);
+    identity_list_add(new_member_idents, member_2);
+    identity_list_add(new_member_idents, member_3);
+    identity_list_add(new_member_idents, member_4);
 
     pEp_group* group = NULL;
-    status = group_create(session, group_ident, me, new_members, &group);
+    status = group_create(session, group_ident, me, new_member_idents, &group);
     ASSERT_OK;
 
     ASSERT_STREQ(group->manager->fpr, manager_1_fpr);
@@ -3874,13 +3884,13 @@ TEST_F(GroupEncryptionTest, check_protocol_remove_unknown_member_from_group_two_
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
 
-    member_list* new_members = new_memberlist(new_member(member_1));
-    ASSERT_NE(new_members, nullptr);
-    memberlist_add(new_members, new_member(member_2));
-    memberlist_add(new_members, new_member(member_4));
+    identity_list* new_member_idents = new_identity_list(member_1);
+    ASSERT_NE(new_member_idents, nullptr);
+    identity_list_add(new_member_idents, member_2);
+    identity_list_add(new_member_idents, member_4);
 
     pEp_group* group = NULL;
-    status = group_create(session, group_ident, me, new_members, &group);
+    status = group_create(session, group_ident, me, new_member_idents, &group);
     ASSERT_OK;
 
     ASSERT_STREQ(group->manager->fpr, manager_1_fpr);

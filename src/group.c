@@ -523,6 +523,44 @@ identity_list* member_list_to_identity_list(member_list* memberlist) {
     return head;
 }
 
+member_list* identity_list_to_memberlist(identity_list* ident_list) {
+
+    identity_list* curr_ident = ident_list;
+    member_list* head = NULL;
+    member_list** mem_list_curr_ptr = &head;
+
+    pEp_identity* tmp_ident = NULL;
+    pEp_member* member = NULL;
+    member_list* new_node = NULL;
+
+    for ( ; curr_ident && curr_ident->ident; curr_ident = curr_ident->next,
+            mem_list_curr_ptr = &((*mem_list_curr_ptr)->next)) {
+        tmp_ident = identity_dup(curr_ident->ident);
+        if (!tmp_ident)
+            goto enomem;
+        pEp_member* member = new_member(curr_ident->ident);
+        if (!member)
+            goto enomem;
+        tmp_ident = NULL;
+        new_node = new_memberlist(member);
+        if (!new_node)
+            goto enomem;
+        member = NULL;
+        *mem_list_curr_ptr = new_node;
+    }
+
+    return head;
+
+enomem:
+    if (!member)
+        free(tmp_ident); // is probably NULL anyway
+    else {
+        free_member(member);
+    }
+    free_memberlist(head);
+    return NULL;
+}
+
 // Exposed for testing.
 PEP_STATUS set_membership_status(PEP_SESSION session,
                                             pEp_identity* group_identity,
@@ -1241,6 +1279,15 @@ PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rat
     if (!gc || !msg->to || !msg->to->ident || msg->to->next)
         return PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
 
+    pEp_identity* member_ident = NULL;
+    pEp_identity* group_identity = NULL;
+    pEp_identity* manager = NULL;
+    pEp_group* group = NULL;
+
+    char* own_id = NULL;
+    stringlist_t* keylist = NULL;
+
+
     // FIXME: this will be hard without address aliases.
 
     // We will probably always have to do this, but if something changes externally we need this check.
@@ -1253,14 +1300,10 @@ PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rat
     if (!is_me(session, msg->to->ident))
         return PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
 
-    pEp_identity* group_identity = Identity_to_Struct(&(gc->groupIdentity), NULL);
+    group_identity = Identity_to_Struct(&(gc->groupIdentity), NULL);
     if (!group_identity)
         return PEP_UNKNOWN_ERROR; // we really don't know why
 
-    pEp_group* group = NULL;
-    pEp_identity* manager = NULL;
-    char* own_id = NULL;
-    stringlist_t* keylist = NULL;
 
     manager = Identity_to_Struct(&(gc->manager), NULL);
     if (!manager)
@@ -1280,8 +1323,10 @@ PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rat
     // Ok then - let's do this:
     // First, we need to ensure the group_ident has an own ident instead
     status = get_default_own_userid(session, &own_id);
-    if (status != PEP_STATUS_OK)
+    if (status != PEP_STATUS_OK) {
+        free(own_id); // Just in case
         goto pEp_free;
+    }
 
     if (!own_id) {
         status = PEP_NO_OWN_USERID_FOUND;
@@ -1290,6 +1335,7 @@ PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rat
 
     // Takes ownership here, which is why we DON'T free own_id at the end
     group_identity->user_id = own_id;
+    own_id = NULL; // avoid double-free;
 
     // Ok, let's ensure we HAVE the key for this group:
     status = find_private_keys(session, group_identity->fpr, &keylist);
@@ -1307,13 +1353,13 @@ PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rat
     if (status != PEP_STATUS_OK)
         goto pEp_free;
 
-    pEp_member* member = new_member(identity_dup(msg->to->ident));
-    if (!member || !member->ident) {
+    member_ident = identity_dup(msg->to->ident);
+    if (!member_ident) {
         status = PEP_OUT_OF_MEMORY;
         goto pEp_free;
     }
 
-    member_list* list = new_memberlist(member);
+    identity_list* list = new_identity_list(member_ident);
     if (!list) {
         status = PEP_OUT_OF_MEMORY;
         goto pEp_free;
@@ -1327,8 +1373,15 @@ PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rat
     status = add_own_membership_entry(session, group_identity, manager, msg->to->ident);
 
 pEp_free:
-    if (!group)
+    if (!group) {
+        if (!list)
+            free_identity(member_ident);
+        else
+            free_identity_list(list);
+
         free_identity(manager);
+        free_identity(group_identity);
+    }
     else
         free_group(group);
     free_stringlist(keylist);
@@ -1761,7 +1814,7 @@ DYNAMIC_API PEP_STATUS group_create(
         PEP_SESSION session,
         pEp_identity *group_identity,
         pEp_identity *manager,
-        member_list *memberlist,
+        identity_list *member_ident_list,
         pEp_group **group
 ) {
     if (!session || !group_identity || !manager)
@@ -1774,6 +1827,7 @@ DYNAMIC_API PEP_STATUS group_create(
     pEp_group* _group = NULL;
     pEp_identity* group_ident_clone = NULL;
     pEp_identity* manager_clone = NULL;
+    member_list* memberlist = NULL;
 
     if (!group_identity->user_id || !is_me(session, group_identity)) {
         char* own_id = NULL;
@@ -1826,6 +1880,16 @@ DYNAMIC_API PEP_STATUS group_create(
     }
 
     // Ok, we're ready to do DB stuff. Do some allocation:
+    memberlist = identity_list_to_memberlist(member_ident_list);
+    // FIXME: double-check empty list head in function above
+    if (member_ident_list && member_ident_list->ident && !memberlist) {
+        status = PEP_OUT_OF_MEMORY;
+        goto pEp_error;
+    }
+
+    // memberlist fully belongs to us and will now go to the group
+    // All fields here belong to us; if the group fails, they'll
+    // be freed individually in the error block
     _group = new_group(group_ident_clone, manager_clone, memberlist);
     if (!_group) {
         status = PEP_OUT_OF_MEMORY;
@@ -1847,7 +1911,7 @@ DYNAMIC_API PEP_STATUS group_create(
             status = update_identity(session, member);
 
         if (status != PEP_STATUS_OK)
-            goto pEp_error;
+            goto pEp_error; // We can do this because we are BEFORE the start of the transaction!!!
     }
 
     sqlite3_exec(session->db, "BEGIN TRANSACTION ;", NULL, NULL, NULL);
@@ -1905,10 +1969,12 @@ DYNAMIC_API PEP_STATUS group_create(
 
 pEp_error:
     if (!_group) {
+        free_memberlist(memberlist);
         free_identity(group_ident_clone);
         free_identity(manager_clone);
     }
-    free_group(_group);
+    else
+        free_group(_group);
     *group = NULL;
     return status;
 }
