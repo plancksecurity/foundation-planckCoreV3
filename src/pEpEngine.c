@@ -216,16 +216,11 @@ DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys(PEP_SESSION session, bool 
     return status;    
 }
 
-
 DYNAMIC_API void config_service_log(PEP_SESSION session, bool enable)
 {
     assert(session);
     if (session)
         session->service_log = enable;
-}
-
-DYNAMIC_API const char* get_commit_hash() {
-    return PEP_CURRENT_COMMIT_HASH;
 }
 
 DYNAMIC_API PEP_STATUS log_event(

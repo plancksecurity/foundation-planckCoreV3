@@ -691,10 +691,6 @@ tstylesheet {
                     message *_m = NULL;
                     char *_data = NULL;
                     
-                    // FIX ENGINE-814: skip identities without key
-                    if (EMPTYSTR(li->ident->fpr))
-                        continue;
-
                     _data = malloc(size);
                     assert(_data);
                     if (!_data) {
