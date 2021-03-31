@@ -1083,6 +1083,10 @@ DYNAMIC_API PEP_STATUS unset_identity_flags(
  *  @retval PEP_CANNOT_SET_TRUST
  *
  */
+DYNAMIC_API PEP_STATUS mark_as_compromised(
+        PEP_SESSION session,
+        const char *fpr
+    );
 
 /**
  *  <!--       mark_as_compromized()       -->
