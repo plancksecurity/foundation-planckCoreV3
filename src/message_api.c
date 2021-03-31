@@ -2566,7 +2566,7 @@ static bool message_is_from_Sync(const message *src)
         return false;
 
     // first to must be set
-    if (!src->to || !src->to->ident || EMPTYSTR(src->to->ident->username))
+    if (!src->to || !src->to->ident || EMPTYSTR(src->to->ident->address))
         return false;
 
     // second to must not be set
