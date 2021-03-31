@@ -817,9 +817,9 @@ static inline int Sqlite3_step(sqlite3_stmt* stmt)
  *
  *  <!--       _add_auto_consume()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*msg		message
+ *  @param[in]    *msg        message
  *
  */
 static inline void _add_auto_consume(message* msg) {

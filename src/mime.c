@@ -21,7 +21,7 @@
  *  
  *  @brief      checks if a character is a whitepsace character 
  *  
- *  @param[in]	c		char
+ *  @param[in]    c        char
  *  
  *  @return     bool    true if whitespace, false otherwise
  */

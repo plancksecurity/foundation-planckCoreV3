@@ -38,7 +38,7 @@ static char translate_char_to_bits(char input) {
  *  @brief      checks if a character is a whitespace character
  *              end returns true if so, false otherwise
  *  
- *  @param[in]	in	    char to be checked	
+ *  @param[in]  in      char to be checked  
  *  @retval     bool    true if whitespace, false otherwise
  *  
  */
@@ -59,11 +59,11 @@ static bool _is_whitespace(const char in) {
  *  
  *  <!--       subtract_whitespace()       -->
  *  
- *  @brief	    returns the length of the C string
+ *  @brief      returns the length of the C string
  *              not counting whitespaces
  *  
- *  @param[in]	*input	    C string	
- *  @param[in]	length	    length of the C string	
+ *  @param[in]  *input      C string
+ *  @param[in]  length      length of the C string
  *  @retval     size_t      actual size of string without whitespaces 
  *  
  */
@@ -83,11 +83,11 @@ static size_t subtract_whitespace(const char* input, int length) {
  *  
  *  <!--       trim_end()       -->
  *  
- *  @brief	    determine length of C string without 
- *              trailing whitespace characters	
+ *  @brief      determine length of C string without
+ *              trailing whitespace characters
  *  
- *  @param[in]  	*input      C string to check	    	
- *  @param[out]	*length		returns the resulting lenght
+ *  @param[in]   *input     C string to check
+ *  @param[out]  *length    returns the resulting lenght
  *  
  */
 static void trim_end(const char* input, int* length) {
@@ -109,10 +109,10 @@ static void trim_end(const char* input, int* length) {
  *  
  *  <!--       next_char()       -->
  *  
- *  @brief		returns the next non-whitespace character in a C string
+ *  @brief    returns the next non-whitespace character in a C string
  *  
- *  @param[in]	**input_ptr     pointer to C string
- *  @param[in]	*end		    pointer to last char of input string
+ *  @param[in]  **input_ptr     pointer to C string
+ *  @param[in]  *end            pointer to last char of input string
  *
  *  @retval     char            next non-whitespace character
  *  
@@ -139,12 +139,12 @@ char next_char(const char** input_ptr, const char* end) {
  *  
  *  <!--       base64_str_to_binary_blob()       -->
  *  
- *  @brief	    converts base64 to a binary blob, putting 4 characters into
+ *  @brief      converts base64 to a binary blob, putting 4 characters into
  *              3 output bytes, returning a pointer to a bloblist containing
  *              the binary blob.
  *  
- *  @param[in]	*input		input as C string 
- *  @param[in]	int         length of C string		
+ *  @param[in]  *input    input as C string
+ *  @param[in]  int       length of C string
  *  
  *  @retval     pointer to bloblist, or NULL on failure  
  */

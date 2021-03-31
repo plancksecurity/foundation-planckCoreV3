@@ -13,7 +13,7 @@
 /**
  *  <!--       email_sendto()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
  *  @param[in]  session      PEP_SESSION
  *  @param[in]  msg          message*

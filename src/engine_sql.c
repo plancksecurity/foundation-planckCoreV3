@@ -7,11 +7,11 @@
  *
  *  <!--       _sql_lower()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*ctx		sqlite3_context
- *  @param[in]	argc		int
- *  @param[in]	**argv		sqlite3_value
+ *  @param[in]    *ctx        sqlite3_context
+ *  @param[in]    argc        int
+ *  @param[in]    **argv      sqlite3_value
  *
  */
 static void _sql_lower(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
@@ -43,12 +43,12 @@ static void _sql_lower(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
  *
  *  <!--       sql_trace_callback()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	trace_constant		unsigned
- *  @param[in]	*context_ptr		void
- *  @param[in]	*P		void
- *  @param[in]	*X		void
+ *  @param[in]    trace_constant        unsigned
+ *  @param[in]    *context_ptr        void
+ *  @param[in]    *P        void
+ *  @param[in]    *X        void
  *
  */
 int sql_trace_callback (unsigned trace_constant,
@@ -83,11 +83,11 @@ int sql_trace_callback (unsigned trace_constant,
  *
  *  <!--       errorLogCallback()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*pArg		void
- *  @param[in]	iErrCode		int
- *  @param[in]	*zMsg		constchar
+ *  @param[in]    *pArg        void
+ *  @param[in]    iErrCode     int
+ *  @param[in]    *zMsg        constchar
  *
  */
 void errorLogCallback(void *pArg, int iErrCode, const char *zMsg){
@@ -100,10 +100,10 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg){
  *
  *  <!--       db_contains_table()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*table_name		constchar
+ *  @param[in]    session            PEP_SESSION
+ *  @param[in]    *table_name        constchar
  *
  */
 static int db_contains_table(PEP_SESSION session, const char* table_name) {
@@ -155,11 +155,11 @@ static int db_contains_table(PEP_SESSION session, const char* table_name) {
  *
  *  <!--       table_contains_column()       -->
  *
- *  @brief			TODO
+ *  @brief        TODO
  *
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*table_name		constchar
- *  @param[in]	*col_name		constchar
+ *  @param[in]    session        PEP_SESSION
+ *  @param[in]    *table_name    constchar
+ *  @param[in]    *col_name      constchar
  *
  */
 static int table_contains_column(PEP_SESSION session, const char* table_name,
@@ -217,9 +217,9 @@ static int table_contains_column(PEP_SESSION session, const char* table_name,
  *
  *  <!--       repair_altered_tables()       -->
  *
- *  @brief			TODO
+ *  @brief        TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]    session        PEP_SESSION
  *
  */
 #define _PEP_MAX_AFFECTED 5
@@ -406,9 +406,9 @@ PEP_STATUS repair_altered_tables(PEP_SESSION session) {
  *
  *  <!--       upgrade_revoc_contact_to_13()       -->
  *
- *  @brief			TODO
+ *  @brief        TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]    session        PEP_SESSION
  *
  */
 static PEP_STATUS upgrade_revoc_contact_to_13(PEP_SESSION session) {
@@ -547,12 +547,12 @@ static PEP_STATUS upgrade_revoc_contact_to_13(PEP_SESSION session) {
  *
  *  <!--       user_version()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*_version		void
- *  @param[in]	count		int
- *  @param[in]	**text		char
- *  @param[in]	**name		char
+ *  @param[in]    *_version     void
+ *  @param[in]    count         int
+ *  @param[in]    **text        char
+ *  @param[in]    **name        char
  *
  */
 static int user_version(void *_version, int count, char **text, char **name)

@@ -38,9 +38,9 @@ double _pEp_log2_36;
  *
  *  <!--       is_a_pEpmessage()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*msg		constmessage
+ *  @param[in]    *msg        constmessage
  *  
  *  @retval     bool
  */
@@ -58,9 +58,9 @@ static bool is_a_pEpmessage(const message *msg)
  *
  *  <!--       keylist_to_string()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*keylist		conststringlist_t
+ *  @param[in]    *keylist        conststringlist_t
  *
  */
 static char * keylist_to_string(const stringlist_t *keylist)
@@ -96,9 +96,9 @@ static char * keylist_to_string(const stringlist_t *keylist)
  *
  *  <!--       rating_to_string()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	rating		PEP_rating
+ *  @param[in]    rating        PEP_rating
  *
  */
 static const char * rating_to_string(PEP_rating rating)
@@ -136,12 +136,12 @@ static const char * rating_to_string(PEP_rating rating)
  *
  *  <!--       _memnmemn()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*needle		constchar
- *  @param[in]	needle_size		size_t
- *  @param[in]	*haystack		constchar
- *  @param[in]	haystack_size		size_t
+ *  @param[in]    *needle        constchar
+ *  @param[in]    needle_size        size_t
+ *  @param[in]    *haystack        constchar
+ *  @param[in]    haystack_size        size_t
  *
  */
 bool _memnmemn(const char* needle,
@@ -207,12 +207,12 @@ void add_opt_field(message *msg, const char *name, const char *value)
  *
  *  <!--       replace_opt_field()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*msg		message
- *  @param[in]	*name		constchar
- *  @param[in]	*value		constchar
- *  @param[in]	clobber		bool
+ *  @param[in]    *msg        message
+ *  @param[in]    *name        constchar
+ *  @param[in]    *value        constchar
+ *  @param[in]    clobber        bool
  *
  */
 void replace_opt_field(message *msg,
@@ -254,9 +254,9 @@ void replace_opt_field(message *msg,
  *
  *  <!--       sync_message_attached()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*msg		message
+ *  @param[in]    *msg        message
  *
  *  @retval     bool
  */
@@ -278,11 +278,11 @@ static bool sync_message_attached(message *msg)
  *
  *  <!--       set_receiverRating()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session		session handle
- *  @param[in]	*msg		message
- *  @param[in]	rating		PEP_rating
+ *  @param[in]    session        session handle
+ *  @param[in]    *msg        message
+ *  @param[in]    rating        PEP_rating
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
@@ -323,11 +323,11 @@ PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rati
  *
  *  <!--       get_receiverRating()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session		session handle
- *  @param[in]	*msg		message
- *  @param[in]	*rating		PEP_rating
+ *  @param[in]    session        session handle
+ *  @param[in]    *msg        message
+ *  @param[in]    *rating        PEP_rating
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
@@ -404,9 +404,9 @@ void decorate_message(
  *
  *  <!--       _get_resource_ptr_noown()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*uri		char
+ *  @param[in]    *uri        char
  *  
  *  @retval     bool
  */
@@ -423,10 +423,10 @@ static char* _get_resource_ptr_noown(char* uri) {
  *
  *  <!--       string_equality()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*s1		const char
- *  @param[in]	*s2		const char
+ *  @param[in]    *s1        const char
+ *  @param[in]    *s2        const char
  *  
  *  @retval     bool
  */
@@ -445,10 +445,10 @@ static bool string_equality(const char *s1, const char *s2)
  *
  *  <!--       is_mime_type()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*bl		constbloblist_t
- *  @param[in]	*mt		constchar
+ *  @param[in]    *bl        constbloblist_t
+ *  @param[in]    *mt        constchar
  *
  *  @retval     bool
  */
@@ -470,10 +470,10 @@ static bool is_mime_type(const bloblist_t *bl, const char *mt)
  *
  *  <!--       is_fileending()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*bl		constbloblist_t
- *  @param[in]	*fe		constchar
+ *  @param[in]    *bl        constbloblist_t
+ *  @param[in]    *fe        constchar
  *  
  *  @retval
  */
@@ -502,10 +502,10 @@ static bool is_fileending(const bloblist_t *bl, const char *fe)
  *
  *  <!--       encapsulate_message_wrap_info()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*msg_wrap_info		constchar
- *  @param[in]	*longmsg		constchar
+ *  @param[in]    *msg_wrap_info        constchar
+ *  @param[in]    *longmsg        constchar
  *
  */
 char * encapsulate_message_wrap_info(const char *msg_wrap_info, const char *longmsg)
@@ -547,10 +547,10 @@ char * encapsulate_message_wrap_info(const char *msg_wrap_info, const char *long
  *
  *  <!--       combine_short_and_long()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*shortmsg		constchar
- *  @param[in]	*longmsg		constchar
+ *  @param[in]    *shortmsg        constchar
+ *  @param[in]    *longmsg        constchar
  *
  */
 static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
@@ -607,9 +607,9 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
  *
  *  <!--       replace_subject()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*msg		message
+ *  @param[in]    *msg        message
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_OUT_OF_MEMORY   out of memory
@@ -643,9 +643,9 @@ static PEP_STATUS replace_subject(message* msg) {
  *
  *  <!--       get_bitmask()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	num_bits		int
+ *  @param[in]    num_bits        int
  *
  */
 unsigned long long get_bitmask(int num_bits) {
@@ -666,10 +666,10 @@ unsigned long long get_bitmask(int num_bits) {
  *
  *  <!--       get_base_36_rep()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	value		unsigned long long
- *  @param[in]	num_sig_bits		int
+ *  @param[in]    value        unsigned long long
+ *  @param[in]    num_sig_bits        int
  *
  */
 static char* get_base_36_rep(unsigned long long value, int num_sig_bits) {
@@ -702,7 +702,7 @@ static char* get_base_36_rep(unsigned long long value, int num_sig_bits) {
  *
  *  <!--       message_id_prand_part()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
  *
  */
@@ -748,9 +748,9 @@ static char* message_id_prand_part(void) {
  *
  *  <!--       generate_message_id()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*msg		message
+ *  @param[in]    *msg        message
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
@@ -849,13 +849,13 @@ enomem:
  *
  *  <!--       get_data_from_encapsulated_line()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*plaintext		constchar
- *  @param[in]	*key		constchar
- *  @param[in]	keylen		constsize_t
- *  @param[in]	**data		char
- *  @param[in]	**modified_msg		char
+ *  @param[in]    *plaintext        constchar
+ *  @param[in]    *key        constchar
+ *  @param[in]    keylen        constsize_t
+ *  @param[in]    **data        char
+ *  @param[in]    **modified_msg        char
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_OUT_OF_MEMORY   out of memory
@@ -908,12 +908,12 @@ static PEP_STATUS get_data_from_encapsulated_line(const char* plaintext, const c
  *
  *  <!--       separate_short_and_long()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*src		constchar
- *  @param[in]	**shortmsg		char
- *  @param[in]	**msg_wrap_info		char
- *  @param[in]	**longmsg		char
+ *  @param[in]    *src        constchar
+ *  @param[in]    **shortmsg        char
+ *  @param[in]    **msg_wrap_info        char
+ *  @param[in]    **longmsg        char
  *
  */
 static int separate_short_and_long(const char *src, char **shortmsg, char** msg_wrap_info, char **longmsg)
@@ -988,10 +988,10 @@ enomem:
  *
  *  <!--       copy_fields()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*dst		message
- *  @param[in]	*src		constmessage
+ *  @param[in]    *dst        message
+ *  @param[in]    *src        constmessage
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
@@ -1119,10 +1119,10 @@ static PEP_STATUS copy_fields(message *dst, const message *src)
  *
  *  <!--       extract_minimal_envelope()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*src		constmessage
- *  @param[in]	direct		PEP_msg_direction
+ *  @param[in]    *src        constmessage
+ *  @param[in]    direct        PEP_msg_direction
  *
  */
 static message* extract_minimal_envelope(const message* src,
@@ -1194,9 +1194,9 @@ enomem:
  *
  *  <!--       clone_to_empty_message()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*src		constmessage
+ *  @param[in]    *src        constmessage
  *
  */
 static message * clone_to_empty_message(const message * src)
@@ -1231,15 +1231,15 @@ enomem:
  *
  *  <!--       wrap_message_as_attachment()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*envelope		message
- *  @param[in]	*attachment		message
- *  @param[in]	wrap_type		message_wrap_type
- *  @param[in]	keep_orig_subject		bool
- *  @param[in]	*extra_keys		stringlist_t
- *  @param[in]	max_major		unsignedint
- *  @param[in]	max_minor		unsignedint
+ *  @param[in]    *envelope        message
+ *  @param[in]    *attachment        message
+ *  @param[in]    wrap_type        message_wrap_type
+ *  @param[in]    keep_orig_subject        bool
+ *  @param[in]    *extra_keys        stringlist_t
+ *  @param[in]    max_major        unsignedint
+ *  @param[in]    max_minor        unsignedint
  *
  */
 static message* wrap_message_as_attachment(message* envelope,
@@ -1355,13 +1355,13 @@ enomem:
  *
  *  <!--       encrypt_PGP_inline()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*src		constmessage
- *  @param[in]	*keys		stringlist_t
- *  @param[in]	*dst		message
- *  @param[in]	flags		PEP_encrypt_flags_t
+ *  @param[in]    session        PEP_SESSION
+ *  @param[in]    *src        constmessage
+ *  @param[in]    *keys        stringlist_t
+ *  @param[in]    *dst        message
+ *  @param[in]    flags        PEP_encrypt_flags_t
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_OUT_OF_MEMORY   out of memory
@@ -1493,14 +1493,14 @@ static PEP_STATUS encrypt_PGP_inline(
  *
  *  <!--       encrypt_PGP_MIME()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*src		constmessage
- *  @param[in]	*keys		stringlist_t
- *  @param[in]	*dst		message
- *  @param[in]	flags		PEP_encrypt_flags_t
- *  @param[in]	wrap_type		message_wrap_type
+ *  @param[in]    session        PEP_SESSION
+ *  @param[in]    *src        constmessage
+ *  @param[in]    *keys        stringlist_t
+ *  @param[in]    *dst        message
+ *  @param[in]    flags        PEP_encrypt_flags_t
+ *  @param[in]    wrap_type        message_wrap_type
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_OUT_OF_MEMORY   out of memory
@@ -1619,9 +1619,9 @@ static bool _has_PGP_MIME_format(message* msg) {
  *
  *  <!--       _rating()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	ct		PEP_comm_type
+ *  @param[in]    ct        PEP_comm_type
  *
  */
 static inline PEP_rating _rating(PEP_comm_type ct)
@@ -1665,9 +1665,9 @@ DYNAMIC_API PEP_rating rating_from_comm_type(PEP_comm_type ct)
  *
  *  <!--       is_encrypted_attachment()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*blob		constbloblist_t
+ *  @param[in]    *blob        constbloblist_t
  *
  *  @retval     bool
  */
@@ -1705,9 +1705,9 @@ static bool is_encrypted_attachment(const bloblist_t *blob)
  *
  *  <!--       is_encrypted_html_attachment()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*blob		constbloblist_t
+ *  @param[in]    *blob        constbloblist_t
  *
  *  @retval     bool
  */
@@ -1734,9 +1734,9 @@ static bool is_encrypted_html_attachment(const bloblist_t *blob)
  *
  *  <!--       without_double_ending()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*filename		constchar
+ *  @param[in]    *filename        constchar
  *
  */
 static char * without_double_ending(const char *filename)
@@ -1759,9 +1759,9 @@ static char * without_double_ending(const char *filename)
  *
  *  <!--       decrypt_rating()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	status		PEP_STATUS
+ *  @param[in]    status        PEP_STATUS
  *
  *  @retval PEP_rating    rating value for comm type ct
  */
@@ -1799,10 +1799,10 @@ static PEP_rating decrypt_rating(PEP_STATUS status)
  *
  *  <!--       key_rating()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*fpr		constchar
+ *  @param[in]    session        PEP_SESSION
+ *  @param[in]    *fpr        constchar
  *
  */
 static PEP_rating key_rating(PEP_SESSION session, const char *fpr)
@@ -1843,10 +1843,10 @@ static PEP_rating key_rating(PEP_SESSION session, const char *fpr)
  *
  *  <!--       worst_rating()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	rating1		PEP_rating
- *  @param[in]	rating2		PEP_rating
+ *  @param[in]    rating1        PEP_rating
+ *  @param[in]    rating2        PEP_rating
  *
  */
 static PEP_rating worst_rating(PEP_rating rating1, PEP_rating rating2) {
@@ -1858,12 +1858,12 @@ static PEP_rating worst_rating(PEP_rating rating1, PEP_rating rating2) {
  *
  *  <!--       keylist_rating()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*keylist		stringlist_t
- *  @param[in]	*sender_fpr		char
- *  @param[in]	sender_rating		PEP_rating
+ *  @param[in]    session        PEP_SESSION
+ *  @param[in]    *keylist        stringlist_t
+ *  @param[in]    *sender_fpr        char
+ *  @param[in]    sender_rating        PEP_rating
  *
  */
 static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist, char* sender_fpr, PEP_rating sender_rating)
@@ -1904,11 +1904,11 @@ static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist, cha
  *
  *  <!--       _get_comm_type()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	max_comm_type		PEP_comm_type
- *  @param[in]	*ident		pEp_identity
+ *  @param[in]    session        PEP_SESSION
+ *  @param[in]    max_comm_type        PEP_comm_type
+ *  @param[in]    *ident        pEp_identity
  *
  */
 static PEP_comm_type _get_comm_type(
@@ -1953,11 +1953,11 @@ static PEP_comm_type _get_comm_type(
  *
  *  <!--       _get_comm_type_preview()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	max_comm_type		PEP_comm_type
- *  @param[in]	*ident		pEp_identity
+ *  @param[in]    session        PEP_SESSION
+ *  @param[in]    max_comm_type        PEP_comm_type
+ *  @param[in]    *ident        pEp_identity
  *
  */
 static PEP_comm_type _get_comm_type_preview(
@@ -2014,9 +2014,9 @@ static PEP_comm_type _get_comm_type_preview(
  *
  *  <!--       is_key()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*bl		constbloblist_t
+ *  @param[in]    *bl        constbloblist_t
  *
  *  @retval     bool
  */
@@ -2068,11 +2068,11 @@ static bool is_key(const bloblist_t *bl)
  *
  *  <!--       compare_first_n_bytes()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*first		constchar
- *  @param[in]	*second		constchar
- *  @param[in]	n		size_t
+ *  @param[in]    *first        constchar
+ *  @param[in]    *second        constchar
+ *  @param[in]    n        size_t
  *
  */
 static bool compare_first_n_bytes(const char* first, const char* second, size_t n) {
@@ -2099,13 +2099,13 @@ static bool compare_first_n_bytes(const char* first, const char* second, size_t 
  *
  *  <!--       import_attached_keys()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session	    session handle	
- *  @param[in]	*msg		message
- *  @param[in]	**private_idents		identity_list
- *  @param[in]	**imported_key_list		stringlist_t
- *  @param[in]	*changed_keys		uint64_t
+ *  @param[in]    session        session handle    
+ *  @param[in]    *msg        message
+ *  @param[in]    **private_idents        identity_list
+ *  @param[in]    **imported_key_list        stringlist_t
+ *  @param[in]    *changed_keys        uint64_t
  *
  *  @retval     bool
  */
@@ -2230,11 +2230,11 @@ bool import_attached_keys(
  *
  *  <!--       _attach_key()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*fpr		constchar
- *  @param[in]	*msg		message
+ *  @param[in]    session        PEP_SESSION
+ *  @param[in]    *fpr        constchar
+ *  @param[in]    *msg        message
  *  
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
@@ -2330,10 +2330,10 @@ PEP_cryptotech determine_encryption_format(message *msg)
  *
  *  <!--       _cleanup_src()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*src		message
- *  @param[in]	remove_attached_key		bool
+ *  @param[in]    *src        message
+ *  @param[in]    remove_attached_key        bool
  *
  */
 static void _cleanup_src(message* src, bool remove_attached_key) {
@@ -2372,11 +2372,11 @@ static void _cleanup_src(message* src, bool remove_attached_key) {
  *
  *  <!--       id_list_set_enc_format()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session	        session handle	
- *  @param[in]	*id_list		identity_list
- *  @param[in]	enc_format		PEP_enc_format
+ *  @param[in]    session            session handle    
+ *  @param[in]    *id_list        identity_list
+ *  @param[in]    enc_format        PEP_enc_format
  *
  *  @retval     PEP_STATUS_OK
  *  @retval     PEP_ILLEGAL_VALUE        illegal parameter value
@@ -2398,10 +2398,10 @@ static PEP_STATUS id_list_set_enc_format(PEP_SESSION session, identity_list* id_
  *
  *  <!--       update_encryption_format()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*id_list		identity_list
- *  @param[in]	*enc_format		PEP_enc_format
+ *  @param[in]    *id_list        identity_list
+ *  @param[in]    *enc_format        PEP_enc_format
  *
  */
 static void update_encryption_format(identity_list* id_list, PEP_enc_format* enc_format) {
@@ -2420,9 +2420,9 @@ static void update_encryption_format(identity_list* id_list, PEP_enc_format* enc
  *
  *  <!--       failed_test()       -->
  *
- *  @brief      returns true if status indicates failure		
+ *  @brief      returns true if status indicates failure        
  *
- *  @param[in]	status		PEP_STATUS
+ *  @param[in]    status        PEP_STATUS
  *
  *  @retval     bool
  */
@@ -2443,18 +2443,18 @@ static bool failed_test(PEP_STATUS status)
  *
  *  <!--       _update_state_for_ident_list()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*from_ident		pEp_identity
- *  @param[in]	*ident_list		identity_list
- *  @param[in]	**keylist		stringlist_t
- *  @param[in]	*max_comm_type		PEP_comm_type
- *  @param[in]	*max_version_major		unsignedint
- *  @param[in]	*max_version_minor		unsignedint
- *  @param[in]	*has_pEp_user		bool
- *  @param[in]	*dest_keys_found		bool
- *  @param[in]	suppress_update_for_bcc		bool
+ *  @param[in]    session        PEP_SESSION
+ *  @param[in]    *from_ident        pEp_identity
+ *  @param[in]    *ident_list        identity_list
+ *  @param[in]    **keylist        stringlist_t
+ *  @param[in]    *max_comm_type        PEP_comm_type
+ *  @param[in]    *max_version_major        unsignedint
+ *  @param[in]    *max_version_minor        unsignedint
+ *  @param[in]    *has_pEp_user        bool
+ *  @param[in]    *dest_keys_found        bool
+ *  @param[in]    suppress_update_for_bcc        bool
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
@@ -3266,10 +3266,10 @@ pEp_error:
  *
  *  <!--       _get_detached_signature()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	    *msg		        message
- *  @param[in,out]	**signature_blob	bloblist_t
+ *  @param[in]        *msg                message
+ *  @param[in,out]    **signature_blob    bloblist_t
  *
  *  @retval PEP_STATUS_OK 
  */
@@ -3296,12 +3296,12 @@ static PEP_STATUS _get_detached_signature(message* msg,
  *
  *  <!--       _get_signed_text()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	    *ptext		constchar
- *  @param[in]	    psize		constsize_t
- *  @param[out] 	**stext		char
- *  @param[out]	    *ssize		size_t
+ *  @param[in]        *ptext        constchar
+ *  @param[in]        psize        constsize_t
+ *  @param[out]     **stext        char
+ *  @param[out]        *ssize        size_t
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_UNKNOWN_ERROR 
@@ -3387,12 +3387,12 @@ static PEP_STATUS _get_signed_text(const char* ptext, const size_t psize,
  *
  *  <!--       combine_keylists()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	    session	            session handle	
- *  @param[in]	    **verify_in		    stringlist_t
- *  @param[out] 	**keylist_in_out	stringlist_t
- *  @param[in] 	    *from		        pEp_identity
+ *  @param[in]        session                session handle    
+ *  @param[in]        **verify_in            stringlist_t
+ *  @param[out]     **keylist_in_out    stringlist_t
+ *  @param[in]         *from                pEp_identity
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_KEY_NOT_FOUND
@@ -3483,12 +3483,12 @@ free:
  *
  *  <!--       amend_rating_according_to_sender_and_recipients()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session	        session handle	
- *  @param[in]	*rating		    PEP_rating
- *  @param[in]	*sender		    pEp_identity
- *  @param[in]	*recipients		stringlist_t
+ *  @param[in]    session            session handle    
+ *  @param[in]    *rating            PEP_rating
+ *  @param[in]    *sender            pEp_identity
+ *  @param[in]    *recipients        stringlist_t
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_OUT_OF_MEMORY   out of memory
@@ -3544,9 +3544,9 @@ static PEP_STATUS amend_rating_according_to_sender_and_recipients(
  *
  *  <!--       pull_up_attached_main_msg()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*src		message
+ *  @param[in]    *src        message
  *
  *  @retval     bool
  */
@@ -3589,11 +3589,11 @@ static bool pull_up_attached_main_msg(message* src) {
  *
  *  <!--       unencapsulate_hidden_fields()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*src		message
- *  @param[in]	*msg		message
- *  @param[in]	**msg_wrap_info		char
+ *  @param[in]    *src        message
+ *  @param[in]    *msg        message
+ *  @param[in]    **msg_wrap_info        char
  *
  *
  *  @retval PEP_STATUS_OK
@@ -3698,11 +3698,11 @@ static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg,
  *
  *  <!--       get_crypto_text()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*src		message
- *  @param[in]	**crypto_text		char
- *  @param[in]	*text_size		size_t
+ *  @param[in]    *src        message
+ *  @param[in]    **crypto_text        char
+ *  @param[in]    *text_size        size_t
  *
  *  @retval PEP_STATUS_OK
  */
@@ -3759,16 +3759,16 @@ static PEP_STATUS get_crypto_text(message* src, char** crypto_text, size_t* text
  *
  *  <!--       verify_decrypted()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session		session handle
- *  @param[in]	*src		message
- *  @param[in]	*msg		message
- *  @param[in]	*plaintext		char
- *  @param[in]	plaintext_size		size_t
- *  @param[in]	**keylist		stringlist_t
- *  @param[in]	*decrypt_status		PEP_STATUS
- *  @param[in]	crypto		PEP_cryptotech
+ *  @param[in]    session        session handle
+ *  @param[in]    *src        message
+ *  @param[in]    *msg        message
+ *  @param[in]    *plaintext        char
+ *  @param[in]    plaintext_size        size_t
+ *  @param[in]    **keylist        stringlist_t
+ *  @param[in]    *decrypt_status        PEP_STATUS
+ *  @param[in]    crypto        PEP_cryptotech
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
@@ -3845,13 +3845,13 @@ static PEP_STATUS verify_decrypted(PEP_SESSION session,
  *
  *  <!--       _decrypt_in_pieces()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session		session handle
- *  @param[in]	*src		message
- *  @param[in]	**msg_ptr		message
- *  @param[in]	*ptext		char
- *  @param[in]	psize		size_t
+ *  @param[in]    session        session handle
+ *  @param[in]    *src        message
+ *  @param[in]    **msg_ptr        message
+ *  @param[in]    *ptext        char
+ *  @param[in]    psize        size_t
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_OUT_OF_MEMORY   out of memory
@@ -4009,15 +4009,15 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
  *
  *  <!--       import_keys_from_decrypted_msg()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session	                session handle	
- *  @param[in]	*msg		            message
- *  @param[in]	*keys_were_imported		bool
- *  @param[in]	*imported_private		bool
- *  @param[in]	**private_il		identity_list
- *  @param[in]	**keylist		stringlist_t
- *  @param[in]	*changed_keys		uint64_t
+ *  @param[in]    session                    session handle    
+ *  @param[in]    *msg                    message
+ *  @param[in]    *keys_were_imported        bool
+ *  @param[in]    *imported_private        bool
+ *  @param[in]    **private_il        identity_list
+ *  @param[in]    **keylist        stringlist_t
+ *  @param[in]    *changed_keys        uint64_t
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
@@ -4094,12 +4094,12 @@ static PEP_STATUS import_keys_from_decrypted_msg(PEP_SESSION session,
  *
  *  <!--       pEp_version_upgrade_or_ignore()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session		session handle
- *  @param[in]	*ident		pEp_identity
- *  @param[in]	major		unsignedint
- *  @param[in]	minor		unsignedint
+ *  @param[in]    session        session handle
+ *  @param[in]    *ident        pEp_identity
+ *  @param[in]    major        unsignedint
+ *  @param[in]    minor        unsignedint
  *
  *  @retval PEP_STATUS_OK
  *  @retval any other value on error
@@ -4124,13 +4124,13 @@ static PEP_STATUS pEp_version_upgrade_or_ignore(
  *
  *  <!--       update_sender_to_pEp_trust()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session		session handle
- *  @param[in]	*sender		pEp_identity
- *  @param[in]	*keylist		stringlist_t
- *  @param[in]	major		unsignedint
- *  @param[in]	minor		unsignedint
+ *  @param[in]    session        session handle
+ *  @param[in]    *sender        pEp_identity
+ *  @param[in]    *keylist        stringlist_t
+ *  @param[in]    major        unsignedint
+ *  @param[in]    minor        unsignedint
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
@@ -4212,10 +4212,10 @@ static PEP_STATUS update_sender_to_pEp_trust(
  *
  *  <!--       reconcile_identity()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*srcid		pEp_identity
- *  @param[in]	*resultid		pEp_identity
+ *  @param[in]    *srcid        pEp_identity
+ *  @param[in]    *resultid        pEp_identity
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
@@ -4250,10 +4250,10 @@ static PEP_STATUS reconcile_identity(pEp_identity* srcid,
  *
  *  <!--       reconcile_identity_lists()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*src_ids		identity_list
- *  @param[in]	*result_ids		identity_list
+ *  @param[in]    *src_ids        identity_list
+ *  @param[in]    *result_ids        identity_list
  *
  */
 static PEP_STATUS reconcile_identity_lists(identity_list* src_ids,
@@ -4290,10 +4290,10 @@ static PEP_STATUS reconcile_identity_lists(identity_list* src_ids,
  *
  *  <!--       reconcile_sent_and_recv_info()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*src		message
- *  @param[in]	*inner_message		message
+ *  @param[in]    *src        message
+ *  @param[in]    *inner_message        message
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
@@ -4316,10 +4316,10 @@ static PEP_STATUS reconcile_sent_and_recv_info(message* src, message* inner_mess
  *
  *  <!--       reconcile_src_and_inner_messages()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*src		message
- *  @param[in]	*inner_message		message
+ *  @param[in]    *src        message
+ *  @param[in]    *inner_message        message
  *
  *  @retval PEP_STATUS_OK
  *  @retval any other value on error
@@ -4356,11 +4356,11 @@ static PEP_STATUS reconcile_src_and_inner_messages(message* src,
  *
  *  <!--       is_trusted_own_priv_fpr()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session	    session handle	
- *  @param[in]	*own_id		constchar
- *  @param[in]	*fpr		constchar
+ *  @param[in]    session        session handle    
+ *  @param[in]    *own_id        constchar
+ *  @param[in]    *fpr        constchar
  *
  *  @retval     bool
  */
@@ -4393,10 +4393,10 @@ static bool is_trusted_own_priv_fpr(PEP_SESSION session,
  *
  *  <!--       reject_fpr()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session		session handle
- *  @param[in]	*fpr		constchar
+ *  @param[in]    session        session handle
+ *  @param[in]    *fpr        constchar
  *
  *  @retval     bool
  */
@@ -4423,11 +4423,11 @@ static bool reject_fpr(PEP_SESSION session, const char* fpr) {
  *
  *  <!--       seek_good_trusted_private_fpr()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session	    session handle	
- *  @param[in]	*own_id		char
- *  @param[in]	*keylist		stringlist_t
+ *  @param[in]    session        session handle    
+ *  @param[in]    *own_id        char
+ *  @param[in]    *keylist        stringlist_t
  *
  */
 static char* seek_good_trusted_private_fpr(PEP_SESSION session, char* own_id,
@@ -4471,12 +4471,12 @@ static char* seek_good_trusted_private_fpr(PEP_SESSION session, char* own_id,
  *
  *  <!--       import_header_keys()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session		            session handle
- *  @param[in]	*src		            message
- *  @param[in]	**imported_key_list		stringlist_t
- *  @param[in]	*changed_keys		    uint64_t
+ *  @param[in]    session                    session handle
+ *  @param[in]    *src                    message
+ *  @param[in]    **imported_key_list        stringlist_t
+ *  @param[in]    *changed_keys            uint64_t
  *
  *  @retval     bool
  */
@@ -4512,11 +4512,11 @@ static bool import_header_keys(PEP_SESSION session, message* src, stringlist_t**
  *
  *  <!--       check_for_own_revoked_key()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session	        session handle	
- *  @param[in]	*keylist		stringlist_t
- *  @param[in]	**revoked_fpr_pairs		stringpair_list_t
+ *  @param[in]    session            session handle    
+ *  @param[in]    *keylist        stringlist_t
+ *  @param[in]    **revoked_fpr_pairs        stringpair_list_t
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
@@ -4624,9 +4624,9 @@ pEp_free:
  *
  *  <!--       _have_extrakeys()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*keylist		stringlist_t
+ *  @param[in]    *keylist        stringlist_t
  *
  *  @retval     bool
  */
@@ -4645,11 +4645,11 @@ static bool _have_extrakeys(stringlist_t *keylist)
  *
  *  <!--       ident_list_intersect()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*list_a		identity_list
- *  @param[in]	*list_b		identity_list
- *  @param[in]	**intersection		identity_list
+ *  @param[in]    *list_a        identity_list
+ *  @param[in]    *list_b        identity_list
+ *  @param[in]    **intersection        identity_list
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
@@ -5871,12 +5871,12 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
  *
  *  <!--       _max_comm_type_from_identity_list()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*identities		    identity_list
- *  @param[in]	session	            session handle	
- *  @param[in]	*max_comm_type		PEP_comm_type
- *  @param[in]	*comm_type_determined		bool
+ *  @param[in]    *identities            identity_list
+ *  @param[in]    session                session handle    
+ *  @param[in]    *max_comm_type        PEP_comm_type
+ *  @param[in]    *comm_type_determined        bool
  *
  */
 static void _max_comm_type_from_identity_list(
@@ -5934,11 +5934,11 @@ static void _max_comm_type_from_identity_list(
  *
  *  <!--       _max_comm_type_from_identity_list_preview()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*identities		    identity_list
- *  @param[in]	session	            session handle	
- *  @param[in]	*max_comm_type		PEP_comm_type
+ *  @param[in]    *identities            identity_list
+ *  @param[in]    session                session handle    
+ *  @param[in]    *max_comm_type        PEP_comm_type
  *
  */
 static void _max_comm_type_from_identity_list_preview(
@@ -6136,9 +6136,9 @@ DYNAMIC_API PEP_color color_from_rating(PEP_rating rating)
  *
  *  <!--       asciihex_to_num()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	a		char
+ *  @param[in]    a        char
  *
  */
 static short asciihex_to_num(char a) {
@@ -6159,9 +6159,9 @@ static short asciihex_to_num(char a) {
  *
  *  <!--       num_to_asciihex()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	h		short
+ *  @param[in]    h        short
  *
  */
 static char num_to_asciihex(short h) {
@@ -6177,10 +6177,10 @@ static char num_to_asciihex(short h) {
  *
  *  <!--       xor_hex_chars()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	a		char
- *  @param[in]	b		char
+ *  @param[in]    a        char
+ *  @param[in]    b        char
  *
  */
 static char xor_hex_chars(char a, char b) {
@@ -6197,10 +6197,10 @@ static char xor_hex_chars(char a, char b) {
  *
  *  <!--       skip_separators()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*current		constchar
- *  @param[in]	*begin		constchar
+ *  @param[in]    *current        constchar
+ *  @param[in]    *begin        constchar
  *
  */
 static const char* skip_separators(const char* current, const char* begin) {
@@ -6230,9 +6230,9 @@ static const char* skip_separators(const char* current, const char* begin) {
  *
  *  <!--       check_for_zero_fpr()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*fpr		char
+ *  @param[in]    *fpr        char
  *
  */
 PEP_STATUS check_for_zero_fpr(char* fpr) {
@@ -6270,11 +6270,11 @@ DYNAMIC_API PEP_STATUS get_trustwords(
  *
  *  <!--       remove_separators()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*str1		const char
- *  @param[in]	*str2		char
- *  @param[in]	str1len		int
+ *  @param[in]    *str1        const char
+ *  @param[in]    *str2        char
+ *  @param[in]    str1len        int
  *
  */
 static void remove_separators(const char* str1, char* str2, int str1len) {
@@ -6534,9 +6534,9 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
  *
  *  <!--       string_to_rating()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*rating		constchar
+ *  @param[in]    *rating        constchar
  *
  *  @retval    PEP_rating_undefined
  *  @retval    PEP_rating_cannot_decrypt
@@ -6589,10 +6589,10 @@ static PEP_rating string_to_rating(const char * rating)
  *
  *  <!--       string_to_keylist()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*skeylist		constchar
- *  @param[in]	**keylist		stringlist_t
+ *  @param[in]    *skeylist        constchar
+ *  @param[in]    **keylist        stringlist_t
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
