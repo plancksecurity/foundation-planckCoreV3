@@ -1896,5 +1896,5 @@ enomem:
 
 the_end:
     ASN_STRUCT_FREE(asn_DEF_Distribution, dist);
-    return status
+    return status;
 }

@@ -46,5 +46,5 @@ DYNAMIC_API bool is_PGP_message_text(const char *text)
 
     for (; *text && is_whitespace(*text); text++);
 
-    return strncmp(text, "-----BEGIN PGP MESSAGE-----", 27) == 0
+    return strncmp(text, "-----BEGIN PGP MESSAGE-----", 27) == 0;
 }
