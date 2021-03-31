@@ -1,8 +1,9 @@
-/** @file */
-/** @brief File description for doxygen missing. FIXME */
-
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    mime.c
+ * @brief   functionality as produced/consumed by the engine. This is the interface to the engine's
+ *          use of the underlying MIME parser
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #define _EXPORT_PEP_ENGINE_DLL
 #include "mime.h"
@@ -18,10 +19,11 @@
  *  
  *  <!--       is_whitespace()       -->
  *  
- *  @brief			TODO
+ *  @brief      checks if a character is a whitepsace character 
  *  
  *  @param[in]	c		char
  *  
+ *  @return     bool    true if whitespace, false otherwise
  */
 static bool is_whitespace(char c)
 {

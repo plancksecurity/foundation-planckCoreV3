@@ -34,6 +34,10 @@ extern "C" {
  *                                   all keys
  *  @param[out]  keyinfo_list      a key/value pair list for each key / UID combination
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval any other value on error
+ *
  *  @warning keyinfo_list must be freed by the caller.
  *  
  */

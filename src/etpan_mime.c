@@ -1,8 +1,8 @@
-/** @file */
-/** @brief File description for doxygen missing. FIXME */
-
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    etpan_mime.c 
+ * @brief   File description for doxygen missing. FIXME
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+*/
 
 #include "etpan_mime.h"
 #ifndef mailmime_param_new_with_data
@@ -1107,6 +1107,9 @@ static PEP_STATUS interpret_MIME(struct mailmime *mime,
  *  @param[in]	*mime		structmailmime
  *  @param[in]	**mimetext		char
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  */
 static PEP_STATUS render_mime(struct mailmime *mime, char **mimetext)
 {
@@ -1167,6 +1170,10 @@ pEp_error:
  *  @param[in]	*blob		bloblist_t
  *  @param[in]	**result		structmailmime
  *  @param[in]	is_nf_message_attachment		bool
+ *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  *  
  */
 static PEP_STATUS mime_attachment(
@@ -1238,6 +1245,9 @@ enomem:
  *  @param[in]	*attachments		bloblist_t
  *  @param[in]	**result		structmailmime
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  */
 static PEP_STATUS mime_html_text(
         const char *plaintext,
@@ -1623,6 +1633,9 @@ static clist * stringlist_to_clist(stringlist_t *sl, bool transport_encode)
  *  @param[in]	*msg		constmessage
  *  @param[in]	**result		structmailimf_fields
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  */
 static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **result)
 {
@@ -1947,6 +1960,9 @@ static pEp_rid_list_t* choose_resource_id(pEp_rid_list_t* rid_list) {
  *  @param[in]	**result		structmailmime
  *  @param[in]	has_pEp_msg_attachment		bool
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  */
 static PEP_STATUS mime_encode_message_plain(
         const message *msg,
@@ -2113,6 +2129,10 @@ pEp_error:
  *  @param[in]	*msg		constmessage
  *  @param[in]	omit_fields		bool
  *  @param[in]	**result		structmailmime
+ *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  *  
  */
 static PEP_STATUS mime_encode_message_PGP_MIME(
@@ -2484,6 +2504,9 @@ enomem:
  *  @param[in]	*msg		message
  *  @param[in]	*fieldlist		clist
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  */
 static PEP_STATUS read_fields(message *msg, clist *fieldlist)
 {
@@ -2706,6 +2729,10 @@ pEp_error:
  *  @param[in]	**longmsg		char
  *  @param[in]	*size		size_t
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  */
 static PEP_STATUS interpret_body(struct mailmime *part, char **longmsg, size_t *size)
 {
@@ -2845,6 +2872,10 @@ static PEP_STATUS interpret_protected_headers(
  *  
  *  @param[in]	*mime		structmailmime
  *  @param[in]	*msg		message
+ *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval any other value on error
  *  
  */
 static PEP_STATUS process_multipart_related(struct mailmime *mime,
@@ -2944,6 +2975,10 @@ static bool _is_marked_as_attachment(struct mailmime_fields *fields)
  *  @param[in]	*msg		message
  *  @param[in]	*has_possible_pEp_msg		bool
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  */
 static PEP_STATUS interpret_MIME(
         struct mailmime *mime,

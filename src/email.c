@@ -1,8 +1,8 @@
-/** @file */
-/** @brief File description for doxygen missing. FIXME */
-
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/** 
+ * @file email.c 
+ * @brief File description for doxygen missing. FIXME 
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #include "email.h"
 

@@ -114,6 +114,10 @@ DYNAMIC_API int identity_list_length(const identity_list *id_list);
  *  
  *  @param[in]  id_list         identity_list*
  *  @param[in]  user_id         const char*
+ *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
  *  
  */
 PEP_STATUS set_all_userids_in_list(identity_list* id_list, const char* user_id);

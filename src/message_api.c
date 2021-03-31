@@ -1,8 +1,8 @@
-/** @file */
-/** @brief File description for doxygen missing. FIXME */
-
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file     message_api.c
+ * @brief    implementation of pEp engine API for message handling and evaluation and related functions
+ * @license  GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #include "pEp_internal.h"
 #include "message_api.h"
@@ -41,7 +41,8 @@ double _pEp_log2_36;
  *  @brief			TODO
  *
  *  @param[in]	*msg		constmessage
- *
+ *  
+ *  @retval     bool
  */
 static bool is_a_pEpmessage(const message *msg)
 {
@@ -257,6 +258,7 @@ void replace_opt_field(message *msg,
  *
  *  @param[in]	*msg		message
  *
+ *  @retval     bool
  */
 static bool sync_message_attached(message *msg)
 {
@@ -278,10 +280,15 @@ static bool sync_message_attached(message *msg)
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session		session handle
  *  @param[in]	*msg		message
  *  @param[in]	rating		PEP_rating
  *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval PEP_SYNC_NO_CHANNEL
+ *  @retval any other value on error
  */
 PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rating)
 {
@@ -318,10 +325,14 @@ PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rati
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session		session handle
  *  @param[in]	*msg		message
  *  @param[in]	*rating		PEP_rating
  *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_SYNC_NO_CHANNEL
+ *  @retval any other value on error
  */
 PEP_STATUS get_receiverRating(PEP_SESSION session, message *msg, PEP_rating *rating)
 {
@@ -396,7 +407,8 @@ void decorate_message(
  *  @brief			TODO
  *
  *  @param[in]	*uri		char
- *
+ *  
+ *  @retval     bool
  */
 static char* _get_resource_ptr_noown(char* uri) {
     char* uri_delim = strstr(uri, "://");
@@ -415,7 +427,8 @@ static char* _get_resource_ptr_noown(char* uri) {
  *
  *  @param[in]	*s1		const char
  *  @param[in]	*s2		const char
- *
+ *  
+ *  @retval     bool
  */
 static bool string_equality(const char *s1, const char *s2)
 {
@@ -437,6 +450,7 @@ static bool string_equality(const char *s1, const char *s2)
  *  @param[in]	*bl		constbloblist_t
  *  @param[in]	*mt		constchar
  *
+ *  @retval     bool
  */
 static bool is_mime_type(const bloblist_t *bl, const char *mt)
 {
@@ -460,7 +474,8 @@ static bool is_mime_type(const bloblist_t *bl, const char *mt)
  *
  *  @param[in]	*bl		constbloblist_t
  *  @param[in]	*fe		constchar
- *
+ *  
+ *  @retval
  */
 static bool is_fileending(const bloblist_t *bl, const char *fe)
 {
@@ -596,6 +611,8 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
  *
  *  @param[in]	*msg		message
  *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
  */
 static PEP_STATUS replace_subject(message* msg) {
     unsigned char pEpstr[] = PEP_SUBJ_STRING;
@@ -735,6 +752,9 @@ static char* message_id_prand_part(void) {
  *
  *  @param[in]	*msg		message
  *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
  */
 static PEP_STATUS generate_message_id(message* msg) {
 
@@ -837,6 +857,8 @@ enomem:
  *  @param[in]	**data		char
  *  @param[in]	**modified_msg		char
  *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
  */
 static PEP_STATUS get_data_from_encapsulated_line(const char* plaintext, const char* key,
                                                   const size_t keylen, char** data, 
@@ -971,6 +993,9 @@ enomem:
  *  @param[in]	*dst		message
  *  @param[in]	*src		constmessage
  *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
  */
 static PEP_STATUS copy_fields(message *dst, const message *src)
 {
@@ -1338,6 +1363,9 @@ enomem:
  *  @param[in]	*dst		message
  *  @param[in]	flags		PEP_encrypt_flags_t
  *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  */
 static PEP_STATUS encrypt_PGP_inline(
         PEP_SESSION session,
@@ -1474,6 +1502,9 @@ static PEP_STATUS encrypt_PGP_inline(
  *  @param[in]	flags		PEP_encrypt_flags_t
  *  @param[in]	wrap_type		message_wrap_type
  *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  */
 static PEP_STATUS encrypt_PGP_MIME(
     PEP_SESSION session,
@@ -1638,6 +1669,7 @@ DYNAMIC_API PEP_rating rating_from_comm_type(PEP_comm_type ct)
  *
  *  @param[in]	*blob		constbloblist_t
  *
+ *  @retval     bool
  */
 static bool is_encrypted_attachment(const bloblist_t *blob)
 {
@@ -1677,6 +1709,7 @@ static bool is_encrypted_attachment(const bloblist_t *blob)
  *
  *  @param[in]	*blob		constbloblist_t
  *
+ *  @retval     bool
  */
 static bool is_encrypted_html_attachment(const bloblist_t *blob)
 {
@@ -1730,6 +1763,7 @@ static char * without_double_ending(const char *filename)
  *
  *  @param[in]	status		PEP_STATUS
  *
+ *  @retval PEP_rating    rating value for comm type ct
  */
 static PEP_rating decrypt_rating(PEP_STATUS status)
 {
@@ -1984,6 +2018,7 @@ static PEP_comm_type _get_comm_type_preview(
  *
  *  @param[in]	*bl		constbloblist_t
  *
+ *  @retval     bool
  */
 static bool is_key(const bloblist_t *bl)
 {
@@ -2066,12 +2101,13 @@ static bool compare_first_n_bytes(const char* first, const char* second, size_t 
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session	    session handle	
  *  @param[in]	*msg		message
  *  @param[in]	**private_idents		identity_list
  *  @param[in]	**imported_key_list		stringlist_t
  *  @param[in]	*changed_keys		uint64_t
  *
+ *  @retval     bool
  */
 bool import_attached_keys(
         PEP_SESSION session,
@@ -2199,7 +2235,12 @@ bool import_attached_keys(
  *  @param[in]	session		PEP_SESSION
  *  @param[in]	*fpr		constchar
  *  @param[in]	*msg		message
- *
+ *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_KEY_NOT_FOUND   key not found
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  */
 PEP_STATUS _attach_key(PEP_SESSION session, const char* fpr, message *msg)
 {
@@ -2333,10 +2374,13 @@ static void _cleanup_src(message* src, bool remove_attached_key) {
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session	        session handle	
  *  @param[in]	*id_list		identity_list
  *  @param[in]	enc_format		PEP_enc_format
  *
+ *  @retval     PEP_STATUS_OK
+ *  @retval     PEP_ILLEGAL_VALUE        illegal parameter value
+ *  @retval     PEP_CANNOT_SET_IDENTITY
  */
 static PEP_STATUS id_list_set_enc_format(PEP_SESSION session, identity_list* id_list, PEP_enc_format enc_format) {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -2376,10 +2420,11 @@ static void update_encryption_format(identity_list* id_list, PEP_enc_format* enc
  *
  *  <!--       failed_test()       -->
  *
- *  @brief			TODO
+ *  @brief      returns true if status indicates failure		
  *
  *  @param[in]	status		PEP_STATUS
  *
+ *  @retval     bool
  */
 static bool failed_test(PEP_STATUS status)
 {
@@ -2411,6 +2456,10 @@ static bool failed_test(PEP_STATUS status)
  *  @param[in]	*dest_keys_found		bool
  *  @param[in]	suppress_update_for_bcc		bool
  *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_UNKNOWN_DB_ERROR;
+ *  @retval any other value on error
  */
 static PEP_STATUS _update_state_for_ident_list(
         PEP_SESSION session,
@@ -3219,9 +3268,10 @@ pEp_error:
  *
  *  @brief			TODO
  *
- *  @param[in]	*msg		message
- *  @param[in]	**signature_blob		bloblist_t
+ *  @param[in]	    *msg		        message
+ *  @param[in,out]	**signature_blob	bloblist_t
  *
+ *  @retval PEP_STATUS_OK 
  */
 static PEP_STATUS _get_detached_signature(message* msg,
                                           bloblist_t** signature_blob) {
@@ -3248,11 +3298,14 @@ static PEP_STATUS _get_detached_signature(message* msg,
  *
  *  @brief			TODO
  *
- *  @param[in]	*ptext		constchar
- *  @param[in]	psize		constsize_t
- *  @param[in]	**stext		char
- *  @param[in]	*ssize		size_t
+ *  @param[in]	    *ptext		constchar
+ *  @param[in]	    psize		constsize_t
+ *  @param[out] 	**stext		char
+ *  @param[out]	    *ssize		size_t
  *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_UNKNOWN_ERROR 
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
  */
 static PEP_STATUS _get_signed_text(const char* ptext, const size_t psize,
                                    char** stext, size_t* ssize) {
@@ -3336,11 +3389,14 @@ static PEP_STATUS _get_signed_text(const char* ptext, const size_t psize,
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	**verify_in		stringlist_t
- *  @param[in]	**keylist_in_out		stringlist_t
- *  @param[in]	*from		pEp_identity
+ *  @param[in]	    session	            session handle	
+ *  @param[in]	    **verify_in		    stringlist_t
+ *  @param[out] 	**keylist_in_out	stringlist_t
+ *  @param[in] 	    *from		        pEp_identity
  *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_KEY_NOT_FOUND
+ *  @retval any other value on error
  */
 static PEP_STATUS combine_keylists(PEP_SESSION session, stringlist_t** verify_in,
                                    stringlist_t** keylist_in_out, 
@@ -3375,6 +3431,7 @@ static PEP_STATUS combine_keylists(PEP_SESSION session, stringlist_t** verify_in
         status = PEP_KEY_NOT_FOUND;
         goto free;
     }
+    return false;
 
     verify_curr = orig_verify;
     
@@ -3428,11 +3485,15 @@ free:
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*rating		PEP_rating
- *  @param[in]	*sender		pEp_identity
+ *  @param[in]	session	        session handle	
+ *  @param[in]	*rating		    PEP_rating
+ *  @param[in]	*sender		    pEp_identity
  *  @param[in]	*recipients		stringlist_t
  *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval PEP_CANNOT_FIND_IDENTITY
+ *  @retval any other value on error
  */
 static PEP_STATUS amend_rating_according_to_sender_and_recipients(
        PEP_SESSION session,
@@ -3487,6 +3548,7 @@ static PEP_STATUS amend_rating_according_to_sender_and_recipients(
  *
  *  @param[in]	*src		message
  *
+ *  @retval     bool
  */
 static bool pull_up_attached_main_msg(message* src) {
     char* slong = src->longmsg;
@@ -3533,6 +3595,11 @@ static bool pull_up_attached_main_msg(message* src) {
  *  @param[in]	*msg		message
  *  @param[in]	**msg_wrap_info		char
  *
+ *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  */
 static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg,
                                               char** msg_wrap_info) {
@@ -3637,6 +3704,7 @@ static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg,
  *  @param[in]	**crypto_text		char
  *  @param[in]	*text_size		size_t
  *
+ *  @retval PEP_STATUS_OK
  */
 static PEP_STATUS get_crypto_text(message* src, char** crypto_text, size_t* text_size) {
                 
@@ -3693,7 +3761,7 @@ static PEP_STATUS get_crypto_text(message* src, char** crypto_text, size_t* text
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session		session handle
  *  @param[in]	*src		message
  *  @param[in]	*msg		message
  *  @param[in]	*plaintext		char
@@ -3702,6 +3770,8 @@ static PEP_STATUS get_crypto_text(message* src, char** crypto_text, size_t* text
  *  @param[in]	*decrypt_status		PEP_STATUS
  *  @param[in]	crypto		PEP_cryptotech
  *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
  */
 static PEP_STATUS verify_decrypted(PEP_SESSION session,
                                    message* src,
@@ -3777,12 +3847,15 @@ static PEP_STATUS verify_decrypted(PEP_SESSION session,
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session		session handle
  *  @param[in]	*src		message
  *  @param[in]	**msg_ptr		message
  *  @param[in]	*ptext		char
  *  @param[in]	psize		size_t
  *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  */
 static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
                                      message* src, 
@@ -3938,14 +4011,18 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*msg		message
+ *  @param[in]	session	                session handle	
+ *  @param[in]	*msg		            message
  *  @param[in]	*keys_were_imported		bool
  *  @param[in]	*imported_private		bool
  *  @param[in]	**private_il		identity_list
  *  @param[in]	**keylist		stringlist_t
  *  @param[in]	*changed_keys		uint64_t
  *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  */
 static PEP_STATUS import_keys_from_decrypted_msg(PEP_SESSION session,
                                                       message* msg,
@@ -4019,11 +4096,13 @@ static PEP_STATUS import_keys_from_decrypted_msg(PEP_SESSION session,
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session		session handle
  *  @param[in]	*ident		pEp_identity
  *  @param[in]	major		unsignedint
  *  @param[in]	minor		unsignedint
  *
+ *  @retval PEP_STATUS_OK
+ *  @retval any other value on error
  */
 static PEP_STATUS pEp_version_upgrade_or_ignore(
         PEP_SESSION session,
@@ -4047,12 +4126,17 @@ static PEP_STATUS pEp_version_upgrade_or_ignore(
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session		session handle
  *  @param[in]	*sender		pEp_identity
  *  @param[in]	*keylist		stringlist_t
  *  @param[in]	major		unsignedint
  *  @param[in]	minor		unsignedint
  *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval PEP_CANNOT_SET_TRUST
+ *  @retval any other value on error
  */
 static PEP_STATUS update_sender_to_pEp_trust(
         PEP_SESSION session, 
@@ -4133,6 +4217,8 @@ static PEP_STATUS update_sender_to_pEp_trust(
  *  @param[in]	*srcid		pEp_identity
  *  @param[in]	*resultid		pEp_identity
  *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
  */
 static PEP_STATUS reconcile_identity(pEp_identity* srcid,
                                      pEp_identity* resultid) {
@@ -4209,6 +4295,8 @@ static PEP_STATUS reconcile_identity_lists(identity_list* src_ids,
  *  @param[in]	*src		message
  *  @param[in]	*inner_message		message
  *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
  */
 static PEP_STATUS reconcile_sent_and_recv_info(message* src, message* inner_message) {
     if (!src || !inner_message)
@@ -4233,6 +4321,8 @@ static PEP_STATUS reconcile_sent_and_recv_info(message* src, message* inner_mess
  *  @param[in]	*src		message
  *  @param[in]	*inner_message		message
  *
+ *  @retval PEP_STATUS_OK
+ *  @retval any other value on error
  */
 static PEP_STATUS reconcile_src_and_inner_messages(message* src,
                                              message* inner_message) {
@@ -4268,10 +4358,11 @@ static PEP_STATUS reconcile_src_and_inner_messages(message* src,
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session	    session handle	
  *  @param[in]	*own_id		constchar
  *  @param[in]	*fpr		constchar
  *
+ *  @retval     bool
  */
 static bool is_trusted_own_priv_fpr(PEP_SESSION session,
                        const char* own_id, 
@@ -4304,9 +4395,10 @@ static bool is_trusted_own_priv_fpr(PEP_SESSION session,
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session		session handle
  *  @param[in]	*fpr		constchar
  *
+ *  @retval     bool
  */
 static bool reject_fpr(PEP_SESSION session, const char* fpr) {
     bool reject = true;
@@ -4333,7 +4425,7 @@ static bool reject_fpr(PEP_SESSION session, const char* fpr) {
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session	    session handle	
  *  @param[in]	*own_id		char
  *  @param[in]	*keylist		stringlist_t
  *
@@ -4381,11 +4473,12 @@ static char* seek_good_trusted_private_fpr(PEP_SESSION session, char* own_id,
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*src		message
+ *  @param[in]	session		            session handle
+ *  @param[in]	*src		            message
  *  @param[in]	**imported_key_list		stringlist_t
- *  @param[in]	*changed_keys		uint64_t
+ *  @param[in]	*changed_keys		    uint64_t
  *
+ *  @retval     bool
  */
 static bool import_header_keys(PEP_SESSION session, message* src, stringlist_t** imported_key_list, uint64_t* changed_keys) {
     stringpair_list_t* header_keys = stringpair_list_find(src->opt_fields, "Autocrypt"); 
@@ -4421,10 +4514,13 @@ static bool import_header_keys(PEP_SESSION session, message* src, stringlist_t**
  *
  *  @brief			TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	session	        session handle	
  *  @param[in]	*keylist		stringlist_t
  *  @param[in]	**revoked_fpr_pairs		stringpair_list_t
  *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval any other value on error
  */
 PEP_STATUS check_for_own_revoked_key(
         PEP_SESSION session, 
@@ -4532,6 +4628,7 @@ pEp_free:
  *
  *  @param[in]	*keylist		stringlist_t
  *
+ *  @retval     bool
  */
 static bool _have_extrakeys(stringlist_t *keylist)
 {
@@ -4554,6 +4651,9 @@ static bool _have_extrakeys(stringlist_t *keylist)
  *  @param[in]	*list_b		identity_list
  *  @param[in]	**intersection		identity_list
  *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
  */
 static PEP_STATUS ident_list_intersect(identity_list* list_a,
                                        identity_list* list_b,
@@ -5773,8 +5873,8 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
  *
  *  @brief			TODO
  *
- *  @param[in]	*identities		identity_list
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*identities		    identity_list
+ *  @param[in]	session	            session handle	
  *  @param[in]	*max_comm_type		PEP_comm_type
  *  @param[in]	*comm_type_determined		bool
  *
@@ -5836,8 +5936,8 @@ static void _max_comm_type_from_identity_list(
  *
  *  @brief			TODO
  *
- *  @param[in]	*identities		identity_list
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]	*identities		    identity_list
+ *  @param[in]	session	            session handle	
  *  @param[in]	*max_comm_type		PEP_comm_type
  *
  */
@@ -6438,6 +6538,20 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
  *
  *  @param[in]	*rating		constchar
  *
+ *  @retval    PEP_rating_undefined
+ *  @retval    PEP_rating_cannot_decrypt
+ *  @retval    PEP_rating_have_no_key
+ *  @retval    PEP_rating_unencrypted
+ *  @retval    PEP_rating_undefined
+ *  @retval    PEP_rating_unreliable
+ *  @retval    PEP_rating_reliable
+ *  @retval    PEP_rating_trusted
+ *  @retval    PEP_rating_trusted_and_anonymized
+ *  @retval    PEP_rating_fully_anonymous
+ *  @retval    PEP_rating_mistrust
+ *  @retval    PEP_rating_b0rken
+ *  @retval    PEP_rating_under_attack
+ *  @retval    PEP_rating_undefined
  */
 static PEP_rating string_to_rating(const char * rating)
 {
@@ -6480,6 +6594,9 @@ static PEP_rating string_to_rating(const char * rating)
  *  @param[in]	*skeylist		constchar
  *  @param[in]	**keylist		stringlist_t
  *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
  */
 static PEP_STATUS string_to_keylist(const char * skeylist, stringlist_t **keylist)
 {

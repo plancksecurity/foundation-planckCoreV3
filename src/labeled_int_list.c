@@ -1,8 +1,8 @@
-/** @file */
-/** @brief File description for doxygen missing. FIXME */
-
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    labeled_int_list.c
+ * @brief   list structure which binds ints to labels
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #include <stdbool.h>
 #include <stdlib.h>

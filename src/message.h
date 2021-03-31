@@ -141,8 +141,8 @@ DYNAMIC_API void free_message(message *msg);
  *  @param[in]   msg    message to duplicate
  *  
  *  @retval pointer to duplicate of message pointed by msg or NULL
- *  @retval NOTA BENE:
- *  @retval not owned pointees (msg->rawmsg_ref and msg->refering_msg_ref) are shared!
+ *          NOTA BENE:
+ *          not owned pointees (msg->rawmsg_ref and msg->refering_msg_ref) are shared!
  *  
  *  
  */
@@ -224,7 +224,7 @@ DYNAMIC_API message_ref_list *message_ref_list_dup(
  *  @param[in]   msg         message to add a reference to
  *  
  *  @retval pointer to the last element of message_ref_list or NULL if out of
- *  @retval memory
+ *          memory
  *  
  *  
  */

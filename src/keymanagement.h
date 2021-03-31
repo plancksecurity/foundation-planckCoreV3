@@ -28,12 +28,12 @@ extern "C" {
  *  
  *  @retval PEP_STATUS_OK if identity could be updated,
  *  @retval PEP_ILLEGAL_VALUE if called with illegal inputs, including an identity
- *  @retval with .me set or with an own user_id specified in the
- *  @retval *input* (see caveats) 
+ *          with .me set or with an own user_id specified in the
+ *          *input* (see caveats) 
  *  @retval PEP_KEY_UNSUITABLE if a default key was found for this identity, no
- *  @retval other acceptable keys were found; if this is returned,
- *  @retval the reason for rejecting the first default key found
- *  @retval may be found in the comm_type
+ *          other acceptable keys were found; if this is returned,
+ *          the reason for rejecting the first default key found
+ *          may be found in the comm_type
  *  @retval any other value on error
  *  
  *  @warning at least identity->address must be a non-empty UTF-8 string as input
@@ -105,6 +105,8 @@ DYNAMIC_API PEP_STATUS update_identity(
  *                             the username record for this identity.                         
  *  
  *  @retval PEP_STATUS_OK if identity could be completed or was already complete,
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
  *  @retval any other value on error
  *  
  *  @warning If an fpr was entered and is not a valid key, the reason for failure
@@ -129,13 +131,17 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity);
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session        PEP_SESSION
+ *  @param[in]  session        session handle 
  *  @param[in]  identity       pEp_identity*
  *  @param[in]  do_keygen      bool
  *  @param[in]  do_renew       bool
  *  @param[in]  ignore_flags   bool
  *  @param[in]  read_only      bool
  *  
+ *  @retval PEP_STATUS_OK if identity could be completed or was already complete,
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  */
 PEP_STATUS _myself(PEP_SESSION session, 
                    pEp_identity * identity, 
@@ -152,9 +158,9 @@ PEP_STATUS _myself(PEP_SESSION session,
  *  @param[in]   management    data structure to deliver (implementation defined)
  *  
  *  @retval identity to check or NULL to terminate do_keymanagement()
- *  @retval if given identity must be created with new_identity()
- *  @retval the identity struct is going to the ownership of this library
- *  @retval it must not be freed by the callee
+ *          if given identity must be created with new_identity()
+ *          the identity struct is going to the ownership of this library
+ *          it must not be freed by the callee
  *  
  *  @warning this callback has to block until an identity or NULL can be returned
  *           an implementation is not provided by this library; instead it has to be
@@ -190,6 +196,8 @@ typedef int (*examine_identity_t)(pEp_identity *ident, void *management);
  *  @param[in]   examine_identity    examine_identity() function to register
  *  @param[in]   management          data structure to deliver (implementation defined)
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
  *  
  */
 
@@ -209,8 +217,10 @@ DYNAMIC_API PEP_STATUS register_examine_function(
  *                                           callback which returns at least a valid
  *                                           address field in the identity struct
  *  
- *  @retval PEP_STATUS_OK if thread has to terminate successfully or any other
- *  @retval value on failure
+ *  @retval PEP_STATUS_OK if thread has to terminate successfully 
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on failure
  *  
  *  @warning to ensure proper working of this library, a thread has to be started
  *           with this function immediately after initialization
@@ -259,7 +269,14 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
  *  @param[in]   ident      person and key to trust in - this must not be an
  *                            own_identity in which the .me flag is set or
  *                            the user_id is an own user_id.
+ *
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_KEY_UNSUITABLE  
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
+ *
  *  @warning the fields user_id, address and fpr must be supplied
  *           own identities will result in a return of PEP_ILLEGAL_VALUE.
  *           for non-own users, this will 1) set the trust bit on its comm type in the DB,
@@ -285,6 +302,12 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
  *  @param[in]   session    session to use
  *  @param[in]   ident      own ident containing fpr to trust
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_KEY_UNSUITABLE  
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
+ *
  *  @warning if this is a public key only, keep in mind that if
  *           the private part of the keypair is later added,
  *           it will not undergo separate trust evaluation. This
@@ -314,6 +337,11 @@ DYNAMIC_API PEP_STATUS trust_own_key(
  *  @param[in]   session    session to use
  *  @param[in]   ident      identity for person and key whose trust status is to be reset
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
+ *
  *  @warning ident is INPUT ONLY. If you want updated trust on the identity, you'll have
  *           to call update_identity or myself respectively after this.
  *           N.B. If you are calling this on a key that is the identity or user default,
@@ -336,6 +364,9 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
  *  @param[in]     fpr        fingerprint of key to test
  *  @param[out]    listed     flags if key is own
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval any other value on error
  *  
  */
 
@@ -353,8 +384,13 @@ DYNAMIC_API PEP_STATUS own_key_is_listed(
  *  
  *  @param[in]     session           session to use
  *  @param[out]    own_identities    list of own identities
- *                                   excluded_flags (int)    flags to exclude from results
+ *  @param[in]     excluded_flags    flags to exclude from results
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
+ *
  *  @warning the ownership of the copy of own_identities goes to the caller
  *  
  */
@@ -373,6 +409,11 @@ DYNAMIC_API PEP_STATUS _own_identities_retrieve(
  *  @param[in]     session           session to use
  *  @param[out]    own_identities    list of own identities
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
+ *
  *  @warning the ownership of the copy of own_identities goes to the caller
  *  
  */
@@ -387,10 +428,13 @@ DYNAMIC_API PEP_STATUS own_identities_retrieve(
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session       PEP_SESSION
+ *  @param[in]  session       session handle 
  *  @param[in]  fpr           const char*
  *  @param[in]  has_private   bool*
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval any other value on error
  */
 PEP_STATUS contains_priv_key(PEP_SESSION session, const char *fpr,
                              bool *has_private);
@@ -405,6 +449,10 @@ PEP_STATUS contains_priv_key(PEP_SESSION session, const char *fpr,
  *  @param[in]   excluded_flags    flags to exclude from results
  *  @param[in]   private_only      if true, return only fprs for
  *                                   which we have the secret part
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  *  
  *  @warning the ownership of the list goes to the caller
  *  
@@ -424,6 +472,11 @@ DYNAMIC_API PEP_STATUS _own_keys_retrieve(
  *  @param[in]     session    session to use
  *  @param[out]    keylist    list of fingerprints
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
+ *
  *  @warning the ownership of the list goes to the caller
  *           this function does not return keys without a private key part
  *  
@@ -442,6 +495,12 @@ DYNAMIC_API PEP_STATUS own_keys_retrieve(
  *  @param[in,out] me         own identity this key is used for
  *  @param[in]     fpr        fingerprint of the key to mark as own key
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_KEY_UNSUITABLE
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
+ *
  *  @warning the key has to be in the key ring already
  *           me->address, me->user_id and me->username must be set to valid data
  *           myself() is called by set_own_key() without key generation
@@ -516,9 +575,20 @@ DYNAMIC_API PEP_STATUS set_own_imported_key(
 /**
  *  <!--       clean_own_key_defaults()       -->
  *  
- *  @brief            TODO
+ *  @brief  Remove any broken, unrenewable expired, or revoked 
+ *          own keys from identity and user defaults in the database.
+ *
+ *  @param[in]  session     session handle 
+ *
+ *  @retval PEP_STATUS_OK            if all went well
+ *  @retval PEP_ILLEGAL_VALUE        illegal parameter values
+ *      
+ *  @retval PEP_PASSPHRASE_REQUIRED  if a key needs to be renewed 
+ *                                   but cached passphrase isn't present 
+ *  @retval PEP_WRONG_PASSPHRASE     if passphrase required for expired key renewal 
+ *                                   but passphrase is the wrong one
+ *  @retval Otherwise, database and keyring errors as appropriate 
  *  
- *  @param[in]  session     PEP_SESSION
  *  
  */
 DYNAMIC_API PEP_STATUS clean_own_key_defaults(PEP_SESSION session);
@@ -528,10 +598,15 @@ DYNAMIC_API PEP_STATUS clean_own_key_defaults(PEP_SESSION session);
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session   PEP_SESSION
+ *  @param[in]  session   session handle
  *  @param[in]  user_id   const char*
  *  @param[in]  keys      stringlist_t**
  *  
+ *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_KEY_NOT_FOUND
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval any other value on error
  */
 PEP_STATUS get_all_keys_for_user(PEP_SESSION session, 
                                  const char* user_id,
@@ -545,19 +620,25 @@ PEP_STATUS get_all_keys_for_user(PEP_SESSION session,
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session   PEP_SESSION
+ *  @param[in]  session   session handle 
  *  @param[in]  fpr       const char*
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_CANNOT_SET_PGP_KEYPAIR
  */
 PEP_STATUS add_mistrusted_key(PEP_SESSION session, const char* fpr);
 /**
  *  <!--       delete_mistrusted_key()       -->
  *  
  *  @brief            TODO
- *  
- *  @param[in]  session     PEP_SESSION
+ *
+ *  @param[in]  session     session handle
  *  @param[in]  fpr         const char*
- *  
+ *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_UNKNOWN_ERROR  
  */
 PEP_STATUS delete_mistrusted_key(PEP_SESSION session, const char* fpr);
 /**
@@ -565,10 +646,13 @@ PEP_STATUS delete_mistrusted_key(PEP_SESSION session, const char* fpr);
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session      PEP_SESSION
+ *  @param[in]  session      session handle
  *  @param[in]  fpr          const char*
  *  @param[in]  mistrusted   bool*
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_UNKNOWN_ERROR  
  */
 PEP_STATUS is_mistrusted_key(PEP_SESSION session, const char* fpr, bool* mistrusted);
 /**
@@ -576,10 +660,13 @@ PEP_STATUS is_mistrusted_key(PEP_SESSION session, const char* fpr, bool* mistrus
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session         PEP_SESSION
+ *  @param[in]  session         session handle
  *  @param[in]  user_id         const char*
  *  @param[in]  default_key     char**
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_GET_KEY_FAILED  
  */
 PEP_STATUS get_user_default_key(PEP_SESSION session, const char* user_id,
                                 char** default_key);
@@ -596,13 +683,16 @@ PEP_STATUS get_user_default_key(PEP_SESSION session, const char* user_id,
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session               PEP_SESSION
+ *  @param[in]  session               session handle
  *  @param[in]  stored_identity       pEp_identity*
  *  @param[in]  is_identity_default   bool*
  *  @param[in]  is_user_default       bool*
  *  @param[in]  is_address_default    bool*
  *  @param[in]  check_blacklist       bool
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval any other value on error
  */
 PEP_STATUS get_valid_pubkey(PEP_SESSION session,
                             pEp_identity* stored_identity,
