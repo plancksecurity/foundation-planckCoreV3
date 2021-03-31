@@ -59,7 +59,7 @@ static bool _is_whitespace(const char in) {
  *  
  *  <!--       subtract_whitespace()       -->
  *  
- *  @brief	    returns the lenght of the C string
+ *  @brief	    returns the length of the C string
  *              not counting whitespaces
  *  
  *  @param[in]	*input	    C string	
