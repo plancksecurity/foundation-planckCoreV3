@@ -2559,6 +2559,36 @@ pEp_done:
     return status;
 }
 
+static bool message_is_from_Sync(const message *src)
+{
+    // from must be set
+    if (!src->from || EMPTYSTR(src->from->address))
+        return false;
+
+    // first to must be set
+    if (!src->to || !src->to->ident || EMPTYSTR(src->to->ident->username))
+        return false;
+
+    // second to must not be set
+    if (src->to->next)
+        return false;
+
+    // cc must not be set
+    if (src->cc && src->cc->ident)
+        return false;
+
+    // bcc must not be set
+    if (src->bcc && src->bcc->ident)
+        return false;
+
+    // from and to must use the same address
+    if (strcmp(src->from->address, src->to->ident->address) != 0)
+        return false;
+
+    // this is a message from Sync
+    return true;
+}
+
 DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_SESSION session,
         message *src,
@@ -2611,8 +2641,11 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     // allow extra keys for non-org (e.g. business) accounts, so we set it to NULL
     // locally so as not to use it if it's a non-org account (cheaper than checks
     // everywhere)
-    if (!(src->from->flags & PEP_idf_org_ident))
-        extra = NULL;
+    if (!(src->from->flags & PEP_idf_org_ident)) {
+        // if this is not from pEp Sync
+        if (!message_is_from_Sync(src))
+            extra = NULL;
+    }
 
     // is a passphrase needed?
     status = probe_encrypt(session, src->from->fpr);
