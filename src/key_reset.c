@@ -881,33 +881,45 @@ static PEP_STATUS send_key_reset_to_active_group_members(PEP_SESSION session,
                                                          const char* new_key) {
     PEP_STATUS status = PEP_STATUS_OK;
 
+    // Declared out here for clean memory cleanup on failure
+    member_list* members = NULL;
+    pEp_identity* group_ident_clone = NULL;
+    identity_list* reset_ident_list = NULL;
+    message* outmsg = NULL;
+
     messageToSend_t send_cb = session->messageToSend;
     if (!send_cb)
         return PEP_SYNC_NO_MESSAGE_SEND_CALLBACK;
 
-    // FIXME: copy group_ident, I think
-    identity_list* group_ident_node = new_identity_list(group_ident);
-
     // Get active group member list
-    member_list* members = NULL;
-
     status = retrieve_active_member_list(session, group_ident, &members);
 
     if (status != PEP_STATUS_OK)
-        return status;
+        goto pEp_free;
 
     if (members) {
         member_list* curr_member = members;
 
+        // The identity we're resetting is the group_identity, which is why it is the "reset_ident_list"
+        // and is the sole member. We send a reset message to each identity.
         for ( ; curr_member && curr_member->member && curr_member->member->ident; curr_member = curr_member->next) {
             pEp_identity* member_ident = curr_member->member->ident;
             if (EMPTYSTR(member_ident->user_id) || EMPTYSTR(member_ident->address))
                 return PEP_UNKNOWN_ERROR;
 
-            message* outmsg = NULL;
-            identity_list* reset_ident_list = new_identity_list(group_ident);
-            if (!group_ident)
-                return PEP_OUT_OF_MEMORY;
+            outmsg = NULL;
+            group_ident_clone = identity_dup(group_ident);
+            if (!group_ident_clone) {
+                status = PEP_OUT_OF_MEMORY;
+                goto pEp_free;
+            }
+
+            reset_ident_list = new_identity_list(group_ident_clone);
+            if (!reset_ident_list) {
+                status = PEP_OUT_OF_MEMORY;
+                goto pEp_free;
+            }
+            group_ident_clone = NULL; // Prevent double-free
 
             // FIXME: this is a little expensive - we should refactor so that
             // we cache the command list and prepare the messages in a loop with a copy
@@ -919,18 +931,20 @@ static PEP_STATUS send_key_reset_to_active_group_members(PEP_SESSION session,
                                                    old_fpr,
                                                    &outmsg);
 
-            if (status != PEP_STATUS_OK) // FIXME: mem
-                return status;
+            if (status != PEP_STATUS_OK)
+                goto pEp_free;
 
-            if (!outmsg || !outmsg->attachments) // Must have keys
-                return PEP_UNKNOWN_ERROR;
+            if (!outmsg || !outmsg->attachments) {// Must have keys
+                status = PEP_UNKNOWN_ERROR;
+                goto pEp_free;
+            }
 
             // Attach key revocation
             char* revoked_key_material = NULL;
-            size_t revoked_key_size = NULL;
+            size_t revoked_key_size = 0;
             status = export_key(session, old_fpr, &revoked_key_material, &revoked_key_size);
             if (status != PEP_STATUS_OK)
-                return status; // FIXME: mem
+                goto pEp_free;
 
             bloblist_add(outmsg->attachments, revoked_key_material, revoked_key_size,
                          "application/pgp-keys","file://pEpkey_revoked.asc");
@@ -942,20 +956,31 @@ static PEP_STATUS send_key_reset_to_active_group_members(PEP_SESSION session,
             status = encrypt_message(session, outmsg, NULL, &enc_msg, PEP_enc_auto, PEP_encrypt_flag_key_reset_only);
 
             if (status != PEP_STATUS_OK)
-                return status;
+                goto pEp_free;
+
+            free_message(outmsg);
+            outmsg = NULL; // Stop double-frees today!
 
             _add_auto_consume(enc_msg);
 
             // insert into queue
             status = send_cb(enc_msg);
 
-            if (status != PEP_STATUS_OK)
-                return status;
+            if (status != PEP_STATUS_OK) // FIXME: Do we still own enc_msg on failure?
+                goto pEp_free;
         }
     }
 
     return status;
 
+pEp_free:
+    free_message(outmsg);
+    free_memberlist(members);
+    if (!reset_ident_list)
+        free_identity(group_ident_clone);
+    else
+        free_identity_list(reset_ident_list);
+    return status;
 }
 
 PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
