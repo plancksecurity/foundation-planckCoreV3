@@ -133,7 +133,7 @@ void uuid_generate_random(pEpUUID out)
     uuid_rc_t rc_create;
     size_t size = sizeof(uuid_string_t);
     void *_out = out;
-	
+
     if ((rc_create = uuid_create(&uuid)) != UUID_RC_OK ||
         uuid_make(uuid, UUID_MAKE_V1) != UUID_RC_OK ||
         uuid_export(uuid, UUID_FMT_BIN, &_out, &size) != UUID_RC_OK)
@@ -176,7 +176,7 @@ void uuid_unparse_upper(pEpUUID uu, uuid_string_t out)
 
 #if !defined(BSD) && !defined(__APPLE__)
 
-size_t strlcpy(char* dst, const	char* src, size_t size) {
+size_t strlcpy(char* dst, const char* src, size_t size) {
     size_t retval = strlen(src);
     size_t size_to_copy = (retval < size ? retval : size - 1);
     
@@ -187,7 +187,7 @@ size_t strlcpy(char* dst, const	char* src, size_t size) {
     return retval;
 }
 
-size_t strlcat(char* dst, const	char* src, size_t size) {
+size_t strlcat(char* dst, const char* src, size_t size) {
     size_t start_len = strnlen(dst, size);
     if (start_len == size)
         return size; // no copy, no null termination in size bytes, according to spec
@@ -255,10 +255,10 @@ char *strnstr(const char *big, const char *little, size_t len) {
  *  
  *  <!--       _stradd()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	**first		char
- *  @param[in]	*second		constchar
+ *  @param[in]    **first        char
+ *  @param[in]    *second        constchar
  *  
  */
 static char *_stradd(char **first, const char *second)
@@ -286,9 +286,9 @@ static char *_stradd(char **first, const char *second)
  *  
  *  <!--       _empty()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	**p		char
+ *  @param[in]    **p        char
  *  
  */
 static void _empty(char **p)
@@ -302,11 +302,11 @@ static void _empty(char **p)
  *  
  *  <!--       _move()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*o		constchar
- *  @param[in]	*ext		constchar
- *  @param[in]	*n		constchar
+ *  @param[in]    *o        constchar
+ *  @param[in]    *ext        constchar
+ *  @param[in]    *n        constchar
  *  
  */
 static void _move(const char *o, const char *ext, const char *n)
@@ -347,9 +347,9 @@ static void _move(const char *o, const char *ext, const char *n)
  *  
  *  <!--       _per_user_directory()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	reset		int
+ *  @param[in]    reset        int
  *  
  */
 static const char *_per_user_directory(int reset)

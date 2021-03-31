@@ -7,11 +7,11 @@
  *
  *  <!--       _sql_lower()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*ctx		sqlite3_context
- *  @param[in]	argc		int
- *  @param[in]	**argv		sqlite3_value
+ *  @param[in]    *ctx        sqlite3_context
+ *  @param[in]    argc        int
+ *  @param[in]    **argv      sqlite3_value
  *
  */
 static void _sql_lower(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
@@ -43,12 +43,12 @@ static void _sql_lower(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
  *
  *  <!--       sql_trace_callback()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	trace_constant		unsigned
- *  @param[in]	*context_ptr		void
- *  @param[in]	*P		void
- *  @param[in]	*X		void
+ *  @param[in]    trace_constant        unsigned
+ *  @param[in]    *context_ptr        void
+ *  @param[in]    *P        void
+ *  @param[in]    *X        void
  *
  */
 int sql_trace_callback (unsigned trace_constant,
@@ -83,11 +83,11 @@ int sql_trace_callback (unsigned trace_constant,
  *
  *  <!--       errorLogCallback()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*pArg		void
- *  @param[in]	iErrCode		int
- *  @param[in]	*zMsg		constchar
+ *  @param[in]    *pArg        void
+ *  @param[in]    iErrCode     int
+ *  @param[in]    *zMsg        constchar
  *
  */
 void errorLogCallback(void *pArg, int iErrCode, const char *zMsg){
@@ -100,10 +100,10 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg){
  *
  *  <!--       db_contains_table()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*table_name		constchar
+ *  @param[in]    session            PEP_SESSION
+ *  @param[in]    *table_name        constchar
  *
  */
 static int db_contains_table(PEP_SESSION session, const char* table_name) {
@@ -155,11 +155,11 @@ static int db_contains_table(PEP_SESSION session, const char* table_name) {
  *
  *  <!--       table_contains_column()       -->
  *
- *  @brief			TODO
+ *  @brief        TODO
  *
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*table_name		constchar
- *  @param[in]	*col_name		constchar
+ *  @param[in]    session        PEP_SESSION
+ *  @param[in]    *table_name    constchar
+ *  @param[in]    *col_name      constchar
  *
  */
 static int table_contains_column(PEP_SESSION session, const char* table_name,
@@ -217,9 +217,9 @@ static int table_contains_column(PEP_SESSION session, const char* table_name,
  *
  *  <!--       repair_altered_tables()       -->
  *
- *  @brief			TODO
+ *  @brief        TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]    session        PEP_SESSION
  *
  */
 #define _PEP_MAX_AFFECTED 5
@@ -406,9 +406,9 @@ PEP_STATUS repair_altered_tables(PEP_SESSION session) {
  *
  *  <!--       upgrade_revoc_contact_to_13()       -->
  *
- *  @brief			TODO
+ *  @brief        TODO
  *
- *  @param[in]	session		PEP_SESSION
+ *  @param[in]    session        PEP_SESSION
  *
  */
 static PEP_STATUS upgrade_revoc_contact_to_13(PEP_SESSION session) {
@@ -547,12 +547,12 @@ static PEP_STATUS upgrade_revoc_contact_to_13(PEP_SESSION session) {
  *
  *  <!--       user_version()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*_version		void
- *  @param[in]	count		int
- *  @param[in]	**text		char
- *  @param[in]	**name		char
+ *  @param[in]    *_version     void
+ *  @param[in]    count         int
+ *  @param[in]    **text        char
+ *  @param[in]    **name        char
  *
  */
 static int user_version(void *_version, int count, char **text, char **name)
@@ -2341,6 +2341,13 @@ PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session) {
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
+    int_result = sqlite3_prepare_v2(session->db, sql_group_delete_member,
+                                    (int)strlen(sql_group_delete_member), &session->group_delete_member, NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
 
     int_result = sqlite3_prepare_v2(session->db, sql_set_group_member_status,
                                     (int)strlen(sql_set_group_member_status), &session->set_group_member_status, NULL);
@@ -2349,8 +2356,8 @@ PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session) {
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
-    int_result = sqlite3_prepare_v2(session->db, sql_join_group,
-                                    (int)strlen(sql_join_group), &session->join_group, NULL);
+    int_result = sqlite3_prepare_v2(session->db, sql_group_join,
+                                    (int)strlen(sql_group_join), &session->group_join, NULL);
     assert(int_result == SQLITE_OK);
 
     if (int_result != SQLITE_OK)
@@ -2439,7 +2446,14 @@ PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session) {
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
+    int_result = sqlite3_prepare_v2(session->db, sql_is_active_group_member,
+                                    (int)strlen(sql_is_active_group_member), &session->is_active_group_member, NULL);
+    assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+    
     int_result = sqlite3_prepare_v2(session->db, sql_is_group_active,
                                     (int)strlen(sql_is_group_active), &session->is_group_active, NULL);
     assert(int_result == SQLITE_OK);
@@ -2624,10 +2638,12 @@ PEP_STATUS pEp_finalize_sql_stmts(PEP_SESSION session) {
         sqlite3_finalize(session->exists_group_entry);
     if (session->group_add_member)
         sqlite3_finalize(session->group_add_member);
+    if (session->group_delete_member)
+        sqlite3_finalize(session->group_delete_member);
     if (session->set_group_member_status)
         sqlite3_finalize(session->set_group_member_status);
-    if (session->join_group)
-        sqlite3_finalize(session->join_group);
+    if (session->group_join)
+        sqlite3_finalize(session->group_join);
     if (session->leave_group)
         sqlite3_finalize(session->leave_group);
     if (session->get_all_members)
@@ -2650,6 +2666,8 @@ PEP_STATUS pEp_finalize_sql_stmts(PEP_SESSION session) {
         sqlite3_finalize(session->get_group_manager);
     if (session->is_invited_group_member)
         sqlite3_finalize(session->is_invited_group_member);
+    if (session->is_active_group_member)
+        sqlite3_finalize(session->is_active_group_member);
     if (session->is_group_active)
         sqlite3_finalize(session->is_group_active);
     if (session->set_pgp_keypair_flags)

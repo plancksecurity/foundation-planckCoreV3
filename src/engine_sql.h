@@ -525,11 +525,15 @@ static const char *sql_exists_group_entry =
 static const char *sql_group_add_member =
         "insert or ignore into own_groups_members (group_id, group_address, member_id, member_address) "
         "    values (?1, ?2, ?3, ?4) ;";
+static const char *sql_group_delete_member =
+        "delete from own_groups_members "
+        "    where group_id = ?1 and  group_address = ?2 and "
+        "          member_id = ?3 and member_address = ?4 ;";
 static const char *sql_set_group_member_status =
         "update own_groups_members set active_member = ?1 "
         "    where group_id = ?2 and group_address = ?3 and "
         "          member_id = ?4 and member_address = ?5; ";
-static const char *sql_join_group =
+static const char *sql_group_join =
         "update own_memberships set have_joined = 1 "
         "    where group_id = ?1 and group_address = ?2 and "
         "          own_id = ?3 and own_address = ?4; ";
@@ -548,6 +552,9 @@ static const char *sql_get_group_manager =
         "   where group_id = ?1 and group_address = ?2; ";
 static const char *sql_is_invited_group_member =
         "select count(*) from own_groups_members "
+        "   where group_id = ?1 and group_address = ?2 and member_id = ?3 and member_address = ?4; ";
+static const char *sql_is_active_group_member =
+        "select active_member from own_groups_members "
         "   where group_id = ?1 and group_address = ?2 and member_id = ?3 and member_address = ?4; ";
 static const char *sql_get_all_groups =
         "select group_id, group_address from own_memberships; ";

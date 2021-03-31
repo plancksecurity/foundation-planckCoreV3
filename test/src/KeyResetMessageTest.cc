@@ -1135,6 +1135,7 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_grouped) {
     status = set_identity_flags(session, alex_id, alex_id->flags | PEP_idf_devicegroup);
     ASSERT_EQ(status , PEP_STATUS_OK);
 
+    // alex_id2 should NOT reset. Period.
     alex_id2->me = true;
     status = set_own_key(session, alex_id2, pubkey2);
     ASSERT_EQ(status, PEP_STATUS_OK);

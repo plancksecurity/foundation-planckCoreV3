@@ -111,12 +111,12 @@
  *
  *  <!--       sq_sql_trace_callback()       -->
  *
- *  @brief			TODO
+ *  @brief                        TODO
  *
- *  @param[in]	trace_constant		unsigned
- *  @param[in]	*context_ptr		void
- *  @param[in]	*P		void
- *  @param[in]	*X		void
+ *  @param[in]        trace_constant                unsigned
+ *  @param[in]        *context_ptr                void
+ *  @param[in]        *P                void
+ *  @param[in]        *X                void
  *
  */
 int sq_sql_trace_callback (unsigned trace_constant,
@@ -753,12 +753,12 @@ static char *pgp_fingerprint_canonicalize(const char *fpr)
  *
  *  <!--       key_load()       -->
  *
- *  @brief			TODO
+ *  @brief                        TODO
  *
- *  @param[in]	PEP_SESSION	    session handle	
- *  @param[in]	*		sqlite3_stmt
- *  @param[in]	*		pgp_cert_t
- *  @param[in]	*		int
+ *  @param[in]        session        session handle
+ *  @param[in]        stmt
+ *  @param[in]        certp
+ *  @param[in]        secretp
  *
  */
 static PEP_STATUS key_load(PEP_SESSION, sqlite3_stmt *, pgp_cert_t *, int *)
@@ -806,12 +806,12 @@ static PEP_STATUS key_load(PEP_SESSION session, sqlite3_stmt *stmt,
  *
  *  <!--       key_loadn()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	PEP_SESSION	    session handle	
- *  @param[in]	*		sqlite3_stmt
- *  @param[in]	**		pgp_cert_t
- *  @param[in]	*		int
+ *  @param[in]    PEP_SESSION        session handle
+ *  @param[in]    *sqlite3_stmt
+ *  @param[in]    **pgp_cert_t
+ *  @param[in]    *int
  *
  */
 static PEP_STATUS key_loadn(PEP_SESSION, sqlite3_stmt *, pgp_cert_t **, int *)
@@ -1468,17 +1468,17 @@ get_public_keys_cb(void *cookie_raw,
  *
  *  <!--       decrypt_cb()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*cookie_opaque		void
- *  @param[in]	*pkesks		pgp_pkesk_t
- *  @param[in]	pkesk_count		size_t
- *  @param[in]	*skesks		pgp_skesk_t
- *  @param[in]	skesk_count		size_t
- *  @param[in]	symmetric_algo		uint8_t
- *  @param[in]	*decrypt		pgp_decryptor_do_decrypt_cb_t
- *  @param[in]	*decrypt_cookie		void
- *  @param[in]	*identity_out		pgp_fingerprint_t
+ *  @param[in]    *cookie_opaque        void
+ *  @param[in]    *pkesks        pgp_pkesk_t
+ *  @param[in]    pkesk_count        size_t
+ *  @param[in]    *skesks        pgp_skesk_t
+ *  @param[in]    skesk_count        size_t
+ *  @param[in]    symmetric_algo        uint8_t
+ *  @param[in]    *decrypt        pgp_decryptor_do_decrypt_cb_t
+ *  @param[in]    *decrypt_cookie        void
+ *  @param[in]    *identity_out        pgp_fingerprint_t
  *
  */
 static pgp_status_t
@@ -2724,9 +2724,13 @@ PEP_STATUS _pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity, ti
     assert(identity->fpr == NULL || identity->fpr[0] == 0);
 //    assert(identity->username);
 
-    const char* passphrase = session->generation_passphrase;
+    bool is_group_identity = identity->flags & PEP_idf_group_ident;
 
-    if (session->new_key_pass_enable && (!passphrase || passphrase[0] == '\0'))
+    // NOTE: FOR NOW, NO PASSPHRASE-BASED KEYS WILL BE GENERATED FOR GROUP ENCRYPTION.
+    // VOLKER HAS A PLAN TO FIX THIS.
+    const char* passphrase = is_group_identity ? NULL : session->generation_passphrase;
+
+    if (!is_group_identity && session->new_key_pass_enable && (!passphrase || passphrase[0] == '\0'))
         return PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED;
 
     char* cached_username = identity->username;
@@ -2779,7 +2783,9 @@ PEP_STATUS _pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity, ti
     pgp_cert_builder_t certb = pgp_cert_builder_general_purpose(
         cipher_suite(session->cipher_suite), userid);
 
-    if (session->new_key_pass_enable)        
+    // NOTE: FOR NOW, NO PASSPHRASE-BASED KEYS WILL BE GENERATED FOR GROUP ENCRYPTION.
+    // VOLKER HAS A PLAN TO FIX THIS.
+    if (!is_group_identity && session->new_key_pass_enable)
         pgp_cert_builder_set_password(&certb, (uint8_t*)passphrase, strlen(passphrase));        
 
     pgp_cert_builder_set_creation_time(&certb, when);
@@ -2894,14 +2900,14 @@ static unsigned int count_keydata_parts(const char* key_data, size_t size) {
  *
  *  <!--       _pgp_import_keydata()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session	        session handle	
- *  @param[in]	*key_data		const char
- *  @param[in]	size		    size_t
- *  @param[in]	**private_idents		identity_list
- *  @param[in]	**imported_keys		stringlist_t
- *  @param[in]	*changed_bitvec		uint64_t
+ *  @param[in]    session            session handle
+ *  @param[in]    *key_data        const char
+ *  @param[in]    size            size_t
+ *  @param[in]    **private_idents        identity_list
+ *  @param[in]    **imported_keys        stringlist_t
+ *  @param[in]    *changed_bitvec        uint64_t
  *
  */
 PEP_STATUS _pgp_import_keydata(PEP_SESSION session, const char *key_data,
@@ -3257,9 +3263,9 @@ PEP_STATUS pgp_export_keydata(
  *
  *  <!--       _undot_address()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*address		const char
+ *  @param[in]    *address        const char
  *
  */
 static char *_undot_address(const char* address) {
@@ -3318,13 +3324,13 @@ static char *_undot_address(const char* address) {
  *
  *  <!--       add_key()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session	            session handle	
- *  @param[in]	*keyinfo_list		stringpair_list_t
- *  @param[in]	*keylist		stringlist_t
- *  @param[in]	cert		pgp_cert_t
- *  @param[in]	fpr		pgp_fingerprint_t
+ *  @param[in]    session        session handle
+ *  @param[in]    *keyinfo_list  stringpair_list_t
+ *  @param[in]    *keylist       stringlist_t
+ *  @param[in]    cert           pgp_cert_t
+ *  @param[in]    fpr            pgp_fingerprint_t
  *
  */
 static stringpair_list_t *add_key(PEP_SESSION session,
@@ -3994,7 +4000,7 @@ PEP_STATUS pgp_key_expired(PEP_SESSION session, const char *fpr,
  *
  *  @param[in]    session        session handle
  *  @param[in]    cert           pgp_cert_t
- *  @param[in]    *revoked        bool
+ *  @param[in]    *revoked       bool
  *
  */
 /**
@@ -4002,11 +4008,11 @@ PEP_STATUS pgp_key_expired(PEP_SESSION session, const char *fpr,
  *
  *  <!--       _pgp_key_revoked()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	session	        session handle	
- *  @param[in]	cert		    pgp_cert_t
- *  @param[in]	*revoked		bool
+ *  @param[in]    session         session handle
+ *  @param[in]    cert            pgp_cert_t
+ *  @param[in]    *revoked        bool
  *
  */
 static void _pgp_key_revoked(PEP_SESSION session, pgp_cert_t cert, bool* revoked) {

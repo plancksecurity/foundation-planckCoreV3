@@ -248,7 +248,8 @@ struct _pEpSession {
     sqlite3_stmt *disable_group;
     sqlite3_stmt *exists_group_entry;
     sqlite3_stmt *group_add_member;
-    sqlite3_stmt *join_group;
+    sqlite3_stmt *group_delete_member;
+    sqlite3_stmt *group_join;
     sqlite3_stmt *leave_group;
     sqlite3_stmt *set_group_member_status;
     sqlite3_stmt *get_all_members;
@@ -261,6 +262,7 @@ struct _pEpSession {
     sqlite3_stmt *retrieve_own_membership_info_for_group;
     sqlite3_stmt *get_group_manager;
     sqlite3_stmt *is_invited_group_member;
+    sqlite3_stmt *is_active_group_member;
     sqlite3_stmt *is_group_active;
 
 //    sqlite3_stmt *set_own_key;
@@ -815,9 +817,9 @@ static inline int Sqlite3_step(sqlite3_stmt* stmt)
  *
  *  <!--       _add_auto_consume()       -->
  *
- *  @brief			TODO
+ *  @brief            TODO
  *
- *  @param[in]	*msg		message
+ *  @param[in]    *msg        message
  *
  */
 static inline void _add_auto_consume(message* msg) {

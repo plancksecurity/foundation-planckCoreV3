@@ -49,7 +49,7 @@ static bool ascii_exceeds_line_length(const char* data, size_t size) {
  *  
  *  <!--       generate_boundary()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
  *  
  */
@@ -844,11 +844,11 @@ char * _get_filename_or_cid(struct mailmime *mime)
  *  
  *  <!--       parameter_has_value()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*content		structmailmime_content
- *  @param[in]	*name		constchar
- *  @param[in]	*value		constchar
+ *  @param[in]    *content        structmailmime_content
+ *  @param[in]    *name        constchar
+ *  @param[in]    *value        constchar
  *  
  */
 static bool parameter_has_value(
@@ -932,10 +932,10 @@ bool _is_text_part(struct mailmime_content *content, const char *subtype)
  *  
  *  <!--       _is_message_part()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*content		structmailmime_content
- *  @param[in]	*subtype		constchar
+ *  @param[in]    *content        structmailmime_content
+ *  @param[in]    *subtype        constchar
  *  
  */
 bool _is_message_part(struct mailmime_content *content, const char* subtype) {
@@ -1102,10 +1102,10 @@ static PEP_STATUS interpret_MIME(struct mailmime *mime,
  *  
  *  <!--       render_mime()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*mime		structmailmime
- *  @param[in]	**mimetext		char
+ *  @param[in]    *mime        structmailmime
+ *  @param[in]    **mimetext        char
  *  
  *  @retval PEP_STATUS_OK
  *  @retval PEP_OUT_OF_MEMORY   out of memory
@@ -1116,31 +1116,31 @@ static PEP_STATUS render_mime(struct mailmime *mime, char **mimetext)
     PEP_STATUS status = PEP_STATUS_OK;
     int col;
     int r;
-	size_t len;
-	char* buf = NULL;
+    size_t len;
+    char* buf = NULL;
 
-	MMAPString* buffer;
+    MMAPString* buffer;
 
-	buffer = mmap_string_new(NULL);
-	if (buffer == NULL)
-		goto enomem;
-	
-	col = 0;
-	r = mailmime_write_mem(buffer, &col, mime);
-	assert(r == MAILIMF_NO_ERROR);
-	if (r == MAILIMF_ERROR_MEMORY)
-		goto enomem;
-	else if (r != MAILIMF_NO_ERROR)
-		goto err_file;
+    buffer = mmap_string_new(NULL);
+    if (buffer == NULL)
+        goto enomem;
 
-	// we overallocate by 1 byte, so we have a terminating 0.
-	len = buffer->len;
-	buf = calloc(len + 1, 1);
-	if (buf == NULL)
-		goto enomem;
+    col = 0;
+    r = mailmime_write_mem(buffer, &col, mime);
+    assert(r == MAILIMF_NO_ERROR);
+    if (r == MAILIMF_ERROR_MEMORY)
+        goto enomem;
+    else if (r != MAILIMF_NO_ERROR)
+        goto err_file;
 
-	memcpy(buf, buffer->str, len);
-	mmap_string_free(buffer);
+    // we overallocate by 1 byte, so we have a terminating 0.
+    len = buffer->len;
+    buf = calloc(len + 1, 1);
+    if (buf == NULL)
+        goto enomem;
+
+    memcpy(buf, buffer->str, len);
+    mmap_string_free(buffer);
 
     *mimetext = buf;
     return PEP_STATUS_OK;
@@ -1153,10 +1153,10 @@ enomem:
     status = PEP_OUT_OF_MEMORY;
 
 pEp_error:
-	if (buffer)
-		mmap_string_free(buffer);
-	if (buf)
-		free(buf);
+    if (buffer)
+        mmap_string_free(buffer);
+    if (buf)
+        free(buf);
     return status;
 }
 
@@ -1165,11 +1165,11 @@ pEp_error:
  *  
  *  <!--       mime_attachment()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*blob		bloblist_t
- *  @param[in]	**result		structmailmime
- *  @param[in]	is_nf_message_attachment		bool
+ *  @param[in]    *blob        bloblist_t
+ *  @param[in]    **result        structmailmime
+ *  @param[in]    is_nf_message_attachment        bool
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_OUT_OF_MEMORY   out of memory
@@ -1238,12 +1238,12 @@ enomem:
  *  
  *  <!--       mime_html_text()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*plaintext		constchar
- *  @param[in]	*htmltext		constchar
- *  @param[in]	*attachments		bloblist_t
- *  @param[in]	**result		structmailmime
+ *  @param[in]    *plaintext        constchar
+ *  @param[in]    *htmltext        constchar
+ *  @param[in]    *attachments        bloblist_t
+ *  @param[in]    **result        structmailmime
  *  
  *  @retval PEP_STATUS_OK
  *  @retval PEP_OUT_OF_MEMORY   out of memory
@@ -1434,9 +1434,9 @@ enomem:
  *  
  *  <!--       identity_to_mailbox()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*ident		constpEp_identity
+ *  @param[in]    *ident        constpEp_identity
  *  
  */
 static struct mailimf_mailbox * identity_to_mailbox(const pEp_identity *ident)
@@ -1474,9 +1474,9 @@ enomem:
  *  
  *  <!--       identity_to_mbl()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*ident		constpEp_identity
+ *  @param[in]    *ident        constpEp_identity
  *  
  */
 static struct mailimf_mailbox_list * identity_to_mbl(
@@ -1522,9 +1522,9 @@ enomem:
  *  
  *  <!--       identity_list_to_mal()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*il		identity_list
+ *  @param[in]    *il        identity_list
  *  
  */
 static struct mailimf_address_list * identity_list_to_mal(identity_list *il)
@@ -1584,10 +1584,10 @@ enomem:
  *  
  *  <!--       stringlist_to_clist()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*sl		stringlist_t
- *  @param[in]	transport_encode		bool
+ *  @param[in]    *sl        stringlist_t
+ *  @param[in]    transport_encode        bool
  *  
  */
 static clist * stringlist_to_clist(stringlist_t *sl, bool transport_encode)
@@ -1628,10 +1628,10 @@ static clist * stringlist_to_clist(stringlist_t *sl, bool transport_encode)
  *  
  *  <!--       build_fields()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*msg		constmessage
- *  @param[in]	**result		structmailimf_fields
+ *  @param[in]    *msg	    constmessage
+ *  @param[in]    **result        structmailimf_fields
  *  
  *  @retval PEP_STATUS_OK
  *  @retval PEP_OUT_OF_MEMORY   out of memory
@@ -1871,9 +1871,9 @@ enomem:
  *  
  *  <!--       has_exceptional_extension()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*filename		char
+ *  @param[in]    *filename        char
  *  
  */
 static bool has_exceptional_extension(char* filename) {
@@ -1894,9 +1894,9 @@ static bool has_exceptional_extension(char* filename) {
  *  
  *  <!--       choose_resource_id()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*rid_list		pEp_rid_list_t
+ *  @param[in]    *rid_list        pEp_rid_list_t
  *  
  */
 static pEp_rid_list_t* choose_resource_id(pEp_rid_list_t* rid_list) {
@@ -1953,12 +1953,12 @@ static pEp_rid_list_t* choose_resource_id(pEp_rid_list_t* rid_list) {
  *  
  *  <!--       mime_encode_message_plain()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*msg		constmessage
- *  @param[in]	omit_fields		bool
- *  @param[in]	**result		structmailmime
- *  @param[in]	has_pEp_msg_attachment		bool
+ *  @param[in]    *msg        constmessage
+ *  @param[in]    omit_fields        bool
+ *  @param[in]    **result        structmailmime
+ *  @param[in]    has_pEp_msg_attachment        bool
  *  
  *  @retval PEP_STATUS_OK
  *  @retval PEP_OUT_OF_MEMORY   out of memory
@@ -2124,11 +2124,11 @@ pEp_error:
  *  
  *  <!--       mime_encode_message_PGP_MIME()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*msg		constmessage
- *  @param[in]	omit_fields		bool
- *  @param[in]	**result		structmailmime
+ *  @param[in]    *msg        constmessage
+ *  @param[in]    omit_fields        bool
+ *  @param[in]    **result        structmailmime
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_OUT_OF_MEMORY   out of memory
@@ -2143,7 +2143,7 @@ static PEP_STATUS mime_encode_message_PGP_MIME(
 {
     struct mailmime * mime = NULL;
     struct mailmime * submime = NULL;
-	struct mailmime_parameter * param;
+    struct mailmime_parameter * param;
     int r;
     PEP_STATUS status;
     char *plaintext;
@@ -2311,9 +2311,9 @@ pEp_error:
  *  
  *  <!--       mailbox_to_identity()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*mb		conststructmailimf_mailbox
+ *  @param[in]    *mb        conststructmailimf_mailbox
  *  
  */
 static pEp_identity *mailbox_to_identity(const struct mailimf_mailbox * mb)
@@ -2368,9 +2368,9 @@ enomem:
  *  
  *  <!--       mbl_to_identity()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*mbl		conststructmailimf_mailbox_list
+ *  @param[in]    *mbl        conststructmailimf_mailbox_list
  *  
  */
 static pEp_identity * mbl_to_identity(const struct mailimf_mailbox_list * mbl)
@@ -2384,9 +2384,9 @@ static pEp_identity * mbl_to_identity(const struct mailimf_mailbox_list * mbl)
  *  
  *  <!--       mal_to_identity_list()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*mal		conststructmailimf_address_list
+ *  @param[in]    *mal        conststructmailimf_address_list
  *  
  */
 static identity_list * mal_to_identity_list(
@@ -2455,9 +2455,9 @@ enomem:
  *  
  *  <!--       clist_to_stringlist()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*list		constclist
+ *  @param[in]    *list        constclist
  *  
  */
 static stringlist_t * clist_to_stringlist(const clist *list)
@@ -2499,10 +2499,10 @@ enomem:
  *  
  *  <!--       read_fields()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*msg		message
- *  @param[in]	*fieldlist		clist
+ *  @param[in]    *msg        message
+ *  @param[in]    *fieldlist        clist
  *  
  *  @retval PEP_STATUS_OK
  *  @retval PEP_OUT_OF_MEMORY   out of memory
@@ -2723,11 +2723,11 @@ pEp_error:
  *  
  *  <!--       interpret_body()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*part		structmailmime
- *  @param[in]	**longmsg		char
- *  @param[in]	*size		size_t
+ *  @param[in]    *part        structmailmime
+ *  @param[in]    **longmsg        char
+ *  @param[in]    *size        size_t
  *  
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
@@ -2817,10 +2817,10 @@ static PEP_STATUS interpret_body(struct mailmime *part, char **longmsg, size_t *
  *  
  *  <!--       interpret_protected_headers()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*mime		structmailmime
- *  @param[in]	*msg		message
+ *  @param[in]    *mime        structmailmime
+ *  @param[in]    *msg        message
  *  
  */
 static PEP_STATUS interpret_protected_headers(
@@ -2868,10 +2868,10 @@ static PEP_STATUS interpret_protected_headers(
  *  
  *  <!--       process_multipart_related()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*mime		structmailmime
- *  @param[in]	*msg		message
+ *  @param[in]    *mime        structmailmime
+ *  @param[in]    *msg        message
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
@@ -2939,9 +2939,9 @@ static PEP_STATUS process_multipart_related(struct mailmime *mime,
  *  
  *  <!--       _is_marked_as_attachment()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*fields		structmailmime_fields
+ *  @param[in]    *fields        structmailmime_fields
  *  
  */
 static bool _is_marked_as_attachment(struct mailmime_fields *fields)
@@ -2969,11 +2969,11 @@ static bool _is_marked_as_attachment(struct mailmime_fields *fields)
  *  
  *  <!--       interpret_MIME()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*mime		structmailmime
- *  @param[in]	*msg		message
- *  @param[in]	*has_possible_pEp_msg		bool
+ *  @param[in]    *mime        structmailmime
+ *  @param[in]    *msg        message
+ *  @param[in]    *has_possible_pEp_msg        bool
  *  
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values

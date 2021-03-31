@@ -50,11 +50,11 @@ static bool key_matches_address(PEP_SESSION session, const char* address,
  *  
  *  <!--       elect_pubkey()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session             session handle
- *  @param[in]	*identity		    pEp_identity
- *  @param[in]	check_blacklist		bool
+ *  @param[in]    session             session handle
+ *  @param[in]    *identity            pEp_identity
+ *  @param[in]    check_blacklist        bool
  *  
  *  @retval PEP_STATUS_OK
  *  @retval PEP_OUT_OF_MEMORY   out of memory
@@ -132,13 +132,13 @@ PEP_STATUS elect_pubkey(
  *  
  *  <!--       validate_fpr()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session                     session handle             			
- *  @param[in]	*ident	                	pEp_identity
- *  @param[in]	check_blacklist		        bool
- *  @param[in]	own_must_contain_private	bool
- *  @param[in]	renew_private		        bool
+ *  @param[in]    session                     session handle
+ *  @param[in]    *ident                        pEp_identity
+ *  @param[in]    check_blacklist                bool
+ *  @param[in]    own_must_contain_private    bool
+ *  @param[in]    renew_private                bool
  *  
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
@@ -530,10 +530,10 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
  *  
  *  <!--       transfer_ident_lang_and_flags()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*new_ident		pEp_identity
- *  @param[in]	*stored_ident		pEp_identity
+ *  @param[in]    *new_ident        pEp_identity
+ *  @param[in]    *stored_ident        pEp_identity
  *  
  */
 static void transfer_ident_lang_and_flags(pEp_identity* new_ident,
@@ -557,10 +557,10 @@ static void transfer_ident_lang_and_flags(pEp_identity* new_ident,
  *  
  *  <!--       adjust_pEp_trust_status()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session	        session handle	
- *  @param[in]	*identity		pEp_identity
+ *  @param[in]    session            session handle
+ *  @param[in]    *identity        pEp_identity
  *  
  */
 static void adjust_pEp_trust_status(PEP_SESSION session, pEp_identity* identity) {
@@ -597,12 +597,12 @@ static void adjust_pEp_trust_status(PEP_SESSION session, pEp_identity* identity)
  *  
  *  <!--       prepare_updated_identity()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session         session handle	
- *  @param[in]	*return_id		pEp_identity
- *  @param[in]	*stored_ident	pEp_identity
- *  @param[in]	store		    bool
+ *  @param[in]    session         session handle
+ *  @param[in]    *return_id        pEp_identity
+ *  @param[in]    *stored_ident    pEp_identity
+ *  @param[in]    store            bool
  *  
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
@@ -1140,10 +1140,10 @@ pEp_free:
  *  
  *  <!--       elect_ownkey()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session     session handle	
- *  @param[in]	*identity	pEp_identity
+ *  @param[in]    session     session handle
+ *  @param[in]    *identity    pEp_identity
  *  
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
@@ -1228,11 +1228,11 @@ PEP_STATUS elect_ownkey(
  *  
  *  <!--       _has_usable_priv_key()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session	        session handle	
- *  @param[in]	*fpr		    char
- *  @param[in]	*is_usable		bool
+ *  @param[in]    session            session handle
+ *  @param[in]    *fpr            char
+ *  @param[in]    *is_usable        bool
  *  
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
@@ -2351,10 +2351,10 @@ PEP_STATUS is_mistrusted_key(PEP_SESSION session, const char* fpr,
  *  
  *  <!--       _wipe_default_key_if_invalid()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session	    session handle	
- *  @param[in]	*ident		pEp_identity
+ *  @param[in]    session        session handle
+ *  @param[in]    *ident        pEp_identity
  *  
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values

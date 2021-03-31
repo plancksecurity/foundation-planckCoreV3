@@ -21,7 +21,7 @@ extern "C" {
 #include "labeled_int_list.h"    
 #include "timestamp.h"
 
-#define PEP_VERSION "2.1" // pEp *protocol* version
+#define PEP_VERSION "2.2" // pEp *protocol* version (aligns with message version always)
 
 // RELEASE version this targets
 // (string: major.minor.patch)
@@ -93,6 +93,7 @@ typedef enum {
     
     PEP_CANNOT_FIND_ALIAS                           = 0x0391,
     PEP_CANNOT_SET_ALIAS                            = 0x0392,
+    PEP_NO_OWN_USERID_FOUND                         = 0x0393,
     
     PEP_UNENCRYPTED                                 = 0x0400,
     PEP_VERIFIED                                    = 0x0401,
@@ -143,6 +144,19 @@ typedef enum {
     PEP_PASSPHRASE_REQUIRED                         = 0x0a00,
     PEP_WRONG_PASSPHRASE                            = 0x0a01,
     PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED            = 0x0a02,
+
+    PEP_CANNOT_CREATE_GROUP                         = 0x0b00,
+    PEP_CANNOT_FIND_GROUP_ENTRY                     = 0x0b01,
+    PEP_GROUP_EXISTS                                = 0x0b02,
+    PEP_GROUP_NOT_FOUND                             = 0x0b03,
+    PEP_CANNOT_ENABLE_GROUP                         = 0x0b04,
+    PEP_CANNOT_DISABLE_GROUP                        = 0x0b05,
+    PEP_CANNOT_ADD_GROUP_MEMBER                     = 0x0b06,
+    PEP_CANNOT_DEACTIVATE_GROUP_MEMBER              = 0x0b07,
+    PEP_NO_MEMBERSHIP_STATUS_FOUND                  = 0x0b08,
+    PEP_CANNOT_LEAVE_GROUP                          = 0x0b09,
+    PEP_CANNOT_JOIN_GROUP                           = 0x0b0a,
+    PEP_CANNOT_RETRIEVE_MEMBERSHIP_INFO             = 0x0b0b,
 
     PEP_DISTRIBUTION_ILLEGAL_MESSAGE                = 0x1002,
 
@@ -760,7 +774,7 @@ typedef enum _identity_flags {
     // the second octet flags are calculated
     PEP_idf_devicegroup = 0x0100,     // identity of a device group member
     PEP_idf_org_ident = 0x0200,       // identity is associated with an org (i.e. NOT a private account - could be company email)
-    PEP_idf_group_ident = 0x0300      // identity is a group identity (e.g. mailing list) - N.B. not related to device group!
+    PEP_idf_group_ident = 0x0400      // identity is a group identity (e.g. mailing list) - N.B. not related to device group!
 } identity_flags;
 
 typedef unsigned int identity_flags_t;
@@ -2512,6 +2526,9 @@ PEP_STATUS set_all_userids_to_own(PEP_SESSION session,
 PEP_STATUS has_partner_contacted_address(PEP_SESSION session, const char* partner_id,
                                          const char* own_address, bool* was_contacted);
                                                                                   
+
+PEP_STATUS exists_identity_entry(PEP_SESSION session, pEp_identity* identity,
+                                 bool* exists);
 #ifdef __cplusplus
 }
 #endif

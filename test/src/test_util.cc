@@ -470,6 +470,13 @@ char* message_to_str(message* msg) {
     return retval;
 }
 
+message* string_to_msg(string infile) {
+    message* out_msg = NULL;
+    mime_decode_message(infile.c_str(), infile.size(), &out_msg, NULL);
+    return out_msg;
+}
+
+
 int util_delete_filepath(const char *filepath,
                          const struct stat *file_stat,
                          int ftw_info,
@@ -1023,6 +1030,8 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
 int NullBuffer::overflow(int c) {
     return c;
 }
+
+
 
 #ifndef DEBUG_OUTPUT
 std::ostream output_stream(new NullBuffer());

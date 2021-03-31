@@ -45,7 +45,9 @@ tstylesheet {
 
         BEGIN
 
-        `` for "fsm" | IMPORTS «@name» FROM «yml:ucase(@name)»;
+        IMPORTS
+        `` for "fsm" |> «@name» FROM «yml:ucase(@name)»
+        ;
 
         «@name» ::= CHOICE {
             «yml:lcase(fsm[1]/@name)» [APPLICATION «fsm[1]/@id»] «fsm[1]/@name»`if "count(fsm)>1" > ,`
