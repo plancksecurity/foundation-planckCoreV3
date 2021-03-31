@@ -31,13 +31,15 @@
  *  
  *  @brief			TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*reset_ident		constpEp_identity
- *  @param[in]	*old_fpr		constchar
- *  @param[in]	*new_fpr		constchar
- *  @param[in]	**key_attachments		bloblist_t
- *  @param[in]	**command_list		keyreset_command_list
+ *  @param[in]	session		    PEP_SESSION
+ *  @param[in]	*reset_ident	identity whose key is being reset
+ *  @param[in]	*old_fpr		key which is being reset for this identity
+ *  @param[in]	*new_fpr		replacement key for this key for this identity
+ *  @param[in,out]	**key_attachments		bloblist_t
+ *  @param[in,out]	**command_list		keyreset_command_list
  *  @param[in]	include_secret		bool
+ *
+ *  @ownership  reset_ident, old_fpr, new_fpr remain with the caller
  *  
  */
 static PEP_STATUS _generate_reset_structs(PEP_SESSION session,
@@ -151,13 +153,16 @@ pEp_error:
  *  
  *  <!--       generate_own_commandlist_msg()       -->
  *  
- *  @brief			TODO
+ *  @brief	   generate a key reset commandlist message for an own identity - either a device group or
+ *             group identity (group encryption)
  *  
  *  @param[in]	session		PEP_SESSION
  *  @param[in]	*reset_idents		identity_list
  *  @param[in]  alt_sender    in case sender needs to be different (group identity needs manager, for example)
  *  @param[in]	*old_fpr		constchar
  *  @param[in]	**dst		message
+ *
+ *  @ownership
  *  
  */
 PEP_STATUS generate_own_commandlist_msg(PEP_SESSION session,
@@ -172,12 +177,18 @@ PEP_STATUS generate_own_commandlist_msg(PEP_SESSION session,
     identity_list* list_curr = NULL;
     keyreset_command_list* kr_commands = NULL;
     bloblist_t* key_attachments = NULL;
-    
+    pEp_identity* from = NULL;
+    pEp_identity* to = NULL;
+
+    char* payload = NULL;
+    size_t size = 0;
+
     for (list_curr = reset_idents ; list_curr && list_curr->ident; list_curr = list_curr->next) {
         pEp_identity* curr_ident = list_curr->ident;
         
         if (curr_ident->flags & (PEP_idf_devicegroup | PEP_idf_group_ident)) {
-        
+
+            // All of these items belong to us after the call anyway
             PEP_STATUS status = _generate_reset_structs(session,
                                                         curr_ident,
                                                         old_fpr,
@@ -198,16 +209,15 @@ PEP_STATUS generate_own_commandlist_msg(PEP_SESSION session,
         // There was nothing for us to send to self - we could be ungrouped,
         // etc
         return PEP_STATUS_OK;
-    }    
-    char* payload = NULL;
-    size_t size = 0;
+    }
+
     status = key_reset_commands_to_PER(kr_commands, &payload, &size);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
         
     // From and to our first ident - this only goes to us.
-    pEp_identity* from = identity_dup(alt_sender ? alt_sender : reset_idents->ident);
-    pEp_identity* to = identity_dup(alt_recip ? alt_recip : from);
+    from = identity_dup(alt_sender ? alt_sender : reset_idents->ident);
+    to = identity_dup(alt_recip ? alt_recip : from);
     status = base_prepare_message(session, from, to,
                                   BASE_DISTRIBUTION, payload, size, NULL,
                                   &msg);
@@ -237,13 +247,17 @@ PEP_STATUS generate_own_commandlist_msg(PEP_SESSION session,
     return status;
     
 pEp_error:
-    if (!msg)
+    if (!msg) {
         free_bloblist(key_attachments);
+        free_identity(from);
+        free_identity(to);
+        free(payload);
+    }
     else
-        free(msg);
+        free_message(msg);
 
     free_keyreset_command_list(kr_commands);
-        
+
     return status;
 }
 
@@ -1765,7 +1779,7 @@ PEP_STATUS key_reset(
         // Ok - now we have at least an ident with user_id and an fpr.
         // Now it matters if we're talking about ourselves or a partner.
         bool is_own_private = false;
-        bool is_own_identity_group = false;
+        //bool is_own_identity_group = false;
 
         if (is_me(session, tmp_ident)) {
             // For now: We don't reset own revoked/mistrusted key. We're 
