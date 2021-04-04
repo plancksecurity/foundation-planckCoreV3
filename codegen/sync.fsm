@@ -710,4 +710,29 @@ protocol Sync 1 {
             field IdentityList trust;
         }
     }
+
+    fsm GroupSync 3, threshold=300 {
+        version 1, 0;
+
+        state InitState {
+            on Init {
+                
+            }
+        }
+
+        message GroupSyncCreate 2 {
+            field Identity groupIdentity;
+            field Identity manager;
+        }
+
+        message GroupSyncAdopted 3 {
+            field Identity groupIdentity;
+            field Identity member;
+        }
+
+        message GroupSyncDissolve 4 {
+            field Identity groupIdentity;
+            field Identity manager;
+        }
+    }
 }

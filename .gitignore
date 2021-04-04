@@ -67,12 +67,14 @@ test/src/engine_test/LocalPlayground.cc
 asn.1/.generated
 src/KeySync_*
 src/TrustSync_*
+src/GroupSync_*
 src/Sync_*
 src/sync_codec.*
 src/distribution_codec.*
 src/storage_codec.*
 asn.1/keysync.asn1
 asn.1/trustsync.asn1
+asn.1/groupsync.asn1
 asn.1/keyreset.asn1
 asn.1/sync.asn1
 asn.1/distribution.asn1
