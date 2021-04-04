@@ -689,4 +689,25 @@ protocol Sync 1 {
             field Rating rating;
         }
     }
+
+    fsm TrustSync 2, threshold=300 {
+        version 1, 0;
+
+        state InitState {
+            on Init {
+                go WaitForTrustUpdate;
+            }
+
+        }
+        state WaitForTrustUpdate {
+            on TrustUpdate {
+
+            }
+        }
+
+        message TrustUpdate 2 {
+            auto Version version;
+            field IdentityList trust;
+        }
+    }
 }

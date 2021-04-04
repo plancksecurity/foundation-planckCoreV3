@@ -19,8 +19,8 @@ libasn1.a: $(ALL_OBJECTS)
 %.o: %.c %.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(OPTIMIZE) $(ASN1C_INC) -c $< -o $@
 
-Sync.c: sync.asn1 keysync.asn1 pEp.asn1
-	$(ASN1C) -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keysync.asn1 $<
+Sync.c: sync.asn1 keysync.asn1 trustsync.asn1 pEp.asn1
+	$(ASN1C) -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keysync.asn1 trustsync.asn1 $<
 	rm -f converter-sample.c
 	touch Sync.c
 
@@ -35,7 +35,7 @@ Storage.c: storage.asn1 messagestorage.asn1 pEp.asn1
 	touch Storage.c
 
 clean:
-	rm -f *.a *.o *.c *.h *.sample sync.asn1 keysync.asn1 distribution.asn1 keyreset.asn1 managedgroup.asn1 storage.asn1 messagestorage.asn1
+	rm -f *.a *.o *.c *.h *.sample sync.asn1 keysync.asn1 trustsync.asn1 distribution.asn1 keyreset.asn1 managedgroup.asn1 storage.asn1 messagestorage.asn1
 
 install:
 
