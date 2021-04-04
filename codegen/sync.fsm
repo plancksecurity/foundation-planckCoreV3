@@ -705,8 +705,15 @@ protocol Sync 1 {
             }
         }
 
+        // if trust changes send an update to the device group
+
         message TrustUpdate 2 {
-            auto Version version;
+            field IdentityList trust;
+        }
+
+        // if we should know the trust status ask the device group
+
+        message TrustRequest 3 {
             field IdentityList trust;
         }
     }
@@ -716,9 +723,15 @@ protocol Sync 1 {
 
         state InitState {
             on Init {
-                
+                go WaitForGroupUpdate;
             }
+
         }
+        state WaitForGroupUpdate {
+
+        }
+
+        // reflect incoming ManagedGroup messages
 
         message GroupSyncCreate 2 {
             field Identity groupIdentity;
@@ -731,6 +744,14 @@ protocol Sync 1 {
         }
 
         message GroupSyncDissolve 4 {
+            field Identity groupIdentity;
+            field Identity manager;
+        }
+
+        // in case a ManagedGroup message arrives for an unknown group ask the
+        // other devices
+
+        message GroupSyncRequest 5 {
             field Identity groupIdentity;
             field Identity manager;
         }

@@ -22,6 +22,7 @@ protocol Distribution 2 {
         }
     }
 
+    // this protocol is stateless
     fsm ManagedGroup 2 {
         version 1, 0;
 
@@ -38,6 +39,33 @@ protocol Distribution 2 {
         message GroupDissolve 4 {
             field Identity groupIdentity;
             field Identity manager;
+        }
+    }
+
+    fsm Exploration 3 {
+        version 1, 0;
+
+        message ExploreRequest 2 {
+            field TID challenge;
+            field Identity forward;
+        }
+
+        message ExploreAnswer 3 {
+            field TID challenge;
+            field Identity forward;
+            field Identity back;
+        }
+
+        message ExploreChallenge 4 {
+            field TID challenge;
+            field Identity forward;
+            field Identity back;
+        }
+
+        message ExploreResponse 5 {
+            field TID challenge;
+            field Identity forward;
+            field Identity back;
         }
     }
 }
