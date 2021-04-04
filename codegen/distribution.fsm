@@ -26,17 +26,17 @@ protocol Distribution 2 {
     fsm ManagedGroup 2 {
         version 1, 0;
 
-        message GroupCreate 2 {
+        message GroupCreate 2, security=untrusted {
             field Identity groupIdentity;
             field Identity manager;
         }
 
-        message GroupAdopted 3 {
+        message GroupAdopted 3, security=untrusted {
             field Identity groupIdentity;
             field Identity member;
         }
 
-        message GroupDissolve 4 {
+        message GroupDissolve 4, security=untrusted {
             field Identity groupIdentity;
             field Identity manager;
         }
@@ -50,19 +50,19 @@ protocol Distribution 2 {
             field Identity forward;
         }
 
-        message ExploreAnswer 3 {
+        message ExploreAnswer 3, security=untrusted {
             field TID challenge;
             field Identity forward;
             field Identity back;
         }
 
-        message ExploreChallenge 4 {
+        message ExploreChallenge 4, security=untrusted {
             field TID challenge;
             field Identity forward;
             field Identity back;
         }
 
-        message ExploreResponse 5 {
+        message ExploreResponse 5, security=untrusted {
             field TID challenge;
             field Identity forward;
             field Identity back;
