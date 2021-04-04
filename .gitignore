@@ -69,10 +69,13 @@ src/KeySync_*
 src/Sync_*
 src/sync_codec.*
 src/distribution_codec.*
+src/storage_codec.*
 asn.1/keysync.asn1
 asn.1/keyreset.asn1
 asn.1/sync.asn1
 asn.1/distribution.asn1
+asn.1/storage.asn1
+asn.1/messagestorage.asn1
 sync/.codecs
 sync/.messages
 sync/.actions

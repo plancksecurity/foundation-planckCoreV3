@@ -95,7 +95,7 @@ libpEpEngine.a: $(ALL_OBJECTS)
 clean:
 	rm -f *.d *.o *.a $(TARGET) *.dll *.so *.zip *.d.* *.def *~
 	rm -Rf $(TARGET).dSYM
-	rm -f KeySync_fsm.* Sync_actions.c Sync_event.* Sync_func.* Sync_impl.* sync_codec.* distribution_codec.*
+	rm -f KeySync_fsm.* Sync_actions.c Sync_event.* Sync_func.* Sync_impl.* sync_codec.* distribution_codec.* storage_codec.*
 
 # CAVEAT:
 # install_headers is needed for building *STANDALONE* pEp MIME - it is NOT used for built-in functionality!!!
@@ -105,7 +105,7 @@ install_headers: $(TARGET)
 	cp pEpEngine.h keymanagement.h message_api.h dynamic_api.h stringlist.h \
 	   timestamp.h identity_list.h bloblist.h stringpair.h message.h mime.h \
 	   cryptotech.h sync_api.h blacklist.h pEp_string.h openpgp_compat.h engine_sql.h \
-	   labeled_int_list.h key_reset.h base64.h sync_codec.h distribution_codec.h \
+	   labeled_int_list.h key_reset.h base64.h sync_codec.h distribution_codec.h storage_codec.h \
 	   status_to_string.h aux_mime_msg.h keyreset_command.h platform.h platform_unix.h ../asn.1/*.h \
  	   $(PREFIX)/include/pEp/
 
