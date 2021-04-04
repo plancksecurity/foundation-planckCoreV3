@@ -25,7 +25,7 @@ ifdef PEP_MIME
     BUILT_IN_MIME=pepmime
 endif
     
-.PHONY: all $(BUILT_IN_MIME) sync asn1 build install dbinstall uninstall clean tags test package db
+.PHONY: all $(BUILT_IN_MIME) codegen asn1 build install dbinstall uninstall clean tags test package db
 
 build: $(BUILT_IN_MIME) asn1
 	$(MAKE) -C src
@@ -37,10 +37,10 @@ all: build
 pepmime: 
 	$(MAKE) -C pEpMIME lib
 
-sync:
-	$(MAKE) -C sync
+codegen:
+	$(MAKE) -C codegen
 
-asn1: sync
+asn1: codegen
 	$(MAKE) -C asn.1
 
 
@@ -66,7 +66,7 @@ clean:
 	$(MAKE) -C test clean
 	$(MAKE) -C db clean
 	$(MAKE) -C asn.1 clean
-	$(MAKE) -C sync clean
+	$(MAKE) -C codegen clean
 	$(MAKE) -C build-android clean
 ifdef PEP_MIME
 	$(MAKE) -C pEpMIME clean

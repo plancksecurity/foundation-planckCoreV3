@@ -124,3 +124,11 @@ test/test_keys/736_a.asc
 test/test_keys/736_b.asc
 test/test_mails/ENGINE-654_bob_mail.eml
 
+# ignore generated data
+
+codegen/.actions
+codegen/.codecs
+codegen/.copy
+codegen/.messages
+codegen/.statemachines
+codegen/generated/
