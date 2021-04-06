@@ -20,6 +20,7 @@ tstylesheet {
     function "header"
     ||
     -- This file is under BSD License 2.0
+    -- This is a generated file, do not edit.
 
     -- «@name» protocol for p≡p
     -- Copyleft 2016-2020 by p≡p foundation
