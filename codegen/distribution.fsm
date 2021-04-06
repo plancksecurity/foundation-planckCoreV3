@@ -3,7 +3,7 @@
 // Distribution protocol for p≡p
 // Copyright (c) 2019-2021, p≡p foundation
 
-// Written by Volker Birk
+// Written by Volker Birk, Hartmut Goebel
 
 include ./fsm.yml2
 
@@ -68,5 +68,57 @@ protocol Distribution 2 {
             field Identity back;
         }
     }
-}
 
+    // this protocol implements a 4-way handshake
+    fsm TempKeyAgreement 4 {
+        version 1, 0;
+
+	state InitState {
+	    on Init {
+	        go StartAgreement;
+	    }
+	}
+	start StartAgreement {
+	    on Init {  // initialized by us, we send a key
+	        do generateTemporaryKey;
+	        send TemporaryKeyAnnouncement;
+		go WaitForKey;
+	    }
+	    on ReceiveTemporaryKey {  // initialized by other, we receive a key
+	        do saveReceivedTemporaryKey;
+	        send TemporaryKeyAnnouncement;
+		go WaitACK2;
+	    }
+        }
+	state WaitForKey {  // initialized by us, wait for other key
+	    on ReceiveTemporaryKey {
+	        do saveReceivedTemporaryKey;
+	        send TemporaryKeyACK;
+		go WaitACK1;
+	    }
+	}
+	state WaitACK1 {  // initialized by us, we sent first ACK
+	    on ReceiveACK {
+		go Established;
+	    }
+	}
+	state WaitACK2 {  // initialized by other, we sent second ACK
+	    on ReceiveACK {
+	        send TemporaryKeyACK;
+		go Established;
+	    }
+	}
+	state Established {
+	    on RenewKey {
+	        go StartAgreement;
+	    }
+	}
+
+	message TemporaryKeyAnnouncement 2 {
+            field Hash key;
+        }
+	message TemporaryKeyACK 3 {
+            field Hash key;   // key to be ack'ed
+        }
+    }
+}
