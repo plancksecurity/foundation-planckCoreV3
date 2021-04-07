@@ -31,6 +31,9 @@ Distribution.c: distribution.asn1 keyreset.asn1 pEp.asn1
 
 clean:
 	rm -f *.a *.o *.c *.h *.sample sync.asn1 keysync.asn1 distribution.asn1 keyreset.asn1
+        # Release 2.1 only
+	rm -f exploration.asn1 groupsync.asn1 messagestorage.asn1 storage.asn1 trustsync.asn1
+
 
 install:
 

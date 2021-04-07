@@ -96,6 +96,8 @@ clean:
 	rm -f *.d *.o *.a $(TARGET) *.dll *.so *.zip *.d.* *.def *~
 	rm -Rf $(TARGET).dSYM
 	rm -f KeySync_fsm.* Sync_actions.c Sync_event.* Sync_func.* Sync_impl.* sync_codec.* distribution_codec.*
+	# Release 2.1 only
+	rm -f GroupSync_fsm.* TrustSync_fsm.* storage_codec.* 
 
 # CAVEAT:
 # install_headers is needed for building *STANDALONE* pEp MIME - it is NOT used for built-in functionality!!!
