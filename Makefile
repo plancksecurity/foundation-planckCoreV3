@@ -68,6 +68,8 @@ clean:
 	$(MAKE) -C asn.1 clean
 	$(MAKE) -C sync clean
 	$(MAKE) -C build-android clean
+	if [ -d "codegen" ]; then rm -rf codegen; fi
+
 ifdef PEP_MIME
 	$(MAKE) -C pEpMIME clean
 endif
@@ -81,6 +83,5 @@ test: all
 
 package: clean
 	cd .. ; COPYFILE_DISABLE=true tar cjf pEpEngine.tar.bz2 "$(HERE_REL)"
-
 db:
 	$(MAKE) -C db db
