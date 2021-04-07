@@ -1,0 +1,251 @@
+X-Envelope-From: <SRS0=iwv9uy=JE=darthmama.org=krista@srs.smtpin.rzone.de>
+X-Envelope-To: <krista@darthmama.org>
+X-Delivery-Time: 1617787574
+X-UID: 23395
+Return-Path: <SRS0=iwv9uy=JE=darthmama.org=krista@srs.smtpin.rzone.de>
+ARC-Seal: i=4; a=rsa-sha256; t=1617787574; cv=pass;
+    d=strato.com; s=strato-dkim-0002;
+    b=gIi5RYiw1bRXzJ8x9Qc5ryLhVoPwFqWpKTh2M99uw0Ja7wNwWlKfk2iXRxKVquH3yX
+    C1Oe487MmgJULR6LSwlyM8AttswF//PCqri+WMWs8d1yZpLHUj350+iH2ynQNWCni5HZ
+    f+cWf1sk/no7Sbqd4ysZvkmRjmN5q7wAKZtQkTCflfSN6qf7ZX6abe4TAN0dYRT9WL/D
+    mvOAmuyWWpi/VE7rOaPFKf8Gilowddyth6V0WZVZ01ESx6NB6PgLCiTBxBEkGzXJeier
+    //p6h0VqVnmDeK18vsN/hugylKxrsearba/FbOOspT6DLIn4jSBfRwmB/wri2ovs6d8B
+    Lctw==
+ARC-Message-Signature: i=4; a=rsa-sha256; c=relaxed/relaxed; t=1617787574;
+    s=strato-dkim-0002; d=strato.com;
+    h=To:Date:Message-Id:Subject:From:Cc:Date:From:Subject:Sender;
+    bh=ywnsCItC4ybkki3R6Xlk6+ddLotNwudqzuXxS2q4shU=;
+    b=tLINlGq3xCYKAyaulJyiy/2tnMz/SQVhGXsrBPmDwQspVyZ06f0G574e8E7r991DbI
+    v2Vue6pxH7+XEAb3StDM+Qg71FV1ANeyGML/VzAzL9R4hlgt0Rmjtnrd5tl+TBQHJR3j
+    fHKTzhghDc1YBK+blYDmQDr54n2lxxt8mDJii8ZffrwdUkF6Q1HKE8jqlaybje/bbukU
+    GUuVT+gWm4jRuSvYTg8bCfyLE8sWl0PlKns5c/OjQ7iuflckm/1p5JIrP/9JJ/PaKruM
+    hAP8T4M2oyhy/diXH017so+89EehIRotcs0sq4Z+FrHKctXBDaz9xVsttd0wuNym7ZwN
+    20Rw==
+ARC-Authentication-Results: i=4; strato.com;
+    dmarc=none header.from="darthmama.org";
+    arc=pass (i=3) smtp.remote-ip=2a01:238:400:1100::8;
+    dkim=pass header.d="darthmama.org" header.s="strato-dkim-0002" header.a="rsa-sha256";
+    dkim-adsp=pass;
+    spf=pass smtp.mailfrom="SRS0=iwv9uy=JE=darthmama.org=krista@srs.smtpin.rzone.de"
+Authentication-Results: strato.com;
+    dmarc=none header.from="darthmama.org";
+    arc=pass (i=3) smtp.remote-ip=2a01:238:400:1100::8;
+    dkim=pass header.d="darthmama.org" header.s="strato-dkim-0002" header.a="rsa-sha256";
+    dkim-adsp=pass;
+    spf=pass smtp.mailfrom="SRS0=iwv9uy=JE=darthmama.org=krista@srs.smtpin.rzone.de"
+X-RZG-Expurgate: clean/normal
+X-RZG-Expurgate-ID: 149500::1617787574-0000C56C-BACA230B/0/0
+X-RZG-CLASS-ID: mi00
+Received-SPF: pass
+    (strato.com: domain _spf.strato.com designates 2a01:238:400:1100::8 as permitted sender)
+    mechanism=ip6;
+    client-ip=2a01:238:400:1100::8;
+    helo="mi6-p00-ob.smtp.rzone.de";
+    envelope-from="SRS0=iwv9uy=JE=darthmama.org=krista@srs.smtpin.rzone.de";
+    rceiver=smtpin.rzone.de;
+    identity=mailfrom;
+Received: from mi6-p00-ob.smtp.rzone.de ([IPv6:2a01:238:400:1100::8])
+    by smtpin.rzone.de (RZmta 47.23.1 OK)
+    with ESMTPS id O02eadx379QE3Yp
+    (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
+    (Client CN "*.smtp.rzone.de", Issuer "TeleSec ServerPass Class 2 CA" (verified OK (+EmiG)))
+        (Client hostname verified OK)
+    for <krista@darthmama.org>;
+    Wed, 7 Apr 2021 11:26:14 +0200 (CEST)
+ARC-Seal: i=3; a=rsa-sha256; t=1617787574; cv=pass;
+    d=strato.com; s=strato-dkim-0002;
+    b=MFVkrUNQtgZgmXyBUDOlxiavlNsznBOspEA4FNuqRJS7CTCnocj4SV5h/h47D5sJPa
+    2iAcsVuaUSnV+rm3S3Wysrb4d42+/P3BOOzRmQjLaYgNdigpG6TTiiEusBPjB9PGMFFD
+    ueL81L8uKnDB3XGU8hnJbNrNZNPNKLnwZX+2m0VBWZUtO1KoXLzakRo9h46e89qBJANG
+    dvdyyYJm2+gDsk9svfK1V+2RXC9NwpZtBr0h4ytzm76iF+uo7HRMgQKQuaAeMQfYwOSS
+    gcLTXQH8vsRbypkGmZnrkVHqmCQIVHMqIGjgSIlutRIJzihWLFVcLI9Cd7ox157VtBVn
+    7DMw==
+ARC-Message-Signature: i=3; a=rsa-sha256; c=relaxed/relaxed; t=1617787574;
+    s=strato-dkim-0002; d=strato.com;
+    h=To:Date:Message-Id:Subject:From:Cc:Date:From:Subject:Sender;
+    bh=ywnsCItC4ybkki3R6Xlk6+ddLotNwudqzuXxS2q4shU=;
+    b=d6eJd944/MTxuYI3DVdiCBRNA9kplFtQM8uwVF/ivnSAP7lKpI53fOa3F3zGJpfWx7
+    /62WQUI12W/RCi3KNExFF+stuILTZ0wC1i8C/bbIHzxNVbi73G8v1OtVlYSQpHK3PfvE
+    iOVvhMSu8fdD3iszlg6r3RlPKr8HCWomaArh2I6cJnJCE8cDE1VAFZezsRHe45dMHVQk
+    q23Bah5h1wAudVLweRAeqHZERwPQaQMt9Fc58PiIxruZ/H/Y3bu3sxLfXckvJ8K0cp9G
+    Z7c264RKbS3O2nUX6OZ3SpEwkV9uI9do+lAzaYDpymi84Mbb5HiMrYPMwrSZj4gBq98y
+    WHDw==
+ARC-Authentication-Results: i=3; strato.com;
+    dmarc=none header.from="darthmama.org";
+    arc=pass (i=1) smtp.remote-ip=85.215.255.22;
+    dkim=pass header.d="darthmama.org" header.s="strato-dkim-0002" header.a="rsa-sha256";
+    dkim-adsp=pass;
+    spf=none smtp.mailfrom="krista@darthmama.org";
+	x-fwd=pass
+X-RZG-FWD-BY: applemail_recip@darthmama.org
+Received: from localhost ([unix socket])
+	by mailin.rzone.de (RZmta 47.24.0) with LMTPS;
+	Wed, 7 Apr 2021 11:26:08 +0200 (CEST)
+ARC-Seal: i=2; a=rsa-sha256; t=1617787568; cv=pass;
+    d=strato.com; s=strato-dkim-0002;
+    b=Xlq4qQ+hwQkgIHHeM+yldMVx0rU2I7UnkAOvg8Ju3vQYggHaTpwe+RkwmjJNVoqn9G
+    MJMWrs+0XIZfhqdujFXxPQrYWmu3ayPW2XxLfjzt21XErOGeBmKvpn356m7bYI6EN1MI
+    P3JOYJ6c5qZQjNAn7NEi5iLE96KLYKSguEEP0g7sl1Rb8E+xgGMjXL8OrY9sdwUGz6k0
+    2tShNzzy7ZAYEAigsHiUwNoXeSPPBIx7GtaH6kJVZchLjO5Iw1XvVSSqLBLKeiPSOwAJ
+    bjDOapn01l7qCo7dwE/EcTdouNZiAjkFRUi7p4Ca5w5GbJJA5NSQqGAbdYHsU8+E3xuF
+    Sbvw==
+ARC-Message-Signature: i=2; a=rsa-sha256; c=relaxed/relaxed; t=1617787568;
+    s=strato-dkim-0002; d=strato.com;
+    h=To:Date:Message-Id:Subject:From:Cc:Date:From:Subject:Sender;
+    bh=ywnsCItC4ybkki3R6Xlk6+ddLotNwudqzuXxS2q4shU=;
+    b=FYBH3LNzUVaVXehurporn/roqzKg4weXlLCUOMkSxPuDDv4UDCuqMlnvl9J3HG0Zmw
+    8GbFoK16v4i88EZlDH4J10+lS2dB97mOtKW4LFheOXzo3FmNdxxiOxyWCXiwca5UKVvE
+    ++VKbJGaJ50VnKvV/+3/nstqRZ4SLkU6EZxzK5Ua4vUbRMKjIiJ73KtPeG0pDv+MhDH7
+    aAp0CJOos3DJYGKCKK6S3gOFVXLUbOMBGJZTXL2zrnfocbxm3pHwbIRiUNKZj2Z+qNeA
+    V96kXFc+UaO5uks3Fs/2CVzxVKPvp22dNUgX99/52eJ3KoPblKsuYX+9qE7ZhXD4tavK
+    htaQ==
+ARC-Authentication-Results: i=2; strato.com;
+    dmarc=none header.from="darthmama.org";
+    arc=pass (i=1) smtp.remote-ip=85.215.255.22;
+    dkim=pass header.d="darthmama.org" header.s="strato-dkim-0002" header.a="rsa-sha256";
+    dkim-adsp=pass;
+    spf=none smtp.mailfrom="krista@darthmama.org"
+X-RZG-Expurgate: clean/normal
+X-RZG-Expurgate-ID: 149500::1617787568-0000B2C2-EC616120/0/0
+X-RZG-CLASS-ID: mi00
+Received-SPF: none
+    client-ip=85.215.255.22;
+    helo="mo4-p00-ob.smtp.rzone.de";
+    envelope-from="krista@darthmama.org";
+    rceiver=smtpin.rzone.de;
+    identity=mailfrom;
+Received: from mo4-p00-ob.smtp.rzone.de ([85.215.255.22])
+    by smtpin.rzone.de (RZmta 47.24.0 OK)
+    with ESMTPS id T08759x379Q8eQG
+    (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
+    (Client CN "*.smtp.rzone.de", Issuer "TeleSec ServerPass Class 2 CA" (verified OK (+EmiG)))
+        (Client hostname verified OK)
+    for <applemail_recip@darthmama.org>;
+    Wed, 7 Apr 2021 11:26:08 +0200 (CEST)
+ARC-Seal: i=1; a=rsa-sha256; t=1617787568; cv=none;
+    d=strato.com; s=strato-dkim-0002;
+    b=ZxCplEBSGI62EV6yRkJL/XQjFeVt/iJ0IpiaaRsMMQVPWpu+W9j44Qu/eUrrF9HOH3
+    zV5e0u2fkVFm5akSHMXUzUaEj80wjQFFQ05S4H/0QtSO4hEVbhcXIWtYPV7QQbrMBsAu
+    +o3V5Bto9nXh4H3Eq5pjJ5JuRgmdlHxueYr58hTjTNL06DqLY6S3qu0YBJ3zBZ7hmpmq
+    CsXcFMCNtfIm47Z4izrKAkeSDP/QW02zdXoyJU9wroIbZSdMVsR5ii/KKeFAsBBmq+eB
+    LZwoQqDQ6TBkiXcvpeWnUInk1mIxo3Gj1OfS/STNytYu5N+LI2yg/W4E+sIrzcfan7RG
+    VOnw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1617787568;
+    s=strato-dkim-0002; d=strato.com;
+    h=To:Date:Message-Id:Subject:From:Cc:Date:From:Subject:Sender;
+    bh=ywnsCItC4ybkki3R6Xlk6+ddLotNwudqzuXxS2q4shU=;
+    b=FoNs+qQsWD5osW1lyXU6rsekFXR51cA9VrE3ROu2iz8wMtpF6bAJwfwX/XQD7ZGt5s
+    jbaqadxdNVUTxnECtXhNQFNiDXYz6swon2h+pVb9EJKghqihYeA/54RnjE1LrB/SrgQG
+    H4JJAtt7+OAWh4mtEje3SrtsPKVFVgbDvKbGi/ddTV9ltTFl5P8DwA2DzGZkpRI9G5rs
+    gnABA7rBVUpbIhMXkdARiQPpTQGzM6OXNzAvtLRYCC/lbY4Umk/dpKw1KxBLQe/9ZKWa
+    hO3/KSLxkvqTa5hhGOzlzKvE/UgEwBaqHc8JBWKyeNSA/8O1Oi+ySoMpvvisEYzpJn76
+    U15w==
+ARC-Authentication-Results: i=1; strato.com;
+    dkim=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1617787568;
+    s=strato-dkim-0002; d=darthmama.org;
+    h=To:Date:Message-Id:Subject:From:Cc:Date:From:Subject:Sender;
+    bh=ywnsCItC4ybkki3R6Xlk6+ddLotNwudqzuXxS2q4shU=;
+    b=R++0xEMdPPPThi/NP9mT55uvPsKkG9FxYMb3iexgk0QjchyF036pEDZzYkMeS95RQ3
+    IQksKTf4kGGMIX3+seVC2sCdq2LOzUKMrNY2j/weiDcYwq3y24KZ94i2qk+M6mIpl8Wr
+    27zV16xv+uhHkL+iGNjoGigp0aiSCCHHdrOG5C54r6CNgrBsBexNughcNDsFEA2YXJ4y
+    rRMK2fN7rfgXJL1SADPTtsgVhxt0Ro40sN54ExFkyE+mV2eyq7rTjpcNzAbDBj+QRe4J
+    AkDKINPtrd3PjZMDKkTrZZBRY3veUE9YcInOP0Sm1jUO/9cT83G+CFp4HXo0xAj4t78W
+    SenA==
+X-RZG-AUTH: ":J34NZlSpW/vPDlKSRxUBevLT/2WDdlCqkty/derpNZ+5lfMiUs6LV5/ENs6FvzQlAGCv3E7R3ZsHsQ=="
+X-RZG-CLASS-ID: mo00
+Received: from rylen.home
+    by smtp.strato.de (RZmta 47.23.1 DYNA|AUTH)
+    with ESMTPSA id f011e8x379Q7zS5
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (curve X9_62_prime256v1 with 256 ECDH bits, eq. 3072 bits RSA))
+	(Client did not present a certificate)
+    for <applemail_recip@darthmama.org>;
+    Wed, 7 Apr 2021 11:26:07 +0200 (CEST)
+From: Krista Bennett <krista@darthmama.org>
+Content-Type: multipart/encrypted;
+	boundary="Apple-Mail=_9066C84B-74BF-48D4-94E9-A10EAA84E3CB";
+	protocol="application/pgp-encrypted"
+Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.120.23.2.4\))
+Subject: HTML Mail is dumb!
+Message-Id: <7F140C79-3103-4BBB-A301-173A5E70F83B@darthmama.org>
+Date: Wed, 7 Apr 2021 11:26:07 +0200
+To: applemail_recip@darthmama.org
+X-Mailer: Apple Mail (2.3608.120.23.2.4)
+
+This is an OpenPGP/MIME encrypted message (RFC 2440 and 3156)
+--Apple-Mail=_9066C84B-74BF-48D4-94E9-A10EAA84E3CB
+Content-Transfer-Encoding: 7bit
+Content-Type: application/pgp-encrypted
+Content-Description: PGP/MIME Versions Identification
+
+Version: 1
+
+--Apple-Mail=_9066C84B-74BF-48D4-94E9-A10EAA84E3CB
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+	filename=encrypted.asc
+Content-Type: application/octet-stream;
+	name=encrypted.asc
+Content-Description: OpenPGP encrypted message
+
+-----BEGIN PGP MESSAGE-----
+
+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
+TA1IItdH1qZPiKRLKbvA
+=Yu7P
+-----END PGP MESSAGE-----
+
+--Apple-Mail=_9066C84B-74BF-48D4-94E9-A10EAA84E3CB--

@@ -3464,7 +3464,6 @@ static PEP_STATUS combine_keylists(PEP_SESSION session, stringlist_t** verify_in
         status = PEP_KEY_NOT_FOUND;
         goto free;
     }
-    return false;
 
     verify_curr = orig_verify;
     
