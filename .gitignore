@@ -41,7 +41,7 @@ Makefile.protocols
 test/msg_encrypt_for_self.asc
 tags
 asn.1/pEpEngineASN1/pEpEngineASN1.vcxproj.user
-sync/generated
+codegen/generated
 *.xml
 *.dot
 *.svg
@@ -82,12 +82,6 @@ asn.1/exploration.asn1
 asn.1/managedgroup.asn1
 asn.1/storage.asn1
 asn.1/messagestorage.asn1
-sync/.codecs
-sync/.messages
-sync/.actions
-sync/.codegen
-sync/.statemachines
-sync/.copy
 test/msg_2.0.asc
 test/*.txt
 lldb-history
@@ -135,9 +129,7 @@ test/test_mails/ENGINE-654_bob_mail.eml
 
 # ignore generated data
 
-codegen/.actions
-codegen/.codecs
-codegen/.copy
-codegen/.messages
-codegen/.statemachines
 codegen/generated/
+codegen/*.gen
+.copy
+
