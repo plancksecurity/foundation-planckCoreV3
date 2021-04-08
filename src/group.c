@@ -538,7 +538,7 @@ member_list* identity_list_to_memberlist(identity_list* ident_list) {
         tmp_ident = identity_dup(curr_ident->ident);
         if (!tmp_ident)
             goto enomem;
-        pEp_member* member = new_member(curr_ident->ident);
+        pEp_member* member = new_member(tmp_ident);
         if (!member)
             goto enomem;
         tmp_ident = NULL;
