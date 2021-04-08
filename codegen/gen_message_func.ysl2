@@ -20,7 +20,7 @@ template "/" {
 }
 
 template "protocol", mode=header
-    document "generated/{@name}_func.h", "text"
+    if "fsm[count(state)]" document "generated/{@name}_func.h", "text"
 ||
 /**
  * @file        «@name»_func.h
@@ -195,7 +195,7 @@ struct _«@name»_state_s {
 ||
 
 template "protocol", mode=impl
-    document "generated/{@name}_func.c", "text" {
+    if "fsm[count(state)]" document "generated/{@name}_func.c", "text" {
 ||
 /**
  * @file        «@name»_func.c

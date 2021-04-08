@@ -10,37 +10,37 @@ all: .copy
 generated:
 	mkdir -p $@
 
-.actions: sync.fsm gen_actions.ysl2 fsm.yml2 functions.ysl2 $(wildcard cond_act_*.yml2) | generated
-	$(YML2_PROC) -y gen_actions.ysl2 $< -o $@
+statemachines := $(patsubst %.fsm,%.fsm.gen,$(wildcard *.fsm))
 
-.statemachines: sync.fsm gen_statemachine.ysl2 fsm.yml2 functions.ysl2 | generated
-	$(YML2_PROC) -y gen_statemachine.ysl2 $< -o $@
+actions := $(patsubst %.act,%.act.gen,$(wildcard *.act))
 
-.codecs: sync.fsm distribution.fsm storage.fsm gen_codec.ysl2 fsm.yml2 functions.ysl2 | generated
-	$(YML2_PROC) -y gen_codec.ysl2 $< -o $@
-	$(YML2_PROC) -y gen_codec.ysl2 distribution.fsm -o $@
-	$(YML2_PROC) -y gen_codec.ysl2 storage.fsm -o $@
+dot := $(patsubst %.fsm,%.dot,$(wildcard *.fsm))
 
-.messages: sync.fsm distribution.fsm storage.fsm gen_messages.ysl2 gen_message_func.ysl2 fsm.yml2 functions.ysl2 | generated
-	$(YML2_PROC) -y gen_messages.ysl2 $< -o $@
+%.fsm.gen: %.fsm gen_statemachine.ysl2 fsm.yml2 functions.ysl2 | generated
+	$(YML2_PROC) -y gen_statemachine.ysl2 $< > /dev/null
+	$(YML2_PROC) -y gen_codec.ysl2 $< > /dev/null
+	$(YML2_PROC) -y gen_messages.ysl2 $< > /dev/null
 	$(YML2_PROC) -y gen_message_func.ysl2 $< -o $@
-	$(YML2_PROC) -y gen_messages.ysl2 distribution.fsm -o $@
-	$(YML2_PROC) -y gen_messages.ysl2 storage.fsm -o $@
+
+%.act.gen: %.act %.fsm gen_actions.ysl2 fsm.yml2 functions.ysl2 | generated
+	echo 'define actfile = "./$<";' | $(YML2_PROC) - gen_actions.ysl2 | $(YML2_PROC) -X - sync.fsm -o $@
 
 clean:
-	rm -rf generated
-	rm -f *.xml *.xsl .statemachines .actions .codecs .messages .copy *.dot *.svg
+	rm -rf generated *.gen
+	rm -f *.xml *.xsl .copy *.dot *.svg
 
-.copy: .actions .statemachines .codecs .messages
+.copy: $(actions) $(statemachines) $(dot)
 	cp -f generated/*.c generated/*.h ../src
 	cp -f generated/*.asn1 ../asn.1
 	touch .copy
 
 %.xml: %.fsm
-	yml2c $< -o $@
+	$(YML2_PROC) $< -o $@
 
-%.dot: sync.fsm gen_dot.ysl2
-	$(YML2_PROC) -y gen_dot.ysl2 $<
+svg: $(patsubst %.dot,%.svg,$(wildcard *.dot))
+
+%.dot: %.fsm gen_dot.ysl2
+	$(YML2_PROC) -y gen_dot.ysl2 $< -o $@
 
 %.svg: %.dot
 	dot -Tsvg -o $@ $<
