@@ -23,7 +23,8 @@ dot := $(patsubst %.fsm,%.dot,$(wildcard *.fsm))
 	$(YML2_PROC) -y gen_message_func.ysl2 $< -o $@
 
 %.act.gen: %.act %.fsm gen_actions.ysl2 fsm.yml2 functions.ysl2 | generated
-	echo 'define actfile = "./$<";' | $(YML2_PROC) - gen_actions.ysl2 | $(YML2_PROC) -X - sync.fsm -o $@
+	echo 'define actfile = "./$<";' | $(YML2_PROC) - gen_actions.ysl2 | \
+		$(YML2_PROC) -X - $(subst .act,.fsm,$<) -o $@
 
 clean:
 	rm -rf generated *.gen
