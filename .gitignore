@@ -79,6 +79,7 @@ asn.1/keyreset.asn1
 asn.1/sync.asn1
 asn.1/distribution.asn1
 asn.1/exploration.asn1
+asn.1/managedgroup.asn1
 asn.1/storage.asn1
 asn.1/messagestorage.asn1
 sync/.codecs
