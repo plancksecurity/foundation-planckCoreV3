@@ -21,15 +21,15 @@ extern "C" {
 #include "labeled_int_list.h"    
 #include "timestamp.h"
 
-#define PEP_VERSION "2.2" // pEp *protocol* version (aligns with message version always)
+#define PEP_VERSION "3.0" // pEp *protocol* version (aligns with message version always)
 
 // RELEASE version this targets
 // (string: major.minor.patch)
-#define PEP_ENGINE_VERSION "2.2.0"
-#define PEP_ENGINE_VERSION_MAJOR 2
-#define PEP_ENGINE_VERSION_MINOR 2
+#define PEP_ENGINE_VERSION "3.0.0"
+#define PEP_ENGINE_VERSION_MAJOR 3
+#define PEP_ENGINE_VERSION_MINOR 0
 #define PEP_ENGINE_VERSION_PATCH 0
-#define PEP_ENGINE_VERSION_RC    4
+#define PEP_ENGINE_VERSION_RC    0
 
 
 #define PEP_OWN_USERID "pEp_own_userId"
