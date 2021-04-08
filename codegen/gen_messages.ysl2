@@ -15,7 +15,7 @@ tstylesheet {
     include ./functions.ysl2
 
     function "pEp_imports"
-        | IMPORTS Version, Identity, IdentityList, TID, Hash, Rating FROM PEP;
+        | IMPORTS Version, Identity, IdentityList, TID, Hash, Rating FROM PEP
 
     function "header"
     ||
@@ -74,6 +74,8 @@ tstylesheet {
 
         EXPORTS «@name»;
         `` call "pEp_imports"
+        `` apply "message/embed", mode=import
+        ;
 
         `` apply "message//list|message", 0, mode=impl;
         «@name» ::= CHOICE {
@@ -88,7 +90,7 @@ tstylesheet {
     template "message", mode=impl
     ||
     «@name» ::= SEQUENCE {
-    `` apply "field|auto|list", mode=direct
+    `` apply "field|auto|list|embed", mode=direct
     }
 
     ||
@@ -101,10 +103,13 @@ tstylesheet {
 
     ||
 
-    template "field|auto", mode=direct
+    template "field|auto|embed", mode=direct
         | «func:asn1name()» «func:asn1type()»`if "position()!=last()" > ,`
 
     template "list", mode=direct
         | «func:asn1name()» SEQUENCE OF «func:asn1type()»`if "position()!=last()" > ,`
+
+    template "embed", mode=import
+        |     «@type» FROM «yml:ucase(@protocol)»
 }
 

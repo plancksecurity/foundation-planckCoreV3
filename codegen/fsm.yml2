@@ -66,3 +66,7 @@ decl auto < field >;
 
 decl list < field >;
 
+// emped message from other state machine
+
+decl embed @protocol @type @name;
+
