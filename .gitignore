@@ -133,3 +133,11 @@ codegen/generated/
 codegen/*.gen
 .copy
 
+# Don't remove these if you want to live a long life. It's necessary because it doesn't get cleaned up between branches.
+sync/generated
+sync/.codecs
+sync/.messages
+sync/.actions
+sync/.codegen
+sync/.statemachines
+sync/.copy
