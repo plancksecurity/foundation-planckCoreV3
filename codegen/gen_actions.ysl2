@@ -23,7 +23,7 @@ tstylesheet {
     include standardlib.ysl2
     include ./functions.ysl2
 
-    include ./cond_act_*.yml2
+    include from *actfile
 
     template "/protocol" {
         document "generated/{@name}_actions.c", "text" {
