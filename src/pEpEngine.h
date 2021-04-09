@@ -21,7 +21,7 @@ extern "C" {
 #include "labeled_int_list.h"    
 #include "timestamp.h"
 
-#define PEP_VERSION "3.0" // pEp *protocol* version (aligns with message version always)
+#define PEP_VERSION "2.2" // pEp *protocol* version (aligns with message version always)
 
 // RELEASE version this targets
 // (string: major.minor.patch)
