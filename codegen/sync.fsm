@@ -728,32 +728,26 @@ protocol Sync 1 {
 
         }
         state WaitForGroupUpdate {
+            on GroupSyncUpdate {
 
+            }
+
+            on RequestUpdate {
+
+            }
         }
 
         // reflect incoming ManagedGroup messages
 
-        message GroupSyncCreate 2 {
-            field Identity groupIdentity;
-            field Identity manager;
-        }
-
-        message GroupSyncAdopted 3 {
-            field Identity groupIdentity;
-            field Identity member;
-        }
-
-        message GroupSyncDissolve 4 {
-            field Identity groupIdentity;
-            field Identity manager;
+        message GroupSyncUpdate 2 {
+            embed Distribution ManagedGroup msg;
         }
 
         // in case a ManagedGroup message arrives for an unknown group ask the
         // other devices
 
-        message GroupSyncRequest 5 {
+        message GroupSyncRequest 3 {
             field Identity groupIdentity;
-            field Identity manager;
         }
     }
 }
