@@ -10,7 +10,7 @@
 
 #include <gtest/gtest.h>
 
-#define ENGINE908_WRITEOUT 1
+#define ENGINE908_WRITEOUT 0
 
 namespace {
 

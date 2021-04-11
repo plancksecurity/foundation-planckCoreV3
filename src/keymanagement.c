@@ -750,12 +750,12 @@ static PEP_STATUS store_updated_identity(PEP_SESSION session, pEp_identity* iden
 
 // Should not return PASSPHRASE errors because we force
 // calls that can cause key renewal not to.
+// Will NOT elect keys as of ENGINE-909 fixes - this is the external call.
 DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
     )
 {
-    // Will change soon. This has this value for ENGINE-908.
-    return _update_identity(session, identity, true);
+    return _update_identity(session, identity, false);
 }
 
 
