@@ -142,3 +142,5 @@ sync/.actions
 sync/.codegen
 sync/.statemachines
 sync/.copy
+
+*.ignore
