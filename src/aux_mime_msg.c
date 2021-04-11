@@ -30,7 +30,7 @@ static PEP_STATUS update_identity_recip_list(PEP_SESSION session,
             if (!is_me(session, curr_identity)) {
                 char* name_bak = curr_identity->username;
                 curr_identity->username = NULL;
-                status = update_identity(session, curr_identity);
+                status =_update_identity(session, curr_identity, true);
                 if (name_bak && 
                     (EMPTYSTR(curr_identity->username) || strcmp(name_bak, curr_identity->username) != 0)) {
                     free(curr_identity->username);
@@ -81,7 +81,7 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     // MIME decode message delivers only addresses. We need more.
     if (tmp_msg->from) {
         if (!is_me(session, tmp_msg->from))
-            status = update_identity(session, (tmp_msg->from));
+            status =_update_identity(session, (tmp_msg->from), true);
         else
             status = _myself(session, tmp_msg->from, false, true, false, true);
 

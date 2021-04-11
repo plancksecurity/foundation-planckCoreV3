@@ -436,7 +436,7 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         status = myself(session, sender_id);        
     }
     else {    
-        status = update_identity(session, sender_id);
+        status =_update_identity(session, sender_id, true);
         if (!sender_id->user_id)
             return PEP_UNKNOWN_ERROR;
     }
@@ -546,7 +546,7 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         curr_ident->fpr = NULL; // ensure old_fpr is preserved
         free(curr_ident->user_id);
         curr_ident->user_id = NULL;
-        status = update_identity(session, curr_ident);
+        status =_update_identity(session, curr_ident, true);
         if (status != PEP_STATUS_OK)
             return status;
             
