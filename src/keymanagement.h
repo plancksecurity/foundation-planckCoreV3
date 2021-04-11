@@ -56,6 +56,10 @@ DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
     );
 
+PEP_STATUS _update_identity(
+        PEP_SESSION session, pEp_identity * identity, bool _do_elect_key
+    );
+
 // TODO: remove
 // initialise_own_identities () - ensures that an own identity is complete
 //

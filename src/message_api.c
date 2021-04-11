@@ -3862,24 +3862,46 @@ static PEP_STATUS _decrypt_message(
     *rating = PEP_rating_undefined;
 //    *flags = 0;
 
-    /*** End init ***/
 
+    /*****************************************************
+     * ENGINE-908/909: It is very important here that we NOT call a full update identity
+     * in this or any called function UNTIL we've decrypted any potential inner messages.
+     * This is because we don't want to call key election - if we've had a key reset,
+     * we want to ensure we don't elect and set the old key (which we shouldn't anyway,
+     * because it currently gets deleted from the keys db, but I don't file the bugs or
+     * determine the priorities - the sooner key election removal comes in, the better :)
+     */
     // Ok, before we do anything, if it's a pEp message, regardless of whether it's
     // encrypted or not, we set the sender as a pEp user. This has NOTHING to do
     // with the key.
     if (src->from && !(is_me(session, src->from))) {
-        if (is_pEp_msg) {
+       pEp_identity* tmp_from = src->from;
+
+       // we should not already have an fpr on src->from anyway that means anything.
+       // And update_identity would have changed it, so we can feel free to remove it.
+       // We don't need a key in the identity yet anyway.
+       free(tmp_from->fpr);  // maybe cache and return, I dunno
+       tmp_from->fpr = NULL;
+
+       status = _update_identity(session, tmp_from, false); // Don't elect a key if we don't have a default
+                                                            // Do key election AFTER we have a sender key, though
+
+       // Status check happens below, in if statements
+        if (!is_me(session, tmp_from) && is_pEp_msg) { // is_me can change in _update_identity
             pEp_identity* tmp_from = src->from;
-    
+
             // Ensure there's a user id
             if (EMPTYSTR(tmp_from->user_id) && tmp_from->address) {
-                status = update_identity(session, tmp_from);
-                if (status == PEP_CANNOT_FIND_IDENTITY) {
+                if (status == PEP_CANNOT_FIND_IDENTITY) { // from _update_identity above
                     tmp_from->user_id = calloc(1, strlen(tmp_from->address) + 6);
                     if (!tmp_from->user_id)
                         return PEP_OUT_OF_MEMORY;
                     snprintf(tmp_from->user_id, strlen(tmp_from->address) + 6,
-                             "TOFU_%s", tmp_from->address);        
+                            "TOFU_%s", tmp_from->address);
+                    // We also have no reason to believe tmp_from->fpr means anything,
+                    // so we free it here. We can pick it up later.
+                    free(tmp_from->fpr);
+                    tmp_from->fpr = NULL;
                     status = PEP_STATUS_OK;
                 }
             }
@@ -3892,7 +3914,7 @@ static PEP_STATUS _decrypt_message(
     // We really need key used in signing to do anything further on the pEp comm_type.
     // So we can't adjust the rating of the sender just yet.
 
-    /*** Begin importing any keys attached an outer, undecrypted message - update identities accordingly ***/
+    /*** Begin importing any keys attached an outer, undecrypted message ***/
     // Private key in unencrypted mail are ignored -> NULL
     //
     // This import is from the outermost message.
@@ -3912,20 +3934,8 @@ static PEP_STATUS _decrypt_message(
     import_header_keys(session, src, 
                        (imported_key_fprs ? &_imported_key_list : NULL), 
                        (changed_public_keys ? &_changed_keys : NULL));
-    
-    // FIXME: is this really necessary here?
-    // if (src->from) {
-    //     if (!is_me(session, src->from))
-    //         status = update_identity(session, src->from);
-    //     else
-    //         status = _myself(session, src->from, false, false, myself_read_only);
-    // 
-    //     // We absolutely should NOT be bailing here unless it's a serious error
-    //     if (status == PEP_OUT_OF_MEMORY)
-    //         return status;
-    // }
-    
-    /*** End Import any attached public keys and update identities accordingly ***/
+
+    /*** End Import any attached public keys ***/
     
     /*** Begin get detached signatures that are attached to the encrypted message ***/
     // Get detached signature, if any
@@ -3969,7 +3979,7 @@ static PEP_STATUS _decrypt_message(
     }
 
     // if there is an own identity defined via this message is coming in
-    // retrieve the details; in case there's no usuable own key make it
+    // retrieve the details; in case there's no usable own key make it
     // functional
     if (src->recv_by && !EMPTYSTR(src->recv_by->address)) {
         status = myself(session, src->recv_by);
@@ -4231,6 +4241,32 @@ static PEP_STATUS _decrypt_message(
                                 if (is_inner || is_key_reset)
                                     inner_message->opt_fields = stringpair_list_delete_by_key(inner_message->opt_fields, X_PEP_MSG_WRAP_KEY);
                             }
+                            // Ok. So at this point, we have the sender and signer fprs.
+                            // First, let's see if we have a default key for this person at all
+                            // (ENGINE-908 and 909 hotfix)
+                            pEp_identity* inner_from = inner_message->from;
+                            if (inner_from && !is_me(session, inner_from)) {
+                                status = _update_identity(session, inner_from, false);
+                                if (status != PEP_STATUS_OK)
+                                    goto pEp_error;
+
+                                const char* sender_fpr = inner_message->_sender_fpr;
+                                if (EMPTYSTR(inner_from->fpr) && !EMPTYSTR(sender_fpr)) {
+                                    const char* signer_fpr = NULL;
+                                    if (_keylist)
+                                        signer_fpr = _keylist->value;
+                                    if (!EMPTYSTR(signer_fpr)) {
+                                        if (strcmp(signer_fpr, sender_fpr) == 0) {
+                                            inner_from->fpr = (char*)sender_fpr; // NOT modified in set_identity
+                                            status = set_identity(session, inner_from);
+                                            if (status != PEP_STATUS_OK)
+                                                goto pEp_error;
+                                            inner_from->fpr = NULL; // doesn't belong to us
+                                        }
+                                    }
+                                }
+                            }
+                            // Ok, at this point, real update_identity calls are allowed
                         }
                         else {
                             is_inner = (strcmp(wrap_info, "INNER") == 0);
