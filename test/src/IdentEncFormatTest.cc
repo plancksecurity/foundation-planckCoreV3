@@ -492,7 +492,7 @@ TEST_F(IdentEncFormatTest, check_ident_enc_format_multi_cc_specified) {
     to_name = "Alice Malice";
     to_address = "alice_malice@darthmama.cool";    
     to_ident = new_identity(to_address, NULL, "ALICE", to_name);
-    status = update_identity(session, to_ident);
+    status = _update_identity(session, to_ident, true);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_EQ(to_ident->enc_format, PEP_enc_inline_EA);
     free_identity(to_ident);
@@ -500,14 +500,14 @@ TEST_F(IdentEncFormatTest, check_ident_enc_format_multi_cc_specified) {
     to_fpr = bob_fpr;
     to_address = "bob_mob@darthmama.cool";
     to_ident = new_identity(to_address, NULL, "BOB", NULL);    
-    status = update_identity(session, to_ident);
+    status = _update_identity(session, to_ident, true);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_EQ(to_ident->enc_format, PEP_enc_inline_EA);
     free_identity(to_ident);
         
     to_address = "dave_rave@darthmama.cool";    
     to_ident = new_identity(to_address, NULL, NULL, NULL);
-    status = update_identity(session, to_ident);
+    status = _update_identity(session, to_ident, true);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_EQ(to_ident->enc_format, PEP_enc_inline_EA);
     free_identity(to_ident);    

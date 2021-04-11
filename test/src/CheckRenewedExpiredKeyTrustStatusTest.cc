@@ -167,7 +167,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     ASSERT_EQ(expired_inquisitor->comm_type , PEP_ct_OpenPGP);
 
     // Ok, now update_identity - we'll discover it's expired
-    status = update_identity(session, expired_inquisitor);
+    status = _update_identity(session, expired_inquisitor, true);
     ASSERT_EQ(status , PEP_KEY_UNSUITABLE);
     PEP_comm_type ct = expired_inquisitor->comm_type;
     ASSERT_EQ(ct , PEP_ct_key_not_found);
@@ -200,7 +200,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
 
     pEp_identity* expired_inquisitor1 = new_identity("inquisitor@darthmama.org", NULL, NULL, "Lady Claire Trevelyan");
 
-    status = update_identity(session, expired_inquisitor1);
+    status = _update_identity(session, expired_inquisitor1, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     status = get_trust(session, expired_inquisitor1);
     ASSERT_EQ(expired_inquisitor1->comm_type , PEP_ct_OpenPGP);
@@ -316,7 +316,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     ASSERT_TRUE(pEp_user);
 
     // Ok, now update_identity - we'll discover it's expired
-    status = update_identity(session, expired_inquisitor);
+    status = _update_identity(session, expired_inquisitor, true);
     ASSERT_EQ(status , PEP_KEY_UNSUITABLE);
     PEP_comm_type ct = expired_inquisitor->comm_type;
     ASSERT_EQ(ct, PEP_ct_key_not_found);
@@ -349,7 +349,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
 
     pEp_identity* expired_inquisitor1 = new_identity("inquisitor@darthmama.org", NULL, NULL, "Lady Claire Trevelyan");
 
-    status = update_identity(session, expired_inquisitor1);
+    status = _update_identity(session, expired_inquisitor1, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     status = get_trust(session, expired_inquisitor1);
     ASSERT_EQ(expired_inquisitor1->comm_type, PEP_ct_pEp);

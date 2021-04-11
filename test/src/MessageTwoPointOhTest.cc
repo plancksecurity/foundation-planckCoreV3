@@ -113,16 +113,16 @@ TEST_F(MessageTwoPointOhTest, check_message_two_point_oh) {
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", PEP_OWN_USERID, "Alice Test");
     pEp_identity* carol = new_identity("pep-test-carol@pep-project.org", NULL, "TOFU_pep-test-carol@pep-project.org", "Carol Test");
 
-    PEP_STATUS alice_status = update_identity(session, alice);
-    PEP_STATUS carol_status = update_identity(session, carol);
+    PEP_STATUS alice_status = _update_identity(session, alice, true);
+    PEP_STATUS carol_status = _update_identity(session, carol, true);
 
     PEP_STATUS status = update_trust_for_fpr(session, alice->fpr, PEP_ct_pEp);
     status = update_trust_for_fpr(session, carol->fpr, carol_comm_type);
 
     PEP_STATUS mystatus = myself(session, alice);
     ASSERT_EQ(mystatus , PEP_STATUS_OK);
-    alice_status = update_identity(session, alice);
-    alice_status = update_identity(session, carol);
+    alice_status = _update_identity(session, alice, true);
+    alice_status = _update_identity(session, carol, true);
     ASSERT_EQ(alice->comm_type , PEP_ct_pEp);
     ASSERT_EQ(carol->comm_type , carol_comm_type);
 

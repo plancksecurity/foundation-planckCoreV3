@@ -128,7 +128,7 @@ TEST_F(KeyringImportTest, check_import1) {
 
         output_stream << "Looking up: " << address << ", should have fingerprint: " << fpr << endl;
         pEp_identity *id = new_identity(address, NULL, NULL, NULL);
-        PEP_STATUS status = update_identity(session, id);
+        PEP_STATUS status = _update_identity(session, id, true);
         ASSERT_EQ(status , PEP_STATUS_OK);
         output_stream << "Got: " << (id->fpr ? id->fpr : "NULL") << " -> " << (id->address ? id->address : "NULL") << endl;
 
@@ -195,7 +195,7 @@ TEST_F(KeyringImportTest, check_import2) {
 
         output_stream << "Looking up: " << address << ", should have fingerprint: " << fpr << endl;
         pEp_identity *id = new_identity(address, NULL, NULL, NULL);
-        PEP_STATUS status = update_identity(session, id);
+        PEP_STATUS status = _update_identity(session, id, true);
         ASSERT_EQ(status , PEP_STATUS_OK);
         output_stream << "Got: " << (id->fpr ? id->fpr : "NULL") << " (expected: " << fpr << ") -> " << (id->address ? id->address : "NULL") << endl;
 

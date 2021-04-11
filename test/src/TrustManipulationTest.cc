@@ -123,14 +123,14 @@ TEST_F(TrustManipulationTest, check_trust_manipulation) {
     output_stream << user_again->fpr << "\n";
 
     ASSERT_STRNE(user->fpr, user_again->fpr);
-    update_identity(session, user);
+    _update_identity(session, user, true);
     ASSERT_STREQ(user->fpr, keypair1);
     output_stream << "Key 1 (" << user->fpr << ") is still the default for the identity after update_identity." << endl;
 
     // First, trust the SECOND key; make sure it replaces as the default
     output_stream << "Set trust bit for key 2 (" << keypair2 << ") and ensure it replaces key 1 as the default." << endl;
     status = trust_personal_key(session, user_again);
-    status = update_identity(session, user);
+    status = _update_identity(session, user, true);
     ASSERT_EQ(user->comm_type , PEP_ct_OpenPGP);
     ASSERT_STREQ(user->fpr, keypair2);
     output_stream << "Key 2 (" << user->fpr << ") is now the default for the identity after update_identity, and its comm_type is PEP_ct_OpenPGP (trust bit set!)." << endl;
@@ -150,7 +150,7 @@ TEST_F(TrustManipulationTest, check_trust_manipulation) {
     ASSERT_EQ(user->comm_type , PEP_ct_mistrusted);
     output_stream << "Hoorah, we now do not trust key 2. (We never liked key 2 anyway.)" << endl;
     output_stream << "Now we call update_identity to see what gifts it gives us (should be key 1 with key 1's initial trust.)" << endl;
-    status = update_identity(session, user);
+    status = _update_identity(session, user, true);
     ASSERT_NE(user->fpr, nullptr);
     ASSERT_STREQ(user->fpr, keypair1);
     ASSERT_EQ(user->comm_type , PEP_ct_OpenPGP_unconfirmed);
@@ -163,7 +163,7 @@ TEST_F(TrustManipulationTest, check_trust_manipulation) {
     ASSERT_EQ(user->comm_type , PEP_ct_mistrusted);
     output_stream << "Hoorah, we now do not trust key 1. (TRUST NO ONE)" << endl;
     output_stream << "Now we call update_identity to see what gifts it gives us (should be an empty key and a key not found comm_type.)" << endl;
-    status = update_identity(session, user);
+    status = _update_identity(session, user, true);
     ASSERT_EQ(user->fpr , nullptr);
     ASSERT_EQ(user->comm_type , PEP_ct_key_not_found);
     output_stream << "Yup, we trust no keys from " << uniqname << endl;

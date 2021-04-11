@@ -170,7 +170,7 @@ TEST_F(BlacklistTest, check_blacklist) {
                                                       NULL,
                                                       "Blacklist Keypair");
 
-    PEP_STATUS status8 = update_identity(session, blacklisted_identity);
+    PEP_STATUS status8 = _update_identity(session, blacklisted_identity, true);
 
     // THERE IS NO BLACKLISTING OF PEP KEYS
     //blacklisted_identity->comm_type = PEP_ct_pEp;
@@ -180,13 +180,13 @@ TEST_F(BlacklistTest, check_blacklist) {
 
     trust_personal_key(session, blacklisted_identity);
 
-    PEP_STATUS status999 = update_identity(session, blacklisted_identity);
+    PEP_STATUS status999 = _update_identity(session, blacklisted_identity, true);
 
     ASSERT_EQ(blacklisted_identity->comm_type , PEP_ct_OpenPGP);
 
     PEP_STATUS status9 = blacklist_add(session, bl_fpr_1);
     status10 = blacklist_is_listed(session, bl_fpr_1, &is_blacklisted);
-    PEP_STATUS status11 = update_identity(session, blacklisted_identity);
+    PEP_STATUS status11 = _update_identity(session, blacklisted_identity, true);
     /* new!!! */
     ASSERT_TRUE(is_blacklisted);
     ASSERT_EQ(status11 , PEP_STATUS_OK);
@@ -235,7 +235,7 @@ TEST_F(BlacklistTest, check_blacklist) {
                                                        bl_fpr_2,
                                                         NULL,
                                                        "Blacklist Keypair");
-    PEP_STATUS status15 = update_identity(session, blacklisted_identity2);
+    PEP_STATUS status15 = _update_identity(session, blacklisted_identity2, true);
     //
     // ASSERT_EQ((blacklisted_identity2->fpr && strcmp(blacklisted_identity2->fpr, bl_fpr_2) , 0), "blacklisted_identity2->fpr && strcmp(blacklisted_identity2->fpr);
     // if (blacklisted_identity2->fpr && strcmp(blacklisted_identity2->fpr, bl_fpr_2) == 0)
@@ -244,14 +244,14 @@ TEST_F(BlacklistTest, check_blacklist) {
     // //     output_stream << "blacklisted_identity->fpr should be " << bl_fpr_2 << " but is " << blacklisted_identity->fpr << endl;
     //
     // PEP_STATUS status12 = blacklist_delete(session, bl_fpr_1);
-    // PEP_STATUS status13 = update_identity(session, blacklisted_identity);
+    // PEP_STATUS status13 = _update_identity(session, blacklisted_identity, true);
     //
     // pEp_identity* stored_identity = new_identity("blacklistedkeys@kgrothoff.org",
     //                                               NULL,
     //                                               blacklisted_identity->user_id,
     //                                               "Blacklist Keypair");
     //
-    // PEP_STATUS status00 = update_identity(session, stored_identity);
+    // PEP_STATUS status00 = _update_identity(session, stored_identity, true);
     //
     // // FIXME
     // // ASSERT_EQ(stored_identity->comm_type , PEP_ct_pEp);

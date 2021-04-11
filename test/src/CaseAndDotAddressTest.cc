@@ -106,7 +106,7 @@ TEST_F(CaseAndDotAddressTest, check_case_and_dot_address) {
     PEP_STATUS status = trust_personal_key(session, alice_id);
 
     pEp_identity * new_alice_id = new_identity("pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", user_id, "Alice Test");
-    status = update_identity(session, new_alice_id);
+    status = _update_identity(session, new_alice_id, true);
     ASSERT_NE(new_alice_id->fpr, nullptr);
     ASSERT_STREQ(new_alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
     free_identity(new_alice_id);
@@ -115,7 +115,7 @@ TEST_F(CaseAndDotAddressTest, check_case_and_dot_address) {
     new_alice_id = NULL;
 
     alice_id = new_identity(alice_email_case, NULL, user_id, "Alice Test");
-    status = update_identity(session, alice_id);
+    status = _update_identity(session, alice_id, true);
     ASSERT_NE(alice_id->fpr, nullptr);
     output_stream << "Alice email: " << alice_email_case << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
     ASSERT_STREQ(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
@@ -123,7 +123,7 @@ TEST_F(CaseAndDotAddressTest, check_case_and_dot_address) {
     alice_id = NULL;
 
     alice_id = new_identity(alice_email_dot, NULL, user_id, "Alice Test");
-    status = update_identity(session, alice_id);
+    status = _update_identity(session, alice_id, true);
     ASSERT_NE(alice_id->fpr, nullptr);
     output_stream << "Alice email: " << alice_email_dot << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
     ASSERT_STREQ(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
@@ -131,7 +131,7 @@ TEST_F(CaseAndDotAddressTest, check_case_and_dot_address) {
     alice_id = NULL;
 
     alice_id = new_identity(alice_email_dotless, NULL, user_id, "Alice Test");
-    status = update_identity(session, alice_id);
+    status = _update_identity(session, alice_id, true);
     ASSERT_NE(alice_id->fpr, nullptr);
     output_stream << "Alice email: " << alice_email_dotless << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
     ASSERT_STREQ(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
@@ -139,7 +139,7 @@ TEST_F(CaseAndDotAddressTest, check_case_and_dot_address) {
     alice_id = NULL;
 
     alice_id = new_identity(alice_email_case_and_dot, NULL, user_id, "Alice Test");
-    status = update_identity(session, alice_id);
+    status = _update_identity(session, alice_id, true);
     ASSERT_NE(alice_id->fpr, nullptr);
     output_stream << "Alice email: " << alice_email_case_and_dot << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
     ASSERT_STREQ(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");

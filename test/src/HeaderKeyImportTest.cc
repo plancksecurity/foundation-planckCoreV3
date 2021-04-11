@@ -735,7 +735,7 @@ TEST_F(HeaderKeyImportTest, check_header_key_import) {
     ASSERT_EQ(status , PEP_STATUS_OK);
 
     pEp_identity* alice_check = new_identity("pep.test.alice@pep-project.org", NULL, NULL, "pEp Test Alice");
-    status = update_identity(session, alice_check);
+    status = _update_identity(session, alice_check, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(alice_check->fpr, nullptr);
     ASSERT_STREQ(alice_check->fpr, alice_fpr);

@@ -98,7 +98,7 @@ TEST_F(GetKeyRatingForUserTest, check_get_key_rating_for_user) {
     // Ok, so we have no info really, let's set it.
     status = set_identity(session, alice);
 
-    status = update_identity(session, alice);
+    status = _update_identity(session, alice, true);
     ASSERT_NE(alice->fpr, nullptr);
 
     PEP_rating rating;

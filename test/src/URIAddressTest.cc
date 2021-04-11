@@ -204,7 +204,7 @@ TEST_F(URIAddressTest, check_uri_address_encrypt_2_keys_no_uname) {
     
     // Try without a userid
     pEp_identity* you = new_identity(uri_addr_b, NULL, NULL, NULL);
-    status = update_identity(session, you);
+    status = _update_identity(session, you, true);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NE(you->fpr, nullptr);
     ASSERT_NE(you->username, nullptr);    
@@ -257,7 +257,7 @@ TEST_F(URIAddressTest, check_uri_address_encrypt) {
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_TRUE(keylist && keylist->value);
 
-    status = update_identity(session, you);
+    status = _update_identity(session, you, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_TRUE(you->fpr && you->fpr[0] != '\0');
 
@@ -296,7 +296,7 @@ TEST_F(URIAddressTest, check_uri_address_tofu_1) {
 
 /*
     stringlist_t* keylist = NULL;
-    status = update_identity(session, you);
+    status = _update_identity(session, you, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_TRUE(you->fpr && you->fpr[0] != '\0');
 */
@@ -347,7 +347,7 @@ TEST_F(URIAddressTest, check_uri_address_tofu_2) {
     ASSERT_TRUE(me->fpr && me->fpr[0] != '\0');  
     
     pEp_identity* you = new_identity(sys_b_addr, NULL, "SYSTEM_B", NULL);
-    status = update_identity(session, you);
+    status = _update_identity(session, you, true);
         
     string msg_txt = slurp("test_mails/system_a_to_b_755_part_1.eml");
     message* msg = NULL;

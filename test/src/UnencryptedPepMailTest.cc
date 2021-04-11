@@ -198,7 +198,7 @@ TEST_F(UnencryptedPepMailTest, check_unencrypted_pep_message_rcpt) {
     
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_TRUE(is_pEpmsg(enc_msg));    
-    status = update_identity(session, enc_msg->from);
+    status = _update_identity(session, enc_msg->from, true);
     ASSERT_EQ(enc_msg->from->comm_type, PEP_ct_pEp_unconfirmed);
     
 }

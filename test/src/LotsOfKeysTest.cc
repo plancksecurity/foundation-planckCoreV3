@@ -223,7 +223,7 @@ TEST_F(LotsOfKeysTest, check) {
         sprintf(email, "%09d@example.org", key);
 
         ids[key] = new_identity(strdup(email), NULL, NULL, "Test User");
-        status = update_identity(session, ids[key]);
+        status = _update_identity(session, ids[key], true);
         ASSERT_EQ(status , PEP_STATUS_OK);
 
         if (key == 0) {

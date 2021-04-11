@@ -109,7 +109,7 @@ TEST_F(RevocationTest, check_revocation) {
     ASSERT_EQ(status , PEP_TEST_KEY_IMPORT_SUCCESS);
 
     pEp_identity* pre = new_identity("linda@example.org", NULL, NULL, NULL);
-    status = update_identity(session, pre);
+    status = _update_identity(session, pre, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(pre->comm_type , PEP_ct_OpenPGP_unconfirmed);
 
@@ -128,7 +128,7 @@ TEST_F(RevocationTest, check_revocation) {
     status = find_keys(session, "linda@example.org", &keylist);
     ASSERT_EQ(status , PEP_STATUS_OK);
 
-    status = update_identity(session, post);
+    status = _update_identity(session, post, true);
     // PEP_KEY_UNSUITABLE => revoked (or something similar).
     ASSERT_EQ(status , PEP_KEY_UNSUITABLE);
     ASSERT_EQ(post->comm_type , PEP_ct_key_not_found);

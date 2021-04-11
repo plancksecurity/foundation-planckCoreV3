@@ -106,9 +106,9 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     pEp_identity * you = new_identity("pep.test.alice@pep-project.org", NULL, "TOFU_pep.test.alice@pep-project.org", "Alice Test");
     you->me = false;
 
-    status = update_identity(session, you);
+    status = _update_identity(session, you, true);
     trust_personal_key(session, you);
-    status = update_identity(session, you);
+    status = _update_identity(session, you, true);
 
     output_stream << "------------------------------------------------------------------------------------------" << endl;
     output_stream << "Test 1a: Normal encrypted mail, pEp as substitute subject, regular subject in crypto text." << endl;

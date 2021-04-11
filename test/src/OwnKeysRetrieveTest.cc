@@ -117,7 +117,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_single_private_single_pub) {
 
     // Make it an own identity in the DB
     pEp_identity* me_bob = new_identity("pep.test.bob@pep-project.org", NULL, PEP_OWN_USERID, NULL);
-    status = update_identity(session, me_bob);
+    status = _update_identity(session, me_bob, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_STREQ(me_bob->fpr, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39");
     status = trust_personal_key(session, me_bob);
@@ -394,7 +394,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multi_pub_only) {
     ASSERT_EQ(status , PEP_STATUS_OK);
     // Make it an own identity in the DB
     pEp_identity* me_pub = new_identity("pep.test.alexander0@darthmama.org", NULL, PEP_OWN_USERID, NULL);
-    status = update_identity(session, me_pub);
+    status = _update_identity(session, me_pub, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_STREQ(me_pub->fpr, "F4598A17D4690EB3B5B0F6A344F04E963B7302DB");
     status = trust_personal_key(session, me_pub);
@@ -470,7 +470,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_no_own) {
     ASSERT_EQ(status , PEP_STATUS_OK);
 
     pEp_identity* a_pub = new_identity("pep.test.alexander0@darthmama.org", NULL, "NotMe", NULL);
-    status = update_identity(session, a_pub);
+    status = _update_identity(session, a_pub, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_STREQ(a_pub->fpr, "F4598A17D4690EB3B5B0F6A344F04E963B7302DB");
     status = trust_personal_key(session, a_pub);
@@ -580,7 +580,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multi_idents_one_priv_key_mu
     ASSERT_EQ(status , PEP_STATUS_OK);
     // Make it an own identity in the DB
     pEp_identity* me_pub = new_identity("pep.test.alexander5@darthmama.org", NULL, PEP_OWN_USERID, NULL);
-    status = update_identity(session, me_pub);
+    status = _update_identity(session, me_pub, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_STREQ(me_pub->fpr, "58BCC2BF2AE1E3C4FBEAB89AD7838ACA0773CD29");
     status = trust_personal_key(session, me_pub);

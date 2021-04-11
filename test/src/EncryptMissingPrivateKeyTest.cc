@@ -116,12 +116,12 @@ TEST_F(EncryptMissingPrivateKeyTest, check_encrypt_missing_private_key) {
     PEP_STATUS status = mime_decode_message(mailtext.c_str(), mailtext.length(), &tmp_msg, NULL);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
-    status = update_identity(session, tmp_msg->from);
+    status = _update_identity(session, tmp_msg->from, true);
     identity_list* to_list = tmp_msg->to;
 
     while (to_list) {
         if (to_list->ident)
-            update_identity(session, to_list->ident);
+            _update_identity(session, to_list->ident, true);
         to_list = to_list->next;
     }
 

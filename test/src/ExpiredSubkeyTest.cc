@@ -86,7 +86,7 @@ TEST_F(ExpiredSubkeyTest, check_expired_subkey_with_valid_subkeys_and_main_key) 
     slurp_and_import_key(session,"test_keys/pub/eb_0_valid_pub.asc");
     pEp_identity* expired_0 = new_identity("expired_in_bits_0@darthmama.org",
                                            NULL, NULL, "Expired 0");
-    PEP_STATUS status = update_identity(session, expired_0);
+    PEP_STATUS status = _update_identity(session, expired_0, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(expired_0->fpr, nullptr);
     PEP_rating rating;
@@ -99,7 +99,7 @@ TEST_F(ExpiredSubkeyTest, check_expired_subkey_with_valid_subkeys_expired_main) 
     slurp_and_import_key(session,"test_keys/pub/master_key_test_sign_and_encrypt_added.asc");
     pEp_identity* expired_0 = new_identity("master_key_test@darthmama.org",
                                            NULL, NULL, "Master Key Test");
-    PEP_STATUS status = update_identity(session, expired_0);
+    PEP_STATUS status = _update_identity(session, expired_0, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(expired_0->fpr, nullptr);
     PEP_rating rating;
@@ -112,7 +112,7 @@ TEST_F(ExpiredSubkeyTest, check_all_valid_with_leftover_expired_subkeys) {
     slurp_and_import_key(session,"test_keys/pub/master_key_test_certify_extended_pub.asc");
     pEp_identity* expired_0 = new_identity("master_key_test@darthmama.org",
                                            NULL, NULL, "Master Key Test");
-    PEP_STATUS status = update_identity(session, expired_0);
+    PEP_STATUS status = _update_identity(session, expired_0, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(expired_0->fpr, nullptr);
     PEP_rating rating;
@@ -125,7 +125,7 @@ TEST_F(ExpiredSubkeyTest, check_no_valid_encryption_subkey) {
     slurp_and_import_key(session,"test_keys/pub/master_key_test_deleted_valid_enc_key_pub.asc");
     pEp_identity* expired_0 = new_identity("master_key_test@darthmama.org",
                                            NULL, NULL, "Master Key Test");
-    PEP_STATUS status = update_identity(session, expired_0);
+    PEP_STATUS status = _update_identity(session, expired_0, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(expired_0->fpr, nullptr);
     PEP_rating rating;

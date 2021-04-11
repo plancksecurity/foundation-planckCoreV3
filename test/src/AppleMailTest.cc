@@ -110,11 +110,11 @@ TEST_F(AppleMailTest, check_apple_mail_text_signed_encrypted) {
 
     pEp_identity * you = new_identity("krista@darthmama.org", NULL, "NOT_ME", "Krista Bennett");
     you->me = false;
-    status = update_identity(session, you);
+    status = _update_identity(session, you, true);
 
     trust_personal_key(session, you);
 
-    status = update_identity(session, you);
+    status = _update_identity(session, you, true);
 
     message* msg_ptr = nullptr;
     message* dest_msg = nullptr;
@@ -127,8 +127,8 @@ TEST_F(AppleMailTest, check_apple_mail_text_signed_encrypted) {
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(msg_ptr, nullptr);
 
-    update_identity(session, msg_ptr->from);
-    update_identity(session, msg_ptr->to->ident);
+    _update_identity(session, msg_ptr->from, true);
+    _update_identity(session, msg_ptr->to->ident, true);
 
     final_ptr = msg_ptr;
 
@@ -167,11 +167,11 @@ TEST_F(AppleMailTest, check_apple_mail_html_signed_encrypted) {
 
     pEp_identity * you = new_identity("krista@darthmama.org", NULL, "NOT_ME", "Krista Bennett");
     you->me = false;
-    status = update_identity(session, you);
+    status = _update_identity(session, you, true);
 
     trust_personal_key(session, you);
 
-    status = update_identity(session, you);
+    status = _update_identity(session, you, true);
 
     // End state copy
 

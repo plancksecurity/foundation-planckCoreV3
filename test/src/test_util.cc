@@ -99,7 +99,7 @@ PEP_STATUS set_up_ident_from_scratch(PEP_SESSION session,
             status = myself(session, ident);
     }
     else
-        status = update_identity(session, ident);
+        status = _update_identity(session, ident, true);
 
     if (status != PEP_STATUS_OK)
         goto pep_free;
@@ -568,7 +568,7 @@ static PEP_STATUS update_identity_recip_list(PEP_SESSION session,
             if (!is_me(session, curr_identity)) {
                 char* name_bak = curr_identity->username;
                 curr_identity->username = NULL;
-                status = update_identity(session, curr_identity);
+                status = _update_identity(session, curr_identity, true);
                 if (name_bak &&
                     (EMPTYSTR(curr_identity->username) || strcmp(name_bak, curr_identity->username) != 0)) {
                     free(curr_identity->username);
@@ -621,7 +621,7 @@ PEP_STATUS MIME_decrypt_message(
     // MIME decode message delivers only addresses. We need more.
     if (tmp_msg->from) {
         if (!is_me(session, tmp_msg->from))
-            status = update_identity(session, (tmp_msg->from));
+            status = _update_identity(session, (tmp_msg->from), true);
         else
             status = _myself(session, tmp_msg->from, false, true, false, true);
 
@@ -1049,7 +1049,7 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
 
     if (trust && status == PEP_STATUS_OK) {
         if (!retval->me)
-            status = update_identity(session, retval);
+            status = _update_identity(session, retval, true);
         if (retval->comm_type >= PEP_ct_strong_but_unconfirmed) {
             retval->comm_type = (PEP_comm_type)(retval->comm_type | PEP_ct_confirmed);
             status = set_trust(session, retval);

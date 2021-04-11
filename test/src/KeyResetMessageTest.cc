@@ -211,7 +211,7 @@ class KeyResetMessageTest : public ::testing::Test {
             identity_list* send_idents =
                 new_identity_list(
                     new_identity("pep.test.alice@pep-project.org", NULL, "AliceOther", NULL));
-            status = update_identity(session, send_idents->ident);
+            status = _update_identity(session, send_idents->ident, true);
             ASSERT_EQ(status , PEP_STATUS_OK);
             status = set_as_pEp_user(session, send_idents->ident);
 
@@ -278,7 +278,7 @@ TEST_F(KeyResetMessageTest, check_reset_key_and_notify) {
     identity_list* curr_ident;
 
     for (curr_ident = send_idents; curr_ident && curr_ident->ident; curr_ident = curr_ident->next) {
-        status = update_identity(session, curr_ident->ident);
+        status = _update_identity(session, curr_ident->ident, true);
         
         // Poor Bob. He doesn't get to be a pEp user.
         if (strcmp(curr_ident->ident->user_id, bob_user_id.c_str()) == 0)
@@ -403,7 +403,7 @@ TEST_F(KeyResetMessageTest, check_non_reset_receive_revoked) {
     pEp_identity* alice_ident = new_identity("pep.test.alice@pep-project.org", NULL,
                                             alice_user_id.c_str(), NULL);
 
-    PEP_STATUS status = update_identity(session, alice_ident);
+    PEP_STATUS status = _update_identity(session, alice_ident, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_STREQ(alice_fpr, alice_ident->fpr);
 
@@ -421,7 +421,7 @@ TEST_F(KeyResetMessageTest, check_non_reset_receive_revoked) {
     if (keylist) // there's a test option to continue when asserts fail, so...
         ASSERT_STREQ(keylist->value,alice_receive_reset_fpr);
 
-    status = update_identity(session, alice_ident);
+    status = _update_identity(session, alice_ident, true);
     ASSERT_NE(alice_ident->fpr, nullptr);
     ASSERT_STREQ(alice_receive_reset_fpr,alice_ident->fpr);
 
@@ -454,7 +454,7 @@ TEST_F(KeyResetMessageTest, check_reset_receive_revoked) {
     pEp_identity* alice_ident = new_identity("pep.test.alice@pep-project.org", NULL,
                                             "ALICE_IS_NOT_OWN_ID", "Alice in Wonderland");
 
-    status = update_identity(session, alice_ident);
+    status = _update_identity(session, alice_ident, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_STREQ(alice_fpr, alice_ident->fpr);
 
@@ -472,7 +472,7 @@ TEST_F(KeyResetMessageTest, check_reset_receive_revoked) {
     if (keylist) // there's a test option to continue when asserts fail, so...
         ASSERT_STREQ(keylist->value, alice_receive_reset_fpr);
 
-    status = update_identity(session, alice_ident);
+    status = _update_identity(session, alice_ident, true);
     ASSERT_NE(alice_ident->fpr, nullptr);
     ASSERT_STREQ(alice_receive_reset_fpr, alice_ident->fpr);
 
@@ -1658,14 +1658,14 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
 TEST_F(KeyResetMessageTest, check_reset_ident_other_pub_fpr) {
     send_setup(); // lazy
     pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, bob_user_id.c_str(), NULL);
-    PEP_STATUS status = update_identity(session, bob);
+    PEP_STATUS status = _update_identity(session, bob, true);
 
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_TRUE(bob->fpr && bob->fpr[0]);
     status = set_as_pEp_user(session, bob);
     status = trust_personal_key(session, bob);
 
-    status = update_identity(session, bob);
+    status = _update_identity(session, bob, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(bob->comm_type , PEP_ct_pEp);
 
@@ -1682,7 +1682,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_other_pub_fpr) {
     ASSERT_EQ(status, PEP_KEY_NOT_FOUND);
     ASSERT_STREQ(main_key, nullptr);
     
-    status = update_identity(session, bob);
+    status = _update_identity(session, bob, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(bob->comm_type , PEP_ct_key_not_found);
     ASSERT_TRUE(!(bob->fpr) || !(bob->fpr[0]));
@@ -1696,7 +1696,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_other_priv_fpr) {
     // Also import Bob's private key, because that dude is a fool.
     PEP_STATUS status = read_file_and_import_key(session, "test_keys/priv/pep-test-bob-0xC9C2EE39_priv.asc");
     pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, bob_user_id.c_str(), NULL);
-    status = update_identity(session, bob);
+    status = _update_identity(session, bob, true);
 
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_TRUE(bob->fpr && bob->fpr[0]);
@@ -1705,14 +1705,14 @@ TEST_F(KeyResetMessageTest, check_reset_ident_other_priv_fpr) {
     status = set_as_pEp_user(session, bob);
     status = trust_personal_key(session, bob);
 
-    status = update_identity(session, bob);
+    status = _update_identity(session, bob, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(bob->comm_type , PEP_ct_pEp);
     ASSERT_FALSE(bob->me);
 
     // Ok, let's reset it
     status = key_reset_identity(session, bob, bob->fpr);
-    status = update_identity(session, bob);
+    status = _update_identity(session, bob, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(bob->comm_type , PEP_ct_key_not_found);
     ASSERT_TRUE(!(bob->fpr) || !(bob->fpr[0]));
@@ -1724,14 +1724,14 @@ TEST_F(KeyResetMessageTest, check_reset_ident_other_priv_fpr) {
 TEST_F(KeyResetMessageTest, check_reset_ident_other_pub_no_fpr) {
     send_setup(); // lazy
     pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, bob_user_id.c_str(), NULL);
-    PEP_STATUS status = update_identity(session, bob);
+    PEP_STATUS status = _update_identity(session, bob, true);
 
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_TRUE(bob->fpr && bob->fpr[0]);
     status = set_as_pEp_user(session, bob);
     status = trust_personal_key(session, bob);
 
-    status = update_identity(session, bob);
+    status = _update_identity(session, bob, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(bob->comm_type , PEP_ct_pEp);
     free(bob->fpr);
@@ -1739,7 +1739,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_other_pub_no_fpr) {
 
     // Ok, let's reset it
     status = key_reset_identity(session, bob, NULL);
-    status = update_identity(session, bob);
+    status = _update_identity(session, bob, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(bob->comm_type , PEP_ct_key_not_found);
     ASSERT_TRUE(!(bob->fpr) || !(bob->fpr[0]));
@@ -1755,14 +1755,14 @@ TEST_F(KeyResetMessageTest, check_reset_ident_other_priv_no_fpr) {
     // Also import Bob's private key, because that dude is a fool.
     PEP_STATUS status = read_file_and_import_key(session, "test_keys/priv/pep-test-bob-0xC9C2EE39_priv.asc");
     pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, bob_user_id.c_str(), NULL);
-    status = update_identity(session, bob);
+    status = _update_identity(session, bob, true);
 
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_TRUE(bob->fpr && bob->fpr[0]);
     status = set_as_pEp_user(session, bob);
     status = trust_personal_key(session, bob);
 
-    status = update_identity(session, bob);
+    status = _update_identity(session, bob, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(bob->comm_type , PEP_ct_pEp);
     ASSERT_FALSE(bob->me);
@@ -1771,7 +1771,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_other_priv_no_fpr) {
 
     // Ok, let's reset it
     status = key_reset_identity(session, bob, NULL);
-    status = update_identity(session, bob);
+    status = _update_identity(session, bob, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(bob->comm_type , PEP_ct_key_not_found);
     ASSERT_TRUE(!(bob->fpr) || !(bob->fpr[0]));
@@ -2360,7 +2360,7 @@ TEST_F(KeyResetMessageTest, not_a_test) {
     slurp_and_import_key(session, "test_keys/pub/pep-test-carol-0x42A85A42_pub.asc");
 
     pEp_identity* carol = new_identity("pep-test-carol@pep-project.org", carol_fpr, carol_user_id.c_str(), "Christmas Carol");
-    status = update_identity(session, carol);
+    status = _update_identity(session, carol, true);
 
     message* bob_msg = new_message(PEP_dir_outgoing);
     bob_msg->from = identity_dup(bob);
@@ -2423,7 +2423,7 @@ TEST_F(KeyResetMessageTest, check_reset_mistrust_next_msg_have_not_mailed) {
 
     slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");
     pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", bob_fpr, NULL, "Bob's Burgers");
-    status = update_identity(session, bob);
+    status = _update_identity(session, bob, true);
 
     status = key_mistrusted(session, bob);
     ASSERT_EQ(status, PEP_STATUS_OK);
@@ -2455,10 +2455,10 @@ TEST_F(KeyResetMessageTest, check_reset_mistrust_next_msg_have_not_mailed) {
     ASSERT_EQ(status, PEP_STATUS_OK);
 
     // status = identity_rating(session, bob, &rating);
-    // status = update_identity(session, bob);
+    // status = _update_identity(session, bob, true);
     status = identity_rating(session, bob, &rating);
     ASSERT_EQ(rating, PEP_rating_have_no_key);
-    //update_identity(session, bob);
+    //_update_identity(session, bob, true);
             //    ASSERT_EQ(bob->fpr, nullptr);
 
     mime_decode_message(mail_from_bob.c_str(), mail_from_bob.size(), &bob_enc_msg, NULL);
@@ -2486,7 +2486,7 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_keys_one_URI_partner) {
     // I don't think this is relevant.
     pEp_identity* you = new_identity("payto://BIC/SYSTEMB", NULL, "SystemB", NULL); 
     ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/SYSTEMB-0xD47A817B3_pub.asc"));
-    status = update_identity(session, you);
+    status = _update_identity(session, you, true);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NE(you->fpr, nullptr);  
     
