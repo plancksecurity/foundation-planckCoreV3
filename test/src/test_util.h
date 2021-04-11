@@ -74,6 +74,10 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
 
 
 PEP_STATUS read_file_and_import_key(PEP_SESSION session, const char* fname);
+
+PEP_STATUS vanilla_encrypt_and_write_to_file(PEP_SESSION session, message* msg, const char* filename);
+PEP_STATUS vanilla_read_file_and_decrypt(PEP_SESSION session, message** msg, const char* filename);
+
 PEP_STATUS set_up_ident_from_scratch(PEP_SESSION session, 
                                      const char* key_fname,
                                      const char* address,

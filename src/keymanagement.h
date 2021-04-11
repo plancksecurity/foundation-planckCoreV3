@@ -62,7 +62,7 @@ DYNAMIC_API PEP_STATUS update_identity(
     );
 
 PEP_STATUS _update_identity(
-        PEP_SESSION session, pEp_identity * identity, bool _do_elect_key
+        PEP_SESSION session, pEp_identity * identity, bool do_elect_key
     );
 
 // TODO: remove
@@ -703,7 +703,14 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
                             bool* is_identity_default,
                             bool* is_user_default,
                             bool* is_address_default,
-                            bool check_blacklist);
+                            bool check_blacklist,
+                            bool do_elect_key);
+
+PEP_STATUS validate_fpr(PEP_SESSION session,
+                        pEp_identity* ident,
+                        bool check_blacklist,
+                        bool own_must_contain_private,
+                        bool renew_private);
 
 /**
  *  <!--       get_key_sticky_bit_for_user()       -->

@@ -1276,7 +1276,7 @@ PEP_STATUS _set_trust_internal(PEP_SESSION session, pEp_identity* identity,
 // you can't use this one.
 PEP_STATUS set_trust(PEP_SESSION session, pEp_identity* identity) {
     PEP_STATUS status = PEP_STATUS_OK;
-    
+
     status = _set_trust_internal(session, identity, true);
     if (status == PEP_STATUS_OK) {
         if ((identity->comm_type | PEP_ct_confirmed) == PEP_ct_pEp)
