@@ -1715,7 +1715,7 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
     if (is_me(session, tmp_ident))
         status = myself(session, tmp_ident);
     else
-        status = update_identity(session, tmp_ident);
+        status =_update_identity(session, tmp_ident, true);
     
     if (status != PEP_STATUS_OK)
         goto pEp_free;
@@ -1807,7 +1807,7 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
         tmp_id->comm_type = _MAX(tmp_id->comm_type, input_default_ct) | PEP_ct_confirmed;
 
         // Get the default identity without setting the fpr                                       
-        status = update_identity(session, ident_copy);
+        status =_update_identity(session, ident_copy, true);
             
         ident_default_fpr = (EMPTYSTR(ident_copy->fpr) ? NULL : strdup(ident_copy->fpr));
 

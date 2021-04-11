@@ -510,7 +510,7 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         status = myself(session, sender_id);
     }
     else {    
-        status = update_identity(session, sender_id);
+        status =_update_identity(session, sender_id, true);
         if (!sender_id->user_id)
             return PEP_UNKNOWN_ERROR;
     }

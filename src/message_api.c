@@ -1929,7 +1929,7 @@ static PEP_comm_type _get_comm_type(
         return PEP_ct_mistrusted;
 
     if (!is_me(session, ident)) {
-        status = update_identity(session, ident);
+        status =_update_identity(session, ident, true);
     }
     else {
         status = _myself(session, ident, false, false, false, true);
@@ -3160,7 +3160,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
 
     *dst = NULL;
 
-    // PEP_STATUS _status = update_identity(session, target_id);
+    // PEP_STATUS _status =_update_identity(session, target_id, true);
     // if (_status != PEP_STATUS_OK) {
     //     status = _status;
     //     goto pEp_error;
@@ -3277,7 +3277,7 @@ pEp_error:
 // 
 //     if (src->from && src->from->address) {
 //         if (!is_me(session, src->from))
-//             status = update_identity(session, src->from);
+//             status =_update_identity(session, src->from, true);
 //         else
 //             status = myself(session, src->from);
 //         if (status == PEP_STATUS_OK
@@ -4188,7 +4188,7 @@ static PEP_STATUS update_sender_to_pEp_trust(
     free(sender->fpr);
     sender->fpr = NULL;
 
-    PEP_STATUS status = is_me(session, sender) ? myself(session, sender) : update_identity(session, sender);
+    PEP_STATUS status = is_me(session, sender) ? myself(session, sender) :_update_identity(session, sender, true);
 
     if (PASS_ERROR(status))
         return status;
@@ -5368,7 +5368,7 @@ static PEP_STATUS _decrypt_message(
             pEp_identity* msg_from = msg->from;
             if (msg_from && !EMPTYSTR(msg_from->address)) {
                 if (!is_me(session, msg_from)) {
-                    status = update_identity(session, msg_from);
+                    status =_update_identity(session, msg_from, true);
                     if (status == PEP_CANNOT_FIND_IDENTITY) {
                         msg_from->user_id = calloc(1, strlen(msg_from->address) + 6);
                         if (!msg_from->user_id)
@@ -5442,7 +5442,7 @@ static PEP_STATUS _decrypt_message(
             PEP_STATUS _tmp_status = PEP_STATUS_OK;
             
             if (!is_me(session, msg->to->ident))
-                _tmp_status = update_identity(session, msg->to->ident);
+                _tmp_status =_update_identity(session, msg->to->ident, true);
             
             if (_tmp_status == PEP_STATUS_OK && is_me(session, msg->to->ident)) {
                 // flag it as such
@@ -6146,7 +6146,7 @@ DYNAMIC_API PEP_STATUS identity_rating(
     if (ident->me)
         status = _myself(session, ident, false, true, true, true);
     else { // Since we don't blacklist own keys, we only check it in here
-        status = update_identity(session, ident);
+        status =_update_identity(session, ident, true);
 
         bool is_blacklisted = false;
         
@@ -6816,7 +6816,7 @@ got_rating:
 got_keylist:
 
     if (!is_me(session, msg->from))
-        status = update_identity(session, msg->from);
+        status =_update_identity(session, msg->from, true);
     else
         status = _myself(session, msg->from, false, true, false, true);
 
