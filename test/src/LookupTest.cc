@@ -125,7 +125,7 @@ TEST_F(LookupTest, check_lookup) {
         const char *address = addresses[i];
 
         pEp_identity *hans = new_identity(address, NULL, NULL, NULL);
-        PEP_STATUS status = update_identity(session, hans);
+        PEP_STATUS status = _update_identity(session, hans, true);
         ASSERT_EQ(status , PEP_STATUS_OK);
 
         // We should always get the same fingerprint.
@@ -147,7 +147,7 @@ TEST_F(LookupTest, check_lookup) {
         ASSERT_FALSE(hans->me);
         ASSERT_EQ(hans->comm_type , PEP_ct_OpenPGP_unconfirmed);
 
-        output_stream << "PASS: update_identity() correctly retrieved OpenPGP key for '" << expected_address << "' using '" << address << "'" << endl << endl;
+        output_stream << "PASS: _update_identity(, true) correctly retrieved OpenPGP key for '" << expected_address << "' using '" << address << "'" << endl << endl;
         free_identity(hans);
     }
 }

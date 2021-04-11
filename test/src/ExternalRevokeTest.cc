@@ -140,9 +140,9 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
     output_stream << "Trusting personal key for " << uniqname << endl;
     recip1->me = false;
     // Trust it
-    status = update_identity(session, recip1);
+    status = _update_identity(session, recip1, true);
     status = trust_personal_key(session, recip1);
-    status = update_identity(session, recip1);
+    status = _update_identity(session, recip1, true);
 
     // TODO: Check trust?
     output_stream << "Done! Trusted personal key with fpr " << recip1->fpr << " for " << uniqname << endl;
@@ -217,7 +217,7 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
     // (note - as of 23.5.17, revoke_key() doesn't touch the trust db, just the keyring, so we can do this)
 
     output_stream << "Revoking key." << endl;
-    status = update_identity(session, recip1);
+    status = _update_identity(session, recip1, true);
     status = revoke_key(session, recip1->fpr, "encrypt_for_identity_test");
     output_stream << "Status of revocation call for " << recip1->fpr << " is "<< tl_status_string(status) << endl;
 
@@ -251,7 +251,7 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
     output_stream << "Encryption returns with status " << tl_status_string(status) << endl;
     ASSERT_EQ(status, PEP_UNENCRYPTED);
     ASSERT_EQ(encrypted_outgoing_msg, nullptr);
-    status = update_identity(session, recip1);
+    status = _update_identity(session, recip1, true);
     ASSERT_EQ(recip1->comm_type, PEP_ct_key_not_found);
 
     output_stream << endl << "---------------------------------------------------------" << endl;
@@ -293,7 +293,7 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
     output_stream << "Creating message…\n";
 
     // output_stream << "First, update identity though!\n";
-    // status = update_identity(session, recip1);
+    // status = _update_identity(session, recip1, true);
     to_list = new_identity_list(identity_dup(recip1)); // to bob
     outgoing_msg = new_message(PEP_dir_outgoing);
     ASSERT_NE(outgoing_msg, nullptr);
@@ -340,7 +340,7 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
     output_stream << "Rating of decrypted message to trusted recip: " << tl_rating_string(rating) << endl;
     ASSERT_EQ(rating, PEP_rating_reliable);
 
-    status = update_identity(session, decrypted_msg->to->ident);
+    status = _update_identity(session, decrypted_msg->to->ident, true);
     ct = (decrypted_msg ? decrypted_msg->to->ident->comm_type : outgoing_msg->to->ident->comm_type);
 
     output_stream << "comm_type: " << tl_ct_string(ct) << endl;

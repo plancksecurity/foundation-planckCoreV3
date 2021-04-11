@@ -103,7 +103,7 @@ TEST_F(SenderFPRTest, check_sender_f_p_r) {
     pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, "Bob", NULL);
     status = myself(session, alice);
     ASSERT_EQ(status , PEP_STATUS_OK);
-    status = update_identity(session, bob);
+    status = _update_identity(session, bob, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
 
     status = set_as_pEp_user(session, bob);

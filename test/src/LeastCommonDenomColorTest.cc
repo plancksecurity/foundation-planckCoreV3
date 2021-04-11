@@ -105,24 +105,24 @@ TEST_F(LeastCommonDenomColorTest, check_least_common_denom_color) {
 
     pEp_identity * sender = new_identity("pep.never.me.test@kgrothoff.org", NULL, "TOFU_pep.never.me.test@kgrothoff.org", "pEp Never Me Test");
     sender->me = false;
-    PEP_STATUS status = update_identity(session, sender);
+    PEP_STATUS status = _update_identity(session, sender, true);
 
     // reset the trust on both keys before we start
     pEp_identity * recip1 = new_identity("banmeonce@kgrothoff.org", NULL, "TOFU_banmeonce@kgrothoff.org", "Ban Me Once");
     recip1->me = false;
-    status = update_identity(session, recip1);
+    status = _update_identity(session, recip1, true);
     key_reset_trust(session, recip1);
 
     pEp_identity * recip2 = new_identity("banmetwice@kgrothoff.org", NULL, "TOFU_banmetwice@kgrothoff.org", "Ban Me Twice");
     recip2->me = false;
-    status = update_identity(session, recip2);
+    status = _update_identity(session, recip2, true);
     key_reset_trust(session, recip2);
 
     const string mailtext = slurp(mailfile);
 
     // trust_personal_key(session, you);
     //
-    // status = update_identity(session, you);
+    // status = _update_identity(session, you, true);
 
     message* msg_ptr = nullptr;
     message* dest_msg = nullptr;

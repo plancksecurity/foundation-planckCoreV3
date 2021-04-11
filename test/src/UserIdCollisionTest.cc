@@ -238,12 +238,12 @@ namespace {
 TEST_F(UserIdCollisionTest, simple_tofu_collision) {
     slurp_and_import_key(session,alex_keyfile);
     tofu_alex->username = strdup("Alexander the Mediocre");
-    PEP_STATUS status = update_identity(session, tofu_alex);
+    PEP_STATUS status = _update_identity(session, tofu_alex, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_STREQ(tofu_alex->fpr, alex_keyid);
     string tofu_id = string("TOFU_") + alex_email;
     ASSERT_STREQ(tofu_alex->user_id, tofu_id.c_str());
-    status = update_identity(session, real_alex);
+    status = _update_identity(session, real_alex, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_STREQ(real_alex->fpr, alex_keyid);
     bool tofu_still_exists = false;
@@ -255,12 +255,12 @@ TEST_F(UserIdCollisionTest, simple_tofu_collision) {
 TEST_F(UserIdCollisionTest, simple_tofu_collision_different_usernames) {
     slurp_and_import_key(session,alex_keyfile);
     tofu_alex->username = strdup("Alexander Hamilton");
-    PEP_STATUS status = update_identity(session, tofu_alex);
+    PEP_STATUS status = _update_identity(session, tofu_alex, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_STREQ(tofu_alex->fpr, alex_keyid);
     string tofu_id = string("TOFU_") + alex_email;
     ASSERT_STREQ(tofu_alex->user_id, tofu_id.c_str());
-    status = update_identity(session, real_alex);
+    status = _update_identity(session, real_alex, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_STREQ(real_alex->fpr, alex_keyid);
     bool tofu_still_exists = false;
@@ -279,7 +279,7 @@ TEST_F(UserIdCollisionTest, tofu_collision_two_tofus) {
     tofu_alex_6a->lang[0] = 'j';
     tofu_alex_6a->lang[1] = 'p';
 
-    PEP_STATUS status = update_identity(session, tofu_alex_6a);
+    PEP_STATUS status = _update_identity(session, tofu_alex_6a, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_STREQ(tofu_alex_6a->fpr, alex6a_keyid);
     string tofu_id = string("TOFU_") + alex6_email;
@@ -287,7 +287,7 @@ TEST_F(UserIdCollisionTest, tofu_collision_two_tofus) {
 
     // Ok, NOW we put in an explicit TOFU
     tofu_alex_6b->user_id = strdup(tofu_id.c_str());
-    status = update_identity(session, tofu_alex_6b);
+    status = _update_identity(session, tofu_alex_6b, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_STREQ(tofu_alex_6b->fpr, alex6a_keyid);
     bool tofu_still_exists = false;
@@ -308,7 +308,7 @@ TEST_F(UserIdCollisionTest, tofu_collision_two_tofus_diff_usernames) {
     tofu_alex_6a->lang[0] = 'j';
     tofu_alex_6a->lang[1] = 'p';
 
-    PEP_STATUS status = update_identity(session, tofu_alex_6a);
+    PEP_STATUS status = _update_identity(session, tofu_alex_6a, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_STREQ(tofu_alex_6a->fpr, alex6a_keyid);
     string tofu_id = string("TOFU_") + alex6_email;
@@ -316,7 +316,7 @@ TEST_F(UserIdCollisionTest, tofu_collision_two_tofus_diff_usernames) {
 
     // Ok, NOW we put in an explicit TOFU
     tofu_alex_6b->user_id = strdup(tofu_id.c_str());
-    status = update_identity(session, tofu_alex_6b);
+    status = _update_identity(session, tofu_alex_6b, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_STREQ(tofu_alex_6b->fpr, alex6a_keyid);
     bool tofu_still_exists = false;
@@ -332,13 +332,13 @@ TEST_F(UserIdCollisionTest, tofu_collision_two_tofus_diff_usernames) {
 TEST_F(UserIdCollisionTest, real_followed_by_explicit_tofu) {
     slurp_and_import_key(session,alex_keyfile);
     real_alex->username = strdup("Alexander the Mediocre");
-    PEP_STATUS status = update_identity(session, real_alex);
+    PEP_STATUS status = _update_identity(session, real_alex, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_STREQ(real_alex->fpr, alex_keyid);
     string tofu_id = string("TOFU_") + alex_email;
     tofu_alex->username = strdup(real_alex->username);
     tofu_alex->user_id = strdup(tofu_id.c_str());
-    status = update_identity(session, tofu_alex);
+    status = _update_identity(session, tofu_alex, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_STREQ(tofu_alex->user_id, "AlexID");
     bool tofu_still_exists = false;
@@ -355,7 +355,7 @@ TEST_F(UserIdCollisionTest, merge_records_normal) {
     tofu_alex_6a->username = strdup("Alexander Hamilton");
     tofu_alex_6a->lang[0] = 'e';
     tofu_alex_6a->lang[1] = 's';
-    PEP_STATUS status = update_identity(session, tofu_alex_6a);
+    PEP_STATUS status = _update_identity(session, tofu_alex_6a, true);
     slurp_and_import_key(session,alex6c_keyfile);
     free(tofu_alex_6a->fpr);
     tofu_alex_6a->fpr = strdup(alex6c_keyid);
@@ -367,7 +367,7 @@ TEST_F(UserIdCollisionTest, merge_records_normal) {
     tofu_alex_6a->comm_type = PEP_ct_pEp_unconfirmed; // ???
     status = set_identity(session, tofu_alex_6a);
     real_alex_6a->username = strdup(tofu_alex_6a->username);
-    status = update_identity(session, real_alex_6a);
+    status = _update_identity(session, real_alex_6a, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(real_alex_6a->lang[0] , 'e');
     ASSERT_EQ(real_alex_6a->comm_type , PEP_ct_pEp_unconfirmed);
@@ -384,7 +384,7 @@ TEST_F(UserIdCollisionTest, merge_records_set) {
     tofu_alex_6a->username = strdup("Alexander Hamilton");
     tofu_alex_6a->lang[0] = 'e';
     tofu_alex_6a->lang[1] = 's';
-    PEP_STATUS status = update_identity(session, tofu_alex_6a);
+    PEP_STATUS status = _update_identity(session, tofu_alex_6a, true);
     slurp_and_import_key(session,alex6b_keyfile);
     slurp_and_import_key(session,alex6c_keyfile);
     free(tofu_alex_6a->fpr);
@@ -402,7 +402,7 @@ TEST_F(UserIdCollisionTest, merge_records_set) {
     real_alex_6a->fpr = strdup(alex6d_keyid);
     status = set_person(session, real_alex_6a, true); // NOT identit
     ASSERT_EQ(status , PEP_STATUS_OK);
-    status = update_identity(session, real_alex_6a);
+    status = _update_identity(session, real_alex_6a, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(real_alex_6a->lang[0] , 'e');
     ASSERT_EQ(real_alex_6a->comm_type , PEP_ct_pEp);
@@ -425,7 +425,7 @@ TEST_F(UserIdCollisionTest, merge_records_set_2) {
     tofu_alex_6a->username = strdup("Alexander Hamilton");
     tofu_alex_6a->lang[0] = 'e';
     tofu_alex_6a->lang[1] = 's';
-    PEP_STATUS status = update_identity(session, tofu_alex_6a);
+    PEP_STATUS status = _update_identity(session, tofu_alex_6a, true);
     slurp_and_import_key(session,alex6b_keyfile);
     slurp_and_import_key(session,alex6c_keyfile);
     free(tofu_alex_6a->fpr);
@@ -444,7 +444,7 @@ TEST_F(UserIdCollisionTest, merge_records_set_2) {
     ASSERT_EQ(status , PEP_STATUS_OK);
     status = set_as_pEp_user(session, real_alex_6a);
     ASSERT_EQ(status , PEP_STATUS_OK);
-    status = update_identity(session, real_alex_6a);
+    status = _update_identity(session, real_alex_6a, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(real_alex_6a->lang[0] , 'e');
     ASSERT_EQ(real_alex_6a->comm_type , PEP_ct_pEp);

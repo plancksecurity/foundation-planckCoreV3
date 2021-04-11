@@ -274,7 +274,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
 
     alex = new_identity(alex_address, NULL, alex_userid, alex_username);
     ASSERT_NE(alex, nullptr);
-    status = update_identity(session, alex);
+    status = _update_identity(session, alex, true);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NE(alex->fpr, nullptr);
     ASSERT_STREQ(alex->fpr, alex_fpr);
@@ -286,7 +286,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     ASSERT_EQ(alex->comm_type, PEP_ct_OpenPGP_unconfirmed);
     ASSERT_STREQ(alex->address, alex_address);
 
-    output_stream << "PASS: update_identity() correctly retrieved extant record with matching address, id, and username" << endl << endl;
+    output_stream << "PASS: _update_identity(, true) correctly retrieved extant record with matching address, id, and username" << endl << endl;
     free_identity(alex);
     alex = NULL;
 
@@ -299,7 +299,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     free_identity(alex);
 
     alex = new_identity(alex_address, NULL, alex_userid, alex_username);
-    status = update_identity(session, alex);
+    status = _update_identity(session, alex, true);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NE(alex->fpr, nullptr);
     ASSERT_STREQ(alex->fpr, alex_fpr);
@@ -311,7 +311,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     ASSERT_EQ(alex->comm_type, PEP_ct_OpenPGP_unconfirmed);
     ASSERT_STREQ(alex->address, alex_address);
 
-    output_stream << "PASS: update_identity() correctly retrieved extant record with matching address, id, and username" << endl << endl;
+    output_stream << "PASS: _update_identity(, true) correctly retrieved extant record with matching address, id, and username" << endl << endl;
     free_identity(alex);
     alex = NULL;
 
@@ -320,7 +320,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     new_username = "Test Patchy";
 
     alex = new_identity(alex_address, NULL, alex_userid, new_username);
-    status = update_identity(session, alex);
+    status = _update_identity(session, alex, true);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NE(alex->fpr, nullptr);
     ASSERT_STREQ(alex->fpr, alex_fpr);
@@ -337,7 +337,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
 
     // 9. UpdateIdAndMyselfTests::update_identity_use_address_username_only() {
     alex = new_identity(alex_address, NULL, NULL, new_username);
-    status = update_identity(session, alex);
+    status = _update_identity(session, alex, true);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NE(alex->fpr, nullptr);
     ASSERT_STREQ(alex->fpr, alex_fpr);
@@ -349,13 +349,13 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     ASSERT_EQ(alex->comm_type, PEP_ct_OpenPGP_unconfirmed);
     ASSERT_STREQ(alex->address, alex_address);
 
-    output_stream << "PASS: update_identity() correctly retrieved extant record with matching address and username" << endl << endl;
+    output_stream << "PASS: _update_identity(, true) correctly retrieved extant record with matching address and username" << endl << endl;
     free_identity(alex);
     alex = NULL;
 
     // 10. update_identity_use_address_only() {
     alex = new_identity(alex_address, NULL, NULL, NULL);
-    status = update_identity(session, alex);
+    status = _update_identity(session, alex, true);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NE(alex->fpr, nullptr);
     ASSERT_STREQ(alex->fpr, alex_fpr);
@@ -367,13 +367,13 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     ASSERT_EQ(alex->comm_type, PEP_ct_OpenPGP_unconfirmed);
     ASSERT_STREQ(alex->address, alex_address);
 
-    output_stream << "PASS: update_identity() correctly retrieved extant record with just matching address. Retrieved previously patched username." << endl << endl;
+    output_stream << "PASS: _update_identity(, true) correctly retrieved extant record with just matching address. Retrieved previously patched username." << endl << endl;
     free_identity(alex);
     alex = NULL;
 
     // 11. update_identity_use_address_only_on_own_ident() {
     pEp_identity* somebody = new_identity(uniqname, NULL, NULL, NULL);
-    status = update_identity(session, somebody);
+    status = _update_identity(session, somebody, true);
     ASSERT_EQ(status, PEP_STATUS_OK);
     myself(session, somebody);
     ASSERT_NE(somebody->fpr, nullptr);
@@ -386,7 +386,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     ASSERT_EQ(somebody->comm_type, PEP_ct_pEp);
     ASSERT_STREQ(somebody->address, uniqname);
 
-    output_stream << "PASS: update_identity() retrieved the right identity information given just an address";
+    output_stream << "PASS: _update_identity(, true) retrieved the right identity information given just an address";
     output_stream << endl << endl;
 
     free_identity(somebody);
@@ -394,12 +394,12 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
 
     // 12. update_identity_non_existent_user_id_address() {
     somebody = new_identity("nope@nope.nope", NULL, "some_user_id", NULL);
-    status= update_identity(session, somebody);
+    status= _update_identity(session, somebody, true);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_EQ(somebody->fpr, nullptr);
     ASSERT_EQ(somebody->comm_type, PEP_ct_key_not_found);
 
-    output_stream << "PASS: update_identity() returns identity with no key and unknown comm type" << endl << endl;
+    output_stream << "PASS: _update_identity(, true) returns identity with no key and unknown comm type" << endl << endl;
 
     free_identity(somebody);
     somebody = NULL;
@@ -409,7 +409,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     const char* rando_userid = "Boofy";
     const char* rando_address = "boof@pickles.org";
     somebody = new_identity(rando_address, NULL, rando_userid, rando_name);
-    status = update_identity(session, somebody);
+    status = _update_identity(session, somebody, true);
 
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_TRUE(somebody->fpr == nullptr || somebody->fpr[0] == '\0');
@@ -421,7 +421,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     ASSERT_EQ(somebody->comm_type, PEP_ct_key_not_found);
     ASSERT_STREQ(somebody->address, rando_address);
 
-    output_stream << "PASS: update_identity() correctly created record with no key" << endl << endl;
+    output_stream << "PASS: _update_identity(, true) correctly created record with no key" << endl << endl;
     free_identity(somebody);
     somebody = NULL;
 
@@ -429,7 +429,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     const char* rando2_name = "Pickles BoofyBoof";
     const char* rando2_address = "boof2@pickles.org";
     somebody = new_identity(rando2_address, NULL, NULL, rando2_name);
-    status = update_identity(session, somebody);
+    status = _update_identity(session, somebody, true);
     const char* expected_rando2_userid = "TOFU_boof2@pickles.org";
 
     ASSERT_EQ(status, PEP_STATUS_OK);
@@ -442,7 +442,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     ASSERT_EQ(somebody->comm_type, PEP_ct_key_not_found);
     ASSERT_STREQ(somebody->address, rando2_address);
 
-    output_stream << "PASS: update_identity() correctly created record with no key" << endl << endl;
+    output_stream << "PASS: _update_identity(, true) correctly created record with no key" << endl << endl;
     free_identity(somebody);
     somebody = NULL;
 
@@ -468,7 +468,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     const char* not_my_userid = "Bad Company";
 
     bella = new_identity(bella_address, NULL, not_my_userid, bella_username);
-    status = update_identity(session, bella);
+    status = _update_identity(session, bella, true);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NE(bella->fpr, nullptr);
     ASSERT_STREQ(bella->fpr, bella_fpr);
@@ -491,7 +491,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     free_identity(bella);
 
     bella = new_identity(bella_address, NULL, NULL, NULL);
-    status = update_identity(session, bella);
+    status = _update_identity(session, bella, true);
     ASSERT_EQ(status, PEP_STATUS_OK);
     free_identity(bella);
     bella = NULL;
@@ -515,7 +515,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     free_identity(bernd);
 
     bernd = new_identity(bernd_address, NULL, bernd_userid, bernd_username);
-    status = update_identity(session, bernd);
+    status = _update_identity(session, bernd, true);
     ASSERT_NE(status, PEP_STATUS_OK);
     ASSERT_TRUE(bernd->fpr == nullptr || bernd->fpr[0] == '\0');
     ASSERT_NE(bernd->username, nullptr);
@@ -526,7 +526,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     ASSERT_EQ(bernd->comm_type, PEP_ct_key_not_found);
     ASSERT_STREQ(bernd->address, bernd_address);
 
-    output_stream << "PASS: update_identity() correctly rejected expired key with PEP_KEY_UNSUITABLE and PEP_ct_key_not_found" << endl << endl;
+    output_stream << "PASS: _update_identity(, true) correctly rejected expired key with PEP_KEY_UNSUITABLE and PEP_ct_key_not_found" << endl << endl;
     free_identity(bernd);
     bernd = NULL;
 
@@ -589,7 +589,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_GT(revokemaster_3000->comm_type & PEP_ct_confirmed, 0);
 
-    status = update_identity(session, revokemaster_3000);
+    status = _update_identity(session, revokemaster_3000, true);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NE(revokemaster_3000->fpr, nullptr);
     ASSERT_STREQ(revokemaster_3000->fpr, revoke_fpr_arr[2]);
@@ -614,7 +614,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
 //  KB: Is this still an issue, or did we delete some problematic code here, or...? 30.08.2019
 //  BAD ASSUMPTION - this only works if we query the trust DB in elect_pubkey, and we don't.
 //    output_stream << "Now see if update_identity gives us " << revoke_fpr_arr[0] << ", the only trusted key left." << endl;
-    status = update_identity(session, revokemaster_3000);
+    status = _update_identity(session, revokemaster_3000, true);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NE(revokemaster_3000->fpr, nullptr);
     bool was_key_0 = (strcmp(revokemaster_3000->fpr, revoke_fpr_arr[0]) == 0);
@@ -640,7 +640,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
 
     output_stream << "The only fpr left is an untrusted one - let's make sure this is what we get from update_identity." << endl;
 
-    status = update_identity(session, revokemaster_3000);
+    status = _update_identity(session, revokemaster_3000, true);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NE(revokemaster_3000->fpr, nullptr);
     ASSERT_STREQ(revokemaster_3000->fpr, revoke_fpr_arr[1]);
@@ -661,7 +661,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
 
     output_stream << "Call update_identity - we expect nothing, plus an error comm type." << endl;
 
-    status = update_identity(session, revokemaster_3000);
+    status = _update_identity(session, revokemaster_3000, true);
     ASSERT_NE(status, PEP_STATUS_OK);
     ASSERT_EQ(revokemaster_3000->fpr, nullptr);
     ASSERT_NE(revokemaster_3000->username, nullptr);
@@ -821,7 +821,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_own_renewal_password) {
 
     free(testy->user_id);    
     testy->user_id = NULL;    
-    status = update_identity(session, testy);    
+    status = _update_identity(session, testy, true);
     ASSERT_EQ(status, PEP_KEY_UNSUITABLE);
     
     bool expired = false;
@@ -853,7 +853,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_own_renewal_wrong_password) 
 
     free(testy->user_id);    
     testy->user_id = NULL;    
-    status = update_identity(session, testy);    
+    status = _update_identity(session, testy, true);
     ASSERT_EQ(status, PEP_KEY_UNSUITABLE);
     
     bool expired = false;
@@ -882,7 +882,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_own_renewal_requires_passwor
 
     free(testy->user_id);    
     testy->user_id = NULL;    
-    status = update_identity(session, testy);    
+    status = _update_identity(session, testy, true);
     ASSERT_EQ(status, PEP_KEY_UNSUITABLE);
     
     bool expired = false;

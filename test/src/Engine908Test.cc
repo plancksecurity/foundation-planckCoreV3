@@ -163,7 +163,7 @@ TEST_F(Engine908Test, check_engine908) {
     ASSERT_OK;
 
     // Make sure we get the right key
-    status = update_identity(session, dec_msg->from);
+    status = _update_identity(session, dec_msg->from, true);
     ASSERT_OK;
     ASSERT_NE(dec_msg->from->fpr, nullptr);
     ASSERT_STREQ(dec_msg->from->fpr, "2D8AF398E47206DE4BC88679C35B821A17659B14");
@@ -226,7 +226,7 @@ TEST_F(Engine908Test, check_engine908_with_default_set) {
     solas->comm_type = PEP_ct_pEp_unconfirmed;
     status = set_identity(session, solas);
     ASSERT_OK;
-    status = update_identity(session, solas);
+    status = _update_identity(session, solas, true);
     ASSERT_OK;
     ASSERT_NE(solas->fpr, nullptr);
     ASSERT_STREQ(solas->fpr, solas_fpr);
@@ -236,7 +236,7 @@ TEST_F(Engine908Test, check_engine908_with_default_set) {
     ASSERT_OK;
 
     // Make sure we get the right key
-    status = update_identity(session, dec_msg->from);
+    status = _update_identity(session, dec_msg->from, true);
     ASSERT_OK;
     ASSERT_NE(dec_msg->from->fpr, nullptr);
     ASSERT_STREQ(dec_msg->from->fpr, solas_fpr);
@@ -299,7 +299,7 @@ TEST_F(Engine908Test, check_engine908_with_key_reset) {
     solas->comm_type = PEP_ct_pEp_unconfirmed;
     status = set_identity(session, solas);
     ASSERT_OK;
-    status = update_identity(session, solas);
+    status = _update_identity(session, solas, true);
     ASSERT_OK;
     ASSERT_NE(solas->fpr, nullptr);
     ASSERT_STREQ(solas->fpr, solas_fpr);
@@ -312,7 +312,7 @@ TEST_F(Engine908Test, check_engine908_with_key_reset) {
     ASSERT_OK;
 
     // Make sure we get the right key
-    status = update_identity(session, dec_msg->from);
+    status = _update_identity(session, dec_msg->from, true);
     ASSERT_OK;
     ASSERT_NE(dec_msg->from->fpr, nullptr);
     ASSERT_STREQ(dec_msg->from->fpr, "2D8AF398E47206DE4BC88679C35B821A17659B14");

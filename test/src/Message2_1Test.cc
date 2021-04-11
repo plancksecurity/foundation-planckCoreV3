@@ -150,7 +150,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_0) {
     ASSERT_NE(carol, nullptr);
 
     // default should be 2.0 after setting pep status
-    status = update_identity(session, carol);
+    status = _update_identity(session, carol, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(carol->major_ver , 2);
     ASSERT_EQ(carol->minor_ver , 0);
@@ -206,7 +206,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_OpenPGP) {
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(carol, nullptr);
 
-    status = update_identity(session, carol);
+    status = _update_identity(session, carol, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_LT(carol->major_ver , 2);
     ASSERT_EQ(carol->minor_ver , 0);
@@ -257,7 +257,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_1) {
     status = set_pEp_version(session, carol, 2, 1);
 
     // default should be 2.1 after setting pep status
-    status = update_identity(session, carol);
+    status = _update_identity(session, carol, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(carol->major_ver , 2);
     ASSERT_EQ(carol->minor_ver , 1);
@@ -404,7 +404,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_1_from_msg) {
     // generate message
 
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, NULL, NULL);
-    status = update_identity(session, alice);
+    status = _update_identity(session, alice, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(alice->comm_type, PEP_ct_pEp_unconfirmed);
     
@@ -454,7 +454,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_2_0) {
     status = set_pEp_version(session, bob, 2, 1);
 
     // default should be 2.1 after setting pep status
-    status = update_identity(session, bob);
+    status = _update_identity(session, bob, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(bob->major_ver , 2);
     ASSERT_EQ(bob->minor_ver , 1);
@@ -468,7 +468,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_2_0) {
     status = set_pEp_version(session, carol, 2, 1);
 
     // default should be 2.1 after setting pep status
-    status = update_identity(session, carol);
+    status = _update_identity(session, carol, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(carol->major_ver , 2);
     ASSERT_EQ(carol->minor_ver , 1);
@@ -482,7 +482,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_2_0) {
     status = set_pEp_version(session, dave, 2, 0);
 
     // default should be 2.1 after setting pep status
-    status = update_identity(session, dave);
+    status = _update_identity(session, dave, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(dave->major_ver , 2);
     ASSERT_EQ(dave->minor_ver , 0);
@@ -496,7 +496,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_2_0) {
     status = set_pEp_version(session, alex, 2, 1);
 
     // default should be 2.1 after setting pep status
-    status = update_identity(session, alex);
+    status = _update_identity(session, alex, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(alex->major_ver , 2);
     ASSERT_EQ(alex->minor_ver , 1);
@@ -549,7 +549,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_1_0_OpenPGP) {
     status = set_pEp_version(session, bob, 2, 1);
 
     // default should be 2.1 after setting pep status
-    status = update_identity(session, bob);
+    status = _update_identity(session, bob, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(bob->major_ver , 2);
     ASSERT_EQ(bob->minor_ver , 1);
@@ -563,7 +563,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_1_0_OpenPGP) {
     status = set_pEp_version(session, carol, 2, 1);
 
     // default should be 2.1 after setting pep status
-    status = update_identity(session, carol);
+    status = _update_identity(session, carol, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(carol->major_ver , 2);
     ASSERT_EQ(carol->minor_ver , 1);
@@ -577,7 +577,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_1_0_OpenPGP) {
     status = set_pEp_version(session, dave, 2, 0);
 
     // default should be 2.1 after setting pep status
-    status = update_identity(session, dave);
+    status = _update_identity(session, dave, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(dave->major_ver , 2);
     ASSERT_EQ(dave->minor_ver , 0);
@@ -591,7 +591,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_1_0_OpenPGP) {
     status = set_pEp_version(session, alex, 1, 0);
 
     // default should be 1.0 after setting pep status
-    status = update_identity(session, alex);
+    status = _update_identity(session, alex, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(alex->major_ver , 1);
     ASSERT_EQ(alex->minor_ver , 0);

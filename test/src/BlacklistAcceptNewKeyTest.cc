@@ -109,11 +109,11 @@ TEST_F(BlacklistAcceptNewKeyTest, check_blacklist_accept_new_key) {
                                                       bl_fpr_1,
                                                       NULL,
                                                       "Blacklist Keypair");
-    PEP_STATUS status8 = update_identity(session, blacklisted_identity);
+    PEP_STATUS status8 = _update_identity(session, blacklisted_identity, true);
     PEP_STATUS status9 = blacklist_add(session, bl_fpr_1);
     PEP_STATUS status10 = blacklist_is_listed(session, bl_fpr_1, &is_blacklisted);
     ASSERT_TRUE(is_blacklisted);
-    PEP_STATUS status11 = update_identity(session, blacklisted_identity);
+    PEP_STATUS status11 = _update_identity(session, blacklisted_identity, true);
     ASSERT_EQ(status11 , PEP_STATUS_OK);
     ASSERT_STREQ(bl_fpr_1, blacklisted_identity->fpr);
 
@@ -135,7 +135,7 @@ TEST_F(BlacklistAcceptNewKeyTest, check_blacklist_accept_new_key) {
     const string mailtext = slurp("test_mails/blacklist_new_key_attached.eml");
     pEp_identity * me1 = new_identity("blacklist_test@kgrothoff.org", NULL, PEP_OWN_USERID, "Blacklisted Key Message Recipient");
 
-    PEP_STATUS status = update_identity(session, me1);
+    PEP_STATUS status = _update_identity(session, me1, true);
     message* msg_ptr = nullptr;
     message* dest_msg = nullptr;
     stringlist_t* keylist = nullptr;
@@ -152,7 +152,7 @@ TEST_F(BlacklistAcceptNewKeyTest, check_blacklist_accept_new_key) {
     ASSERT_STRCASEEQ(blacklisted_identity->fpr, new_key);
 
     PEP_STATUS status13 = blacklist_delete(session, bl_fpr_1);
-    PEP_STATUS status14 = update_identity(session, blacklisted_identity);
+    PEP_STATUS status14 = _update_identity(session, blacklisted_identity, true);
 
     free_message(msg_ptr);
     free_message(dest_msg);

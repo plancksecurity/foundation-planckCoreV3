@@ -100,7 +100,7 @@ TEST_F(BareEncryptShellTest, check_bare_encrypt_shell) {
 
     mime_decode_message(inmsg_str.c_str(), inmsg_str.size(), &inmsg, NULL);
     PEP_STATUS status = encrypt_message(session, inmsg, NULL, &outmsg, PEP_enc_auto, 0);
-    update_identity(session, inmsg->from);
+    _update_identity(session, inmsg->from, true);
     ASSERT_OK;
     cout << message_to_str(outmsg);
 }
