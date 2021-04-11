@@ -33,11 +33,11 @@ extern "C" {
  *  Note that reset keys will be removed as defaults for all users and identities.
  *  
  *  @param[in]   session    session handle
- *  @param[in]   fpr        fingerprint of key to reset. If NULL, we reset the default key
- *                            this identity if there is one, and the user default if not.
  *  @param[in]   ident      identity for which the key reset should occur. Must contain
  *                          user_id and address. Must not be NULL.
  *                          Note: ident->fpr field will be ignored.
+ *  @param[in]   fpr        fingerprint of key to reset. If NULL, we reset the default key
+ *                            this identity if there is one, and the user default if not.
  *  
  *  
  *  @retval PEP_STATUS_OK
