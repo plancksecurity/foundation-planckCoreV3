@@ -729,10 +729,19 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     return status;
 }
 
-// Should not return PASSPHRASE errors because we force 
+// Should not return PASSPHRASE errors because we force
 // calls that can cause key renewal not to.
 DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
+    )
+{
+    // Will change soon. This has this value for ENGINE-908.
+    return _update_identity(session, identity, true);
+}
+
+
+PEP_STATUS _update_identity(
+        PEP_SESSION session, pEp_identity * identity, bool _do_elect_key
     )
 {
     PEP_STATUS status;
@@ -909,10 +918,12 @@ DYNAMIC_API PEP_STATUS update_identity(
             // (and is possible) is PEP_OUT_OF_MEMORY. This function will
             // disappear in the next release, so we check for this and
             // handle it explicitly.
-            status = elect_pubkey(session, identity, false);
-            if (status == PEP_OUT_OF_MEMORY)
-                goto enomem;
-                        
+            if (_do_elect_key) {
+                status = elect_pubkey(session, identity, false);
+                if (status == PEP_OUT_OF_MEMORY)
+                    goto enomem;
+            }
+
             //    * We've already checked and retrieved
             //      any applicable temporary identities above. If we're 
             //      here, none of them fit.
@@ -1007,8 +1018,8 @@ DYNAMIC_API PEP_STATUS update_identity(
                 //    * We've already checked and retrieved
                 //      any applicable temporary identities above. If we're 
                 //      here, none of them fit.
-                
-                status = elect_pubkey(session, identity, false);
+                if (_do_elect_key)
+                    status = elect_pubkey(session, identity, false);
                              
                 //    * call set_identity() to store
                 if (identity->fpr) {
@@ -1105,7 +1116,8 @@ DYNAMIC_API PEP_STATUS update_identity(
             identity->fpr = NULL;
             identity->comm_type = PEP_ct_unknown;
 
-            status = elect_pubkey(session, identity, false);
+            if (_do_elect_key)
+                status = elect_pubkey(session, identity, false);
                          
             if (identity->fpr)
                 status = get_key_rating(session, identity->fpr, &identity->comm_type);
