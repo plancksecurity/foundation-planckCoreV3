@@ -119,7 +119,7 @@ TEST_F(BlacklistAcceptNewKeyTest, check_blacklist_accept_new_key) {
 
     bool id_def, us_def, addr_def;
     status11 = get_valid_pubkey(session, blacklisted_identity,
-                                &id_def, &us_def, &addr_def, true);
+                                &id_def, &us_def, &addr_def, true, true);
     ASSERT_EQ(blacklisted_identity->comm_type , PEP_ct_unknown);
 
     if (!(blacklisted_identity->fpr))
@@ -147,7 +147,7 @@ TEST_F(BlacklistAcceptNewKeyTest, check_blacklist_accept_new_key) {
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
 
     PEP_STATUS status12 = get_valid_pubkey(session, blacklisted_identity,
-                                           &id_def, &us_def, &addr_def, true);
+                                           &id_def, &us_def, &addr_def, true, true);
 
     ASSERT_STRCASEEQ(blacklisted_identity->fpr, new_key);
 

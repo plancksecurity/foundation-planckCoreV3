@@ -1,4 +1,5 @@
 #include "pEpEngine_test.h"
+#include "pEpEngine_test.h"
 #include "pEpEngine.h"
 #include "pEp_internal.h"
 #include "message_api.h"
@@ -468,6 +469,50 @@ char* message_to_str(message* msg) {
     char* retval = NULL;
     mime_encode_message(msg, false, &retval, false);
     return retval;
+}
+
+PEP_STATUS vanilla_encrypt_and_write_to_file(PEP_SESSION session, message* msg, const char* filename) {
+    if (!session || !msg || !filename)
+        return PEP_ILLEGAL_VALUE;
+    message* enc_msg = NULL;
+    PEP_STATUS status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+    if (status != PEP_STATUS_OK)
+        return status;
+    if (!enc_msg)
+        return PEP_UNKNOWN_ERROR;
+    char* msg_str = NULL;
+    msg_str = message_to_str(enc_msg);
+    if (!msg_str)
+        return PEP_UNKNOWN_ERROR;
+    dump_out(filename, msg_str);
+    free_message(enc_msg);
+    free(msg_str);
+    return PEP_STATUS_OK;
+}
+
+// For when you ONLY care about the message
+PEP_STATUS vanilla_read_file_and_decrypt(PEP_SESSION session, message** msg, const char* filename) {
+    if (!session || !msg || !filename)
+        return PEP_ILLEGAL_VALUE;
+    PEP_STATUS status = PEP_STATUS_OK;
+    std::string inbox = slurp(filename);
+    if (inbox.empty())
+        return PEP_UNKNOWN_ERROR;
+
+    message* enc_msg = NULL;
+    mime_decode_message(inbox.c_str(), inbox.size(), &enc_msg, NULL);
+
+    message* dec_msg = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_decrypt_flags_t flags = 0;
+    PEP_rating rating;
+
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    if (dec_msg)
+        *msg = dec_msg;
+    free_stringlist(keylist); // no one cares
+    free_message(enc_msg);
+    return status;
 }
 
 int util_delete_filepath(const char *filepath,

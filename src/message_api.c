@@ -1923,7 +1923,7 @@ static PEP_STATUS _update_state_for_ident_list(
         PEP_STATUS status = PEP_STATUS_OK;
         
         if (!is_me(session, _il->ident)) {
-            status = update_identity(session, _il->ident);
+            status = _update_identity(session, _il->ident, true);
             
             if (status == PEP_CANNOT_FIND_IDENTITY) {
                 _il->ident->comm_type = PEP_ct_key_not_found;
@@ -1951,6 +1951,7 @@ static PEP_STATUS _update_state_for_ident_list(
                     status = get_valid_pubkey(session, _il->ident,
                                                &ident_default, &user_default,
                                                &address_default,
+                                               true,
                                                true);
                                                
                     if (status != PEP_STATUS_OK || _il->ident->fpr == NULL) {
@@ -4247,21 +4248,33 @@ static PEP_STATUS _decrypt_message(
                             pEp_identity* inner_from = inner_message->from;
                             if (inner_from && !is_me(session, inner_from)) {
                                 status = _update_identity(session, inner_from, false);
-                                if (status != PEP_STATUS_OK)
+                                bool unsuitable_key = false;
+                                if (status == PEP_KEY_UNSUITABLE || status == PEP_KEY_NOT_FOUND)
+                                    unsuitable_key = true;
+                                else if (status != PEP_STATUS_OK)
                                     goto pEp_error;
 
                                 const char* sender_fpr = inner_message->_sender_fpr;
-                                if (EMPTYSTR(inner_from->fpr) && !EMPTYSTR(sender_fpr)) {
+                                if ((unsuitable_key || EMPTYSTR(inner_from->fpr)) && !EMPTYSTR(sender_fpr)) {
                                     const char* signer_fpr = NULL;
                                     if (_keylist)
                                         signer_fpr = _keylist->value;
                                     if (!EMPTYSTR(signer_fpr)) {
                                         if (strcmp(signer_fpr, sender_fpr) == 0) {
+                                            free(inner_from->fpr); // in case of "" or unsuitable key
+                                            inner_from->comm_type = PEP_ct_unknown;
                                             inner_from->fpr = (char*)sender_fpr; // NOT modified in set_identity
-                                            status = set_identity(session, inner_from);
-                                            if (status != PEP_STATUS_OK)
-                                                goto pEp_error;
+                                            status = validate_fpr(session, inner_from, inner_from, false, false);
+                                            if (status == PEP_STATUS_OK) {
+                                                status = set_identity(session, inner_from);
+                                                if (status != PEP_STATUS_OK)
+                                                    goto pEp_error;
+                                            }
+                                            else
+                                                status = PEP_STATUS_OK; // we won't set anything, suffer later.
+
                                             inner_from->fpr = NULL; // doesn't belong to us
+                                            inner_from->comm_type = PEP_ct_unknown; // get this from real update_ident
                                         }
                                     }
                                 }
@@ -4272,7 +4285,9 @@ static PEP_STATUS _decrypt_message(
                             is_inner = (strcmp(wrap_info, "INNER") == 0);
                             if (!is_inner)
                                 is_key_reset = (strcmp(wrap_info, "KEY_RESET") == 0);
-                        }                        
+                        }
+
+                        status = _update_identity(session, inner_message->from, true);
                             
                         // check for private key in decrypted message attachment while importing
                         // N.B. Apparently, we always import private keys into the keyring; however,
@@ -4892,6 +4907,7 @@ static void _max_comm_type_from_identity_list(
                     status = get_valid_pubkey(session, il->ident,
                                               &ident_default, &user_default,
                                               &address_default,
+                                              true,
                                               true);
                     
                     if (status != PEP_STATUS_OK || il->ident->fpr == NULL) {                            
@@ -5051,6 +5067,7 @@ DYNAMIC_API PEP_STATUS identity_rating(
                 status = get_valid_pubkey(session, ident,
                                            &ident_default, &user_default,
                                            &address_default,
+                                           true,
                                            true);
                 if (status != PEP_STATUS_OK || ident->fpr == NULL) {
                     ident->comm_type = PEP_ct_key_not_found;

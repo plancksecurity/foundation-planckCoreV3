@@ -194,7 +194,7 @@ TEST_F(BlacklistTest, check_blacklist) {
 
     bool id_def, us_def, addr_def;
     status11 = get_valid_pubkey(session, blacklisted_identity,
-                                &id_def, &us_def, &addr_def, true);
+                                &id_def, &us_def, &addr_def, true, true);
 
     if (!(blacklisted_identity->fpr))
         output_stream << "OK! blacklisted_identity->fpr is empty. Yay!" << endl;
