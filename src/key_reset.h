@@ -29,10 +29,10 @@ extern "C" {
 //
 //  parameters:
 //      session (in)            session handle
+//      ident (in)              identity for which the key reset should occur. Must contain
+//                              user_id and address. Must not be NULL.
 //      fpr (in)                fingerprint of key to reset. If NULL, we reset the default key
 //                              this identity if there is one, and the user default if not.
-//      ident (in)              identity for which the key reset should occur. Must contain 
-//                              user_id and address. Must not be NULL.
 //
 //                              Note: ident->fpr field will be ignored.
 //
