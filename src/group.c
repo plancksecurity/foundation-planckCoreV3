@@ -1042,7 +1042,7 @@ PEP_STATUS retrieve_full_group_membership(
     for ( ; curr ; curr = curr->next) {
         if (!(curr->member && curr->member->ident))
             goto enomem;
-        status = update_identity(session, curr->member->ident);
+        status = _update_identity(session, curr->member->ident, true);
     }
 
     sqlite3_reset(session->get_all_members);
@@ -1111,7 +1111,7 @@ PEP_STATUS retrieve_active_member_list(
     for ( ; curr && curr->member && curr->member->ident; curr = curr->next) {
         if (!curr->member->ident)
             goto enomem;
-        status = update_identity(session, curr->member->ident);
+        status = _update_identity(session, curr->member->ident, true);
     }
 
     sqlite3_reset(session->get_active_members);
@@ -1204,7 +1204,7 @@ PEP_STATUS send_GroupAdopted(PEP_SESSION session, pEp_identity* group_identity, 
     }
 
     if (!is_me(session, group_identity))
-        status = update_identity(session, group_identity);
+        status = _update_identity(session, group_identity, true);
     else
         status = _myself(session, group_identity, false, false, false, true);
 
@@ -1230,7 +1230,7 @@ PEP_STATUS send_GroupAdopted(PEP_SESSION session, pEp_identity* group_identity, 
     if (is_me(session, manager))
         return PEP_ILLEGAL_VALUE;
 
-    status = update_identity(session, manager);
+    status = _update_identity(session, manager, true);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
     // ??
@@ -1292,7 +1292,7 @@ PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rat
 
     // We will probably always have to do this, but if something changes externally we need this check.
     if (!msg->to->ident->me) {
-        status = update_identity(session, msg->to->ident);
+        status = _update_identity(session, msg->to->ident, true);
         if (status != PEP_STATUS_OK)
             return status;
     }
@@ -1314,7 +1314,7 @@ PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rat
     free(group_identity->user_id);
     group_identity->user_id = NULL;
 
-    status = update_identity(session, manager);
+    status = _update_identity(session, manager, true);
     if (!manager->fpr) {// at some point, we can require this to be the sender fpr I think - FIXME
         status = PEP_KEY_NOT_FOUND;
         goto pEp_free;
@@ -1407,7 +1407,7 @@ PEP_STATUS receive_GroupDissolve(PEP_SESSION session, message* msg, PEP_rating r
 
     // We will probably always have to do this, but if something changes externally we need this check.
     if (!msg->to->ident->me) {
-        status = update_identity(session, msg->to->ident);
+        status = _update_identity(session, msg->to->ident, true);
         if (status != PEP_STATUS_OK)
             return status;
     }
@@ -1436,7 +1436,7 @@ PEP_STATUS receive_GroupDissolve(PEP_SESSION session, message* msg, PEP_rating r
 
     free(manager->user_id);
     manager->user_id = NULL;
-    status = update_identity(session, manager);
+    status = _update_identity(session, manager, true);
     if (status != PEP_STATUS_OK)
         goto pEp_free;
 
@@ -1590,7 +1590,7 @@ PEP_STATUS receive_GroupAdopted(PEP_SESSION session, message* msg, PEP_rating ra
 
     // We will probably always have to do this, but if something changes externally we need this check.
     if (!msg->to->ident->me) {
-        status = update_identity(session, msg->to->ident);
+        status = _update_identity(session, msg->to->ident, true);
         if (status != PEP_STATUS_OK)
             goto pEp_free;
     }
@@ -1653,7 +1653,7 @@ PEP_STATUS receive_GroupAdopted(PEP_SESSION session, message* msg, PEP_rating ra
     // Ok, first off, the user_id will be wrong.
     free(member->user_id);
     member->user_id = NULL;
-    status = update_identity(session, member);
+    status = _update_identity(session, member, true);
     if (status != PEP_STATUS_OK)
         goto pEp_free;
 
@@ -1870,7 +1870,7 @@ DYNAMIC_API PEP_STATUS group_create(
     if (is_me(session, manager))
         status = myself(session, manager);
     else
-        status = update_identity(session, manager);
+        status = _update_identity(session, manager, true);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
@@ -1908,7 +1908,7 @@ DYNAMIC_API PEP_STATUS group_create(
         if (is_me(session, member))
             status = myself(session, member);
         else
-            status = update_identity(session, member);
+            status = _update_identity(session, member, true);
 
         if (status != PEP_STATUS_OK)
             goto pEp_error; // We can do this because we are BEFORE the start of the transaction!!!
