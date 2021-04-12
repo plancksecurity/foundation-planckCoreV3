@@ -140,6 +140,49 @@ TEST_F(Engine909Test, check_engine909_no_default) {
     ASSERT_EQ(solas->fpr, nullptr);
 }
 
+TEST_F(Engine909Test, check_engine909_no_default_allow_true) {
+    pEp_identity* solas = new_identity("solas_dreadwolf@darthmama.org", NULL, "SOLAS", "Totally Not Fen'Harel");
+
+    // Make sure we FIND keys for the guy
+    stringlist_t* keylist = NULL;
+    PEP_STATUS status = find_keys(session, "solas_dreadwolf@darthmama.org", &keylist);
+    ASSERT_OK;
+    ASSERT_NE(keylist, nullptr);
+    ASSERT_NE(keylist->value, nullptr);
+    ASSERT_NE(keylist->next, nullptr);
+
+    // Ok, we're lazy, but we test this elsewhere.
+    free_stringlist(keylist);
+
+    // Now, the proof:
+    status = _update_identity(session, solas, true);
+    ASSERT_OK;
+    ASSERT_NE(solas->fpr, nullptr);
+}
+
+TEST_F(Engine909Test, check_engine909_no_default_with_910_true) {
+    config_key_election_disabled(session, true);
+
+    pEp_identity* solas = new_identity("solas_dreadwolf@darthmama.org", NULL, "SOLAS", "Totally Not Fen'Harel");
+
+    // Make sure we FIND keys for the guy
+    stringlist_t* keylist = NULL;
+    PEP_STATUS status = find_keys(session, "solas_dreadwolf@darthmama.org", &keylist);
+    ASSERT_OK;
+    ASSERT_NE(keylist, nullptr);
+    ASSERT_NE(keylist->value, nullptr);
+    ASSERT_NE(keylist->next, nullptr);
+
+    // Ok, we're lazy, but we test this elsewhere.
+    free_stringlist(keylist);
+
+    // Now, the proof:
+    status = _update_identity(session, solas, true);
+    ASSERT_OK;
+    ASSERT_EQ(solas->fpr, nullptr);
+}
+
+
 TEST_F(Engine909Test, check_engine909_default) {
     const char* solas_fpr = "ABB6BF06462407ACBD891D97E3F5D4A4C1FD228F";
     pEp_identity* solas = new_identity("solas_dreadwolf@darthmama.org", solas_fpr, "SOLAS", "Totally Not Fen'Harel");
@@ -160,6 +203,33 @@ TEST_F(Engine909Test, check_engine909_default) {
     status = set_identity(session, solas);
     ASSERT_OK;
     status = update_identity(session, solas);
+    ASSERT_OK;
+    ASSERT_NE(solas->fpr, nullptr);
+    ASSERT_STREQ(solas->fpr, solas_fpr);
+}
+
+TEST_F(Engine909Test, check_engine909_default_with_910_true) {
+    config_key_election_disabled(session, true);
+
+    const char* solas_fpr = "ABB6BF06462407ACBD891D97E3F5D4A4C1FD228F";
+    pEp_identity* solas = new_identity("solas_dreadwolf@darthmama.org", solas_fpr, "SOLAS", "Totally Not Fen'Harel");
+
+    // Make sure we FIND keys for the guy
+    stringlist_t* keylist = NULL;
+    PEP_STATUS status = find_keys(session, "solas_dreadwolf@darthmama.org", &keylist);
+    ASSERT_OK;
+    ASSERT_NE(keylist, nullptr);
+    ASSERT_NE(keylist->value, nullptr);
+    ASSERT_NE(keylist->next, nullptr);
+
+    // Ok, we're lazy, but we test this elsewhere.
+    free_stringlist(keylist);
+
+    // Set a default:
+    solas->comm_type = PEP_ct_pEp_unconfirmed;
+    status = set_identity(session, solas);
+    ASSERT_OK;
+    status = _update_identity(session, solas, true);
     ASSERT_OK;
     ASSERT_NE(solas->fpr, nullptr);
     ASSERT_STREQ(solas->fpr, solas_fpr);
@@ -199,6 +269,77 @@ TEST_F(Engine909Test, check_engine909_mistrust) {
     ASSERT_EQ(solas->fpr, nullptr);
 }
 
+TEST_F(Engine909Test, check_engine909_mistrust_allow_true) {
+    const char* solas_fpr = "ABB6BF06462407ACBD891D97E3F5D4A4C1FD228F";
+    pEp_identity* solas = new_identity("solas_dreadwolf@darthmama.org", solas_fpr, "SOLAS", "Totally Not Fen'Harel");
+
+    // Make sure we FIND keys for the guy
+    stringlist_t* keylist = NULL;
+    PEP_STATUS status = find_keys(session, "solas_dreadwolf@darthmama.org", &keylist);
+    ASSERT_OK;
+    ASSERT_NE(keylist, nullptr);
+    ASSERT_NE(keylist->value, nullptr);
+    ASSERT_NE(keylist->next, nullptr);
+
+    // Ok, we're lazy, but we test this elsewhere.
+    free_stringlist(keylist);
+
+    // Set a default:
+    solas->comm_type = PEP_ct_pEp_unconfirmed;
+    status = set_identity(session, solas);
+    ASSERT_OK;
+    status = update_identity(session, solas);
+    ASSERT_OK;
+    ASSERT_NE(solas->fpr, nullptr);
+    ASSERT_STREQ(solas->fpr, solas_fpr);
+
+    // mistrust it
+    status = key_mistrusted(session, solas);
+    ASSERT_OK;
+    free(solas->fpr);
+    solas->fpr = NULL;
+    solas->comm_type = PEP_ct_unknown;
+    status = _update_identity(session, solas, true);
+    ASSERT_NE(solas->fpr, nullptr);
+}
+
+TEST_F(Engine909Test, check_engine909_mistrust_with_910_true) {
+    config_key_election_disabled(session, true);
+
+    const char* solas_fpr = "ABB6BF06462407ACBD891D97E3F5D4A4C1FD228F";
+    pEp_identity* solas = new_identity("solas_dreadwolf@darthmama.org", solas_fpr, "SOLAS", "Totally Not Fen'Harel");
+
+    // Make sure we FIND keys for the guy
+    stringlist_t* keylist = NULL;
+    PEP_STATUS status = find_keys(session, "solas_dreadwolf@darthmama.org", &keylist);
+    ASSERT_OK;
+    ASSERT_NE(keylist, nullptr);
+    ASSERT_NE(keylist->value, nullptr);
+    ASSERT_NE(keylist->next, nullptr);
+
+    // Ok, we're lazy, but we test this elsewhere.
+    free_stringlist(keylist);
+
+    // Set a default:
+    solas->comm_type = PEP_ct_pEp_unconfirmed;
+    status = set_identity(session, solas);
+    ASSERT_OK;
+    status = update_identity(session, solas);
+    ASSERT_OK;
+    ASSERT_NE(solas->fpr, nullptr);
+    ASSERT_STREQ(solas->fpr, solas_fpr);
+
+    // mistrust it
+    status = key_mistrusted(session, solas);
+    ASSERT_OK;
+    free(solas->fpr);
+    solas->fpr = NULL;
+    solas->comm_type = PEP_ct_unknown;
+    status = _update_identity(session, solas, true);
+    ASSERT_EQ(solas->fpr, nullptr);
+}
+
+
 TEST_F(Engine909Test, check_engine909_reset) {
     const char* solas_fpr = "ABB6BF06462407ACBD891D97E3F5D4A4C1FD228F";
     pEp_identity* solas = new_identity("solas_dreadwolf@darthmama.org", solas_fpr, "SOLAS", "Totally Not Fen'Harel");
@@ -233,3 +374,37 @@ TEST_F(Engine909Test, check_engine909_reset) {
     ASSERT_EQ(solas->fpr, nullptr);
 }
 
+TEST_F(Engine909Test, check_engine909_reset_with_910_true) {
+    config_key_election_disabled(session, true);
+    const char* solas_fpr = "ABB6BF06462407ACBD891D97E3F5D4A4C1FD228F";
+    pEp_identity* solas = new_identity("solas_dreadwolf@darthmama.org", solas_fpr, "SOLAS", "Totally Not Fen'Harel");
+
+    // Make sure we FIND keys for the guy
+    stringlist_t* keylist = NULL;
+    PEP_STATUS status = find_keys(session, "solas_dreadwolf@darthmama.org", &keylist);
+    ASSERT_OK;
+    ASSERT_NE(keylist, nullptr);
+    ASSERT_NE(keylist->value, nullptr);
+    ASSERT_NE(keylist->next, nullptr);
+
+    // Ok, we're lazy, but we test this elsewhere.
+    free_stringlist(keylist);
+
+    // Set a default:
+    solas->comm_type = PEP_ct_pEp_unconfirmed;
+    status = set_identity(session, solas);
+    ASSERT_OK;
+    status = update_identity(session, solas);
+    ASSERT_OK;
+    ASSERT_NE(solas->fpr, nullptr);
+    ASSERT_STREQ(solas->fpr, solas_fpr);
+
+    // reset it
+    status = key_reset_identity(session, solas, solas_fpr);
+    ASSERT_OK;
+    free(solas->fpr);
+    solas->fpr = NULL;
+    solas->comm_type = PEP_ct_unknown;
+    status = _update_identity(session, solas, true);
+    ASSERT_EQ(solas->fpr, nullptr);
+}
