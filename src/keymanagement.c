@@ -45,6 +45,9 @@ PEP_STATUS elect_pubkey(
         PEP_SESSION session, pEp_identity * identity, bool check_blacklist
     )
 {
+    if (session->key_election_disabled)
+        return PEP_KEY_NOT_FOUND;
+    
     PEP_STATUS status;
     stringlist_t *keylist = NULL;
     char *_fpr = "";
@@ -603,7 +606,7 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     }
     
     return_id->me = stored_ident->me;
-    
+
     return_id->major_ver = stored_ident->major_ver;
     return_id->minor_ver = stored_ident->minor_ver;
 

@@ -2749,6 +2749,12 @@ DYNAMIC_API void config_service_log(PEP_SESSION session, bool enable)
         session->service_log = enable;
 }
 
+DYNAMIC_API void config_key_election_disabled(PEP_SESSION session, bool disable) {
+    assert(session);
+    if (session)
+        session->key_election_disabled = disable;
+}
+
 DYNAMIC_API PEP_STATUS log_event(
         PEP_SESSION session,
         const char *title,
