@@ -385,6 +385,7 @@ DYNAMIC_API void config_use_only_own_private_keys(PEP_SESSION session, bool enab
 
 DYNAMIC_API void config_service_log(PEP_SESSION session, bool enable);
 
+DYNAMIC_API void config_key_election_disabled(PEP_SESSION session, bool disable);
 
 /**
  *  @enum    PEP_CIPHER_SUITE

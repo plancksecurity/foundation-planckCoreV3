@@ -160,7 +160,9 @@ struct _pEpSession {
     char* curr_passphrase;
     bool new_key_pass_enable;
     char* generation_passphrase;
-    
+
+    bool key_election_disabled;
+
     PEP_transport_t *transports;
 
     sqlite3 *db;
