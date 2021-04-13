@@ -11,9 +11,11 @@
 
 #include "pEpEngine.h"
 #include "pEp_internal.h"
+#include "pEp_internal.h"
 #include "mime.h"
 #include "keymanagement.h"
 #include "key_reset.h"
+#include "key_reset_internal.h"
 
 #include "test_util.h"
 #include "TestConstants.h"

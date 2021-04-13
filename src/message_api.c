@@ -18,7 +18,9 @@
 #include "internal_format.h"
 #include "sync_codec.h"
 #include "distribution_codec.h"
+
 #include "group.h"
+#include "group_internal.h"
 
 #include <assert.h>
 #include <string.h>

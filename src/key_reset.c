@@ -9,7 +9,10 @@
 #include "dynamic_api.h"
 #include "message_api.h"
 #include "key_reset.h"
+#include "key_reset_internal.h"
+
 #include "group.h"
+#include "group_internal.h"
 #include "distribution_codec.h"
 #include "map_asn1.h"
 #include "keymanagement.h"

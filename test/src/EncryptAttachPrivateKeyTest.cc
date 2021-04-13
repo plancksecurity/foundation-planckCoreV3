@@ -7,6 +7,7 @@
 #include <cstring>
 
 #include "pEpEngine.h"
+#include "pEp_internal.h"
 
 #include "mime.h"
 #include "message_api.h"
