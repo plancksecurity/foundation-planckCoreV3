@@ -18,8 +18,8 @@ system.db: create_system_db.sql $(DICOS)
 
 .PHONY: install
 install: system.db
-	mkdir -p $(PER_MACHINE_DIRECTORY)
-	cp system.db $(PER_MACHINE_DIRECTORY)
+	mkdir -p $(DESTDIR)$(PER_MACHINE_DIRECTORY)
+	cp system.db $(DESTDIR)$(PER_MACHINE_DIRECTORY)
 
 .PHONY: clean
 clean:

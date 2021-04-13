@@ -101,26 +101,26 @@ clean:
 # install_headers is needed for building *STANDALONE* pEp MIME - it is NOT used for built-in functionality!!!
 
 install_headers: $(TARGET)
-	mkdir -p $(PREFIX)/include/pEp
+	mkdir -p $(DESTDIR)$(PREFIX)/include/pEp
 	cp pEpEngine.h keymanagement.h message_api.h dynamic_api.h stringlist.h \
 	   timestamp.h identity_list.h bloblist.h stringpair.h message.h mime.h group.h \
 	   cryptotech.h sync_api.h blacklist.h pEp_string.h openpgp_compat.h engine_sql.h \
 	   labeled_int_list.h key_reset.h base64.h sync_codec.h distribution_codec.h storage_codec.h \
 	   status_to_string.h aux_mime_msg.h keyreset_command.h platform.h platform_unix.h ../asn.1/*.h \
- 	   $(PREFIX)/include/pEp/
+	   $(DESTDIR)$(PREFIX)/include/pEp/
 
 # FIXME: Does anyone but Roker use install_headers? Otherwise, remove the dependency.
 install: $(TARGET) install_headers
-	mkdir -p "$(PREFIX)/lib/"
-	cp -v $< $(PREFIX)/lib/
-	cp -v libpEpEngine.a $(PREFIX)/lib/
+	mkdir -p "$(DESTDIR)$(PREFIX)/lib/"
+	cp -v $< $(DESTDIR)$(PREFIX)/lib/
+	cp -v libpEpEngine.a $(DESTDIR)$(PREFIX)/lib/
 
 beinstall: install
-	cp platform*.h $(PREFIX)/include/pEp/
+	cp platform*.h $(DESTDIR)$(PREFIX)/include/pEp/
 
 uninstall:
-	rm -f $(PREFIX)/lib/$(TARGET)
-	rm -rf $(PREFIX)/include/pEp
+	rm -f $(DESTDIR)$(PREFIX)/lib/$(TARGET)
+	rm -rf $(DESTDIR)$(PREFIX)/include/pEp
 
 tags: $(wildcard *.c) $(wildcard *.h)
 	ctags --sort=yes *.c *.h
