@@ -96,6 +96,7 @@
 #endif
 
 #include "pEpEngine.h"
+#include "pEpEngine_internal.h"
 
 // If not specified, build for Sequoia
 #ifndef USE_SEQUOIA
@@ -116,6 +117,7 @@
 #include "Sync_func.h"
 
 #include "key_reset.h"
+#include "key_reset_internal.h"
 
 #define NOT_IMPLEMENTED assert(0); return PEP_UNKNOWN_ERROR;
 

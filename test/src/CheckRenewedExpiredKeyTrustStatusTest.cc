@@ -7,6 +7,8 @@
 #include <cstring>
 
 #include "pEpEngine.h"
+#include "pEp_internal.h"
+#include "pEpEngine_internal.h"
 
 #include "test_util.h"
 

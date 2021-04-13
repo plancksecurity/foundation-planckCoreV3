@@ -8,6 +8,7 @@
 
 
 #include "pEpEngine.h"
+#include "pEp_internal.h"
 #include "bloblist.h"
 #include "base64.h"
 
