@@ -9,7 +9,7 @@ CPPFLAGS+=$(CPPFLAGS_GENERATED)
 ASN1C_INC+= -I.
 ASN1C_OPTIONS = -fincludes-quoted -fcompound-names -pdu=auto
 
-DISTRIBUTION = distribution keyreset managedgroup exploration
+DISTRIBUTION = distribution keyreset managedgroup exploration tempkeyagreement
 SYNC  = sync keysync trustsync groupsync
 STORAGE = storage messagestorage
 
