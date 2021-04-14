@@ -96,7 +96,13 @@
 #endif
 
 #include "pEpEngine.h"
+#include "key_reset.h"
+
 #include "pEpEngine_internal.h"
+#include "key_reset_internal.h"
+#include "group_internal.h"
+#include "keymanagement_internal.h"
+#include "message_api_internal.h"
 
 // If not specified, build for Sequoia
 #ifndef USE_SEQUOIA
@@ -116,8 +122,6 @@
 #include "sync_api.h"
 #include "Sync_func.h"
 
-#include "key_reset.h"
-#include "key_reset_internal.h"
 
 #define NOT_IMPLEMENTED assert(0); return PEP_UNKNOWN_ERROR;
 
