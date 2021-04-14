@@ -68,6 +68,7 @@ test/src/engine_test/LocalPlayground.cc
 */.tags
 */*/.tags
 asn.1/.generated
+src/Distribution_*
 src/KeySync_*
 src/TrustSync_*
 src/GroupSync_*
