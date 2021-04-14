@@ -94,9 +94,9 @@ srcclean:
 	rm *.cc *.hh *.hxx
 
 install: lib 
-	mkdir -p "$(PREFIX)/lib/"
-	cp -v libpEpMIME.a $(PREFIX)/lib
+	mkdir -p "$(DESTDIR)$(PREFIX)/lib/"
+	cp -v libpEpMIME.a $(DESTDIR)$(PREFIX)/lib
 
 uninstall:
-	rm $(PREFIX)/lib/libpEpMIME.a
+	rm $(DESTDIR)$(PREFIX)/lib/libpEpMIME.a
 
