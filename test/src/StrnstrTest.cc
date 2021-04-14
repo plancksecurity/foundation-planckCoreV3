@@ -9,6 +9,7 @@
 #include "TestConstants.h"
     
 #include "pEpEngine.h"
+#include "pEp_internal.h"
 #include "platform_unix.h"
 
 

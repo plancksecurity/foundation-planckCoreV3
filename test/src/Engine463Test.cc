@@ -7,6 +7,7 @@
 
 #include "pEpEngine.h"
 #include "pEp_internal.h"
+#include "pEp_internal.h"
 #include "test_util.h"
 #include "message.h"
 
