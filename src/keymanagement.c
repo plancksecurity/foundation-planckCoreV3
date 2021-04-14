@@ -15,6 +15,7 @@
 
 #include "pEp_internal.h"
 #include "keymanagement.h"
+#include "keymanagement_internal.h"
 #include "KeySync_fsm.h"
 
 #include "blacklist.h"

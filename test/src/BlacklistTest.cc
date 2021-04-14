@@ -22,6 +22,7 @@
 #include <assert.h>
 
 #include "pEpEngine.h"
+#include "pEp_internal.h"
 
 #include "blacklist.h"
 #include "keymanagement.h"

@@ -9,6 +9,7 @@
 #include <cstring>
 
 #include "pEpEngine.h"
+#include "pEp_internal.h"
 #include "platform.h"
 
 #include "test_util.h"

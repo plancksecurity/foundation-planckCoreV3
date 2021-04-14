@@ -7,6 +7,7 @@
 #include <assert.h>
 
 #include "pEpEngine.h"
+#include "pEp_internal.h"
 #include "message_api.h"
 #include "TestConstants.h"
 

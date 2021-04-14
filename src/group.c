@@ -2,6 +2,8 @@
 // see LICENSE.txt
 
 #include "group.h"
+#include "group_internal.h"
+
 #include "pEp_internal.h"
 #include "message_api.h"
 #include "distribution_codec.h"

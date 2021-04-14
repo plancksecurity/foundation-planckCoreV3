@@ -14,6 +14,7 @@
 #include "test_util.h"
 
 #include "pEpEngine.h"
+#include "pEp_internal.h"
 
 
 
