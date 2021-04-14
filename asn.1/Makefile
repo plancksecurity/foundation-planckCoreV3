@@ -53,3 +53,8 @@ uninstall:
 
 tags: $(wildcard *.c) $(wildcard *.h)
 	ctags --sort=yes *.c *.h
+
+# ensure generated files are here - useful after "make clean"
+$(SYNC_FILES) $(DISTRIBUTION_FILES) $(STORAGE_FILES):
+	rm -f ../codegen/.copy
+	$(MAKE) -C ../codegen .copy
