@@ -19,6 +19,8 @@
 #include "sync_codec.h"
 #include "distribution_codec.h"
 
+#include "keymanagement_internal.h"
+
 #include "group.h"
 #include "group_internal.h"
 
