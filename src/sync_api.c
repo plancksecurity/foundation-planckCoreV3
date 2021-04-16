@@ -290,10 +290,6 @@ DYNAMIC_API PEP_STATUS enable_identity_for_sync(PEP_SESSION session,
     ident->flags = stored_ident->flags;
     free_identity(stored_ident);
 
-    // this is an invalid state; detect while debugging
-
-    assert(!((ident->flags & PEP_idf_devicegroup) && (ident->flags & PEP_idf_not_for_sync)));
-
     // if we're grouped and this identity is enabled already we can stop here
 
     if ((ident->flags & PEP_idf_devicegroup) && !(ident->flags & PEP_idf_not_for_sync))
