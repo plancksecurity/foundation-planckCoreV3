@@ -346,6 +346,11 @@ DYNAMIC_API PEP_STATUS disable_identity_for_sync(PEP_SESSION session,
     ident->flags = stored_ident->flags;
     free_identity(stored_ident);
 
+    // if this identity is disabled and not part of a device group already we can end here
+
+    if ((ident->flags & PEP_idf_not_for_sync) && !(ident->flags & PEP_idf_devicegroup))
+        return PEP_STATUS_OK;
+
     // if the identity is not part of a device group just disable it to keep this
 
     if (!(ident->flags & PEP_idf_devicegroup)) {
