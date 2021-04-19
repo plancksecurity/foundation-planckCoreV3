@@ -8,6 +8,7 @@
 #include <cstring>
 
 #include "pEpEngine.h"
+#include "pEp_internal.h"
 #include "map_asn1.h"
 
 #include "test_util.h"

@@ -1,8 +1,12 @@
-/** @file */
-/** @brief File description for doxygen missing. FIXME */
-
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/** 
+ * @file     baseprotocol.c
+ * @brief    Implementation of basic functions for administrative pEp messages (preparation,
+ *           decoration, payload, extraction, etc.). These are used for
+ *           protocol messages in, for example, key sync and key reset.
+ *           The payloads of these messages are, in general, not human-readable.
+ *           @see baseprotocol.h
+ * @license  GNU General Public License 3.0 - see LICENSE.txt
+*/
 
 #include "pEp_internal.h"
 #include "message_api.h"
@@ -17,7 +21,7 @@ static PEP_STATUS _get_base_protocol_type_str(base_protocol_type type, const cha
         case BASE_SYNC:
             *type_str = _BASE_PROTO_MIME_TYPE_SYNC;
             break;
-        case BASE_KEYRESET:
+        case BASE_DISTRIBUTION:
             *type_str = _BASE_PROTO_MIME_TYPE_DIST;
             break;
         default:
@@ -40,7 +44,7 @@ PEP_STATUS base_decorate_message(
     assert(msg);
     assert(payload);
     assert(size);
-    assert(type == BASE_SYNC || type == BASE_KEYRESET);
+    assert(type == BASE_SYNC || type == BASE_DISTRIBUTION);
 
     if (!(msg && payload && size && type))
         return PEP_ILLEGAL_VALUE;
@@ -54,7 +58,7 @@ PEP_STATUS base_decorate_message(
             bl = bloblist_add(msg->attachments, payload, size,
                               _BASE_PROTO_MIME_TYPE_SYNC, "sync.pEp");
             break;
-        case BASE_KEYRESET:
+        case BASE_DISTRIBUTION:
             bl = bloblist_add(msg->attachments, payload, size,
                               _BASE_PROTO_MIME_TYPE_DIST, "distribution.pEp");
             break;
@@ -117,7 +121,7 @@ PEP_STATUS base_prepare_message(
     assert(payload);
     assert(size);
     assert(result);
-    assert(type == BASE_SYNC || type == BASE_KEYRESET);
+    assert(type == BASE_SYNC || type == BASE_DISTRIBUTION);
 
     if (!(me && partner && payload && size && result && type))
         return PEP_ILLEGAL_VALUE;
@@ -172,7 +176,7 @@ PEP_STATUS base_extract_message(
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session && msg && size && payload && fpr);
-    assert(type == BASE_SYNC || type == BASE_KEYRESET);
+    assert(type == BASE_SYNC || type == BASE_DISTRIBUTION);
     if (!(session && msg && size && payload && fpr && type))
         return PEP_ILLEGAL_VALUE;
 
@@ -264,7 +268,7 @@ PEP_STATUS try_base_prepare_message(
     assert(payload);
     assert(size);
     assert(result);
-    assert(type == BASE_SYNC || type == BASE_KEYRESET);
+    assert(type == BASE_SYNC || type == BASE_DISTRIBUTION);
 
     if (!(session && session->messageToSend && session->notifyHandshake))
         return PEP_ILLEGAL_VALUE;

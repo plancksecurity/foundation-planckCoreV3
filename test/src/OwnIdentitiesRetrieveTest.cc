@@ -5,6 +5,7 @@
 #include <string>
 
 #include "pEpEngine.h"
+#include "pEp_internal.h"
 #include "keymanagement.h"
 
 #include "test_util.h"

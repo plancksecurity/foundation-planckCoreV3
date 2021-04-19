@@ -1,11 +1,12 @@
 /**
  * @file    bloblist.h
  * @brief   functions for list structure to hold data of unspecified format (hence,
- *          "blob list"); can contain addition format information in structure's mime info
+ *          "blob list"); can contain additional format information in structure's mime info
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef BLOBLIST_H
+#define BLOBLIST_H
 
 #include <stddef.h> 
 
@@ -189,4 +190,6 @@ bloblist_t* find_blob_by_URI(bloblist_t* bloblist, const char* uri);
     
 #ifdef __cplusplus
 }
+#endif
+
 #endif

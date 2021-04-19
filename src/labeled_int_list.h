@@ -4,7 +4,8 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef LABELED_INT_LIST_H
+#define LABELED_INT_LIST_H
 
 #include "dynamic_api.h"
 #include "stringpair.h"
@@ -71,4 +72,6 @@ DYNAMIC_API int labeled_int_list_length(const labeled_int_list_t *labeled_int_li
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

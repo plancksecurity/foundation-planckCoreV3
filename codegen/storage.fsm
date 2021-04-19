@@ -1,0 +1,21 @@
+// This file is under BSD License 2.0
+
+// Storage protocol for p≡p
+// Copyright (c) 2021, p≡p foundation
+
+// Written by Volker Birk
+
+include ./fsm.yml2
+
+protocol Storage 3 {
+
+    // this protocol is stateless
+    fsm MessageStorage 1 {
+        version 1, 0;
+
+        message ReceiverRating 2, security=ignore {
+            field Rating rating;
+        }
+    }
+}
+

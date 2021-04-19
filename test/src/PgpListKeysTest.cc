@@ -7,7 +7,9 @@
 #include <iostream>
 
 #include "pEpEngine.h"
+#include "pEp_internal.h"
 #include "pEpEngine.h"
+#include "pEp_internal.h"
 #include "stringpair.h"
 #include "openpgp_compat.h"
 

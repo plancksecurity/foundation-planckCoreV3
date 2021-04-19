@@ -90,23 +90,23 @@ namespace {
 
 TEST_F(AppleMailTest, check_apple_mail_text_signed_encrypted) {
 
-    const char* mailfile = "test_mails/apple_mail_TC_signed_encrypted.eml";
+    const char* mailfile = "test_mails/Text_AppleMail.eml";
 
-    const string keytextkey1 = slurp("test_keys/pub/pep-test-apple-0x1CCBC7D7_pub.asc");
-    const string keytextkey2 = slurp("test_keys/priv/pep-test-recip-0x08DB0AEE_priv.asc");
-    const string keytextkey3 = slurp("test_keys/pub/pep-test-recip-0x08DB0AEE_pub.asc");
+    const string keytextkey1 = slurp("test_keys/pub/darthmama.asc");
+    const string keytextkey2 = slurp("test_keys/priv/applemail_recip_priv.asc");
+    const string keytextkey3 = slurp("test_keys/pub/applemail_recip_pub.asc");
 
     PEP_STATUS statuskey1 = import_key(session, keytextkey1.c_str(), keytextkey1.length(), NULL);
     PEP_STATUS statuskey2 = import_key(session, keytextkey2.c_str(), keytextkey2.length(), NULL);
     PEP_STATUS statuskey3 = import_key(session, keytextkey3.c_str(), keytextkey3.length(), NULL);
 
     const string mailtext = slurp(mailfile);
-    pEp_identity * me = new_identity("pep.test.recip@kgrothoff.org", "93D19F24AD6F4C4BA9134AAF84D9217908DB0AEE", PEP_OWN_USERID, "pEp Test Recipient");
+    pEp_identity * me = new_identity("applemail_recip@darthmama.org", "5668C4BA76A87874CEAB50710401383F39CB6DB8", PEP_OWN_USERID, "Applemail McRecipient");
     me->me = true;
-    PEP_STATUS status = set_own_key(session, me, "93D19F24AD6F4C4BA9134AAF84D9217908DB0AEE");
+    PEP_STATUS status = set_own_key(session, me, "5668C4BA76A87874CEAB50710401383F39CB6DB8");
 
     // Key election removal: Key must be set as default explicitly or through mail
-    pEp_identity * you = new_identity("pep.test.apple@pep-project.org", "3D8D9423D03DDF61B60161150313D94A1CCBC7D7", "pep.test.apple@pep-project.org", "pEp Apple Test");
+    pEp_identity * you = new_identity("krista@darthmama.org", "5668C4BA76A87874CEAB50710401383F39CB6DB8", "NOT_ME", "Krista Bennett");
     you->me = false;
     status = set_identity(session, you);
     ASSERT_OK;
@@ -154,20 +154,20 @@ TEST_F(AppleMailTest, check_apple_mail_html_signed_encrypted) {
     // N.B. As part of breaking up formerly monolith tests into individual tests, I've copied state setup from the
     // original functions into many functions. It should, when there's time, either be refactored (if necessary for this
     // test) or removed (if not).
-    const string keytextkey1 = slurp("test_keys/pub/pep-test-apple-0x1CCBC7D7_pub.asc");
-    const string keytextkey2 = slurp("test_keys/priv/pep-test-recip-0x08DB0AEE_priv.asc");
-    const string keytextkey3 = slurp("test_keys/pub/pep-test-recip-0x08DB0AEE_pub.asc");
+    const string keytextkey1 = slurp("test_keys/pub/darthmama.asc");
+    const string keytextkey2 = slurp("test_keys/priv/applemail_recip_priv.asc");
+    const string keytextkey3 = slurp("test_keys/pub/applemail_recip_pub.asc");
 
     PEP_STATUS statuskey1 = import_key(session, keytextkey1.c_str(), keytextkey1.length(), NULL);
     PEP_STATUS statuskey2 = import_key(session, keytextkey2.c_str(), keytextkey2.length(), NULL);
     PEP_STATUS statuskey3 = import_key(session, keytextkey3.c_str(), keytextkey3.length(), NULL);
 
-    pEp_identity * me = new_identity("pep.test.recip@kgrothoff.org", "93D19F24AD6F4C4BA9134AAF84D9217908DB0AEE", PEP_OWN_USERID, "pEp Test Recipient");
+    pEp_identity * me = new_identity("applemail_recip@darthmama.org", "5668C4BA76A87874CEAB50710401383F39CB6DB8", PEP_OWN_USERID, "Applemail McRecipient");
     me->me = true;
-    PEP_STATUS status = set_own_key(session, me, "93D19F24AD6F4C4BA9134AAF84D9217908DB0AEE");
+    PEP_STATUS status = set_own_key(session, me, "5668C4BA76A87874CEAB50710401383F39CB6DB8");
 
     // Key election removal: Key must be set as default explicitly or through mail
-    pEp_identity * you = new_identity("pep.test.apple@pep-project.org", "3D8D9423D03DDF61B60161150313D94A1CCBC7D7", "pep.test.apple@pep-project.org", "pEp Apple Test");
+    pEp_identity * you = new_identity("krista@darthmama.org", "5668C4BA76A87874CEAB50710401383F39CB6DB8", "NOT_ME", "Krista Bennett");
     you->me = false;
     status = set_identity(session, you);
     ASSERT_OK;
@@ -187,7 +187,7 @@ TEST_F(AppleMailTest, check_apple_mail_html_signed_encrypted) {
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
-    const char* mailfile2 = "test_mails/apple_mail_TC_html_signed_encrypted.eml";
+    const char* mailfile2 = "test_mails/HTML_AppleMail.eml";
     const string mailtext2 = slurp(mailfile2);
 
     status = mime_decode_message(mailtext2.c_str(), mailtext2.length(), &msg_ptr, NULL);

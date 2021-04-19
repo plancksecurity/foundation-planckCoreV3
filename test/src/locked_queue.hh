@@ -1,4 +1,5 @@
-#pragma once
+#ifndef LOCKED_QUEUE_H
+#define LOCKED_QUEUE_H
 
 #include <list>
 #include <mutex>
@@ -59,3 +60,5 @@ namespace utility
         }
     };
 }
+
+#endif

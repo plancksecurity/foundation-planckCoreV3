@@ -4,7 +4,8 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef STRINGPAIR_H
+#define STRINGPAIR_H
 
 #include "dynamic_api.h"
 
@@ -226,4 +227,6 @@ DYNAMIC_API stringpair_list_t *stringpair_list_delete_by_key(
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

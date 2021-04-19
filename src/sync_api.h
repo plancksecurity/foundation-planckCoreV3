@@ -4,7 +4,8 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef SYNC_API_H
+#define SYNC_API_H
 
 
 #include "message.h"
@@ -305,6 +306,21 @@ DYNAMIC_API PEP_STATUS disable_identity_for_sync(PEP_SESSION session,
         pEp_identity *ident);
 
 
+/**
+ *  <!--       disable_all_sync_channels()       -->
+ *  
+ *  @brief Disable sync for all identities; use this function to reset
+ *         the state which identities will be synced and which not
+ *         This function is intended to be used at app init
+ *  
+ *  
+ */
+
+DYNAMIC_API PEP_STATUS disable_all_sync_channels(PEP_SESSION session);
+
+
 #ifdef __cplusplus
 }
+#endif
+
 #endif

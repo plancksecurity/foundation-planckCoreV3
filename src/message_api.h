@@ -5,7 +5,8 @@
  */
 
 
-#pragma once
+#ifndef MESSAGE_API_H
+#define MESSAGE_API_H
 
 #include "pEpEngine.h"
 #include "keymanagement.h"
@@ -16,60 +17,6 @@
 extern "C" {
 #endif
 
-/**
- *  <!--       import_attached_keys()       -->
- *
- *  @brief            TODO
- *
- *  @param[in]  session         PEP_SESSION
- *  @param[in]  msg             message*
- *  @param[in]  private_idents  identity_list**
- *  @param[in]  imported_keys   stringlist_t**
- *  @param[in]  changed_keys    uint64_t*
- *
- */
-bool import_attached_keys(
-        PEP_SESSION session,
-        message *msg,
-        bool is_pEp_msg,
-        identity_list **private_idents, 
-        stringlist_t** imported_keys,
-        uint64_t* changed_keys,
-        char** imported_sender_key_fpr
-    );
-
-/**
- *  <!--       attach_own_key()       -->
- *
- *  @brief            TODO
- *
- *  @param[in]  session     PEP_SESSION
- *  @param[in]  msg         message*
- *
- */
-void attach_own_key(PEP_SESSION session, message *msg);
-
-/**
- *  <!--       determine_encryption_format()       -->
- *
- *  @brief            TODO
- *
- *  @param[in]  msg         message*
- *
- */
-PEP_cryptotech determine_encryption_format(message *msg);
-
-/**
- *  <!--       add_opt_field()       -->
- *
- *  @brief            TODO
- *
- *  @param[in]  msg         message*
- *  @param[in]  name        const char*
- *  @param[in]  value       const char*
- *
- */
-void add_opt_field(message *msg, const char *name, const char *value);
 
 /**
  *  @enum    PEP_encrypt_flags
@@ -138,6 +85,9 @@ typedef enum _message_wrap_type {
  *  @retval PEP_UNENCRYPTED                 on demand or no recipients with usable
  *                                          key, is left unencrypted, and key is
  *                                          attached to it
+ *  @retval PEP_ILLEGAL_VALUE               illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY               out of memory
+ *  @retval any other value on error
  *
  *  @warning the ownership of src remains with the caller
  *           the ownership of dst goes to the caller
@@ -182,6 +132,10 @@ DYNAMIC_API PEP_STATUS encrypt_message(
  *  @retval PEP_UNENCRYPTED                 on demand or no recipients with usable
  *                                          key, is left unencrypted, and key is
  *                                          attached to it
+ *  @retval PEP_ILLEGAL_VALUE               illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY               out of memory
+ *  @retval PEP_UNKNOWN_ERROR
+ *  @retval any other value on error
  *
  *  @warning the ownershop of src remains with the caller
  *           the ownership of dst goes to the caller
@@ -218,6 +172,9 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
  *  @retval PEP_KEY_HAS_AMBIG_NAME   at least one of the receipient keys has
  *                                   an ambiguous name
  *  @retval PEP_GET_KEY_FAILED       cannot retrieve key
+ *  @retval PEP_CANNOT_FIND_IDENTITY
+ *  @retval PEP_ILLEGAL_VALUE
+ *  @retval PEP_OUT_OF_MEMORY
  *
  *  @warning the ownership of src remains with the caller
  *           the ownership of target_id remains w/ caller
@@ -403,7 +360,9 @@ DYNAMIC_API PEP_STATUS decrypt_message(
  *                            application passes message that have been previously flagged by
  *                            decrypt_message() as own message containing own key to this function
  *
- *  @retval error status or PEP_STATUS_OK on success
+ *  @retval PEP_STATUS_OK       on success
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval any other value on error
  *
  *  @warning the ownership of msg remains with the caller
  *           the ownership of ident goes to the caller
@@ -426,7 +385,9 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
  *  @param[in]   msg        message to get the rating for
  *  @param[out]  rating     rating for the message
  *
- *  @retval error status or PEP_STATUS_OK on success
+ *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
  *
  *  @warning msg->from must point to a valid pEp_identity
  *           msg->dir must be PEP_dir_outgoing
@@ -449,7 +410,8 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
  *  @param[in]   msg        message to get the rating for
  *  @param[out]  rating     rating preview for the message
  *
- *  @retval error status or PEP_STATUS_OK on success
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
  *
  *  @warning msg->from must point to a valid pEp_identity
  *           msg->dir must be PEP_dir_outgoing
@@ -470,8 +432,10 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating_preview(
  *  @param[in]   session    session handle
  *  @param[in]   ident      identity to get the rating for
  *  @param[out]  rating     rating for the identity
- *
- *  @retval error status or PEP_STATUS_OK on success
+ 
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval any other value on error
  *
  *  @warning the ownership of ident remains with the caller
  *
@@ -517,6 +481,7 @@ DYNAMIC_API PEP_STATUS get_binary_path(PEP_cryptotech tech, const char **path);
  *
  *  @retval PEP_STATUS_OK            trustwords retrieved
  *  @retval PEP_OUT_OF_MEMORY        out of memory
+ *  @retval PEP_ILLEGAL_VALUE        illegal parameter values
  *  @retval PEP_TRUSTWORD_NOT_FOUND  at least one trustword not found
  *
  *  @warning the word pointer goes to the ownership of the caller
@@ -549,8 +514,10 @@ DYNAMIC_API PEP_STATUS get_trustwords(
  *                                subset in next version)
  *
  *  @retval PEP_STATUS_OK            trustwords retrieved
+ *  @retval PEP_ILLEGAL_VALUE        illegal parameter values
  *  @retval PEP_OUT_OF_MEMORY        out of memory
  *  @retval PEP_TRUSTWORD_NOT_FOUND  at least one trustword not found
+ *  @retval PEP_CANNOT_FIND_IDENTITY identity not found
  *  @retval error                    status of decrypt_message() if decryption fails.
  *
  *  @warning the word pointer goes to the ownership of the caller
@@ -585,6 +552,7 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
  *
  *  @retval PEP_STATUS_OK            trustwords retrieved
  *  @retval PEP_OUT_OF_MEMORY        out of memory
+ *  @retval PEP_ILLEGAL_VALUE        illegal parameter values
  *  @retval PEP_TRUSTWORD_NOT_FOUND  at least one trustword not found
  *
  *  @warning the word pointer goes to the ownership of the caller
@@ -607,12 +575,14 @@ DYNAMIC_API PEP_STATUS get_trustwords_for_fprs(
  *  @param[in]   x_enc_status    original rating for the decrypted message
  *  @param[out]  rating          rating for the message
  *
+ *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE       if decrypted message doesn't contain
  *                                  X-EncStatus optional field and x_enc_status is
  *                                  pEp_rating_udefined
  *                                  or if decrypted message doesn't contain
  *                                  X-Keylist optional field and x_keylist is NULL
  *  @retval PEP_OUT_OF_MEMORY       if not enough memory could be allocated
+ *  @retval any other value on error
  *
  *  @warning msg->from must point to a valid pEp_identity
  *           the ownership of msg remains with the caller
@@ -638,8 +608,12 @@ DYNAMIC_API PEP_STATUS re_evaluate_message_rating(
  *  @param[in]   fpr        string with fingerprint
  *  @param[out]  rating     rating of key for this user
  *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE       illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY       out of memory
  *  @retval PEP_RECORD_NOT_FOUND    if no trust record for user_id
  *                                  and fpr can be found
+ *  @retval any other value on error
  *
  *
  */
@@ -665,52 +639,10 @@ DYNAMIC_API PEP_STATUS get_key_rating_for_user(
 
 DYNAMIC_API PEP_rating rating_from_comm_type(PEP_comm_type ct);
 
-/**
- *  @internal
- *
- *  <!--       try_encrypt_message()       -->
- *
- *  @brief This is the internal version of encrypt_message()
- *         to be used by asynchronous network protocol
- *         implementations. This function is calls messageToSend(NULL)
- *         in case there is a missing or wrong passphrase.
- *
- *  @param[in]  session        PEP_SESSION
- *  @param[in]  src         message*
- *  @param[in]  extra         stringlist_t*
- *  @param[in]  dst          message**
- *  @param[in]  enc_format        PEP_enc_format
- *  @param[in]  flags        PEP_encrypt_flags_t
- *
- *  @warning    Do NOT use this function in adapters.
- *
- *  @todo KB: line up with the try_base_blahblah docs
- */
-PEP_STATUS try_encrypt_message(
-        PEP_SESSION session,
-        message *src,
-        stringlist_t *extra,
-        message **dst,
-        PEP_enc_format enc_format,
-        PEP_encrypt_flags_t flags
-    );
 
-/**
- *  <!--       probe_encrypt()       -->
- *
- *  @brief Test if passphrase for a key is working in current session
- *
- *  @param[in]   session    session handle
- *  @param[in]   fpr        fingerprint of key to test
- *
- *  @retval PEP_STATUS_OK           in case passphrase works
- *  @retval error                   if not
- *
- *
- */
-
-DYNAMIC_API PEP_STATUS probe_encrypt(PEP_SESSION session, const char *fpr);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

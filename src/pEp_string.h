@@ -4,7 +4,8 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef PEP_STRING_H
+#define PEP_STRING_H
 
 #include <string.h>
 #include "dynamic_api.h"
@@ -23,9 +24,9 @@ extern "C" {
  *  @param[in]   len    length of newly created string or 0 for default
  *  
  *  @retval pointer to string object or NULL if out of memory
- *  @retval calling with str and len is equivalent to strndup()
- *  @retval calling with str but len=0 is equivalent to strdup()
- *  @retval calling with str=NULL is equivalent to calloc()
+ *          calling with str and len is equivalent to strndup()
+ *          calling with str but len=0 is equivalent to strdup()
+ *          calling with str=NULL is equivalent to calloc()
  *  
  *  
  */
@@ -66,3 +67,4 @@ DYNAMIC_API char * string_dup(const char *src, size_t len);
 }
 #endif
 
+#endif

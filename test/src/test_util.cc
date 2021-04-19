@@ -1,6 +1,7 @@
 #include "pEpEngine_test.h"
 #include "pEpEngine.h"
 #include "pEp_internal.h"
+#include "pEp_internal.h"
 #include "message_api.h"
 #include "test_util.h"
 #include "TestConstants.h"
@@ -476,6 +477,13 @@ char* message_to_str(message* msg) {
     mime_encode_message(msg, false, &retval, false);
     return retval;
 }
+
+message* string_to_msg(string infile) {
+    message* out_msg = NULL;
+    mime_decode_message(infile.c_str(), infile.size(), &out_msg, NULL);
+    return out_msg;
+}
+
 
 int util_delete_filepath(const char *filepath,
                          const struct stat *file_stat,
@@ -1068,6 +1076,8 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
 int NullBuffer::overflow(int c) {
     return c;
 }
+
+
 
 #ifndef DEBUG_OUTPUT
 std::ostream output_stream(new NullBuffer());

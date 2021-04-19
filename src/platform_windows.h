@@ -4,7 +4,8 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef PLATFORM_WINDOWS_H
+#define PLATFORM_WINDOWS_H
 
 // Windows platform specifica
 
@@ -274,4 +275,6 @@ void uuid_unparse_upper(pEpUUID uu, uuid_string_t out);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

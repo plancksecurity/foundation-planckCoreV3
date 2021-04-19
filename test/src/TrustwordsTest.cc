@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include "pEpEngine.h"
+#include "pEp_internal.h"
 #include "message_api.h"
 
 #include "test_util.h"

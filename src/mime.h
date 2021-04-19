@@ -5,7 +5,8 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef MIME_H
+#define MIME_H
 
 #include "message.h"
 
@@ -50,12 +51,12 @@ DYNAMIC_API bool is_PGP_message_text(const char *text);
  *  
  *  @retval PEP_STATUS_OK           if everything worked
  *  @retval PEP_BUFFER_TOO_SMALL    if encoded message size is too big to handle
- *  @retval PEP_CANNOT_CREATE_TEMP_FILE
- *  @retval if there are issues with temp files; in
- *  @retval this case errno will contain the underlying
- *  @retval error
+ *  @retval PEP_CANNOT_CREATE_TEMP_FILE     if there are issues with temp files; in
+ *                                          this case errno will contain the underlying
+ *                                          error
  *  @retval PEP_OUT_OF_MEMORY       if not enough memory could be allocated
- *  
+ *  @retval PEP_ILLEGAL_VALUE       illegal parameter values
+ *
  *  @warning the resulttext will go to the ownership of the caller
  *           the message will remain in the ownership of the caller
  *           omit_fields is true for payload of PGP/MIME messages
@@ -90,11 +91,11 @@ DYNAMIC_API PEP_STATUS mime_encode_message(
  *  
  *  @retval PEP_STATUS_OK           if everything worked
  *  @retval PEP_BUFFER_TOO_SMALL    if encoded message size is too big to handle
- *  @retval PEP_CANNOT_CREATE_TEMP_FILE
- *  @retval if there are issues with temp files; in
- *  @retval this case errno will contain the underlying
- *  @retval error
+ *  @retval PEP_CANNOT_CREATE_TEMP_FILE     if there are issues with temp files; in
+ *                                          this case errno will contain the underlying
+ *                                          error
  *  @retval PEP_OUT_OF_MEMORY       if not enough memory could be allocated
+ *  @retval PEP_ILLEGAL_VALUE       illegal parameter values
  *  
  *  @warning the decoded message will go to the ownership of the caller; mimetext
  *           will remain in the ownership of the caller
@@ -110,4 +111,6 @@ DYNAMIC_API PEP_STATUS mime_decode_message(
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

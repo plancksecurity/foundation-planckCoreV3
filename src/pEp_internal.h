@@ -4,8 +4,10 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-// maximum attachment size to import as key 25MB, maximum of 20 attachments
+#ifndef PEP_INTERNAL_H
+#define PEP_INTERNAL_H
 
+// maximum attachment size to import as key 25MB, maximum of 20 attachments
 #define MAX_KEY_SIZE (25 * 1024 * 1024)
 #define MAX_KEYS_TO_IMPORT  20
 
@@ -79,6 +81,7 @@
 #define LOCAL_DB unix_local_db()
 #else
 #define LOCAL_DB unix_local_db(false)
+#define LOCAL_DB_RESET unix_local_db(true)
 #endif
 #ifdef ANDROID
 #define SYSTEM_DB android_system_db()
@@ -102,6 +105,13 @@
 #endif
 
 #include "pEpEngine.h"
+#include "key_reset.h"
+
+#include "pEpEngine_internal.h"
+#include "key_reset_internal.h"
+#include "group_internal.h"
+#include "keymanagement_internal.h"
+#include "message_api_internal.h"
 
 // If not specified, build for Sequoia
 #ifndef USE_SEQUOIA
@@ -112,13 +122,15 @@
 #include "pgp_sequoia_internal.h"
 #endif
 
+#include "../asn.1/Distribution.h"
+#include "../asn.1/Sync.h"
+
 #include "keymanagement.h"
 #include "cryptotech.h"
 #include "transport.h"
 #include "sync_api.h"
 #include "Sync_func.h"
 
-#include "key_reset.h"
 
 #define NOT_IMPLEMENTED assert(0); return PEP_UNKNOWN_ERROR;
 
@@ -202,6 +214,8 @@ struct _pEpSession {
     // sqlite3_stmt *set_device_group;
     // sqlite3_stmt *get_device_group;
     sqlite3_stmt *set_pgp_keypair;
+    sqlite3_stmt *set_pgp_keypair_flags;
+    sqlite3_stmt *unset_pgp_keypair_flags;
     sqlite3_stmt *set_identity_entry;
     sqlite3_stmt *update_identity_entry;
     sqlite3_stmt *exists_identity_entry;        
@@ -218,6 +232,8 @@ struct _pEpSession {
     sqlite3_stmt *get_trust;
     sqlite3_stmt *get_trust_by_userid;
     sqlite3_stmt *least_trust;
+    sqlite3_stmt *update_key_sticky_bit_for_user;
+    sqlite3_stmt *is_key_sticky_for_user;
     sqlite3_stmt *mark_compromised;
     sqlite3_stmt *reset_trust;
     sqlite3_stmt *crashdump;
@@ -242,6 +258,28 @@ struct _pEpSession {
         
     sqlite3_stmt *get_default_own_userid;
 
+    // groups
+    sqlite3_stmt *create_group;
+    sqlite3_stmt *enable_group;
+    sqlite3_stmt *disable_group;
+    sqlite3_stmt *exists_group_entry;
+    sqlite3_stmt *group_add_member;
+    sqlite3_stmt *group_delete_member;
+    sqlite3_stmt *group_join;
+    sqlite3_stmt *leave_group;
+    sqlite3_stmt *set_group_member_status;
+    sqlite3_stmt *get_all_members;
+    sqlite3_stmt *get_active_members;
+    sqlite3_stmt *get_active_groups;
+    sqlite3_stmt *get_all_groups;
+    sqlite3_stmt *add_own_membership_entry;
+    sqlite3_stmt *get_own_membership_status;
+    sqlite3_stmt *retrieve_own_membership_info_for_group_and_ident;
+    sqlite3_stmt *retrieve_own_membership_info_for_group;
+    sqlite3_stmt *get_group_manager;
+    sqlite3_stmt *is_invited_group_member;
+    sqlite3_stmt *is_active_group_member;
+    sqlite3_stmt *is_group_active;
 
 //    sqlite3_stmt *set_own_key;
 
@@ -298,9 +336,10 @@ struct _pEpSession {
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session        PEP_SESSION
+ *  @param[in]  session        session handle 
  *  @param[in]  in_first       bool
  *  
+ *  @retval     PEP_STATUS_OK
  */
 PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first);
 
@@ -309,7 +348,7 @@ PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first);
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session        PEP_SESSION
+ *  @param[in]  session        session handle
  *  @param[in]  out_last       bool
  *  
  */
@@ -322,7 +361,7 @@ void release_transport_system(PEP_SESSION session, bool out_last);
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session     PEP_SESSION
+ *  @param[in]  session     session handle 
  *  @param[in]  keylist     const stringlist_t*
  *  @param[in]  ptext       const char*
  *  @param[in]  psize       size_t
@@ -391,6 +430,9 @@ typedef enum _normalize_hex_rest_t {
  *  
  *  @param[in]  hex         char*
  *  
+ *  @retval     accept_hex
+ *  @retval     irgnore_hex
+ *  @retval     reject_hex
  */
 static inline normalize_hex_res_t _normalize_hex(char *hex) 
 {
@@ -423,6 +465,9 @@ static inline normalize_hex_res_t _normalize_hex(char *hex)
  *  @param[in]  fprbs        size_t
  *  @param[in]  comparison   int*
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_TRUSTWORDS_FPR_WRONG_LENGTH
  */
 static inline PEP_STATUS _compare_fprs(
         const char* fpra,
@@ -511,6 +556,8 @@ static inline PEP_STATUS _compare_fprs(
  *  @param[in]  fprb         const char*
  *  @param[in]  fprbs        size_t
  *  
+ *  @retval     0 on equal fingerprints
+ *  @retval     non-zero if not equal 
  */
 static inline int _same_fpr(
         const char* fpra,
@@ -579,9 +626,11 @@ static inline char* _pEp_subj_copy() {
  *  
  *  @brief            TODO
  *  
- *  @param[in]  session        PEP_SESSION
+ *  @param[in]  session        session handle 
  *  @param[in]  test_ident     const pEp_identity*
  *  
+ *  @retval     true
+ *  @retval     false
  */
 static inline bool is_me(PEP_SESSION session, const pEp_identity* test_ident) {
     bool retval = false;
@@ -600,10 +649,12 @@ static inline bool is_me(PEP_SESSION session, const pEp_identity* test_ident) {
 /**
  *  <!--       pEp_version_numeric()       -->
  *  
- *  @brief            TODO
+ *  @brief
  *  
  *  @param[in]  version_str         const char*
  *  
+ *  @retval     float   version number
+ *  @retval     0 on failure
  */
 static inline float pEp_version_numeric(const char* version_str) {
     float retval = 0;    
@@ -617,7 +668,7 @@ static inline float pEp_version_numeric(const char* version_str) {
 /**
  *  <!--       pEp_version_major_minor()       -->
  *  
- *  @brief            TODO
+ *  @brief get major and minor numbers as integers from version string 
  *  
  *  @param[in]   version_str   const char*
  *  @param[out]  major         unsigned int*
@@ -639,13 +690,16 @@ static inline void pEp_version_major_minor(const char* version_str, unsigned int
 /**
  *  <!--       compare_versions()       -->
  *  
- *  @brief            TODO
+ *  @brief compares two versions by major and minor version numbers 
  *  
  *  @param[in]  first_maj       unsigned int
  *  @param[in]  first_min       unsigned int
  *  @param[in]  second_maj      unsigned int
  *  @param[in]  second_min      unsigned int
  *  
+ *  @retval     1 when first is higher version
+ *  @retval     -1 when first is lower version
+ *  @retval     0 when versions are equal 
  */
 static inline int compare_versions(unsigned int first_maj, unsigned int first_min,
                                    unsigned int second_maj, unsigned int second_min) {
@@ -663,14 +717,14 @@ static inline int compare_versions(unsigned int first_maj, unsigned int first_mi
 /**
  *  <!--       set_min_version()       -->
  *  
- *  @brief            TODO
+ *  @brief determine the smaler version from two versions 
  *  
  *  @param[in]  first_maj        unsigned int
  *  @param[in]  first_minor      unsigned int
  *  @param[in]  second_maj       unsigned int
  *  @param[in]  second_minor     unsigned int
- *  @param[in]  result_maj       unsigned int*
- *  @param[in]  result_minor     unsigned int*
+ *  @param[out]  result_maj       unsigned int*
+ *  @param[out]  result_minor     unsigned int*
  *  
  */
 static inline void set_min_version(unsigned int first_maj, unsigned int first_minor,
@@ -690,7 +744,7 @@ static inline void set_min_version(unsigned int first_maj, unsigned int first_mi
 /**
  *  <!--       set_max_version()       -->
  *  
- *  @brief            TODO
+ *  @brief determine the greater version out of two versions 
  *  
  *  @param[in]   first_maj        unsigned int
  *  @param[in]   first_minor      unsigned int
@@ -741,15 +795,19 @@ extern double _pEp_log2_36;
 
 /**
  *  <!--       _init_globals()       -->
- *  
+ *
+ *  @internal
+ *
  *  @brief            TODO
  *  
- *  
+ *  Please leave _patch_asn1_codec COMMENTED OUT unless you're working
+ *  in a branch or patching the asn1 is a solution
  */
 static inline void _init_globals() {
     _pEp_rand_max_bits = (int) ceil(log2((double) RAND_MAX));
     _pEp_log2_36 = log2(36);
 }
+
 
 // spinlock implementation
 
@@ -769,3 +827,21 @@ static inline int Sqlite3_step(sqlite3_stmt* stmt)
     } while (rc == SQLITE_BUSY || rc == SQLITE_LOCKED);
     return rc;
 }
+
+/**
+ *  @internal
+ *
+ *  <!--       _add_auto_consume()       -->
+ *
+ *  @brief            TODO
+ *
+ *  @param[in]    *msg        message
+ *
+ */
+static inline void _add_auto_consume(message* msg) {
+    add_opt_field(msg, "pEp-auto-consume", "yes");
+    msg->in_reply_to = stringlist_add(msg->in_reply_to, "pEp-auto-consume@pEp.foundation");
+}
+
+
+#endif

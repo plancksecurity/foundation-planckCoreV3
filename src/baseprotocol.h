@@ -7,7 +7,8 @@
  * @license  GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef BASEPROTOCOL_H
+#define BASEPROTOCOL_H
 
 #include "message.h"
 
@@ -28,17 +29,19 @@ extern "C" {
 typedef enum _base_protocol_type {
     BASE_SIGN = 0,
     BASE_SYNC = 1,
-    BASE_KEYRESET = 2
+    BASE_DISTRIBUTION = 2
 } base_protocol_type;
 
 
 /**
  *  <!--       base_decorate_message()       -->
  *  
- *  @brief Decorate a message with payload
+ *  @brief      Given the data payload for an administrative message, add the appropriate
+ *              information for the payload based on type and insert the payload into the
+ *              message
  *  
  *  @param[in]     session    session handle
- *  @param[in,out] msg        message to decorate (contains return result on success)
+ *  @param[in,out] msg        message to decorate
  *  @param[in]     type       base protocol type
  *  @param[in]     payload    payload to send
  *  @param[in]     size       size of payload
@@ -66,7 +69,8 @@ PEP_STATUS base_decorate_message(
 /**
  *  <!--       base_prepare_message()       -->
  *  
- *  @brief Prepare a sync message with payload
+ *  @brief      Given a protocol data payload and a message type, prepare an administrative
+ *              protocol message for encryption and/or delivery
  *  
  *  @param[in]   session    session handle
  *  @param[in]   me         identity to use for the sender
@@ -78,7 +82,9 @@ PEP_STATUS base_decorate_message(
  *  @param[out]  result     returned message with payload on success
  *  
  *  @retval PEP_STATUS_OK       on success
- *  @retval error_status        on failure
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval any other value     on failure
  *  
  *  @ownership 
  *  - On (and only on) success, ownership of payload is assigned to the result structure
@@ -101,7 +107,7 @@ PEP_STATUS base_prepare_message(
 /**
  *  <!--       base_extract_message()       -->
  *  
- *  @brief Extract a sync message from a pEp message
+ *  @brief      Extract protocol data from a pEp administrative message
  *  
  *  @param[in]   session    session handle
  *  @param[in]   msg        message to analyze
@@ -112,8 +118,10 @@ PEP_STATUS base_prepare_message(
  *  @param[out]  fpr        if message was correctly signed then fpr of signature's
  *                          key, otherwise NULL
  *  
- *  @retval PEP_STATUS_OK     if no error occurred, whether or not sync message was found
- *  @retval error_status      any other value on error
+ *  @retval PEP_STATUS_OK       if no error occurred, whether or not sync message was found
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval error_status        any other value on error
  *  
  *  @ownership
  *  - Payload may point to msg attachment, but the ownership does not change
@@ -136,10 +144,10 @@ PEP_STATUS base_extract_message(
 /**
  *  <!--       try_base_prepare_message()       -->
  *  
- *  @brief Prepare a sync message with payload. This is the internal function to be used by 
- *         asynchronous network protocol implementations. This function differs from 
- *         base_prepare_message in that it calls messageToSend(NULL) in case there is a missing 
- *         or wrong passphrase, but more explanation is required here.
+ *  @brief      Prepare an administrative message with payload. This is the internal function to be used by
+ *              asynchronous network protocol implementations. This function differs from
+ *              base_prepare_message in that it calls messageToSend(NULL) in case there is a missing
+ *              or wrong passphrase, but more explanation is required here.
  *  
  *  @param[in]   session    session handle
  *  @param[in]   me         identity to use for the sender
@@ -150,6 +158,11 @@ PEP_STATUS base_extract_message(
  *  @param[in]   fpr        optional key to sign or NULL
  *  @param[out]  result     returned message with payload on success
  *  
+ *  @retval PEP_STATUS_OK       if no error occurred, whether or not sync message was found
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval error_status        any other value on error
+ *
  *  @ownership 
  *  - On (and only on) success, ownership of payload is assigned to the result structure
  *  - Ownership of the result goes to the caller
@@ -174,3 +187,4 @@ PEP_STATUS try_base_prepare_message(
 }
 #endif
 
+#endif

@@ -4,7 +4,8 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#pragma once
+#ifndef MAP_ASN1_H
+#define MAP_ASN1_H
 
 #include "pEpEngine.h"
 #include "identity_list.h"
@@ -21,9 +22,8 @@ extern "C" {
  *  
  *  @brief Convert pEp_identity into ASN.1 Identity_t
  *  
- *  params:
- *  ident (in)          pEp_identity to convert
- *  result (inout)      Identity_t to update or NULL to alloc a new one
+ *  @param ident[in]           pEp_identity to convert
+ *  @param result[in,out]      Identity_t to update or NULL to alloc a new one
  *  
  *  @retval pointer to updated or allocated result
  *  
@@ -42,9 +42,8 @@ Identity_t *Identity_from_Struct(
  *  
  *  @brief Convert ASN.1 Identity_t into pEp_identity
  *  
- *  params:
- *  ident (in)          Identity_t to convert
- *  result (inout)      pEp_identity to update or NULL to alloc a new one
+ *  @param ident[in]          Identity_t to convert
+ *  @param result[inout]      pEp_identity to update or NULL to alloc a new one
  *  
  *  @retval pointer to updated or allocated result
  *  
@@ -60,9 +59,8 @@ pEp_identity *Identity_to_Struct(Identity_t *ident, pEp_identity *result);
  *  
  *  @brief Convert identity_list_t into ASN.1 IdentityList_t
  *  
- *  params:
- *  list (in)           identity_list to convert
- *  result (inout)      IdentityList_t to update or NULL to alloc a new one
+ *  @param list[in]           identity_list to convert
+ *  @param result[inout]      IdentityList_t to update or NULL to alloc a new one
  *  
  *  @retval pointer to updated or allocated result
  *  
@@ -80,9 +78,8 @@ IdentityList_t *IdentityList_from_identity_list(
  *  
  *  @brief Convert ASN.1 IdentityList_t to identity_list_t
  *  
- *  params:
- *  list (in)           ASN.1 IdentityList_t to convert
- *  result (inout)      identity_list_t to update or NULL to alloc a new one
+ *  @param list[in]           ASN.1 IdentityList_t to convert
+ *  @param result[inout]      identity_list_t to update or NULL to alloc a new one
  *  
  *  @retval pointer to updated or allocated result
  *  
@@ -94,4 +91,6 @@ identity_list *IdentityList_to_identity_list(IdentityList_t *list, identity_list
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

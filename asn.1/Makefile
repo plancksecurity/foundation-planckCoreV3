@@ -5,32 +5,37 @@ include ../Makefile.conf
 
 ALL_SOURCE=$(subst $(NO_SOURCE),,$(wildcard *.c))
 ALL_OBJECTS=$(subst .c,.o,$(ALL_SOURCE))
-CPPFLAGS+=$(CFLAGS_GENERATED)
+CPPFLAGS+=$(CPPFLAGS_GENERATED)
 ASN1C_INC+= -I.
 
 .PHONY: all clean install uninstall
 
-all: Sync.c Distribution.c
+all: Sync.c Distribution.c Storage.c
 	$(MAKE) libasn1.a
 
 libasn1.a: $(ALL_OBJECTS)
 	$(AR) -rc $@ $(ALL_OBJECTS)
 
 %.o: %.c %.h
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(OPTIMIZE) $(ASN1C_INC) -c $< -o $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(OPTIMIZE) $(ASN1C_INC) -c $< -o $@
 
-Sync.c: sync.asn1 keysync.asn1 pEp.asn1
-	$(ASN1C) -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keysync.asn1 $<
+Sync.c: sync.asn1 keysync.asn1 trustsync.asn1 groupsync.asn1 pEp.asn1 distribution.asn1
+	$(ASN1C) -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keysync.asn1 trustsync.asn1 groupsync.asn1 distribution.asn1 keyreset.asn1 managedgroup.asn1 exploration.asn1 $<
 	rm -f converter-sample.c
 	touch Sync.c
 
-Distribution.c: distribution.asn1 keyreset.asn1 pEp.asn1
-	$(ASN1C) -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keyreset.asn1 $<
+Distribution.c: distribution.asn1 keyreset.asn1 managedgroup.asn1 exploration.asn1 pEp.asn1
+	$(ASN1C) -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keyreset.asn1 managedgroup.asn1 exploration.asn1 $<
 	rm -f converter-sample.c
 	touch Distribution.c
 
+Storage.c: storage.asn1 messagestorage.asn1 pEp.asn1
+	$(ASN1C) -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 messagestorage.asn1 $<
+	rm -f converter-sample.c
+	touch Storage.c
+
 clean:
-	rm -f *.a *.o *.c *.h *.sample sync.asn1 keysync.asn1 distribution.asn1 keyreset.asn1
+	rm -f *.a *.o *.c *.h *.sample sync.asn1 keysync.asn1 trustsync.asn1 groupsync.asn1 distribution.asn1 keyreset.asn1 managedgroup.asn1 exploration.asn1 storage.asn1 messagestorage.asn1
 
 install:
 

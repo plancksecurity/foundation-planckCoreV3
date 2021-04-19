@@ -127,6 +127,7 @@ bool slurp_and_import_key(PEP_SESSION session, const char* key_filename);
 bool slurp_message_and_import_key(PEP_SESSION session, const char* message_fname, std::string& message, const char* key_filename);
 
 char* message_to_str(message* msg);
+message* string_to_msg(std::string infile);
 
 int util_delete_filepath(const char *filepath, 
                          const struct stat *file_stat, 

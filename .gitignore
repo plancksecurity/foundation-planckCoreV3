@@ -31,6 +31,7 @@ build-android/pEpEngine-android-1.zip
 build-android/third-party
 build-android/pEpEngine-android-1
 build-linux/*
+build-windows/libpEpasn1/libpEpasn1.vcxproj.user
 *.dSYM*
 *_test
 msg4.asc
@@ -40,7 +41,7 @@ Makefile.protocols
 test/msg_encrypt_for_self.asc
 tags
 asn.1/pEpEngineASN1/pEpEngineASN1.vcxproj.user
-sync/generated
+codegen/generated
 *.xml
 *.dot
 *.svg
@@ -65,19 +66,22 @@ test/src/engine_test/LocalPlayground.cc
 */*/.tags
 asn.1/.generated
 src/KeySync_*
+src/TrustSync_*
+src/GroupSync_*
 src/Sync_*
 src/sync_codec.*
 src/distribution_codec.*
+src/storage_codec.*
 asn.1/keysync.asn1
+asn.1/trustsync.asn1
+asn.1/groupsync.asn1
 asn.1/keyreset.asn1
 asn.1/sync.asn1
 asn.1/distribution.asn1
-sync/.codecs
-sync/.messages
-sync/.actions
-sync/.codegen
-sync/.statemachines
-sync/.copy
+asn.1/exploration.asn1
+asn.1/managedgroup.asn1
+asn.1/storage.asn1
+asn.1/messagestorage.asn1
 test/msg_2.0.asc
 test/*.txt
 lldb-history
@@ -86,6 +90,30 @@ lldb-history
 test/EngineTests
 test/googletest
 test/tmp/*
+
+src/commit_hash.h
+.idea/
+venv/
+venv2/
+cleangit.py
+newgit
+
+# Xcode related ignores
+build/
+DerivedData/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.moved-aside
+*.xccheckout
+*.xcscmblueprint
+xcshareddata
 
 # ignore generated test data
 
@@ -99,3 +127,19 @@ test/test_keys/736_a.asc
 test/test_keys/736_b.asc
 test/test_mails/ENGINE-654_bob_mail.eml
 
+# ignore generated data
+
+codegen/generated/
+codegen/*.gen
+.copy
+
+# Don't remove these if you want to live a long life. It's necessary because it doesn't get cleaned up between branches.
+sync/generated
+sync/.codecs
+sync/.messages
+sync/.actions
+sync/.codegen
+sync/.statemachines
+sync/.copy
+
+*.ignore
