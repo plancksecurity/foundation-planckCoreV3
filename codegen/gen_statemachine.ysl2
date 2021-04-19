@@ -1003,7 +1003,7 @@ tstylesheet {
             ||
             for "fsm[message/@ratelimit>0]" {
             ||
-                    case Sync_PR_«yml:lcase(@name)»:
+                    case «../@name»_PR_«yml:lcase(@name)»:
                         switch (message_type) {
             ||
             for "message[@ratelimit>0]"
@@ -1131,7 +1131,7 @@ tstylesheet {
 
     template "fsm", mode=send2 {
     ||
-    case Sync_PR_«yml:lcase(@name)»: {
+    case «../@name»_PR_«yml:lcase(@name)»: {
         switch (message_type) {
     ||
     if "message[@type='broadcast']"
@@ -1210,7 +1210,7 @@ tstylesheet {
 
     template "fsm[message/@security='ignore' or message/@ratelimit>0]", mode=send {
     ||
-    case Sync_PR_«yml:lcase(@name)»: {
+    case «../@name»_PR_«yml:lcase(@name)»: {
     ||
     if "message[@security='ignore']" {
     ||
