@@ -80,7 +80,7 @@ namespace {
             const char* group_2_name = "Vanus for Best Mage Ever Campaign";
             const char* group_2_fpr = "A39A9EE41E9D6380C8E5220E6DC64C166456E7C7";
             const char* group_2_prefix = "vanus_for_archmage_0x6456E7C7";
-            const char* group_1_replacement_revoke_1 = "0719045BDD551D5DDC7799EB266BADD188AFF1F7"; // CHANGE ME
+            const char* group_1_replacement_revoke_1 = "A87B102645C0130A7FF6A26B352D442AF06B5F28"; // CHANGE ME
 
             string kf_name(const char* prefix, bool priv) {
                 return string("test_keys/") + (priv ? "priv/" : "pub/") + prefix + (priv ? "_priv.asc" : "_pub.asc");
@@ -821,6 +821,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create) {
     free_group(group);
 }
 
+// ENGINE-633 FIXME: Check incoming mail and our expectations about that incoming key
 TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_1) {
     const char* own_id = "DIFFERENT_OWN_ID_FOR_KICKS";
     pEp_identity* me = new_identity(member_1_address, NULL, own_id, member_1_name);
@@ -905,6 +906,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_1) {
     // ASSERT_FALSE(group_info->active);
 }
 
+// ENGINE-633 FIXME: Check incoming mail and our expectations about that incoming key
 TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_2) {
     const char* own_id = PEP_OWN_USERID;
     pEp_identity* me = new_identity(member_2_address, NULL, own_id, member_2_name);
@@ -961,6 +963,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_2) {
     ASSERT_STREQ(msg->to->ident->address, member_2_address);
 }
 
+// ENGINE-633 FIXME: Check incoming mail and our expectations about that incoming key
 TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_3) {
     const char* own_id = PEP_OWN_USERID;
     pEp_identity* me = new_identity(member_3_address, NULL, own_id, member_3_name);
@@ -1017,6 +1020,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_3) {
     ASSERT_STREQ(msg->to->ident->address, member_3_address);
 }
 
+// ENGINE-633 FIXME: Check incoming mail and our expectations about that incoming key
 TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_4) {
     const char* own_id = PEP_OWN_USERID;
     pEp_identity* me = new_identity(member_4_address, NULL, own_id, member_4_name);
@@ -1317,7 +1321,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_join_member_1) {
     ASSERT_TRUE(group->members->member->joined);
 }
 
-TEST_F(GroupEncryptionTest, group_join_member_2) {
+TEST_F(GroupEncryptionTest, check_protocol_group_join_member_2) {
     const char* own_id = "PEP_OWN_USERID"; // on purpose, little joke here
     pEp_identity* me = new_identity(member_2_address, NULL, own_id, member_2_name);
     read_file_and_import_key(session, kf_name(member_2_prefix, false).c_str());
@@ -1377,7 +1381,7 @@ TEST_F(GroupEncryptionTest, group_join_member_2) {
     m_queue.clear();
 }
 
-TEST_F(GroupEncryptionTest, group_join_member_3) {
+TEST_F(GroupEncryptionTest, check_protocol_group_join_member_3) {
     const char* own_id = "BAH";
     pEp_identity* me = new_identity(member_3_address, NULL, own_id, member_3_name);
     read_file_and_import_key(session, kf_name(member_3_prefix, false).c_str());
@@ -1437,7 +1441,7 @@ TEST_F(GroupEncryptionTest, group_join_member_3) {
     m_queue.clear();
 }
 
-TEST_F(GroupEncryptionTest, group_join_member_4) {
+TEST_F(GroupEncryptionTest, check_protocol_group_join_member_4) {
     const char* own_id = PEP_OWN_USERID;
     pEp_identity* me = new_identity(member_4_address, NULL, own_id, member_4_name);
     read_file_and_import_key(session, kf_name(member_4_prefix, false).c_str());
@@ -2347,7 +2351,7 @@ TEST_F(GroupEncryptionTest, not_a_test_message_gen_for_group_dissolve_not_manage
     ASSERT_NE(g1_new_member_idents, nullptr);
 
     pEp_group* group1 = NULL;
-    status = group_create(session, group1_ident, me2, g1_new_members, &group1);
+    status = group_create(session, group1_ident, me2, g1_new_member_idents, &group1);
     ASSERT_OK;
 
     ASSERT_STREQ(group1->manager->fpr, manager_2_fpr);
