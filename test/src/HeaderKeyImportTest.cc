@@ -720,9 +720,9 @@ TEST_F(HeaderKeyImportTest, check_header_key_import) {
     slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");
     slurp_and_import_key(session, "test_keys/priv/pep-test-bob-0xC9C2EE39_priv.asc");
 
-    string message = slurp("test_mails/Header_key_import.eml");
+    string strmsg = slurp("test_mails/Header_key_import.eml");
 
-    char* dec_msg = NULL;
+    message* dec_msg = NULL;
 
     stringlist_t* keylist = NULL;
 
@@ -730,8 +730,8 @@ TEST_F(HeaderKeyImportTest, check_header_key_import) {
     PEP_decrypt_flags_t flags;
 
     flags = 0;
-    char* modified_src = NULL;
-    PEP_STATUS status = MIME_decrypt_message(session, message.c_str(), message.size(), &dec_msg, &keylist, &rating, &flags, &modified_src);
+    message* enc_msg = string_to_msg(strmsg);
+    PEP_STATUS status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(rating , PEP_rating_reliable);
     ASSERT_OK;
 
@@ -740,8 +740,8 @@ TEST_F(HeaderKeyImportTest, check_header_key_import) {
     ASSERT_OK;
     ASSERT_NOTNULL(alice_check->fpr);
     ASSERT_STREQ(alice_check->fpr, alice_fpr);
-    free(dec_msg);
-    free(modified_src);
+    free_message(dec_msg);
+    free_message(enc_msg);
     free_identity(alice_check);
     
     char* outkey = NULL;

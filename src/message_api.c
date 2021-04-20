@@ -5066,7 +5066,7 @@ static PEP_STATUS _decrypt_message(
     // if the keys are on the outside?? Are they ever?
 
     // In case there are header keys, get those - these will be the FIRST keys, and right 
-    // now, this will leadd to the first header key imported being the default key if the from 
+    // now, this will lead to the first header key imported being the default key if the from
     // identity has no default key. This is intentional, as we're only importing one autocrypt 
     // header key here, but if this changes, we MUST change this assumption
     bool header_key_imported = import_header_keys(session, src, 
