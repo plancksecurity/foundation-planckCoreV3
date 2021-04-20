@@ -108,15 +108,10 @@ TEST_F(MessageNullFromTest, check_message_null_from_no_header_key_unencrypted) {
     stringlist_t* keylist = NULL;
     PEP_decrypt_flags_t flags = 0;
     PEP_rating rating;
-    char* mime_plaintext = NULL;
-    char* modified_src = NULL;
-    PEP_STATUS status = MIME_decrypt_message(session, null_from_msg.c_str(),
-                                             null_from_msg.size(),
-                                             &mime_plaintext,
-                                             &keylist,
-                                             &rating,
-                                             &flags,
-                                             &modified_src);
+    message* enc_msg = string_to_msg(null_from_msg);
+    message* dec_msg = NULL;
+    ASSERT_NOTNULL(enc_msg);
+    PEP_STATUS status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status , PEP_UNENCRYPTED);
 }
 
@@ -126,15 +121,10 @@ TEST_F(MessageNullFromTest, check_message_null_from_header_key_unencrypted) {
     stringlist_t* keylist = NULL;
     PEP_decrypt_flags_t flags = 0;
     PEP_rating rating;
-    char* mime_plaintext = NULL;
-    char* modified_src = NULL;
-    PEP_STATUS status = MIME_decrypt_message(session, null_from_msg.c_str(),
-                                             null_from_msg.size(),
-                                             &mime_plaintext,
-                                             &keylist,
-                                             &rating,
-                                             &flags,
-                                             &modified_src);
+    message* enc_msg = string_to_msg(null_from_msg);
+    message* dec_msg = NULL;
+    ASSERT_NOTNULL(enc_msg);
+    PEP_STATUS status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status , PEP_UNENCRYPTED);
 }
 
