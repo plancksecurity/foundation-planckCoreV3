@@ -899,7 +899,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nCUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include\"\nmkdir -p ${CUSTOM_INCLUDE_DIR}\ncp -R \"${TARGET_BUILD_DIR}\"/usr/local/include/* ${CUSTOM_INCLUDE_DIR}\ncp  \"${TARGET_BUILD_DIR}/libpEpASN1_iOS.a\" ${CUSTOM_BUILD_DIR}\n\n";
+			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nCUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include\"\nmkdir -p ${CUSTOM_INCLUDE_DIR}\ncp -R \"${PROJECT_DIR}\"/../../../asn.1/*.h ${CUSTOM_INCLUDE_DIR}\ncp  \"${TARGET_BUILD_DIR}/libpEpASN1_iOS.a\" ${CUSTOM_BUILD_DIR}\n\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
