@@ -7,14 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		151672D0262F38D900E99CE5 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 151672CE262F38D900E99CE5 /* sqlite3.c */; };
+		151672D1262F38D900E99CE5 /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 151672CF262F38D900E99CE5 /* sqlite3.h */; };
+		151672D4262F38E500E99CE5 /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 151672CF262F38D900E99CE5 /* sqlite3.h */; };
 		15A326372612055F009D07EB /* PEPSQLITE3_iOS.m in Sources */ = {isa = PBXBuildFile; fileRef = 15A326362612055F009D07EB /* PEPSQLITE3_iOS.m */; };
 		15A326382612055F009D07EB /* PEPSQLITE3_iOS.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 15A326352612055F009D07EB /* PEPSQLITE3_iOS.h */; };
 		15A32656261205E7009D07EB /* PEPSQLITE3_macOS.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32655261205E7009D07EB /* PEPSQLITE3_macOS.h */; };
 		15A32658261205E7009D07EB /* PEPSQLITE3_macOS.m in Sources */ = {isa = PBXBuildFile; fileRef = 15A32657261205E7009D07EB /* PEPSQLITE3_macOS.m */; };
-		15A326722612063B009D07EB /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A326282611F6D3009D07EB /* sqlite3.c */; };
-		15A3267C2612065A009D07EB /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A326292611F6D3009D07EB /* sqlite3.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		15A3268426120671009D07EB /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A326292611F6D3009D07EB /* sqlite3.h */; };
-		15A326C626120858009D07EB /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A326282611F6D3009D07EB /* sqlite3.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -31,10 +30,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		151672CE262F38D900E99CE5 /* sqlite3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sqlite3.c; path = ../../../../sqlite/sqlite3.c; sourceTree = "<group>"; };
+		151672CF262F38D900E99CE5 /* sqlite3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sqlite3.h; path = ../../../../sqlite/sqlite3.h; sourceTree = "<group>"; };
 		15A3260B2611F646009D07EB /* PEPSQLITE3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PEPSQLITE3.h; sourceTree = "<group>"; };
 		15A3260C2611F646009D07EB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		15A326282611F6D3009D07EB /* sqlite3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sqlite3.c; path = ../../../../../../sqlite/sqlite3.c; sourceTree = "<group>"; };
-		15A326292611F6D3009D07EB /* sqlite3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sqlite3.h; path = ../../../../../../sqlite/sqlite3.h; sourceTree = "<group>"; };
 		15A326332612055F009D07EB /* libPEPSQLITE3_iOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPEPSQLITE3_iOS.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		15A326352612055F009D07EB /* PEPSQLITE3_iOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PEPSQLITE3_iOS.h; sourceTree = "<group>"; };
 		15A326362612055F009D07EB /* PEPSQLITE3_iOS.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PEPSQLITE3_iOS.m; sourceTree = "<group>"; };
@@ -61,9 +60,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		151672CD262F388F00E99CE5 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				151672CE262F38D900E99CE5 /* sqlite3.c */,
+				151672CF262F38D900E99CE5 /* sqlite3.h */,
+			);
+			name = src;
+			sourceTree = "<group>";
+		};
 		15A325FE2611F646009D07EB = {
 			isa = PBXGroup;
 			children = (
+				151672CD262F388F00E99CE5 /* src */,
 				15A3260A2611F646009D07EB /* PEPSQLITE3 */,
 				15A326342612055F009D07EB /* PEPSQLITE3_iOS */,
 				15A32654261205E7009D07EB /* PEPSQLITE3_macOS */,
@@ -83,20 +92,10 @@
 		15A3260A2611F646009D07EB /* PEPSQLITE3 */ = {
 			isa = PBXGroup;
 			children = (
-				15A326272611F6BC009D07EB /* src */,
 				15A3260B2611F646009D07EB /* PEPSQLITE3.h */,
 				15A3260C2611F646009D07EB /* Info.plist */,
 			);
 			path = PEPSQLITE3;
-			sourceTree = "<group>";
-		};
-		15A326272611F6BC009D07EB /* src */ = {
-			isa = PBXGroup;
-			children = (
-				15A326292611F6D3009D07EB /* sqlite3.h */,
-				15A326282611F6D3009D07EB /* sqlite3.c */,
-			);
-			path = src;
 			sourceTree = "<group>";
 		};
 		15A326342612055F009D07EB /* PEPSQLITE3_iOS */ = {
@@ -124,7 +123,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				15A3267C2612065A009D07EB /* sqlite3.h in Headers */,
+				151672D4262F38E500E99CE5 /* sqlite3.h in Headers */,
 				15A32656261205E7009D07EB /* PEPSQLITE3_macOS.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -133,7 +132,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				15A3268426120671009D07EB /* sqlite3.h in Headers */,
+				151672D1262F38D900E99CE5 /* sqlite3.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -229,7 +228,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nCUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include\"\nmkdir -p ${CUSTOM_INCLUDE_DIR}\ncp -R \"${TARGET_BUILD_DIR}\"/usr/local/include/sqlite3.h ${CUSTOM_INCLUDE_DIR}\ncp  \"${TARGET_BUILD_DIR}/libPEPSQLITE3_iOS.a\" ${CUSTOM_BUILD_DIR}\n\n";
+			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nCUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include\"\nmkdir -p ${CUSTOM_INCLUDE_DIR}\ncp -R \"${PROJECT_DIR}\"/../../../../sqlite/*.h ${CUSTOM_INCLUDE_DIR}\ncp  \"${TARGET_BUILD_DIR}/libPEPSQLITE3_iOS.a\" ${CUSTOM_BUILD_DIR}\n\n";
 			showEnvVarsInLog = 0;
 		};
 		15A3268A26120757009D07EB /* Copy Artefacts & Headers to Custom Build Dir */ = {
@@ -259,7 +258,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				15A326372612055F009D07EB /* PEPSQLITE3_iOS.m in Sources */,
-				15A326722612063B009D07EB /* sqlite3.c in Sources */,
+				151672D0262F38D900E99CE5 /* sqlite3.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -268,7 +267,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				15A32658261205E7009D07EB /* PEPSQLITE3_macOS.m in Sources */,
-				15A326C626120858009D07EB /* sqlite3.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
