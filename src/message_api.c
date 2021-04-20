@@ -4937,6 +4937,10 @@ static PEP_STATUS _decrypt_message(
         else
             *rating = PEP_rating_unencrypted;
 
+        // Regardless, we are DONE with that status. And not clearing it causes
+        // ENGINE-915 in other branches.
+        status = PEP_STATUS_OK;
+
         // We remove these from the outermost source message
         // if (keys_were_imported)
         //     remove_attached_keys(src);
