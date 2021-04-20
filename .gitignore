@@ -125,4 +125,18 @@ test/test_keys/736_a.asc
 test/test_keys/736_b.asc
 test/test_mails/ENGINE-654_bob_mail.eml
 
+# if you remove this, krista will have your head unless you actually NEED to check these in
+asn.1/exploration.asn1
+asn.1/groupsync.asn1
+asn.1/messagestorage.asn1
+asn.1/storage.asn1
+asn.1/trustsync.asn1
+codegen/
+GroupSync_fsm.c
+GroupSync_fsm.h
+TrustSync_fsm.c
+TrustSync_fsm.h
+storage_codec.c
+storage_codec.h
+
 *.ignore
