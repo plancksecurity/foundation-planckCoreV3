@@ -13,7 +13,7 @@
 		15A32658261205E7009D07EB /* PEPSQLITE3_macOS.m in Sources */ = {isa = PBXBuildFile; fileRef = 15A32657261205E7009D07EB /* PEPSQLITE3_macOS.m */; };
 		15A326722612063B009D07EB /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A326282611F6D3009D07EB /* sqlite3.c */; };
 		15A3267C2612065A009D07EB /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A326292611F6D3009D07EB /* sqlite3.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		15A3268426120671009D07EB /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A326292611F6D3009D07EB /* sqlite3.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15A3268426120671009D07EB /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A326292611F6D3009D07EB /* sqlite3.h */; };
 		15A326C626120858009D07EB /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 15A326282611F6D3009D07EB /* sqlite3.c */; };
 /* End PBXBuildFile section */
 
