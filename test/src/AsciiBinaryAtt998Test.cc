@@ -93,7 +93,7 @@ TEST_F(AsciiBinary998Test, check_engine_895) {
     char* alicename = strdup(alice->username);
 
     pEp_identity* alice_is_bob = NULL;
-    status = set_up_preset(session, BOB, false, true, true, false, true, &alice_is_bob);
+    status = set_up_preset(session, BOB, true, true, true, false, true, &alice_is_bob);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NE(alice_is_bob, nullptr);
     alice_is_bob->user_id = strdup(alice->user_id);
@@ -184,7 +184,7 @@ TEST_F(AsciiBinary998Test, check_increasing_attachment_size_mime_encode) {
     char* alicename = strdup(alice->username);
 
     pEp_identity* alice_is_bob = NULL;
-    status = set_up_preset(session, BOB, false, true, true, false, true, &alice_is_bob);
+    status = set_up_preset(session, BOB, true, true, true, false, true, &alice_is_bob);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NE(alice_is_bob, nullptr);
     alice_is_bob->user_id = strdup(alice->user_id);
@@ -225,7 +225,7 @@ TEST_F(AsciiBinary998Test, check_997_strings_in_attachment) {
     char* alicename = strdup(alice->username);
 
     pEp_identity* alice_is_bob = NULL;
-    status = set_up_preset(session, BOB, false, true, true, false, true, &alice_is_bob);
+    status = set_up_preset(session, BOB, true, true, true, false, true, &alice_is_bob);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NE(alice_is_bob, nullptr);
     alice_is_bob->user_id = strdup(alice->user_id);
@@ -274,7 +274,7 @@ TEST_F(AsciiBinary998Test, check_big_plaintext_998) {
     char* alicename = strdup(alice->username);
 
     pEp_identity* alice_is_bob = NULL;
-    status = set_up_preset(session, BOB, false, true, true, false, true, &alice_is_bob);
+    status = set_up_preset(session, BOB, true, true, true, false, true, &alice_is_bob);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NE(alice_is_bob, nullptr);
     alice_is_bob->user_id = strdup(alice->user_id);
@@ -313,7 +313,7 @@ TEST_F(AsciiBinary998Test, check_big_plaintext_999) {
     char* alicename = strdup(alice->username);
 
     pEp_identity* alice_is_bob = NULL;
-    status = set_up_preset(session, BOB, false, true, true, false, true, &alice_is_bob);
+    status = set_up_preset(session, BOB, true, true, true, false, true, &alice_is_bob);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NE(alice_is_bob, nullptr);
     alice_is_bob->user_id = strdup(alice->user_id);
