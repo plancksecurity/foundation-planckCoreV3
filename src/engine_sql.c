@@ -703,6 +703,7 @@ static PEP_STATUS _create_core_tables(PEP_SESSION session) {
             "   main_key_id text\n"
             "       references pgp_keypair (fpr)\n"
             "       on delete set null,\n"
+            "   username text,\n"
             "   comment text,\n"
             "   flags integer default 0,\n"
             "   is_own integer default 0,\n"
@@ -928,33 +929,48 @@ PEP_STATUS get_db_user_version(PEP_SESSION session, int* version) {
     return PEP_STATUS_OK;
 }
 
+// Only called if input version is 1
 static PEP_STATUS _verify_version(PEP_SESSION session, int* version) {
     // Sometimes the user_version wasn't set correctly.
     bool version_changed = true;
     int int_result;
-    if (table_contains_column(session, "groups", "group_identity")) {
+    if (table_contains_column(session, "identity", "username")) {
+        *version = 17;
+    }
+    else if (table_contains_column(session, "trust", "sticky")) {
+        *version = 16;
+    }
+    else if (table_contains_column(session, "groups", "group_identity")) {
         *version = 15;
     }
     else if (table_contains_column(session, "identity", "enc_format")) {
         *version = 14;
-    } else if (table_contains_column(session, "revocation_contact_list", "own_address")) {
+    }
+    else if (table_contains_column(session, "revocation_contact_list", "own_address")) {
         *version = 13;
-    } else if (table_contains_column(session, "identity", "pEp_version_major")) {
+    }
+    else if (table_contains_column(session, "identity", "pEp_version_major")) {
         *version = 12;
-    } else if (db_contains_table(session, "social_graph") > 0) {
+    }
+    else if (db_contains_table(session, "social_graph") > 0) {
         if (!table_contains_column(session, "person", "device_group"))
             *version = 10;
         else
             *version = 9;
-    } else if (table_contains_column(session, "identity", "timestamp") > 0) {
+    }
+    else if (table_contains_column(session, "identity", "timestamp") > 0) {
         *version = 8;
-    } else if (table_contains_column(session, "person", "is_pEp_user") > 0) {
+    }
+    else if (table_contains_column(session, "person", "is_pEp_user") > 0) {
         *version = 7;
-    } else if (table_contains_column(session, "identity", "is_own") > 0) {
+    }
+    else if (table_contains_column(session, "identity", "is_own") > 0) {
         *version = 6;
-    } else if (table_contains_column(session, "pgp_keypair", "flags") > 0) {
+    }
+    else if (table_contains_column(session, "pgp_keypair", "flags") > 0) {
         *version = 2;
-    } else {
+    }
+    else {
         version_changed = false;
     }
 
@@ -1484,6 +1500,24 @@ static PEP_STATUS _upgrade_DB_to_ver_16(PEP_SESSION session) {
     return PEP_STATUS_OK;
 }
 
+static PEP_STATUS _upgrade_DB_to_ver_17(PEP_SESSION session) {
+    int int_result = sqlite3_exec(
+            session->db,
+            "alter table identity\n"
+            "   add column username;\n",
+            NULL,
+            NULL,
+            NULL
+    );
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+    return PEP_STATUS_OK;
+}
+
+
 static PEP_STATUS _check_and_execute_upgrades(PEP_SESSION session, int version) {
     PEP_STATUS status = PEP_STATUS_OK;
 
@@ -1547,6 +1581,10 @@ static PEP_STATUS _check_and_execute_upgrades(PEP_SESSION session, int version) 
             if (status != PEP_STATUS_OK)
                 return status;
         case 16:
+            status = _upgrade_DB_to_ver_17(session);
+            if (status != PEP_STATUS_OK)
+                return status;
+        case 17:
             break;
         default:
             return PEP_ILLEGAL_VALUE;

@@ -143,3 +143,6 @@ sync/.statemachines
 sync/.copy
 
 *.ignore
+
+# This is temporary, to deal with shifts between ENGINE-633 and other branches
+test/test_mails/default_keys_test_*.eml
