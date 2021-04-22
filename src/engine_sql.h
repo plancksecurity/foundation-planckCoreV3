@@ -25,8 +25,10 @@ static const char *sql_trustword =
 // Also: we've never used pgp_keypair.flags before now, but it seems to me that
 // having combination of those flags is a road to ruin. Changing this for now.
 static const char *sql_get_identity =
-        "select identity.main_key_id, ifnull(identity.username, person.username), comm_type, lang,"
-        "   identity.flags,"
+        "select identity.main_key_id,"
+        "   (case when (identity.flags & 1024 = 0) then ifnull(identity.username, person.username) "
+        "         else identity.username end),"
+        "   comm_type, lang, identity.flags,"
 //        "   identity.flags | pgp_keypair.flags,"
         "   is_own, pEp_version_major, pEp_version_minor, enc_format"
         "   from identity"
@@ -44,8 +46,10 @@ static const char *sql_get_identity =
         "   timestamp desc; ";
 
 static const char *sql_get_identities_by_main_key_id =
-        "select address, identity.user_id, ifnull(identity.username, person.username), comm_type, lang,"
-        "   identity.flags,"
+        "select address, identity.user_id,"
+        "   (case when (identity.flags & 1024 = 0) then ifnull(identity.username, person.username) "
+        "         else identity.username end),"
+        "   comm_type, lang, identity.flags,"
 //        "   identity.flags | pgp_keypair.flags,"
         "   is_own, pEp_version_major, pEp_version_minor, enc_format"
         "   from identity"
@@ -58,8 +62,10 @@ static const char *sql_get_identities_by_main_key_id =
         "   timestamp desc; ";
 
 static const char *sql_get_identity_without_trust_check =
-        "select identity.main_key_id, ifnull(identity.username, person.username), lang,"
-        "   identity.flags, is_own, pEp_version_major, pEp_version_minor, enc_format"
+        "select identity.main_key_id,"
+        "   (case when (identity.flags & 1024 = 0) then ifnull(identity.username, person.username) "
+        "         else identity.username end),"
+        "   lang, identity.flags, is_own, pEp_version_major, pEp_version_minor, enc_format"
         "   from identity"
         "   join person on id = identity.user_id"
         "   where (case when (address = ?1) then (1)"
@@ -72,8 +78,10 @@ static const char *sql_get_identity_without_trust_check =
         "   timestamp desc; ";
 
 static const char *sql_get_identities_by_address =
-        "select user_id, identity.main_key_id, ifnull(identity.username, person.username), lang,"
-        "   identity.flags, is_own, pEp_version_major, pEp_version_minor, enc_format"
+        "select user_id, identity.main_key_id,"
+        "   (case when (identity.flags & 1024 = 0) then ifnull(identity.username, person.username) "
+        "         else identity.username end),"
+        "   lang, identity.flags, is_own, pEp_version_major, pEp_version_minor, enc_format"
         "   from identity"
         "   join person on id = identity.user_id"
         "   where (case when (address = ?1) then (1)"
@@ -85,18 +93,20 @@ static const char *sql_get_identities_by_address =
         "   timestamp desc; ";
 
 static const char *sql_get_identities_by_userid =
-        "select address, identity.main_key_id, ifnull(identity.username, person.username), comm_type, lang,"
-        "   identity.flags,"
-//        "   identity.flags | pgp_keypair.flags,"
-        "   is_own, pEp_version_major, pEp_version_minor, enc_format"
-        "   from identity"
-        "   join person on id = identity.user_id"
-        "   left join pgp_keypair on fpr = identity.main_key_id"
-        "   left join trust on id = trust.user_id"
-        "       and pgp_keypair_fpr = identity.main_key_id"
-        "   where identity.user_id = ?1"
-        "   order by is_own desc, "
-        "   timestamp desc; ";
+        "select address, identity.main_key_id,"
+        "   (case when (identity.flags & 1024 = 0) then ifnull(identity.username, person.username) "
+        "         else identity.username end),"
+        "    comm_type, lang, identity.flags,"
+//        "    identity.flags | pgp_keypair.flags,"
+        "    is_own, pEp_version_major, pEp_version_minor, enc_format"
+        "    from identity"
+        "    join person on id = identity.user_id"
+        "    left join pgp_keypair on fpr = identity.main_key_id"
+        "    left join trust on id = trust.user_id"
+        "        and pgp_keypair_fpr = identity.main_key_id"
+        "    where identity.user_id = ?1"
+        "    order by is_own desc, "
+        "    timestamp desc; ";
 
 static const char *sql_replace_identities_fpr =
         "update identity"
@@ -407,9 +417,10 @@ static const char *sql_is_own_address =
         ");";
 
 static const char *sql_own_identities_retrieve =
-        "select address, identity.main_key_id, identity.user_id, ifnull(identity.username, person.username),"
-        "   lang,"
-        "   identity.flags,"
+        "select address, identity.main_key_id, identity.user_id,"
+        "   (case when (identity.flags & 1024 = 0) then ifnull(identity.username, person.username) "
+        "         else identity.username end),"
+        "   lang, identity.flags,"
 //        "   identity.flags | pgp_keypair.flags,"
         "   pEp_version_major, pEp_version_minor"
         "   from identity"
