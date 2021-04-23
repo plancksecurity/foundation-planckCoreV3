@@ -2174,8 +2174,6 @@ DYNAMIC_API PEP_STATUS group_invite_member(
             }
         }
         else {
-            manager = NULL;
-            data = NULL;
 
             status = _build_managed_group_message_payload(session, group_identity,
                                                           manager, &data, &size,
