@@ -105,7 +105,17 @@ PEP_STATUS try_encrypt_message(
         PEP_encrypt_flags_t flags
     );
 
-
+/**
+ *  @internal
+ *
+ *  <!--       _rating()       -->
+ *
+ *  @brief            TODO
+ *
+ *  @param[in]    ct        PEP_comm_type
+ *
+ */
+PEP_rating _rating(PEP_comm_type ct);
 
 #ifdef __cplusplus
 }

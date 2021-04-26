@@ -6,6 +6,7 @@
 
 #include "pEp_internal.h"
 #include "message_api.h"
+#include "message_api_internal.h"
 #include "distribution_codec.h"
 #include "map_asn1.h"
 #include "baseprotocol.h"
@@ -1811,6 +1812,27 @@ DYNAMIC_API void free_group(pEp_group *group) {
     free_memberlist(group->members);
 }
 
+static PEP_STATUS _validate_member_ident(PEP_SESSION session, pEp_identity* ident) {
+    if (!ident || EMPTYSTR(ident->address) || EMPTYSTR(ident->username) || EMPTYSTR(ident->fpr))
+        return PEP_ILLEGAL_VALUE;
+    if (_rating(ident->comm_type) < PEP_rating_reliable)
+        return PEP_KEY_UNSUITABLE;
+    return PEP_STATUS_OK;
+}
+
+static PEP_STATUS _validate_member_identities(PEP_SESSION session, identity_list* member_idents) {
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    identity_list* curr = member_idents;
+
+    for ( ; curr && curr->ident; curr = curr->next) {
+        pEp_identity* the_id = curr->ident;
+        if (_validate_member_ident(session, the_id) != PEP_STATUS_OK)
+            return PEP_CANNOT_ADD_GROUP_MEMBER;
+    }
+    return PEP_STATUS_OK;
+}
 
 DYNAMIC_API PEP_STATUS group_create(
         PEP_SESSION session,
@@ -1825,11 +1847,15 @@ DYNAMIC_API PEP_STATUS group_create(
     if (!group_identity->address || !manager->address)
         return PEP_ILLEGAL_VALUE;
 
-    PEP_STATUS status = PEP_STATUS_OK;
+    PEP_STATUS status = _validate_member_identities(session, member_ident_list);
+    if (status != PEP_STATUS_OK)
+        return status;
+
     pEp_group* _group = NULL;
     pEp_identity* group_ident_clone = NULL;
     pEp_identity* manager_clone = NULL;
     member_list* memberlist = NULL;
+
 
     if (!group_identity->user_id || !is_me(session, group_identity)) {
         char* own_id = NULL;
@@ -2155,12 +2181,22 @@ DYNAMIC_API PEP_STATUS group_invite_member(
     size_t key_material_size = 0;
     bloblist_t* key_attachment = NULL;
 
+    if (_validate_member_ident(session, group_member) != PEP_STATUS_OK)
+        return PEP_CANNOT_ADD_GROUP_MEMBER;
 
     status = get_group_manager(session, group_identity, &manager);
     if (status != PEP_STATUS_OK)
         return status;
     if (!manager)
         return PEP_UNKNOWN_ERROR;
+
+    // Trying to be sneaky
+    if (!is_me(session, manager))
+        return PEP_ILLEGAL_VALUE;
+
+    status = myself(session, manager);
+    if (status != PEP_STATUS_OK)
+        goto pEp_free;
 
     status = group_add_member(session, group_identity, group_member);
     if (status == PEP_STATUS_OK) {
@@ -2181,8 +2217,6 @@ DYNAMIC_API PEP_STATUS group_invite_member(
 
             if (status != PEP_STATUS_OK)
                 goto pEp_free;
-
-            data = NULL; // avoid double-free
 
             // Let's also get the private key for the group we want to distribute
             status = export_secret_key(session, group_identity->fpr, &key_material_priv, &key_material_size);
@@ -2210,9 +2244,11 @@ DYNAMIC_API PEP_STATUS group_invite_member(
                 }
 
                 // encrypt and send this baby and get out
-                // FIXME: mem?
+                // FIXME: mem? - it gets freed IF all goes well, but if not?
                 status = _create_and_send_managed_group_message(session, manager, group_member, data, size,
                                                                 key_attachment);
+                // FIXME
+                data = NULL; // avoid double-free - check this
             }
         }
     }
