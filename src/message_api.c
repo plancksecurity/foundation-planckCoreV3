@@ -1618,17 +1618,7 @@ static bool _has_PGP_MIME_format(message* msg) {
 }
 */
 
-/**
- *  @internal
- *
- *  <!--       _rating()       -->
- *
- *  @brief            TODO
- *
- *  @param[in]    ct        PEP_comm_type
- *
- */
-static inline PEP_rating _rating(PEP_comm_type ct)
+PEP_rating _rating(PEP_comm_type ct)
 {
     if (ct == PEP_ct_unknown)
         return PEP_rating_undefined;

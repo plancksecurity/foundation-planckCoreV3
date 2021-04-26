@@ -11,6 +11,10 @@
 extern "C" {
 #endif
 
+/***
+ * TODO: Note in EACH call that update_identity/myself must be called before entry into the functions
+ */
+
 /*************************************************************************************************
  * In-memory objects and functions for representation of groups
  *************************************************************************************************/

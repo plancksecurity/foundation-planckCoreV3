@@ -89,8 +89,10 @@
       <Command>cargo build --manifest-path="$(SolutionDir)sequoia\Cargo.toml"</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy "$(SolutionDir)sequoia\target\debug\sequoia_openpgp_ffi.dll" "$(TargetDir)" /Y</Command>
-      <Command>xcopy "$(SolutionDir)sequoia\target\debug\sq.exe" "$(TargetDir)" /Y</Command>
+      <Command>
+        xcopy "$(SolutionDir)sequoia\target\debug\sequoia_openpgp_ffi.dll" "$(TargetDir)" /Y
+        xcopy "$(SolutionDir)sequoia\target\debug\sq.exe" "$(TargetDir)" /Y
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -122,8 +124,10 @@
       <Command>cargo build --manifest-path="$(SolutionDir)sequoia\Cargo.toml" --release</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy "$(SolutionDir)sequoia\target\release\sequoia_openpgp_ffi.dll" "$(TargetDir)" /Y</Command>
-      <Command>xcopy "$(SolutionDir)sequoia\target\release\sq.exe" "$(TargetDir)" /Y</Command>
+      <Command>
+        xcopy "$(SolutionDir)sequoia\target\release\sequoia_openpgp_ffi.dll" "$(TargetDir)" /Y
+        xcopy "$(SolutionDir)sequoia\target\release\sq.exe" "$(TargetDir)" /Y
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

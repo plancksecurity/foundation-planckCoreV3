@@ -144,3 +144,6 @@ sync/.statemachines
 sync/.copy
 
 *.ignore
+
+# Will remove once KER comes in
+test/test_mails/default_keys_test_*.eml
