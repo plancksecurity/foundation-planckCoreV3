@@ -135,7 +135,10 @@
     <ClCompile Include="..\src\cryptotech.c" />
     <ClCompile Include="..\src\distribution_codec.c" />
     <ClCompile Include="..\src\email.c" />
+    <ClCompile Include="..\src\engine_sql.c" />
     <ClCompile Include="..\src\etpan_mime.c" />
+    <ClCompile Include="..\src\group.c" />
+    <ClCompile Include="..\src\GroupSync_fsm.c" />
     <ClCompile Include="..\src\growing_buf.c" />
     <ClCompile Include="..\src\identity_list.c" />
     <ClCompile Include="..\src\internal_format.c" />
@@ -167,6 +170,7 @@
     <ClCompile Include="..\src\timestamp.c" />
     <ClCompile Include="..\src\transport.c" />
     <ClCompile Include="..\src\trans_auto.c" />
+    <ClCompile Include="..\src\TrustSync_fsm.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\asn1_helper.h" />
@@ -181,6 +185,7 @@
     <ClInclude Include="..\src\email.h" />
     <ClInclude Include="..\src\etpan_mime.h" />
     <ClInclude Include="..\src\fsm_common.h" />
+    <ClInclude Include="..\src\group.h" />
     <ClInclude Include="..\src\growing_buf.h" />
     <ClInclude Include="..\src\identity_list.h" />
     <ClInclude Include="..\src\internal_format.h" />

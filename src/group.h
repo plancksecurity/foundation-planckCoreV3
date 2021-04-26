@@ -3,7 +3,8 @@
 
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
-
+#include "platform.h"
+#include "dynamic_api.h"
 #include "message_api.h"
 
 #ifdef __cplusplus
