@@ -140,3 +140,6 @@ storage_codec.c
 storage_codec.h
 
 *.ignore
+
+# Leftovers from KER branch
+test/test_mails/default_keys_test_*.eml
