@@ -2025,6 +2025,12 @@ PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session) {
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
+    int_result = sqlite3_prepare_v2(session->db, sql_force_set_identity_username,
+                                    (int)strlen(sql_force_set_identity_username), &session->force_set_identity_username, NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
 
     int_result = sqlite3_prepare_v2(session->db, sql_set_identity_flags,
                                     (int)strlen(sql_set_identity_flags), &session->set_identity_flags,
@@ -2582,6 +2588,8 @@ PEP_STATUS pEp_finalize_sql_stmts(PEP_SESSION session) {
         sqlite3_finalize(session->set_identity_entry);
     if (session->update_identity_entry)
         sqlite3_finalize(session->update_identity_entry);
+    if (session->force_set_identity_username)
+        sqlite3_finalize(session->force_set_identity_username);
     if (session->set_identity_flags)
         sqlite3_finalize(session->set_identity_flags);
     if (session->unset_identity_flags)

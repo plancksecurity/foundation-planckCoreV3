@@ -215,7 +215,9 @@ static const char* sql_exists_identity_entry =
 static const char *sql_set_identity_entry =
         "insert into identity ("
         "       address, main_key_id, "
-        "       user_id, flags, is_own,"
+        "       user_id, "
+        "       username, "
+        "       flags, is_own,"
         "       pEp_version_major, pEp_version_minor"
         "   ) values ("
         "       ?1,"
@@ -224,22 +226,35 @@ static const char *sql_set_identity_entry =
         "       ?4,"
         "       ?5,"
         "       ?6,"
-        "       ?7"
+        "       ?7,"
+        "       ?8 "
         "   );";
 
 static const char* sql_update_identity_entry =
         "update identity "
         "   set main_key_id = upper(replace(?2,' ','')), "
-        "       flags = ?4, "
-        "       is_own = ?5, "
-        "       pEp_version_major = ?6, "
-        "       pEp_version_minor = ?7 "
+        "       username = coalesce(username, ?4), "
+        "       flags = ?5, "
+        "       is_own = ?6, "
+        "       pEp_version_major = ?7, "
+        "       pEp_version_minor = ?8 "
         "   where (case when (address = ?1) then (1)"
         "               when (lower(address) = lower(?1)) then (1)"
         "               when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1) "
         "               else 0 "
         "          end) = 1 "
         "          and user_id = ?3 ;";
+
+static const char* sql_force_set_identity_username =
+        "update identity "
+        "   set username = coalesce(username, ?3) "
+        "   where (case when (address = ?1) then (1)"
+        "               when (lower(address) = lower(?1)) then (1)"
+        "               when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1) "
+        "               else 0 "
+        "          end) = 1 "
+        "          and user_id = ?2 ;";
+
 
 // " (select"
 // "   coalesce("

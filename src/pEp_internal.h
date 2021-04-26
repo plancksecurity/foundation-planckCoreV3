@@ -208,7 +208,8 @@ struct _pEpSession {
     sqlite3_stmt *unset_pgp_keypair_flags;
     sqlite3_stmt *set_identity_entry;
     sqlite3_stmt *update_identity_entry;
-    sqlite3_stmt *exists_identity_entry;        
+    sqlite3_stmt *exists_identity_entry;
+    sqlite3_stmt *force_set_identity_username;
     sqlite3_stmt *set_identity_flags;
     sqlite3_stmt *unset_identity_flags;
     sqlite3_stmt *set_ident_enc_format;
