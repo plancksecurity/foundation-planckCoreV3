@@ -25,10 +25,10 @@ extern "C" {
 
 // RELEASE version this targets
 // (string: major.minor.patch)
-#define PEP_ENGINE_VERSION "3.0.9"
+#define PEP_ENGINE_VERSION "3.0.10"
 #define PEP_ENGINE_VERSION_MAJOR 3
 #define PEP_ENGINE_VERSION_MINOR 0
-#define PEP_ENGINE_VERSION_PATCH 9
+#define PEP_ENGINE_VERSION_PATCH 10
 #define PEP_ENGINE_VERSION_RC    0
 
 
