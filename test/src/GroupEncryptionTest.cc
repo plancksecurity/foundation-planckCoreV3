@@ -331,132 +331,6 @@ TEST_F(GroupEncryptionTest, check_new_group) {
     free_group(group);
 }
 
-TEST_F(GroupEncryptionTest, check_create_group) {
-    pEp_identity* group_leader = new_identity("alistair@lost.pants", NULL, PEP_OWN_USERID, "Alistair Theirin");
-    PEP_STATUS status = myself(session, group_leader);
-    ASSERT_OK;
-
-    pEp_identity* group_ident = new_identity("groupies@group.group", NULL, PEP_OWN_USERID, "Bad group");
-    status = myself(session, group_ident);
-    ASSERT_OK;
-
-    // Create member list
-    pEp_identity* carol = new_identity("carol@bob.bob", NULL, "CAROL_ID", "Carol");
-    ASSERT_NE(carol, nullptr);
-    status = update_identity(session, carol);
-    ASSERT_OK;
-
-    identity_list* list = new_identity_list(carol);
-    ASSERT_NE(list, nullptr);
-
-    pEp_identity* bob = new_identity("bob@bob.bob", NULL, "BOB_ID", NULL);
-    status = update_identity(session, bob);
-    ASSERT_OK;
-    ASSERT_NE(identity_list_add(list, bob), nullptr);
-
-    pEp_identity* solas = new_identity("solas@solas.solas", NULL, "SOLAS_ID", "The Dread Wolf, Betrayer of All");
-    status = update_identity(session, solas);
-    ASSERT_OK;
-    ASSERT_NE(identity_list_add(list, solas), nullptr);
-
-    pEp_group* group = NULL;
-    status = group_create(session, group_ident, group_leader, list, &group);
-    ASSERT_OK;
-    ASSERT_NE(group, nullptr);
-    ASSERT_NE(group->group_identity, nullptr);
-    ASSERT_STREQ(group->group_identity->address, group_ident->address);
-    ASSERT_STREQ(group->group_identity->user_id, group_ident->user_id);
-    ASSERT_NE(group->group_identity->flags & PEP_idf_group_ident, 0);
-    ASSERT_NE(group->manager, nullptr);
-    ASSERT_STREQ(group->manager->address, group_leader->address);
-    ASSERT_STREQ(group->manager->user_id, group_leader->user_id);
-    ASSERT_EQ(group->manager->flags & PEP_idf_group_ident, 0);
-    ASSERT_STRNE(group_ident->fpr, group_leader->fpr);
-
-    // We need to check for identity parity in the input ident list and the member list, I guess:
-    identity_list* input_idents = list;
-    member_list* group_members = group->members;
-
-    for ( ; input_idents && group_members && input_idents->ident && group_members->member && group_members->member->ident;
-         group_members = group_members->next, input_idents = input_idents->next) {
-        // Check that the bare essentials match
-        pEp_identity* ident_ident = input_idents->ident;
-        pEp_identity* member_ident = group_members->member->ident;
-
-        ASSERT_STREQ(ident_ident->user_id, member_ident->user_id);
-        ASSERT_STREQ(ident_ident->address, member_ident->address);
-        ASSERT_FALSE(group_members->member->joined);
-    }
-    // Make sure both lists hit their end
-    ASSERT_EQ(input_idents, nullptr);
-    ASSERT_EQ(group_members, nullptr);
-
-    free_group(group);
-}
-
-TEST_F(GroupEncryptionTest, check_membership_from_create_group) {
-    pEp_identity* group_leader = new_identity("alistair@lost.pants", NULL, PEP_OWN_USERID, "Alistair Theirin");
-    PEP_STATUS status = myself(session, group_leader);
-    ASSERT_OK;
-
-    pEp_identity* group_ident = new_identity("groupies@group.group", NULL, PEP_OWN_USERID, "Bad group");
-    status = myself(session, group_ident);
-    ASSERT_OK;
-
-    // Create member list
-    pEp_identity* carol = new_identity("carol@bob.bob", NULL, "CAROL_ID", "Carol");
-    ASSERT_NE(carol, nullptr);
-    status = update_identity(session, carol);
-    ASSERT_OK;
-
-    identity_list* list = new_identity_list(carol);
-    ASSERT_NE(list, nullptr);
-
-    pEp_identity* bob = new_identity("bob@bob.bob", NULL, "BOB_ID", NULL);
-    status = update_identity(session, bob);
-    ASSERT_OK;
-    ASSERT_NE(identity_list_add(list, bob), nullptr);
-
-    pEp_identity* solas = new_identity("solas@solas.solas", NULL, "SOLAS_ID", "The Dread Wolf, Betrayer of All");
-    status = update_identity(session, solas);
-    ASSERT_OK;
-    ASSERT_NE(identity_list_add(list, solas), nullptr);
-
-    pEp_group* group = NULL;
-    status = group_create(session, group_ident, group_leader, list, &group);
-    ASSERT_OK;
-
-    bool carol_found = false;
-    bool solas_found = false;
-    bool bob_found = false;
-
-    member_list* retrieved_members = NULL;
-    status = retrieve_full_group_membership(session, group_ident, &retrieved_members);
-    ASSERT_OK;
-    ASSERT_NE(retrieved_members, nullptr);
-
-    for (member_list* curr_node = retrieved_members; curr_node && curr_node->member; curr_node = curr_node->next) {
-        if (!curr_node->member->ident)
-            break;
-        pEp_identity* ident = curr_node->member->ident;
-        if ((strcmp(ident->user_id, carol->user_id) == 0) && strcmp(ident->address, carol->address) == 0)
-            carol_found = true;
-        else if ((strcmp(ident->user_id, bob->user_id) == 0) && strcmp(ident->address, bob->address) == 0)
-            bob_found = true;
-        else if ((strcmp(ident->user_id, solas->user_id) == 0) && strcmp(ident->address, solas->address) == 0)
-            solas_found = true;
-        else
-            ASSERT_STREQ("This message is just to make the test fail and give a message, we found an unexpected member node.", "FAIL");
-        ASSERT_FALSE(curr_node->member->joined);
-    }
-
-    ASSERT_TRUE(carol_found);
-    ASSERT_TRUE(bob_found);
-    ASSERT_TRUE(solas_found);
-
-    free_group(group);
-}
-
 TEST_F(GroupEncryptionTest, check_null_membership_from_create_group) {
     pEp_identity* group_leader = new_identity("alistair@lost.pants", NULL, PEP_OWN_USERID, "Alistair Theirin");
     PEP_STATUS status = myself(session, group_leader);
@@ -535,41 +409,322 @@ TEST_F(GroupEncryptionTest, check_null_manager_address_from_create_group) {
     ASSERT_EQ(group, nullptr);
 }
 
-TEST_F(GroupEncryptionTest, check_add_invite) {
-    pEp_identity* own_ident = new_identity("alistair@lost.pants", NULL, PEP_OWN_USERID, "Alistair Theirin");
-    PEP_STATUS status = myself(session, own_ident);
+TEST_F(GroupEncryptionTest, check_add_invite_exist_members) {
+    pEp_identity* me = new_identity(manager_1_address, NULL, PEP_OWN_USERID, manager_1_name);
+    read_file_and_import_key(session, kf_name(manager_1_prefix, false).c_str());
+    read_file_and_import_key(session, kf_name(manager_1_prefix, true).c_str());
+    PEP_STATUS status = set_own_key(session, me, manager_1_fpr);
     ASSERT_OK;
 
-    pEp_identity* group_ident = new_identity("groupies@group.group", NULL, PEP_OWN_USERID, "Bad group");
-    status = myself(session, group_ident);
+    pEp_identity* member_1 = new_identity(member_1_address, NULL, "MEMBER1", member_1_name);
+    read_file_and_import_key(session, kf_name(member_1_prefix, false).c_str());
+    status = update_identity(session, member_1);
     ASSERT_OK;
-    status = set_identity_flags(session, group_ident, group_ident->flags | PEP_idf_group_ident);
+    status = set_pEp_version(session, member_1, 2, 2);
+    ASSERT_OK;
+    status = set_as_pEp_user(session, member_1);
+    ASSERT_OK;
+    pEp_identity* member_2 = new_identity(member_2_address, NULL, "MEMBER2", member_2_name);
+    read_file_and_import_key(session, kf_name(member_2_prefix, false).c_str());
+    status = update_identity(session, member_2);
+    ASSERT_OK;
+    status = set_pEp_version(session, member_2, 2, 2);
+    ASSERT_OK;
+    status = set_as_pEp_user(session, member_2);
+    ASSERT_OK;
+    pEp_identity* member_3 = new_identity(member_3_address, NULL, "MEMBER3", member_3_name);
+    read_file_and_import_key(session, kf_name(member_3_prefix, false).c_str());
+    status = update_identity(session, member_3);
+    ASSERT_OK;
+    status = set_pEp_version(session, member_3, 2, 2);
+    ASSERT_OK;
+    status = set_as_pEp_user(session, member_3);
     ASSERT_OK;
 
-    pEp_identity* manager = new_identity("bad_manager@bad.bad", NULL, "BAD_MANAGER", "bad_manager");
-    status = update_identity(session, manager);
-    ASSERT_OK;
+    identity_list* new_member_idents = new_identity_list(member_1);
+    ASSERT_NE(new_member_idents, nullptr);
+    identity_list_add(new_member_idents, member_2);
+    identity_list_add(new_member_idents, member_3);
+
+    pEp_identity* group_ident = new_identity(group_1_address, NULL, PEP_OWN_USERID, group_1_name);
 
     pEp_group* group = NULL;
+    status = group_create(session, group_ident, me, new_member_idents, &group);
+    ASSERT_OK;
+    ASSERT_NE(group, nullptr);
+    ASSERT_NE(group->group_identity, nullptr);
+    ASSERT_STREQ(group->group_identity->address, group_ident->address);
+    ASSERT_STREQ(group->group_identity->user_id, group_ident->user_id);
+    ASSERT_NE(group->group_identity->flags & PEP_idf_group_ident, 0);
+    ASSERT_NE(group->manager, nullptr);
+    ASSERT_STREQ(group->manager->address, me->address);
+    ASSERT_STREQ(group->manager->user_id, me->user_id);
+    ASSERT_EQ(group->manager->flags & PEP_idf_group_ident, 0);
+    ASSERT_STRNE(group_ident->fpr, me->fpr);
 
-    status = group_create(session, group_ident, manager, NULL, &group);
+    // We need to check for identity parity in the input ident list and the member list, I guess:
+    identity_list* input_idents = new_member_idents;
+    member_list* group_members = group->members;
+
+    int member_count = 0;
+    for ( ; input_idents && group_members && input_idents->ident && group_members->member && group_members->member->ident;
+            group_members = group_members->next, input_idents = input_idents->next) {
+        // Check that the bare essentials match
+        pEp_identity* ident_ident = input_idents->ident;
+        pEp_identity* member_ident = group_members->member->ident;
+
+        ASSERT_STREQ(ident_ident->user_id, member_ident->user_id);
+        ASSERT_STREQ(ident_ident->address, member_ident->address);
+        ASSERT_FALSE(group_members->member->joined);
+
+        member_count++;
+    }
+
+    ASSERT_EQ(member_count, 3);
+
+    // Make sure both lists hit their end
+    ASSERT_EQ(input_idents, nullptr);
+    ASSERT_EQ(group_members, nullptr);
+
+    pEp_identity* member_4 = new_identity(member_4_address, NULL, "MEMBER4", member_4_name);
+    read_file_and_import_key(session, kf_name(member_4_prefix, false).c_str());
+    status = update_identity(session, member_4);
+    ASSERT_OK;
+    status = set_pEp_version(session, member_4, 2, 2);
+    ASSERT_OK;
+    status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
 
-    status = group_enable(session, group_ident);
+    // Ok, add Solas to the group
+    status = group_invite_member(session, group_ident, member_4);
     ASSERT_OK;
 
-    status = add_own_membership_entry(session, group_ident, manager, own_ident);
+    free_group(group);
+    group = NULL;
+    status = retrieve_group_info(session, group_ident, &group);
     ASSERT_OK;
+    ASSERT_NE(group, nullptr);
 
-    status = retrieve_own_membership_info_for_group_and_identity(session, group, own_ident);
-    ASSERT_OK;
+    member_list* output_idents = group->members;
+    member_count = 0;
+    bool member_4_found = false;
+    for ( ; output_idents && output_idents->member && output_idents->member->ident ; output_idents = output_idents->next) {
+        pEp_identity* the_member = output_idents->member->ident;
+        ASSERT_FALSE(output_idents->member->joined);
+        member_count++;
+        if (strcmp(the_member->address, member_4_address) == 0 && strcmp(the_member->address, member_4_address) == 0) {
+            member_4_found = true;
+        }
+    }
+    ASSERT_EQ(member_count, 4);
+    ASSERT_TRUE(member_4_found);
 
-    ASSERT_STREQ(group->manager->user_id, manager->user_id);
-    ASSERT_STREQ(group->manager->address, manager->address);
-    ASSERT_TRUE(group->active);
-    ASSERT_FALSE(group->members->member->joined);
-    ASSERT_EQ(group->members->next, nullptr);
+    free(group);
 }
+
+TEST_F(GroupEncryptionTest, check_add_invite_empty_members) {
+    pEp_identity* me = new_identity(manager_1_address, NULL, PEP_OWN_USERID, manager_1_name);
+    read_file_and_import_key(session, kf_name(manager_1_prefix, false).c_str());
+    read_file_and_import_key(session, kf_name(manager_1_prefix, true).c_str());
+    PEP_STATUS status = set_own_key(session, me, manager_1_fpr);
+    ASSERT_OK;
+
+    identity_list* new_member_idents = NULL; // new_identity_list(member_1);
+
+    pEp_identity* group_ident = new_identity(group_1_address, NULL, PEP_OWN_USERID, group_1_name);
+
+    pEp_group* group = NULL;
+    status = group_create(session, group_ident, me, new_member_idents, &group);
+    ASSERT_OK;
+    ASSERT_NE(group, nullptr);
+    ASSERT_NE(group->group_identity, nullptr);
+    ASSERT_STREQ(group->group_identity->address, group_ident->address);
+    ASSERT_STREQ(group->group_identity->user_id, group_ident->user_id);
+    ASSERT_NE(group->group_identity->flags & PEP_idf_group_ident, 0);
+    ASSERT_NE(group->manager, nullptr);
+    ASSERT_STREQ(group->manager->address, me->address);
+    ASSERT_STREQ(group->manager->user_id, me->user_id);
+    ASSERT_EQ(group->manager->flags & PEP_idf_group_ident, 0);
+    ASSERT_STRNE(group_ident->fpr, me->fpr);
+
+    pEp_identity* member_4 = new_identity(member_4_address, NULL, "MEMBER4", member_4_name);
+    read_file_and_import_key(session, kf_name(member_4_prefix, false).c_str());
+    status = update_identity(session, member_4);
+    ASSERT_OK;
+    status = set_pEp_version(session, member_4, 2, 2);
+    ASSERT_OK;
+    status = set_as_pEp_user(session, member_4);
+    ASSERT_OK;
+
+    status = group_invite_member(session, group_ident, member_4);
+    ASSERT_OK;
+
+    free_group(group);
+    group = NULL;
+    status = retrieve_group_info(session, group_ident, &group);
+    ASSERT_OK;
+    ASSERT_NE(group, nullptr);
+
+    member_list* output_idents = group->members;
+    int member_count = 0;
+    bool member_4_found = false;
+    for ( ; output_idents && output_idents->member && output_idents->member->ident ; output_idents = output_idents->next) {
+        pEp_identity* the_member = output_idents->member->ident;
+        ASSERT_FALSE(output_idents->member->joined);
+        member_count++;
+        if (strcmp(the_member->address, member_4_address) == 0 && strcmp(the_member->address, member_4_address) == 0) {
+            member_4_found = true;
+        }
+    }
+    ASSERT_EQ(member_count, 1);
+    ASSERT_TRUE(member_4_found);
+
+    free(group);
+}
+
+TEST_F(GroupEncryptionTest, check_add_invite_empty_members_empty_head) {
+    pEp_identity* me = new_identity(manager_1_address, NULL, PEP_OWN_USERID, manager_1_name);
+    read_file_and_import_key(session, kf_name(manager_1_prefix, false).c_str());
+    read_file_and_import_key(session, kf_name(manager_1_prefix, true).c_str());
+    PEP_STATUS status = set_own_key(session, me, manager_1_fpr);
+    ASSERT_OK;
+
+    identity_list* new_member_idents = new_identity_list(NULL);
+
+    pEp_identity* group_ident = new_identity(group_1_address, NULL, PEP_OWN_USERID, group_1_name);
+
+    pEp_group* group = NULL;
+    status = group_create(session, group_ident, me, new_member_idents, &group);
+    ASSERT_OK;
+    ASSERT_NE(group, nullptr);
+    ASSERT_NE(group->group_identity, nullptr);
+    ASSERT_STREQ(group->group_identity->address, group_ident->address);
+    ASSERT_STREQ(group->group_identity->user_id, group_ident->user_id);
+    ASSERT_NE(group->group_identity->flags & PEP_idf_group_ident, 0);
+    ASSERT_NE(group->manager, nullptr);
+    ASSERT_STREQ(group->manager->address, me->address);
+    ASSERT_STREQ(group->manager->user_id, me->user_id);
+    ASSERT_EQ(group->manager->flags & PEP_idf_group_ident, 0);
+    ASSERT_STRNE(group_ident->fpr, me->fpr);
+
+    pEp_identity* member_4 = new_identity(member_4_address, NULL, "MEMBER4", member_4_name);
+    read_file_and_import_key(session, kf_name(member_4_prefix, false).c_str());
+    status = update_identity(session, member_4);
+    ASSERT_OK;
+    status = set_pEp_version(session, member_4, 2, 2);
+    ASSERT_OK;
+    status = set_as_pEp_user(session, member_4);
+    ASSERT_OK;
+
+    status = group_invite_member(session, group_ident, member_4);
+    ASSERT_OK;
+
+    free_group(group);
+    group = NULL;
+    status = retrieve_group_info(session, group_ident, &group);
+    ASSERT_OK;
+    ASSERT_NE(group, nullptr);
+
+    member_list* output_idents = group->members;
+    int member_count = 0;
+    bool member_4_found = false;
+    for ( ; output_idents && output_idents->member && output_idents->member->ident ; output_idents = output_idents->next) {
+        pEp_identity* the_member = output_idents->member->ident;
+        ASSERT_FALSE(output_idents->member->joined);
+        member_count++;
+        if (strcmp(the_member->address, member_4_address) == 0 && strcmp(the_member->address, member_4_address) == 0) {
+            member_4_found = true;
+        }
+    }
+    ASSERT_EQ(member_count, 1);
+    ASSERT_TRUE(member_4_found);
+
+    free(group);
+}
+
+TEST_F(GroupEncryptionTest, check_add_invite_members_no_member) {
+    pEp_identity* me = new_identity(manager_1_address, NULL, PEP_OWN_USERID, manager_1_name);
+    read_file_and_import_key(session, kf_name(manager_1_prefix, false).c_str());
+    read_file_and_import_key(session, kf_name(manager_1_prefix, true).c_str());
+    PEP_STATUS status = set_own_key(session, me, manager_1_fpr);
+    ASSERT_OK;
+
+    identity_list* new_member_idents = new_identity_list(NULL);
+
+    pEp_identity* group_ident = new_identity(group_1_address, NULL, PEP_OWN_USERID, group_1_name);
+
+    pEp_group* group = NULL;
+    status = group_create(session, group_ident, me, new_member_idents, &group);
+    ASSERT_OK;
+    ASSERT_NE(group, nullptr);
+    ASSERT_NE(group->group_identity, nullptr);
+    ASSERT_STREQ(group->group_identity->address, group_ident->address);
+    ASSERT_STREQ(group->group_identity->user_id, group_ident->user_id);
+    ASSERT_NE(group->group_identity->flags & PEP_idf_group_ident, 0);
+    ASSERT_NE(group->manager, nullptr);
+    ASSERT_STREQ(group->manager->address, me->address);
+    ASSERT_STREQ(group->manager->user_id, me->user_id);
+    ASSERT_EQ(group->manager->flags & PEP_idf_group_ident, 0);
+    ASSERT_STRNE(group_ident->fpr, me->fpr);
+
+    status = group_invite_member(session, group_ident, NULL);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+
+    free_group(group);
+    group = NULL;
+    status = retrieve_group_info(session, group_ident, &group);
+    ASSERT_OK;
+    ASSERT_NE(group, nullptr);
+    ASSERT_EQ(group->members, nullptr);
+    free(group);
+}
+
+TEST_F(GroupEncryptionTest, check_add_invite_member_no_key) {
+    pEp_identity* me = new_identity(manager_1_address, NULL, PEP_OWN_USERID, manager_1_name);
+    read_file_and_import_key(session, kf_name(manager_1_prefix, false).c_str());
+    read_file_and_import_key(session, kf_name(manager_1_prefix, true).c_str());
+    PEP_STATUS status = set_own_key(session, me, manager_1_fpr);
+    ASSERT_OK;
+
+    identity_list* new_member_idents = NULL; // new_identity_list(member_1);
+
+    pEp_identity* group_ident = new_identity(group_1_address, NULL, PEP_OWN_USERID, group_1_name);
+
+    pEp_group* group = NULL;
+    status = group_create(session, group_ident, me, new_member_idents, &group);
+    ASSERT_OK;
+    ASSERT_NE(group, nullptr);
+    ASSERT_NE(group->group_identity, nullptr);
+    ASSERT_STREQ(group->group_identity->address, group_ident->address);
+    ASSERT_STREQ(group->group_identity->user_id, group_ident->user_id);
+    ASSERT_NE(group->group_identity->flags & PEP_idf_group_ident, 0);
+    ASSERT_NE(group->manager, nullptr);
+    ASSERT_STREQ(group->manager->address, me->address);
+    ASSERT_STREQ(group->manager->user_id, me->user_id);
+    ASSERT_EQ(group->manager->flags & PEP_idf_group_ident, 0);
+    ASSERT_STRNE(group_ident->fpr, me->fpr);
+
+    pEp_identity* member_4 = new_identity(member_4_address, NULL, "MEMBER4", member_4_name);
+    status = update_identity(session, member_4);
+    ASSERT_OK;
+    status = set_pEp_version(session, member_4, 2, 2);
+    ASSERT_OK;
+    status = set_as_pEp_user(session, member_4);
+    ASSERT_OK;
+
+    status = group_invite_member(session, group_ident, member_4);
+    ASSERT_EQ(status, PEP_CANNOT_ADD_GROUP_MEMBER);
+
+    free_group(group);
+    group = NULL;
+    status = retrieve_group_info(session, group_ident, &group);
+    ASSERT_OK;
+    ASSERT_NE(group, nullptr);
+    ASSERT_EQ(group->members, nullptr);
+
+    free(group);
+}
+
 
 TEST_F(GroupEncryptionTest, check_group_join) {
     pEp_identity* own_ident = new_identity("alistair@lost.pants", NULL, PEP_OWN_USERID, "Alistair Theirin");
