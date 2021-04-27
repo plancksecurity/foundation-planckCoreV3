@@ -666,11 +666,24 @@ PEP_STATUS set_all_userids_to_own(PEP_SESSION session,
 PEP_STATUS has_partner_contacted_address(PEP_SESSION session, const char* partner_id,
                                          const char* own_address, bool* was_contacted);
 
-
+/**
+ *
+ * @param session
+ * @param identity
+ * @param exists
+ * @return
+ */
 PEP_STATUS exists_identity_entry(PEP_SESSION session, pEp_identity* identity,
                                  bool* exists);
 
-
+/**
+ *
+ * @param session
+ * @param identity
+ * @param username
+ * @return
+ */
+PEP_STATUS force_set_identity_username(PEP_SESSION session, pEp_identity* identity, const char* username);
 
 #ifdef __cplusplus
 }

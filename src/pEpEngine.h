@@ -1838,20 +1838,26 @@ DYNAMIC_API PEP_STATUS set_ident_enc_format(PEP_SESSION session,
                                             pEp_identity *identity,
                                             PEP_enc_format format);
 
-
 /**
- *  <!--       reset_pEptest_hack()       -->
- *  
- *  @brief            TODO
- *  
- *  @param[in]  session        session handle
- *
-
-PEP_STATUS get_default_identity_fpr(PEP_SESSION session, 
+ * 
+ * @param session
+ * @param address
+ * @param user_id
+ * @param main_fpr
+ * @return
+ */
+PEP_STATUS get_default_identity_fpr(PEP_SESSION session,
                                     const char* address,                            
                                     const char* user_id,
                                     char** main_fpr);
- *  
+/**
+ *  <!--       reset_pEptest_hack()       -->
+ *
+ *  @brief            TODO
+ *
+ *  @param[in]  session        session handle
+ *
+ *
  *  @retval       PEP_STATUS_OK      
  *  @retval       PEP_ILLEGAL_VALUE    illegal parameter value
  *  @retval       PEP_UNKNOWN_DB_ERROR

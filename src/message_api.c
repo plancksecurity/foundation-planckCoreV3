@@ -363,6 +363,9 @@ PEP_STATUS get_receiverRating(PEP_SESSION session, message *msg, PEP_rating *rat
     if (!own_key)
         return PEP_SYNC_NO_CHANNEL;
 
+    // This only decodes the payload - there is no update_identity/myself shenanigans going on here
+    // (important for _decrypt_message - if it changes, this MUST be reflected in username caching
+    // by the caller)
     Sync_t *res;
     status = decode_Sync_message(payload, size, &res);
     if (status)
@@ -4992,7 +4995,13 @@ static PEP_STATUS _decrypt_message(
     unsigned int minor_ver = 0;
     unsigned int msg_major_ver = 0;
     unsigned int msg_minor_ver = 0;
-    
+
+    // We have to capture this early, because sometimes, we will have to
+    // force-set identity.username (IN THE DATABASE) from this. See
+    // https://dev.pep.foundation/Engine/UserPseudonymity
+    // This will get replaced if there is an inner message.
+    char* input_from_username = (src->from && !EMPTYSTR(src->from->username)) ? strdup(src->from->username) : NULL;
+
     if (imported_key_fprs)
         *imported_key_fprs = NULL;
         
@@ -5015,7 +5024,6 @@ static PEP_STATUS _decrypt_message(
     *dst = NULL;
     *keylist = NULL;
     *rating = PEP_rating_undefined;
-//    *flags = 0;
 
     /*** End init ***/
 
@@ -5028,6 +5036,7 @@ static PEP_STATUS _decrypt_message(
     
             // Ensure there's a user id
             if (EMPTYSTR(tmp_from->user_id) && tmp_from->address) {
+                // Safe, because we have stored the input username.
                 status = update_identity(session, tmp_from);
                 if (status == PEP_CANNOT_FIND_IDENTITY) {
                     tmp_from->user_id = calloc(1, strlen(tmp_from->address) + 6);
@@ -5117,6 +5126,10 @@ static PEP_STATUS _decrypt_message(
         // if there is a valid receiverRating then return this rating else
         // return unencrypted
 
+        // All this does is try to deal with unencrypted sync messages;
+        // Failure means the message wasn't one (or maybe wasn't a valid one)
+        // and nothing else, so there should NOT be a fatal failure here
+        // if the status comes back differently.
         PEP_rating _rating = PEP_rating_undefined;
         status = get_receiverRating(session, src, &_rating);
         if (status == PEP_STATUS_OK && _rating)
@@ -5124,8 +5137,7 @@ static PEP_STATUS _decrypt_message(
         else
             *rating = PEP_rating_unencrypted;
 
-        // Regardless, we are DONE with that status. And not clearing it causes
-        // ENGINE-915 in other branches.
+        // We are DONE with that status. Not clearing it causes ENGINE-915.
         status = PEP_STATUS_OK;
 
         // We remove these from the outermost source message
@@ -5134,30 +5146,54 @@ static PEP_STATUS _decrypt_message(
                                     
         pull_up_attached_main_msg(src);
 
-        // Set default key if there isn't one
-        // This is the case ONLY for unencrypted messages and differs from the 1.0 and 2.x cases,
-        // in case you are led to think this is pure code duplication.
-        if (src->from && src->from->address && !is_me(session, src->from)) {
-            const char* sender_key = NULL;
-            if (imported_sender_key_fpr) // pEp message version 2.2 or greater
-                sender_key = imported_sender_key_fpr;
-            else if (header_key_imported) // autocrypt
-                sender_key = _imported_key_list->value;
-            else {
-                // We do this only with pEp messages 2.1 or less, or OpenPGP messages
-                if (!is_pEp_msg || (major_ver == 2 && minor_ver < 2) || major_ver < 2) {
-                    if (_imported_key_list && !(_imported_key_list->next))
-                        sender_key = _imported_key_list->value;
+        // Before we inadvertently update the presence of a key (because this
+        // function will not have set one yet if needed, even if it was delivered in the
+        // sent message), we check the quality of the "channel" by seeing what
+        // rating we would have given the sender BEFORE we might import a new key
+        // for them.
+
+        // (N.B. is_me is calculated correctly because of the update_identity check above
+        //  if we didn't already know at input)
+        if (src->from && !is_me(session, src->from)) {
+            PEP_rating channel_pre_rating = PEP_rating_undefined;
+            if (input_from_username) {
+                if (status == PEP_STATUS_OK && channel_pre_rating < PEP_rating_reliable) {
+                    // We'll set this as the identity's username in the DB.
+                    status = force_set_identity_username(session, src->from, input_from_username);
+                    if (status == PEP_STATUS_OK) {
+                        free(src->from->username);
+                        src->from->username = input_from_username;
+                        input_from_username = NULL;
+                    }
                 }
-            } // Otherwise, too bad.
+            }
+            // Set default key if there isn't one
+            // This is the case ONLY for unencrypted messages and differs from the 1.0 and 2.x cases,
+            // in case you are led to think this is pure code duplication.
+            if (src->from->address) {
+                PEP_STATUS incoming_status = status;
+                const char* sender_key = NULL;
+                if (imported_sender_key_fpr) // pEp message version 2.2 or greater
+                    sender_key = imported_sender_key_fpr;
+                else if (header_key_imported) // autocrypt
+                    sender_key = _imported_key_list->value;
+                else {
+                    // We do this only with pEp messages 2.1 or less, or OpenPGP messages
+                    if (!is_pEp_msg || (major_ver == 2 && minor_ver < 2) || major_ver < 2) {
+                        if (_imported_key_list && !(_imported_key_list->next))
+                            sender_key = _imported_key_list->value;
+                    }
+                } // Otherwise, too bad.
 
-            status = _check_and_set_default_key(session, src->from, sender_key);
+                status = _check_and_set_default_key(session, src->from, sender_key);
 
-            if (status == PEP_OUT_OF_MEMORY)
-                goto enomem;
-
+                if (status == PEP_OUT_OF_MEMORY)
+                    goto enomem;
+                if (status == PEP_STATUS_OK)
+                    status = incoming_status;
+            }
         }
-            
+
         if (imported_key_fprs)
             *imported_key_fprs = _imported_key_list;
         if (changed_public_keys)
@@ -5167,7 +5203,11 @@ static PEP_STATUS _decrypt_message(
             *imported_key_fprs = _imported_key_list;
         if (changed_public_keys)
             *changed_public_keys = _changed_keys;
-        
+
+        // FIXME: double check for mem leaks from beginning of function!
+
+        free(input_from_username); // in case we didn't use it (if we did, this is NULL)
+
         // we return the status value here because it's important to know when 
         // we have a DB error here as soon as we have the info.
         return (status == PEP_STATUS_OK ? PEP_UNENCRYPTED : status);

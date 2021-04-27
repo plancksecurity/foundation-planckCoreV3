@@ -1320,7 +1320,6 @@ PEP_STATUS set_identity_entry(PEP_SESSION session, pEp_identity* identity,
 }
 
 
-
 // This will NOT call set_as_pEp_user, nor set_pEp_version; you have to do that separately.
 DYNAMIC_API PEP_STATUS set_identity(
         PEP_SESSION session, const pEp_identity *identity
@@ -1398,6 +1397,39 @@ DYNAMIC_API PEP_STATUS set_identity(
 pEp_free:
     free_identity(ident_copy);
     return status;
+}
+
+//static const char* sql_force_set_identity_username =
+//        "update identity "
+//        "   set username = coalesce(username, ?3) "
+//        "   where (case when (address = ?1) then (1)"
+//        "               when (lower(address) = lower(?1)) then (1)"
+//        "               when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1) "
+//        "               else 0 "
+//        "          end) = 1 "
+//        "          and user_id = ?2 ;";
+
+PEP_STATUS force_set_identity_username(PEP_SESSION session, pEp_identity* ident, const char* username) {
+    if (!ident || EMPTYSTR(ident->user_id) || EMPTYSTR(ident->address))
+        return PEP_ILLEGAL_VALUE;
+
+    // If username is NULL, it's fine. This defaults to sqlite3_bind_null() and clears the username, which
+    // might be intended. The caller should decide that before calling this. This is really the force-bludgeon.
+    sqlite3_reset(session->force_set_identity_username);
+    sqlite3_bind_text(session->force_set_identity_username, 1, ident->address, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_text(session->force_set_identity_username, 2, ident->user_id, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_text(session->force_set_identity_username, 3, username, -1,
+                      SQLITE_STATIC);
+    int result = sqlite3_step(session->force_set_identity_username);
+
+    sqlite3_reset(session->force_set_identity_username);
+
+    if (result != SQLITE_DONE)
+        return PEP_CANNOT_SET_IDENTITY;
+
+    return PEP_STATUS_OK;
 }
 
 /**
