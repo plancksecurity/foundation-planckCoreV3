@@ -1162,10 +1162,12 @@ static PEP_STATUS _set_or_update_identity_entry(PEP_SESSION session,
             SQLITE_STATIC);
     sqlite3_bind_text(set_or_update, 3, identity->user_id, -1,
             SQLITE_STATIC);
-    sqlite3_bind_int(set_or_update, 4, identity->flags);
-    sqlite3_bind_int(set_or_update, 5, identity->me);
-    sqlite3_bind_int(set_or_update, 6, identity->major_ver);
-    sqlite3_bind_int(set_or_update, 7, identity->minor_ver);
+    sqlite3_bind_text(set_or_update, 4, identity->username, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_int(set_or_update, 5, identity->flags);
+    sqlite3_bind_int(set_or_update, 6, identity->me);
+    sqlite3_bind_int(set_or_update, 7, identity->major_ver);
+    sqlite3_bind_int(set_or_update, 8, identity->minor_ver);
         
     int result = sqlite3_step(set_or_update);
     sqlite3_reset(set_or_update);
@@ -1317,6 +1319,8 @@ PEP_STATUS set_identity_entry(PEP_SESSION session, pEp_identity* identity,
                                        guard_transaction);
 }
 
+
+
 // This will NOT call set_as_pEp_user, nor set_pEp_version; you have to do that separately.
 DYNAMIC_API PEP_STATUS set_identity(
         PEP_SESSION session, const pEp_identity *identity
@@ -1358,6 +1362,7 @@ DYNAMIC_API PEP_STATUS set_identity(
     if (!ident_copy)
         return PEP_OUT_OF_MEMORY;
 
+    // For now, we ALWAYS set the person.username.
     status = set_person(session, ident_copy, false);
     if (status != PEP_STATUS_OK) {
         sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
