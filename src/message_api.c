@@ -4544,53 +4544,53 @@ static bool reject_fpr(PEP_SESSION session, const char* fpr) {
     return reject;
 }
 
-/**
- *  @internal
- *
- *  <!--       seek_good_trusted_private_fpr()       -->
- *
- *  @brief            TODO
- *
- *  @param[in]    session        session handle    
- *  @param[in]    *own_id        char
- *  @param[in]    *keylist        stringlist_t
- *
- */
-static char* seek_good_trusted_private_fpr(PEP_SESSION session, char* own_id,
-                                           stringlist_t* keylist) {
-    if (!own_id || !keylist)
-        return NULL;
-        
-    stringlist_t* kl_curr = keylist;
-    while (kl_curr) {
-        char* fpr = kl_curr->value;
-        
-        if (is_trusted_own_priv_fpr(session, own_id, fpr)) { 
-            if (!reject_fpr(session, fpr))
-                return strdup(fpr);
-        }
-            
-        kl_curr = kl_curr->next;
-    }
-
-    char* target_own_fpr = NULL;
-    
-    // Last shot...
-    PEP_STATUS status = get_user_default_key(session, own_id, 
-                                             &target_own_fpr);
-
-    if (status == PEP_STATUS_OK && !EMPTYSTR(target_own_fpr)) {
-        if (is_trusted_own_priv_fpr(session, own_id, target_own_fpr)) { 
-            if (!reject_fpr(session, target_own_fpr))
-                return target_own_fpr;
-        }
-    }
-    
-    // TODO: We can also go through all of the other available fprs for the
-    // own identity, but then I submit this function requires a little refactoring
-        
-    return NULL;
-}
+// /**
+// *  @internal
+// *
+// *  <!--       seek_good_trusted_private_fpr()       -->
+// *
+// *  @brief            TODO
+// *
+// *  @param[in]    session        session handle
+// *  @param[in]    *own_id        char
+// *  @param[in]    *keylist        stringlist_t
+// *
+// */
+//static char* seek_good_trusted_private_fpr(PEP_SESSION session, char* own_id,
+//                                           stringlist_t* keylist) {
+//    if (!own_id || !keylist)
+//        return NULL;
+//
+//    stringlist_t* kl_curr = keylist;
+//    while (kl_curr) {
+//        char* fpr = kl_curr->value;
+//
+//        if (is_trusted_own_priv_fpr(session, own_id, fpr)) {
+//            if (!reject_fpr(session, fpr))
+//                return strdup(fpr);
+//        }
+//
+//        kl_curr = kl_curr->next;
+//    }
+//
+//    char* target_own_fpr = NULL;
+//
+//    // Last shot...
+//    PEP_STATUS status = get_user_default_key(session, own_id,
+//                                             &target_own_fpr);
+//
+//    if (status == PEP_STATUS_OK && !EMPTYSTR(target_own_fpr)) {
+//        if (is_trusted_own_priv_fpr(session, own_id, target_own_fpr)) {
+//            if (!reject_fpr(session, target_own_fpr))
+//                return target_own_fpr;
+//        }
+//    }
+//
+//    // TODO: We can also go through all of the other available fprs for the
+//    // own identity, but then I submit this function requires a little refactoring
+//
+//    return NULL;
+//}
 
 /**
  *  @internal
@@ -4953,6 +4953,17 @@ static PEP_STATUS _check_and_set_default_key(
     return PEP_STATUS_OK;  // We don't care about other errors here.    
 }
 
+
+// Rule for this function, since it is one of the three most complicated functions in this whole damned
+// business:
+//
+// If you calculate a status from something and expect it NOT to be fatal, once you are done USING that status,
+// you MUST set it back to "PEP_STATUS_OK".
+//
+// There are times when we don't want errors during calls to be fatal. Once any action is taken on that
+// status, if we are going to continue processing and not bail from the message, the status needs to be reset
+// to PEP_STATUS_OK, or, alternately, we need to be using a temp status variable.
+
 static PEP_STATUS _decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -4979,6 +4990,7 @@ static PEP_STATUS _decrypt_message(
     PEP_STATUS status = PEP_STATUS_OK;
     PEP_STATUS decrypt_status = PEP_CANNOT_DECRYPT_UNKNOWN;
     PEP_STATUS _decrypt_in_pieces_status = PEP_CANNOT_DECRYPT_UNKNOWN;
+
     message* msg = NULL;
     message* calculated_src = src;
     message* reset_msg = NULL;
@@ -5000,7 +5012,10 @@ static PEP_STATUS _decrypt_message(
     // force-set identity.username (IN THE DATABASE) from this. See
     // https://dev.pep.foundation/Engine/UserPseudonymity
     // This will get replaced if there is an inner message.
-    char* input_from_username = (src->from && !EMPTYSTR(src->from->username)) ? strdup(src->from->username) : NULL;
+    char* input_from_username = NULL;
+    PEP_rating channel_pre_rating = PEP_rating_undefined; // This is NOT the message rating. Will be used to
+                                                          // cache the rating of non-me from identities before
+                                                          // key import might assign a default key
 
     if (imported_key_fprs)
         *imported_key_fprs = NULL;
@@ -5027,10 +5042,20 @@ static PEP_STATUS _decrypt_message(
 
     /*** End init ***/
 
-    // Ok, before we do anything, if it's a pEp message, regardless of whether it's
-    // encrypted or not, we set the sender as a pEp user. This has NOTHING to do
-    // with the key.
+    /*** Begin caching and setup information from non-me from identities ***/
+    // Cache outer from info before key imports and setting of defaults can take place:
+    // 1. Cache the username, if present. Under certain circumstances, we will need
+    //    to set this as an *identity* default in the database.
+    // 2. If it's a pEp message, regardless of whether it's
+    //    encrypted or not, we set the sender as a pEp user. This has NOTHING to do
+    //    with the key.
+    // 3. Cache the outer channel rating. See below.
+    // 4. Profit!!! (???????)
+    //
     if (src->from && !(is_me(session, src->from))) {
+        if (!EMPTYSTR(src->from->username))
+            input_from_username = strdup(src->from->username); // Get it before update_identity changes it
+
         if (is_pEp_msg) {
             pEp_identity* tmp_from = src->from;
     
@@ -5052,9 +5077,26 @@ static PEP_STATUS _decrypt_message(
                 status = set_as_pEp_user(session, tmp_from);
             }
         }
+        // Before we go any further, we need to check the rating of the "channel" (described
+        // in some fdik video somewhere, apparently - this is usually only described as an
+        // app concept, so as far as we're concerned for the moment, it's the "usual" rating
+        // we'd get if we were receiving in the best available communication with the "from" partner
+        // alone). Since we've cached non-me usernames, this is safe here.
+        //
+        // Note: this MAY not be the actual channel rating we end up caring about - we'll look
+        // at the inner message where appropriate if it's available. But for now, we cache this before
+        // we lose it.
+        status = identity_rating(session, src->from, &channel_pre_rating);
+
+        // FIXME: we've been ignoring these statuses. Should we? Because I kind of don't think we should.
+        // RESET
+        status = PEP_STATUS_OK;
     }
+    /*** End caching and setup information from non-me from identities ***/
+
+    // NOTE:
     // We really need key used in signing to do anything further on the pEp comm_type.
-    // So we can't adjust the rating of the sender just yet.
+    // So we can't adjust the *real* rating of the sender just yet.
 
     /*** Begin importing any keys attached an outer, undecrypted message - update identities accordingly ***/
     // Private key in unencrypted mail are ignored -> NULL
@@ -5082,20 +5124,8 @@ static PEP_STATUS _decrypt_message(
                                                   &_imported_key_list, 
                                                   &_changed_keys,
                                                   &imported_sender_key_fpr);
-    }                                              
-    // FIXME: is this really necessary here?
-    // if (src->from) {
-    //     if (!is_me(session, src->from))
-    //         status = update_identity(session, src->from);
-    //     else
-    //         status = _myself(session, src->from, false, false, myself_read_only);
-    // 
-    //     // We absolutely should NOT be bailing here unless it's a serious error
-    //     if (status == PEP_OUT_OF_MEMORY)
-    //         return status;
-    // }
-    
-    /*** End Import any attached public keys and update identities accordingly ***/
+    }
+    /*** End Import any attached outer public keys and update identities accordingly ***/
     
     /*** Begin get detached signatures that are attached to the encrypted message ***/
     // Get detached signature, if any
@@ -5107,21 +5137,25 @@ static PEP_STATUS _decrypt_message(
         dsig_text = detached_sig->value;
         dsig_size = detached_sig->size;
     }
+    status = PEP_STATUS_OK; // again, reset, we don't use the status
     /*** End get detached signatures that are attached to the encrypted message ***/
 
     /*** Determine encryption format ***/
     PEP_cryptotech crypto = determine_encryption_format(src);
 
+    /*** Get outer protocol information ***/
     // Get protocol information listed on the OUTER message. This will not be used if there 
     // is an inner message and is not relied on for any security-relevant functionality since 
-    // it is fully manipulable on-the-wire. It'll be recalculated if we have inner headers.
+    // it is *fully manipulable on-the-wire*. It'll be recalculated if we have inner headers.
     get_protocol_version_from_headers(src->opt_fields, &major_ver, &minor_ver);
 
     if (major_ver == 0) {
         msg_major_ver = 1;
         msg_minor_ver = 0;
     }
-    // Check for and deal with unencrypted messages
+    /*** End get outer protocol information ***/
+
+    /*** Check for and deal with unencrypted messages ***/
     if (src->enc_format == PEP_enc_none) {
         // if there is a valid receiverRating then return this rating else
         // return unencrypted
@@ -5155,7 +5189,6 @@ static PEP_STATUS _decrypt_message(
         // (N.B. is_me is calculated correctly because of the update_identity check above
         //  if we didn't already know at input)
         if (src->from && !is_me(session, src->from)) {
-            PEP_rating channel_pre_rating = PEP_rating_undefined;
             if (input_from_username) {
                 if (status == PEP_STATUS_OK && channel_pre_rating < PEP_rating_reliable) {
                     // We'll set this as the identity's username in the DB.
@@ -5204,18 +5237,28 @@ static PEP_STATUS _decrypt_message(
         if (changed_public_keys)
             *changed_public_keys = _changed_keys;
 
-        // FIXME: double check for mem leaks from beginning of function!
-
+        // FIXME: double check for mem leaks from beginning of function in the unencrypted case!
         free(input_from_username); // in case we didn't use it (if we did, this is NULL)
 
         // we return the status value here because it's important to know when 
         // we have a DB error here as soon as we have the info.
         return (status == PEP_STATUS_OK ? PEP_UNENCRYPTED : status);
     }
+    /*** End check for and deal with unencrypted messages ***/
 
+    //***************************************************************************
+    //* From this point on, we are dealing with an encrypted message of some sort.
+    //***************************************************************************
+
+    // FIXME: This comment doesn't make a lot of sense. Ask vb about what
+    //        is going on here.
     // if there is an own identity defined via this message is coming in
-    // retrieve the details; in case there's no usuable own key make it
+    // retrieve the details; in case there's no usable own key make it
     // functional
+    // (Note: according to fdik, the apps are responsible for setting
+    //  recv_by)
+
+    // FIXME, with both here: free memory
     if (src->recv_by && !EMPTYSTR(src->recv_by->address)) {
         status = myself(session, src->recv_by);
         if (status) {
@@ -5224,6 +5267,7 @@ static PEP_STATUS _decrypt_message(
         }
     }
 
+    // FIXME: see above
     status = get_crypto_text(src, &ctext, &csize);
     if (status) {
         free_stringlist(_imported_key_list);
@@ -5289,6 +5333,9 @@ static PEP_STATUS _decrypt_message(
                     if (status == PEP_STATUS_OK && !has_inner) {
                         // If we're claiming to have a pEp version 2.2 or greater, we only take it
                         // if it had the right name during the import and if it was the ONLY key on the message?
+                        //
+                        // FIXME: From SENDER >= 2.2, we should be VERY careful here -- check back on this one
+                        //
                         const char* sender_key = NULL;
                         if ((major_ver == 2 && minor_ver > 1) || major_ver > 2) {
                             if (imported_sender_key_fpr)
@@ -5478,7 +5525,7 @@ static PEP_STATUS _decrypt_message(
                         actual_message = actual_message->next;
                     }        
                 }    
-                if (message_blob) {              
+                if (message_blob) {
                     status = mime_decode_message(message_blob->value, 
                                                  message_blob->size, 
                                                  &inner_message,
@@ -5487,6 +5534,15 @@ static PEP_STATUS _decrypt_message(
                         goto pEp_error;
                                 
                     if (inner_message) {
+
+                        // Ok, so IF there is a src->from->username here, we need to be sure to cache the right one
+                        // for later.
+                        if (src->from && src->from->username && !is_me(session, src->from)) {
+                            free(input_from_username);
+                            input_from_username = NULL;
+                            if (!EMPTYSTR(src->from->username))
+                                input_from_username = strdup(src->from->username);
+                        }
                         is_pEp_msg = is_a_pEpmessage(inner_message);
                         
                         // Though this will strip any message info on the
@@ -5727,7 +5783,7 @@ static PEP_STATUS _decrypt_message(
         } // end if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
         
         *rating = decrypt_rating(decrypt_status);
-        
+
         // Ok, so if it was signed and it's all verified, we can update
         // eligible signer comm_types to PEP_ct_pEp_*
         // This also sets and upgrades pEp version
@@ -5766,7 +5822,7 @@ static PEP_STATUS _decrypt_message(
        Ok, at this point, we know we have a reliably decrypted message.
        Prepare the output message for return.
     */
-    
+
     // 1. Check to see if this message is to us and contains an own key imported 
     // from own trusted message
     if (*rating >= PEP_rating_trusted && imported_private_key_address) {
@@ -5812,7 +5868,8 @@ static PEP_STATUS _decrypt_message(
     } // End prepare output message for return
 
     // 3. Check to see if the sender is a pEp user who used any of our revoked keys
-    if (msg->from && !is_me(session, msg->from)) {
+    //
+    if (msg && msg->from && !is_me(session, msg->from)) {
         bool pEp_peep = false;
 
         if (!EMPTYSTR(msg->from->user_id)) {
@@ -5822,7 +5879,6 @@ static PEP_STATUS _decrypt_message(
             if (pEp_peep) {
                 status = check_for_own_revoked_key(session, _keylist, &revoke_replace_pairs);
 
-                //assert(status != PEP_STATUS_OK); // FIXME: FOR DEBUGGING ONLY DO NOT LEAVE IN    
                 if (status != PEP_STATUS_OK) {
                     // This should really never choke unless the DB is broken.
                     status = PEP_UNKNOWN_DB_ERROR;
@@ -5989,9 +6045,9 @@ static PEP_STATUS _decrypt_message(
         revoke_replace_pairs = NULL;
     } // end !is_me(msg->from)    
 
-    bool reenc_signer_key_is_own_key = false; // only matters for reencrypted messages 
-    
     // 4. Reencrypt if necessary
+    bool reenc_signer_key_is_own_key = false; // only matters for reencrypted messages
+
     bool has_extra_keys = _have_extrakeys(extra);
 
     bool subjects_match = false;
@@ -6119,7 +6175,20 @@ static PEP_STATUS _decrypt_message(
         *imported_key_fprs = _imported_key_list;
     if (changed_public_keys)
         *changed_public_keys = _changed_keys;
-    
+
+    // Force-set username?
+    if (msg && msg->from && !is_me(session, msg->from) && input_from_username && *rating >= PEP_rating_reliable) {
+        // Set it.
+        status = force_set_identity_username(session, msg->from, input_from_username);
+        // We're gonna ignore this for now - I don't think we should give up returning a decrypted message
+        // for this, but FIXME ask fdik
+        status = PEP_STATUS_OK;
+        free(msg->from->username);
+        msg->from->username = input_from_username;
+        input_from_username = NULL;
+    }
+    free(input_from_username); // This was set to NULL in both places ownership could be legitimately grabbed.
+
     if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
         return PEP_STATUS_OK;
     else
@@ -6135,6 +6204,7 @@ pEp_error:
     free_stringlist(_keylist);
     free_stringpair_list(revoke_replace_pairs);
     free(imported_sender_key_fpr);
+    free(input_from_username);
 
     return status;
 }
