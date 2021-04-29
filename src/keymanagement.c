@@ -1162,13 +1162,21 @@ PEP_STATUS _myself(PEP_SESSION session,
     if (!session || !identity || EMPTYSTR(identity->address))
         return PEP_ILLEGAL_VALUE;
 
-    // this is leading to crashes otherwise
+    // this leads to crashes otherwise
 
     if (!(identity->user_id && identity->user_id[0])) {
         free(identity->user_id);
         identity->user_id = strdup(PEP_OWN_USERID);
         assert(identity->user_id);
         if (!identity->user_id)
+            return PEP_OUT_OF_MEMORY;
+    }
+
+    // Cache the input username, if there is one and it's not read_only
+    char* cached_input_username = NULL;
+    if (!read_only && identity->username) {
+        cached_input_username = strdup(identity->username);
+        if (!cached_input_username)
             return PEP_OUT_OF_MEMORY;
     }
 
@@ -1355,9 +1363,19 @@ PEP_STATUS _myself(PEP_SESSION session,
     // We want to set an identity in the DB even if a key isn't found, but we have to preserve the status if
     // it's NOT ok
     if (!read_only) {
+        // set identity will not automatically set identity.username in the database, only
+        // the person.username (user default). So we set it here, but will then force-set the name again if we
+        // have to.
         PEP_STATUS set_id_status = set_identity(session, identity);
         if (set_id_status == PEP_STATUS_OK)
             set_id_status = set_as_pEp_user(session, identity);
+        if (set_id_status == PEP_STATUS_OK && cached_input_username) {
+            // Force-set input username
+            set_id_status = force_set_identity_username(session, identity, cached_input_username);
+            free(identity->username);
+            identity->username = cached_input_username;
+            cached_input_username = NULL;
+        }
 
         status = (status == PEP_STATUS_OK ? set_id_status : status);
     }
@@ -1366,6 +1384,7 @@ pEp_free:
     free(default_own_id);
     free(revoked_fpr);                     
     free_identity(stored_identity);
+    free(cached_input_username);
     return status;
 }
 
