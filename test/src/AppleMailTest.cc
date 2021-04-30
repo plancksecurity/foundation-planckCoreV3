@@ -106,7 +106,7 @@ TEST_F(AppleMailTest, check_apple_mail_text_signed_encrypted) {
     PEP_STATUS status = set_own_key(session, me, "5668C4BA76A87874CEAB50710401383F39CB6DB8");
 
     // Key election removal: Key must be set as default explicitly or through mail
-    pEp_identity * you = new_identity("krista@darthmama.org", "5668C4BA76A87874CEAB50710401383F39CB6DB8", "NOT_ME", "Krista Bennett");
+    pEp_identity * you = new_identity("krista@darthmama.org", "62D4932086185C15917B72D30571AFBCA5493553", "NOT_ME", "Krista Bennett");
     you->me = false;
     status = set_identity(session, you);
     ASSERT_OK;
@@ -167,7 +167,7 @@ TEST_F(AppleMailTest, check_apple_mail_html_signed_encrypted) {
     PEP_STATUS status = set_own_key(session, me, "5668C4BA76A87874CEAB50710401383F39CB6DB8");
 
     // Key election removal: Key must be set as default explicitly or through mail
-    pEp_identity * you = new_identity("krista@darthmama.org", "5668C4BA76A87874CEAB50710401383F39CB6DB8", "NOT_ME", "Krista Bennett");
+    pEp_identity * you = new_identity("krista@darthmama.org", "62D4932086185C15917B72D30571AFBCA5493553", "NOT_ME", "Krista Bennett");
     you->me = false;
     status = set_identity(session, you);
     ASSERT_OK;

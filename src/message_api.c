@@ -4244,7 +4244,6 @@ static PEP_STATUS pEp_version_upgrade_or_ignore(
     return status;    
 }
 
-// FIXME: myself ??????
 /**
  *  @internal
  *
@@ -4281,7 +4280,7 @@ static PEP_STATUS update_sender_to_pEp_trust(
     free(sender->fpr);
     sender->fpr = NULL;
 
-    PEP_STATUS status = is_me(session, sender) ? myself(session, sender) : update_identity(session, sender);
+    PEP_STATUS status = is_me(session, sender) ? _myself(session, sender, false, false, false, true) : update_identity(session, sender);
 
     if (PASS_ERROR(status))
         return status;

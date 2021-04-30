@@ -104,19 +104,38 @@ TEST_F(LeastCommonDenomColorTest, check_least_common_denom_color) {
     PEP_STATUS statuskey3 = import_key(session, keytextkey3.c_str(), keytextkey3.length(), NULL);
     PEP_STATUS statuskey4 = import_key(session, keytextkey4.c_str(), keytextkey4.length(), NULL);
 
+    /*
+    banmeonce@kgrothoff.org|9F371BACD583EE26347899F21CCE13DE07B29090
+    banmetwice@kgrothoff.org|84A33862CC664EA1086B7E94ADF10A134080C3E7
+    pep.never.me.test@kgrothoff.org|8314EF2E19278F9800527EA887601BD579C11D1D
+    */
+
     pEp_identity * sender = new_identity("pep.never.me.test@kgrothoff.org", NULL, "TOFU_pep.never.me.test@kgrothoff.org", "pEp Never Me Test");
     sender->me = false;
     PEP_STATUS status = update_identity(session, sender);
+    ASSERT_OK;
+    free(sender->fpr);
+    sender->fpr = strdup("8314EF2E19278F9800527EA887601BD579C11D1D");
+    status = set_identity(session, sender);
+    ASSERT_OK;
 
     // reset the trust on both keys before we start
     pEp_identity * recip1 = new_identity("banmeonce@kgrothoff.org", NULL, "TOFU_banmeonce@kgrothoff.org", "Ban Me Once");
     recip1->me = false;
     status = update_identity(session, recip1);
+    free(recip1->fpr);
+    recip1->fpr = strdup("9F371BACD583EE26347899F21CCE13DE07B29090");
+    status = set_identity(session, recip1);
+    ASSERT_OK;
     key_reset_trust(session, recip1);
 
     pEp_identity * recip2 = new_identity("banmetwice@kgrothoff.org", NULL, "TOFU_banmetwice@kgrothoff.org", "Ban Me Twice");
     recip2->me = false;
     status = update_identity(session, recip2);
+    free(recip2->fpr);
+    recip2->fpr = strdup("84A33862CC664EA1086B7E94ADF10A134080C3E7");
+    status = set_identity(session, recip2);
+    ASSERT_OK;
     key_reset_trust(session, recip2);
 
     const string mailtext = slurp(mailfile);
