@@ -416,24 +416,30 @@ TEST_F(GroupEncryptionTest, check_add_invite_exist_members) {
     PEP_STATUS status = set_own_key(session, me, manager_1_fpr);
     ASSERT_OK;
 
-    pEp_identity* member_1 = new_identity(member_1_address, NULL, "MEMBER1", member_1_name);
+    pEp_identity* member_1 = new_identity(member_1_address, member_1_fpr, "MEMBER1", member_1_name);
     read_file_and_import_key(session, kf_name(member_1_prefix, false).c_str());
+    status = set_identity(session, member_1);
+    ASSERT_OK;
     status = update_identity(session, member_1);
     ASSERT_OK;
     status = set_pEp_version(session, member_1, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_1);
     ASSERT_OK;
-    pEp_identity* member_2 = new_identity(member_2_address, NULL, "MEMBER2", member_2_name);
+    pEp_identity* member_2 = new_identity(member_2_address, member_2_fpr, "MEMBER2", member_2_name);
     read_file_and_import_key(session, kf_name(member_2_prefix, false).c_str());
+    status = set_identity(session, member_2);
+    ASSERT_OK;
     status = update_identity(session, member_2);
     ASSERT_OK;
     status = set_pEp_version(session, member_2, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_2);
     ASSERT_OK;
-    pEp_identity* member_3 = new_identity(member_3_address, NULL, "MEMBER3", member_3_name);
+    pEp_identity* member_3 = new_identity(member_3_address, member_3_fpr, "MEMBER3", member_3_name);
     read_file_and_import_key(session, kf_name(member_3_prefix, false).c_str());
+    status = set_identity(session, member_3);
+    ASSERT_OK;
     status = update_identity(session, member_3);
     ASSERT_OK;
     status = set_pEp_version(session, member_3, 2, 2);
@@ -486,8 +492,10 @@ TEST_F(GroupEncryptionTest, check_add_invite_exist_members) {
     ASSERT_EQ(input_idents, nullptr);
     ASSERT_EQ(group_members, nullptr);
 
-    pEp_identity* member_4 = new_identity(member_4_address, NULL, "MEMBER4", member_4_name);
+    pEp_identity* member_4 = new_identity(member_4_address, member_4_fpr, "MEMBER4", member_4_name);
     read_file_and_import_key(session, kf_name(member_4_prefix, false).c_str());
+    status = set_identity(session, member_4);
+    ASSERT_OK;
     status = update_identity(session, member_4);
     ASSERT_OK;
     status = set_pEp_version(session, member_4, 2, 2);
@@ -547,8 +555,10 @@ TEST_F(GroupEncryptionTest, check_add_invite_empty_members) {
     ASSERT_EQ(group->manager->flags & PEP_idf_group_ident, 0);
     ASSERT_STRNE(group_ident->fpr, me->fpr);
 
-    pEp_identity* member_4 = new_identity(member_4_address, NULL, "MEMBER4", member_4_name);
+    pEp_identity* member_4 = new_identity(member_4_address, member_4_fpr, "MEMBER4", member_4_name);
     read_file_and_import_key(session, kf_name(member_4_prefix, false).c_str());
+    status = set_identity(session, member_4);
+    ASSERT_OK;
     status = update_identity(session, member_4);
     ASSERT_OK;
     status = set_pEp_version(session, member_4, 2, 2);
@@ -607,8 +617,10 @@ TEST_F(GroupEncryptionTest, check_add_invite_empty_members_empty_head) {
     ASSERT_EQ(group->manager->flags & PEP_idf_group_ident, 0);
     ASSERT_STRNE(group_ident->fpr, me->fpr);
 
-    pEp_identity* member_4 = new_identity(member_4_address, NULL, "MEMBER4", member_4_name);
+    pEp_identity* member_4 = new_identity(member_4_address, member_4_fpr, "MEMBER4", member_4_name);
     read_file_and_import_key(session, kf_name(member_4_prefix, false).c_str());
+    status = set_identity(session, member_4);
+    ASSERT_OK;
     status = update_identity(session, member_4);
     ASSERT_OK;
     status = set_pEp_version(session, member_4, 2, 2);

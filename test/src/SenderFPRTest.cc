@@ -101,12 +101,13 @@ TEST_F(SenderFPRTest, check_sender_f_p_r) {
 
     message* msg = new_message(PEP_dir_outgoing);
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, NULL);
-    pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, "Bob", NULL);
+    pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39", "Bob", "Bob");
     status = myself(session, alice);
+    ASSERT_OK;
+    status = set_identity(session, bob);
     ASSERT_OK;
     status = update_identity(session, bob);
     ASSERT_OK;
-
     status = set_as_pEp_user(session, bob);
     ASSERT_OK;
 
