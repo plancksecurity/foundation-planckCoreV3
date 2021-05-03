@@ -1,0 +1,4 @@
+pytest==5.3.5
+pytest-cov==2.8.1
+# pytest-mp 0.0.4 @PyPI is buggy :-(
+https://github.com/ansible/pytest-mp/archive/master.zip
