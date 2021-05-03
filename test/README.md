@@ -17,14 +17,12 @@ In addition to the engine requirements, you will need:
 
   * `cmake`
   * `python3`
-  * `git` (for getting the `gtest-parallel` repository, unless you grab the
-  tarball from somewhere)
+  * `wget` (for getting the `gtest-parallel.py` file)
 
 ## Building the prerequisites
 
-The Engine test suite now requires (at least) two additional pieces to run:
+The Engine test suite now requires (at least) one additional pieces to run:
   * `googletest`
-  * `gtest-parallel`
 
 How this proceeds depends on your platform and whether or not you use a packaged
 distribution.
@@ -110,12 +108,6 @@ Ubuntu](https://www.eriksmistad.no/getting-started-with-google-test-on-ubuntu/))
   (i.e. the absolute path of where the `src` and `include` directories were 
   above - for me, `/Users/krista/googletest/googletest`).
   
-### Installing `gtest-parallel`
-
-Pick a source directory and put your `gtest-parallel` source there
-(e.g. via `git clone https://github.com/google/gtest-parallel.git`).
-
-We'll deal more with this when preparing to compile the test suite.
 
 ## Building the test suite
 
@@ -133,9 +125,9 @@ are:
   * `GTEST_INC_DIR`: This is where the include files for googletest are located
   (defaults to `$(GTEST_SRC_DIR)/include`)
   
-  * `GTEST_PL`: This is the full path to the *python file* for `gtest_parallel`
-  (default presumes you cloned it under `src` in your home directory, i.e. it is
-  `$(HOME)/src/gtest-parallel/gtest_parallel.py`)
+  * `GTEST_PL`: This is the full path to the *python file* `gtest_parallel.py`
+  (default presumes you let the Makefile download it into the test directory
+  i.e. it is `gtest_parallel.py`)
 
 ### Building
 
