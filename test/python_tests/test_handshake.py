@@ -43,7 +43,7 @@ def test_handshake():
 
     def process1():
         print("process1 starting")
-        setup_gnupg("test1") ; import pEp
+        setup_gnupg("dummyhome1") ; import pEp
         me = Me(ALICE)
         you = You(BOB)
 
@@ -53,7 +53,7 @@ def test_handshake():
         msg.longmsg = "Message Text\n"
 
         enc = msg.encrypt()
-        send_message("test2", str(enc))
+        send_message("dummyhome2", str(enc))
 
         txt = wait_for_message()
         enc = pEp.Message(txt)
@@ -67,12 +67,13 @@ def test_handshake():
         msg.longmsg = "Message Text complete\n"
 
         enc = msg.encrypt()
-        send_message("test2", str(enc))
+        send_message("dummyhome2", str(enc))
         print("process1 finishing")
 
     def process2():
         print("process2 starting")
-        setup_gnupg("test2") ; import pEp
+        setup_gnupg("dummyhome2") ; import pEp
+
         me = Me(BOB)
         you = You(ALICE)
 
@@ -87,7 +88,7 @@ def test_handshake():
         out.longmsg = "Text Back\n"
 
         enc = out.encrypt()
-        send_message("test1", str(enc))
+        send_message("dummyhome1", str(enc))
 
         txt = wait_for_message()
         msg = pEp.Message(txt)
