@@ -65,12 +65,14 @@ def create_home(mydir, arthome, addr, username):
 
     os.chdir(arthome)
 
-    link_if_exists("bin", arthome)
-    link_if_exists("include", arthome)
-    link_if_exists("lib", arthome)
-    link_if_exists("share", arthome)
-    link_if_exists(".local", arthome)
-    link_if_exists("Library", arthome) # this may exist on macOS
+    # What is this required for? It has unwanted side-effects like
+    # making pytest search all tests from ~/.local/lib/python*/site-packages
+    #link_if_exists("bin", arthome)
+    #link_if_exists("include", arthome)
+    #link_if_exists("lib", arthome)
+    #link_if_exists("share", arthome)
+    #link_if_exists(".local", arthome)
+    #link_if_exists("Library", arthome) # this may exist on macOS
 
     p = Process(target=create_own_identities,
                 args=(mydir, arthome, addr, username))
