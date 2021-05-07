@@ -148,9 +148,33 @@ TEST_F(TrustRatingTest, check_rating_of_new_channel) {
     ASSERT_EQ(rating, PEP_rating_reliable);
     ASSERT_STREQ(bob->fpr, bob_fpr);
 
+    // repeat with comm_type
+    rating = PEP_rating_undefined;
+    status = last_rating_of_new_channel(session, bob, &rating);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    // key is there and good so this should be reliable
+    ASSERT_EQ(rating, PEP_rating_reliable);
+    ASSERT_STREQ(bob->fpr, bob_fpr);
+
+    // repeat without comm_type
+    rating = PEP_rating_undefined;
+    bob->comm_type = PEP_ct_unknown;
+    status = last_rating_of_new_channel(session, bob, &rating);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    // key is there and good so this should be reliable
+    ASSERT_EQ(rating, PEP_rating_reliable);
+    ASSERT_STREQ(bob->fpr, bob_fpr);
+
     // sylvia is unknown 
     pEp_identity *sylvia = new_identity("sylvia@test.pep", NULL, NULL, "Sylvia");
     status = rating_of_new_channel(session, sylvia, &rating);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_EQ(rating, PEP_rating_have_no_key);
+
+    // repeat
+    rating = PEP_rating_undefined;
+    sylvia->comm_type = PEP_ct_unknown;
+    status = last_rating_of_new_channel(session, sylvia, &rating);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(rating, PEP_rating_have_no_key);
 

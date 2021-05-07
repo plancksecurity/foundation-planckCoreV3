@@ -135,6 +135,10 @@ DYNAMIC_API PEP_STATUS last_rating_of_new_channel(
     PEP_STATUS status = get_identity(session, ident->address, ident->user_id, &stored_ident);
     if (status)
         return status;
+    if (stored_ident->comm_type == PEP_ct_unknown) {
+        if (EMPTYSTR(stored_ident->fpr))
+            stored_ident->comm_type = PEP_ct_key_not_found;
+    }
 
     *rating = rating_from_comm_type(stored_ident->comm_type);
     free_identity(stored_ident);
