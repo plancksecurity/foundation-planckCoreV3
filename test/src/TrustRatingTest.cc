@@ -184,3 +184,44 @@ the_end:
     free_identity(sylvia);
 }
 
+TEST_F(TrustRatingTest, check_rating_of_existing_channel) {
+    output_stream << "\n*** " << test_suite_name << ": " << test_name << " ***\n";
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    pEp_identity *alice;
+    pEp_identity *bob;
+    alice_and_bob(session, alice, bob);
+ 
+    // rating_of_new_channel() will call update_identity()
+    bob->comm_type = PEP_ct_unknown;
+    free(bob->fpr);
+    bob->fpr = NULL;
+
+    // rating_of_existing_channel() is expecting this
+    status = update_identity(session, bob);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+
+    PEP_rating rating;
+    status = rating_of_existing_channel(session, bob, &rating);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    // key is there and good so this should be reliable
+    ASSERT_EQ(rating, PEP_rating_reliable);
+    ASSERT_STREQ(bob->fpr, bob_fpr);
+
+    // sylvia is unknown 
+    pEp_identity *sylvia = new_identity("sylvia@test.pep", NULL, NULL, "Sylvia");
+
+    // rating_of_existing_channel() is expecting this
+    status = update_identity(session, bob);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+
+    status = rating_of_existing_channel(session, sylvia, &rating);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_EQ(rating, PEP_rating_have_no_key);
+
+the_end:
+    free_identity(alice);
+    free_identity(bob);
+    free_identity(sylvia);
+}
+
