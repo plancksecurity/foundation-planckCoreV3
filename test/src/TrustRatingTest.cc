@@ -239,6 +239,11 @@ TEST_F(TrustRatingTest, check_outgoing_message_rating) {
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(rating, PEP_rating_reliable);
  
+    rating = PEP_rating_undefined;
+    status = outgoing_message_rating_preview(session, src, &rating);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_EQ(rating, PEP_rating_reliable);
+
     // outgoing message from Alice to Sylvia
     free_identity(src->to->ident);
     src->to->ident = identity_dup(sylvia);
@@ -249,6 +254,11 @@ TEST_F(TrustRatingTest, check_outgoing_message_rating) {
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(rating, PEP_rating_unencrypted);
  
+    rating = PEP_rating_undefined;
+    status = outgoing_message_rating_preview(session, src, &rating);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_EQ(rating, PEP_rating_unencrypted);
+
     // outgoing message from Alice to Sylvia, and Bob CC
     src->cc = new_identity_list(identity_dup(bob));
     assert(src->cc && src->cc->ident);
