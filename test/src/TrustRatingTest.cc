@@ -86,6 +86,37 @@ namespace {
 
 }  // namespace
 
+static const char* alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
+static const char* bob_fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
+
+static void alice_and_bob(PEP_SESSION session, pEp_identity *&alice, pEp_identity *&bob)
+{
+    output_stream << "\nsetting up Alice and Bob…\n";
+
+    PEP_STATUS status = read_file_and_import_key(session,
+                "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");
+    ASSERT_EQ(status , PEP_KEY_IMPORTED);
+    status = set_up_ident_from_scratch(session,
+                "test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc",
+                "pep.test.alice@pep-project.org", alice_fpr,
+                PEP_OWN_USERID, "Alice in Wonderland", NULL, true
+            );
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc"));
+
+    message* msg = new_message(PEP_dir_outgoing);
+    alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, NULL);
+    bob = new_identity("pep.test.bob@pep-project.org", NULL, "Bob", NULL);
+    status = myself(session, alice);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    status = update_identity(session, bob);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+
+    status = set_as_pEp_user(session, bob);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+
+    output_stream << "\ndone\n";
+}
 
 TEST_F(TrustRatingTest, check_add_rating) {
     output_stream << "\n*** " << test_suite_name << ": " << test_name << " ***\n";
@@ -97,91 +128,35 @@ TEST_F(TrustRatingTest, check_add_rating) {
     ASSERT_EQ(sum, PEP_rating_undefined);
 }
 
-    /*
-    char* user_id = get_new_uuid();
-
+TEST_F(TrustRatingTest, check_rating_of_new_channel) {
+    output_stream << "\n*** " << test_suite_name << ": " << test_name << " ***\n";
     PEP_STATUS status = PEP_STATUS_OK;
 
-    output_stream << "creating id for : ";
-    char *uniqname = strdup("AAAAtestuser@testdomain.org");
-    srandom(time(NULL));
-    for(int i=0; i < 4;i++)
-        uniqname[i] += random() & 0xf;
+    pEp_identity *alice;
+    pEp_identity *bob;
+    alice_and_bob(session, alice, bob);
+ 
+    // rating_of_new_channel() will call update_identity()
+    bob->comm_type = PEP_ct_unknown;
+    free(bob->fpr);
+    bob->fpr = NULL;
 
-    output_stream << uniqname << "\n";
-    pEp_identity * user = new_identity(uniqname, NULL, user_id, "Test User");
-    status = generate_keypair(session, user);
-    ASSERT_NE(user->fpr, nullptr);
+    PEP_rating rating;
+    status = rating_of_new_channel(session, bob, &rating);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    // key is there and good so this should be reliable
+    ASSERT_EQ(rating, PEP_rating_reliable);
+    ASSERT_STREQ(bob->fpr, bob_fpr);
 
-    char* keypair1 = strdup(user->fpr);
-    output_stream << "generated fingerprint \n";
-    output_stream << user->fpr << "\n";
+    // sylvia is unknown 
+    pEp_identity *sylvia = new_identity("sylvia@test.pep", NULL, NULL, "Sylvia");
+    status = rating_of_new_channel(session, sylvia, &rating);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_EQ(rating, PEP_rating_have_no_key);
 
-    output_stream << "Setting key 1 (" << user->fpr << ") as the default for the identity." << endl;
-    // Put identity in the DB
-    status = set_identity(session, user);
+the_end:
+    free_identity(alice);
+    free_identity(bob);
+    free_identity(sylvia);
+}
 
-    output_stream << "creating second keypair for : " << uniqname << endl;
-
-    pEp_identity * user_again = new_identity(uniqname, NULL, user_id, "Test User");
-    status = generate_keypair(session, user_again);
-    ASSERT_NE(user_again->fpr, nullptr);
-
-    char* keypair2 = strdup(user_again->fpr);
-    output_stream << "generated fingerprint \n";
-    output_stream << user_again->fpr << "\n";
-
-    ASSERT_STRNE(user->fpr, user_again->fpr);
-    update_identity(session, user);
-    ASSERT_STREQ(user->fpr, keypair1);
-    output_stream << "Key 1 (" << user->fpr << ") is still the default for the identity after update_identity." << endl;
-
-    // First, trust the SECOND key; make sure it replaces as the default
-    output_stream << "Set trust bit for key 2 (" << keypair2 << ") and ensure it replaces key 1 as the default." << endl;
-    status = trust_personal_key(session, user_again);
-    status = update_identity(session, user);
-    ASSERT_EQ(user->comm_type , PEP_ct_OpenPGP);
-    ASSERT_STREQ(user->fpr, keypair2);
-    output_stream << "Key 2 (" << user->fpr << ") is now the default for the identity after update_identity, and its comm_type is PEP_ct_OpenPGP (trust bit set!)." << endl;
-
-    output_stream << "Now make key 2 not trusted (which also removes it as a default everywhere)." << endl;
-    status = key_reset_trust(session, user);
-    status = get_trust(session, user);
-    ASSERT_STREQ(user->fpr, keypair2);
-    ASSERT_EQ(user->comm_type , PEP_ct_OpenPGP_unconfirmed);
-    output_stream << "Key 2 is untrusted in the DB." << endl;
-
-    output_stream << "Now let's mistrust key 2 in the DB." << endl;
-    // Now let's mistrust the second key.
-    status = key_mistrusted(session, user);
-    status = get_trust(session, user);
-    ASSERT_STREQ(user->fpr, keypair2);
-    ASSERT_EQ(user->comm_type , PEP_ct_mistrusted);
-    output_stream << "Hoorah, we now do not trust key 2. (We never liked key 2 anyway.)" << endl;
-    output_stream << "Now we call update_identity to see what gifts it gives us (should be key 1 with key 1's initial trust.)" << endl;
-    status = update_identity(session, user);
-    ASSERT_NE(user->fpr, nullptr);
-    ASSERT_STREQ(user->fpr, keypair1);
-    ASSERT_EQ(user->comm_type , PEP_ct_OpenPGP_unconfirmed);
-    output_stream << "Yup, got key 1, and the trust status is PEP_ct_OpenPGP_unconfirmed." << endl;
-
-    output_stream << "Let's mistrust key 1 too. It's been acting shifty lately." << endl;
-    status = key_mistrusted(session, user);
-    status = get_trust(session, user);
-    ASSERT_STREQ(user->fpr, keypair1);
-    ASSERT_EQ(user->comm_type , PEP_ct_mistrusted);
-    output_stream << "Hoorah, we now do not trust key 1. (TRUST NO ONE)" << endl;
-    output_stream << "Now we call update_identity to see what gifts it gives us (should be an empty key and a key not found comm_type.)" << endl;
-    status = update_identity(session, user);
-    ASSERT_EQ(user->fpr , nullptr);
-    ASSERT_EQ(user->comm_type , PEP_ct_key_not_found);
-    output_stream << "Yup, we trust no keys from " << uniqname << endl;
-
-    output_stream << "TODO: Add cases where we have multiple user_ids addressing a single key, and multiple identities with that key + mistrust" << endl;
-    output_stream << "Passed all of our exciting messing with the trust DB. Moving on..." << endl;
-
-    free(user_id);
-    free(keypair1);
-    free(uniqname);
-    free_identity(user);
-    */
