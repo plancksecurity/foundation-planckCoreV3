@@ -190,17 +190,9 @@ TEST_F(TrustRatingTest, check_rating_of_existing_channel) {
 
     pEp_identity *alice;
     pEp_identity *bob;
+    // this is calling myself(sesion, alice) and update_identity(session, bob)
     alice_and_bob(session, alice, bob);
  
-    // rating_of_new_channel() will call update_identity()
-    bob->comm_type = PEP_ct_unknown;
-    free(bob->fpr);
-    bob->fpr = NULL;
-
-    // rating_of_existing_channel() is expecting this
-    status = update_identity(session, bob);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-
     PEP_rating rating;
     status = rating_of_existing_channel(session, bob, &rating);
     ASSERT_EQ(status , PEP_STATUS_OK);
@@ -210,9 +202,7 @@ TEST_F(TrustRatingTest, check_rating_of_existing_channel) {
 
     // sylvia is unknown 
     pEp_identity *sylvia = new_identity("sylvia@test.pep", NULL, NULL, "Sylvia");
-
-    // rating_of_existing_channel() is expecting this
-    status = update_identity(session, bob);
+    status = update_identity(session, sylvia);
     ASSERT_EQ(status , PEP_STATUS_OK);
 
     status = rating_of_existing_channel(session, sylvia, &rating);
@@ -220,6 +210,75 @@ TEST_F(TrustRatingTest, check_rating_of_existing_channel) {
     ASSERT_EQ(rating, PEP_rating_have_no_key);
 
 the_end:
+    free_identity(alice);
+    free_identity(bob);
+    free_identity(sylvia);
+}
+
+TEST_F(TrustRatingTest, check_outgoing_message_rating) {
+    output_stream << "\n*** " << test_suite_name << ": " << test_name << " ***\n";
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    pEp_identity *alice;
+    pEp_identity *bob;
+    alice_and_bob(session, alice, bob);
+ 
+    // sylvia is unknown 
+    pEp_identity *sylvia = new_identity("sylvia@test.pep", NULL, NULL, "Sylvia");
+
+    // outgoing message from Alice to Bob
+    message *src = new_message(PEP_dir_outgoing);
+    assert(src);
+    src->from = identity_dup(alice);
+    assert(src->from);
+    src->to = new_identity_list(identity_dup(bob));
+    assert(src->to && src->to->ident);
+
+    PEP_rating rating;
+    status = outgoing_message_rating(session, src, &rating);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_EQ(rating, PEP_rating_reliable);
+ 
+    // outgoing message from Alice to Sylvia
+    free_identity(src->to->ident);
+    src->to->ident = identity_dup(sylvia);
+    assert(src->to->ident);
+
+    rating = PEP_rating_undefined;
+    status = outgoing_message_rating(session, src, &rating);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_EQ(rating, PEP_rating_unencrypted);
+ 
+    // outgoing message from Alice to Sylvia, and Bob CC
+    src->cc = new_identity_list(identity_dup(bob));
+    assert(src->cc && src->cc->ident);
+
+    rating = PEP_rating_undefined;
+    status = outgoing_message_rating(session, src, &rating);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_EQ(rating, PEP_rating_unencrypted);
+ 
+    // outgoing message from Alice to Alice, and Bob CC
+    free_identity(src->to->ident);
+    src->to->ident = identity_dup(alice);
+    assert(src->to->ident);
+
+    rating = PEP_rating_undefined;
+    status = outgoing_message_rating(session, src, &rating);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_EQ(rating, PEP_rating_reliable);
+
+    // outgoing message from Alice to Alice
+    free_identity_list(src->cc);
+    src->cc = nullptr;
+
+    rating = PEP_rating_undefined;
+    status = outgoing_message_rating(session, src, &rating);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_EQ(rating, PEP_rating_trusted_and_anonymized);
+
+the_end:
+    free_message(src);
     free_identity(alice);
     free_identity(bob);
     free_identity(sylvia);

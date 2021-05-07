@@ -379,7 +379,7 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
     if (listed && _rating > PEP_rating_unencrypted)
         _rating = PEP_rating_unencrypted;
 
-    *rating = _rating;
+    *rating = (_rating == PEP_rating_have_no_key) ? PEP_rating_unencrypted : _rating;
 
 the_end:
     return status;
