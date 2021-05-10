@@ -2,3 +2,4 @@
 ## Prefer git tags instead of SHA hashes when possible.
 
 sequoia=365d00a08bec6a5a48d48a7c7893d78c27092b59
+yml2=2.7.0
