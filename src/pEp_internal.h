@@ -104,13 +104,10 @@
 #include "keymanagement_internal.h"
 #include "message_api_internal.h"
 
-// If not specified, build for Sequoia
-#ifndef USE_SEQUOIA
-#define USE_SEQUOIA
-#endif
-
 #if defined(USE_SEQUOIA)
 #include "pgp_sequoia_internal.h"
+#elif defined(USE_NETPGP)
+#include "pgp_netpgp_internal.h"
 #endif
 
 #include "../asn.1/Distribution.h"

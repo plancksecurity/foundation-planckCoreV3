@@ -59,6 +59,13 @@ ifeq ($(OPENPGP),SEQUOIA)
     CFLAGS+= $(SEQUOIA_CFLAGS) $(SEQUOIA_INC)
     LDFLAGS+= $(SEQUOIA_LDFLAGS)
     LDLIBS+= $(SEQUOIA_LIB)
+    NO_SOURCE+=pgp_netpgp.c
+else ifeq ($(OPENPGP),NETPGP)
+    CPPFLAGS+= -DUSE_NETPGP
+    CFLAGS+= $(NETPGP_CFLAGS) $(NETPGP_INC)
+    LDFLAGS+= $(NETPGP_LDFLAGS)
+    LDLIBS+= $(NETPGP_LIB)
+    NO_SOURCE+=pgp_sequoia.c
 else
     $(error Unknown OpenPGP library: $(OPENPGP))
 endif

@@ -6,10 +6,11 @@
 
 #include "pEp_internal.h"
 
-#ifdef USE_SEQUOIA
+#if defined(USE_SEQUOIA)
 #include "pgp_sequoia.h"
+#elif defined(USE_NETPGP)
+#include "pgp_netpgp.h"
 #endif
-// 
 
 #include <stdlib.h>
 #include <memory.h>
