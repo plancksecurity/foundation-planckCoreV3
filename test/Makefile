@@ -7,7 +7,7 @@ HERE:=$(CURDIR)
 
 GTEST_SRC_DIR:=/usr/src/gtest
 GTEST_INC_DIR:=$(GTEST_SRC_DIR)/include
-GTEST_PL:=gtest_parallel.py
+GTEST_PL:=$(HOME)/src/gtest-parallel/gtest_parallel.py
 
 include ../Makefile.conf # This should import changed values for the above from
                          # local.conf
@@ -83,11 +83,8 @@ endif
 
 .PHONY: all clean test
 
-all: gtest_parallel.py
+all:
 	make $(TARGET)
-
-gtest_parallel.py:
-	wget https://raw.githubusercontent.com/google/gtest-parallel/master/gtest_parallel.py
 
 %.d: %.cc
 	$(CXX) -MM $(CXXFLAGS) $(CPPFLAGS) $< \
@@ -105,7 +102,7 @@ test: all
 
 clean:
 	$(RM) $(TARGET) $(TARGET).o $(TARGET).d $(OBJS) \
-		$(notdir $(basename $(OBJS))) $(DEPS) gtest_parallel.py
+		$(notdir $(basename $(OBJS))) $(DEPS)
 	$(RM) -rf ./pEp_test_home/*
 
 # If only the target 'clean' is given, do not generate and include the
