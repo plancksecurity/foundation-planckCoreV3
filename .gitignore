@@ -55,7 +55,10 @@ trustdb.gpg
 .cache
 __pycache__
 *.pyc
+test/gtest_parallel.py
 test/python_tests/test?
+test/python_tests/dummyhome?
+test/python_tests/common
 test/pEp_test_home
 test/TestDriver
 test/local
