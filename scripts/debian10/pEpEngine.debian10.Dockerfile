@@ -17,6 +17,7 @@ USER root
 RUN chown -R pep-builder:pep-builder ${BUILDROOT}/pEpEngine
 WORKDIR ${BUILDROOT}/pEpEngine
 
+ARG YML2_VERSION
 ARG ENGINE_VERSION
 ARG CURRENT_DISTRO
 
