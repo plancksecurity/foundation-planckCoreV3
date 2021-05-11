@@ -1230,7 +1230,7 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
                 ERROR_OUT(NULL, status, "Could not serialize existing cert for change check");
         }        
 
-        cert = pgp_cert_merge(&err, cert, current);
+        cert = pgp_cert_merge_public_and_secret(&err, cert, current);
         if (! cert)
             ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Merging certificates");
     }
