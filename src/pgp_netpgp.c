@@ -16,7 +16,6 @@
 #include <netpgp/validate.h>
 #include <netpgp/readerwriter.h>
 
-#include <curl/curl.h>
 #include <pthread.h>
 #include <regex.h>
 
@@ -91,85 +90,6 @@ static void release_netpgp()
     return;
 }
 
-static PEP_STATUS init_curl(
-    pthread_mutex_t *curl_mutex,
-    bool in_first)
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    if(pthread_mutex_init(curl_mutex, NULL)){
-        return PEP_OUT_OF_MEMORY;
-    }
-
-    if(pthread_mutex_lock(curl_mutex)){
-        return PEP_UNKNOWN_ERROR;
-    }
-
-    if(in_first){
-        curl_global_init(CURL_GLOBAL_DEFAULT);
-    }
-
-    pthread_mutex_unlock(curl_mutex);
-    return status;
-}
-
-static void release_curl(
-    pthread_mutex_t *curl_mutex,
-    bool out_last)
-{
-    if(pthread_mutex_lock(curl_mutex)){
-        return;
-    }
-
-    if(out_last){
-        curl_global_cleanup();
-    }
-
-    pthread_mutex_destroy(curl_mutex);
-
-    return;
-}
-
-static PEP_STATUS curl_get_ctx(
-    CURL **curl)
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-    struct curl_slist *headers=NULL;
-
-    if ((*curl = curl_easy_init()) == NULL) {
-        return PEP_OUT_OF_MEMORY;
-    }
-
-    curl_easy_setopt(*curl, CURLOPT_FOLLOWLOCATION, 1L);
-    curl_easy_setopt(*curl, CURLOPT_MAXREDIRS, 3L);
-
-    headers=curl_slist_append(headers,"Pragma: no-cache");
-    if(headers)
-        headers=curl_slist_append(headers,"Cache-Control: no-cache");
-
-    if(!headers)
-    {
-        return PEP_OUT_OF_MEMORY;
-    }
-
-    curl_easy_setopt(curl,CURLOPT_HTTPHEADER,headers);
-    curl_slist_free_all(headers);
-
-    // TODO curl_easy_setopt(curl,CURLOPT_PROXY,proxy);
-    return status;
-}
-
-static void curl_release_ctx(
-    CURL **curl)
-{
-    if(*curl)
-        curl_easy_cleanup(*curl);
-
-    *curl = NULL;
-
-    return;
-}
-
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -202,7 +122,7 @@ _armoured(const char *buf, size_t size, const char *pattern)
     unsigned armoured = 0;
     regex_t r;
     regcomp(&r, pattern, REG_EXTENDED|REG_NOSUB);
-    if (regnexec(&r, buf, size, 0, NULL, 0) == 0) {
+    if (regexec(&r, buf, size, 0, NULL) == 0) {
         armoured = 1;
     }
     regfree(&r);
@@ -1455,49 +1375,6 @@ unlock_netpgp:
 #define HKP_REQ_PREFIX "keytext="
 #define HKP_REQ_PREFIX_LEN 8
 
-static PEP_STATUS send_key_cb(void *arg, pgp_key_t *key)
-{
-    char *buffer = NULL;
-    size_t buflen = 0;
-    PEP_STATUS result;
-    stringlist_t *encoded_keys;
-    encoded_keys = (stringlist_t*)arg;
-
-    result = _export_keydata(key, &buffer, &buflen);
-
-    if(result == PEP_STATUS_OK){
-        char *encoded_key = curl_escape(buffer, (int)buflen);
-        if(!encoded_key){
-            result = PEP_OUT_OF_MEMORY;
-            goto free_buffer;
-        }
-        size_t encoded_key_len = strlen(encoded_key);
-
-        char *request = calloc(1, HKP_REQ_PREFIX_LEN + encoded_key_len + 1);
-        if(!request){
-            result = PEP_OUT_OF_MEMORY;
-            goto free_encoded_key;
-        }
-
-        memcpy(request, HKP_REQ_PREFIX, HKP_REQ_PREFIX_LEN);
-        memcpy(request + HKP_REQ_PREFIX_LEN, encoded_key, encoded_key_len);
-        request[HKP_REQ_PREFIX_LEN + encoded_key_len] = '\0';
-
-        if(!stringlist_add(encoded_keys, request)){
-            result = PEP_OUT_OF_MEMORY;
-        }
-        free(request);
-
-free_encoded_key:
-        curl_free(encoded_key);
-
-free_buffer:
-        free(buffer);
-    }
-
-    return result;
-}
-
 PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern)
 {
     assert(!"pgp_send_key not implemented");
@@ -1949,4 +1826,12 @@ PEP_STATUS pgp_import_ultimately_trusted_keypairs(PEP_SESSION session) {
     // Not implemented - netpgp doesn't appear to keep track of trust status in
     // a meaningful way, though there is space for it in the structs.
     return PEP_STATUS_OK;
+}
+
+PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session, PEP_CIPHER_SUITE suite) {
+    if (suite == PEP_CIPHER_SUITE_DEFAULT) {
+        return PEP_STATUS_OK;
+    } else {
+        return PEP_CANNOT_CONFIG;
+    }
 }

@@ -109,10 +109,7 @@ PEP_STATUS pgp_find_private_keys(
 // Stub - just returns PEP_STATUS_OK, as netpgp isn't sufficient to do this.
 PEP_STATUS pgp_import_ultimately_trusted_keypairs(PEP_SESSION session);
 
-PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session, PEP_CIPHER_SUITE suite) {
-    if (suite == PEP_CIPHER_SUITE_DEFAULT) {
-        return PEP_STATUS_OK;
-    } else {
-        return PEP_CANNOT_CONFIG;
-    }
-}
+PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
+        PEP_CIPHER_SUITE suite);
+
+
