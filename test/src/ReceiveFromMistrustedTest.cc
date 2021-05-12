@@ -3,6 +3,7 @@
 #include <cstring>
 
 #include "pEpEngine.h"
+#include "pEpEngine_internal.h"
 #include "test_util.h"
 #include "keymanagement.h"
 #include "message_api.h"
