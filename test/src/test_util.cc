@@ -465,6 +465,12 @@ bool slurp_message_and_import_key(PEP_SESSION session, const char* message_fname
     return ok;
 }
 
+message* string_to_msg(string infile) {
+    message *out_msg = NULL;
+    mime_decode_message(infile.c_str(), infile.size(), &out_msg, NULL);
+    return out_msg;
+}
+
 char* message_to_str(message* msg) {
     char* retval = NULL;
     mime_encode_message(msg, false, &retval, false);
