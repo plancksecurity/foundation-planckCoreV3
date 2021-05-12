@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1500C9AE264BE75F001FD417 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 151672CE262F38D900E99CE5 /* sqlite3.c */; };
 		151672D0262F38D900E99CE5 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 151672CE262F38D900E99CE5 /* sqlite3.c */; };
 		151672D1262F38D900E99CE5 /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 151672CF262F38D900E99CE5 /* sqlite3.h */; };
 		151672D4262F38E500E99CE5 /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 151672CF262F38D900E99CE5 /* sqlite3.h */; };
@@ -267,6 +268,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				15A32658261205E7009D07EB /* PEPSQLITE3_macOS.m in Sources */,
+				1500C9AE264BE75F001FD417 /* sqlite3.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
