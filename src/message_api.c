@@ -5233,7 +5233,7 @@ static PEP_STATUS _decrypt_message(
                                         if (strcmp(signer_fpr, sender_fpr) == 0) {
                                             free(inner_from->fpr); // in case of "" or unsuitable key
                                             inner_from->comm_type = PEP_ct_unknown;
-                                            inner_from->fpr = (char*)sender_fpr; // NOT modified in set_identity
+                                            inner_from->fpr = strdup(sender_fpr);
                                             status = validate_fpr(session, inner_from, inner_from, false, false);
                                             if (status == PEP_STATUS_OK) {
                                                 status = set_identity(session, inner_from);
