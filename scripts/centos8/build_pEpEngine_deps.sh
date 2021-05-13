@@ -3,7 +3,7 @@ set -exo
 
 ### YML2
 cd $INSTPREFIX
-wget "https://gitea.pep.foundation/fdik/yml2/archive/${YML2_VERSION}.tar.gz"
+curl -O "https://gitea.pep.foundation/fdik/yml2/archive/${YML2_VERSION}.tar.gz"
 tar -xf "${YML2_VERSION}.tar.gz"
 rm -f ${YML2_VERSION}.tar*
 
