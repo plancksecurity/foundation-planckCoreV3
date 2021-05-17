@@ -88,7 +88,8 @@ TEST_F(Engine704Test, check_engine704) {
     char* alicename = strdup(alice->username);
     
     pEp_identity* alice_is_bob = NULL;
-    status = set_up_preset(session, BOB, false, true, true, false, true, &alice_is_bob);        
+    status = set_up_preset(session, BOB, false, true, true, false, true, &alice_is_bob);
+    alice_is_bob->fpr = strdup("BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39");
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(alice_is_bob);
     alice_is_bob->user_id = strdup(alice->user_id);
