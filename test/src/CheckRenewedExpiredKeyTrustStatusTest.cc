@@ -206,7 +206,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     // We don't keep OpenPGP expired keys. We'll have to receive the new one via mail.
     status = outgoing_message_rating(session, msg2, &rating);
     ASSERT_OK;
-    ASSERT_EQ(rating, PEP_rating_unencrypted);
+    ASSERT_EQ(rating, PEP_rating_reliable);
 }
 
 // If we updated an OpenPGP identity in the meantime, we will have removed the key. Too bad.
@@ -284,8 +284,11 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
 
     status = update_identity(session, expired_inquisitor1);
     ASSERT_OK;
+    ASSERT_STREQ(expired_inquisitor1->fpr, inquisitor_fpr);
+    ASSERT_EQ(expired_inquisitor1->comm_type, PEP_ct_OpenPGP);
     status = get_trust(session, expired_inquisitor1);
-    ASSERT_EQ(expired_inquisitor1->comm_type, PEP_ct_key_not_found);
+    ASSERT_OK;
+    ASSERT_EQ(expired_inquisitor1->comm_type, PEP_ct_OpenPGP);
 
     message* msg2 = new_message(PEP_dir_outgoing);
 
@@ -297,7 +300,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
 
     status = outgoing_message_rating(session, msg2, &rating);
     ASSERT_OK;
-    ASSERT_EQ(rating, PEP_rating_unencrypted);
+    ASSERT_EQ(rating, PEP_rating_trusted);
 
     free_message(msg2);
 }
