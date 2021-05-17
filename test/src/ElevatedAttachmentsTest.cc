@@ -213,7 +213,11 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message) {
     ASSERT_OK;
     status = update_identity(session, bob);
     ASSERT_OK;
-
+    bob->fpr = strdup(bob_fpr);
+    status = set_identity(session, bob);
+    ASSERT_OK;
+    status = update_identity(session, bob);
+    ASSERT_OK;
     status = set_as_pEp_user(session, bob);
     ASSERT_OK;
 
