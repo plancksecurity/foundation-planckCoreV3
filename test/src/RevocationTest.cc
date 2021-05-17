@@ -109,7 +109,13 @@ TEST_F(RevocationTest, check_revocation) {
     PEP_STATUS status = import_key(session, key.c_str(), key.length(), NULL);
     ASSERT_EQ(status , PEP_TEST_KEY_IMPORT_SUCCESS);
 
+    const char* linda_fpr = "ABC96B3B4BAFB57DC45D81B56A48221A903A158B";
     pEp_identity* pre = new_identity("linda@example.org", NULL, NULL, NULL);
+    status = update_identity(session, pre);
+    ASSERT_OK;
+    pre->fpr = strdup(linda_fpr);
+    status = set_identity(session, pre);
+    ASSERT_OK;
     status = update_identity(session, pre);
     ASSERT_OK;
     ASSERT_EQ(pre->comm_type , PEP_ct_OpenPGP_unconfirmed);
