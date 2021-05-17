@@ -294,3 +294,121 @@ the_end:
     free_identity(sylvia);
 }
 
+/*
+    Test Cases for Trust Rating of Incoming Messages
+
+    A) Handshake and TOFU
+
+    1)  Sylvia sends an unencrypted mail without key
+        => unencrypted, no default key
+    2)  Sylvia sends an unencrypted mail with key attached, no claim
+        => unencrypted, no default key
+    3)  Sylvia sends an unencrypted mail with key attached, wrong claim for
+        sender key
+        => b0rken, no default key
+    4)  Sylvia sends an unencrypted mail with key attached, correct sender key
+        => default key set, unencrypted
+
+    B) Reliable Channel to Bob
+
+    5)  Bob sends an unencrypted mail without key
+        => unencrypted
+    6)  Bob sends an unencrypted mail with key attached, no claim
+        => key imported, default key not changed, unencrypted
+    7)  Bob sends an unencrypted mail with key attached, wrong claim for sender key
+        => b0rken
+    8)  Bob sends an unencrypted mail with key attached, correct sender key
+        => unencrypted
+
+    9)  Bob sends an encrypted mail, wrong claim for sender key
+        => b0rken
+    10) Bob sends an encrypted mail, correct sender key but not default key
+        => unreliable
+    11) Bob sends an encrypted mail, correct sender key and default key
+        => reliable
+
+    C) Trustwords check between Alice and Bob was successful
+
+    12) Bob sends an unencrypted mail without key
+        => unencrypted
+    13) Bob sends an unencrypted mail with key attached, no claim
+        => key imported, default key not changed, unencrypted
+    14) Bob sends an unencrypted mail with key attached, wrong claim for sender key
+        => b0rken
+    15) Bob sends an unencrypted mail with key attached, correct sender key
+        => unencrypted
+
+    16) Bob sends an encrypted mail, wrong claim for sender key
+        => b0rken
+    17) Bob sends an encrypted mail, correct sender key but not default key
+        => unreliable
+    18) Bob sends an encrypted mail, correct sender key and default key
+        => trusted
+
+*/
+
+#ifndef EMPTYSTR
+#define EMPTYSTR(STR) ((STR) == NULL || (STR)[0] == '\0')
+#endif
+
+static bool default_key_set(PEP_SESSION session, pEp_identity *ident)
+{
+    assert(ident);
+
+    PEP_STATUS status = update_identity(session, ident);
+    assert(status == PEP_STATUS_OK);
+
+    return !EMPTYSTR(ident->fpr);
+}
+
+TEST_F(TrustRatingTest, check_incoming_message_rating) {
+    output_stream << "\n*** " << test_suite_name << ": " << test_name << " ***\n";
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    pEp_identity *alice;
+    pEp_identity *bob;
+    alice_and_bob(session, alice, bob);
+
+    // Sylvia is unknown 
+    pEp_identity *sylvia = new_identity("sylvia@test.pep", NULL, NULL, "Sylvia");
+
+    // incoming message from Sylvia to Alice
+    message *src = new_message(PEP_dir_incoming);
+    assert(src);
+    src->from = identity_dup(sylvia);
+    assert(src->from);
+    src->to = new_identity_list(identity_dup(alice));
+    assert(src->to && src->to->ident);
+    src->shortmsg = strdup("pEp");
+    assert(src->shortmsg);
+
+    PEP_rating rating = PEP_rating_undefined;
+
+    // 1)  Sylvia sends an unencrypted mail without key
+
+    status = incoming_message_rating(session, src, nullptr, nullptr, nullptr,
+            PEP_UNENCRYPTED, &rating);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(rating, PEP_rating_unencrypted);
+    ASSERT_EQ(default_key_set(session, sylvia), false);
+
+    // 2)  Sylvia sends an unencrypted mail with key attached, no claim
+    //     => unencrypted, no default key
+    
+    std::string sylvias_key = slurp("test_keys/pub/sylvia-pub.asc");
+    src->attachments = new_bloblist(strdup(sylvias_key.c_str()), sylvias_key.size(),
+            "application/pgp-keys", "sylvia-pub.asc");
+    assert(src->attachments && src->attachments->value);
+
+    status = incoming_message_rating(session, src, nullptr, nullptr, nullptr,
+            PEP_UNENCRYPTED, &rating);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(rating, PEP_rating_unencrypted);
+    ASSERT_EQ(default_key_set(session, sylvia), false);
+
+the_end:
+    free_message(src);
+    free_identity(alice);
+    free_identity(bob);
+    free_identity(sylvia);
+}
