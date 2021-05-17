@@ -107,6 +107,15 @@ TEST_F(NoOwnIdentWritesOnDecryptTest, check_no_own_ident_writes_on_decrypt) {
     me_recip = new_identity("pep.test.bob@pep-project.org", NULL, "Bob_is_hot", "Hot Bob");
     other_recip = new_identity("pep-test-carol@pep-project.org", NULL, "Carol_loves_me", "Carol Loves Alice");
 
+    // Better set those default fprs
+    const char* bob_fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
+    const char* carol_fpr = "8DD4F5827B45839E9ACCA94687BDDFFB42A85A42";
+
+    PEP_STATUS status = set_fpr_preserve_ident(session, me_recip, bob_fpr, true);
+    ASSERT_OK;
+    status = set_fpr_preserve_ident(session, other_recip, carol_fpr, true);
+    ASSERT_OK;
+
     identity_list* to_list = new_identity_list(other_recip);
     identity_list_add(to_list, me_recip);
 
@@ -118,7 +127,7 @@ TEST_F(NoOwnIdentWritesOnDecryptTest, check_no_own_ident_writes_on_decrypt) {
 
     message* enc_msg = NULL;
 
-    PEP_STATUS status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_OK;
     free_message(msg);
     enc_msg->dir = PEP_dir_incoming;
@@ -151,7 +160,6 @@ TEST_F(NoOwnIdentWritesOnDecryptTest, check_no_own_ident_writes_on_decrypt) {
     ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/pep-test-carol-0x42A85A42_pub.asc"));
 
     const char* bob_name = "STOP MESSING WITH ME ALICE";
-    const char* bob_fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
     pEp_identity* me = new_identity("pep.test.bob@pep-project.org", NULL, PEP_OWN_USERID, bob_name);
     status = set_own_key(session, me, bob_fpr);
     ASSERT_OK;
