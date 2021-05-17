@@ -94,7 +94,8 @@ namespace {
 
 }  // namespace
 
-
+// FIXME: I am really not sure what this test was supposed to check - I think it's leftover from another test and
+// is actually covered by key_reset tests at this point. Double check?
 TEST_F(RevokeRegenAttachTest, check_revoke_regen_attach) {
     PEP_STATUS status = PEP_STATUS_OK;
 
@@ -133,7 +134,10 @@ TEST_F(RevokeRegenAttachTest, check_revoke_regen_attach) {
     me->comm_type = PEP_ct_unknown;
     myself(session, me);
 
+    const char* alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
     identity_list *to = new_identity_list(new_identity("pep.test.alice@pep-project.org", NULL, "42", "pEp Test Alice (test key don't use)"));
+    status = set_fpr_preserve_ident(session, to->ident, alice_fpr, false);
+
     message *msg = new_message(PEP_dir_outgoing);
     ASSERT_NOTNULL(msg);
     msg->from = me;
@@ -149,18 +153,9 @@ TEST_F(RevokeRegenAttachTest, check_revoke_regen_attach) {
     ASSERT_NOTNULL(enc_msg);
     output_stream << "message encrypted.\n";
 
-    // output_stream << msg->attachments->filename;
-    // int bl_len = bloblist_length(msg->attachments);
-    // output_stream << "Message contains " << bloblist_length(msg->attachments) << " attachments." << endl;
-    // ASSERT_EQ(bloblist_length(msg->attachments) , 2);
-    // ASSERT_EQ((strcmp(msg->attachments->filename, "file://pEpkey.asc") , 0), "strcmp(msg->attachments->filename);
-    // ASSERT_EQ((strcmp(msg->attachments->next->filename, "file://pEpkey.asc") , 0), "strcmp(msg->attachments->next->filename);
-    //
-    // output_stream << "message contains 2 key attachments.\n";
+    output_stream << msg->attachments->filename;
+    ASSERT_STREQ(msg->attachments->filename, "file://sender_key.asc");
 
     free_message(msg);
     free_message(enc_msg);
-
-    // TODO: check that revoked key isn't sent after some time.
-
 }
