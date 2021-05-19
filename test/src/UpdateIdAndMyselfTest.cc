@@ -908,7 +908,7 @@ TEST_F(UpdateIdAndMyselfTest, check_key_elect_expired_key) {
 
     bernd = new_identity(bernd_address, NULL, bernd_userid, bernd_username);
     status = update_identity(session, bernd);
-    ASSERT_NE(status, PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_TRUE(bernd->fpr == nullptr || bernd->fpr[0] == '\0');
     ASSERT_NOTNULL(bernd->username);
     ASSERT_STREQ(bernd->username, bernd_username);
@@ -918,7 +918,7 @@ TEST_F(UpdateIdAndMyselfTest, check_key_elect_expired_key) {
     ASSERT_EQ(bernd->comm_type, PEP_ct_key_not_found);
     ASSERT_STREQ(bernd->address, bernd_address);
 
-    output_stream << "PASS: update_identity() correctly rejected expired key with PEP_KEY_UNSUITABLE and PEP_ct_key_not_found" << endl << endl;
+    output_stream << "PASS: update_identity() correctly rejected expired key with PEP_ct_key_not_found" << endl << endl;
     free_identity(bernd);
 }
 
@@ -1216,7 +1216,8 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_own_renewal_password) {
     free(testy->user_id);    
     testy->user_id = NULL;    
     status = update_identity(session, testy);    
-    ASSERT_EQ(status, PEP_KEY_UNSUITABLE);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(testy->comm_type, PEP_ct_key_not_found);
     
     bool expired = false;
     status = key_expired(session, testy_fpr, time(NULL), &expired);
@@ -1248,7 +1249,9 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_own_renewal_wrong_password) 
     free(testy->user_id);    
     testy->user_id = NULL;    
     status = update_identity(session, testy);    
-    ASSERT_EQ(status, PEP_KEY_UNSUITABLE);
+    ASSERT_OK;
+    ASSERT_EQ(testy->comm_type, PEP_ct_key_not_found);
+
     
     bool expired = false;
     status = key_expired(session, testy_fpr, time(NULL), &expired);
@@ -1277,7 +1280,8 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_own_renewal_requires_passwor
     free(testy->user_id);    
     testy->user_id = NULL;    
     status = update_identity(session, testy);    
-    ASSERT_EQ(status, PEP_KEY_UNSUITABLE);
+    ASSERT_OK;
+    ASSERT_EQ(testy->comm_type, PEP_ct_key_not_found);
     
     bool expired = false;
     status = key_expired(session, testy_fpr, time(NULL), &expired);
