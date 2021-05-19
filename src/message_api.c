@@ -5344,9 +5344,9 @@ static PEP_STATUS _decrypt_message(
                                 sender_key = imported_sender_key_fpr;
                         }
                         else if (header_key_imported && _imported_key_list)
-                            sender_key = strdup(_imported_key_list->value);
+                            sender_key = _imported_key_list->value;
                         else if (*start && !((*start)->next))
-                            sender_key = strdup((*start)->value); // signer if sent from < 2.1
+                            sender_key = (*start)->value; // signer if sent from < 2.1
 
 
                         status = _check_and_set_default_key(session, src->from, sender_key);

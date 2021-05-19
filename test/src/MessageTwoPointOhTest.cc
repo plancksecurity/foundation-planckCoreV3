@@ -112,13 +112,17 @@ TEST_F(MessageTwoPointOhTest, check_message_two_point_oh) {
 
     output_stream << "creating message…\n";
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", PEP_OWN_USERID, "Alice Test");
+    PEP_STATUS alice_status = set_own_key(session, alice, alice->fpr);
+    ASSERT_EQ(alice_status, PEP_STATUS_OK);
+
     pEp_identity* carol = new_identity("pep-test-carol@pep-project.org", NULL, "TOFU_pep-test-carol@pep-project.org", "Carol Test");
+    const char* carol_fpr = "8DD4F5827B45839E9ACCA94687BDDFFB42A85A42";
+    PEP_STATUS carol_status = set_fpr_preserve_ident(session, carol, carol_fpr, true);
+    ASSERT_EQ(carol_status, PEP_STATUS_OK);
+    carol_status = update_identity(session, carol);
+    ASSERT_EQ(carol_status, PEP_STATUS_OK);
 
-    PEP_STATUS alice_status = update_identity(session, alice);
-    PEP_STATUS carol_status = update_identity(session, carol);
-
-    PEP_STATUS status = update_trust_for_fpr(session, alice->fpr, PEP_ct_pEp);
-    status = update_trust_for_fpr(session, carol->fpr, carol_comm_type);
+    PEP_STATUS status = update_trust_for_fpr(session, carol->fpr, carol_comm_type);
 
     PEP_STATUS mystatus = myself(session, alice);
     ASSERT_EQ(mystatus , PEP_STATUS_OK);
