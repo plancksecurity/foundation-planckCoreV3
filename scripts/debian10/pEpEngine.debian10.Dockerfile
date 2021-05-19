@@ -27,13 +27,13 @@ RUN  apt-get update && apt-get install -y bzip2 && \
 ### Build pEpEngine dependencies
 USER pep-builder
 
-RUN sh ./scripts/${CURRENT_DISTRO}/build_pEpEngine_deps.sh
+RUN sh ./scripts/common/build_pEpEngine_deps.sh
 
 ### Build pEpEngine
-RUN sh ./scripts/${CURRENT_DISTRO}/build_pEpEngine.sh
+RUN sh ./scripts/common/build_pEpEngine.sh
 
 ### Install Systemdb
 USER root
 
-RUN sh ./scripts/${CURRENT_DISTRO}/install_pEpEngine_systemdb.sh && \
+RUN sh ./scripts/common/install_pEpEngine_systemdb.sh && \
     rm -rf ${BUILDROOT}/*
