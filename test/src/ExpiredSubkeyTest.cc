@@ -108,11 +108,17 @@ TEST_F(ExpiredSubkeyTest, check_expired_subkey_with_valid_subkeys_expired_main) 
     ASSERT_OK;
     status = update_identity(session, expired_0);
     ASSERT_OK;
-    ASSERT_NOTNULL(expired_0->fpr);
     PEP_rating rating;
     status = identity_rating(session, expired_0, &rating);
-    ASSERT_EQ(status , PEP_KEY_UNSUITABLE);
-    ASSERT_EQ(rating , PEP_rating_undefined);
+    ASSERT_OK;
+    ASSERT_EQ(rating , PEP_rating_have_no_key);
+    PEP_comm_type ct = PEP_ct_unknown;
+    status = get_key_rating(session, fpr, &ct);
+    ASSERT_OK;
+    ASSERT_EQ(ct, PEP_ct_key_expired);
+    status = get_key_rating_for_user(session, expired_0->user_id, fpr, &rating);
+    ASSERT_OK;
+    ASSERT_EQ(rating, PEP_rating_unreliable);
 }
 
 TEST_F(ExpiredSubkeyTest, check_all_valid_with_leftover_expired_subkeys) {
@@ -140,9 +146,19 @@ TEST_F(ExpiredSubkeyTest, check_no_valid_encryption_subkey) {
     ASSERT_OK;
     status = update_identity(session, expired_0);
     ASSERT_OK;
-    ASSERT_NOTNULL(expired_0->fpr);
+
+    status = update_identity(session, expired_0);
+    ASSERT_OK;
+    ASSERT_NULL(expired_0->fpr);
     PEP_rating rating;
     status = identity_rating(session, expired_0, &rating);
-    ASSERT_EQ(status , PEP_KEY_UNSUITABLE);
-    ASSERT_EQ(rating , PEP_rating_undefined);
+    ASSERT_OK;
+    ASSERT_EQ(rating , PEP_rating_have_no_key);
+    PEP_comm_type ct = PEP_ct_unknown;
+    status = get_key_rating(session, fpr, &ct);
+    ASSERT_OK;
+    ASSERT_EQ(ct, PEP_ct_key_expired);
+    status = get_key_rating_for_user(session, expired_0->user_id, fpr, &rating);
+    ASSERT_OK;
+    ASSERT_EQ(rating, PEP_rating_unreliable);
 }

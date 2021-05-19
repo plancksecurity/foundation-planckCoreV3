@@ -92,7 +92,7 @@ TEST_F(RemoveKeyElectionTest, check_remove_key_election_simple_unstored_not_foun
     PEP_STATUS status = update_identity(session, alice);
     ASSERT_OK;
     ASSERT_NULL(alice->fpr);
-    ASSERT_EQ(alice->comm_type, PEP_ct_key_not_found); // This might be undesired. Maybe "unknown"
+    ASSERT_EQ(alice->comm_type, PEP_ct_key_not_found); // This is desired. The DB, however, must have "unknown"
 }
 
 TEST_F(RemoveKeyElectionTest, check_remove_key_election_simple_stored_not_found) {
@@ -104,7 +104,7 @@ TEST_F(RemoveKeyElectionTest, check_remove_key_election_simple_stored_not_found)
     status = update_identity(session, alice);
     ASSERT_OK;
     ASSERT_NULL(alice->fpr);
-    ASSERT_EQ(alice->comm_type, PEP_ct_key_not_found); // This might be undesired. Maybe "unknown"
+    ASSERT_EQ(alice->comm_type, PEP_ct_key_not_found); // This is desired. The DB, however, must have "unknown"
 }
 
 TEST_F(RemoveKeyElectionTest, check_remove_key_election_simple_stored_found) {
@@ -120,7 +120,7 @@ TEST_F(RemoveKeyElectionTest, check_remove_key_election_simple_stored_found) {
     ASSERT_OK;
     ASSERT_NOTNULL(alice->fpr);
     ASSERT_STREQ(alice->fpr, alice_fpr);
-    ASSERT_EQ(alice->comm_type, PEP_ct_OpenPGP_unconfirmed); // This might be undesired. Maybe "unknown"
+    ASSERT_EQ(alice->comm_type, PEP_ct_OpenPGP_unconfirmed);
 }
 
 TEST_F(RemoveKeyElectionTest, check_remove_key_election_simple_stored_found_no_input_username) {
@@ -138,7 +138,7 @@ TEST_F(RemoveKeyElectionTest, check_remove_key_election_simple_stored_found_no_i
     ASSERT_OK;
     ASSERT_NOTNULL(alice->fpr);
     ASSERT_STREQ(alice->fpr, alice_fpr);
-    ASSERT_EQ(alice->comm_type, PEP_ct_OpenPGP_unconfirmed); // This might be undesired. Maybe "unknown"
+    ASSERT_EQ(alice->comm_type, PEP_ct_OpenPGP_unconfirmed);
     ASSERT_STREQ(alice_name, alice->username);
 }
 
@@ -166,7 +166,7 @@ TEST_F(RemoveKeyElectionTest, check_remove_key_election_simple_stored_found_stor
     ASSERT_OK;
     ASSERT_NOTNULL(alice->fpr);
     ASSERT_STREQ(alice->fpr, alice_fpr);
-    ASSERT_EQ(alice->comm_type, PEP_ct_OpenPGP_unconfirmed); // This might be undesired. Maybe "unknown"
+    ASSERT_EQ(alice->comm_type, PEP_ct_OpenPGP_unconfirmed);
     ASSERT_STREQ(alice_name, alice->username);
     free_identity(alice2);
     alice2 = NULL;
@@ -190,7 +190,7 @@ TEST_F(RemoveKeyElectionTest, check_remove_key_election_simple_stored_found_no_u
     ASSERT_OK;
     ASSERT_NOTNULL(alice->fpr);
     ASSERT_STREQ(alice->fpr, alice_fpr);
-    ASSERT_EQ(alice->comm_type, PEP_ct_OpenPGP_unconfirmed); // This might be undesired. Maybe "unknown"
+    ASSERT_EQ(alice->comm_type, PEP_ct_OpenPGP_unconfirmed);
 }
 
 TEST_F(RemoveKeyElectionTest, check_remove_key_election_simple_stored_found_no_userid_no_uname) {
@@ -210,7 +210,7 @@ TEST_F(RemoveKeyElectionTest, check_remove_key_election_simple_stored_found_no_u
     ASSERT_OK;
     ASSERT_NOTNULL(alice->fpr);
     ASSERT_STREQ(alice->fpr, alice_fpr);
-    ASSERT_EQ(alice->comm_type, PEP_ct_OpenPGP_unconfirmed); // This might be undesired. Maybe "unknown"
+    ASSERT_EQ(alice->comm_type, PEP_ct_OpenPGP_unconfirmed);
 }
 
 TEST_F(RemoveKeyElectionTest, check_remove_key_election_simple_stored_found_stored_TOFU_input_TOFU_names_match) {
@@ -226,7 +226,7 @@ TEST_F(RemoveKeyElectionTest, check_remove_key_election_simple_stored_found_stor
     ASSERT_OK;
     ASSERT_NOTNULL(alice->fpr);
     ASSERT_STREQ(alice->fpr, alice_fpr);
-    ASSERT_EQ(alice->comm_type, PEP_ct_OpenPGP_unconfirmed); // This might be undesired. Maybe "unknown"
+    ASSERT_EQ(alice->comm_type, PEP_ct_OpenPGP_unconfirmed);
 }
 
 TEST_F(RemoveKeyElectionTest, check_remove_key_election_simple_stored_found_stored_TOFU_input_TOFU_names_no_match) {
@@ -244,7 +244,7 @@ TEST_F(RemoveKeyElectionTest, check_remove_key_election_simple_stored_found_stor
     ASSERT_OK;
     ASSERT_NOTNULL(alice->fpr);
     ASSERT_STREQ(alice->fpr, alice_fpr);
-    ASSERT_EQ(alice->comm_type, PEP_ct_OpenPGP_unconfirmed); // This might be undesired. Maybe "unknown"
+    ASSERT_EQ(alice->comm_type, PEP_ct_OpenPGP_unconfirmed);
 }
 
 TEST_F(RemoveKeyElectionTest, check_remove_key_election_simple_stored_found_stored_TOFU_input_no_userid_names_no_match) {
@@ -264,7 +264,7 @@ TEST_F(RemoveKeyElectionTest, check_remove_key_election_simple_stored_found_stor
     ASSERT_OK;
     ASSERT_NOTNULL(alice->fpr);
     ASSERT_STREQ(alice->fpr, alice_fpr);
-    ASSERT_EQ(alice->comm_type, PEP_ct_OpenPGP_unconfirmed); // This might be undesired. Maybe "unknown"
+    ASSERT_EQ(alice->comm_type, PEP_ct_OpenPGP_unconfirmed);
     ASSERT_STREQ(alice->username, "Cheese");
     pEp_identity* alice2 = NULL;
     status = get_identity(session, alice_addr, alice_TOFU, &alice2);

@@ -30,10 +30,6 @@ extern "C" {
  *  @retval PEP_ILLEGAL_VALUE if called with illegal inputs, including an identity
  *          with .me set or with an own user_id specified in the
  *          *input* (see caveats) 
- *  @retval PEP_KEY_UNSUITABLE if a default key was found for this identity, no
- *          other acceptable keys were found; if this is returned,
- *          the reason for rejecting the first default key found
- *          may be found in the comm_type
  *  @retval any other value on error
  *  
  *  @warning at least identity->address must be a non-empty UTF-8 string as input

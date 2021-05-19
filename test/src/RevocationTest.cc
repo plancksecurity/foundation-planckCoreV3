@@ -111,10 +111,7 @@ TEST_F(RevocationTest, check_revocation) {
 
     const char* linda_fpr = "ABC96B3B4BAFB57DC45D81B56A48221A903A158B";
     pEp_identity* pre = new_identity("linda@example.org", NULL, NULL, NULL);
-    status = update_identity(session, pre);
-    ASSERT_OK;
-    pre->fpr = strdup(linda_fpr);
-    status = set_identity(session, pre);
+    status = set_fpr_preserve_ident(session, pre, linda_fpr, false);
     ASSERT_OK;
     status = update_identity(session, pre);
     ASSERT_OK;
@@ -136,10 +133,9 @@ TEST_F(RevocationTest, check_revocation) {
     ASSERT_OK;
 
     status = update_identity(session, post);
-    // PEP_KEY_UNSUITABLE => revoked (or something similar).
-    ASSERT_EQ(status , PEP_KEY_UNSUITABLE);
+    ASSERT_EQ(status , PEP_STATUS_OK); // We don't return revoked keys on update_identity, we just return nothing, and this is OK.
     ASSERT_EQ(post->comm_type , PEP_ct_key_not_found);
-    free(post->fpr);
+    ASSERT_NULL(post->fpr);
     post->fpr = strdup(keylist->value);
     status = get_trust(session, post);
     ASSERT_OK;

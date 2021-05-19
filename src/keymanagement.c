@@ -640,22 +640,27 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     bool is_pEp = false;
 
     switch (status) {
+        // FIXME: can we get memory or DB errors from the above? If so, handle it.
         case PEP_STATUS_OK:
             if (!EMPTYSTR(stored_ident->fpr)) {
                 // set identity comm_type from trust db (user_id, FPR)
                 status = get_trust(session, stored_ident);
-                if (status == PEP_CANNOT_FIND_IDENTITY || stored_ident->comm_type == PEP_ct_unknown) {
+                PEP_comm_type ct = stored_ident->comm_type;
+                if (status == PEP_CANNOT_FIND_IDENTITY || ct == PEP_ct_unknown || ct == PEP_ct_key_not_found) {
                     // This is OK - there is no trust DB entry, but we
                     // found a key. We won't store this, but we'll
                     // use it.
-                    PEP_comm_type ct = PEP_ct_unknown;
+                    ct = PEP_ct_unknown;
                     status = get_key_rating(session, stored_ident->fpr, &ct);
-                    stored_ident->comm_type = ct;
+                    stored_ident->comm_type = (ct == PEP_ct_unknown ? PEP_ct_key_not_found : ct);
                 }
             }
             else if (stored_ident->comm_type == PEP_ct_unknown)
                 stored_ident->comm_type = PEP_ct_key_not_found;
-            break;    
+            break;
+        case PEP_KEY_UNSUITABLE:
+            status = PEP_STATUS_OK;
+            // explicit fallthrough
         default:    
             is_pEp_user(session, stored_ident, &is_pEp);
             if (is_pEp) {
@@ -671,14 +676,14 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
 
             free(stored_ident->fpr);
             stored_ident->fpr = NULL;
-            stored_ident->comm_type = PEP_ct_key_not_found;        
+            stored_ident->comm_type = PEP_ct_key_not_found;
     }
 
     free(return_id->fpr);
     return_id->fpr = NULL;
     if (status == PEP_STATUS_OK && !EMPTYSTR(stored_ident->fpr))
         return_id->fpr = strdup(stored_ident->fpr);
-        
+
     return_id->comm_type = stored_ident->comm_type;
                     
     // We patch the DB with the input username, but if we didn't have
@@ -1011,6 +1016,9 @@ DYNAMIC_API PEP_STATUS update_identity(
         identity->comm_type = PEP_ct_unknown;
         adjust_pEp_trust_status(session, identity);
         status = set_identity(session, identity);
+        // This is ONLY for the return value - VB confirms we should tell the user we didn't find a key
+        if (identity->comm_type == PEP_ct_unknown)
+            identity->comm_type = PEP_ct_key_not_found;
     }
     
     // VB says, and I quote, "that is not implemented and no one is using it right now"
@@ -2264,7 +2272,7 @@ PEP_STATUS is_mistrusted_key(PEP_SESSION session, const char* fpr,
 /**
  *  @internal
  *  
- *  <!--       _wipe_default_key_if_invalid()       -->
+ *  <!--       _wipe_own_default_key_if_invalid()       -->
  *  
  *  @brief            TODO
  *  
@@ -2276,7 +2284,7 @@ PEP_STATUS is_mistrusted_key(PEP_SESSION session, const char* fpr,
  *  @retval PEP_OUT_OF_MEMORY   out of memory
  *  @retval any other value on error
  */
-static PEP_STATUS _wipe_default_key_if_invalid(PEP_SESSION session,
+static PEP_STATUS _wipe_own_default_key_if_invalid(PEP_SESSION session,
                                          pEp_identity* ident) {
 
     if (!(session && ident))
@@ -2319,6 +2327,8 @@ static PEP_STATUS _wipe_default_key_if_invalid(PEP_SESSION session,
     // This may have been for a user default, not an identity default.
     if (status == PEP_STATUS_OK && !(EMPTYSTR(ident->address)))
         status = myself(session, ident);
+    else
+        status = PEP_STATUS_OK; // Once we've wiped it, since password errors are already handled, we're fine here.
             
     return status;                                        
 }
@@ -2348,7 +2358,7 @@ DYNAMIC_API PEP_STATUS clean_own_key_defaults(PEP_SESSION session) {
         if (!ident)
             continue;
         
-        status = _wipe_default_key_if_invalid(session, ident);    
+        status = _wipe_own_default_key_if_invalid(session, ident);    
         if (PASS_ERROR(status))
             return status;
     }   
@@ -2375,7 +2385,7 @@ DYNAMIC_API PEP_STATUS clean_own_key_defaults(PEP_SESSION session) {
         }
         else if (user_default_key) {
             pEp_identity* empty_user = new_identity(NULL, user_default_key, own_id, NULL);
-            status = _wipe_default_key_if_invalid(session, empty_user);       
+            status = _wipe_own_default_key_if_invalid(session, empty_user);       
             if (PASS_ERROR(status))
                 return status;
                     

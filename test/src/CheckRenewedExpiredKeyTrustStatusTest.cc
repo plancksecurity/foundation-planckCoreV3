@@ -175,8 +175,9 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     const string msg = slurp("test_mails/ENGINE-463-attempt-numero-dos.eml");
 
     status = update_identity(session, expired_inquisitor);
-    ASSERT_EQ(status, PEP_KEY_UNSUITABLE);
+    ASSERT_EQ(status, PEP_STATUS_OK); // We don't need to be informed that there's now no key - update_identity not having one is enough
     ASSERT_NULL(expired_inquisitor->fpr);
+    ASSERT_EQ(expired_inquisitor->comm_type, PEP_ct_key_not_found);
 
     char* decrypted_msg = NULL;
     stringlist_t* keylist = NULL;
@@ -207,6 +208,12 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     status = outgoing_message_rating(session, msg2, &rating);
     ASSERT_OK;
     ASSERT_EQ(rating, PEP_rating_reliable);
+
+    status = update_identity(session, expired_inquisitor);
+    ASSERT_EQ(status, PEP_STATUS_OK); // We don't need to be informed that there's now no key - update_identity not having one is enough
+    ASSERT_NE(expired_inquisitor->fpr, nullptr);
+    ASSERT_STREQ(expired_inquisitor->fpr, inq_fpr);
+    ASSERT_EQ(expired_inquisitor->comm_type, PEP_ct_OpenPGP_unconfirmed);
 }
 
 // If we updated an OpenPGP identity in the meantime, we will have removed the key. Too bad.
@@ -247,7 +254,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
 
     // Ok, now update_identity - we'll discover it's expired
     status = update_identity(session, expired_inquisitor);
-    ASSERT_EQ(status , PEP_KEY_UNSUITABLE);
+    ASSERT_EQ(status , PEP_STATUS_OK); // Key is expired, but we don't return it. So... byebye.
     PEP_comm_type ct = expired_inquisitor->comm_type;
     ASSERT_EQ(ct , PEP_ct_key_not_found);
     ASSERT_NULL(expired_inquisitor->fpr);
@@ -303,6 +310,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     ASSERT_EQ(rating, PEP_rating_trusted);
 
     free_message(msg2);
+
 }
 
 TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_status_pEp_user) {
@@ -403,7 +411,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
 
     // Ok, now update_identity - we'll discover it's expired
     status = update_identity(session, expired_inquisitor);
-    ASSERT_EQ(status , PEP_KEY_UNSUITABLE);
+    ASSERT_OK; // key is expired, but we don't return it, so we're OK.
     PEP_comm_type ct = expired_inquisitor->comm_type;
     ASSERT_EQ(ct, PEP_ct_key_not_found);
     ASSERT_NULL(expired_inquisitor->fpr);
