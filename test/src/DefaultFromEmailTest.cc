@@ -268,13 +268,42 @@ TEST_F(DefaultFromEmailTest, check_encrypt_to_pEp_10_111_simple_key) {
     free_message(enc_msg);
 }
 
+TEST_F(DefaultFromEmailTest, check_unencrypted_from_pEp_simple_key) {
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    message* unenc_msg = NULL;
+    message* enc_msg = NULL;
+    create_base_test_msg(&unenc_msg, 1, 0, true);
+
+    // We actually want this to be to someone we don't have the key for, so we remove
+    // the set up "to"
+    free_identity_list(unenc_msg->to);
+    pEp_identity* ramoth = new_identity("ramoth_cat@darthmama.org", NULL, "RAMOTH", "Ramoth T. Cat, Spy Queen of Orlais");
+    unenc_msg->to = new_identity_list(ramoth);
+    status = encrypt_message(session, unenc_msg, NULL, &enc_msg, PEP_enc_PEP, 0);
+    ASSERT_EQ(status, PEP_UNENCRYPTED);
+    ASSERT_EQ(enc_msg, nullptr);
+
+    // N.B. Actual check happens on decrypt later. But we can check that the encryption path doesn't fail, anyway.
+    if (DEFAULT_FROM_TEST_GEN) {
+        char* enc_text = NULL;
+        status = mime_encode_message(unenc_msg, false, &enc_text, false);
+        ASSERT_OK;
+        ASSERT_NOTNULL(enc_text);
+        dump_out("test_mails/unencrypted_from_pEp.eml", enc_text);
+        free(enc_text);
+    }
+    free_message(unenc_msg);
+    free_message(enc_msg);
+}
+
+
 TEST_F(DefaultFromEmailTest, check_unencrypted_OpenPGP_from_TB_import_bare_default) {
     PEP_STATUS status = PEP_STATUS_OK;
     pEp_identity* ramoth = new_identity("ramoth_cat@darthmama.org", NULL, PEP_OWN_USERID, "Ramoth T. Cat, Spy Queen of Orlais");
     status = myself(session, ramoth);
     ASSERT_OK;
 
-    // FIXME: change this message to an non-expiring key, btw.
     // Import the message which contains a single key. Be sure we get this key back.
     string email = slurp("test_mails/unencrypted_OpenPGP_with_key_attached.eml");
 
@@ -285,7 +314,7 @@ TEST_F(DefaultFromEmailTest, check_unencrypted_OpenPGP_from_TB_import_bare_defau
     ASSERT_OK;
     ASSERT_NOTNULL(enc_msg);
 
-    const char* sender_key_fpr = "62D4932086185C15917B72D30571AFBCA5493553";
+    const char* sender_key_fpr = "89047BFE779999F77CFBEDB284593ADAC6406F81";
     message* dec_msg = NULL;
     stringlist_t* keylist = NULL;
     PEP_rating rating;
@@ -371,7 +400,7 @@ TEST_F(DefaultFromEmailTest, check_unencrypted_pEp_v1_import_bare_default) {
 
     // FIXME: change this message to an non-expiring key, btw.
     // Import the message which contains a single key. Be sure we get this key back.
-    string email = slurp("test_mails/unencrypted_OpenPGP_with_key_attached.eml");
+    string email = slurp("test_mails/unencrypted_from_pEp_1.0.eml");
 
     // We shouldn't rely on MIME_encrypt/decrypt (and should fix other tests) -
     // otherwise, we're also testing the parser driver.
@@ -380,7 +409,6 @@ TEST_F(DefaultFromEmailTest, check_unencrypted_pEp_v1_import_bare_default) {
     ASSERT_OK;
     ASSERT_NOTNULL(enc_msg);
 
-    const char* sender_key_fpr = "62D4932086185C15917B72D30571AFBCA5493553";
     message* dec_msg = NULL;
     stringlist_t* keylist = NULL;
     PEP_rating rating;
@@ -398,12 +426,12 @@ TEST_F(DefaultFromEmailTest, check_unencrypted_pEp_v1_import_bare_default) {
     pEp_identity* bcc = idents->ident;
     ASSERT_NOTNULL(bcc);
     ASSERT_NOTNULL(bcc->fpr);
-    ASSERT_STREQ(sender_key_fpr, bcc->fpr);
+    ASSERT_STREQ(john_fpr, bcc->fpr);
 
     // Now make sure update identity returns the same
     status = update_identity(session, bcc);
     ASSERT_NOTNULL(bcc->fpr);
-    ASSERT_STREQ(sender_key_fpr, bcc->fpr);
+    ASSERT_STREQ(john_fpr, bcc->fpr);
 
     // FIXME: free stuff    
 }
