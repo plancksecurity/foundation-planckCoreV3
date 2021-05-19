@@ -5205,9 +5205,10 @@ static PEP_STATUS _decrypt_message(
             if (src->from->address) {
                 PEP_STATUS incoming_status = status;
                 const char* sender_key = NULL;
-                if (imported_sender_key_fpr) // pEp message version 2.2 or greater
-                    sender_key = imported_sender_key_fpr;
-                else if (header_key_imported) // autocrypt
+                if (imported_sender_key_fpr) {// pEp message version 2.2 or greater
+                    sender_key = imported_sender_key_fpr; // FIXME: free
+                }
+                else if (!is_pEp_msg && header_key_imported) // autocrypt
                     sender_key = _imported_key_list->value;
                 else {
                     // We do this only with pEp messages 2.1 or less, or OpenPGP messages
@@ -5218,6 +5219,8 @@ static PEP_STATUS _decrypt_message(
                 } // Otherwise, too bad.
 
                 status = _check_and_set_default_key(session, src->from, sender_key);
+                free(imported_sender_key_fpr);
+                imported_sender_key_fpr = NULL;
 
                 if (status == PEP_OUT_OF_MEMORY)
                     goto enomem;
@@ -5324,7 +5327,7 @@ static PEP_STATUS _decrypt_message(
                                                         &keys_were_imported,
                                                         &imported_private_key_address,
                                                         private_il,
-                                                        &_imported_key_list, 
+                                                        &_imported_key_list,
                                                         &_changed_keys,
                                                         &imported_sender_key_fpr);
 
@@ -5339,11 +5342,16 @@ static PEP_STATUS _decrypt_message(
                         if ((major_ver == 2 && minor_ver > 1) || major_ver > 2) {
                             if (imported_sender_key_fpr)
                                 sender_key = imported_sender_key_fpr;
-                        }             
+                        }
+                        else if (header_key_imported && _imported_key_list)
+                            sender_key = strdup(_imported_key_list->value);
                         else if (*start && !((*start)->next))
-                            sender_key = (*start)->value; // signer if sent from < 2.1
+                            sender_key = strdup((*start)->value); // signer if sent from < 2.1
+
 
                         status = _check_and_set_default_key(session, src->from, sender_key);
+                        free(imported_sender_key_fpr);
+                        imported_sender_key_fpr = NULL;
 
                         if (status == PEP_OUT_OF_MEMORY)
                             goto enomem;    
