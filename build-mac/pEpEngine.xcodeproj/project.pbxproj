@@ -883,7 +883,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "CUSTOM_BUILD_DIR=${PROJECT_DIR}/build\nmkdir -p ${CUSTOM_BUILD_DIR}\ncp -r \"${BUILD_DIR}/${CONFIGURATION}/libpEpEngine_macOS.a\" ${CUSTOM_BUILD_DIR}\n\n# Copy system.db also\ncp ${PROJECT_DIR}/../db/system.db ${CUSTOM_BUILD_DIR}\n";
+			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nmkdir -p \"${CUSTOM_BUILD_DIR}\"\ncp -r \"${BUILD_DIR}/${CONFIGURATION}/libpEpEngine_macOS.a\" \"${CUSTOM_BUILD_DIR}/libpEpEngine.a\"\n\n# COPY HEADERS\nCUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include/pEp\"\nmkdir -p \"${CUSTOM_INCLUDE_DIR}\"\n\n#pushd ${PROJECT_DIR}/../asn.1\n#    cp *h \"${CUSTOM_INCLUDE_DIR}\"\n#popd\n\npushd ${PROJECT_DIR}/../sync/generated\n    cp *h \"${CUSTOM_INCLUDE_DIR}\"\npopd\n\npushd ${PROJECT_DIR}/../src\n    cp *h \"${CUSTOM_INCLUDE_DIR}\"\npopd\n\n# Copy system.db also\ncp ${PROJECT_DIR}/../db/system.db \"${CUSTOM_BUILD_DIR}\"\n";
 		};
 		150845EA25F13CF100D46DA6 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
