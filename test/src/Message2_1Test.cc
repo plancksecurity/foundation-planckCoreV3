@@ -145,7 +145,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_0) {
     ASSERT_NOTNULL(alice);
 
     status = set_up_preset(session, CAROL,
-                           false, true, false, false, false, &carol);
+                           true, true, false, false, false, &carol);
 
     ASSERT_OK;
     ASSERT_NOTNULL(carol);
@@ -202,7 +202,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_OpenPGP) {
     ASSERT_NOTNULL(alice);
 
     status = set_up_preset(session, CAROL,
-                           false, false, false, false, false, &carol);
+                           true, false, false, false, false, &carol);
 
     ASSERT_OK;
     ASSERT_NOTNULL(carol);
