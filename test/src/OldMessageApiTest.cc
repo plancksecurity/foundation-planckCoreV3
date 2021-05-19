@@ -21,11 +21,16 @@
 
 #include <gtest/gtest.h>
 
-
+// This is a long interdependent happy-path test which pretty much summarises the
+// state of engine testing in early 2016, if not earlier. Kept for posterity, and
+// also, if this breaks, lots of things do.
+//
+// It should not be used as an example for how to write engine tests overall unless
+// you are testing a specific, complex scenario.
 namespace {
 
-	//The fixture for MessageApiTest
-    class MessageApiTest : public ::testing::Test {
+	//The fixture for OldMessageApiTest
+    class OldMessageApiTest : public ::testing::Test {
         public:
             Engine* engine;
             PEP_SESSION session;
@@ -33,14 +38,14 @@ namespace {
         protected:
             // You can remove any or all of the following functions if its body
             // is empty.
-            MessageApiTest() {
+            OldMessageApiTest() {
                 // You can do set-up work for each test here.
                 test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->GTEST_SUITE_SYM();
                 test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
                 test_path = get_main_test_home_dir() + "/" + test_suite_name + "/" + test_name;
             }
 
-            ~MessageApiTest() override {
+            ~OldMessageApiTest() override {
                 // You can do clean-up work that doesn't throw exceptions here.
             }
 
@@ -82,33 +87,39 @@ namespace {
             const char* test_suite_name;
             const char* test_name;
             string test_path;
-            // Objects declared here can be used by all tests in the MessageApiTest suite.
+            // Objects declared here can be used by all tests in the OldMessageApiTest suite.
 
     };
 
 }  // namespace
 
 
-TEST_F(MessageApiTest, check_message_api) {
+TEST_F(OldMessageApiTest, check_message_api) {
     output_stream << "Importing Alice's key " << endl;
     const string alice_pub_key = slurp("test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");
     const string alice_priv_key = slurp("test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc");
     const string bob_pub_key = slurp("test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");
 
-    PEP_STATUS status0 = import_key(session, alice_pub_key.c_str(), alice_pub_key.size(), NULL);
-    ASSERT_EQ(status0 , PEP_TEST_KEY_IMPORT_SUCCESS);
-    status0 = import_key(session, alice_priv_key.c_str(), alice_priv_key.size(), NULL);
-    ASSERT_EQ(status0 , PEP_TEST_KEY_IMPORT_SUCCESS);
-    status0 = import_key(session, bob_pub_key.c_str(), bob_pub_key.size(), NULL);
-    ASSERT_EQ(status0 , PEP_TEST_KEY_IMPORT_SUCCESS);
+    PEP_STATUS status = import_key(session, alice_pub_key.c_str(), alice_pub_key.size(), NULL);
+    ASSERT_EQ(status , PEP_TEST_KEY_IMPORT_SUCCESS);
+    status = import_key(session, alice_priv_key.c_str(), alice_priv_key.size(), NULL);
+    ASSERT_EQ(status , PEP_TEST_KEY_IMPORT_SUCCESS);
+    status = import_key(session, bob_pub_key.c_str(), bob_pub_key.size(), NULL);
+    ASSERT_EQ(status , PEP_TEST_KEY_IMPORT_SUCCESS);
     // message_api test code
-
     output_stream << "creating message…\n";
     pEp_identity * me2 = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, "Alice Test");
     // pEp_identity * me2 = new_identity("test@nokey.plop", NULL, PEP_OWN_USERID, "Test no key");
     me2->me = true;
     identity_list *to2 = new_identity_list(new_identity("pep.test.bob@pep-project.org", NULL, "42", "Bob Test"));
     // identity_list *to2 = new_identity_list(new_identity("still@nokey.blup", NULL, "42", "Still no key"));
+
+    // New in 2.2: Bob's key has to be explicitly set in order to ensure it's available for his identity (either
+    // though a mail or directly in the DB (set identity, etc)
+    const char* bob_fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
+    status = set_fpr_preserve_ident(session, to2->ident, bob_fpr, true);
+    ASSERT_OK;
+
     message *msg2 = new_message(PEP_dir_outgoing);
     ASSERT_NOTNULL(msg2);
     msg2->from = me2;
