@@ -1,3 +1,6 @@
+/** @file */
+/** @brief File description for doxygen missing. FIXME */
+
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
@@ -16,7 +19,7 @@ DYNAMIC_API PEP_STATUS blacklist_add(PEP_SESSION session, const char *fpr)
     sqlite3_exec(session->db, "BEGIN ;", NULL, NULL, NULL);
 
     sqlite3_reset(session->blacklist_add);
-	sqlite3_bind_text(session->blacklist_add, 1, fpr, -1, SQLITE_STATIC);
+    sqlite3_bind_text(session->blacklist_add, 1, fpr, -1, SQLITE_STATIC);
 
     int result;
 
@@ -46,7 +49,7 @@ DYNAMIC_API PEP_STATUS blacklist_delete(PEP_SESSION session, const char *fpr)
         return PEP_ILLEGAL_VALUE;
 
     sqlite3_reset(session->blacklist_delete);
-	sqlite3_bind_text(session->blacklist_delete, 1, fpr, -1, SQLITE_STATIC);
+    sqlite3_bind_text(session->blacklist_delete, 1, fpr, -1, SQLITE_STATIC);
 
     int result;
 

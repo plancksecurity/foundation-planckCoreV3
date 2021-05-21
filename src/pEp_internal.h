@@ -1,9 +1,14 @@
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    pEp_internal.h
+ * @brief   pEp internal structs, functions, defines, and values
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
-// maximum attachment size to import as key 1MB, maximum of 20 attachments
+#ifndef PEP_INTERNAL_H
+#define PEP_INTERNAL_H
 
-#define MAX_KEY_SIZE (1024 * 1024)
+// maximum attachment size to import as key 25MB, maximum of 20 attachments
+#define MAX_KEY_SIZE (25 * 1024 * 1024)
 #define MAX_KEYS_TO_IMPORT  20
 
 #define KEY_EXPIRE_DELTA (60 * 60 * 24 * 365)
@@ -67,6 +72,7 @@
 #define LOCAL_DB unix_local_db()
 #else
 #define LOCAL_DB unix_local_db(false)
+#define LOCAL_DB_RESET unix_local_db(true)
 #endif
 #ifdef ANDROID
 #define SYSTEM_DB android_system_db()
@@ -90,6 +96,13 @@
 #endif
 
 #include "pEpEngine.h"
+#include "key_reset.h"
+
+#include "pEpEngine_internal.h"
+#include "key_reset_internal.h"
+#include "group_internal.h"
+#include "keymanagement_internal.h"
+#include "message_api_internal.h"
 
 // If not specified, build for Sequoia
 #ifndef USE_SEQUOIA
@@ -100,18 +113,26 @@
 #include "pgp_sequoia_internal.h"
 #endif
 
+#include "../asn.1/Distribution.h"
+#include "../asn.1/Sync.h"
+
 #include "keymanagement.h"
 #include "cryptotech.h"
 #include "transport.h"
 #include "sync_api.h"
 #include "Sync_func.h"
 
-#include "key_reset.h"
 
 #define NOT_IMPLEMENTED assert(0); return PEP_UNKNOWN_ERROR;
 
 struct _pEpSession;
 typedef struct _pEpSession pEpSession;
+/**
+ *  @struct    _pEpSession
+ *  
+ *  @brief    TODO
+ *  
+ */
 struct _pEpSession {
     const char *version;
     messageToSend_t messageToSend;
@@ -183,6 +204,8 @@ struct _pEpSession {
     // sqlite3_stmt *set_device_group;
     // sqlite3_stmt *get_device_group;
     sqlite3_stmt *set_pgp_keypair;
+    sqlite3_stmt *set_pgp_keypair_flags;
+    sqlite3_stmt *unset_pgp_keypair_flags;
     sqlite3_stmt *set_identity_entry;
     sqlite3_stmt *update_identity_entry;
     sqlite3_stmt *exists_identity_entry;        
@@ -199,6 +222,8 @@ struct _pEpSession {
     sqlite3_stmt *get_trust;
     sqlite3_stmt *get_trust_by_userid;
     sqlite3_stmt *least_trust;
+    sqlite3_stmt *update_key_sticky_bit_for_user;
+    sqlite3_stmt *is_key_sticky_for_user;
     sqlite3_stmt *mark_compromised;
     sqlite3_stmt *reset_trust;
     sqlite3_stmt *crashdump;
@@ -223,6 +248,28 @@ struct _pEpSession {
         
     sqlite3_stmt *get_default_own_userid;
 
+    // groups
+    sqlite3_stmt *create_group;
+    sqlite3_stmt *enable_group;
+    sqlite3_stmt *disable_group;
+    sqlite3_stmt *exists_group_entry;
+    sqlite3_stmt *group_add_member;
+    sqlite3_stmt *group_delete_member;
+    sqlite3_stmt *group_join;
+    sqlite3_stmt *leave_group;
+    sqlite3_stmt *set_group_member_status;
+    sqlite3_stmt *get_all_members;
+    sqlite3_stmt *get_active_members;
+    sqlite3_stmt *get_active_groups;
+    sqlite3_stmt *get_all_groups;
+    sqlite3_stmt *add_own_membership_entry;
+    sqlite3_stmt *get_own_membership_status;
+    sqlite3_stmt *retrieve_own_membership_info_for_group_and_ident;
+    sqlite3_stmt *retrieve_own_membership_info_for_group;
+    sqlite3_stmt *get_group_manager;
+    sqlite3_stmt *is_invited_group_member;
+    sqlite3_stmt *is_active_group_member;
+    sqlite3_stmt *is_group_active;
 
 //    sqlite3_stmt *set_own_key;
 
@@ -250,6 +297,7 @@ struct _pEpSession {
     notifyHandshake_t notifyHandshake;
     inject_sync_event_t inject_sync_event;
     retrieve_next_sync_event_t retrieve_next_sync_event;
+    ensure_passphrase_t ensure_passphrase;
 
     // pEp Sync
     void *sync_management;
@@ -268,24 +316,69 @@ struct _pEpSession {
     bool service_log;
     
 #ifndef NDEBUG
-#   ifdef DEBUG_ERRORSTACK
-    stringlist_t* errorstack;
-#   endif
     int debug_color;
 #endif
 };
 
 
+/**
+ *  <!--       init_transport_system()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session        session handle 
+ *  @param[in]  in_first       bool
+ *  
+ *  @retval     PEP_STATUS_OK
+ */
 PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first);
+
+/**
+ *  <!--       release_transport_system()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session        session handle
+ *  @param[in]  out_last       bool
+ *  
+ */
 void release_transport_system(PEP_SESSION session, bool out_last);
 
-/* NOT to be exposed to the outside!!! */
+/**
+ *  @internal
+ * 
+ *  <!--       encrypt_only()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session     session handle 
+ *  @param[in]  keylist     const stringlist_t*
+ *  @param[in]  ptext       const char*
+ *  @param[in]  psize       size_t
+ *  @param[in]  ctext       char**
+ *  @param[in]  csize       size_t*
+ *  
+ *  @warning    NOT to be exposed to the outside!!!!!
+ */
 PEP_STATUS encrypt_only(
         PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
         size_t psize, char **ctext, size_t *csize
 );
 
+/**
+ *  <!--       decorate_message()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  msg          message*
+ *  @param[in]  rating       PEP_rating
+ *  @param[in]  keylist      stringlist_t*
+ *  @param[in]  add_version  bool
+ *  @param[in]  clobber      bool
+ *  
+ */
 void decorate_message(
+    PEP_SESSION session,
     message *msg,
     PEP_rating rating,
     stringlist_t *keylist,
@@ -308,12 +401,29 @@ void decorate_message(
 }
 #endif
 
+/**
+ *  @enum    normalize_hex_res_t
+ *  
+ *  @brief    TODO
+ *  
+ */
 typedef enum _normalize_hex_rest_t {
     accept_hex,
     ignore_hex,
     reject_hex
 } normalize_hex_res_t;
 
+/**
+ *  <!--       _normalize_hex()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  hex         char*
+ *  
+ *  @retval     accept_hex
+ *  @retval     irgnore_hex
+ *  @retval     reject_hex
+ */
 static inline normalize_hex_res_t _normalize_hex(char *hex) 
 {
     if (*hex >= '0' && *hex <= '9')
@@ -334,6 +444,21 @@ static inline normalize_hex_res_t _normalize_hex(char *hex)
 }
 
 // Space tolerant and case insensitive fingerprint string compare
+/**
+ *  <!--       _compare_fprs()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  fpra         const char*
+ *  @param[in]  fpras        size_t
+ *  @param[in]  fprb         const char*
+ *  @param[in]  fprbs        size_t
+ *  @param[in]  comparison   int*
+ *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_TRUSTWORDS_FPR_WRONG_LENGTH
+ */
 static inline PEP_STATUS _compare_fprs(
         const char* fpra,
         size_t fpras,
@@ -411,6 +536,19 @@ static inline PEP_STATUS _compare_fprs(
     return PEP_STATUS_OK;
 }
 
+/**
+ *  <!--       _same_fpr()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  fpra         const char*
+ *  @param[in]  fpras        size_t
+ *  @param[in]  fprb         const char*
+ *  @param[in]  fprbs        size_t
+ *  
+ *  @retval     0 on equal fingerprints
+ *  @retval     non-zero if not equal 
+ */
 static inline int _same_fpr(
         const char* fpra,
         size_t fpras,
@@ -429,6 +567,24 @@ static inline int _same_fpr(
 // size is the length of the bytestr that's coming in. This is really only intended
 // for comparing two full strings. If charstr's length is different from bytestr_size,
 // we'll return a non-zero value.
+/**
+ *  @internal
+ * 
+ *  <!--       _unsigned_signed_strcmp()       -->
+ *  
+ *  @brief      Compare an unsigned sequence of bytes with the input string.
+ *              This is really only intended for comparing two full strings. 
+ *              If charstr's length is different from bytestr_size,
+ *              we'll return a non-zero value.
+ * 
+ *  @param[in]  bytestr         byte string (unsigned char data)
+ *  @param[in]  charstr         character string (NUL-terminated)
+ *  @param[in]  bytestr_size    length of byte string passed in
+ * 
+ *  @retval     0           if equal
+ *  @retval     non-zero    if not equal
+ *  
+ */
 static inline int _unsigned_signed_strcmp(const unsigned char* bytestr, const char* charstr, int bytestr_size) {
     int charstr_len = strlen(charstr);
     if (charstr_len != bytestr_size)
@@ -437,6 +593,13 @@ static inline int _unsigned_signed_strcmp(const unsigned char* bytestr, const ch
 }
 
 // This is just a horrible example of C type madness. UTF-8 made me do it.
+/**
+ *  <!--       _pEp_subj_copy()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  
+ */
 static inline char* _pEp_subj_copy() {
 #ifndef WIN32
     unsigned char pEpstr[] = PEP_SUBJ_STRING;
@@ -448,7 +611,18 @@ static inline char* _pEp_subj_copy() {
 #endif
 }
 
-static inline bool is_me(PEP_SESSION session, pEp_identity* test_ident) {
+/**
+ *  <!--       is_me()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session        session handle 
+ *  @param[in]  test_ident     const pEp_identity*
+ *  
+ *  @retval     true
+ *  @retval     false
+ */
+static inline bool is_me(PEP_SESSION session, const pEp_identity* test_ident) {
     bool retval = false;
     if (test_ident && test_ident->user_id) {
         char* def_id = NULL;
@@ -462,6 +636,16 @@ static inline bool is_me(PEP_SESSION session, pEp_identity* test_ident) {
     return retval;
 }
 
+/**
+ *  <!--       pEp_version_numeric()       -->
+ *  
+ *  @brief
+ *  
+ *  @param[in]  version_str         const char*
+ *  
+ *  @retval     float   version number
+ *  @retval     0 on failure
+ */
 static inline float pEp_version_numeric(const char* version_str) {
     float retval = 0;    
         
@@ -471,6 +655,16 @@ static inline float pEp_version_numeric(const char* version_str) {
     return retval;    
 }
 
+/**
+ *  <!--       pEp_version_major_minor()       -->
+ *  
+ *  @brief get major and minor numbers as integers from version string 
+ *  
+ *  @param[in]   version_str   const char*
+ *  @param[out]  major         unsigned int*
+ *  @param[out]  minor         unsigned int*
+ *  
+ */
 static inline void pEp_version_major_minor(const char* version_str, unsigned int* major, unsigned int* minor) {
     if (!major || !minor)
         return;
@@ -483,6 +677,20 @@ static inline void pEp_version_major_minor(const char* version_str, unsigned int
     return;    
 }
 
+/**
+ *  <!--       compare_versions()       -->
+ *  
+ *  @brief compares two versions by major and minor version numbers 
+ *  
+ *  @param[in]  first_maj       unsigned int
+ *  @param[in]  first_min       unsigned int
+ *  @param[in]  second_maj      unsigned int
+ *  @param[in]  second_min      unsigned int
+ *  
+ *  @retval     1 when first is higher version
+ *  @retval     -1 when first is lower version
+ *  @retval     0 when versions are equal 
+ */
 static inline int compare_versions(unsigned int first_maj, unsigned int first_min,
                                    unsigned int second_maj, unsigned int second_min) {
     if (first_maj > second_maj)
@@ -496,6 +704,19 @@ static inline int compare_versions(unsigned int first_maj, unsigned int first_mi
     return 0;    
 }
 
+/**
+ *  <!--       set_min_version()       -->
+ *  
+ *  @brief determine the smaler version from two versions 
+ *  
+ *  @param[in]  first_maj        unsigned int
+ *  @param[in]  first_minor      unsigned int
+ *  @param[in]  second_maj       unsigned int
+ *  @param[in]  second_minor     unsigned int
+ *  @param[out]  result_maj       unsigned int*
+ *  @param[out]  result_minor     unsigned int*
+ *  
+ */
 static inline void set_min_version(unsigned int first_maj, unsigned int first_minor,
                                    unsigned int second_maj, unsigned int second_minor,
                                    unsigned int* result_maj, unsigned int* result_minor) {
@@ -510,6 +731,19 @@ static inline void set_min_version(unsigned int first_maj, unsigned int first_mi
     }    
 }
 
+/**
+ *  <!--       set_max_version()       -->
+ *  
+ *  @brief determine the greater version out of two versions 
+ *  
+ *  @param[in]   first_maj        unsigned int
+ *  @param[in]   first_minor      unsigned int
+ *  @param[in]   second_maj       unsigned int
+ *  @param[in]   second_minor     unsigned int
+ *  @param[out]  result_maj       unsigned int*
+ *  @param[out]  result_minor     unsigned int*
+ *  
+ */
 static inline void set_max_version(unsigned int first_maj, unsigned int first_minor,
                                    unsigned int second_maj, unsigned int second_minor,
                                    unsigned int* result_maj, unsigned int* result_minor) {
@@ -526,6 +760,10 @@ static inline void set_max_version(unsigned int first_maj, unsigned int first_mi
 
 #ifndef EMPTYSTR
 #define EMPTYSTR(STR) ((STR) == NULL || (STR)[0] == '\0')
+#endif
+
+#ifndef PASS_ERROR
+#define PASS_ERROR(ST) (ST == PEP_PASSPHRASE_REQUIRED || ST == PEP_WRONG_PASSPHRASE || ST == PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED)
 #endif
 
 #ifndef IS_PGP_CT
@@ -545,13 +783,32 @@ static inline void set_max_version(unsigned int first_maj, unsigned int first_mi
 extern int _pEp_rand_max_bits;
 extern double _pEp_log2_36;
 
+/**
+ *  <!--       _init_globals()       -->
+ *
+ *  @internal
+ *
+ *  @brief            TODO
+ *  
+ *  Please leave _patch_asn1_codec COMMENTED OUT unless you're working
+ *  in a branch or patching the asn1 is a solution
+ */
 static inline void _init_globals() {
     _pEp_rand_max_bits = (int) ceil(log2((double) RAND_MAX));
     _pEp_log2_36 = log2(36);
 }
 
+
 // spinlock implementation
 
+/**
+ *  <!--       Sqlite3_step()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  stmt         sqlite3_stmt*
+ *  
+ */
 static inline int Sqlite3_step(sqlite3_stmt* stmt)
 {
     int rc;
@@ -560,3 +817,21 @@ static inline int Sqlite3_step(sqlite3_stmt* stmt)
     } while (rc == SQLITE_BUSY || rc == SQLITE_LOCKED);
     return rc;
 }
+
+/**
+ *  @internal
+ *
+ *  <!--       _add_auto_consume()       -->
+ *
+ *  @brief            TODO
+ *
+ *  @param[in]    *msg        message
+ *
+ */
+static inline void _add_auto_consume(message* msg) {
+    add_opt_field(msg, "pEp-auto-consume", "yes");
+    msg->in_reply_to = stringlist_add(msg->in_reply_to, "pEp-auto-consume@pEp.foundation");
+}
+
+
+#endif

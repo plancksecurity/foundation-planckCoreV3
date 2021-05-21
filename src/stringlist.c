@@ -1,3 +1,6 @@
+/** @file */
+/** @brief File description for doxygen missing. FIXME */
+
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
@@ -53,6 +56,18 @@ DYNAMIC_API stringlist_t *stringlist_dup(const stringlist_t *src)
     return dst;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       _stringlist_add_first()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]    *stringlist        stringlist_t
+ *  @param[in]    **result        stringlist_t
+ *  @param[in]    *value        constchar
+ *  
+ */
 static bool _stringlist_add_first(
         stringlist_t *stringlist,
         stringlist_t **result,
@@ -116,13 +131,18 @@ DYNAMIC_API stringlist_t *stringlist_add(
 stringlist_t* stringlist_search(stringlist_t* head, const char* value) {
     if (!head || !value || !head->value)
         return NULL;
-    stringlist_t* retval = head;
-    for (; retval ; retval = retval->next) {
-        if (strcmp(retval->value, value) == 0)
+    stringlist_t* retval = NULL;
+    
+    stringlist_t* curr = head;
+    for (; curr ; curr = curr->next) {
+        if (strcmp(curr->value, value) == 0) {
+            retval = curr;
             break;
+        }    
     }
     return retval;
 }
+
 
 DYNAMIC_API stringlist_t *stringlist_add_unique(
         stringlist_t *stringlist,
@@ -134,31 +154,35 @@ DYNAMIC_API stringlist_t *stringlist_add_unique(
         return NULL;
 
     stringlist_t *result = NULL;
+
     if(_stringlist_add_first(stringlist, &result, value))
         return result;
-    
+
+    if (!stringlist)
+        return NULL; // If the previous call fails somehow. this code is bizarre.
+
     stringlist_t* list_curr = stringlist;
 
-    bool found = false;
-    while (list_curr->next) {
-        if(strcmp(list_curr->value,value)==0)
-            found = true;
+    stringlist_t** next_ptr_addr = NULL;
+
+    while (list_curr) {
+        next_ptr_addr = &list_curr->next;
+        if (strcmp(list_curr->value, value) == 0)
+            return list_curr;
         list_curr = list_curr->next;
     }
-    if(strcmp(list_curr->value,value)==0)
-        found = true;
 
-    if (!found) {
-        list_curr->next = new_stringlist(value);
+    if (!next_ptr_addr)
+        return NULL; // This is an error, because stringlist_add_first should
+                     // have handled this case
 
-        assert(list_curr->next);
-        if (list_curr->next == NULL)
-            return NULL;
+    *next_ptr_addr = new_stringlist(value);
 
-        return list_curr->next;
-    } else {
-        return list_curr;
-    }
+    if (!*next_ptr_addr)
+        return NULL;
+
+    return *next_ptr_addr;
+
 }
 
 
@@ -176,6 +200,27 @@ DYNAMIC_API stringlist_t *stringlist_append(
         return stringlist;
 
     stringlist_t *_s = stringlist;
+
+    if (stringlist == second) {
+        // Passing in the same pointer twice is not cool.
+        // Since the semantics are to copy the second list,
+        // we'll just do that, presuming that the
+        // caller wants this.
+        second = stringlist_dup(stringlist);
+
+        stringlist_t** end_ptr = NULL;
+
+        while (_s) {
+            end_ptr = &_s->next;
+            _s = _s->next;
+        }
+        if (!end_ptr)
+            return NULL;
+        *end_ptr = second;
+
+        return stringlist;
+    }
+
     stringlist_t *_s2;
     for (_s2 = second; _s2 != NULL; _s2 = _s2->next) {
         _s = stringlist_add(_s, _s2->value);
@@ -229,6 +274,17 @@ DYNAMIC_API stringlist_t *stringlist_delete(
     return stringlist;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       stringlist_multi_delete()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]    *stringlist        stringlist_t
+ *  @param[in]    *value             constchar
+ *  
+ */
 static stringlist_t* stringlist_multi_delete(stringlist_t* stringlist, const char* value) {
     if (stringlist == NULL || !stringlist->value)
         return stringlist;

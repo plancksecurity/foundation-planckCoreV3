@@ -9,6 +9,7 @@
 #include <cstring>
 
 #include "pEpEngine.h"
+#include "pEp_internal.h"
 #include "platform.h"
 
 #include "test_util.h"
@@ -55,7 +56,7 @@ namespace {
                 ASSERT_NE(engine, nullptr);
 
                 // Ok, let's initialize test directories etc.
-                engine->prep(NULL, NULL, init_files);
+                engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
@@ -73,6 +74,18 @@ namespace {
                 engine = NULL;
                 session = NULL;
             }
+
+            const char* alice_filename = "test_keys/alice-no-passwords.pgp";
+            const char* alice_pub_filename = "test_keys/pub/alice-0x2A649B9F_pub.asc";
+            const char* bob_filename = "test_keys/bob-primary-with-password-bob-subkey-without.pgp";
+            const char* carol_filename = "test_keys/carol-subkeys-password-carol.pgp";
+            const char* david_filename = "test_keys/david-encryption-subkey-password-encrypt-signing-subkey-password-sign.pgp";
+            const char* erwin_filename = "test_keys/erwin-primary-encrypted-erwin-subkey-unencrypted.pgp";
+            const char* alice_fpr = "03AF88F728B8E9AADA7F370BD41801C62A649B9F";
+            const char* bob_fpr = "5C76378A62B04CF3F41BEC8D4940FC9FA1878736";
+            const char* carol_fpr = "A5B3473EA7CBB5DF7A4F595A8883DC4BCD8BAC06";
+            const char* david_fpr = "7F72E4B27C6161455CD9C50FE7A05D7BF3FF4E19";
+            const char* erwin_fpr = "A34048189F0067DF0006FB28CBD7CFBCC0FA7F97";
 
         private:
             const char* test_suite_name;
@@ -136,4 +149,60 @@ TEST_F(KeyeditTest, check_keyedit) {
     // PEP_STATUS delete_status = delete_keypair(session, key.c_str());
     // output_stream << "delete_keypair() exits with " << delete_status << "\n";
     // ASSERT_EQ(delete_status , PEP_STATUS_OK);
+}
+
+TEST_F(KeyeditTest, check_renew_key_correct_passphrase) {
+    ASSERT_TRUE(slurp_and_import_key(session, bob_filename));
+    stringlist_t* found_key = NULL;
+    PEP_STATUS status = find_keys(session, bob_fpr, &found_key);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(found_key, nullptr);
+    ASSERT_NE(found_key->value, nullptr);
+    
+    config_passphrase(session, "bob");
+
+    time_t now = time(NULL);
+    output_stream << "Time is " << now << endl;
+    timestamp *ts = new_timestamp(now);
+    ts->tm_year += 2;
+
+    status = renew_key(session, bob_fpr, ts);
+    ASSERT_EQ(status, PEP_STATUS_OK);            
+}
+
+TEST_F(KeyeditTest, check_renew_key_needs_passphrase) {
+    ASSERT_TRUE(slurp_and_import_key(session, bob_filename));
+    stringlist_t* found_key = NULL;
+    PEP_STATUS status = find_keys(session, bob_fpr, &found_key);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(found_key, nullptr);
+    ASSERT_NE(found_key->value, nullptr);
+
+    time_t now = time(NULL);
+    output_stream << "Time is " << now << endl;
+    timestamp *ts = new_timestamp(now);
+    ts->tm_year += 2;
+
+    status = renew_key(session, bob_fpr, ts);
+    ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);
+
+}
+
+TEST_F(KeyeditTest, check_renew_key_wrong_passphrase) {
+    ASSERT_TRUE(slurp_and_import_key(session, bob_filename));
+    stringlist_t* found_key = NULL;
+    PEP_STATUS status = find_keys(session, bob_fpr, &found_key);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(found_key, nullptr);
+    ASSERT_NE(found_key->value, nullptr);
+    
+    config_passphrase(session, "julio");
+
+    time_t now = time(NULL);
+    output_stream << "Time is " << now << endl;
+    timestamp *ts = new_timestamp(now);
+    ts->tm_year += 2;
+
+    status = renew_key(session, bob_fpr, ts);
+    ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);    
 }

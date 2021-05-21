@@ -19,24 +19,37 @@ ifdef BUILD_CONFIG
     $(info ================================================)
 endif
 
-.PHONY: all sync asn1 build install dbinstall uninstall clean tags test package db
+BUILT_IN_MIME=
 
-build: asn1
+ifdef PEP_MIME
+    BUILT_IN_MIME=pepmime
+endif
+    
+.PHONY: all $(BUILT_IN_MIME) codegen asn1 build install dbinstall uninstall clean tags test package db
+
+build: $(BUILT_IN_MIME) asn1
 	$(MAKE) -C src
 
 all: build
 # `make all` is not for tests, that's what `make test` is for
 #	$(MAKE) -C test
 
-sync:
-	$(MAKE) -C sync
+pepmime: 
+	$(MAKE) -C pEpMIME lib
 
-asn1: sync
+codegen:
+	$(MAKE) -C codegen
+
+asn1: codegen
 	$(MAKE) -C asn.1
+
 
 install: build
 	$(MAKE) -C src install
 	$(MAKE) -C asn.1 install
+ifeq ($(BUILT_IN_MIME),pepmime)
+	$(MAKE) -C pEpMIME install
+endif
 
 beinstall:
 	$(MAKE) -C src beinstall
@@ -53,7 +66,11 @@ clean:
 	$(MAKE) -C test clean
 	$(MAKE) -C db clean
 	$(MAKE) -C asn.1 clean
-	$(MAKE) -C sync clean
+	$(MAKE) -C codegen clean
+	$(MAKE) -C build-android clean
+ifdef PEP_MIME
+	$(MAKE) -C pEpMIME clean
+endif
 
 tags:
 	$(MAKE) -C asn.1 tags

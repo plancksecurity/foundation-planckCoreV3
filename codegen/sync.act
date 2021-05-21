@@ -1,0 +1,616 @@
+// This file is under GNU General Public License 3.0
+// see LICENSE.txt
+
+// generate conditions and actions
+
+// Copyleft (c) 2017-2020, p≡p foundation
+
+// Written by Volker Birk
+
+
+include ./sql_func.yml2
+
+// condition: PEP_STATUS «@name»(PEP_SESSION session, bool *result)
+
+condition deviceGrouped {
+    call "exec_sql_int" with "sql"
+        > "select count(*) from identity where is_own = 1 and (flags & 0x100) = 0x100;"
+    |> *result = _result > 0;
+}
+
+condition weAreOfferer
+||
+    TID_t *t1 = &session->sync_state.keysync.challenge;
+    TID_t *t2 = &session->sync_state.own.challenge;
+
+    *result = _TID_greater(t1, t2);
+||
+
+condition partnerIsGrouped
+|> *result = session->sync_state.keysync.is_group;
+
+condition sameChallenge
+||
+    TID_t *t1 = &session->sync_state.keysync.challenge;
+    TID_t *t2 = &session->sync_state.own.challenge;
+
+    *result = t1->size == t2->size && memcmp(t1->buf, t2->buf, t1->size) == 0;
+||
+
+condition sameResponse
+||
+    TID_t *t1 = &session->sync_state.keysync.response;
+    TID_t *t2 = &session->sync_state.own.response;
+
+    *result = t1->size == t2->size && memcmp(t1->buf, t2->buf, t1->size) == 0;
+||
+
+condition sameNegotiation
+||
+    TID_t *t1 = &session->sync_state.keysync.negotiation;
+    TID_t *t2 = &session->sync_state.comm_partner.negotiation;
+
+    // test if TID is identical
+    *result = t1->size == t2->size && memcmp(t1->buf, t2->buf, t1->size) == 0;
+||
+
+condition sameNegotiationAndPartner
+||
+    TID_t *t1 = &session->sync_state.keysync.negotiation;
+    TID_t *t2 = &session->sync_state.comm_partner.negotiation;
+
+    const char *s1 = session->sync_state.comm_partner.sender_fpr;
+    const char *s2 = session->sync_state.transport.sender_fpr;
+
+    // test if TID is identical
+    *result = t1->size == t2->size && memcmp(t1->buf, t2->buf, t1->size) == 0
+    // and test if we're talking to the same sender
+            && s1 && s2 && strcmp(s1, s2) == 0;
+||
+
+condition fromGroupMember
+||
+    const char *sender_fpr = session->sync_state.transport.sender_fpr;
+    return is_own_key(session, sender_fpr, result);
+||
+
+condition keyElectionWon
+||
+    pEp_identity *from = session->sync_state.transport.from;
+    char *sender_fpr = session->sync_state.comm_partner.sender_fpr;
+
+    assert(from && from->address && from->address[0] && from->user_id &&
+            from->user_id[0]);
+    if (!(from && from->address && from->address[0] && from->user_id &&
+            from->user_id[0]))
+        return PEP_ILLEGAL_VALUE;
+
+    pEp_identity *me = NULL;
+    PEP_STATUS status = get_identity(session, from->address, from->user_id, &me);
+    assert(status == PEP_STATUS_OK);
+    if (status)
+        return status;
+
+    assert(me->fpr && me->fpr[0]);
+    if (!(me->fpr && me->fpr[0])) {
+        free_identity(me);
+        return PEP_ILLEGAL_VALUE;
+    }
+
+    size_t len = MIN(strlen(sender_fpr), strlen(me->fpr));
+    *result = strncasecmp(sender_fpr, me->fpr, len) > 0;
+    free_identity(me);
+||
+
+// action: PEP_STATUS «@name»(PEP_SESSION session)
+
+function "new_UUID" {
+    param "dst";
+    ||
+        {
+            pEpUUID c;
+            uuid_generate_random(c);
+
+            OCTET_STRING_fromBuf(«$dst», (char *) c, 16);
+        }
+    ||
+}
+
+function "copy_UUID" {
+    param "src", param "dst";
+    ||
+        {
+            TID_t *src = «$src»;
+            TID_t *dst = «$dst»;
+
+            assert(src->size == 16);
+            if (!(src->size == 16))
+                return PEP_UNKNOWN_ERROR;
+
+            OCTET_STRING_fromBuf(dst, (char *) src->buf, src->size);
+        }
+    ||
+}
+
+function "xor_UUID" {
+    param "src", param "dst";
+    ||
+        {
+            TID_t *src = «$src»;
+            TID_t *dst = «$dst»;
+
+            assert(src->size == 16 && dst->size == 16);
+            if (!(src->size == 16 && dst->size == 16))
+                return PEP_UNKNOWN_ERROR;
+
+            for (int i=0; i < src->size; ++i)
+                dst->buf[i] ^= src->buf[i];
+        }
+    ||
+}
+
+action newChallengeAndNegotiationBase {
+    // random new challenge
+    call "new_UUID" with "dst" > &session->sync_state.own.challenge
+    call "copy_UUID" {
+        with "src" > &session->sync_state.own.challenge
+        with "dst" > &session->sync_state.keysync.challenge
+    }
+
+    // random new response
+    call "new_UUID" with "dst" > &session->sync_state.own.response
+    call "copy_UUID" {
+        with "src" > &session->sync_state.own.response
+        with "dst" > &session->sync_state.keysync.response
+    }
+
+    // this is the random data we are using as a base
+    call "new_UUID" with "dst" > &session->sync_state.own.negotiation
+||
+    memset(session->sync_state.keysync.negotiation.buf, 0,
+            session->sync_state.keysync.negotiation.size);
+    memset(session->sync_state.comm_partner.negotiation.buf, 0,
+            session->sync_state.comm_partner.negotiation.size);
+||
+}
+
+action useOwnChallenge call "copy_UUID" {
+    with "src" > &session->sync_state.own.challenge
+    with "dst" > &session->sync_state.keysync.challenge
+}
+
+action useOwnResponse call "copy_UUID" {
+    with "src" > &session->sync_state.own.response
+    with "dst" > &session->sync_state.keysync.response
+}
+
+action openNegotiation {
+||
+    // clear comm_partner's key until we have decided
+
+    free(session->sync_state.comm_partner.sender_fpr);
+    session->sync_state.comm_partner.sender_fpr = NULL;
+
+    // clear comm_partner's identity
+
+    free_identity(session->sync_state.comm_partner.identity);
+    session->sync_state.comm_partner.identity = NULL;
+
+    // we need a unique TID for the Negotiation with each single comm_partner
+    // we identify the comm_partners by their Challenge
+    // we derive the actual Negotiation TID by having random data and XORing it
+    // with comm_partner's Challenge
+
+    // copy Negotiation base into buffer
+
+||
+    call "copy_UUID" {
+        with "src" > &session->sync_state.own.negotiation
+        with "dst" > &session->sync_state.keysync.negotiation
+    }
+||
+
+    // we're XORing this with the challenge of the comm_partner, which is in
+    // the buffer already
+
+||
+    call "xor_UUID" {
+        with "src" > &session->sync_state.keysync.challenge
+        with "dst" > &session->sync_state.keysync.negotiation
+    }
+||
+
+    // this is the Negotiation's TID for this comm_partner
+
+||
+    call "copy_UUID" {
+        with "src" > &session->sync_state.keysync.negotiation
+        with "dst" > &session->sync_state.comm_partner.negotiation
+    }
+}
+
+action storeNegotiation {
+||
+    // comm_partner must be stable from now on
+
+    // we take the actual signature of the last message and store it in our
+    // state for the comm_partner
+
+    assert(session->sync_state.transport.sender_fpr);
+
+    free(session->sync_state.comm_partner.sender_fpr);
+
+    session->sync_state.comm_partner.sender_fpr
+            = strdup(session->sync_state.transport.sender_fpr);
+    assert(session->sync_state.comm_partner.sender_fpr);
+    if (!session->sync_state.comm_partner.sender_fpr)
+        return PEP_OUT_OF_MEMORY;
+
+    // we store the comm_partner's identity
+    
+    assert(session->sync_state.transport.from);
+
+    free_identity(session->sync_state.comm_partner.identity);
+
+    session->sync_state.comm_partner.identity
+            = identity_dup(session->sync_state.transport.from);
+    if (!session->sync_state.comm_partner.identity)
+        return PEP_OUT_OF_MEMORY;
+
+||
+    call "copy_UUID" {
+        with "src" > &session->sync_state.keysync.negotiation
+        with "dst" > &session->sync_state.comm_partner.negotiation
+    }
+}
+
+function "show_handshake" {
+    param "type";
+    ||
+        assert(session->notifyHandshake);
+        if (!session->notifyHandshake)
+            return PEP_SYNC_NO_NOTIFY_CALLBACK;
+
+    ||
+    choose {
+    when "$type = 'SYNC_NOTIFY_INIT_ADD_OUR_DEVICE' or $type = 'SYNC_NOTIFY_INIT_ADD_OTHER_DEVICE' or $type = 'SYNC_NOTIFY_INIT_FORM_GROUP'"
+    ||
+        assert(session->sync_state.transport.from);
+        if (!session->sync_state.transport.from)
+            return PEP_ILLEGAL_VALUE;
+
+        pEp_identity *from = session->sync_state.transport.from;
+        pEp_identity *me = NULL;
+        PEP_STATUS status = get_identity(session, from->address, from->user_id, &me);
+        assert(status == PEP_STATUS_OK);
+        if (status)
+            return status;
+
+        assert(me->fpr && me->fpr[0]);
+        if (!(me->fpr && me->fpr[0])) {
+            free_identity(me);
+            return PEP_ILLEGAL_VALUE;
+        }
+
+        pEp_identity *partner = identity_dup(from);
+        if (!partner) {
+            free_identity(me);
+            return PEP_OUT_OF_MEMORY;
+        }
+
+        assert(session->sync_state.comm_partner.sender_fpr);
+        if (session->sync_state.comm_partner.sender_fpr) {
+            free(partner->fpr);
+            partner->fpr = strdup(session->sync_state.comm_partner.sender_fpr);
+            assert(partner->fpr);
+            if (!partner->fpr) {
+                free_identity(me);
+                free_identity(partner);
+                return PEP_OUT_OF_MEMORY;
+            }
+        }
+
+        free(partner->user_id);
+        partner->user_id = strdup("#NV");
+        assert(partner->user_id);
+        if (!partner->user_id) {
+            free_identity(me);
+            free_identity(partner);
+            return PEP_OUT_OF_MEMORY;
+        }
+
+        status = session->notifyHandshake(me, partner, «$type»);
+        if (status)
+            return status;
+    ||
+    otherwise
+    ||
+        pEp_identity *me = new_identity(NULL, NULL, NULL, NULL);
+        pEp_identity *partner = new_identity(NULL, NULL, NULL, NULL);
+        assert(me && partner);
+        if (!(me && partner)) {
+            free_identity(me);
+            free_identity(partner);
+            return PEP_OUT_OF_MEMORY;
+        }
+
+        PEP_STATUS status = session->notifyHandshake(me, partner, «$type»);
+        if (status)
+            return status;
+    ||
+    }
+}
+
+action showSoleHandshake
+    call "show_handshake" with "type" > SYNC_NOTIFY_INIT_FORM_GROUP
+
+action showJoinGroupHandshake
+    call "show_handshake" with "type" > SYNC_NOTIFY_INIT_ADD_OUR_DEVICE
+
+action showGroupedHandshake
+    call "show_handshake" with "type" > SYNC_NOTIFY_INIT_ADD_OTHER_DEVICE
+
+action showDeviceAdded
+    call "show_handshake" with "type" > SYNC_NOTIFY_ACCEPTED_DEVICE_ADDED
+
+action showDeviceAccepted
+    call "show_handshake" with "type" > SYNC_NOTIFY_ACCEPTED_DEVICE_ACCEPTED
+
+action showGroupCreated
+    call "show_handshake" with "type" > SYNC_NOTIFY_ACCEPTED_GROUP_CREATED
+
+action showBeingSole
+    call "show_handshake" with "type" > SYNC_NOTIFY_SOLE
+
+action showBeingInGroup
+    call "show_handshake" with "type" > SYNC_NOTIFY_IN_GROUP
+
+timeout KeySync
+    call "show_handshake" with "type" > SYNC_NOTIFY_TIMEOUT
+
+timeout TrustSync;
+timeout GroupSync;
+
+action prepareOwnKeys
+||
+    stringlist_t *own_keys;
+    PEP_STATUS status = _own_keys_retrieve(session, &own_keys, PEP_idf_not_for_sync, true);
+    if (status)
+        return status;
+
+    if (session->sync_state.own.keys)
+        free_stringlist(session->sync_state.own.keys);
+    session->sync_state.own.keys = own_keys;
+
+    identity_list *il;
+    status = _own_identities_retrieve(session, &il, PEP_idf_not_for_sync);
+    if (status)
+        return status;
+
+    IdentityList_from_identity_list(il, &session->sync_state.keysync.ownIdentities);
+    free_identity_list(il);
+||
+
+action saveGroupKeys
+||
+    char *user_id = NULL;
+    PEP_STATUS status = get_default_own_userid(session, &user_id);
+    if (status)
+        return status;
+
+    identity_list *il = IdentityList_to_identity_list(&session->sync_state.keysync.ownIdentities, NULL);
+    if (!il) {
+        free(user_id);
+        return PEP_OUT_OF_MEMORY;
+    }
+    status = set_all_userids_to_own(session, il);
+    if (status != PEP_STATUS_OK) {
+        free(user_id);
+        return status;
+    }
+
+    // if own identities are not yet fetched from the database do this now
+    if (!session->sync_state.own.identities) {
+        identity_list *il;
+        status = _own_identities_retrieve(session, &il, PEP_idf_not_for_sync);
+        if (status) {
+            free(user_id);
+            return status;
+        }
+        session->sync_state.own.identities = il;
+    }
+
+    identity_list *oil = session->sync_state.own.identities;
+
+    // FIXME: this should be a transaction and been rolled back completely on error
+    for (identity_list *_il = il; _il && _il->ident; _il = _il->next) {
+        bool found = false;
+        status = _have_identity_in(oil, _il->ident, &found);
+        if (status)
+            break;
+
+        if (!found) {
+            _il->ident->me = true;
+
+            status = set_identity(session, _il->ident);
+            if (status)
+                break;
+        }
+    }
+
+    free(user_id);
+    free_identity_list(il);
+||
+
+action ownKeysAreDefaultKeys
+||
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    // set flag for all keys; don't change anything else
+    for (identity_list *il = session->sync_state.own.identities; il && il->ident ; il = il->next) {
+        if (!(il->ident->flags & PEP_idf_not_for_sync)) {
+            status = set_identity_flags(session, il->ident, PEP_idf_devicegroup);
+            if (status)
+                return status;
+        }
+    }
+||
+
+action backupOwnKeys
+||
+    if (session->sync_state.own.backup)
+        free_stringlist(session->sync_state.own.backup);
+
+    session->sync_state.own.backup = stringlist_dup(session->sync_state.own.keys);
+    if (session->sync_state.own.backup == NULL)
+        return PEP_OUT_OF_MEMORY;
+||
+
+action prepareOwnKeysFromBackup
+||
+    if (session->sync_state.own.keys)
+        free_stringlist(session->sync_state.own.keys);
+
+    session->sync_state.own.keys = stringlist_dup(session->sync_state.own.backup);
+    if (session->sync_state.own.keys == NULL)
+        return PEP_OUT_OF_MEMORY;
+||
+
+action receivedKeysAreDefaultKeys
+||
+    PEP_STATUS status = PEP_STATUS_OK;
+    // set flag for all keys
+    for (identity_list *il = session->sync_state.own.identities; il && il->ident ; il = il->next) {
+        if (!(il->ident->flags & PEP_idf_not_for_sync)) {
+
+            status = set_identity_flags(session, il->ident, PEP_idf_devicegroup);
+            if (status)
+                return status;
+        }
+    }
+
+    char *user_id = NULL;
+    status = get_default_own_userid(session, &user_id);
+    if (status)
+        return status;
+
+    identity_list *il = IdentityList_to_identity_list(&session->sync_state.keysync.ownIdentities, NULL);
+    if (!il)
+        return PEP_OUT_OF_MEMORY;
+
+    status = set_all_userids_to_own(session, il);
+    if (status != PEP_STATUS_OK) {
+        free(user_id);
+        return status;
+    }
+
+    for (identity_list *_il = il; _il && _il->ident ; _il = _il->next) {
+        status = set_own_key(session, _il->ident, _il->ident->fpr);
+        if (status != PEP_STATUS_OK && status != PEP_KEY_UNSUITABLE)
+            break;
+    }
+
+    free_identity_list(il);
+    free(user_id);
+
+    if (status == PEP_KEY_UNSUITABLE)
+        status = PEP_STATUS_OK;
+||
+
+action useThisKey
+||
+    assert(session->sync_state.comm_partner.sender_fpr);
+    if (!session->sync_state.comm_partner.sender_fpr)
+        return PEP_ILLEGAL_VALUE;
+
+    const char *fpr = session->sync_state.comm_partner.sender_fpr;
+    OCTET_STRING_fromBuf(&session->sync_state.keysync.key, fpr, strlen(fpr));
+||
+
+action storeThisKey
+||
+    assert(session->sync_state.keysync.key.size);
+    if (!session->sync_state.keysync.key.size)
+        return PEP_ILLEGAL_VALUE;
+
+    char *fpr = strndup((const char *) session->sync_state.keysync.key.buf, session->sync_state.keysync.key.size);
+    assert(fpr);
+    if (!fpr)
+        return PEP_OUT_OF_MEMORY;
+
+    free(session->sync_state.comm_partner.sender_fpr);
+    session->sync_state.comm_partner.sender_fpr = fpr;
+||
+
+action trustThisKey
+||
+    assert(session->sync_state.transport.from && session->sync_state.comm_partner.sender_fpr);
+    if (!(session->sync_state.transport.from && session->sync_state.comm_partner.sender_fpr))
+        return PEP_ILLEGAL_VALUE;
+
+    pEp_identity *ident = identity_dup(session->sync_state.transport.from);
+    if (!ident)
+        return PEP_OUT_OF_MEMORY;
+    free(ident->fpr);
+    ident->fpr = strdup(session->sync_state.comm_partner.sender_fpr);
+    assert(ident->fpr);
+    if (!ident->fpr) {
+        free_identity(ident);
+        return PEP_OUT_OF_MEMORY;
+    }
+
+    PEP_STATUS status = trust_own_key(session, ident);
+    if (status) {
+        free_identity(ident);
+        return status;
+    }
+
+    OCTET_STRING_fromBuf(&session->sync_state.keysync.key, ident->fpr, strlen(ident->fpr));
+    free_identity(ident);
+||
+
+action untrustThisKey
+||
+    assert(session->sync_state.transport.from && session->sync_state.comm_partner.sender_fpr);
+    if (!(session->sync_state.transport.from && session->sync_state.comm_partner.sender_fpr))
+        return PEP_ILLEGAL_VALUE;
+
+    pEp_identity *ident = session->sync_state.transport.from;
+    free(ident->fpr);
+    ident->fpr = strdup(session->sync_state.comm_partner.sender_fpr);
+    assert(ident->fpr);
+    if (!ident->fpr)
+        return PEP_OUT_OF_MEMORY;
+
+    PEP_STATUS status = key_reset_trust(session, ident);
+    if (status)
+        return status;
+
+    OCTET_STRING_fromBuf(&session->sync_state.keysync.key, "", 0);
+||
+
+action tellWeAreGrouped
+||
+    session->sync_state.keysync.is_group = true;
+||
+
+action tellWeAreNotGrouped
+||
+    session->sync_state.keysync.is_group = false;
+||
+
+action disable
+||
+    disable_sync(session);
+||
+
+action resetOwnGroupedKeys
+||
+    // Will NOT reset keys with the sticky bit set
+    return key_reset_own_grouped_keys(session);
+||
+
+action resetOwnKeysUngrouped
+||
+    return key_reset_all_own_keys(session);
+||

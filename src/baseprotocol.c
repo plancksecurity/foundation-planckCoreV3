@@ -1,15 +1,34 @@
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/** 
+ * @file     baseprotocol.c
+ * @brief    Implementation of basic functions for administrative pEp messages (preparation,
+ *           decoration, payload, extraction, etc.). These are used for
+ *           protocol messages in, for example, key sync and key reset.
+ *           The payloads of these messages are, in general, not human-readable.
+ *           @see baseprotocol.h
+ * @license  GNU General Public License 3.0 - see LICENSE.txt
+*/
 
 #include "pEp_internal.h"
 #include "message_api.h"
 #include "baseprotocol.h"
 
-static const char *_base_type[] = {
-    "application/pEp.sign",
-    "application/pEp.sync",
-    "application/pEp.distribution"
-};
+static PEP_STATUS _get_base_protocol_type_str(base_protocol_type type, const char** type_str) {
+    *type_str = NULL;
+    switch(type) {
+        case BASE_SIGN:
+            *type_str = _BASE_PROTO_MIME_TYPE_SIGN;
+            break;
+        case BASE_SYNC:
+            *type_str = _BASE_PROTO_MIME_TYPE_SYNC;
+            break;
+        case BASE_DISTRIBUTION:
+            *type_str = _BASE_PROTO_MIME_TYPE_DIST;
+            break;
+        default:
+            return PEP_ILLEGAL_VALUE;
+    }
+    return PEP_STATUS_OK;
+}
 
 PEP_STATUS base_decorate_message(
         PEP_SESSION session,
@@ -25,25 +44,34 @@ PEP_STATUS base_decorate_message(
     assert(msg);
     assert(payload);
     assert(size);
-    assert(type == BASE_SYNC || type == BASE_KEYRESET);
+    assert(type == BASE_SYNC || type == BASE_DISTRIBUTION);
 
     if (!(msg && payload && size && type))
         return PEP_ILLEGAL_VALUE;
 
     bloblist_t *bl;
 
+    const char* type_str = NULL;
+
     switch (type) {
         case BASE_SYNC:
             bl = bloblist_add(msg->attachments, payload, size,
-                    _base_type[type], "sync.pEp");
+                              _BASE_PROTO_MIME_TYPE_SYNC, "sync.pEp");
             break;
-        case BASE_KEYRESET:
+        case BASE_DISTRIBUTION:
             bl = bloblist_add(msg->attachments, payload, size,
-                    _base_type[type], "distribution.pEp");
+                              _BASE_PROTO_MIME_TYPE_DIST, "distribution.pEp");
             break;
         default:
+            status = _get_base_protocol_type_str(type, &type_str);
+            if (status != PEP_STATUS_OK)
+                return status;
+            else if (!type_str)
+                return PEP_UNKNOWN_ERROR;
+
             bl = bloblist_add(msg->attachments, payload, size,
-                    _base_type[type], "ignore_this_attachment.pEp");
+                              type_str, "ignore_this_attachment.pEp");
+            type_str = NULL;
     }
 
     if (bl == NULL)
@@ -61,7 +89,7 @@ PEP_STATUS base_decorate_message(
         assert(sign && sign_size);
 
         bl = bloblist_add(bl, sign, sign_size,
-                _base_type[BASE_SIGN], "electronic_signature.asc");
+                _BASE_PROTO_MIME_TYPE_SIGN, "electronic_signature.asc");
         if (!bl)
             goto enomem;
     }
@@ -93,7 +121,7 @@ PEP_STATUS base_prepare_message(
     assert(payload);
     assert(size);
     assert(result);
-    assert(type == BASE_SYNC || type == BASE_KEYRESET);
+    assert(type == BASE_SYNC || type == BASE_DISTRIBUTION);
 
     if (!(me && partner && payload && size && result && type))
         return PEP_ILLEGAL_VALUE;
@@ -148,7 +176,7 @@ PEP_STATUS base_extract_message(
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session && msg && size && payload && fpr);
-    assert(type == BASE_SYNC || type == BASE_KEYRESET);
+    assert(type == BASE_SYNC || type == BASE_DISTRIBUTION);
     if (!(session && msg && size && payload && fpr && type))
         return PEP_ILLEGAL_VALUE;
 
@@ -162,8 +190,14 @@ PEP_STATUS base_extract_message(
     size_t _sign_size = 0;
     stringlist_t *keylist = NULL;
 
+    const char* type_str = NULL;
+
+    status = _get_base_protocol_type_str(type, &type_str);
+    if (status != PEP_STATUS_OK || !type_str)
+        return status;
+
     for (bloblist_t *bl = msg->attachments; bl ; bl = bl->next) {
-        if (bl->mime_type && strcasecmp(bl->mime_type, _base_type[type]) == 0) {
+        if (bl->mime_type && strcasecmp(bl->mime_type, type_str) == 0) {
             if (!_payload) {
                 _payload = bl->value;
                 _payload_size = bl->size;
@@ -173,7 +207,7 @@ PEP_STATUS base_extract_message(
                 goto the_end;
             }
         }
-        else if (bl->mime_type && strcasecmp(bl->mime_type, _base_type[BASE_SIGN]) == 0) {
+        else if (bl->mime_type && strcasecmp(bl->mime_type, _BASE_PROTO_MIME_TYPE_SIGN) == 0) {
             if (!_sign) {
                 _sign = bl->value;
                 _sign_size = bl->size;
@@ -234,7 +268,7 @@ PEP_STATUS try_base_prepare_message(
     assert(payload);
     assert(size);
     assert(result);
-    assert(type == BASE_SYNC || type == BASE_KEYRESET);
+    assert(type == BASE_SYNC || type == BASE_DISTRIBUTION);
 
     if (!(session && session->messageToSend && session->notifyHandshake))
         return PEP_ILLEGAL_VALUE;
@@ -244,30 +278,40 @@ PEP_STATUS try_base_prepare_message(
 
     // https://dev.pep.foundation/Engine/MessageToSendPassphrase
 
-    if (session->curr_passphrase) {
-        // first try with empty passphrase
-        char *passphrase = session->curr_passphrase;
-        session->curr_passphrase = NULL;
+    // first try with empty passphrase
+    char *passphrase = session->curr_passphrase;
+    session->curr_passphrase = NULL;
+    status = base_prepare_message(session, me, partner, type, payload, size, fpr, result);
+    session->curr_passphrase = passphrase;
+    if (!(status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE))
+        return status;
+
+    if (!EMPTYSTR(session->curr_passphrase)) {
+        // try configured passphrase
         status = base_prepare_message(session, me, partner, type, payload, size, fpr, result);
-        session->curr_passphrase = passphrase;
         if (!(status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE))
             return status;
     }
 
     do {
-        // then try passphrases
-        status = base_prepare_message(session, me, partner, type, payload, size, fpr, result);
+        // then try passphrases from the cache
+        status = session->messageToSend(NULL);
+
+        // if there will be no passphrase then exit
+        if (status == PEP_SYNC_NO_CHANNEL)
+            break;
+
+        // if a passphrase is needed ask the app
         if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
-            PEP_STATUS status2 = session->messageToSend(NULL);
-            if (status2 == PEP_PASSPHRASE_REQUIRED || status2 == PEP_WRONG_PASSPHRASE) {
-                pEp_identity *_me = identity_dup(me);
-                if (!_me)
-                    return PEP_OUT_OF_MEMORY;
-                session->notifyHandshake(_me, NULL, SYNC_PASSPHRASE_REQUIRED);
-            }
+            pEp_identity* _me = identity_dup(me);
+            if (!_me)
+                return PEP_OUT_OF_MEMORY;
+            session->notifyHandshake(_me, NULL, SYNC_PASSPHRASE_REQUIRED);
+        }
+        else if (status == PEP_STATUS_OK) {
+            status = base_prepare_message(session, me, partner, type, payload, size, fpr, result);
         }
     } while (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE);
 
     return status;
 }
-

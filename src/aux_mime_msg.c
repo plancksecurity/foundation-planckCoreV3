@@ -1,3 +1,6 @@
+/** @file */
+/** @brief File description for doxygen missing. FIXME */
+
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
@@ -38,7 +41,7 @@ static PEP_STATUS update_identity_recip_list(PEP_SESSION session,
                 }                        
             }
             else
-                status = _myself(session, curr_identity, false, false, true);
+                status = _myself(session, curr_identity, false, false, false, true);
         if (status == PEP_ILLEGAL_VALUE || status == PEP_OUT_OF_MEMORY)
             return status;
         }
@@ -83,9 +86,9 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
         if (!is_me(session, tmp_msg->from))
             status = update_identity(session, (tmp_msg->from));
         else
-            status = _myself(session, tmp_msg->from, false, false, true);
+            status = _myself(session, tmp_msg->from, false, true, false, true);
 
-        if (status == PEP_ILLEGAL_VALUE || status == PEP_OUT_OF_MEMORY)
+        if (status == PEP_ILLEGAL_VALUE || status == PEP_OUT_OF_MEMORY || PASS_ERROR(status))
             goto pEp_error;
     }
 
@@ -278,5 +281,6 @@ pEp_error:
     return status;
 }
 #else
+// This is here to please ISO C - it needs a compilation unit. Value will never be used.
 const int the_answer_my_friend = 42;
 #endif

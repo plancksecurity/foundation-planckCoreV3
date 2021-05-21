@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include "pEpEngine.h"
+#include "pEp_internal.h"
 #include "message_api.h"
 
 #include "test_util.h"
@@ -53,7 +54,7 @@ namespace {
                 ASSERT_NE(engine, nullptr);
 
                 // Ok, let's initialize test directories etc.
-                engine->prep(NULL, NULL, init_files);
+                engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();

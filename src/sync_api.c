@@ -1,3 +1,6 @@
+/** @file */
+/** @brief File description for doxygen missing. FIXME */
+
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
@@ -375,3 +378,25 @@ DYNAMIC_API PEP_STATUS disable_identity_for_sync(PEP_SESSION session,
     status = key_reset_identity(session, ident, NULL);
     return status;
 }
+
+DYNAMIC_API PEP_STATUS disable_all_sync_channels(PEP_SESSION session)
+{
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    identity_list *own_identities = NULL;
+    PEP_STATUS status = own_identities_retrieve(session, &own_identities);
+    if (status)
+        return status;
+
+    for (identity_list *oi = own_identities; oi && oi->ident; oi = oi->next) {
+        status = set_identity_flags(session, oi->ident, PEP_idf_not_for_sync);
+        if (status)
+            break;
+    }
+
+    free_identity_list(own_identities);
+    return status;
+}
+

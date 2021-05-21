@@ -331,7 +331,7 @@ char *stpcpy(char *dst, const char *src)
     return dst;
 }
 
-size_t strlcpy(char* dst, const	char* src, size_t size) {
+size_t strlcpy(char* dst, const char* src, size_t size) {
     size_t retval = strlen(src);
     size_t size_to_copy = (retval < size ? retval : size - 1);
     
@@ -341,7 +341,7 @@ size_t strlcpy(char* dst, const	char* src, size_t size) {
     dst[size_to_copy] = '\0';
     return retval;
 }
-size_t strlcat(char* dst, const	char* src, size_t size) {
+size_t strlcat(char* dst, const char* src, size_t size) {
     size_t start_len = strnlen(dst, size);
     if (start_len == size)
         return size; // no copy, no null termination in size bytes, according to spec
@@ -406,11 +406,12 @@ DYNAMIC_API time_t timegm(timestamp *timeptr)
     if (!timeptr)
         return -1;
 
+    timeptr->tm_gmtoff = 0;
     time_t result = _mkgmtime((struct tm *) timeptr);
     if (result == -1)
         return -1;
 
-    return (result - timeptr->tm_gmtoff);
+    return result;
 }
 
 void uuid_generate_random(pEpUUID out)

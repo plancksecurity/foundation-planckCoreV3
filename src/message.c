@@ -1,5 +1,10 @@
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    message.c
+ * @brief   implementation of the pEp message structure and functions used to represent messages and pass message 
+ *          information back and forth between the engine and its customers. Includes memory management
+ *          for said structs.
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #include "pEp_internal.h"
 
@@ -52,8 +57,6 @@ DYNAMIC_API void free_message(message *msg)
 DYNAMIC_API message * message_dup(const message *src)
 {
     message * msg = NULL;
-    pEp_identity * from = NULL;
-    identity_list * to = NULL;
 
     assert(src);
 
@@ -197,14 +200,7 @@ DYNAMIC_API message * message_dup(const message *src)
     return msg;
 
 enomem:
-    if (msg) {
-        free_message(msg);
-    }
-    else {
-        free_identity(from);
-        free_identity_list(to);
-    }
-
+    free_message(msg);
     return NULL;
 }
 

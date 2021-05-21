@@ -1,7 +1,7 @@
 -- This file is under BSD License 2.0
 
 -- Sync protocol for p≡p
--- Copyright (c) 2016, 2017 p≡p foundation
+-- Copyright (c) 2016-2021 p≡p foundation
 
 -- Written by Volker Birk
 
@@ -12,7 +12,7 @@ DEFINITIONS AUTOMATIC TAGS EXTENSIBILITY IMPLIED ::=
 
 BEGIN
 
-EXPORTS Identity, IdentityList, TID, Hash, Version;
+EXPORTS Identity, IdentityList, TID, Hash, Version, Rating;
 
 ISO639-1 ::= PrintableString(FROM ("a".."z")) (SIZE(2))
 Hex ::= PrintableString(FROM ("A".."F") | FROM ("0".."9"))
@@ -34,6 +34,32 @@ IdentityList ::= SEQUENCE OF Identity
 Version ::= SEQUENCE {
     major INTEGER (0..255) DEFAULT 1,
     minor INTEGER (0..255) DEFAULT 2
+}
+
+Rating ::= ENUMERATED { 
+    -- no color
+
+    cannot-decrypt (1),
+    have-no-key (2),
+    unencrypted (3),
+    unreliable (5),
+
+    b0rken (-2),
+
+    -- yellow
+
+    reliable (6),
+
+    -- green
+
+    trusted (7),
+    trusted-and-anonymized (8),
+    fully-anonymous (9), 
+
+    -- red
+
+    mistrust (-1),
+    under-attack (-3)
 }
 
 END

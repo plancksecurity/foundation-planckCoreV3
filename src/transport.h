@@ -1,7 +1,11 @@
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    transport.h
+ * @brief   transport structs
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
-#pragma once
+#ifndef TRANSPORT_H
+#define TRANSPORT_H
 
 #include "pEpEngine.h"
 #include "message.h"
@@ -10,6 +14,12 @@
 extern "C" {
 #endif
 
+/**
+ *  @enum    PEP_transports
+ *  
+ *  @brief    TODO
+ *  
+ */
 typedef enum _PEP_transports {
     // auto transport chooses transport per message automatically
     PEP_trans_auto = 0,
@@ -25,6 +35,12 @@ typedef PEP_STATUS (*sendto_t)(PEP_SESSION session, const message *msg);
 typedef PEP_STATUS (*readnext_t)(PEP_SESSION session, message **msg,
         PEP_transport_t **via);
 
+/**
+ *  @struct    _PEP_transport_t
+ *  
+ *  @brief    TODO
+ *  
+ */
 struct _PEP_transport_t {
     uint8_t id;                             // transport ID
     sendto_t sendto;                        // sendto function
@@ -44,3 +60,4 @@ typedef uint64_t transports_mask;
 }
 #endif
 
+#endif

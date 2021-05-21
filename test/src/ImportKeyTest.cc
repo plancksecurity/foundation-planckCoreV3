@@ -1,8 +1,15 @@
 #include <stdlib.h>
 #include <string>
 #include <cstring>
+#include <iostream>
+#include <fstream>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 
 #include "pEpEngine.h"
+#include "pEp_internal.h"
 #include "test_util.h"
 #include "TestConstants.h"
 #include "Engine.h"
@@ -47,7 +54,7 @@ namespace {
                 ASSERT_NE(engine, nullptr);
 
                 // Ok, let's initialize test directories etc.
-                engine->prep(NULL, NULL, init_files);
+                engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
@@ -141,6 +148,52 @@ TEST_F(ImportKeyTest, check_import_change_pub_nochange) {
     ASSERT_EQ(status, PEP_KEY_IMPORTED);
     ASSERT_NE(keylist, nullptr);
     ASSERT_STREQ(keylist->value, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
+    ASSERT_EQ(keylist->next, nullptr);
+    ASSERT_EQ(changes, 0);
+}
+
+TEST_F(ImportKeyTest, check_import_change_pub_nochange_binary_bigkey) {
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    int retval = 0;
+
+#ifndef WIN32
+    struct stat fst;
+    retval = stat("test_keys/bigkey.pgp", &fst);
+#else
+    struct _stat fst;
+    retval = _stat("test_keys/bigkey.pgp", &fst);
+#endif
+
+    ASSERT_EQ(retval, 0);
+    size_t img_size = (size_t)(fst.st_size);
+    ASSERT_NE(img_size, 0);
+    char* img = (char*)calloc(1, img_size);
+
+    ifstream img_file("test_keys/bigkey.pgp", ios::in | ios::binary);
+
+    img_file.read(img, img_size);
+    img_file.close();
+
+    cout << img_size << endl;   
+
+    stringlist_t* keylist = NULL;
+    uint64_t changes = 0;
+    status = _import_key_with_fpr_return(session, img, img_size, NULL, &keylist, &changes);
+    ASSERT_EQ(status, PEP_KEY_IMPORTED);
+    ASSERT_NE(keylist, nullptr);
+//    ASSERT_STREQ(keylist->value, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
+    ASSERT_EQ(keylist->next, nullptr);
+    ASSERT_EQ(changes, 1);
+
+    // import again!
+    free_stringlist(keylist);
+    keylist = NULL;
+    changes = 0;
+    status = _import_key_with_fpr_return(session, img, img_size, NULL, &keylist, &changes);
+    ASSERT_EQ(status, PEP_KEY_IMPORTED);
+    ASSERT_NE(keylist, nullptr);
+  //  ASSERT_STREQ(keylist->value, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
     ASSERT_EQ(keylist->next, nullptr);
     ASSERT_EQ(changes, 0);
 }
@@ -325,4 +378,32 @@ TEST_F(ImportKeyTest, check_non_cleared_list_usage) {
     ASSERT_EQ(stringlist_length(keylist), 20);
     ASSERT_EQ(changes, 0xEABFF); // (938 << 10 | 1023) -> 11101010101111111111 = 0xEABFF
     free_stringlist(keylist);    
+}
+
+TEST_F(ImportKeyTest, check_770_import_priv_asc) {
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    string pubkey = slurp("test_keys/770_priv.asc");
+    stringlist_t* keylist = NULL;
+    status = _import_key_with_fpr_return(session, pubkey.c_str(), pubkey.size(), NULL, &keylist, NULL);
+    ASSERT_EQ(status, PEP_KEY_IMPORTED);
+    ASSERT_NE(keylist, nullptr);
+    ASSERT_STREQ(keylist->value, "0521111E12084FDEA58A38E880D9FB378DCC789D");
+    ASSERT_EQ(keylist->next, nullptr);
+
+    // FIXME, check key is actually imported
+}
+
+TEST_F(ImportKeyTest, check_770_import_priv_pgp) {
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    string pubkey = slurp("test_keys/770_priv.pgp");
+    stringlist_t* keylist = NULL;
+    status = _import_key_with_fpr_return(session, pubkey.c_str(), pubkey.size(), NULL, &keylist, NULL);
+    ASSERT_EQ(status, PEP_KEY_IMPORTED);
+    ASSERT_NE(keylist, nullptr);
+    ASSERT_STREQ(keylist->value, "0521111E12084FDEA58A38E880D9FB378DCC789D");
+    ASSERT_EQ(keylist->next, nullptr);
+
+    // FIXME, check key is actually imported
 }

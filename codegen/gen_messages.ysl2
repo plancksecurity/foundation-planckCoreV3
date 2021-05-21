@@ -1,0 +1,115 @@
+// This file is under GNU General Public License 3.0
+// see LICENSE.txt
+// generated files of this template are under BSD License 2.0
+
+// generate message functions
+
+// Copyleft (c) 2017-2020, p≡p foundation
+
+// Written by Volker Birk
+
+include yslt.yml2
+
+tstylesheet {
+    include standardlib.ysl2
+    include ./functions.ysl2
+
+    function "pEp_imports"
+        | IMPORTS Version, Identity, IdentityList, TID, Hash, Rating FROM PEP
+
+    function "header"
+    ||
+    -- This file is under BSD License 2.0
+
+    -- «@name» protocol for p≡p
+    -- Copyleft 2016-2020 by p≡p foundation
+
+    -- Written by Volker Birk
+
+    ||
+
+    template "/" {
+        apply "protocol", 0, mode=overview;
+        apply "protocol/fsm", 0, mode=individual;
+    }
+
+    template "protocol", mode=overview
+        document "generated/{yml:lcase(@name)}.asn1", "text" {
+
+        call "header";
+        ||
+        «yml:ucase(@name)»
+            { iso(1) org(3) dod(6) internet(1) private(4) enterprise(1) pEp(47878) «yml:lcase(@name)»(«@id») }
+
+        DEFINITIONS AUTOMATIC TAGS EXTENSIBILITY IMPLIED ::=
+
+        BEGIN
+
+        IMPORTS
+        `` for "fsm" |> «@name» FROM «yml:ucase(@name)»
+        ;
+
+        «@name» ::= CHOICE {
+            «yml:lcase(fsm[1]/@name)» [APPLICATION «fsm[1]/@id»] «fsm[1]/@name»`if "count(fsm)>1" > ,`
+            `` if "count(fsm)>1" |> ...,
+            `` for "fsm[position()>1]" |> «yml:lcase(@name)» [APPLICATION «@id»] «@name»`if "position()!=last()" > ,`
+        }
+
+        END
+
+        ||
+    }
+
+    template "fsm", mode=individual
+        document "generated/{yml:lcase(@name)}.asn1", "text" {
+
+        call "header";
+        ||
+        «yml:ucase(@name)»
+            { iso(1) org(3) dod(6) internet(1) private(4) enterprise(1) pEp(47878) «yml:lcase(../@name)»(«../@id») «yml:lcase(@name)»(«@id») }
+
+        DEFINITIONS AUTOMATIC TAGS EXTENSIBILITY IMPLIED ::=
+
+        BEGIN
+
+        EXPORTS «@name»;
+        `` call "pEp_imports"
+        `` apply "message/embed", mode=import
+        ;
+
+        `` apply "message//list|message", 0, mode=impl;
+        «@name» ::= CHOICE {
+        `` for "message" |> «yml:mixedCase(@name)» [APPLICATION «@id»] «@name»`if "position()!=last()" > ,`
+        }
+
+        END
+
+        ||
+    }
+
+    template "message", mode=impl
+    ||
+    «@name» ::= SEQUENCE {
+    `` apply "field|auto|list|embed", mode=direct
+    }
+
+    ||
+
+    template "list", mode=impl
+    ||
+    «@type» ::= SEQUENCE {
+    `` apply "field|auto|list", mode=direct
+    }
+
+    ||
+
+    template "field|auto|embed", mode=direct
+        | «func:asn1name()» «func:asn1type()»`if "position()!=last()" > ,`
+
+    template "list", mode=direct
+        | «func:asn1name()» SEQUENCE OF «func:asn1type()»`if "position()!=last()" > ,`
+
+    template "embed", mode=import
+        |     «@type» FROM «yml:ucase(@protocol)»
+}
+

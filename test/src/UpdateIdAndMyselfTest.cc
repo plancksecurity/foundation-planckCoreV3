@@ -13,6 +13,8 @@
 #include "TestConstants.h"
 
 #include "pEpEngine.h"
+#include "pEp_internal.h"
+#include "pEp_internal.h"
 #include "message_api.h"
 #include "keymanagement.h"
 #include "test_util.h"
@@ -59,7 +61,7 @@ namespace {
                 ASSERT_NE(engine, nullptr);
 
                 // Ok, let's initialize test directories etc.
-                engine->prep(NULL, NULL, init_files);
+                engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
@@ -77,6 +79,9 @@ namespace {
                 engine = NULL;
                 session = NULL;
             }
+
+            const char* testy_filename = "test_keys/testy_expired.pgp"; // pub/private keypair 
+            const char* testy_fpr = "D1AEA592B78BEF2BE8D93C78DD835B271075DA7E";
 
         private:
             const char* test_suite_name;
@@ -673,4 +678,216 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     free(default_own_id);
     free(alias_id);
     free(new_fpr);    
+}
+
+TEST_F(UpdateIdAndMyselfTest, check_myself_gen_password) {
+    PEP_STATUS status;
+    config_passphrase_for_new_keys(session, true, "test");
+    pEp_identity* testy = new_identity("testy@darthmama.org", NULL, PEP_OWN_USERID, "Testy McKeys");
+    testy->me = true;
+    testy->comm_type = PEP_ct_pEp;
+    status = set_identity(session, testy);
+    ASSERT_OK;    
+
+    status = myself(session, testy);    
+    ASSERT_OK;
+    ASSERT_NE(testy->fpr, nullptr);
+    ASSERT_NE(testy->fpr[0], '\0');
+        
+    status = probe_encrypt(session, testy->fpr);
+    ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);
+    config_passphrase(session, "test");
+    status = probe_encrypt(session, testy->fpr);
+    ASSERT_OK;
+}
+
+TEST_F(UpdateIdAndMyselfTest, check_myself_gen_password_required) {
+    PEP_STATUS status;
+    
+    session->new_key_pass_enable = true;
+    
+    pEp_identity* testy = new_identity("testy@darthmama.org", NULL, PEP_OWN_USERID, "Testy McKeys");
+    testy->me = true;
+    testy->comm_type = PEP_ct_pEp;
+    status = set_identity(session, testy);
+    ASSERT_OK;    
+
+    status = myself(session, testy);    
+    ASSERT_EQ(status, PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED);
+}
+
+TEST_F(UpdateIdAndMyselfTest, check_myself_gen_password_disable) {
+    PEP_STATUS status;    
+    config_passphrase_for_new_keys(session, true, "test");
+    session->new_key_pass_enable = false;
+    pEp_identity* testy = new_identity("testy@darthmama.org", NULL, PEP_OWN_USERID, "Testy McKeys");
+    testy->me = true;
+    testy->comm_type = PEP_ct_pEp;
+    status = set_identity(session, testy);
+    ASSERT_OK;    
+
+    status = myself(session, testy);    
+    ASSERT_OK;
+    ASSERT_NE(testy->fpr, nullptr);
+    ASSERT_NE(testy->fpr[0], '\0');
+        
+    status = probe_encrypt(session, testy->fpr);
+    ASSERT_OK;
+}
+
+TEST_F(UpdateIdAndMyselfTest, check_myself_renewal_password) {
+    ASSERT_TRUE(slurp_and_import_key(session, testy_filename));
+    stringlist_t* found_key = NULL;
+    PEP_STATUS status = find_keys(session, testy_fpr, &found_key);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(found_key, nullptr);
+    ASSERT_NE(found_key->value, nullptr);
+        
+    pEp_identity* testy = new_identity("testy@darthmama.org", testy_fpr, PEP_OWN_USERID, "Testy McKeys");
+    testy->me = true;
+    testy->comm_type = PEP_ct_pEp;
+    status = set_identity(session, testy);
+    ASSERT_OK;    
+
+    config_passphrase(session, "test");
+
+    status = myself(session, testy);    
+    ASSERT_OK;
+    
+    bool expired = false;
+    status = key_expired(session, testy_fpr, time(NULL), &expired);
+    ASSERT_OK;
+    ASSERT_FALSE(expired);
+    
+    ASSERT_STREQ(testy_fpr, testy->fpr);
+}    
+
+TEST_F(UpdateIdAndMyselfTest, check_myself_renewal_wrong_password) {
+    ASSERT_TRUE(slurp_and_import_key(session, testy_filename));
+    stringlist_t* found_key = NULL;
+    PEP_STATUS status = find_keys(session, testy_fpr, &found_key);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(found_key, nullptr);
+    ASSERT_NE(found_key->value, nullptr);
+        
+    pEp_identity* testy = new_identity("testy@darthmama.org", testy_fpr, PEP_OWN_USERID, "Testy McKeys");
+    testy->me = true;
+    testy->comm_type = PEP_ct_pEp;
+    status = set_identity(session, testy);
+    ASSERT_OK;    
+
+    config_passphrase(session, "bob");
+
+    status = myself(session, testy);    
+    ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);
+}
+
+TEST_F(UpdateIdAndMyselfTest, check_myself_renewal_requires_password) {
+    ASSERT_TRUE(slurp_and_import_key(session, testy_filename));
+    stringlist_t* found_key = NULL;
+    PEP_STATUS status = find_keys(session, testy_fpr, &found_key);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(found_key, nullptr);
+    ASSERT_NE(found_key->value, nullptr);
+        
+    pEp_identity* testy = new_identity("testy@darthmama.org", testy_fpr, PEP_OWN_USERID, "Testy McKeys");
+    testy->me = true;
+    testy->comm_type = PEP_ct_pEp;
+    status = set_identity(session, testy);
+    ASSERT_OK;    
+
+    status = myself(session, testy);    
+    ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);    
+}
+
+TEST_F(UpdateIdAndMyselfTest, check_update_identity_own_renewal_password) {
+    ASSERT_TRUE(slurp_and_import_key(session, testy_filename));
+    stringlist_t* found_key = NULL;
+    PEP_STATUS status = find_keys(session, testy_fpr, &found_key);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(found_key, nullptr);
+    ASSERT_NE(found_key->value, nullptr);
+    
+    // Force own identity to exist in DB, but not the onee we're working on
+    pEp_identity* fake_id = new_identity("fake@fake.fake", NULL, PEP_OWN_USERID, "This identity is fake");
+    fake_id->me = true;
+    status = set_identity(session, fake_id);
+    ASSERT_OK;            
+        
+    pEp_identity* testy = new_identity("testy@darthmama.org", testy_fpr, PEP_OWN_USERID, "Testy McKeys");
+    status = set_identity(session, testy);
+    ASSERT_OK;    
+
+    config_passphrase(session, "test");
+
+    free(testy->user_id);    
+    testy->user_id = NULL;    
+    status = update_identity(session, testy);    
+    ASSERT_EQ(status, PEP_KEY_UNSUITABLE);
+    
+    bool expired = false;
+    status = key_expired(session, testy_fpr, time(NULL), &expired);
+    ASSERT_OK;
+    ASSERT_TRUE(expired);
+}
+
+
+TEST_F(UpdateIdAndMyselfTest, check_update_identity_own_renewal_wrong_password) {
+    ASSERT_TRUE(slurp_and_import_key(session, testy_filename));
+    stringlist_t* found_key = NULL;
+    PEP_STATUS status = find_keys(session, testy_fpr, &found_key);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(found_key, nullptr);
+    ASSERT_NE(found_key->value, nullptr);
+    
+    // Force own identity to exist in DB, but not the onee we're working on
+    pEp_identity* fake_id = new_identity("fake@fake.fake", NULL, PEP_OWN_USERID, "This identity is fake");
+    fake_id->me = true;
+    status = set_identity(session, fake_id);
+    ASSERT_OK;            
+        
+    pEp_identity* testy = new_identity("testy@darthmama.org", testy_fpr, PEP_OWN_USERID, "Testy McKeys");
+    status = set_identity(session, testy);
+    ASSERT_OK;    
+
+    config_passphrase(session, "bob");
+
+    free(testy->user_id);    
+    testy->user_id = NULL;    
+    status = update_identity(session, testy);    
+    ASSERT_EQ(status, PEP_KEY_UNSUITABLE);
+    
+    bool expired = false;
+    status = key_expired(session, testy_fpr, time(NULL), &expired);
+    ASSERT_OK;
+    ASSERT_TRUE(expired);
+}
+
+TEST_F(UpdateIdAndMyselfTest, check_update_identity_own_renewal_requires_password) {
+    ASSERT_TRUE(slurp_and_import_key(session, testy_filename));
+    stringlist_t* found_key = NULL;
+    PEP_STATUS status = find_keys(session, testy_fpr, &found_key);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(found_key, nullptr);
+    ASSERT_NE(found_key->value, nullptr);
+
+    // Force own identity to exist in DB, but not the onee we're working on
+    pEp_identity* fake_id = new_identity("fake@fake.fake", NULL, PEP_OWN_USERID, "This identity is fake");
+    fake_id->me = true;
+    status = set_identity(session, fake_id);
+    ASSERT_OK;            
+        
+    pEp_identity* testy = new_identity("testy@darthmama.org", testy_fpr, PEP_OWN_USERID, "Testy McKeys");
+    status = set_identity(session, testy);
+    ASSERT_OK;    
+
+    free(testy->user_id);    
+    testy->user_id = NULL;    
+    status = update_identity(session, testy);    
+    ASSERT_EQ(status, PEP_KEY_UNSUITABLE);
+    
+    bool expired = false;
+    status = key_expired(session, testy_fpr, time(NULL), &expired);
+    ASSERT_OK;
+    ASSERT_TRUE(expired);
 }

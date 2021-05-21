@@ -6,17 +6,23 @@
 #include <sys/stat.h>
 #include <ftw.h>
 #include <iostream>
+#include <vector>
 
 #include "pEpEngine.h"
 #include "message_api.h"
 #include "aux_mime_msg.h"
 #include "mime.h"
 
+#include <gtest/gtest.h>
+
 void test_init();
 
 bool file_exists(std::string filename);
 bool is_pEpmsg(const message *msg); // duplicates static func in message_api.c, fyi
 
+#ifndef ASSERT_OK
+#define ASSERT_OK ASSERT_EQ(status, PEP_STATUS_OK)
+#endif
 
 extern std::string _main_test_home_dir;
 
@@ -107,6 +113,9 @@ bool slurp_and_import_key(PEP_SESSION session, const char* key_filename);
 
 bool slurp_message_and_import_key(PEP_SESSION session, const char* message_fname, std::string& message, const char* key_filename);
 
+char* message_to_str(message* msg);
+message* string_to_msg(std::string infile);
+
 int util_delete_filepath(const char *filepath, 
                          const struct stat *file_stat, 
                          int ftw_info, 
@@ -117,6 +126,8 @@ class NullBuffer : public std::streambuf {
         int overflow(int c);
 };                         
                          
+PEP_STATUS config_valid_passphrase(PEP_SESSION session, const char* fpr, std::vector<std::string> passphrases);
+
 #ifndef ENIGMAIL_MAY_USE_THIS
 
 // MIME_decrypt_message() - decrypt a MIME message, with MIME output

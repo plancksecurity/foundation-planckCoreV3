@@ -12,6 +12,7 @@
 #include <time.h>
 
 #include "pEpEngine.h"
+#include "pEp_internal.h"
 
 #include "test_util.h"
 #include "TestConstants.h"
@@ -59,10 +60,10 @@ ggsave("/tmp/pep-benchmark.pdf", width = 4, height = 4)
 #define REPITIONS 3
 
 // 10^x, x=0.5.. step 0.5.
-const int exp[] = { 3, 10, 31, 100, 316, 1000, 3162, 10000, 31622,
+const int _exp[] = { 3, 10, 31, 100, 316, 1000, 3162, 10000, 31622,
                     100000, 316227, 1000000, 3162277, 10000000,
                     31622776, 100000000, 316227766, 1000000000 };
-#define BENCHMARKS (sizeof(exp) / sizeof(exp[0]))
+#define BENCHMARKS (sizeof(_exp) / sizeof(_exp[0]))
 
 struct stats {
     FILE *fp;
@@ -168,7 +169,7 @@ namespace {
                 ASSERT_NE(engine, nullptr);
 
                 // Ok, let's initialize test directories etc.
-                engine->prep(NULL, NULL, init_files);
+                engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
@@ -257,10 +258,10 @@ TEST_F(LotsOfKeysTest, check) {
         }
 
         bool do_benchmark = false;
-        for (int i = 0; i < sizeof(exp) / sizeof(exp[0]); i ++) {
-            if (key + 1 == exp[i]) {
+        for (int i = 0; i < sizeof(_exp) / sizeof(_exp[0]); i ++) {
+            if (key + 1 == _exp[i]) {
                 do_benchmark = true;
-            } else if (key + 1 < exp[i]) {
+            } else if (key + 1 < _exp[i]) {
                 break;
             }
         }
