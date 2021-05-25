@@ -1488,6 +1488,11 @@ PEP_STATUS _generate_keypair(PEP_SESSION session,
                              pEp_identity *identity,
                              bool suppress_event);
 
+PEP_STATUS get_default_identity_fpr(PEP_SESSION session,
+                                    const char* address,
+                                    const char* user_id,
+                                    char** main_fpr);
+
 DYNAMIC_API PEP_STATUS reset_pEptest_hack(PEP_SESSION session);
 
 // This is used internally when there is a temporary identity to be retrieved

@@ -154,7 +154,16 @@ static const char *sql_replace_identities_fpr =
     "update identity"
     "   set main_key_id = ?1 "
     "   where main_key_id = ?2 ;";
-    
+
+static const char *sql_get_default_identity_fpr =
+        "select main_key_id from identity"
+        "   where (case when (address = ?1) then (1)"
+        "               when (lower(address) = lower(?1)) then (1)"
+        "               when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1) "
+        "               else 0 "
+        "          end) = 1 "
+        "          and user_id = ?2 ;";
+
 static const char *sql_remove_fpr_as_identity_default =
     "update identity set main_key_id = NULL where main_key_id = ?1 ;";
 
@@ -1887,7 +1896,6 @@ DYNAMIC_API PEP_STATUS init(
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
-
     int_result = sqlite3_prepare_v2(_session->db, sql_get_identities_by_main_key_id,
             (int)strlen(sql_get_identities_by_main_key_id), 
             &_session->get_identities_by_main_key_id, NULL);
@@ -1896,6 +1904,12 @@ DYNAMIC_API PEP_STATUS init(
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_default_identity_fpr,
+                                    (int)strlen(sql_get_default_identity_fpr), &_session->get_default_identity_fpr, NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
 
     int_result = sqlite3_prepare_v2(_session->db, sql_get_user_default_key,
             (int)strlen(sql_get_user_default_key), &_session->get_user_default_key, NULL);
@@ -2541,6 +2555,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->get_identities_by_userid);                
             if (session->get_identities_by_main_key_id)
                 sqlite3_finalize(session->get_identities_by_main_key_id);                                
+            if (session->get_default_identity_fpr)
+                sqlite3_finalize(session->get_default_identity_fpr);
             if (session->get_user_default_key)
                 sqlite3_finalize(session->get_user_default_key);
             if (session->get_all_keys_for_user)
@@ -4811,6 +4827,48 @@ PEP_STATUS get_main_user_fpr(PEP_SESSION session,
     sqlite3_reset(session->get_main_user_fpr);
     return status;
 }
+
+PEP_STATUS get_default_identity_fpr(PEP_SESSION session, 
+                                    const char* address,                            
+                                    const char* user_id,
+                                    char** main_fpr)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    int result;
+        
+    if (!session || EMPTYSTR(address) || EMPTYSTR(user_id) || !main_fpr)
+        return PEP_ILLEGAL_VALUE;
+        
+    *main_fpr = NULL;
+    
+    sqlite3_reset(session->get_default_identity_fpr);
+    sqlite3_bind_text(session->get_default_identity_fpr, 1, address, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_text(session->get_default_identity_fpr, 2, user_id, -1,
+                      SQLITE_STATIC);
+    result = sqlite3_step(session->get_default_identity_fpr);
+    switch (result) {
+    case SQLITE_ROW: {
+        const char* _fpr = 
+            (const char *) sqlite3_column_text(session->get_default_identity_fpr, 0);
+        if (_fpr) {
+            *main_fpr = strdup(_fpr);
+            if (!(*main_fpr))
+                status = PEP_OUT_OF_MEMORY;
+        }
+        else {
+            status = PEP_KEY_NOT_FOUND;
+        }
+        break;
+    }
+    default:
+        status = PEP_CANNOT_FIND_IDENTITY;
+    }
+
+    sqlite3_reset(session->get_default_identity_fpr);
+    return status;
+}
+
 
 // Deprecated
 DYNAMIC_API PEP_STATUS mark_as_compromized(
