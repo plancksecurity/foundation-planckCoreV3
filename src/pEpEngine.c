@@ -155,6 +155,10 @@ static const char *sql_replace_identities_fpr =
     "   set main_key_id = ?1 "
     "   where main_key_id = ?2 ;";
 
+static const char* sql_set_default_identity_fpr =
+        "update identity set main_key_id = ?3 "
+        "    where user_id = ?1 and address = ?2; ";
+
 static const char *sql_get_default_identity_fpr =
         "select main_key_id from identity"
         "   where (case when (address = ?1) then (1)"
@@ -1911,6 +1915,14 @@ DYNAMIC_API PEP_STATUS init(
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
+    int_result = sqlite3_prepare_v2(_session->db, sql_set_default_identity_fpr,
+                                    (int)strlen(sql_set_default_identity_fpr), &_session->set_default_identity_fpr, NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+    
+    
     int_result = sqlite3_prepare_v2(_session->db, sql_get_user_default_key,
             (int)strlen(sql_get_user_default_key), &_session->get_user_default_key, NULL);
     assert(int_result == SQLITE_OK);
@@ -2557,6 +2569,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->get_identities_by_main_key_id);                                
             if (session->get_default_identity_fpr)
                 sqlite3_finalize(session->get_default_identity_fpr);
+            if (session->set_default_identity_fpr)
+                sqlite3_finalize(session->set_default_identity_fpr);
             if (session->get_user_default_key)
                 sqlite3_finalize(session->get_user_default_key);
             if (session->get_all_keys_for_user)
@@ -4827,6 +4841,37 @@ PEP_STATUS get_main_user_fpr(PEP_SESSION session,
     sqlite3_reset(session->get_main_user_fpr);
     return status;
 }
+
+DYNAMIC_API PEP_STATUS set_default_identity_fpr(PEP_SESSION session,
+                                                const char* user_id,
+                                                const char* address,
+                                                const char* fpr) {
+
+    if (!session || EMPTYSTR(user_id) || EMPTYSTR(address) || EMPTYSTR(fpr))
+        return PEP_ILLEGAL_VALUE;
+
+    // Make sure fpr is in the management DB
+    PEP_STATUS status = set_pgp_keypair(session, fpr);
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    int result;
+
+    sqlite3_reset(session->set_default_identity_fpr);
+    sqlite3_bind_text(session->set_default_identity_fpr, 1, user_id, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(session->set_default_identity_fpr, 2, address, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(session->set_default_identity_fpr, 3, fpr, -1,
+            SQLITE_STATIC);
+    result = sqlite3_step(session->set_default_identity_fpr);
+    sqlite3_reset(session->set_default_identity_fpr);
+    if (result != SQLITE_DONE)
+        return PEP_CANNOT_SET_PGP_KEYPAIR;
+
+    return PEP_STATUS_OK;
+}
+
 
 PEP_STATUS get_default_identity_fpr(PEP_SESSION session, 
                                     const char* address,                            

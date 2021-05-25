@@ -1465,8 +1465,9 @@ DYNAMIC_API PEP_STATUS config_passphrase(PEP_SESSION session, const char *passph
 //
 
 DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys(PEP_SESSION session, 
-                                                bool enable, 
-                                                const char *passphrase);
+                                                      bool enable,
+                                                      const char *passphrase);
+
 // set_ident_enc_format() - set the default encryption format for this identity
 //                          (value only MIGHT be used, and only in the case where the
 //                          message enc_format is PEP_enc_auto. It will be used 
@@ -1487,6 +1488,20 @@ DYNAMIC_API PEP_STATUS set_ident_enc_format(PEP_SESSION session,
 PEP_STATUS _generate_keypair(PEP_SESSION session, 
                              pEp_identity *identity,
                              bool suppress_event);
+
+// set_default_identity_fpr() - FOR UPPER_LEVEL TESTING ONLY - NOT TO BE USED DIRECTLY BY ADAPTER OR APPS IN PRODUCTION
+//                              Set the default key fingerprint for the identity identitified by this address and user_id.
+//                              Only to be used for testing, since key election cannot be relied upon for tests.
+//  parameters:
+//      session (in)            session handle
+//      user_id (in)            user_id for identity - cannot be NULL
+//      address (in)            address for identity - cannot be NULL
+//      fpr     (in)            fingerprint for identity - cannot be NULL
+//
+DYNAMIC_API PEP_STATUS set_default_identity_fpr(PEP_SESSION session,
+                                                const char* user_id,
+                                                const char* address,
+                                                const char* fpr);
 
 PEP_STATUS get_default_identity_fpr(PEP_SESSION session,
                                     const char* address,
