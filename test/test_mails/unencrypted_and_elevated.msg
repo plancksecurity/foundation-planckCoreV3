@@ -3,14 +3,14 @@ To: "pep.test.bob@pep-project.org" <pep.test.bob@pep-project.org>
 Subject: Yo Bob!
 X-pEp-Version: 2.1
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="34273e357c4c86d64ae275d254fca12e"
+Content-Type: multipart/mixed; boundary="3b252729743ec59168d6bc392f71f885"
 
---34273e357c4c86d64ae275d254fca12e
+--3b252729743ec59168d6bc392f71f885
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 
 Intentionally unencrypted message
---34273e357c4c86d64ae275d254fca12e
+--3b252729743ec59168d6bc392f71f885
 Content-Type: application/pgp-keys
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="sender_key.asc"
@@ -63,4 +63,4 @@ UUZpU0xIMmhJQXlXWi9aam5WSkZkbkpLRXBOU3VUNmJhVjByQ2l6aS9udGxyc1VqQ0svQUZYa2Fw
 RzJHQ3VsTQoxK3FpSUVDS3pEcm1sNnJVV2pjVFhISjh5RXRXTFhiV0JFVXAwMmdhTFRhZnhSZHNI
 eU93VFJUK3E5QT0KPWlrRkYKLS0tLS1FTkQgUEdQIFBVQkxJQyBLRVkgQkxPQ0stLS0tLQo=
 
---34273e357c4c86d64ae275d254fca12e--
+--3b252729743ec59168d6bc392f71f885--

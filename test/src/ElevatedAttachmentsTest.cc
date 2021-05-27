@@ -421,6 +421,7 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message_elevated) {
 // key from an unencrypted message (ENGINE-927 in Release_2.1 branch), we'll set it correctly.
 // This won't result in elevated anything, it just simulates the call sequence used anyway.
 
+#if 0 // set to 1 if you need to quote or generate again
 // Largely for generation.
 TEST_F(ElevatedAttachmentsTest, check_send_unencrypted) {
     // a message from me, Alice, to Bob
@@ -476,6 +477,7 @@ TEST_F(ElevatedAttachmentsTest, check_send_unencrypted) {
 
     free(unenc_str);
 }
+#endif
 
 TEST_F(ElevatedAttachmentsTest, check_receive_unencrypted) {
 
@@ -495,7 +497,9 @@ TEST_F(ElevatedAttachmentsTest, check_receive_unencrypted) {
 
     status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status, PEP_UNENCRYPTED);
-    pEp_identity *alice = new_identity("pep.test.alice@pep-project.org", NULL, "ALICE", "ALICE");
+
+    // 2.1 note: this will fail if the username differs. This is known and expected by vb.
+    pEp_identity *alice = new_identity("pep.test.alice@pep-project.org", NULL, "ALICE", "Alice in Wonderland");
     status = update_identity(session, alice);
     ASSERT_OK;
     ASSERT_NE(alice->fpr, nullptr);
