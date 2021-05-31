@@ -297,6 +297,12 @@ the_end:
 /*
     Test Cases for Trust Rating of Incoming Messages
 
+    Dramatis personae
+
+    Alice: the own user
+    Bob: Alice frequent comm partner
+    Sylvia: a new comm partner of Alice
+
     A) Handshake and TOFU
 
     1)  Sylvia sends an unencrypted mail without key
