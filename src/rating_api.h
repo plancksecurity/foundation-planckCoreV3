@@ -267,6 +267,11 @@ PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rati
  *  @param[in]   src                encrypted version of message to get the rating for
  *  @param[in]   dst                decrypted version of message to get the rating for
  *  @param[in]   known_keys         list of fprs of keys known to be used to encrypt src
+ *                                  first key MUST be the sender key; if no sender key
+ *                                  can be identified the list MUST be empty
+ *                                  in case the message was unencrypted and the
+ *                                  sender key was identified this MUST have
+ *                                  exactly one element
  *  @param[in]   extra_keys         extra keys declared by the sender
  *  @param[in]   decrypt_status     return value of decrypt_and_verify()
  *                                  for a partitioned message:
