@@ -1489,6 +1489,18 @@ PEP_STATUS _generate_keypair(PEP_SESSION session,
                              pEp_identity *identity,
                              bool suppress_event);
 
+// set_comm_partner_key() - Set the default key fingerprint for the identity identitified by this address and user_id.
+//
+//  parameters:
+//      session  (in)            session handle
+//      identity (inout)         identity - cannot be NULL
+//      fpr      (in)            fingerprint for identity - cannot be NULL or empty
+//
+DYNAMIC_API PEP_STATUS set_comm_partner_key(PEP_SESSION session,
+                                            pEp_identity *identity,
+                                            const char* fpr);
+
+
 // set_default_identity_fpr() - FOR UPPER_LEVEL TESTING ONLY - NOT TO BE USED DIRECTLY BY ADAPTER OR APPS IN PRODUCTION
 //                              Set the default key fingerprint for the identity identitified by this address and user_id.
 //                              Only to be used for testing, since key election cannot be relied upon for tests.
@@ -1498,7 +1510,7 @@ PEP_STATUS _generate_keypair(PEP_SESSION session,
 //      address (in)            address for identity - cannot be NULL
 //      fpr     (in)            fingerprint for identity - cannot be NULL
 //
-DYNAMIC_API PEP_STATUS set_default_identity_fpr(PEP_SESSION session,
+PEP_STATUS set_default_identity_fpr(PEP_SESSION session,
                                                 const char* user_id,
                                                 const char* address,
                                                 const char* fpr);

@@ -4842,10 +4842,29 @@ PEP_STATUS get_main_user_fpr(PEP_SESSION session,
     return status;
 }
 
-DYNAMIC_API PEP_STATUS set_default_identity_fpr(PEP_SESSION session,
-                                                const char* user_id,
-                                                const char* address,
-                                                const char* fpr) {
+DYNAMIC_API PEP_STATUS set_comm_partner_key(PEP_SESSION session,
+                                            pEp_identity *identity,
+                                            const char* fpr) {
+    if (!session || !identity || EMPTYSTR(fpr))
+        return PEP_ILLEGAL_VALUE;
+
+    // update identity upfront - we need the identity to exist in the DB.
+    PEP_STATUS status = update_identity(session, identity);
+    if (status != PEP_OUT_OF_MEMORY) {
+        status = set_default_identity_fpr(session,
+                                          identity->user_id,
+                                          identity->address,
+                                          fpr);
+    }
+    return status;
+}
+
+
+
+PEP_STATUS set_default_identity_fpr(PEP_SESSION session,
+                                    const char* user_id,
+                                    const char* address,
+                                    const char* fpr) {
 
     if (!session || EMPTYSTR(user_id) || EMPTYSTR(address) || EMPTYSTR(fpr))
         return PEP_ILLEGAL_VALUE;
@@ -4871,6 +4890,7 @@ DYNAMIC_API PEP_STATUS set_default_identity_fpr(PEP_SESSION session,
 
     return PEP_STATUS_OK;
 }
+
 
 
 PEP_STATUS get_default_identity_fpr(PEP_SESSION session, 
