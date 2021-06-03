@@ -81,14 +81,14 @@ namespace {
 TEST_F(Engine704Test, check_engine704) {
     PEP_STATUS status = PEP_STATUS_OK;
     pEp_identity* alice = NULL;
-    status = set_up_preset(session, ALICE, true, true, true, true, true, &alice);
+    status = set_up_preset(session, ALICE, true, true, true, true, true, true, &alice);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(alice);
     status = myself(session, alice);
     char* alicename = strdup(alice->username);
     
     pEp_identity* alice_is_bob = NULL;
-    status = set_up_preset(session, BOB, false, true, true, false, true, &alice_is_bob);
+    status = set_up_preset(session, BOB, false, true, true, true, false, true, &alice_is_bob);
     alice_is_bob->fpr = strdup("BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39");
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(alice_is_bob);

@@ -71,7 +71,6 @@ namespace {
                 engine = NULL;
                 session = NULL;
             }
-
         private:
             const char* test_suite_name;
             const char* test_name;
@@ -84,7 +83,8 @@ namespace {
 TEST_F(TestSetDefaultFPRTest, check_test_set_default_fpr) {
     pEp_identity* carol = NULL;
     PEP_STATUS status = set_up_preset(session, CAROL,
-                                      false, true, false, false, false, &carol);
+                                      true, false, true, false, false, false, &carol);
+    ASSERT_EQ(carol->fpr, nullptr);
     status = update_identity(session, carol);
     ASSERT_OK;
     ASSERT_EQ(carol->fpr, nullptr);
@@ -111,7 +111,7 @@ TEST_F(TestSetDefaultFPRTest, check_test_set_default_fpr) {
 TEST_F(TestSetDefaultFPRTest, check_test_set_comm_partner_key) {
     pEp_identity* carol = NULL;
     PEP_STATUS status = set_up_preset(session, CAROL,
-                                       true, true, false, false, false, &carol);
+                                       true, false, true, false, false, false, &carol);
     status = set_comm_partner_key(session, carol, carol_fpr);
     ASSERT_OK;
     status = update_identity(session, carol);
@@ -135,7 +135,7 @@ TEST_F(TestSetDefaultFPRTest, check_test_set_comm_partner_key) {
 TEST_F(TestSetDefaultFPRTest, check_test_set_default_no_identity) {
     pEp_identity* carol = NULL;
     PEP_STATUS status = set_up_preset(session, CAROL,
-                                      false, true, false, false, false, &carol);
+                                      true, false, true, false, false, false, &carol);
     status = update_identity(session, carol);
     ASSERT_OK;
     ASSERT_EQ(carol->fpr, nullptr);
@@ -163,7 +163,7 @@ TEST_F(TestSetDefaultFPRTest, check_test_set_default_no_identity) {
 TEST_F(TestSetDefaultFPRTest, check_test_set_comm_partner_key_no_set_identity) {
     pEp_identity* carol = NULL;
     PEP_STATUS status = set_up_preset(session, CAROL,
-                                      false, false, false, false, false, &carol);
+                                      false, false, false, false, false, false, &carol);
     string user_id_cache = carol->user_id;
     status = set_comm_partner_key(session, carol, carol_fpr);
     ASSERT_OK;

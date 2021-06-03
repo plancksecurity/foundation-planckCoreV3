@@ -86,7 +86,7 @@ TEST_F(UnencryptedPepMailTest, check_unencrypted_pep_mail_outgoing) {
     pEp_identity* dave = NULL;
 
     PEP_STATUS status = set_up_preset(session, ALICE,
-                                      true, true, true, true, true, &alice);
+                                      true, true, true, true, true, true, &alice);
 
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(alice);
@@ -135,7 +135,7 @@ TEST_F(UnencryptedPepMailTest, check_unencrypted_pep_mail_outgoing_MIME) {
     pEp_identity* dave = NULL;
 
     PEP_STATUS status = set_up_preset(session, ALICE,
-                                      true, true, true, true, true, &alice);
+                                      true, true, true, true, true, true, &alice);
 
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(alice);
@@ -186,7 +186,7 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
 TEST_F(UnencryptedPepMailTest, check_unencrypted_pep_message_rcpt) {
     string msgstr = slurp("test_mails/unenc_pep_msg_test_1.eml");
     PEP_STATUS status = set_up_preset(session, DAVE,
-                                      true, true, true, true, true, NULL);
+                                      true, true, true, true, true, true, NULL);
     ASSERT_EQ(status, PEP_STATUS_OK);
     message* dec_msg = NULL;
     message* enc_msg = NULL;

@@ -78,7 +78,8 @@ typedef enum _pEp_test_ident_preset {
 
 PEP_STATUS set_up_preset(PEP_SESSION session,
                          pEp_test_ident_preset preset_name,
-                         bool set_identity, 
+                         bool set_identity,
+                         bool set_fpr,
                          bool set_pep,
                          bool trust,
                          bool set_own, 

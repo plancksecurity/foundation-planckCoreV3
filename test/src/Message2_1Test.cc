@@ -139,13 +139,13 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_0) {
     pEp_identity* carol = NULL;
 
     PEP_STATUS status = set_up_preset(session, ALICE,
-                                      true, true, true, true, true, &alice);
+                                      true, true, true, true, true, true, &alice);
 
     ASSERT_OK;
     ASSERT_NOTNULL(alice);
 
     status = set_up_preset(session, CAROL,
-                           true, true, false, false, false, &carol);
+                           true, true, true, false, false, false, &carol);
 
     ASSERT_OK;
     ASSERT_NOTNULL(carol);
@@ -196,13 +196,13 @@ TEST_F(Message2_1Test, check_message2_1_recip_OpenPGP) {
     pEp_identity* carol = NULL;
 
     PEP_STATUS status = set_up_preset(session, ALICE,
-                                      true, true, true, true, true, &alice);
+                                      true, true, true, true, true, true, &alice);
 
     ASSERT_OK;
     ASSERT_NOTNULL(alice);
 
     status = set_up_preset(session, CAROL,
-                           true, false, false, false, false, &carol);
+                           true, true, false, false, false, false, &carol);
 
     ASSERT_OK;
     ASSERT_NOTNULL(carol);
@@ -244,13 +244,13 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_1) {
     pEp_identity* carol = NULL;
 
     PEP_STATUS status = set_up_preset(session, ALICE,
-                                      true, true, true, true, true, &alice);
+                                      true, true, true, true, true, true, &alice);
 
     ASSERT_OK;
     ASSERT_NOTNULL(alice);
 
     status = set_up_preset(session, CAROL,
-                           true, true, false, false, false, &carol);
+                           true, true, true, false, false, false, &carol);
 
     ASSERT_OK;
     ASSERT_NOTNULL(carol);
@@ -291,7 +291,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_1_0_from_msg_OpenPGP) {
     pEp_identity* alex = NULL;
 
     PEP_STATUS status = set_up_preset(session, ALEX_0,
-                                      true, true, true, true, true, &alex);
+                                      true, true, true, true, true, true, &alex);
 
     ASSERT_OK;
     ASSERT_NOTNULL(alex);
@@ -338,7 +338,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_0_from_msg) {
     pEp_identity* carol = NULL;
 
     PEP_STATUS status = set_up_preset(session, CAROL,
-                                      true, true, true, true, true, &carol);
+                                      true, true, true, true, true, true, &carol);
 
     ASSERT_OK;
     ASSERT_NOTNULL(carol);
@@ -385,7 +385,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_1_from_msg) {
     pEp_identity* carol = NULL;
 
     PEP_STATUS status = set_up_preset(session, CAROL,
-                                      true, true, true, true, true, &carol);
+                                      true, true, true, true, true, true, &carol);
 
     ASSERT_OK;
     ASSERT_NOTNULL(carol);
@@ -441,13 +441,13 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_2_0) {
     pEp_identity* alex = NULL;
 
     PEP_STATUS status = set_up_preset(session, ALICE,
-                                      true, true, true, true, true, &alice);
+                                      true, true, true, true, true, true, &alice);
 
     ASSERT_OK;
     ASSERT_NOTNULL(alice);
 
     status = set_up_preset(session, BOB,
-                           true, true, false, false, false, &bob);
+                           true, true, true, false, false, false, &bob);
 
     ASSERT_OK;
     ASSERT_NOTNULL(bob);
@@ -461,7 +461,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_2_0) {
     ASSERT_EQ(bob->minor_ver , 1);
 
     status = set_up_preset(session, CAROL,
-                           true, true, false, false, false, &carol);
+                           true, true, true, false, false, false, &carol);
 
     ASSERT_OK;
     ASSERT_NOTNULL(carol);
@@ -475,7 +475,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_2_0) {
     ASSERT_EQ(carol->minor_ver , 1);
 
     status = set_up_preset(session, DAVE,
-                           true, true, false, false, false, &dave);
+                           true, true, true, false, false, false, &dave);
 
     ASSERT_OK;
     ASSERT_NOTNULL(dave);
@@ -489,7 +489,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_2_0) {
     ASSERT_EQ(dave->minor_ver , 0);
 
     status = set_up_preset(session, ALEX,
-                           true, true, true, false, false, &alex);
+                           true, true, true, true, false, false, &alex);
 
     ASSERT_OK;
     ASSERT_NOTNULL(alex);
@@ -536,13 +536,13 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_1_0_OpenPGP) {
     pEp_identity* alex = NULL;
 
     PEP_STATUS status = set_up_preset(session, ALICE,
-                                      true, true, true, true, true, &alice);
+                                      true, true, true, true, true, true, &alice);
 
     ASSERT_OK;
     ASSERT_NOTNULL(alice);
 
     status = set_up_preset(session, BOB,
-                           true, true, false, false, false, &bob);
+                           true, true, true, false, false, false, &bob);
 
     ASSERT_OK;
     ASSERT_NOTNULL(bob);
@@ -556,7 +556,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_1_0_OpenPGP) {
     ASSERT_EQ(bob->minor_ver , 1);
 
     status = set_up_preset(session, CAROL,
-                           true, true, false, false, false, &carol);
+                           true, true, true, false, false, false, &carol);
 
     ASSERT_OK;
     ASSERT_NOTNULL(carol);
@@ -570,7 +570,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_1_0_OpenPGP) {
     ASSERT_EQ(carol->minor_ver , 1);
 
     status = set_up_preset(session, DAVE,
-                           true, true, false, false, false, &dave);
+                           true, true, true, false, false, false, &dave);
 
     ASSERT_OK;
     ASSERT_NOTNULL(dave);
@@ -584,7 +584,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_1_0_OpenPGP) {
     ASSERT_EQ(dave->minor_ver , 0);
 
     status = set_up_preset(session, ALEX,
-                           true, false, true, false, false, &alex);
+                           true, true, false, true, false, false, &alex);
 
     ASSERT_OK;
     ASSERT_NOTNULL(alex);

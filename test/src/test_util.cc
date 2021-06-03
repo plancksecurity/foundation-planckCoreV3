@@ -824,6 +824,7 @@ PEP_STATUS set_fpr_preserve_ident(PEP_SESSION session, const pEp_identity* ident
 PEP_STATUS set_up_preset(PEP_SESSION session,
                          pEp_test_ident_preset preset_name,
                          bool set_ident,
+                         bool set_fpr,
                          bool set_pep,
                          bool trust,
                          bool set_own,
@@ -1043,7 +1044,7 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
 
     // honestly probably happens anyway
     if (set_ident && status == PEP_STATUS_OK) {
-        retval->fpr = strdup(fpr);
+        retval->fpr = set_fpr ? strdup(fpr) : NULL;
         status = set_identity(session, retval);
     }
 
