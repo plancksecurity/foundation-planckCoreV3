@@ -484,19 +484,26 @@ message* string_to_msg(string infile) {
     return out_msg;
 }
 
-PEP_STATUS vanilla_encrypt_and_write_to_file(PEP_SESSION session, message* msg, const char* filename) {
+PEP_STATUS vanilla_encrypt_and_write_to_file(PEP_SESSION session, message* msg, const char* filename, PEP_encrypt_flags_t flags) {
     if (!session || !msg || !filename)
         return PEP_ILLEGAL_VALUE;
     message* enc_msg = NULL;
-    PEP_STATUS status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
-    if (status != PEP_STATUS_OK)
-        return status;
-    if (!enc_msg)
-        return PEP_UNKNOWN_ERROR;
-    char* msg_str = NULL;
-    msg_str = message_to_str(enc_msg);
-    if (!msg_str)
-        return PEP_UNKNOWN_ERROR;
+    char *msg_str = NULL;
+    PEP_STATUS status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, flags);
+    if (status != PEP_UNENCRYPTED) {
+        if (status != PEP_STATUS_OK)
+            return status;
+        if (!enc_msg)
+            return PEP_UNKNOWN_ERROR;
+        msg_str = message_to_str(enc_msg);
+        if (!msg_str)
+            return PEP_UNKNOWN_ERROR;
+    }
+    else {
+        msg_str = message_to_str(msg);
+        if (!msg_str)
+            return PEP_UNKNOWN_ERROR;
+    }
     dump_out(filename, msg_str);
     free_message(enc_msg);
     free(msg_str);
@@ -937,6 +944,106 @@ PEP_STATUS TestUtilsPreset::set_up_preset(PEP_SESSION session,
 
     return status;
 }
+/*
+static PEP_STATUS set_up_preset(PEP_SESSION session,
+                     ident_preset preset_name,
+                     bool set_identity,
+                     bool set_fpr,
+                     bool set_pep,
+                     bool trust,
+                     bool set_own,
+                     bool setup_private,
+                     pEp_identity** ident);
+*/
+pEp_identity* TestUtilsPreset::generateAndSetOpenPGPPartnerIdentity(PEP_SESSION session,
+                                                                    ident_preset preset_name,
+                                                                    bool set_fpr,
+                                                                    bool trust) {
+    pEp_identity* retval = NULL;
+    PEP_STATUS status = set_up_preset(session, preset_name, true, set_fpr, false, trust, false, false, &retval);
+    if (status != PEP_STATUS_OK) {
+        free(retval);
+        retval = NULL;
+    }
+    return retval;
+
+}
+
+pEp_identity* TestUtilsPreset::generateAndSetpEpPartnerIdentity(PEP_SESSION session,
+                                                                    ident_preset preset_name,
+                                                                    bool set_fpr,
+                                                                    bool trust) {
+    pEp_identity* retval = NULL;
+    PEP_STATUS status = set_up_preset(session, preset_name, true, set_fpr, true, trust, false, false, &retval);
+    if (status != PEP_STATUS_OK) {
+        free(retval);
+        retval = NULL;
+    }
+    return retval;
+}
+
+pEp_identity* TestUtilsPreset::generateAndSetPrivateIdentity(PEP_SESSION session,
+                                                             ident_preset preset_name) {
+    pEp_identity* retval = NULL;
+    PEP_STATUS status = set_up_preset(session, preset_name, true, true, true, true, true, true, &retval);
+    if (status != PEP_STATUS_OK) {
+        free(retval);
+        retval = NULL;
+    }
+    return retval;
+}
+
+pEp_identity* TestUtilsPreset::generateOnlyPrivateIdentity(PEP_SESSION session,
+                                                           ident_preset preset_name) {
+    pEp_identity* retval = NULL;
+    PEP_STATUS status = set_up_preset(session, preset_name, false, false, false, false, false, true, &retval);
+    if (status != PEP_STATUS_OK) {
+        free(retval);
+        retval = NULL;
+    }
+    return retval;
+}
+pEp_identity* TestUtilsPreset::generateOnlyPrivateIdentityGrabFPR(PEP_SESSION session,
+                                                           ident_preset preset_name) {
+    pEp_identity* retval = NULL;
+    PEP_STATUS status = set_up_preset(session, preset_name, false, false, false, false, false, true, &retval);
+    if (status != PEP_STATUS_OK) {
+        free(retval);
+        retval = NULL;
+    }
+    else {
+        retval->fpr = strdup(TestUtilsPreset::presets[preset_name].fpr);
+    }
+
+    return retval;
+}
+
+
+pEp_identity* TestUtilsPreset::generateOnlyPartnerIdentity(PEP_SESSION session,
+                                                           ident_preset preset_name) {
+    pEp_identity* retval = NULL;
+    PEP_STATUS status = set_up_preset(session, preset_name, false, false, false, false, false, false, &retval);
+    if (status != PEP_STATUS_OK) {
+        free(retval);
+        retval = NULL;
+    }
+    return retval;
+}
+
+pEp_identity* TestUtilsPreset::generateOnlyPartnerIdentityGrabFPR(PEP_SESSION session,
+                                                                  ident_preset preset_name) {
+    pEp_identity* retval = NULL;
+    PEP_STATUS status = set_up_preset(session, preset_name, false, false, false, false, false, true, &retval);
+    if (status != PEP_STATUS_OK) {
+        free(retval);
+        retval = NULL;
+    }
+    else {
+        retval->fpr = strdup(TestUtilsPreset::presets[preset_name].fpr);
+    }
+    return retval;
+}
+
 
 int NullBuffer::overflow(int c) {
     return c;

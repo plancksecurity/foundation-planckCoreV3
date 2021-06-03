@@ -100,7 +100,8 @@ public:
         FENRIS      = 21,
         SERCULLEN   = 22,
         INQUISITOR  = 23,
-        BERND       = 24
+        BERND       = 24,
+        SYLVIA      = 25
     } ident_preset;
 
     static PEP_STATUS set_up_preset(PEP_SESSION session,
@@ -112,7 +113,32 @@ public:
                          bool set_own,
                          bool setup_private,
                          pEp_identity** ident);
-private:
+
+    static pEp_identity* generateAndSetOpenPGPPartnerIdentity(PEP_SESSION session,
+                                                              ident_preset preset_name,
+                                                              bool set_fpr,
+                                                              bool trust);
+    static pEp_identity* generateAndSetpEpPartnerIdentity(PEP_SESSION session,
+                                                          ident_preset preset_name,
+                                                          bool set_fpr,
+                                                          bool trust);
+
+
+    static pEp_identity* generateAndSetPrivateIdentity(PEP_SESSION session,
+                                                       ident_preset preset_name);
+
+    static pEp_identity* generateOnlyPrivateIdentity(PEP_SESSION session,
+                                                     ident_preset preset_name);
+
+    static pEp_identity* generateOnlyPartnerIdentity(PEP_SESSION session,
+                                                     ident_preset preset_name);
+
+    static pEp_identity* generateOnlyPrivateIdentityGrabFPR(PEP_SESSION session,
+                                                            ident_preset preset_name);
+
+    static pEp_identity* generateOnlyPartnerIdentityGrabFPR(PEP_SESSION session,
+                                                            ident_preset preset_name);
+
     static inline const IdentityInfo presets[] = {
                 IdentityInfo("Alice Spivak Hyatt", "ALICE", "pep.test.alice@pep-project.org", "pep-test-alice-0x6FF00E97", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97"),
                 IdentityInfo("Apple of my Computer", "APPLE", "pep.test.apple@pep-project.org", "pep-test-apple-0x1CCBC7D7", "3D8D9423D03DDF61B60161150313D94A1CCBC7D7"),
@@ -138,7 +164,8 @@ private:
                 IdentityInfo("Fenris Leto Hawke", "FENRIS", "pep.test.fenris@thisstilldoesntwork.lu", "pep.test.fenris-0x4F3D2900", "0969FA229DF21C832A64A04711B1B9804F3D2900"),
                 IdentityInfo("Cullen Rutherford", "CULLEN", "sercullen-test@darthmama.org", "sercullen-0x3CEAADED4", "1C9666D8B3E28F4AA3847DA89A6E75E3CEAADED4"),  // NB expired on purpose
                 IdentityInfo("Inquisitor Claire Trevelyan", "INQUISITOR", "inquisitor@darthmama.org", "inquisitor-0xA4728718_renewed", "8E8D2381AE066ABE1FEE509821BA977CA4728718"),
-                IdentityInfo("Bernd das Brot", "BERNDI", "bernd.das.brot@darthmama.org", "bernd.das.brot-0xCAFAA422", "F8CE0F7E24EB190A2FCBFD38D4B088A7CAFAA422")
+                IdentityInfo("Bernd das Brot", "BERNDI", "bernd.das.brot@darthmama.org", "bernd.das.brot-0xCAFAA422", "F8CE0F7E24EB190A2FCBFD38D4B088A7CAFAA422"),
+                IdentityInfo("Sylvia Plath", "SYLVIA", "sylvia@darthmama.org", "sylvia-0x585A6780", "0C0F053EED87058C7330A11F10B89D31585A6780")
     };
     static constexpr int PRESETS_LEN = sizeof(presets);
 };
@@ -190,7 +217,7 @@ char* message_to_str(message* msg);
 message* string_to_msg(std::string infile);
 
 // For when you ONLY care about the message
-PEP_STATUS vanilla_encrypt_and_write_to_file(PEP_SESSION session, message* msg, const char* filename);
+PEP_STATUS vanilla_encrypt_and_write_to_file(PEP_SESSION session, message* msg, const char* filename, PEP_encrypt_flags_t flags = 0);
 PEP_STATUS vanilla_read_file_and_decrypt(PEP_SESSION session, message** msg, const char* filename);
 
 int util_delete_filepath(const char *filepath, 
