@@ -113,6 +113,10 @@ static const char *sql_replace_identities_fpr =
         "   set main_key_id = ?1 "
         "   where main_key_id = ?2 ;";
 
+static const char* sql_set_default_identity_fpr =
+        "update identity set main_key_id = ?3 "
+        "    where user_id = ?1 and address = ?2; ";
+
 static const char *sql_get_default_identity_fpr =
         "select main_key_id from identity"
         "   where (case when (address = ?1) then (1)"

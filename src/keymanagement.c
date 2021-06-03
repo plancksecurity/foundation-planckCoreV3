@@ -2087,6 +2087,25 @@ PEP_STATUS get_key_sticky_bit_for_user(PEP_SESSION session,
     return status;
 }
 
+DYNAMIC_API PEP_STATUS set_comm_partner_key(PEP_SESSION session,
+                                            pEp_identity *identity,
+                                            const char* fpr) {
+    if (!session || !identity || EMPTYSTR(fpr))
+        return PEP_ILLEGAL_VALUE;
+
+    // update identity upfront - we need the identity to exist in the DB.
+    PEP_STATUS status = update_identity(session, identity);
+    if (status != PEP_OUT_OF_MEMORY) {
+        if (identity->me)
+            return PEP_ILLEGAL_VALUE;
+        status = set_default_identity_fpr(session,
+                                          identity->user_id,
+                                          identity->address,
+                                          fpr);
+    }
+    return status;
+}
+
 // Returns PASSPHRASE errors when necessary
 DYNAMIC_API PEP_STATUS set_own_key(
        PEP_SESSION session,

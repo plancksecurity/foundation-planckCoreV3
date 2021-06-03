@@ -442,6 +442,34 @@ DYNAMIC_API PEP_STATUS own_keys_retrieve(
         stringlist_t **keylist
       );
 
+
+/**
+ *  <!--       set_comm_partner_key()       -->
+ *
+ *  @brief Mark a key the default for a comm partner
+ *
+ *  @param[in]     session    session to use
+ *  @param[in,out] identity   partner identity this key is used for
+ *  @param[in]     fpr        fingerprint of the key to set as the identity default
+ *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_KEY_UNSUITABLE
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values, including if update_identity determines this is an own identity
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
+ *
+ *  @warning the key has to be in the key ring already
+ *           identity->address must be set to valid data
+ *           update_identity() is called by this function and will create a TOFU user_id + new entry if none is indicated
+ *           and heuristic fails to match extant identity
+ *           identity->fpr will NOT be updated with the set identity fpr; it is only in,out because update_identity() is called
+ *           before setting it.
+ *
+ */
+DYNAMIC_API PEP_STATUS set_comm_partner_key(PEP_SESSION session,
+                                            pEp_identity *identity,
+                                            const char* fpr);
+
 /**
  *  <!--       set_own_key()       -->
  *  
@@ -474,6 +502,7 @@ DYNAMIC_API PEP_STATUS set_own_key(
        pEp_identity *me,
        const char *fpr
     );
+
 
 /**
  *  <!--       set_own_imported_key()       -->

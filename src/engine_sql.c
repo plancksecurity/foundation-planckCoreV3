@@ -1736,6 +1736,13 @@ PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session) {
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
+    int_result = sqlite3_prepare_v2(session->db, sql_set_default_identity_fpr,
+                                    (int)strlen(sql_set_default_identity_fpr), &session->set_default_identity_fpr, NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+    
     int_result = sqlite3_prepare_v2(session->db, sql_get_default_identity_fpr,
                                     (int)strlen(sql_get_default_identity_fpr), &session->get_default_identity_fpr, NULL);
     assert(int_result == SQLITE_OK);

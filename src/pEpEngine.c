@@ -2531,6 +2531,38 @@ PEP_STATUS get_main_user_fpr(PEP_SESSION session,
     return status;
 }
 
+
+PEP_STATUS set_default_identity_fpr(PEP_SESSION session,
+                                    const char* user_id,
+                                    const char* address,
+                                    const char* fpr) {
+    if (!session || EMPTYSTR(user_id) || EMPTYSTR(address) || EMPTYSTR(fpr))
+        return PEP_ILLEGAL_VALUE;
+
+    // Make sure fpr is in the management DB
+    PEP_STATUS status = set_pgp_keypair(session, fpr);
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    int result;
+
+    sqlite3_reset(session->set_default_identity_fpr);
+    sqlite3_bind_text(session->set_default_identity_fpr, 1, user_id, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(session->set_default_identity_fpr, 2, address, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(session->set_default_identity_fpr, 3, fpr, -1,
+            SQLITE_STATIC);
+    result = sqlite3_step(session->set_default_identity_fpr);
+    sqlite3_reset(session->set_default_identity_fpr);
+    if (result != SQLITE_DONE)
+        return PEP_CANNOT_SET_PGP_KEYPAIR;
+
+    return PEP_STATUS_OK;
+}
+
+
+
 PEP_STATUS get_default_identity_fpr(PEP_SESSION session, 
                                     const char* address,                            
                                     const char* user_id,
