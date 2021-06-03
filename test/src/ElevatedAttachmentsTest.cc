@@ -4,7 +4,7 @@
 
 #include "internal_format.h"
 
-#include "test_util.h"
+#include "TestUtilities.h"
 #include "TestConstants.h"
 #include "Engine.h"
 

@@ -5,7 +5,7 @@
 #include <cstring>
 #include <string>
 
-#include "test_util.h"
+#include "TestUtilities.h"
 #include "TestConstants.h"
 
 #include "pEpEngine.h"

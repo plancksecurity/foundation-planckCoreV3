@@ -17,7 +17,7 @@
 #include "key_reset.h"
 #include "key_reset_internal.h"
 
-#include "test_util.h"
+#include "TestUtilities.h"
 #include "TestConstants.h"
 
 

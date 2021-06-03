@@ -3,7 +3,7 @@
 #include <cstring>
 
 #include "pEpEngine.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 #include "TestConstants.h"
 #include "Engine.h"
 

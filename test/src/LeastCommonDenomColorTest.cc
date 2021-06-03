@@ -13,7 +13,7 @@
 #include "keymanagement.h"
 #include "message_api.h"
 #include "mime.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 
 
 

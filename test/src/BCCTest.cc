@@ -11,7 +11,7 @@
 #include "message_api.h"
 #include "TestConstants.h"
 
-#include "test_util.h"
+#include "TestUtilities.h"
 
 
 #include "Engine.h"

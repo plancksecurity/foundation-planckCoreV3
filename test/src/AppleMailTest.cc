@@ -14,7 +14,7 @@
 #include "keymanagement.h"
 #include "message_api.h"
 #include "mime.h"
-#include "test_util.h" // for slurp()
+#include "TestUtilities.h" // for slurp()
 #include "TestConstants.h"
 
 #include "Engine.h"

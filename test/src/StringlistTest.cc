@@ -10,7 +10,7 @@
 
 #include "stringlist.h"
 
-#include "test_util.h"
+#include "TestUtilities.h"
 
 #include "Engine.h"
 

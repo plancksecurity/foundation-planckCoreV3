@@ -16,7 +16,7 @@
 
 #include "platform_unix.h"
 
-#include "test_util.h"
+#include "TestUtilities.h"
 #include "Engine.h"
 #include "pEpTestStatic.h"
 #include <algorithm>

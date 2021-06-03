@@ -13,7 +13,7 @@
 #include "stringpair.h"
 #include "openpgp_compat.h"
 
-#include "test_util.h"
+#include "TestUtilities.h"
 
 #include "Engine.h"
 

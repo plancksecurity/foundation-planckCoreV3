@@ -4,7 +4,7 @@
 #include "TestConstants.h"
 #include <stdlib.h>
 #include <string>
-#include "test_util.h"
+#include "TestUtilities.h"
 
 #include "pEpEngine.h"
 #include "pEp_internal.h"

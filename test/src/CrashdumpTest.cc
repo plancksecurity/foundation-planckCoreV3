@@ -11,7 +11,7 @@
 
 
 #include "Engine.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 #include <gtest/gtest.h>
 
 

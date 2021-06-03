@@ -11,7 +11,7 @@
 #include <fstream>
 #include "mime.h"
 #include "message_api.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 
 #include "pEpEngine.h"
 #include "pEp_internal.h"

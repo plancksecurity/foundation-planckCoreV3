@@ -2,7 +2,7 @@
 // see LICENSE.txt
 
 #include "TestConstants.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 
 #include <stdlib.h>
 #include <string>

@@ -13,7 +13,7 @@
 #include "pEp_internal.h"
 #include "mime.h"
 
-#include "test_util.h"
+#include "TestUtilities.h"
 
 
 #include "Engine.h"

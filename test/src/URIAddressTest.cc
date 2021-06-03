@@ -7,7 +7,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "test_util.h"
+#include "TestUtilities.h"
 #include "TestConstants.h"
 
 #include "pEpEngine.h"
