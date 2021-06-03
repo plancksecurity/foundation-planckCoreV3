@@ -84,7 +84,7 @@ namespace {
 TEST_F(TestSetDefaultFPRTest, check_test_set_default_fpr) {
     pEp_identity* carol = NULL;
     PEP_STATUS status = set_up_preset(session, CAROL,
-                                       true, true, false, false, false, &carol);
+                                      false, true, false, false, false, &carol);
     status = update_identity(session, carol);
     ASSERT_OK;
     ASSERT_EQ(carol->fpr, nullptr);
@@ -135,7 +135,7 @@ TEST_F(TestSetDefaultFPRTest, check_test_set_comm_partner_key) {
 TEST_F(TestSetDefaultFPRTest, check_test_set_default_no_identity) {
     pEp_identity* carol = NULL;
     PEP_STATUS status = set_up_preset(session, CAROL,
-                                      true, true, false, false, false, &carol);
+                                      false, true, false, false, false, &carol);
     status = update_identity(session, carol);
     ASSERT_OK;
     ASSERT_EQ(carol->fpr, nullptr);
