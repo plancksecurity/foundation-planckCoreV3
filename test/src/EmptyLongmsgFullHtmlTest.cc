@@ -123,9 +123,9 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_NULL) {
     // This is just a dummy test case. The convention is check_whatever_you_are_checking
     // so for multiple test cases in a suite, be more explicit ;)
     pEp_identity* carol = NULL;
-    PEP_STATUS status = set_up_preset(session, CAROL, true, true, true, true, true, true, &carol);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL, true, true, true, true, true, true, &carol);
     pEp_identity* dave = NULL;
-    status = set_up_preset(session, DAVE, true, true, true, true, false, false, &dave);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE, true, true, true, true, false, false, &dave);
     
     message* msg = new_message(PEP_dir_outgoing);
     msg->from = carol;
@@ -144,9 +144,9 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_text_att) {
     // This is just a dummy test case. The convention is check_whatever_you_are_checking
     // so for multiple test cases in a suite, be more explicit ;)
     pEp_identity* carol = NULL;
-    PEP_STATUS status = set_up_preset(session, CAROL, true, true, true, true, true, true, &carol);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL, true, true, true, true, true, true, &carol);
     pEp_identity* dave = NULL;
-    status = set_up_preset(session, DAVE, true, true, true, true, false, false, &dave);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE, true, true, true, true, false, false, &dave);
     
     message* msg = new_message(PEP_dir_outgoing);
     msg->from = carol;
@@ -170,9 +170,9 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_html_att) {
     // This is just a dummy test case. The convention is check_whatever_you_are_checking
     // so for multiple test cases in a suite, be more explicit ;)
     pEp_identity* carol = NULL;
-    PEP_STATUS status = set_up_preset(session, CAROL, true, true, true, true, true, true, &carol);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL, true, true, true, true, true, true, &carol);
     pEp_identity* dave = NULL;
-    status = set_up_preset(session, DAVE, true, true, true, true, false, false, &dave);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE, true, true, true, true, false, false, &dave);
     
     message* msg = new_message(PEP_dir_outgoing);
     msg->from = carol;
@@ -198,9 +198,9 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_text_html_atts) {
     // This is just a dummy test case. The convention is check_whatever_you_are_checking
     // so for multiple test cases in a suite, be more explicit ;)
     pEp_identity* carol = NULL;
-    PEP_STATUS status = set_up_preset(session, CAROL, true, true, true, true, true, true, &carol);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL, true, true, true, true, true, true, &carol);
     pEp_identity* dave = NULL;
-    status = set_up_preset(session, DAVE, true, true, true, true, false, false, &dave);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE, true, true, true, true, false, false, &dave);
     
     message* msg = new_message(PEP_dir_outgoing);
     msg->from = carol;
@@ -240,9 +240,9 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_text_html_atts) {
 
 TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_html_text_atts) {
     pEp_identity* carol = NULL;
-    PEP_STATUS status = set_up_preset(session, CAROL, true, true, true, true, true, true, &carol);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL, true, true, true, true, true, true, &carol);
     pEp_identity* dave = NULL;
-    status = set_up_preset(session, DAVE, true, true, true, true, false, false, &dave);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE, true, true, true, true, false, false, &dave);
     
     message* msg = new_message(PEP_dir_outgoing);
     msg->from = carol;
@@ -282,9 +282,9 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_text_empty) {
     // This is just a dummy test case. The convention is check_whatever_you_are_checking
     // so for multiple test cases in a suite, be more explicit ;)
     pEp_identity* carol = NULL;
-    PEP_STATUS status = set_up_preset(session, CAROL, true, true, true, true, true, true, &carol);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL, true, true, true, true, true, true, &carol);
     pEp_identity* dave = NULL;
-    status = set_up_preset(session, DAVE, true, true, true, true, false, false, &dave);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE, true, true, true, true, false, false, &dave);
     
     message* msg = new_message(PEP_dir_outgoing);
     msg->from = carol;
@@ -304,9 +304,9 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_text_inline_att) 
     // This is just a dummy test case. The convention is check_whatever_you_are_checking
     // so for multiple test cases in a suite, be more explicit ;)
     pEp_identity* carol = NULL;
-    PEP_STATUS status = set_up_preset(session, CAROL, true, true, true, true, true, true, &carol);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL, true, true, true, true, true, true, &carol);
     pEp_identity* dave = NULL;
-    status = set_up_preset(session, DAVE, true, true, true, true, false, false, &dave);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE, true, true, true, true, false, false, &dave);
     
     message* msg = new_message(PEP_dir_outgoing);
     msg->from = carol;
@@ -353,9 +353,9 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_text_inline_att_p
     // This is just a dummy test case. The convention is check_whatever_you_are_checking
     // so for multiple test cases in a suite, be more explicit ;)
     pEp_identity* carol = NULL;
-    PEP_STATUS status = set_up_preset(session, CAROL, true, true, true, true, true, true, &carol);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL, true, true, true, true, true, true, &carol);
     pEp_identity* dave = NULL;
-    status = set_up_preset(session, DAVE, true, true, true, true, false, false, &dave);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE, true, true, true, true, false, false, &dave);
     
     message* msg = new_message(PEP_dir_outgoing);
     msg->from = carol;

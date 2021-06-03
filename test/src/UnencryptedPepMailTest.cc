@@ -85,14 +85,14 @@ TEST_F(UnencryptedPepMailTest, check_unencrypted_pep_mail_outgoing) {
     pEp_identity* alice = NULL;
     pEp_identity* dave = NULL;
 
-    PEP_STATUS status = set_up_preset(session, ALICE,
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALICE,
                                       true, true, true, true, true, true, &alice);
 
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(alice);
 /*
 PEP_STATUS set_up_preset(PEP_SESSION session,
-                         pEp_test_ident_preset preset_name,
+                         ident_preset preset_name,
                          bool set_ident,
                          bool set_pep,
                          bool trust,
@@ -134,14 +134,14 @@ TEST_F(UnencryptedPepMailTest, check_unencrypted_pep_mail_outgoing_MIME) {
     pEp_identity* alice = NULL;
     pEp_identity* dave = NULL;
 
-    PEP_STATUS status = set_up_preset(session, ALICE,
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALICE,
                                       true, true, true, true, true, true, &alice);
 
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(alice);
 /*
 PEP_STATUS set_up_preset(PEP_SESSION session,
-                         pEp_test_ident_preset preset_name,
+                         ident_preset preset_name,
                          bool set_ident,
                          bool set_pep,
                          bool trust,
@@ -185,7 +185,7 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
 
 TEST_F(UnencryptedPepMailTest, check_unencrypted_pep_message_rcpt) {
     string msgstr = slurp("test_mails/unenc_pep_msg_test_1.eml");
-    PEP_STATUS status = set_up_preset(session, DAVE,
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE,
                                       true, true, true, true, true, true, NULL);
     ASSERT_EQ(status, PEP_STATUS_OK);
     message* dec_msg = NULL;

@@ -45,47 +45,106 @@ extern std::ostream output_stream;
 #define output_stream std::cerr
 #endif
 
-std::string get_main_test_home_dir();
-std::string random_string( size_t length );
+class TestUtilsPreset {
+public:
 
-typedef enum _pEp_test_ident_preset {
-    ALICE,
-    APPLE,
-    BOB,
-    CAROL,
-    DAVE,
-    ERIN,
-    FRANK,
-    GABRIELLE,
-    JOHN,
-    ALEX,
-    ALEX_0,
-    ALEX_1,
-    ALEX_2,
-    ALEX_3,
-    ALEX_4,
-    ALEX_5,
-    ALEX_6A,
-    ALEX_6B,
-    ALEX_6C,
-    ALEX_6D,
-    BELLA,
-    FENRIS,
-    SERCULLEN,
-    INQUISITOR,
-    BERND
-} pEp_test_ident_preset;
+    class IdentityInfo {
+    public:
+        // instance stuff
+        char* name;
+        char* user_id;
+        char* email;
+        char* key_prefix;
+        char* fpr;
 
-PEP_STATUS set_up_preset(PEP_SESSION session,
-                         pEp_test_ident_preset preset_name,
+        IdentityInfo(const char* name, const char* user_id, const char* email, const char* key_prefix, const char* fpr) {
+            this->name = strdup(name);
+            this->user_id = strdup(user_id);
+            this->email = strdup(email);
+            this->key_prefix = strdup(key_prefix);
+            this->fpr = strdup(fpr);
+        }
+        ~IdentityInfo() {
+            free(name);
+            free(user_id);
+            free(email);
+            free(key_prefix);
+            free(fpr);
+        }
+    };
+    // static stuff
+
+
+    typedef enum _ident_preset {
+        ALICE       = 0,
+        APPLE       = 1,
+        BOB         = 2,
+        CAROL       = 3,
+        DAVE        = 4,
+        ERIN        = 5,
+        FRANK       = 6,
+        GABRIELLE   = 7,
+        JOHN        = 8,
+        ALEX        = 9,
+        ALEX_0      = 10,
+        ALEX_1      = 11,
+        ALEX_2      = 12,
+        ALEX_3      = 13,
+        ALEX_4      = 14,
+        ALEX_5      = 15,
+        ALEX_6A     = 16,
+        ALEX_6B     = 17,
+        ALEX_6C     = 18,
+        ALEX_6D     = 19,
+        BELLA       = 20,
+        FENRIS      = 21,
+        SERCULLEN   = 22,
+        INQUISITOR  = 23,
+        BERND       = 24
+    } ident_preset;
+
+    static PEP_STATUS set_up_preset(PEP_SESSION session,
+                         ident_preset preset_name,
                          bool set_identity,
                          bool set_fpr,
                          bool set_pep,
                          bool trust,
-                         bool set_own, 
-                         bool setup_private, 
+                         bool set_own,
+                         bool setup_private,
                          pEp_identity** ident);
+private:
+    static inline const IdentityInfo presets[] = {
+                IdentityInfo("Alice Spivak Hyatt", "ALICE", "pep.test.alice@pep-project.org", "pep-test-alice-0x6FF00E97", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97"),
+                IdentityInfo("Apple of my Computer", "APPLE", "pep.test.apple@pep-project.org", "pep-test-apple-0x1CCBC7D7", "3D8D9423D03DDF61B60161150313D94A1CCBC7D7"),
+                IdentityInfo("Bob Dog", "BOB", "pep.test.bob@pep-project.org", "pep-test-bob-0xC9C2EE39", "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39"),
+                IdentityInfo("Carol Burnett", "CAROL", "pep-test-carol@pep-project.org", "pep-test-carol-0x42A85A42", "8DD4F5827B45839E9ACCA94687BDDFFB42A85A42"),
+                IdentityInfo("The Hoff", "DAVE", "pep-test-dave@pep-project.org", "pep-test-dave-0xBB5BCCF6", "E8AC9779A2D13A15D8D55C84B049F489BB5BCCF6"),
+                IdentityInfo("Erin Ireland", "ERIN", "pep-test-erin@pep-project.org", "pep-test-erin-0x9F8D7CBA", "1B0E197E8AE66277B8A024B9AEA69F509F8D7CBA"),
+                IdentityInfo("Frank N. Furter", "FRANK", "pep-test-frank@pep-project.org", "pep-test-frank-0x9A7FC670", "B022B74476D8A8E1F01E55FBAB6972569A7FC670"),  // currently expired
+                IdentityInfo("Gabrielle Gonzales", "GABI", "pep-test-gabrielle@pep-project.org", "pep-test-gabrielle-0xE203586C", "906C9B8349954E82C5623C3C8C541BD4E203586C"),
+                IdentityInfo("John Denver", "JOHN", "pep.test.john@pep-project.org", "pep-test-john-0x70DCF575", "AA2E4BEB93E5FE33DEFD8BE1135CD6D170DCF575"),
+                IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander@peptest.ch", "pep.test.alexander-0x26B54E4E", "3AD9F60FAEB22675DB873A1362D6981326B54E4E"),
+                IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander0@darthmama.org", "pep.test.alexander0-0x3B7302DB", "F4598A17D4690EB3B5B0F6A344F04E963B7302DB"),
+                IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander1@darthmama.org", "pep.test.alexander1-0x541260F6", "59AF4C51492283522F6904531C09730A541260F6"),
+                IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander2@darthmama.org", "pep.test.alexander2-0xA6512F30", "46A994F19077C05610870273C4B8AB0BA6512F30"),
+                IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander3@darthmama.org", "pep.test.alexander3-0x724B3975", "5F7076BBD92E14EA49F0DF7C2CE49419724B3975"),
+                IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander4@darthmama.org", "pep.test.alexander4-0x844B9DCF", "E95FFF95B8E2FDD4A12C3374395F1485844B9DCF"),
+                IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander5@darthmama.org", "pep.test.alexander5-0x0773CD29", "58BCC2BF2AE1E3C4FBEAB89AD7838ACA0773CD29"),
+                IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander6@darthmama.org", "pep.test.alexander6-0x0019697D", "74D79B4496E289BD8A71B70BA8E2C4530019697D"),
+                IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander6@darthmama.org", "pep.test.alexander6-0x503B14D8", "2E21325D202A44BFD9C607FCF095B202503B14D8"),
+                IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander6@darthmama.org", "pep.test.alexander6-0xA216E95A", "3C1E713D8519D7F907E3142D179EAA24A216E95A"),
+                IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander6@darthmama.org", "pep.test.alexander6-0xBDA17020", "B4CE2F6947B6947C500F0687AEFDE530BDA17020"),
+                IdentityInfo("Bella Cat", "BELLA", "pep.test.bella@peptest.ch", "pep.test.bella-0xAF516AAE", "5631BF1357326A02AA470EEEB815EF7FA4516AAE"),
+                IdentityInfo("Fenris Leto Hawke", "FENRIS", "pep.test.fenris@thisstilldoesntwork.lu", "pep.test.fenris-0x4F3D2900", "0969FA229DF21C832A64A04711B1B9804F3D2900"),
+                IdentityInfo("Cullen Rutherford", "CULLEN", "sercullen-test@darthmama.org", "sercullen-0x3CEAADED4", "1C9666D8B3E28F4AA3847DA89A6E75E3CEAADED4"),  // NB expired on purpose
+                IdentityInfo("Inquisitor Claire Trevelyan", "INQUISITOR", "inquisitor@darthmama.org", "inquisitor-0xA4728718_renewed", "8E8D2381AE066ABE1FEE509821BA977CA4728718"),
+                IdentityInfo("Bernd das Brot", "BERNDI", "bernd.das.brot@darthmama.org", "bernd.das.brot-0xCAFAA422", "F8CE0F7E24EB190A2FCBFD38D4B088A7CAFAA422")
+    };
+    static constexpr int PRESETS_LEN = sizeof(presets);
+};
 
+std::string get_main_test_home_dir();
+std::string random_string( size_t length );
 
 PEP_STATUS read_file_and_import_key(PEP_SESSION session, const char* fname);
 PEP_STATUS set_up_ident_from_scratch(PEP_SESSION session, 

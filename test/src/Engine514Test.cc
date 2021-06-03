@@ -99,7 +99,7 @@ TEST_F(Engine514Test, check_engine514_unencrypted) {
         
     message* msg = new_message(PEP_dir_outgoing);
     pEp_identity* carol = NULL;                         
-    PEP_STATUS status = set_up_preset(session, CAROL, true, true, true, true, true, true, &carol);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL, true, true, true, true, true, true, &carol);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(carol);
     status = myself(session, carol);
@@ -150,7 +150,7 @@ TEST_F(Engine514Test, check_engine514_unencrypted_second_position) {
         
     message* msg = new_message(PEP_dir_outgoing);
     pEp_identity* carol = NULL;                         
-    PEP_STATUS status = set_up_preset(session, CAROL, true, true, true, true, true, true, &carol);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL, true, true, true, true, true, true, &carol);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(carol);
     status = myself(session, carol);
@@ -199,14 +199,14 @@ TEST_F(Engine514Test, check_engine514_encode_and_decode) {
         
     message* msg = new_message(PEP_dir_outgoing);
     pEp_identity* carol = NULL;                         
-    PEP_STATUS status = set_up_preset(session, CAROL, true, true, true, true, true, true, &carol);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL, true, true, true, true, true, true, &carol);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(carol);
     status = myself(session, carol);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
     pEp_identity* dave = NULL;
-    status = set_up_preset(session, DAVE, true, true, true, true, false, false, &dave);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE, true, true, true, true, false, false, &dave);
     msg->from = carol;
     msg->to = new_identity_list(dave);
     msg->shortmsg = strdup("This is the actual message");
@@ -246,14 +246,14 @@ TEST_F(Engine514Test, check_engine514_encrypted) {
         
     message* msg = new_message(PEP_dir_outgoing);
     pEp_identity* carol = NULL;                         
-    PEP_STATUS status = set_up_preset(session, CAROL, true, true, true, true, true, true, &carol);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL, true, true, true, true, true, true, &carol);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(carol);
     status = myself(session, carol);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
     pEp_identity* dave = NULL;
-    status = set_up_preset(session, DAVE, true, true, true, true, false, false, &dave);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE, true, true, true, true, false, false, &dave);
     msg->from = carol;
     msg->to = new_identity_list(dave);
     msg->shortmsg = strdup("This is the actual message");

@@ -81,11 +81,11 @@ namespace {
 
             void create_base_test_msg(message** msg, unsigned int to_major, unsigned int to_minor, bool is_pEp) {
                 pEp_identity* from = NULL; 
-                PEP_STATUS status = set_up_preset(session, JOHN, true, true, true, true, true, true, &from);
+                PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::JOHN, true, true, true, true, true, true, &from);
                 ASSERT_OK;
 
                 pEp_identity* to = NULL;
-                status = set_up_preset(session, INQUISITOR, true, true,is_pEp, false, false, false, &to);
+                status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::INQUISITOR, true, true,is_pEp, false, false, false, &to);
                 ASSERT_OK;
                 to->major_ver = to_major;
                 to->minor_ver = to_minor;
@@ -467,7 +467,7 @@ TEST_F(DefaultFromEmailTest, check_to_to_OpenPGP_import_bare_default) {
     ASSERT_NOTNULL(enc_msg);
 
     pEp_identity* me = NULL;
-    status = set_up_preset(session, INQUISITOR, true, true, true, true, true, true, &me);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::INQUISITOR, true, true, true, true, true, true, &me);
     ASSERT_OK;
 
     message* dec_msg = NULL;
@@ -513,7 +513,7 @@ TEST_F(DefaultFromEmailTest, check_to_pEp_v1_import_bare_default) {
     ASSERT_NOTNULL(enc_msg);
 
     pEp_identity* me = NULL;
-    status = set_up_preset(session, INQUISITOR, true, true, true, true, true, true, &me);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::INQUISITOR, true, true, true, true, true, true, &me);
     ASSERT_OK;
 
     message* dec_msg = NULL;
@@ -558,7 +558,7 @@ TEST_F(DefaultFromEmailTest, check_to_pEp_v2_0_import_bare_default) {
     ASSERT_NOTNULL(enc_msg);
 
     pEp_identity* me = NULL;
-    status = set_up_preset(session, INQUISITOR, true, true, true, true, true, true, &me);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::INQUISITOR, true, true, true, true, true, true, &me);
     ASSERT_OK;
 
     message* dec_msg = NULL;
@@ -603,7 +603,7 @@ TEST_F(DefaultFromEmailTest, check_to_pEp_v2_1_import_bare_default) {
     ASSERT_NOTNULL(enc_msg);
 
     pEp_identity* me = NULL;
-    status = set_up_preset(session, INQUISITOR, true, true, true, true, true, true, &me);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::INQUISITOR, true, true, true, true, true, true, &me);
     ASSERT_OK;
 
     message* dec_msg = NULL;
@@ -648,7 +648,7 @@ TEST_F(DefaultFromEmailTest, check_to_pEp_v2_2_import_bare_default) {
     ASSERT_NOTNULL(enc_msg);
 
     pEp_identity* me = NULL;
-    status = set_up_preset(session, INQUISITOR, true, true, true, true, true, true, &me);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::INQUISITOR, true, true, true, true, true, true, &me);
     ASSERT_OK;
 
     message* dec_msg = NULL;
@@ -693,7 +693,7 @@ TEST_F(DefaultFromEmailTest, check_to_pEp_v10_111_import_bare_default) {
     ASSERT_NOTNULL(enc_msg);
 
     pEp_identity* me = NULL;
-    status = set_up_preset(session, INQUISITOR, true, true, true, true, true, true, &me);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::INQUISITOR, true, true, true, true, true, true, &me);
     ASSERT_OK;
 
     message* dec_msg = NULL;

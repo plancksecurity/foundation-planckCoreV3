@@ -138,13 +138,13 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_0) {
     pEp_identity* alice = NULL;
     pEp_identity* carol = NULL;
 
-    PEP_STATUS status = set_up_preset(session, ALICE,
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALICE,
                                       true, true, true, true, true, true, &alice);
 
     ASSERT_OK;
     ASSERT_NOTNULL(alice);
 
-    status = set_up_preset(session, CAROL,
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL,
                            true, true, true, false, false, false, &carol);
 
     ASSERT_OK;
@@ -181,7 +181,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_0) {
 }
 
 /* PEP_STATUS set_up_preset(PEP_SESSION session,
-                         pEp_test_ident_preset preset_name,
+                         ident_preset preset_name,
                          bool set_ident,
                          bool set_pep,
                          bool trust,
@@ -195,13 +195,13 @@ TEST_F(Message2_1Test, check_message2_1_recip_OpenPGP) {
     pEp_identity* alice = NULL;
     pEp_identity* carol = NULL;
 
-    PEP_STATUS status = set_up_preset(session, ALICE,
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALICE,
                                       true, true, true, true, true, true, &alice);
 
     ASSERT_OK;
     ASSERT_NOTNULL(alice);
 
-    status = set_up_preset(session, CAROL,
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL,
                            true, true, false, false, false, false, &carol);
 
     ASSERT_OK;
@@ -243,13 +243,13 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_1) {
     pEp_identity* alice = NULL;
     pEp_identity* carol = NULL;
 
-    PEP_STATUS status = set_up_preset(session, ALICE,
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALICE,
                                       true, true, true, true, true, true, &alice);
 
     ASSERT_OK;
     ASSERT_NOTNULL(alice);
 
-    status = set_up_preset(session, CAROL,
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL,
                            true, true, true, false, false, false, &carol);
 
     ASSERT_OK;
@@ -290,7 +290,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_1) {
 TEST_F(Message2_1Test, check_message2_1_recip_1_0_from_msg_OpenPGP) {
     pEp_identity* alex = NULL;
 
-    PEP_STATUS status = set_up_preset(session, ALEX_0,
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALEX_0,
                                       true, true, true, true, true, true, &alex);
 
     ASSERT_OK;
@@ -337,7 +337,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_0_from_msg) {
     // receive 2.0 message
     pEp_identity* carol = NULL;
 
-    PEP_STATUS status = set_up_preset(session, CAROL,
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL,
                                       true, true, true, true, true, true, &carol);
 
     ASSERT_OK;
@@ -384,7 +384,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_1_from_msg) {
     // receive 2.1 message
     pEp_identity* carol = NULL;
 
-    PEP_STATUS status = set_up_preset(session, CAROL,
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL,
                                       true, true, true, true, true, true, &carol);
 
     ASSERT_OK;
@@ -440,13 +440,13 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_2_0) {
     pEp_identity* dave = NULL;
     pEp_identity* alex = NULL;
 
-    PEP_STATUS status = set_up_preset(session, ALICE,
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALICE,
                                       true, true, true, true, true, true, &alice);
 
     ASSERT_OK;
     ASSERT_NOTNULL(alice);
 
-    status = set_up_preset(session, BOB,
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::BOB,
                            true, true, true, false, false, false, &bob);
 
     ASSERT_OK;
@@ -460,7 +460,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_2_0) {
     ASSERT_EQ(bob->major_ver , 2);
     ASSERT_EQ(bob->minor_ver , 1);
 
-    status = set_up_preset(session, CAROL,
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL,
                            true, true, true, false, false, false, &carol);
 
     ASSERT_OK;
@@ -474,7 +474,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_2_0) {
     ASSERT_EQ(carol->major_ver , 2);
     ASSERT_EQ(carol->minor_ver , 1);
 
-    status = set_up_preset(session, DAVE,
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE,
                            true, true, true, false, false, false, &dave);
 
     ASSERT_OK;
@@ -488,7 +488,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_2_0) {
     ASSERT_EQ(dave->major_ver , 2);
     ASSERT_EQ(dave->minor_ver , 0);
 
-    status = set_up_preset(session, ALEX,
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALEX,
                            true, true, true, true, false, false, &alex);
 
     ASSERT_OK;
@@ -535,13 +535,13 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_1_0_OpenPGP) {
     pEp_identity* dave = NULL;
     pEp_identity* alex = NULL;
 
-    PEP_STATUS status = set_up_preset(session, ALICE,
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALICE,
                                       true, true, true, true, true, true, &alice);
 
     ASSERT_OK;
     ASSERT_NOTNULL(alice);
 
-    status = set_up_preset(session, BOB,
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::BOB,
                            true, true, true, false, false, false, &bob);
 
     ASSERT_OK;
@@ -555,7 +555,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_1_0_OpenPGP) {
     ASSERT_EQ(bob->major_ver , 2);
     ASSERT_EQ(bob->minor_ver , 1);
 
-    status = set_up_preset(session, CAROL,
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL,
                            true, true, true, false, false, false, &carol);
 
     ASSERT_OK;
@@ -569,7 +569,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_1_0_OpenPGP) {
     ASSERT_EQ(carol->major_ver , 2);
     ASSERT_EQ(carol->minor_ver , 1);
 
-    status = set_up_preset(session, DAVE,
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE,
                            true, true, true, false, false, false, &dave);
 
     ASSERT_OK;
@@ -583,7 +583,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_1_0_OpenPGP) {
     ASSERT_EQ(dave->major_ver , 2);
     ASSERT_EQ(dave->minor_ver , 0);
 
-    status = set_up_preset(session, ALEX,
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALEX,
                            true, true, false, true, false, false, &alex);
 
     ASSERT_OK;

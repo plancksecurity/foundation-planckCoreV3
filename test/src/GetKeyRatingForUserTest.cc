@@ -87,7 +87,7 @@ namespace {
 
 TEST_F(GetKeyRatingForUserTest, check_get_key_rating_for_user) {
     pEp_identity* alice = NULL;
-    PEP_STATUS status = set_up_preset(session, ALICE, false, true,false, false, false, false, &alice);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALICE, false, true,false, false, false, false, &alice);
     pEp_identity* test_null = NULL;
     const char* fpr_save = alice->fpr;
     alice->fpr = NULL;

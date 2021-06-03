@@ -150,7 +150,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj) {
     config_unencrypted_subject(session, true);
     pEp_identity* carol = NULL;
 
-    PEP_STATUS status = set_up_preset(session, CAROL,
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL,
                                       true, true, true, true, true, true, &carol);
 
     ASSERT_OK;
@@ -204,7 +204,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_check_effici
     config_unencrypted_subject(session, true);
     pEp_identity* carol = NULL;
 
-    PEP_STATUS status = set_up_preset(session, CAROL,
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL,
                                       true, true, true, true, true, true, &carol);
 
     ASSERT_OK;
@@ -280,7 +280,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys) 
     
     pEp_identity* carol = NULL;
 
-    PEP_STATUS status = set_up_preset(session, CAROL,
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL,
                                       true, true, true, true, true, true, &carol);
 
     ASSERT_EQ(status, PEP_STATUS_OK);
@@ -371,7 +371,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys_e
     
     pEp_identity* carol = NULL;
 
-    PEP_STATUS status = set_up_preset(session, CAROL,
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL,
                                       true, true, true, true, true, true, &carol);
 
     ASSERT_EQ(status, PEP_STATUS_OK);
@@ -451,7 +451,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys_e
     
     pEp_identity* carol = NULL;
 
-    PEP_STATUS status = set_up_preset(session, CAROL,
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL,
                                       true, true, true, true, true, true, &carol);
 
     ASSERT_EQ(status, PEP_STATUS_OK);

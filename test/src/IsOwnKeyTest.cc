@@ -80,7 +80,7 @@ namespace {
 
 /*
 PEP_STATUS set_up_preset(PEP_SESSION session,
-                         pEp_test_ident_preset preset_name,
+                         ident_preset preset_name,
                          bool set_ident,
                          bool set_pep,
                          bool trust,
@@ -90,7 +90,7 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
  */
 TEST_F(IsOwnKeyTest, check_is_own_key_normal) {
     pEp_identity* alice = NULL;
-    PEP_STATUS status = set_up_preset(session, ALICE, true, true, true, true, true, true, &alice);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALICE, true, true, true, true, true, true, &alice);
     ASSERT_OK;
     bool is_own = false;
     status = is_own_key(session, alice->fpr, &is_own);
@@ -103,7 +103,7 @@ TEST_F(IsOwnKeyTest, check_is_own_key_OpenPGP) {
 
 TEST_F(IsOwnKeyTest, check_is_own_key_external_revoked) {
     pEp_identity* alice = NULL;
-    PEP_STATUS status = set_up_preset(session, ALICE, true, true, true, true, true, true, &alice);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALICE, true, true, true, true, true, true, &alice);
     ASSERT_OK;
     bool is_own = false;
     status = is_own_key(session, alice->fpr, &is_own);
@@ -119,7 +119,7 @@ TEST_F(IsOwnKeyTest, check_is_own_key_external_revoked) {
 
 TEST_F(IsOwnKeyTest, check_is_own_key_external_marked_revoked) {
     pEp_identity* alice = NULL;
-    PEP_STATUS status = set_up_preset(session, ALICE, true, true, true, true, true, true, &alice);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALICE, true, true, true, true, true, true, &alice);
     ASSERT_OK;
     bool is_own = false;
     status = is_own_key(session, alice->fpr, &is_own);
@@ -142,7 +142,7 @@ TEST_F(IsOwnKeyTest, check_is_own_key_external_marked_revoked) {
 
 TEST_F(IsOwnKeyTest, check_is_own_key_revoked_through_reset) { // Probably mistrusted case...
     pEp_identity* alice = NULL;
-    PEP_STATUS status = set_up_preset(session, ALICE, true, true, true, true, true, true, &alice);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALICE, true, true, true, true, true, true, &alice);
     ASSERT_OK;
     bool is_own = false;
     status = is_own_key(session, alice->fpr, &is_own);
@@ -158,7 +158,7 @@ TEST_F(IsOwnKeyTest, check_is_own_key_revoked_through_reset) { // Probably mistr
 
 TEST_F(IsOwnKeyTest, check_is_own_key_mistrusted) {
     pEp_identity* alice = NULL;
-    PEP_STATUS status = set_up_preset(session, ALICE, true, true, true, true, true, true, &alice);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALICE, true, true, true, true, true, true, &alice);
     ASSERT_OK;
     bool is_own = false;
     status = is_own_key(session, alice->fpr, &is_own);
@@ -188,12 +188,12 @@ TEST_F(IsOwnKeyTest, check_is_own_key_expired) {
 
 TEST_F(IsOwnKeyTest, check_is_key_someone_elses_pubkey) {
     pEp_identity* alice = NULL;
-    PEP_STATUS status = set_up_preset(session, ALICE, true, true, true, true, true, true, &alice);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALICE, true, true, true, true, true, true, &alice);
     ASSERT_OK;
 
     // Dave == NOT OWN
     pEp_identity* dave = NULL;
-    status = set_up_preset(session, DAVE, true, true, true, true, false, false, &dave);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE, true, true, true, true, false, false, &dave);
     // import the private part also
     const char* dave_fpr = "E8AC9779A2D13A15D8D55C84B049F489BB5BCCF6";
 
@@ -205,12 +205,12 @@ TEST_F(IsOwnKeyTest, check_is_key_someone_elses_pubkey) {
 
 TEST_F(IsOwnKeyTest, check_is_non_own_priv_key) {
     pEp_identity* alice = NULL;
-    PEP_STATUS status = set_up_preset(session, ALICE, true, true, true, true, true, true, &alice);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALICE, true, true, true, true, true, true, &alice);
     ASSERT_OK;
 
     // Dave == NOT OWN
     pEp_identity* dave = NULL;
-    status = set_up_preset(session, DAVE, true, true, true, true, false, false, &dave);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE, true, true, true, true, false, false, &dave);
     // import the private part also
     bool imported = slurp_and_import_key(session, "test_keys/priv/pep-test-dave-0xBB5BCCF6_priv.asc");
     ASSERT_TRUE(imported);

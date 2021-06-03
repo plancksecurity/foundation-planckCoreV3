@@ -2593,7 +2593,7 @@ test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc
 
 TEST_F(KeyResetMessageTest, not_a_test) {
     pEp_identity* bob = NULL;
-    PEP_STATUS status = set_up_preset(session, BOB,
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::BOB,
                                       true, true, true, true, true, true, &bob);
 
     const char* carol_fpr = "8DD4F5827B45839E9ACCA94687BDDFFB42A85A42";
@@ -2625,7 +2625,7 @@ TEST_F(KeyResetMessageTest, not_a_test) {
 
 TEST_F(KeyResetMessageTest, check_no_reset_message_to_self) {
     pEp_identity* bob = NULL;
-    PEP_STATUS status = set_up_preset(session, BOB,
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::BOB,
                                       true, true, true, true, true, true, &bob);
 
     slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");
@@ -2656,7 +2656,7 @@ TEST_F(KeyResetMessageTest, check_no_reset_message_to_self) {
 
 TEST_F(KeyResetMessageTest, check_reset_mistrust_next_msg_have_not_mailed) {
     pEp_identity* carol = NULL;
-    PEP_STATUS status = set_up_preset(session, CAROL,
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL,
                                       true, true, true, true, true, true, &carol);
 
     status = myself(session, carol);
@@ -3223,19 +3223,19 @@ TEST_F(KeyResetMessageTest, check_reset_own_with_revocations) {
     pEp_identity* id1 = new_identity("krista-not-real@darthmama.org", NULL, PEP_OWN_USERID, "Krista at Home");
     PEP_STATUS status = myself(session, id1);
     pEp_identity* id2 = NULL;
-    status = set_up_preset(session, ALICE, true, true, true, false, false, false, &id2);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALICE, true, true, true, false, false, false, &id2);
     pEp_identity* id3 = new_identity("krista-not-real@angryshark.eu", NULL, PEP_OWN_USERID, "Krista at Shark");
     status = myself(session, id3);
     pEp_identity* id4 = NULL;
-    status = set_up_preset(session, BOB, true, true,false, false, false, false, &id4);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::BOB, true, true,false, false, false, false, &id4);
     pEp_identity* id5 = new_identity("krista-not-real@pep.foundation", NULL, PEP_OWN_USERID, "Krista at Work");
     status = myself(session, id5);
     pEp_identity* id6 = new_identity("grrrr-not-real@angryshark.eu", NULL, PEP_OWN_USERID, "GRRRR is a Shark");
     status = myself(session, id6);
     pEp_identity* id7 = NULL;
-    status = set_up_preset(session, CAROL, true, true,false, true, false, false, &id7);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL, true, true,false, true, false, false, &id7);
     pEp_identity* id8 = NULL;
-    status = set_up_preset(session, DAVE, true, true, true, true, false, false, &id8);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE, true, true, true, true, false, false, &id8);
 
     identity_list* own_identities = NULL;
     stringlist_t* revocations = NULL;

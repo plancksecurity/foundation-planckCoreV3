@@ -866,25 +866,20 @@ PEP_STATUS set_fpr_preserve_ident(PEP_SESSION session, const pEp_identity* ident
     return status;
 }
 
-PEP_STATUS set_up_preset(PEP_SESSION session,
-                         pEp_test_ident_preset preset_name,
-                         bool set_ident,
-                         bool set_fpr,
-                         bool set_pep,
-                         bool trust,
-                         bool set_own,
-                         bool setup_private,
-                         pEp_identity** ident) {
+PEP_STATUS TestUtilsPreset::set_up_preset(PEP_SESSION session,
+                                          ident_preset preset_name,
+                                          bool set_ident,
+                                          bool set_fpr,
+                                          bool set_pep,
+                                          bool trust,
+                                          bool set_own,
+                                          bool setup_private,
+                                          pEp_identity** ident) {
     if (set_own && !set_ident)
         return PEP_ILLEGAL_VALUE;
 
-    const char* name = NULL;
-    const char* user_id = NULL;
-    const char* email = NULL;
-    const char* key_prefix = NULL;
     string pubkey_dir = "test_keys/pub/";
     string privkey_dir = "test_keys/priv/";
-    const char* fpr = NULL;
     PEP_STATUS status = PEP_STATUS_OK;
 
     if (ident)
@@ -892,188 +887,13 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
 
     pEp_identity* retval = NULL;
 
-    switch (preset_name) {
-        case ALICE:
-            name = "Alice Spivak Hyatt";
-            user_id = "ALICE";
-            email = "pep.test.alice@pep-project.org";
-            key_prefix = "pep-test-alice-0x6FF00E97";
-            fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
-            break;
-        case APPLE:
-            name = "Apple of my Computer";
-            user_id = "APPLE";
-            email = "pep.test.apple@pep-project.org";
-            key_prefix = "pep-test-apple-0x1CCBC7D7";
-            fpr = "3D8D9423D03DDF61B60161150313D94A1CCBC7D7";
-            break;
-        case BOB:
-            name = "Bob Dog";
-            user_id = "BOB";
-            email = "pep.test.bob@pep-project.org";
-            key_prefix = "pep-test-bob-0xC9C2EE39";
-            fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
-            break;
-        case CAROL:
-            name = "Carol Burnett";
-            user_id = "CAROL";
-            email = "pep-test-carol@pep-project.org";
-            key_prefix = "pep-test-carol-0x42A85A42";
-            fpr = "8DD4F5827B45839E9ACCA94687BDDFFB42A85A42";
-            break;
-        case DAVE:
-            name = "The Hoff";
-            user_id = "DAVE";
-            email = "pep-test-dave@pep-project.org";
-            key_prefix = "pep-test-dave-0xBB5BCCF6";
-            fpr = "E8AC9779A2D13A15D8D55C84B049F489BB5BCCF6";
-            break;
-        case ERIN:
-            name = "Erin Ireland";
-            user_id = "ERIN";
-            email = "pep-test-erin@pep-project.org";
-            key_prefix = "pep-test-erin-0x9F8D7CBA";
-            fpr = "1B0E197E8AE66277B8A024B9AEA69F509F8D7CBA";
-            break;
-        case FRANK:
-            name = "Frank N. Furter";
-            user_id = "FRANK";
-            email = "pep-test-frank@pep-project.org";
-            key_prefix = "pep-test-frank-0x9A7FC670";
-            fpr = "B022B74476D8A8E1F01E55FBAB6972569A7FC670"; // currently expired
-            break;
-        case GABRIELLE:
-            name = "Gabrielle Gonzales";
-            user_id = "GABI";
-            email = "pep-test-gabrielle@pep-project.org";
-            key_prefix = "pep-test-gabrielle-0xE203586C";
-            fpr = "906C9B8349954E82C5623C3C8C541BD4E203586C";
-            break;
-        case JOHN:
-            name = "John Denver";
-            user_id = "JOHN";
-            email = "pep.test.john@pep-project.org";
-            key_prefix = "pep-test-john-0x70DCF575";
-            fpr = "AA2E4BEB93E5FE33DEFD8BE1135CD6D170DCF575";
-            break;
-        case ALEX:
-            name = "Alex Braithwaite";
-            user_id = "ALEX";
-            email = "pep.test.alexander@peptest.ch";
-            key_prefix = "pep.test.alexander-0x26B54E4E";
-            fpr = "3AD9F60FAEB22675DB873A1362D6981326B54E4E";
-            break;
-        case ALEX_0:
-            name = "Alex Braithwaite";
-            user_id = "ALEX";
-            email = "pep.test.alexander0@darthmama.org";
-            key_prefix = "pep.test.alexander0-0x3B7302DB";
-            fpr = "F4598A17D4690EB3B5B0F6A344F04E963B7302DB";
-            break;
-        case ALEX_1:
-            name = "Alex Braithwaite";
-            user_id = "ALEX";
-            email = "pep.test.alexander1@darthmama.org";
-            key_prefix = "pep.test.alexander1-0x541260F6";
-            fpr = "59AF4C51492283522F6904531C09730A541260F6";
-            break;
-        case ALEX_2:
-            name = "Alex Braithwaite";
-            user_id = "ALEX";
-            email = "pep.test.alexander2@darthmama.org";
-            key_prefix = "pep.test.alexander2-0xA6512F30";
-            fpr = "46A994F19077C05610870273C4B8AB0BA6512F30";
-            break;
-        case ALEX_3:
-            name = "Alex Braithwaite";
-            user_id = "ALEX";
-            email = "pep.test.alexander3@darthmama.org";
-            key_prefix = "pep.test.alexander3-0x724B3975";
-            fpr = "5F7076BBD92E14EA49F0DF7C2CE49419724B3975";
-            break;
-        case ALEX_4:
-            name = "Alex Braithwaite";
-            user_id = "ALEX";
-            email = "pep.test.alexander4@darthmama.org";
-            key_prefix = "pep.test.alexander4-0x844B9DCF";
-            fpr = "E95FFF95B8E2FDD4A12C3374395F1485844B9DCF";
-            break;
-        case ALEX_5:
-            name = "Alex Braithwaite";
-            user_id = "ALEX";
-            email = "pep.test.alexander5@darthmama.org";
-            key_prefix = "pep.test.alexander5-0x0773CD29";
-            fpr = "58BCC2BF2AE1E3C4FBEAB89AD7838ACA0773CD29";
-            break;
-        case ALEX_6A:
-            name = "Alex Braithwaite";
-            user_id = "ALEX";
-            email = "pep.test.alexander6@darthmama.org";
-            key_prefix = "pep.test.alexander6-0x0019697D";
-            fpr = "74D79B4496E289BD8A71B70BA8E2C4530019697D";
-            break;
-        case ALEX_6B:
-            name = "Alex Braithwaite";
-            user_id = "ALEX";
-            email = "pep.test.alexander6@darthmama.org";
-            key_prefix = "pep.test.alexander6-0x503B14D8";
-            fpr = "2E21325D202A44BFD9C607FCF095B202503B14D8";
-            break;
-        case ALEX_6C:
-            name = "Alex Braithwaite";
-            user_id = "ALEX";
-            email = "pep.test.alexander6@darthmama.org";
-            key_prefix = "pep.test.alexander6-0xA216E95A";
-            fpr = "3C1E713D8519D7F907E3142D179EAA24A216E95A";
-            break;
-        case ALEX_6D:
-            name = "Alex Braithwaite";
-            user_id = "ALEX";
-            email = "pep.test.alexander6@darthmama.org";
-            key_prefix = "pep.test.alexander6-0xBDA17020";
-            fpr = "B4CE2F6947B6947C500F0687AEFDE530BDA17020";
-            break;
-        case BELLA:
-            name = "Bella Cat";
-            user_id = "BELLA";
-            email = "pep.test.bella@peptest.ch";
-            key_prefix = "pep.test.bella-0xAF516AAE";
-            fpr = "5631BF1357326A02AA470EEEB815EF7FA4516AAE";
-            break;
-        case FENRIS:
-            name = "Fenris Leto Hawke";
-            user_id = "FENRIS";
-            email = "pep.test.fenris@thisstilldoesntwork.lu";
-            key_prefix = "pep.test.fenris-0x4F3D2900";
-            fpr = "0969FA229DF21C832A64A04711B1B9804F3D2900";
-            break;
-        case SERCULLEN:
-            name = "Cullen Rutherford";
-            user_id = "CULLEN";
-            email = "sercullen-test@darthmama.org";
-            key_prefix = "sercullen-0x3CEAADED4"; // NB expired on purpose
-            fpr = "1C9666D8B3E28F4AA3847DA89A6E75E3CEAADED4";
-            break;
-        case INQUISITOR:
-            name = "Inquisitor Claire Trevelyan";
-            user_id = "INQUISITOR";
-            email = "inquisitor@darthmama.org";
-            key_prefix = "inquisitor-0xA4728718_renewed";
-            fpr = "8E8D2381AE066ABE1FEE509821BA977CA4728718";
-            break;
-        case BERND:
-            name = "Bernd das Brot";
-            user_id = "BERNDI";
-            email = "bernd.das.brot@darthmama.org";
-            key_prefix = "bernd.das.brot-0xCAFAA422";
-            fpr = "F8CE0F7E24EB190A2FCBFD38D4B088A7CAFAA422";
-            break;
-        default:
-            return PEP_CANNOT_SET_IDENTITY;
-    }
+    if (preset_name >= PRESETS_LEN)
+        return PEP_ILLEGAL_VALUE;
 
-    string pubkey_file = pubkey_dir + key_prefix + "_pub.asc";
-    string privkey_file = privkey_dir + key_prefix + "_priv.asc";
+    const TestUtilsPreset::IdentityInfo& preset = presets[preset_name];
+
+    string pubkey_file = pubkey_dir + preset.key_prefix + "_pub.asc";
+    string privkey_file = privkey_dir + preset.key_prefix + "_priv.asc";
 
     if (!slurp_and_import_key(session, pubkey_file.c_str()))
         return PEP_KEY_NOT_FOUND;
@@ -1083,19 +903,19 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
             return PEP_KEY_NOT_FOUND;
     }
 
-    retval = new_identity(email, NULL, user_id, name);
+    retval = new_identity(preset.email, NULL, preset.user_id, preset.name);
     if (!retval)
         return PEP_OUT_OF_MEMORY;
 
     // honestly probably happens anyway
     if (set_ident && status == PEP_STATUS_OK) {
-        retval->fpr = set_fpr ? strdup(fpr) : NULL;
+        retval->fpr = set_fpr ? strdup(preset.fpr) : NULL;
         status = set_identity(session, retval);
     }
 
     if (set_own) {
         retval->me = true;
-        status = set_own_key(session, retval, fpr);
+        status = set_own_key(session, retval, preset.fpr);
     }
 
     if (set_pep && status == PEP_STATUS_OK)
@@ -1109,7 +929,6 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
             status = set_trust(session, retval);
         }
     }
-
 
     if (ident)
         *ident = retval;
