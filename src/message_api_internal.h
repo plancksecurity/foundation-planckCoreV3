@@ -20,21 +20,22 @@ extern "C" {
  *
  *  @brief            TODO
  *
- *  @param[in]  session         session handle
+ *  @param[in]  session         PEP_SESSION
  *  @param[in]  msg             message*
  *  @param[in]  private_idents  identity_list**
  *  @param[in]  imported_keys   stringlist_t**
  *  @param[in]  changed_keys    uint64_t*
  *
- *  @retval     bool
  */
 bool import_attached_keys(
         PEP_SESSION session,
         message *msg,
+        bool is_pEp_msg,
         identity_list **private_idents,
         stringlist_t** imported_keys,
-        uint64_t* changed_keys
-    );
+        uint64_t* changed_keys,
+        char** imported_sender_key_fpr
+);
 
 /**
  *  <!--       attach_own_key()       -->

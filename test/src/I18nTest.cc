@@ -9,7 +9,7 @@
 #include "pEpEngine.h"
 #include "pEp_internal.h"
 
-#include "test_util.h"
+#include "TestUtilities.h"
 
 #include "Engine.h"
 
@@ -50,14 +50,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -90,7 +90,7 @@ TEST_F(I18nTest, check_i18n) {
     char *languages;
     PEP_STATUS status2 = get_languagelist(session, &languages);
     ASSERT_EQ(status2 , PEP_STATUS_OK);
-    ASSERT_NE(languages, nullptr);
+    ASSERT_NOTNULL(languages);
 
     output_stream << languages;
     pEp_free(languages);
@@ -98,12 +98,12 @@ TEST_F(I18nTest, check_i18n) {
     char *phrase;
     PEP_STATUS status3 = get_phrase(session, "de", 1000, &phrase);
     ASSERT_EQ(status3 , PEP_STATUS_OK);
-    ASSERT_NE(phrase, nullptr);
+    ASSERT_NOTNULL(phrase);
 
     output_stream << "\nGerman: " << phrase << "\n";
     pEp_free(phrase);
 
     status3 = get_phrase(session, "zz", 1000, &phrase);
     ASSERT_EQ(status3, PEP_PHRASE_NOT_FOUND);
-    ASSERT_EQ(phrase, nullptr);
+    ASSERT_NULL(phrase);
 }

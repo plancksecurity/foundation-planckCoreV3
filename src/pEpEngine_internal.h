@@ -605,6 +605,44 @@ PEP_STATUS get_identities_by_main_key_id(
         const char *fpr,
         identity_list **identities);
 
+
+PEP_STATUS get_identities_by_address(
+        PEP_SESSION session,
+        const char *address,
+        identity_list** id_list
+    );
+
+/**
+ *
+ * @param session
+ * @param address
+ * @param user_id
+ * @param main_fpr
+ * @return
+ */
+PEP_STATUS get_default_identity_fpr(PEP_SESSION session,
+                                    const char* address,
+                                    const char* user_id,
+                                    char** main_fpr);
+
+/**
+ *  <!--       set_default_identity_fpr()       -->
+ *  Set the default key fingerprint for the identity identitified by this address and user_id. Will only
+ *  succeed if identity is already in DB.
+ *
+ *  @param[in]  session     session handle
+ *  @param[in]  user_id     user_id for identity - cannot be NULL
+ *  @param[in]  address     address for identity - cannot be NULL
+ *  @param[in]  fpr         fingerprint for identity - cannot be NULL
+ *
+ *  @retval     PEP_STATUS_OK   if key was set or identity doesn't exists
+ *  @retval     error           otherwise
+ */
+PEP_STATUS set_default_identity_fpr(PEP_SESSION session,
+                                    const char* user_id,
+                                    const char* address,
+                                    const char* fpr);
+
 /**
  *  <!--       sign_only()       -->
  *
@@ -658,11 +696,24 @@ PEP_STATUS set_all_userids_to_own(PEP_SESSION session,
 PEP_STATUS has_partner_contacted_address(PEP_SESSION session, const char* partner_id,
                                          const char* own_address, bool* was_contacted);
 
-
+/**
+ *
+ * @param session
+ * @param identity
+ * @param exists
+ * @return
+ */
 PEP_STATUS exists_identity_entry(PEP_SESSION session, pEp_identity* identity,
                                  bool* exists);
 
-
+/**
+ *
+ * @param session
+ * @param identity
+ * @param username
+ * @return
+ */
+PEP_STATUS force_set_identity_username(PEP_SESSION session, pEp_identity* identity, const char* username);
 
 #ifdef __cplusplus
 }

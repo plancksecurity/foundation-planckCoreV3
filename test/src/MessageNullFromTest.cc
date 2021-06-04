@@ -9,7 +9,7 @@
 
 #include "pEpEngine.h"
 #include "pEp_internal.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 
 
 
@@ -68,14 +68,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -108,15 +108,10 @@ TEST_F(MessageNullFromTest, check_message_null_from_no_header_key_unencrypted) {
     stringlist_t* keylist = NULL;
     PEP_decrypt_flags_t flags = 0;
     PEP_rating rating;
-    char* mime_plaintext = NULL;
-    char* modified_src = NULL;
-    PEP_STATUS status = MIME_decrypt_message(session, null_from_msg.c_str(),
-                                             null_from_msg.size(),
-                                             &mime_plaintext,
-                                             &keylist,
-                                             &rating,
-                                             &flags,
-                                             &modified_src);
+    message* enc_msg = string_to_msg(null_from_msg);
+    message* dec_msg = NULL;
+    ASSERT_NOTNULL(enc_msg);
+    PEP_STATUS status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status , PEP_UNENCRYPTED);
 }
 
@@ -126,15 +121,10 @@ TEST_F(MessageNullFromTest, check_message_null_from_header_key_unencrypted) {
     stringlist_t* keylist = NULL;
     PEP_decrypt_flags_t flags = 0;
     PEP_rating rating;
-    char* mime_plaintext = NULL;
-    char* modified_src = NULL;
-    PEP_STATUS status = MIME_decrypt_message(session, null_from_msg.c_str(),
-                                             null_from_msg.size(),
-                                             &mime_plaintext,
-                                             &keylist,
-                                             &rating,
-                                             &flags,
-                                             &modified_src);
+    message* enc_msg = string_to_msg(null_from_msg);
+    message* dec_msg = NULL;
+    ASSERT_NOTNULL(enc_msg);
+    PEP_STATUS status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status , PEP_UNENCRYPTED);
 }
 
@@ -155,7 +145,7 @@ TEST_F(MessageNullFromTest, check_message_null_from_encrypted_not_signed) {
                                              &flags,
                                              &modified_src);
     ASSERT_EQ(status , PEP_DECRYPTED);
-    ASSERT_NE(mime_plaintext, nullptr);
+    ASSERT_NOTNULL(mime_plaintext);
 }
 
 TEST_F(MessageNullFromTest, check_message_null_from_encrypted_and_signed) {
@@ -174,6 +164,6 @@ TEST_F(MessageNullFromTest, check_message_null_from_encrypted_and_signed) {
                                              &rating,
                                              &flags,
                                              &modified_src);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(mime_plaintext, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(mime_plaintext);
 }

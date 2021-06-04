@@ -10,7 +10,7 @@
 #include "pEp_internal.h"
 #include "message.h"
 #include "mime.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 
 
 
@@ -53,14 +53,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -91,15 +91,15 @@ TEST_F(SimpleBodyNotAltTest, check_text_w_html_attach) {
     message* parsed = NULL;
 
     PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &parsed, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(parsed, nullptr);
-    ASSERT_NE(parsed->longmsg, nullptr);
-    ASSERT_EQ(parsed->longmsg_formatted , nullptr);
-    ASSERT_NE(parsed->attachments, nullptr);
-    ASSERT_EQ(parsed->attachments->next , nullptr);
-    ASSERT_NE(parsed->attachments->filename, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(parsed);
+    ASSERT_NOTNULL(parsed->longmsg);
+    ASSERT_NULL(parsed->longmsg_formatted );
+    ASSERT_NOTNULL(parsed->attachments);
+    ASSERT_NULL(parsed->attachments->next );
+    ASSERT_NOTNULL(parsed->attachments->filename);
     ASSERT_STREQ(parsed->attachments->filename, "file://index.html");
-    ASSERT_NE(parsed->attachments->mime_type, nullptr);
+    ASSERT_NOTNULL(parsed->attachments->mime_type);
     ASSERT_STREQ(parsed->attachments->mime_type, "text/html");
     free_message(parsed);
 }
@@ -109,15 +109,15 @@ TEST_F(SimpleBodyNotAltTest, check_html_w_text_attach) {
     message* parsed = NULL;
 
     PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &parsed, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(parsed, nullptr);
-    ASSERT_EQ(parsed->longmsg , nullptr);
-    ASSERT_NE(parsed->longmsg_formatted, nullptr);
-    ASSERT_NE(parsed->attachments, nullptr);
-    ASSERT_EQ(parsed->attachments->next , nullptr);
-    ASSERT_NE(parsed->attachments->filename, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(parsed);
+    ASSERT_NULL(parsed->longmsg );
+    ASSERT_NOTNULL(parsed->longmsg_formatted);
+    ASSERT_NOTNULL(parsed->attachments);
+    ASSERT_NULL(parsed->attachments->next );
+    ASSERT_NOTNULL(parsed->attachments->filename);
     ASSERT_STREQ(parsed->attachments->filename, "file://cheese.txt");
-    ASSERT_NE(parsed->attachments->mime_type, nullptr);
+    ASSERT_NOTNULL(parsed->attachments->mime_type);
     ASSERT_STREQ(parsed->attachments->mime_type, "text/plain");
     free_message(parsed);
 }

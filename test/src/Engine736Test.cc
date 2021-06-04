@@ -4,7 +4,7 @@
 
 #include "pEpEngine.h"
 #include "pEp_internal.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 #include "TestConstants.h"
 #include "Engine.h"
 #include <iostream>
@@ -47,14 +47,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -87,14 +87,14 @@ TEST_F(Engine736Test, check_engine736) {
     pEp_identity* huss1 = new_identity("huss_android@huss.android.cool", NULL, PEP_OWN_USERID, "Huss (Android)");
     PEP_STATUS status = myself(session, huss1);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(huss1->fpr, nullptr);
+    ASSERT_NOTNULL(huss1->fpr);
     
     // This is just so we can look at the keys externally and ensure the userid is OK.
     char* key = NULL;
     size_t size = 0;
     status = export_key(session, huss1->fpr, &key, &size);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(key, nullptr);
+    ASSERT_NOTNULL(key);
     ofstream outfile;
     outfile.open("test_keys/736_a.asc");
     outfile << key;
@@ -106,14 +106,14 @@ TEST_F(Engine736Test, check_engine736) {
     pEp_identity* huss2 = new_identity("huss_android2@huss.android.cool", NULL, PEP_OWN_USERID, bad_uname);
     status = myself(session, huss2);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(huss2->fpr, nullptr);
+    ASSERT_NOTNULL(huss2->fpr);
 
     free(key);
     key = NULL;
     size = 0;
     status = export_key(session, huss2->fpr, &key, &size);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(key, nullptr);
+    ASSERT_NOTNULL(key);
     outfile.open("test_keys/736_b.asc");
     outfile << key;
     outfile.close();

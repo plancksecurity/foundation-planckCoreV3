@@ -11,7 +11,7 @@
 #include "bloblist.h"
 #include "TestConstants.h"
 
-#include "test_util.h"
+#include "TestUtilities.h"
 
 #include "Engine.h"
 
@@ -66,9 +66,9 @@ TEST_F(BloblistTest, check_bloblists) {
     output_stream << "duping one-element bloblist...\n";
 
     bloblist_t* new_bl = bloblist_dup(bl1);
-    ASSERT_NE(new_bl, nullptr);
+    ASSERT_NOTNULL(new_bl);
     ASSERT_TRUE(test_bloblist_node_equals(bl1, new_bl));
-    ASSERT_EQ(new_bl->next , nullptr);
+    ASSERT_NULL(new_bl->next );
     ASSERT_NE(bl1->value , new_bl->value);
     ASSERT_TRUE(bl1->mime_type != new_bl->mime_type || !(bl1->mime_type || new_bl->mime_type));
     ASSERT_TRUE(bl1->filename != new_bl->filename || !(bl1->filename || new_bl->filename));
@@ -86,13 +86,13 @@ TEST_F(BloblistTest, check_bloblists) {
         to_copy = bl_arr[i];
         p = bloblist_add(new_bl, strdup(to_copy->value), to_copy->size, to_copy->mime_type, to_copy->filename);
 
-        ASSERT_NE((p), nullptr);
+        ASSERT_NOTNULL((p));
     }
 
     p = new_bl;
 
     for (i = 0; i < 4; i++) {
-        ASSERT_NE(p, nullptr);
+        ASSERT_NOTNULL(p);
 
         ASSERT_TRUE(test_bloblist_node_equals(p, bl_arr[i]));
         ASSERT_TRUE(p->value != bl_arr[i]->value);
@@ -101,7 +101,7 @@ TEST_F(BloblistTest, check_bloblists) {
 
         p = p->next;
     }
-    ASSERT_EQ(p , nullptr);
+    ASSERT_NULL(p );
 
     output_stream << "\nduplicating four-element list...\n\n";
     bloblist_t* duplist = bloblist_dup(new_bl);

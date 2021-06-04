@@ -11,7 +11,7 @@
 #include "message_api.h"
 #include "TestConstants.h"
 
-#include "test_util.h"
+#include "TestUtilities.h"
 
 
 #include "Engine.h"
@@ -53,14 +53,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -108,11 +108,18 @@ TEST_F(BCCTest, check_single_BCC) {
     // D0AF2F9695E186A8DC058B935FE2793DDAC746BE
     // B36E468E7A381946FCDBDDFA84B1F3E853CECCF7
     pEp_identity* sender = new_identity("bcc_test_dude_0@darthmama.cool", NULL, PEP_OWN_USERID, "BCC Test Sender");
-    pEp_identity* open_recip = new_identity("bcc_test_dude_1@darthmama.cool", NULL, NULL, "BCC Test Recip");
-    pEp_identity* bcc_recip = new_identity("bcc_test_dude_2@darthmama.cool", NULL, NULL, "BCC Super Sekrit Test Recip");
+
+    // Now require explicit sets in the new world order... Key election removal FTW!
+    pEp_identity* open_recip = new_identity("bcc_test_dude_1@darthmama.cool", "B36E468E7A381946FCDBDDFA84B1F3E853CECCF7", "TOFU_bcc_test_dude_1@darthmama.cool", "BCC Test Recip");
+    pEp_identity* bcc_recip = new_identity("bcc_test_dude_2@darthmama.cool", "B36E468E7A381946FCDBDDFA84B1F3E853CECCF7", "TOFU_bcc_test_dude_2@darthmama.cool", "BCC Super Sekrit Test Recip");
+
+    status = set_identity(session, open_recip);
+    ASSERT_OK;
+    status = set_identity(session, bcc_recip);
+    ASSERT_OK;
 
     message *msg = new_message(PEP_dir_outgoing);
-    ASSERT_NE(msg, nullptr);
+    ASSERT_NOTNULL(msg);
     msg->from = sender;
 //    msg->to = new_identity_list(open_recip); FYI, this is supposed to fail for now. Unfortunately.
     msg->bcc = new_identity_list(bcc_recip);

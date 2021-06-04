@@ -21,13 +21,13 @@ extern "C" {
 #include "labeled_int_list.h"    
 #include "timestamp.h"
 
-#define PEP_VERSION "2.2" // pEp *protocol* version (aligns with message version always)
+#define PEP_VERSION "2.2" // pEp *protocol* version
 
 // RELEASE version this targets
 // (string: major.minor.patch)
-#define PEP_ENGINE_VERSION "3.1.0"
+#define PEP_ENGINE_VERSION "3.2.0"
 #define PEP_ENGINE_VERSION_MAJOR 3
-#define PEP_ENGINE_VERSION_MINOR 1
+#define PEP_ENGINE_VERSION_MINOR 2
 #define PEP_ENGINE_VERSION_PATCH 0
 #define PEP_ENGINE_VERSION_RC    1
 
@@ -1873,15 +1873,14 @@ DYNAMIC_API PEP_STATUS set_ident_enc_format(PEP_SESSION session,
                                             pEp_identity *identity,
                                             PEP_enc_format format);
 
-
 /**
  *  <!--       reset_pEptest_hack()       -->
- *  
+ *
  *  @brief            TODO
- *  
+ *
  *  @param[in]  session        session handle
  *
- *  
+ *
  *  @retval       PEP_STATUS_OK      
  *  @retval       PEP_ILLEGAL_VALUE    illegal parameter value
  *  @retval       PEP_UNKNOWN_DB_ERROR

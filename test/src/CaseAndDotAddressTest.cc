@@ -9,7 +9,7 @@
 #include <fstream>
 #include "mime.h"
 #include "message_api.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 #include "TestConstants.h"
 
 
@@ -53,14 +53,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -87,6 +87,7 @@ namespace {
 
 
 TEST_F(CaseAndDotAddressTest, check_case_and_dot_address) {
+    PEP_STATUS status = PEP_STATUS_OK;
     output_stream << "\n*** case_and_dot_address_test.cc ***\n\n";
 
     char* user_id = get_new_uuid();
@@ -103,11 +104,14 @@ TEST_F(CaseAndDotAddressTest, check_case_and_dot_address) {
 
     pEp_identity * alice_id = new_identity("pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", user_id, "Alice Test");
 
-    PEP_STATUS status = trust_personal_key(session, alice_id);
-
+    status = set_fpr_preserve_ident(session, alice_id, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", true);
+    ASSERT_OK;
+    status = trust_personal_key(session, alice_id);
+    ASSERT_OK;
+    
     pEp_identity * new_alice_id = new_identity("pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", user_id, "Alice Test");
     status = update_identity(session, new_alice_id);
-    ASSERT_NE(new_alice_id->fpr, nullptr);
+    ASSERT_NOTNULL(new_alice_id->fpr);
     ASSERT_STREQ(new_alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
     free_identity(new_alice_id);
     free_identity(alice_id);
@@ -116,7 +120,7 @@ TEST_F(CaseAndDotAddressTest, check_case_and_dot_address) {
 
     alice_id = new_identity(alice_email_case, NULL, user_id, "Alice Test");
     status = update_identity(session, alice_id);
-    ASSERT_NE(alice_id->fpr, nullptr);
+    ASSERT_NOTNULL(alice_id->fpr);
     output_stream << "Alice email: " << alice_email_case << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
     ASSERT_STREQ(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
     free_identity(alice_id);
@@ -124,7 +128,7 @@ TEST_F(CaseAndDotAddressTest, check_case_and_dot_address) {
 
     alice_id = new_identity(alice_email_dot, NULL, user_id, "Alice Test");
     status = update_identity(session, alice_id);
-    ASSERT_NE(alice_id->fpr, nullptr);
+    ASSERT_NOTNULL(alice_id->fpr);
     output_stream << "Alice email: " << alice_email_dot << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
     ASSERT_STREQ(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
     free_identity(alice_id);
@@ -132,7 +136,7 @@ TEST_F(CaseAndDotAddressTest, check_case_and_dot_address) {
 
     alice_id = new_identity(alice_email_dotless, NULL, user_id, "Alice Test");
     status = update_identity(session, alice_id);
-    ASSERT_NE(alice_id->fpr, nullptr);
+    ASSERT_NOTNULL(alice_id->fpr);
     output_stream << "Alice email: " << alice_email_dotless << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
     ASSERT_STREQ(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
     free_identity(alice_id);
@@ -140,7 +144,7 @@ TEST_F(CaseAndDotAddressTest, check_case_and_dot_address) {
 
     alice_id = new_identity(alice_email_case_and_dot, NULL, user_id, "Alice Test");
     status = update_identity(session, alice_id);
-    ASSERT_NE(alice_id->fpr, nullptr);
+    ASSERT_NOTNULL(alice_id->fpr);
     output_stream << "Alice email: " << alice_email_case_and_dot << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
     ASSERT_STREQ(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
     free_identity(alice_id);

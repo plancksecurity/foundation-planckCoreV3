@@ -11,7 +11,7 @@
 #include <fstream>
 #include "mime.h"
 #include "message_api.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 
 #include "pEpEngine.h"
 #include "pEp_internal.h"
@@ -57,14 +57,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -124,6 +124,7 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
     pEp_identity * recip1 = new_identity(uniqname, NULL, NULL, "Test User");
 
     status = generate_keypair(session, recip1);
+    ASSERT_OK;
 
     output_stream << "Generated fingerprint ";
     output_stream << recip1->fpr << "\n";
@@ -142,9 +143,17 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
     recip1->me = false;
     // Trust it
     status = update_identity(session, recip1);
-    status = trust_personal_key(session, recip1);
+    ASSERT_OK;
+    status = set_fpr_preserve_ident(session, recip1, fprs[0], true);
+    ASSERT_OK;
     status = update_identity(session, recip1);
-
+    ASSERT_OK;
+    ASSERT_STREQ(recip1->fpr, fprs[0]);
+    status = trust_personal_key(session, recip1);
+    ASSERT_OK;
+    status = update_identity(session, recip1);
+    ASSERT_OK;
+    
     // TODO: Check trust?
     output_stream << "Done! Trusted personal key with fpr " << recip1->fpr << " for " << uniqname << endl;
 
@@ -155,7 +164,7 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
     output_stream << "Creating message…\n";
     identity_list* to_list = new_identity_list(identity_dup(recip1)); // to bob
     message* outgoing_msg = new_message(PEP_dir_outgoing);
-    ASSERT_NE(outgoing_msg, nullptr);
+    ASSERT_NOTNULL(outgoing_msg);
     outgoing_msg->from = identity_dup(me);
     outgoing_msg->to = to_list;
     outgoing_msg->shortmsg = strdup("Greetings, humans!");
@@ -169,8 +178,8 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
     status = encrypt_message(session, outgoing_msg, NULL, &encrypted_outgoing_msg, PEP_enc_PGP_MIME, 0);
     output_stream << "Encrypted message with status " << tl_status_string(status) << endl;
     // check status
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(encrypted_outgoing_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(encrypted_outgoing_msg);
 
     output_stream << "Checking message recipient comm_type from message." << endl;
     // check comm_type
@@ -198,7 +207,7 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
     output_stream << "Decrypting message." << endl;
     status = decrypt_message(session, encrypted_outgoing_msg, &outgoing_msg, &keylist, &rating, &flags);
     output_stream << "Decrypted message with status " << tl_status_string(status) << endl;
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(rating , PEP_rating_trusted);
 
     // check rating
@@ -232,7 +241,7 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
     output_stream << "creating message…\n";
     to_list = new_identity_list(identity_dup(recip1)); // to bob
     outgoing_msg = new_message(PEP_dir_outgoing);
-    ASSERT_NE(outgoing_msg, nullptr);
+    ASSERT_NOTNULL(outgoing_msg);
     outgoing_msg->from = identity_dup(me);
     outgoing_msg->to = to_list;
     outgoing_msg->shortmsg = strdup("Greetings, humans!");
@@ -251,7 +260,7 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
     status = encrypt_message(session, outgoing_msg, NULL, &encrypted_outgoing_msg, PEP_enc_PGP_MIME, 0);
     output_stream << "Encryption returns with status " << tl_status_string(status) << endl;
     ASSERT_EQ(status, PEP_UNENCRYPTED);
-    ASSERT_EQ(encrypted_outgoing_msg, nullptr);
+    ASSERT_NULL(encrypted_outgoing_msg);
     status = update_identity(session, recip1);
     ASSERT_EQ(recip1->comm_type, PEP_ct_key_not_found);
 
@@ -259,7 +268,7 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
     output_stream << "2c. Check trust of recip, whose only key has been revoked, once an encryption attempt has been made." << endl;
     output_stream << "---------------------------------------------------------" << endl << endl;
 
-    ASSERT_EQ(recip1->fpr, nullptr);
+    ASSERT_NULL(recip1->fpr);
     recip1->fpr = fprs[0];
     status = get_trust(session, recip1);
     recip1->fpr = NULL;
@@ -287,7 +296,7 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
 
     // try again
     output_stream << endl << "---------------------------------------------------------" << endl;
-    output_stream << "3b. Try to send something to the email address of our revoked friend, make sure a new key is used to encrypt." << endl;
+    output_stream << "3b. Try to send something to the email address of our revoked friend, make sure we can't encrypt (no key yet)." << endl;
     output_stream << "---------------------------------------------------------" << endl << endl;
 
     // encrypt something to the key
@@ -297,7 +306,7 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
     // status = update_identity(session, recip1);
     to_list = new_identity_list(identity_dup(recip1)); // to bob
     outgoing_msg = new_message(PEP_dir_outgoing);
-    ASSERT_NE(outgoing_msg, nullptr);
+    ASSERT_NOTNULL(outgoing_msg);
     outgoing_msg->from = identity_dup(me);
     outgoing_msg->to = to_list;
     outgoing_msg->shortmsg = strdup("Greetings, humans!");
@@ -311,23 +320,66 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
 
     // CHECK STATUS???
     output_stream << "Encryption returns with status " << tl_status_string(status) << endl;
+    ASSERT_EQ(status, PEP_UNENCRYPTED);
+
+    // check comm_type
+    output_stream << "comm_type: " << tl_ct_string(ct) << endl;
+    ASSERT_EQ(ct, PEP_ct_key_not_found);
+
+    status = get_trust(session, recip1);
+    ASSERT_EQ(recip1->comm_type, PEP_ct_unknown);
+
+    free_message(outgoing_msg);
+
+    // try again
+    output_stream << endl << "---------------------------------------------------------" << endl;
+    output_stream << "3c. Try to send something to the email address of our revoked friend, make sure a new key is used to encrypt." << endl;
+    output_stream << "---------------------------------------------------------" << endl << endl;
+
+    status = update_identity(session, recip1);
+    ASSERT_OK;
+    status = set_fpr_preserve_ident(session, recip1, fprs[1], true);
+    ASSERT_OK;
+//    status = update_identity(session, recip1);
+//    ASSERT_OK;
+//    ASSERT_STREQ(recip1->fpr, fprs[1]);
+
+    // encrypt something to the key
+    output_stream << "Creating message…\n";
+
+    // output_stream << "First, update identity though!\n";
+    // status = update_identity(session, recip1);
+    to_list = new_identity_list(identity_dup(recip1)); // to bob
+    outgoing_msg = new_message(PEP_dir_outgoing);
+    ASSERT_NOTNULL(outgoing_msg);
+    outgoing_msg->from = identity_dup(me);
+    outgoing_msg->to = to_list;
+    outgoing_msg->shortmsg = strdup("Greetings, humans!");
+    outgoing_msg->longmsg = strdup("This is a test of the emergency message system. This is only a test. BEEP.");
+    outgoing_msg->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
+    output_stream << "Message created.\n";
+
+    status = encrypt_message(session, outgoing_msg, NULL, &encrypted_outgoing_msg, PEP_enc_PGP_MIME, 0);
+    ct = (encrypted_outgoing_msg ? encrypted_outgoing_msg->to->ident->comm_type : outgoing_msg->to->ident->comm_type);
+
+
+    // CHECK STATUS???
+    output_stream << "Encryption returns with status " << tl_status_string(status) << endl;
 
     // check comm_type
     output_stream << "comm_type: " << tl_ct_string(ct) << endl;
     ASSERT_EQ(ct, PEP_ct_OpenPGP_unconfirmed);
-
+    status = update_identity(session, recip1);
+    ASSERT_OK;
     status = get_trust(session, recip1);
+    ASSERT_OK;
 
 //    output_stream << "Recip's trust DB comm_type (should be unknown, as we're using a keyring-only key, not in DB) = "  << tl_ct_string(recip1->comm_type) << endl;
     output_stream << "Recip's trust DB comm_type (should PEP_ct_OpenPGP_unconfirmed), as we now record this when using update_identity on no-default idents = "  << tl_ct_string(recip1->comm_type) << endl;
     ASSERT_EQ(recip1->comm_type, PEP_ct_OpenPGP_unconfirmed);
 
-    // decrypt message
-//    free_message(outgoing_msg);
-//    outgoing_msg = NULL;
-
     output_stream << endl << "---------------------------------------------------------" << endl;
-    output_stream << "3c. Decrypt... that... message!" << endl;
+    output_stream << "3d. Decrypt... that... message!" << endl;
     output_stream << "---------------------------------------------------------" << endl << endl;
 
 
@@ -335,7 +387,7 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
     status = decrypt_message(session, encrypted_outgoing_msg, &decrypted_msg, &keylist, &rating, &flags);
     output_stream << "Decryption returns with status " << tl_status_string(status) << endl;
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(decrypted_msg, nullptr);
+    ASSERT_NOTNULL(decrypted_msg);
 
     // check rating
     output_stream << "Rating of decrypted message to trusted recip: " << tl_rating_string(rating) << endl;
@@ -346,9 +398,10 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
 
     output_stream << "comm_type: " << tl_ct_string(ct) << endl;
     ASSERT_EQ(ct, PEP_ct_OpenPGP_unconfirmed);
-
+    status = update_identity(session, recip1);
+    ASSERT_OK;
     status = get_trust(session, recip1);
-
+    ASSERT_OK;
 //    output_stream << "Recip's trust DB comm_type (should be unknown - there's nothing in the DB) = "  << tl_ct_string(recip1->comm_type) << endl;
     output_stream << "Recip's trust DB comm_type (should be PEP_ct_OpenPGP_unconfirmed, as we now store it.) = "  << tl_ct_string(recip1->comm_type) << endl;
     ASSERT_EQ(recip1->comm_type, PEP_ct_OpenPGP_unconfirmed);

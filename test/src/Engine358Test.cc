@@ -9,7 +9,7 @@
 #include "pEpEngine.h"
 #include "pEp_internal.h"
 
-#include "test_util.h"
+#include "TestUtilities.h"
 
 
 #include "Engine.h"
@@ -51,14 +51,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -97,7 +97,7 @@ TEST_F(Engine358Test, check_engine358) {
     pEp_identity* alice_from = new_identity("pep.test.alice@pep-project.org", alice_fpr, PEP_OWN_USERID, "Alice Cooper");
 
     PEP_STATUS status = set_own_key(session, alice_from, alice_fpr);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     pEp_identity* expired_inquisitor = new_identity("inquisitor@darthmama.org", NULL, NULL, "Lady Claire Trevelyan");
     message* msg = new_message(PEP_dir_outgoing);
@@ -111,7 +111,7 @@ TEST_F(Engine358Test, check_engine358) {
     message* enc_msg = NULL;
 
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
-    ASSERT_EQ(enc_msg, nullptr);
+    ASSERT_NULL(enc_msg);
     ASSERT_TRUE(msg->to && msg->to->ident);
     ASSERT_EQ(status , PEP_UNENCRYPTED);
 }

@@ -8,7 +8,7 @@
 #include "pEp_internal.h"
 #include "message_api.h"
 
-#include "test_util.h"
+#include "TestUtilities.h"
 
 #include "Engine.h"
 
@@ -49,14 +49,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -118,7 +118,7 @@ TEST_F(TrustwordsTest, check_trustwords) {
 
     output_stream << "\nfinding German trustwords for " << fingerprint1 << "...\n";
     trustwords(session, fingerprint1.c_str(), "de", &words1, &wsize1, 5);
-    ASSERT_NE(words1, nullptr);
+    ASSERT_NOTNULL(words1);
     output_stream << words1 << "\n";
 
     free(words1);
@@ -126,7 +126,7 @@ TEST_F(TrustwordsTest, check_trustwords) {
 
     output_stream << "\nfinding German trustwords for " << fingerprint2 << "...\n";
     trustwords(session, fingerprint2.c_str(), "de", &words2, &wsize2, 5);
-    ASSERT_NE(words2, nullptr);
+    ASSERT_NOTNULL(words2);
     output_stream << words2 << "\n";
 
     free(words2);
@@ -134,7 +134,7 @@ TEST_F(TrustwordsTest, check_trustwords) {
 
     output_stream << "\nfinding German trustwords for " << identity1->address << " and " << identity2->address << "...\n";
     get_trustwords(session, identity1, identity2, "de", &full_wordlist, &wsize_full, false);
-    ASSERT_NE(full_wordlist, nullptr);
+    ASSERT_NOTNULL(full_wordlist);
     output_stream << full_wordlist << "\n";
 
     free(full_wordlist);
@@ -142,7 +142,7 @@ TEST_F(TrustwordsTest, check_trustwords) {
 
     output_stream << "\nfinding English trustwords for " << identity1->address << " and " << identity2->address << "... with spaces\n";
     get_trustwords(session, identity1, identity2_with_spaces, "en", &full_wordlist, &wsize_full, false);
-    ASSERT_NE(full_wordlist, nullptr);
+    ASSERT_NOTNULL(full_wordlist);
     output_stream << full_wordlist << "\n";
 
     free(full_wordlist);
@@ -152,7 +152,7 @@ TEST_F(TrustwordsTest, check_trustwords) {
 
     output_stream << "\nfinding French trustwords for " << fingerprint2 << "...\n";
     trustwords(session, fingerprint2.c_str(), "fr", &words1, &wsize1, 5);
-    ASSERT_NE(words1, nullptr);
+    ASSERT_NOTNULL(words1);
     output_stream << words1 << "\n";
 
     output_stream << "\nfinding French trustwords for " << identity2->address << " and " << identity2->address << "...\n";
@@ -163,7 +163,7 @@ TEST_F(TrustwordsTest, check_trustwords) {
 
     output_stream << "\nfinding English trustwords for " << fingerprint2 << "...\n";
     trustwords(session, fingerprint2.c_str(), "en", &words1, &wsize1, 5);
-    ASSERT_NE(words1, nullptr);
+    ASSERT_NOTNULL(words1);
     output_stream << words1 << "\n";
 
     output_stream << "\nfinding English trustwords for " << identity2->address << " and " << identity2->address << "... with spaces\n";
@@ -181,22 +181,22 @@ TEST_F(TrustwordsTest, check_trustwords) {
 
     output_stream << "\nfinding English trustwords for " << fingerprint2 << "...\n";
     trustwords(session, fingerprint2.c_str(), "en", &words1, &wsize1, 0);
-    ASSERT_NE(words1, nullptr);
+    ASSERT_NOTNULL(words1);
     output_stream << words1 << "\n";
 
     output_stream << "\nfinding English trustwords for " << fingerprint1 << "...\n";
     trustwords(session, fingerprint1.c_str(), "en", &words2, &wsize2, 0);
-    ASSERT_NE(words2, nullptr);
+    ASSERT_NOTNULL(words2);
     output_stream << words2 << "\n";
 
     output_stream << "\nfinding English trustwords for " << identity2->address << " and " << identity1->address << "...\n";
     get_trustwords(session, identity2, identity1, "en", &full_wordlist, &wsize_full, true);
-    ASSERT_NE(full_wordlist, nullptr);
+    ASSERT_NOTNULL(full_wordlist);
     output_stream << full_wordlist << "\n";
 
     output_stream << "\nfinding English trustwords for " << identity2->address << " and " << identity1->address << "... with spaces\n";
     get_trustwords(session, identity2_with_spaces, identity1, "en", &full_wordlist, &wsize_full, true);
-    ASSERT_NE(full_wordlist, nullptr);
+    ASSERT_NOTNULL(full_wordlist);
     output_stream << full_wordlist << "\n";
 
     pEp_free(words1);
@@ -232,17 +232,17 @@ TEST_F(TrustwordsTest, check_trustwords) {
 
     output_stream << "\nfinding Catalan trustwords for " << fingerprint3 << "...\n";
     trustwords(session, fingerprint3.c_str(), "ca", &words1, &wsize1, 0);
-    ASSERT_NE(words1, nullptr);
+    ASSERT_NOTNULL(words1);
     output_stream << words1 << "\n";
 
     output_stream << "\nfinding Catalan trustwords for " << fingerprint4 << "...\n";
     trustwords(session, fingerprint4.c_str(), "ca", &words2, &wsize2, 0);
-    ASSERT_NE(words2, nullptr);
+    ASSERT_NOTNULL(words2);
     output_stream << words2 << "\n";
 
     output_stream << "\nfinding Catalan trustwords for " << identity3->address << " and " << identity4->address << "...\n";
     get_trustwords(session, identity3, identity4, "ca", &full_wordlist, &wsize_full, true);
-    ASSERT_NE(full_wordlist, nullptr);
+    ASSERT_NOTNULL(full_wordlist);
     output_stream << full_wordlist << "\n";
 
     pEp_free(words1);
@@ -256,17 +256,17 @@ TEST_F(TrustwordsTest, check_trustwords) {
 
     output_stream << "\nfinding Turkish trustwords for " << fingerprint4 << "...\n";
     trustwords(session, fingerprint4.c_str(), "tr", &words1, &wsize1, 5);
-    ASSERT_NE(words1, nullptr);
+    ASSERT_NOTNULL(words1);
     output_stream << words1 << "\n";
 
     output_stream << "\nfinding Turkish trustwords for " << fingerprint5 << "...\n";
     trustwords(session, fingerprint5.c_str(), "tr", &words2, &wsize2, 5);
-    ASSERT_NE(words2, nullptr);
+    ASSERT_NOTNULL(words2);
     output_stream << words2 << "\n";
 
     output_stream << "\nfinding Turkish trustwords for " << identity4->address << " and " << identity5->address << "...\n";
     get_trustwords(session, identity4, identity5, "tr", &full_wordlist, &wsize_full, false);
-    ASSERT_NE(full_wordlist, nullptr);
+    ASSERT_NOTNULL(full_wordlist);
     output_stream << full_wordlist << "\n";
 
     pEp_free(words1);
@@ -331,7 +331,7 @@ TEST_F(TrustwordsTest, check_trustwords_short_trailing_space) {
     get_trustwords(session, identity1, identity2, "en", &wordlist, &wsize_full, false);        
 
     ASSERT_NE(wsize_full, 0);
-    ASSERT_NE(wordlist, nullptr);
+    ASSERT_NOTNULL(wordlist);
     ASSERT_NE(wordlist[wsize_full - 1], ' ');
     ASSERT_STREQ(wordlist, "CAPTIVITY BULIMIC EXEMPT BETTYE NEWTONIAN");
 }
@@ -356,7 +356,7 @@ TEST_F(TrustwordsTest, check_trustwords_long_trailing_space) {
     get_trustwords(session, identity1, identity2, "en", &wordlist, &wsize_full, true);        
 
     ASSERT_NE(wsize_full, 0);
-    ASSERT_NE(wordlist, nullptr);
+    ASSERT_NOTNULL(wordlist);
     ASSERT_NE(wordlist[wsize_full - 1], ' ');
     ASSERT_STREQ(wordlist, "CAPTIVITY BULIMIC EXEMPT BETTYE NEWTONIAN DANDELION CLASSICISM BAGGAGEMAN BABBAGE VERSATILITY");
 }

@@ -5,7 +5,7 @@
 #include <cstring>
 #include <string>
 
-#include "test_util.h"
+#include "TestUtilities.h"
 #include "TestConstants.h"
 
 #include "pEpEngine.h"
@@ -50,14 +50,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -138,21 +138,21 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_0) {
     pEp_identity* alice = NULL;
     pEp_identity* carol = NULL;
 
-    PEP_STATUS status = set_up_preset(session, ALICE,
-                                      true, true, true, true, true, &alice);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALICE,
+                                      true, true, true, true, true, true, &alice);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(alice, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(alice);
 
-    status = set_up_preset(session, CAROL,
-                           false, true, false, false, false, &carol);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL,
+                           true, true, true, false, false, false, &carol);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(carol, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(carol);
 
     // default should be 2.0 after setting pep status
     status = update_identity(session, carol);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(carol->major_ver , 2);
     ASSERT_EQ(carol->minor_ver , 0);
     // generate message
@@ -168,7 +168,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_0) {
     message* enc_msg = NULL;
 
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // ensure sent message is in 2.0 format
     unsigned int major = 2;
@@ -181,7 +181,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_0) {
 }
 
 /* PEP_STATUS set_up_preset(PEP_SESSION session,
-                         pEp_test_ident_preset preset_name,
+                         ident_preset preset_name,
                          bool set_ident,
                          bool set_pep,
                          bool trust,
@@ -195,20 +195,20 @@ TEST_F(Message2_1Test, check_message2_1_recip_OpenPGP) {
     pEp_identity* alice = NULL;
     pEp_identity* carol = NULL;
 
-    PEP_STATUS status = set_up_preset(session, ALICE,
-                                      true, true, true, true, true, &alice);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALICE,
+                                      true, true, true, true, true, true, &alice);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(alice, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(alice);
 
-    status = set_up_preset(session, CAROL,
-                           false, false, false, false, false, &carol);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL,
+                           true, true, false, false, false, false, &carol);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(carol, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(carol);
 
     status = update_identity(session, carol);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_LT(carol->major_ver , 2);
     ASSERT_EQ(carol->minor_ver , 0);
 
@@ -225,7 +225,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_OpenPGP) {
     message* enc_msg = NULL;
 
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // ensure sent message is in 1.0 format
     unsigned int major = 1;
@@ -243,23 +243,23 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_1) {
     pEp_identity* alice = NULL;
     pEp_identity* carol = NULL;
 
-    PEP_STATUS status = set_up_preset(session, ALICE,
-                                      true, true, true, true, true, &alice);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALICE,
+                                      true, true, true, true, true, true, &alice);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(alice, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(alice);
 
-    status = set_up_preset(session, CAROL,
-                           true, true, false, false, false, &carol);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL,
+                           true, true, true, false, false, false, &carol);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(carol, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(carol);
 
     status = set_pEp_version(session, carol, 2, 1);
 
     // default should be 2.1 after setting pep status
     status = update_identity(session, carol);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(carol->major_ver , 2);
     ASSERT_EQ(carol->minor_ver , 1);
     // generate message
@@ -275,7 +275,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_1) {
     message* enc_msg = NULL;
 
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // ensure sent message is in 2.0 format
     unsigned int major = 2;
@@ -290,11 +290,11 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_1) {
 TEST_F(Message2_1Test, check_message2_1_recip_1_0_from_msg_OpenPGP) {
     pEp_identity* alex = NULL;
 
-    PEP_STATUS status = set_up_preset(session, ALEX_0,
-                                      true, true, true, true, true, &alex);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALEX_0,
+                                      true, true, true, true, true, true, &alex);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(alex, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(alex);
 
     // receive 1.0 message from OpenPGP
     string incoming = slurp("test_mails/From_M1_0.eml");
@@ -307,7 +307,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_1_0_from_msg_OpenPGP) {
 
     status = MIME_decrypt_message(session, incoming.c_str(), incoming.size(), &dec_msg, &keylist_used, &rating, &flags, &mod_src);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     // generate message
 
     message* msg = new_message(PEP_dir_outgoing);
@@ -320,7 +320,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_1_0_from_msg_OpenPGP) {
     message* enc_msg = NULL;
 
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // ensure sent message is in 1.0 format
     unsigned int major = 1;
@@ -337,11 +337,11 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_0_from_msg) {
     // receive 2.0 message
     pEp_identity* carol = NULL;
 
-    PEP_STATUS status = set_up_preset(session, CAROL,
-                                      true, true, true, true, true, &carol);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL,
+                                      true, true, true, true, true, true, &carol);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(carol, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(carol);
 
     // receive 1.0 message from OpenPGP
     string incoming = slurp("test_mails/2_0_msg.eml");
@@ -354,7 +354,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_0_from_msg) {
 
     status = MIME_decrypt_message(session, incoming.c_str(), incoming.size(), &dec_msg, &keylist_used, &rating, &flags, &mod_src);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     // generate message
 
     message* msg = new_message(PEP_dir_outgoing);
@@ -367,7 +367,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_0_from_msg) {
     message* enc_msg = NULL;
 
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // ensure sent message is in 1.0 format
     unsigned int major = 2;
@@ -384,11 +384,11 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_1_from_msg) {
     // receive 2.1 message
     pEp_identity* carol = NULL;
 
-    PEP_STATUS status = set_up_preset(session, CAROL,
-                                      true, true, true, true, true, &carol);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL,
+                                      true, true, true, true, true, true, &carol);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(carol, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(carol);
 
     // receive 1.0 message from OpenPGP
     string incoming = slurp("test_mails/From_M2_1.eml");
@@ -401,12 +401,12 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_1_from_msg) {
 
     status = MIME_decrypt_message(session, incoming.c_str(), incoming.size(), &dec_msg, &keylist_used, &rating, &flags, &mod_src);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     // generate message
 
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, NULL, NULL);
     status = update_identity(session, alice);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(alice->comm_type, PEP_ct_pEp_unconfirmed);
     
     message* msg = new_message(PEP_dir_outgoing);
@@ -419,7 +419,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_1_from_msg) {
     message* enc_msg = NULL;
 
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // ensure sent message is in 2.1 format
     unsigned int major = 2;
@@ -440,65 +440,65 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_2_0) {
     pEp_identity* dave = NULL;
     pEp_identity* alex = NULL;
 
-    PEP_STATUS status = set_up_preset(session, ALICE,
-                                      true, true, true, true, true, &alice);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALICE,
+                                      true, true, true, true, true, true, &alice);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(alice, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(alice);
 
-    status = set_up_preset(session, BOB,
-                           true, true, false, false, false, &bob);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::BOB,
+                           true, true, true, false, false, false, &bob);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(bob, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(bob);
 
     status = set_pEp_version(session, bob, 2, 1);
 
     // default should be 2.1 after setting pep status
     status = update_identity(session, bob);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(bob->major_ver , 2);
     ASSERT_EQ(bob->minor_ver , 1);
 
-    status = set_up_preset(session, CAROL,
-                           true, true, false, false, false, &carol);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL,
+                           true, true, true, false, false, false, &carol);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(carol, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(carol);
 
     status = set_pEp_version(session, carol, 2, 1);
 
     // default should be 2.1 after setting pep status
     status = update_identity(session, carol);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(carol->major_ver , 2);
     ASSERT_EQ(carol->minor_ver , 1);
 
-    status = set_up_preset(session, DAVE,
-                           true, true, false, false, false, &dave);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE,
+                           true, true, true, false, false, false, &dave);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(dave, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(dave);
 
     status = set_pEp_version(session, dave, 2, 0);
 
     // default should be 2.1 after setting pep status
     status = update_identity(session, dave);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(dave->major_ver , 2);
     ASSERT_EQ(dave->minor_ver , 0);
 
-    status = set_up_preset(session, ALEX,
-                           true, true, true, false, false, &alex);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALEX,
+                           true, true, true, true, false, false, &alex);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(alex, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(alex);
 
     status = set_pEp_version(session, alex, 2, 1);
 
     // default should be 2.1 after setting pep status
     status = update_identity(session, alex);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(alex->major_ver , 2);
     ASSERT_EQ(alex->minor_ver , 1);
 
@@ -516,7 +516,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_2_0) {
     message* enc_msg = NULL;
 
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // ensure sent message is in 2.0 format
     unsigned int major = 2;
@@ -535,65 +535,65 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_1_0_OpenPGP) {
     pEp_identity* dave = NULL;
     pEp_identity* alex = NULL;
 
-    PEP_STATUS status = set_up_preset(session, ALICE,
-                                      true, true, true, true, true, &alice);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALICE,
+                                      true, true, true, true, true, true, &alice);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(alice, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(alice);
 
-    status = set_up_preset(session, BOB,
-                           true, true, false, false, false, &bob);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::BOB,
+                           true, true, true, false, false, false, &bob);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(bob, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(bob);
 
     status = set_pEp_version(session, bob, 2, 1);
 
     // default should be 2.1 after setting pep status
     status = update_identity(session, bob);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(bob->major_ver , 2);
     ASSERT_EQ(bob->minor_ver , 1);
 
-    status = set_up_preset(session, CAROL,
-                           true, true, false, false, false, &carol);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL,
+                           true, true, true, false, false, false, &carol);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(carol, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(carol);
 
     status = set_pEp_version(session, carol, 2, 1);
 
     // default should be 2.1 after setting pep status
     status = update_identity(session, carol);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(carol->major_ver , 2);
     ASSERT_EQ(carol->minor_ver , 1);
 
-    status = set_up_preset(session, DAVE,
-                           true, true, false, false, false, &dave);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE,
+                           true, true, true, false, false, false, &dave);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(dave, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(dave);
 
     status = set_pEp_version(session, dave, 2, 0);
 
     // default should be 2.1 after setting pep status
     status = update_identity(session, dave);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(dave->major_ver , 2);
     ASSERT_EQ(dave->minor_ver , 0);
 
-    status = set_up_preset(session, ALEX,
-                           true, false, true, false, false, &alex);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALEX,
+                           true, true, false, true, false, false, &alex);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(alex, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(alex);
 
     status = set_pEp_version(session, alex, 1, 0);
 
     // default should be 1.0 after setting pep status
     status = update_identity(session, alex);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(alex->major_ver , 1);
     ASSERT_EQ(alex->minor_ver , 0);
 
@@ -611,7 +611,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_1_0_OpenPGP) {
     message* enc_msg = NULL;
 
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     // ensure sent message is in 2.0 format
     unsigned int major = 1;

@@ -8,7 +8,7 @@
 #include "pEpEngine.h"
 #include "pEp_internal.h"
 
-#include "test_util.h"
+#include "TestUtilities.h"
 
 
 
@@ -51,14 +51,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -92,7 +92,7 @@ TEST_F(SubkeyRatingEvalTest, check_subkey_rating_eval_no_es) {
     slurp_and_import_key(session, "test_keys/pub/subkey_select_0-0x4929DC45_pub.asc");
     PEP_comm_type ct = PEP_ct_unknown;
     PEP_STATUS status = get_key_rating(session, "F0D03C842C0770C2C2A9FEAF2A1ED9814929DC45", &ct);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     bool expired = false;
     status = key_expired(session, "F0D03C842C0770C2C2A9FEAF2A1ED9814929DC45", time(NULL), &expired);
     ASSERT_FALSE(expired);
@@ -108,7 +108,7 @@ TEST_F(SubkeyRatingEvalTest, check_subkey_rating_eval_weak_s) {
     slurp_and_import_key(session, "test_keys/pub/subkey_select_1-0xF2BFF59E_pub.asc");
     PEP_comm_type ct = PEP_ct_unknown;
     PEP_STATUS status = get_key_rating(session, "918AF6E986F39B630541E10DF5F7FA35F2BFF59E", &ct);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(ct , PEP_ct_OpenPGP_weak_unconfirmed);
 }
 
@@ -121,7 +121,7 @@ TEST_F(SubkeyRatingEvalTest, check_subkey_rating_eval_ecc_s) {
     slurp_and_import_key(session, "test_keys/pub/subkey_select_2-0xBAD7800C_pub.asc");
     PEP_comm_type ct = PEP_ct_unknown;
     PEP_STATUS status = get_key_rating(session, "8894202E3D791C95560058BD77676BACBAD7800C", &ct);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(ct , PEP_ct_OpenPGP_unconfirmed);
 }
 
@@ -136,7 +136,7 @@ TEST_F(SubkeyRatingEvalTest, check_subkey_rating_eval_weak_e_strong_ecc_se) {
     slurp_and_import_key(session, "test_keys/pub/subkey_select_3-0x34F44C02_pub.asc");
     PEP_comm_type ct = PEP_ct_unknown;
     PEP_STATUS status = get_key_rating(session, "5EA5F7F71BB39B4F7924D1E8D11C676134F44C02", &ct);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(ct , PEP_ct_OpenPGP_weak_unconfirmed);
 }
 
@@ -149,7 +149,7 @@ TEST_F(SubkeyRatingEvalTest, check_subkey_rating_eval_bad_es) {
     slurp_and_import_key(session, "test_keys/pub/crappykey_0-26F88D0B_pub.asc");
     PEP_comm_type ct = PEP_ct_unknown;
     PEP_STATUS status = get_key_rating(session, "70376BC88DE2DAB4BEF831B65FD6F65326F88D0B", &ct);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(ct , PEP_ct_key_too_short);
 }
 
@@ -163,7 +163,7 @@ TEST_F(SubkeyRatingEvalTest, check_subkey_rating_eval_bad_e) {
     slurp_and_import_key(session, "test_keys/pub/crappykey_1-0xC508F2B1_pub.asc");
     PEP_comm_type ct = PEP_ct_unknown;
     PEP_STATUS status = get_key_rating(session, "F712B88AF525E4E32A2A24BCD1B86137C508F2B1", &ct);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(ct , PEP_ct_key_too_short);
 }
 
@@ -176,7 +176,7 @@ TEST_F(SubkeyRatingEvalTest, check_subkey_rating_eval_bad_s_ecc_e) {
     slurp_and_import_key(session, "test_keys/pub/crappykey_2-0xC027262F_pub.asc");
     PEP_comm_type ct = PEP_ct_unknown;
     PEP_STATUS status = get_key_rating(session, "18544492055207B2936BB215325776FBC027262F", &ct);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(ct , PEP_ct_key_too_short);
 }
 
@@ -192,7 +192,7 @@ TEST_F(SubkeyRatingEvalTest, check_subkey_rating_eval_revoked_sign_no_alt) {
     slurp_and_import_key(session, "test_keys/pub/subkey_select_4-0x6E6C7B8A_pub.asc");
     PEP_comm_type ct = PEP_ct_unknown;
     PEP_STATUS status = get_key_rating(session, "1E0D278644E2E293A9E953D9AC97F67F6E6C7B8A", &ct);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(ct , PEP_ct_key_revoked);
 }
 
@@ -215,6 +215,6 @@ TEST_F(SubkeyRatingEvalTest, check_subkey_rating_eval_revoked_e_with_alt) {
     slurp_and_import_key(session, "test_keys/pub/subkey_select_5-0xD106E693_pub.asc");
     PEP_comm_type ct = PEP_ct_unknown;
     PEP_STATUS status = get_key_rating(session, "A2C00B12660CCB5759E6BF1854315D29D106E693", &ct);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(ct , PEP_ct_OpenPGP_unconfirmed);
 }

@@ -245,7 +245,7 @@ typedef unsigned int PEP_decrypt_flags_t;
  *  @brief Decrypt message in memory
  *
  *  @param[in]     session    session handle
- *  @param[in,out] src        message to decrypt
+ *  @param[in,out] src        message to decrypt - see warning about identities below
  *  @param[out]    dst        pointer to new decrypted message or NULL on failure
  *  @param[in,out] keylist    in: stringlist with additional keyids for reencryption if needed
  *                            (will be freed and replaced with output keylist)
@@ -291,17 +291,25 @@ typedef unsigned int PEP_decrypt_flags_t;
  *  PEP_decrypt_flag_ignore               | used by sync                                         |
  *  ---------------------------------------------------------------------------------------------| @endverbatim
  *
- *  @warning the ownership of src remains with the caller - however, the contents
+ *  @ownership src remains with the caller; HOWEVER, the contents
  *               might be modified (strings freed and allocated anew or set to NULL,
  *               etc) intentionally; when this happens, PEP_decrypt_flag_src_modified
  *               is set.
- *           the ownership of dst goes to the caller
- *           the ownership of keylist goes to the caller
- *           if src is unencrypted this function returns PEP_UNENCRYPTED and sets
- *              dst to NULL
- *           if src->enc_format is PEP_enc_inline_EA on input then elevated attachments
- *              will be expected
+ *  @ownership dst goes to the caller
+ *  @ownership contents of keylist goes to the caller
+ *  @note if src is unencrypted this function returns PEP_UNENCRYPTED and sets
+ *        dst to NULL
+ *  @note if src->enc_format is PEP_enc_inline_EA on input then elevated attachments
+ *        will be expected
  *
+ *
+ *  @warning decrypt_message RELIES on the fact that identity information provided in src for recips and
+ *           sender is AS TAKEN FROM THE ORIGINAL PARSED MESSAGE. This means that if update_identity or
+ *           myself is called on those identities by the caller before passing the message struct to decrypt_message,
+ *           the caller will have to cache and restore those to their original state before sending them
+ *           to this function. ADAPTERS AND APPLICATIONS PLEASE TAKE NOTE OF THIS. (Obviously, this doesn't
+ *           include information like user_ids, but we very specifically need the incoming usernames preserved
+ *           so that they can be handled by the internal algorithm appropriately)
  */
 
 DYNAMIC_API PEP_STATUS decrypt_message(

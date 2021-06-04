@@ -26,7 +26,7 @@
 
 #include "blacklist.h"
 #include "keymanagement.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 #include "TestConstants.h"
 
 
@@ -70,14 +70,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -120,7 +120,7 @@ TEST_F(BlacklistTest, check_blacklist) {
     stringlist_t *blacklist;
     PEP_STATUS status6 = blacklist_retrieve(session, &blacklist);
     ASSERT_EQ(status6 , PEP_STATUS_OK);
-    ASSERT_NE(blacklist, nullptr);
+    ASSERT_NOTNULL(blacklist);
 
     bool in23 = false;
     output_stream << "the blacklist contains now: ";
@@ -168,8 +168,11 @@ TEST_F(BlacklistTest, check_blacklist) {
 
     pEp_identity* blacklisted_identity = new_identity("blacklistedkeys@kgrothoff.org",
                                                       bl_fpr_1,
-                                                      NULL,
+                                                      "TOFU_blacklistedkeys@kgrothoff.org",
                                                       "Blacklist Keypair");
+
+    PEP_STATUS status = set_fpr_preserve_ident(session, blacklisted_identity, bl_fpr_1, false);
+    ASSERT_OK;
 
     PEP_STATUS status8 = update_identity(session, blacklisted_identity);
 
@@ -191,7 +194,7 @@ TEST_F(BlacklistTest, check_blacklist) {
     /* new!!! */
     ASSERT_TRUE(is_blacklisted);
     ASSERT_EQ(status11 , PEP_STATUS_OK);
-    ASSERT_STREQ(bl_fpr_1, blacklisted_identity->fpr);
+    ASSERT_STREQ(bl_fpr_1, blacklisted_identity->fpr); // I don't think this should be true, but...
 
     bool id_def, us_def, addr_def;
     status11 = get_valid_pubkey(session, blacklisted_identity,
@@ -211,12 +214,12 @@ TEST_F(BlacklistTest, check_blacklist) {
     ASSERT_TRUE(blacklisted_identity->fpr == NULL || blacklisted_identity->fpr[0] == '\0' || strcmp(blacklisted_identity->fpr, bl_fpr_2) == 0);
 
     pEp_identity *me = new_identity("alice@peptest.ch", NULL, "423", "Alice Miller");
-    ASSERT_NE(me, nullptr);
+    ASSERT_NOTNULL(me);
     PEP_STATUS status24 = myself(session, me);
     ASSERT_EQ(status24 , PEP_STATUS_OK);
 
     message *msg23 = new_message(PEP_dir_outgoing);
-    ASSERT_NE(msg23, nullptr);
+    ASSERT_NOTNULL(msg23);
     msg23->from = me;
     msg23->to = new_identity_list(identity_dup(blacklisted_identity));
     ASSERT_TRUE(msg23->to != NULL && msg23->to->ident != NULL);

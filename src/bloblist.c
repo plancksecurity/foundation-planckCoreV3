@@ -192,3 +192,15 @@ DYNAMIC_API void set_blob_disposition(bloblist_t* blob,
     if (blob)                                    
         blob->disposition = disposition;
 }
+
+bloblist_t* find_blob_by_URI(bloblist_t* bloblist, const char* uri) {
+    if (!bloblist || !uri)
+        return NULL;
+    bloblist_t* retval = bloblist;
+    for (; retval ; retval = retval->next) {
+        if (retval->filename && strcmp(retval->filename, uri) == 0) {
+            break;
+        }    
+    }
+    return retval;    
+}

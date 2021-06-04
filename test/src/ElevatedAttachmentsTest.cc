@@ -4,7 +4,7 @@
 
 #include "internal_format.h"
 
-#include "test_util.h"
+#include "TestUtilities.h"
 #include "TestConstants.h"
 #include "Engine.h"
 
@@ -45,14 +45,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -203,19 +203,23 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message) {
                 "pep.test.alice@pep-project.org", alice_fpr,
                 PEP_OWN_USERID, "Alice in Wonderland", NULL, true
             );
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc"));
 
     message* msg = new_message(PEP_dir_outgoing);
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, NULL);
     pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, "Bob", NULL);
     status = myself(session, alice);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     status = update_identity(session, bob);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-
+    ASSERT_OK;
+    bob->fpr = strdup(bob_fpr);
+    status = set_identity(session, bob);
+    ASSERT_OK;
+    status = update_identity(session, bob);
+    ASSERT_OK;
     status = set_as_pEp_user(session, bob);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     msg->to = new_identity_list(bob);
     msg->from = alice;
@@ -230,7 +234,7 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message) {
 
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_inline, 0);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     
     // .shortmsg will stay unencrypted
     ASSERT_STREQ(msg->shortmsg, enc_msg->shortmsg);
@@ -255,8 +259,9 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message) {
     // attached key is encrypted
     ASSERT_TRUE(is_PGP_message_text(ad->value));
     ASSERT_STREQ(ad->mime_type, "application/octet-stream");
-    ASSERT_STREQ(ad->filename, "file://pEpkey.asc.pgp");
-
+//    ASSERT_STREQ(ad->filename, "file://pEpkey.asc.pgp");
+    // As of ENGINE-633:
+    ASSERT_STREQ(ad->filename, "file://sender_key.asc.pgp");
     // decrypt this message
     
     message *dec_msg = NULL;
@@ -297,19 +302,23 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message_elevated) {
                 "pep.test.alice@pep-project.org", alice_fpr,
                 PEP_OWN_USERID, "Alice in Wonderland", NULL, true
             );
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc"));
 
     message* msg = new_message(PEP_dir_outgoing);
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, NULL);
     pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, "Bob", NULL);
     status = myself(session, alice);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     status = update_identity(session, bob);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-
+    ASSERT_OK;
+    bob->fpr = strdup(bob_fpr);
+    status = set_identity(session, bob);
+    ASSERT_OK;
+    status = update_identity(session, bob);
+    ASSERT_OK;
     status = set_as_pEp_user(session, bob);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     msg->to = new_identity_list(bob);
     msg->from = alice;
@@ -324,7 +333,7 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message_elevated) {
 
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_inline_EA, 0);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     
     // .longmsg will go encrypted
     ASSERT_TRUE(is_PGP_message_text(enc_msg->longmsg));
@@ -346,7 +355,10 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message_elevated) {
     // attached key is encrypted
     ASSERT_TRUE(is_PGP_message_text(ad->value));
     ASSERT_STREQ(ad->mime_type, "application/octet-stream");
-    ASSERT_STREQ(ad->filename, "file://pEpkey.asc.pgp");
+//    ASSERT_STREQ(ad->filename, "file://pEpkey.asc.pgp");
+    // As of ENGINE-633:
+    ASSERT_STREQ(ad->filename, "file://sender_key.asc.pgp");
+    // decrypt this message
 
     char *ct = strdup(ad->value);
 

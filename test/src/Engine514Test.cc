@@ -4,7 +4,7 @@
 
 #include "pEpEngine.h"
 #include "pEp_internal.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 #include "TestConstants.h"
 #include "Engine.h"
 
@@ -45,14 +45,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -94,14 +94,14 @@ TEST_F(Engine514Test, check_engine514_unencrypted) {
     not_the_msg->longmsg = strdup("Some body text here.");
 
     mime_encode_message(not_the_msg, false, &attachment_text, false);
-    ASSERT_NE(attachment_text, nullptr);
+    ASSERT_NOTNULL(attachment_text);
     free_message(not_the_msg);
         
     message* msg = new_message(PEP_dir_outgoing);
     pEp_identity* carol = NULL;                         
-    PEP_STATUS status = set_up_preset(session, CAROL, true, true, true, true, true, &carol);                         
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL, true, true, true, true, true, true, &carol);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(carol, nullptr);
+    ASSERT_NOTNULL(carol);
     status = myself(session, carol);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
@@ -115,17 +115,17 @@ TEST_F(Engine514Test, check_engine514_unencrypted) {
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_UNENCRYPTED);
-    ASSERT_EQ(enc_msg, nullptr);
+    ASSERT_NULL(enc_msg);
     ASSERT_STREQ(msg->attachments->mime_type, "message/rfc822");
-    ASSERT_NE(msg->attachments->next, nullptr);
+    ASSERT_NOTNULL(msg->attachments->next);
     
     // Funny, it's not reproduceable here.
     char* output_str = NULL;
     mime_encode_message(msg, false, &output_str, false);
     char* find_the_mimetype = strstr(output_str, "message/rfc822");
-    ASSERT_NE(find_the_mimetype, nullptr);
+    ASSERT_NOTNULL(find_the_mimetype);
     find_the_mimetype = strstr(output_str, "text/rfc822");
-    ASSERT_EQ(find_the_mimetype, nullptr);            
+    ASSERT_NULL(find_the_mimetype);            
 }
 
 TEST_F(Engine514Test, check_engine514_unencrypted_second_position) {
@@ -145,14 +145,14 @@ TEST_F(Engine514Test, check_engine514_unencrypted_second_position) {
     not_the_msg->longmsg = strdup("Some body text here.");
 
     mime_encode_message(not_the_msg, false, &attachment_text, false);
-    ASSERT_NE(attachment_text, nullptr);
+    ASSERT_NOTNULL(attachment_text);
     free_message(not_the_msg);
         
     message* msg = new_message(PEP_dir_outgoing);
     pEp_identity* carol = NULL;                         
-    PEP_STATUS status = set_up_preset(session, CAROL, true, true, true, true, true, &carol);                         
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL, true, true, true, true, true, true, &carol);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(carol, nullptr);
+    ASSERT_NOTNULL(carol);
     status = myself(session, carol);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
@@ -168,18 +168,18 @@ TEST_F(Engine514Test, check_engine514_unencrypted_second_position) {
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_UNENCRYPTED);
-    ASSERT_EQ(enc_msg, nullptr);
+    ASSERT_NULL(enc_msg);
     ASSERT_STREQ(msg->attachments->next->mime_type, "message/rfc822");
-    ASSERT_NE(msg->attachments->next->next, nullptr);
+    ASSERT_NOTNULL(msg->attachments->next->next);
     
     // Still not reproduceable
     char* output_str = NULL;
     mime_encode_message(msg, false, &output_str, false);
     cout << output_str << endl;
     char* find_the_mimetype = strstr(output_str, "message/rfc822");
-    ASSERT_NE(find_the_mimetype, nullptr);
+    ASSERT_NOTNULL(find_the_mimetype);
     find_the_mimetype = strstr(output_str, "text/rfc822");
-    ASSERT_EQ(find_the_mimetype, nullptr);            
+    ASSERT_NULL(find_the_mimetype);            
 }
 
 TEST_F(Engine514Test, check_engine514_encode_and_decode) {
@@ -194,19 +194,19 @@ TEST_F(Engine514Test, check_engine514_encode_and_decode) {
     not_the_msg->longmsg = strdup("Some body text here.");
 
     mime_encode_message(not_the_msg, false, &attachment_text, false);
-    ASSERT_NE(attachment_text, nullptr);
+    ASSERT_NOTNULL(attachment_text);
     free_message(not_the_msg);
         
     message* msg = new_message(PEP_dir_outgoing);
     pEp_identity* carol = NULL;                         
-    PEP_STATUS status = set_up_preset(session, CAROL, true, true, true, true, true, &carol);                         
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL, true, true, true, true, true, true, &carol);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(carol, nullptr);
+    ASSERT_NOTNULL(carol);
     status = myself(session, carol);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
     pEp_identity* dave = NULL;
-    status = set_up_preset(session, DAVE, true, true, true, false, false, &dave);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE, true, true, true, true, false, false, &dave);
     msg->from = carol;
     msg->to = new_identity_list(dave);
     msg->shortmsg = strdup("This is the actual message");
@@ -217,9 +217,9 @@ TEST_F(Engine514Test, check_engine514_encode_and_decode) {
     mime_encode_message(msg, false, &output_str, false);
     cout << output_str << endl;
     char* find_the_mimetype = strstr(output_str, "message/rfc822");
-    ASSERT_NE(find_the_mimetype, nullptr);
+    ASSERT_NOTNULL(find_the_mimetype);
     find_the_mimetype = strstr(output_str, "text/rfc822");
-    ASSERT_EQ(find_the_mimetype, nullptr);            
+    ASSERT_NULL(find_the_mimetype);            
 
     message* checker = NULL;
     mime_decode_message(output_str, strlen(output_str), &checker, NULL);    
@@ -241,19 +241,19 @@ TEST_F(Engine514Test, check_engine514_encrypted) {
     not_the_msg->longmsg = strdup("Some body text here.");
 
     mime_encode_message(not_the_msg, false, &attachment_text, false);
-    ASSERT_NE(attachment_text, nullptr);
+    ASSERT_NOTNULL(attachment_text);
     free_message(not_the_msg);
         
     message* msg = new_message(PEP_dir_outgoing);
     pEp_identity* carol = NULL;                         
-    PEP_STATUS status = set_up_preset(session, CAROL, true, true, true, true, true, &carol);                         
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL, true, true, true, true, true, true, &carol);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(carol, nullptr);
+    ASSERT_NOTNULL(carol);
     status = myself(session, carol);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
     pEp_identity* dave = NULL;
-    status = set_up_preset(session, DAVE, true, true, true, false, false, &dave);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE, true, true, true, true, false, false, &dave);
     msg->from = carol;
     msg->to = new_identity_list(dave);
     msg->shortmsg = strdup("This is the actual message");
@@ -263,7 +263,7 @@ TEST_F(Engine514Test, check_engine514_encrypted) {
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(enc_msg, nullptr);
+    ASSERT_NOTNULL(enc_msg);
     
     message* dec_msg = NULL;
     PEP_decrypt_flags_t flags = 0;
@@ -273,13 +273,13 @@ TEST_F(Engine514Test, check_engine514_encrypted) {
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status, PEP_STATUS_OK);    
     ASSERT_STREQ(msg->attachments->mime_type, "message/rfc822");
-    ASSERT_EQ(msg->attachments->next, nullptr);
+    ASSERT_NULL(msg->attachments->next);
     
     // Funny, it's not reproduceable here.
     // char* output_str = NULL;
     // mime_encode_message(msg, false, &output_str, false);
     // char* find_the_mimetype = strstr(output_str, "message/rfc822");
-    // ASSERT_NE(find_the_mimetype, nullptr);
+    // ASSERT_NOTNULL(find_the_mimetype);
     // find_the_mimetype = strstr(output_str, "text/rfc822");
-    // ASSERT_EQ(find_the_mimetype, nullptr);            
+    // ASSERT_NULL(find_the_mimetype);            
 }

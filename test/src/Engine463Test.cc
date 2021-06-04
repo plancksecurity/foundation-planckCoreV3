@@ -8,7 +8,7 @@
 #include "pEpEngine.h"
 #include "pEp_internal.h"
 #include "pEp_internal.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 #include "message.h"
 
 
@@ -52,14 +52,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -105,7 +105,7 @@ TEST_F(Engine463Test, check_engine_463_no_own_key) {
     PEP_decrypt_flags_t flags = 0;
 
     status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 }
 
 TEST_F(Engine463Test, check_engine_463_sender_expired_and_renewed) {
@@ -116,6 +116,11 @@ TEST_F(Engine463Test, check_engine_463_sender_expired_and_renewed) {
     ASSERT_TRUE(ok);
     ok = slurp_and_import_key(session, "test_keys/pub/inquisitor-0xA4728718_full_expired.pub.asc");
     ASSERT_TRUE(ok);
+
+    const char* inq_fpr = "8E8D2381AE066ABE1FEE509821BA977CA4728718";
+    pEp_identity* inquisitor = new_identity("inquisitor@darthmama.org", NULL, NULL, "Lady Claire Trevelyan");
+    PEP_STATUS status = set_fpr_preserve_ident(session, inquisitor, inq_fpr, false);
+    ASSERT_OK;
 
     // Ok, so I want to make sure we make an entry, so I'll try to decrypt the message WITH
     // the expired key:
@@ -128,7 +133,7 @@ TEST_F(Engine463Test, check_engine_463_sender_expired_and_renewed) {
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
-    PEP_STATUS status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
+    status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
     ASSERT_EQ(status , PEP_DECRYPTED);
 
     free(decrypted_msg);
@@ -139,14 +144,14 @@ TEST_F(Engine463Test, check_engine_463_sender_expired_and_renewed) {
     pEp_identity* expired_inquisitor = new_identity("inquisitor@darthmama.org", NULL, NULL, "Lady Claire Trevelyan");
 
     status = identity_rating(session, expired_inquisitor, &rating);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(rating , PEP_rating_reliable);
 
     flags = 0;
 
     status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
-    ASSERT_NE(decrypted_msg, nullptr);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_NOTNULL(decrypted_msg);
+    ASSERT_OK;
     ASSERT_EQ(rating , PEP_rating_reliable);
 
     free_identity(expired_inquisitor);
@@ -166,7 +171,12 @@ TEST_F(Engine463Test, check_engine_463_sender_expired_and_renewed) {
     pEp_identity* alice_from = new_identity("pep.test.alice@pep-project.org", alice_fpr, PEP_OWN_USERID, "Alice Cooper");
 
     PEP_STATUS status = set_own_key(session, alice_from, alice_fpr);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
+
+    const char* inq_fpr = "8E8D2381AE066ABE1FEE509821BA977CA4728718";
+    pEp_identity* inquisitor = new_identity("inquisitor@darthmama.org", NULL, NULL, "Lady Claire Trevelyan");
+    status = set_fpr_preserve_ident(session, inquisitor, inq_fpr, false);
+    ASSERT_OK;
 
     // Ok, so I want to make sure we make an entry, so I'll try to decrypt the message WITH
     // the expired key:
@@ -197,7 +207,7 @@ TEST_F(Engine463Test, check_engine_463_sender_expired_and_renewed) {
     msg2->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
 
     status = outgoing_message_rating(session, msg2, &rating);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(rating , PEP_rating_reliable);
 
     free_message(msg2);

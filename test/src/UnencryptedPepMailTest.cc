@@ -6,7 +6,7 @@
 
 #include "pEpEngine.h"
 #include "pEp_internal.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 #include "TestConstants.h"
 #include "Engine.h"
 
@@ -48,14 +48,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -85,14 +85,14 @@ TEST_F(UnencryptedPepMailTest, check_unencrypted_pep_mail_outgoing) {
     pEp_identity* alice = NULL;
     pEp_identity* dave = NULL;
 
-    PEP_STATUS status = set_up_preset(session, ALICE,
-                                      true, true, true, true, true, &alice);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALICE,
+                                      true, true, true, true, true, true, &alice);
 
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(alice, nullptr);
+    ASSERT_NOTNULL(alice);
 /*
 PEP_STATUS set_up_preset(PEP_SESSION session,
-                         pEp_test_ident_preset preset_name,
+                         ident_preset preset_name,
                          bool set_ident,
                          bool set_pep,
                          bool trust,
@@ -134,14 +134,14 @@ TEST_F(UnencryptedPepMailTest, check_unencrypted_pep_mail_outgoing_MIME) {
     pEp_identity* alice = NULL;
     pEp_identity* dave = NULL;
 
-    PEP_STATUS status = set_up_preset(session, ALICE,
-                                      true, true, true, true, true, &alice);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::ALICE,
+                                      true, true, true, true, true, true, &alice);
 
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(alice, nullptr);
+    ASSERT_NOTNULL(alice);
 /*
 PEP_STATUS set_up_preset(PEP_SESSION session,
-                         pEp_test_ident_preset preset_name,
+                         ident_preset preset_name,
                          bool set_ident,
                          bool set_pep,
                          bool trust,
@@ -167,12 +167,12 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
         
     status = MIME_encrypt_message(session, outmsg, strlen(outmsg), NULL, &encmsg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_UNENCRYPTED);
-    ASSERT_NE(encmsg, nullptr);
+    ASSERT_NOTNULL(encmsg);
     
     const char* contains = NULL;
     
     contains = strstr(encmsg, "X-pEp-Version");
-    ASSERT_NE(encmsg, nullptr);
+    ASSERT_NOTNULL(encmsg);
     
     // char* outmsg = NULL;
     // mime_encode_message(msg, false, &outmsg, false);
@@ -185,8 +185,8 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
 
 TEST_F(UnencryptedPepMailTest, check_unencrypted_pep_message_rcpt) {
     string msgstr = slurp("test_mails/unenc_pep_msg_test_1.eml");
-    PEP_STATUS status = set_up_preset(session, DAVE,
-                                      true, true, true, true, true, NULL);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE,
+                                      true, true, true, true, true, true, NULL);
     ASSERT_EQ(status, PEP_STATUS_OK);
     message* dec_msg = NULL;
     message* enc_msg = NULL;

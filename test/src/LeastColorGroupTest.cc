@@ -10,7 +10,7 @@
 #include "keymanagement.h"
 #include "message_api.h"
 #include "mime.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 
 #include "pEpEngine.h"
 #include "pEp_internal.h"
@@ -56,14 +56,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -121,10 +121,16 @@ TEST_F(LeastColorGroupTest, check_least_color_group) {
     pEp_identity * sender1 = new_identity("pep.color.test.V@kgrothoff.org",
                                           NULL, "TOFU_pep.color.test.V@kgrothoff.org",
                                           "Pep Color Test V (sender)");
-    status = update_identity(session, sender1);
-    trust_personal_key(session, sender1);
-    status = update_identity(session, sender1);
 
+    status = set_fpr_preserve_ident(session, sender1, "AFC019B22E2CC61F13F285BF179B9DF271FC6D28", false);
+    ASSERT_OK;
+    status = update_identity(session, sender1);
+    ASSERT_OK;
+    status = trust_personal_key(session, sender1);
+    ASSERT_OK;
+    status = update_identity(session, sender1);
+    ASSERT_OK;
+    
     message* msg_ptr = nullptr;
     message* dest_msg = nullptr;
     message* final_ptr = nullptr;
@@ -133,8 +139,8 @@ TEST_F(LeastColorGroupTest, check_least_color_group) {
     PEP_decrypt_flags_t flags;
 
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(msg_ptr, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(msg_ptr);
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);

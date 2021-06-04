@@ -10,7 +10,7 @@
 
 #include "stringlist.h"
 
-#include "test_util.h"
+#include "TestUtilities.h"
 
 #include "Engine.h"
 
@@ -34,10 +34,10 @@ TEST_F(StringlistTest, check_stringlists) {
     output_stream << "creating one-element stringlist…\n";
 
     stringlist_t* src = new_stringlist(str0);
-    ASSERT_NE((src), nullptr);
+    ASSERT_NOTNULL((src));
     ASSERT_STREQ(src->value, str0);
     output_stream << "Value: " << src->value;
-    ASSERT_EQ(src->next, nullptr);
+    ASSERT_NULL(src->next);
     output_stream << "one-element stringlist created, next element is NULL\n";
 
     output_stream << "freeing stringlist…\n\n";
@@ -53,33 +53,33 @@ TEST_F(StringlistTest, check_stringlists) {
     const char* strarr[4] = {str1, str2, str3, str4};
     output_stream << "stringlist_add on empty list…\n";
     src = stringlist_add(src, str1); // src is NULL
-    ASSERT_NE(src, nullptr);
-    ASSERT_NE(stringlist_add(src, str2), nullptr); // returns ptr to new elt
-    ASSERT_NE(stringlist_add(src, str3), nullptr);
-    ASSERT_NE(stringlist_add(src, str4), nullptr);
+    ASSERT_NOTNULL(src);
+    ASSERT_NOTNULL(stringlist_add(src, str2)); // returns ptr to new elt
+    ASSERT_NOTNULL(stringlist_add(src, str3));
+    ASSERT_NOTNULL(stringlist_add(src, str4));
 
     output_stream << "checking contents\n";
     stringlist_t* p = src;
     int i = 0;
     while (p) {
-        ASSERT_NE((p->value), nullptr);
+        ASSERT_NOTNULL((p->value));
         ASSERT_STREQ(p->value, strarr[i]);
         ASSERT_NE(p->value , strarr[i]); // ensure this is a copy
         p = p->next;
         i++;
     }
-    ASSERT_EQ(p, nullptr); // list ends properly
+    ASSERT_NULL(p); // list ends properly
 
     output_stream << "\nduplicating four-element stringlist…\n";
     stringlist_t* dst = stringlist_dup(src);
-    ASSERT_NE(dst, nullptr);
+    ASSERT_NOTNULL(dst);
 
     stringlist_t* p_dst = dst;
     p = src;
 
     output_stream << "checking contents\n";
     while (p_dst) {
-        ASSERT_NE(p_dst->value, nullptr);
+        ASSERT_NOTNULL(p_dst->value);
         ASSERT_STREQ(p->value, p_dst->value);
         ASSERT_NE(p->value , p_dst->value); // ensure this is a copy
         output_stream << p_dst->value;
@@ -87,7 +87,7 @@ TEST_F(StringlistTest, check_stringlists) {
         p_dst = p_dst->next;
         ASSERT_TRUE((p == NULL) == (p_dst == NULL));
     }
-    ASSERT_EQ(p_dst, nullptr);
+    ASSERT_NULL(p_dst);
 
     output_stream << "freeing stringlists…\n\n";
     free_stringlist(src);
@@ -97,11 +97,11 @@ TEST_F(StringlistTest, check_stringlists) {
 
     output_stream << "duplicating one-element stringlist…\n";
     src = new_stringlist(str0);
-    ASSERT_NE(src, nullptr);
+    ASSERT_NOTNULL(src);
     dst = stringlist_dup(src);
     ASSERT_STREQ(dst->value, str0);
     output_stream << "Value: " << src->value;
-    ASSERT_EQ(dst->next, nullptr);
+    ASSERT_NULL(dst->next);
     output_stream << "one-element stringlist duped, next element is NULL\n";
 
     output_stream << "\nAdd to empty stringlist (node exists, but no value…)\n";
@@ -109,7 +109,7 @@ TEST_F(StringlistTest, check_stringlists) {
         free(src->value);
     src->value = NULL;
     stringlist_add(src, str2);
-    ASSERT_NE(src->value, nullptr);
+    ASSERT_NOTNULL(src->value);
     ASSERT_STREQ(src->value, str2);
     ASSERT_NE(src->value , str2); // ensure this is a copy
     output_stream << src->value;
@@ -132,33 +132,33 @@ TEST_F(StringlistTest, check_dedup_stringlist) {
 
     stringlist_t* s_list = NULL;
     dedup_stringlist(s_list);
-    ASSERT_EQ(s_list , nullptr);
+    ASSERT_NULL(s_list );
 
     s_list = new_stringlist(NULL);
     dedup_stringlist(s_list);
-    ASSERT_EQ(s_list->value , nullptr);
+    ASSERT_NULL(s_list->value );
 
     stringlist_add(s_list, str1);
     dedup_stringlist(s_list);
-    ASSERT_NE(s_list->value, nullptr);
+    ASSERT_NOTNULL(s_list->value);
     ASSERT_STREQ(s_list->value, str1);
-    ASSERT_EQ(s_list->next, nullptr);
+    ASSERT_NULL(s_list->next);
 
     // Add same value
     stringlist_add(s_list, str1);
     dedup_stringlist(s_list);
-    ASSERT_NE(s_list->value, nullptr);
+    ASSERT_NOTNULL(s_list->value);
     ASSERT_STREQ(s_list->value, str1);
-    ASSERT_EQ(s_list->next, nullptr);
+    ASSERT_NULL(s_list->next);
 
     stringlist_add(s_list, str1);
     stringlist_add(s_list, str2);
     dedup_stringlist(s_list);
-    ASSERT_NE(s_list->value, nullptr);
+    ASSERT_NOTNULL(s_list->value);
     ASSERT_STREQ(s_list->value, str1);
-    ASSERT_NE(s_list->next, nullptr);
-    ASSERT_EQ(s_list->next->next, nullptr);
-    ASSERT_NE(s_list->next->value, nullptr);
+    ASSERT_NOTNULL(s_list->next);
+    ASSERT_NULL(s_list->next->next);
+    ASSERT_NOTNULL(s_list->next->value);
     ASSERT_STREQ(s_list->next->value, str2);
 
     free_stringlist(s_list);
@@ -180,9 +180,9 @@ TEST_F(StringlistTest, check_dedup_stringlist) {
     stringlist_add(s_list, str1);
     stringlist_add(s_list, str1);
     dedup_stringlist(s_list);
-    ASSERT_NE(s_list->value, nullptr);
+    ASSERT_NOTNULL(s_list->value);
     ASSERT_STREQ(s_list->value, str1);
-    ASSERT_EQ(s_list->next, nullptr);
+    ASSERT_NULL(s_list->next);
 
     free_stringlist(s_list);
     s_list = new_stringlist(str1);
@@ -203,11 +203,11 @@ TEST_F(StringlistTest, check_dedup_stringlist) {
     stringlist_add(s_list, str2);
     stringlist_add(s_list, str1);
     dedup_stringlist(s_list);
-    ASSERT_NE(s_list->value, nullptr);
+    ASSERT_NOTNULL(s_list->value);
     ASSERT_STREQ(s_list->value, str1);
-    ASSERT_NE(s_list->next, nullptr);
-    ASSERT_EQ(s_list->next->next, nullptr);
-    ASSERT_NE(s_list->next->value, nullptr);
+    ASSERT_NOTNULL(s_list->next);
+    ASSERT_NULL(s_list->next->next);
+    ASSERT_NOTNULL(s_list->next->value);
     ASSERT_STREQ(s_list->next->value, str2);
 
     free_stringlist(s_list);
@@ -223,42 +223,42 @@ TEST_F(StringlistTest, check_dedup_stringlist) {
     stringlist_add(s_list, str3);
 
     dedup_stringlist(s_list);
-    ASSERT_NE(s_list->next, nullptr);
-    ASSERT_NE(s_list->next->next, nullptr);
-    ASSERT_NE(s_list->next->next->next, nullptr);
-    ASSERT_EQ(s_list->next->next->next->next, nullptr);
-    ASSERT_NE(s_list->value, nullptr);
+    ASSERT_NOTNULL(s_list->next);
+    ASSERT_NOTNULL(s_list->next->next);
+    ASSERT_NOTNULL(s_list->next->next->next);
+    ASSERT_NULL(s_list->next->next->next->next);
+    ASSERT_NOTNULL(s_list->value);
     ASSERT_STREQ(s_list->value, str3);
-    ASSERT_NE(s_list->next->value, nullptr);
+    ASSERT_NOTNULL(s_list->next->value);
     ASSERT_STREQ(s_list->next->value, str2);
-    ASSERT_NE(s_list->next->next->value, nullptr);
+    ASSERT_NOTNULL(s_list->next->next->value);
     ASSERT_STREQ(s_list->next->next->value, str1);
-    ASSERT_NE(s_list->next->next->next->value, nullptr);
+    ASSERT_NOTNULL(s_list->next->next->next->value);
     ASSERT_STREQ(s_list->next->next->next->value, str4);
 }
 
 TEST_F(StringlistTest, check_stringlist_to_string_null) {
     stringlist_t* sl = NULL;
     char* stringy = stringlist_to_string(sl);
-    ASSERT_EQ(stringy, nullptr);
+    ASSERT_NULL(stringy);
 }
 
 TEST_F(StringlistTest, check_string_to_stringlist_null) {
     const char* cl = NULL;
     stringlist_t* sl = string_to_stringlist(cl);
-    ASSERT_EQ(sl, nullptr);
+    ASSERT_NULL(sl);
 }
 
 TEST_F(StringlistTest, check_stringlist_to_string_empty) {
     stringlist_t* sl = new_stringlist(NULL);
     char* stringy = stringlist_to_string(sl);
-    ASSERT_EQ(stringy, nullptr);
+    ASSERT_NULL(stringy);
 }
 
 TEST_F(StringlistTest, check_string_to_stringlist_empty) {
     const char* cl = "";
     stringlist_t* sl = string_to_stringlist(cl);
-    ASSERT_EQ(sl, nullptr);
+    ASSERT_NULL(sl);
 }
 
 TEST_F(StringlistTest, check_stringlist_to_string_single) {
@@ -271,9 +271,9 @@ TEST_F(StringlistTest, check_stringlist_to_string_single) {
 TEST_F(StringlistTest, check_string_to_stringlist_single) {
     const char* cl = "Eat my shorts";
     stringlist_t* sl = string_to_stringlist(cl);
-    ASSERT_NE(sl, nullptr);
-    ASSERT_NE(sl->value, nullptr);
-    ASSERT_EQ(sl->next, nullptr);
+    ASSERT_NOTNULL(sl);
+    ASSERT_NOTNULL(sl->value);
+    ASSERT_NULL(sl->next);
     ASSERT_STREQ(sl->value, cl);
 }
 
@@ -291,11 +291,11 @@ TEST_F(StringlistTest, check_string_to_stringlist_two) {
     const char* str0 = "Non";
     const char* str1 = "je ne regrette rien";
     stringlist_t* sl = string_to_stringlist(cl);
-    ASSERT_NE(sl, nullptr);
-    ASSERT_NE(sl->value, nullptr);
-    ASSERT_NE(sl->next, nullptr);
-    ASSERT_NE(sl->next->value, nullptr);
-    ASSERT_EQ(sl->next->next, nullptr);    
+    ASSERT_NOTNULL(sl);
+    ASSERT_NOTNULL(sl->value);
+    ASSERT_NOTNULL(sl->next);
+    ASSERT_NOTNULL(sl->next->value);
+    ASSERT_NULL(sl->next->next);    
     ASSERT_STREQ(sl->value, str0);
     ASSERT_STREQ(sl->next->value, str1);    
 }
@@ -327,17 +327,17 @@ TEST_F(StringlistTest, check_string_to_stringlist_five) {
     const char* str3 = "Fix your crypto and your comma key";
     const char* str4 = "Alice";
     stringlist_t* sl = string_to_stringlist(cl);
-    ASSERT_NE(sl, nullptr);
-    ASSERT_NE(sl->value, nullptr);
-    ASSERT_NE(sl->next, nullptr);
-    ASSERT_NE(sl->next->value, nullptr);
-    ASSERT_NE(sl->next->next, nullptr);    
-    ASSERT_NE(sl->next->next->value, nullptr);
-    ASSERT_NE(sl->next->next->next, nullptr);    
-    ASSERT_NE(sl->next->next->next->value, nullptr);
-    ASSERT_NE(sl->next->next->next->next, nullptr);    
-    ASSERT_NE(sl->next->next->next->next->value, nullptr);
-    ASSERT_EQ(sl->next->next->next->next->next, nullptr);    
+    ASSERT_NOTNULL(sl);
+    ASSERT_NOTNULL(sl->value);
+    ASSERT_NOTNULL(sl->next);
+    ASSERT_NOTNULL(sl->next->value);
+    ASSERT_NOTNULL(sl->next->next);    
+    ASSERT_NOTNULL(sl->next->next->value);
+    ASSERT_NOTNULL(sl->next->next->next);    
+    ASSERT_NOTNULL(sl->next->next->next->value);
+    ASSERT_NOTNULL(sl->next->next->next->next);    
+    ASSERT_NOTNULL(sl->next->next->next->next->value);
+    ASSERT_NULL(sl->next->next->next->next->next);    
     ASSERT_STREQ(sl->value, str0);
     ASSERT_STREQ(sl->next->value, str1);    
     ASSERT_STREQ(sl->next->next->value, str2);
@@ -349,7 +349,7 @@ TEST_F(StringlistTest, check_string_to_stringlist_five) {
 TEST_F(StringlistTest, check_string_to_stringlist_commas) {
     const char* cl = ",,,,";
     stringlist_t* sl = string_to_stringlist(cl);
-    ASSERT_EQ(sl, nullptr);
+    ASSERT_NULL(sl);
 }
 
 TEST_F(StringlistTest, check_string_to_stringlist_commas_to_two) {
@@ -357,11 +357,11 @@ TEST_F(StringlistTest, check_string_to_stringlist_commas_to_two) {
     const char* str0 = "Non";
     const char* str1 = "je ne regrette rien";
     stringlist_t* sl = string_to_stringlist(cl);
-    ASSERT_NE(sl, nullptr);
-    ASSERT_NE(sl->value, nullptr);
-    ASSERT_NE(sl->next, nullptr);
-    ASSERT_NE(sl->next->value, nullptr);
-    ASSERT_EQ(sl->next->next, nullptr);    
+    ASSERT_NOTNULL(sl);
+    ASSERT_NOTNULL(sl->value);
+    ASSERT_NOTNULL(sl->next);
+    ASSERT_NOTNULL(sl->next->value);
+    ASSERT_NULL(sl->next->next);    
     ASSERT_STREQ(sl->value, str0);
     ASSERT_STREQ(sl->next->value, str1);    
 }

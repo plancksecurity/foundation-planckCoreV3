@@ -182,6 +182,35 @@ PEP_STATUS get_key_sticky_bit_for_user(PEP_SESSION session,
                                        const char* fpr,
                                        bool* is_sticky);
 
+
+/**
+ *  @internal
+ *
+ *  <!--       validate_fpr()       -->
+ *
+ *  @brief            TODO
+ *
+ *  @param[in]    session                     session handle
+ *  @param[in]    *ident                        pEp_identity
+ *  @param[in]    check_blacklist                bool
+ *  @param[in]    own_must_contain_private    bool
+ *  @param[in]    renew_private                bool
+ *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval PEP_KEY_UNSUITABLE
+ *  @retval PEP_PASSPHRASE_REQUIRED
+ *  @retval PEP_WRONG_PASSPHRASE
+ *  @retval any other value on error
+ *
+ */
+PEP_STATUS validate_fpr(PEP_SESSION session,
+                        pEp_identity* ident,
+                        bool check_blacklist,
+                        bool own_must_contain_private,
+                        bool renew_private);
+
 #ifdef __cplusplus
 }
 #endif
