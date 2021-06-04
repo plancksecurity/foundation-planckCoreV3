@@ -350,6 +350,102 @@ static bool default_key_set(PEP_SESSION session, pEp_identity *ident)
     return !EMPTYSTR(ident->fpr);
 }
 
+// Let's please break this up - monolithic unit tests are hard to debug.
+
+//    A) Handshake and TOFU
+//    1)  Sylvia sends an unencrypted mail without key => unencrypted (no default key, but not tested here)
+TEST_F(TrustRatingTest, check_incoming_message_rating_unknown_sender_no_key_unencrypted) {
+    pEp_identity* alice = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::ALICE);
+    ASSERT_NOTNULL(alice);
+
+    message* incoming = string_to_msg("test_mails/CanonicalFrom2.2SylviaToAliceUnencrypted_NoKey.eml");
+    ASSERT_NOTNULL(incoming);
+
+    message* dec_msg = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+
+    // Note, we're NOT testing the real thing here. This is kind of a problem. We want decrypt_and_verify,
+    // and this is decrypt_message. But we'd have to replicate the entirety of _decrypt_message to
+    // get all of the info we want here otherwise.
+    PEP_STATUS decrypt_status = decrypt_message(session, incoming, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_NULL(dec_msg);
+    ASSERT_NULL(keylist);
+    ASSERT_EQ(decrypt_status, PEP_UNENCRYPTED);
+
+    PEP_STATUS status = incoming_message_rating(session, incoming, dec_msg, keylist, nullptr, decrypt_status, &rating);
+    ASSERT_OK;
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(rating, PEP_rating_unencrypted);
+
+    free_message(incoming);
+}
+
+//    A) Handshake and TOFU
+//    2) Sylvia sends an unencrypted mail with key attached, no claim
+//        => unencrypted, no default key (Sylvia ***is a pEp user***, so we want the correct filename)
+TEST_F(TrustRatingTest, check_incoming_message_rating_unknown_sender_no_key_unencrypted_key_bad_filename) {
+    pEp_identity* alice = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::ALICE);
+    ASSERT_NOTNULL(alice);
+
+    message* incoming = string_to_msg("test_mails/test_mails/CanonicalFrom2.2SylviaToAliceUnencrypted_wrong_key_filename.eml");
+    ASSERT_NOTNULL(incoming);
+
+    message* dec_msg = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+
+    // Note, we're NOT testing the real thing here. This is kind of a problem. We want decrypt_and_verify,
+    // and this is decrypt_message. But we'd have to replicate the entirety of _decrypt_message to
+    // get all of the info we want here otherwise.
+    PEP_STATUS decrypt_status = decrypt_message(session, incoming, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_NULL(dec_msg);
+    ASSERT_NULL(keylist);
+    ASSERT_EQ(decrypt_status, PEP_UNENCRYPTED);
+
+    PEP_STATUS status = incoming_message_rating(session, incoming, dec_msg, keylist, nullptr, decrypt_status, &rating);
+    ASSERT_OK;
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(rating, PEP_rating_unencrypted);
+
+    free_message(incoming);
+}
+
+//    A) Handshake and TOFU
+//    3)  Sylvia sends an unencrypted mail with sender key identified
+//        => default key set (not checked here), unencrypted
+TEST_F(TrustRatingTest, check_incoming_message_rating_unknown_sender_no_key_unencrypted_key_correct_filename) {
+    pEp_identity* alice = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::ALICE);
+    ASSERT_NOTNULL(alice);
+
+    message* incoming = string_to_msg("test_mails/CanonicalFrom2.2SylviaToAliceUnencrypted.eml");
+    ASSERT_NOTNULL(incoming);
+
+    message* dec_msg = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+
+    // Note, we're NOT testing the real thing here. This is kind of a problem. We want decrypt_and_verify,
+    // and this is decrypt_message. But we'd have to replicate the entirety of _decrypt_message to
+    // get all of the info we want here otherwise.
+    PEP_STATUS decrypt_status = decrypt_message(session, incoming, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_NULL(dec_msg);
+    ASSERT_NULL(keylist);
+    ASSERT_EQ(decrypt_status, PEP_UNENCRYPTED);
+
+    PEP_STATUS status = incoming_message_rating(session, incoming, dec_msg, keylist, nullptr, decrypt_status, &rating);
+    ASSERT_OK;
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(rating, PEP_rating_unencrypted);
+
+    free_message(incoming);
+}
+
+
+
 TEST_F(TrustRatingTest, check_incoming_message_rating) {
     output_stream << "\n*** " << test_suite_name << ": " << test_name << " ***\n";
     PEP_STATUS status = PEP_STATUS_OK;
