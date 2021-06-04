@@ -1,8 +1,9 @@
-/** @file */
-/** @brief File description for doxygen missing. FIXME */
-
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    keymanagement.c
+ * @brief   Implementation of functions to manage keys 
+ *          (and identities when in relation to keys)
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #include "platform.h"
 
@@ -14,6 +15,7 @@
 
 #include "pEp_internal.h"
 #include "keymanagement.h"
+#include "keymanagement_internal.h"
 #include "KeySync_fsm.h"
 
 #include "blacklist.h"
@@ -49,12 +51,14 @@ static bool key_matches_address(PEP_SESSION session, const char* address,
  *  
  *  <!--       elect_pubkey()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*identity		pEp_identity
- *  @param[in]	check_blacklist		bool
+ *  @param[in]    session             session handle
+ *  @param[in]    *identity            pEp_identity
+ *  @param[in]    check_blacklist        bool
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
  */
 PEP_STATUS elect_pubkey(
         PEP_SESSION session, pEp_identity * identity, bool check_blacklist
@@ -129,14 +133,22 @@ PEP_STATUS elect_pubkey(
  *  
  *  <!--       validate_fpr()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*ident		pEp_identity
- *  @param[in]	check_blacklist		bool
- *  @param[in]	own_must_contain_private		bool
- *  @param[in]	renew_private		bool
+ *  @param[in]    session                     session handle
+ *  @param[in]    *ident                        pEp_identity
+ *  @param[in]    check_blacklist                bool
+ *  @param[in]    own_must_contain_private    bool
+ *  @param[in]    renew_private                bool
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval PEP_KEY_UNSUITABLE
+ *  @retval PEP_PASSPHRASE_REQUIRED
+ *  @retval PEP_WRONG_PASSPHRASE
+ *  @retval any other value on error
+ *
  */
 static PEP_STATUS validate_fpr(PEP_SESSION session, 
                                pEp_identity* ident,
@@ -519,10 +531,10 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
  *  
  *  <!--       transfer_ident_lang_and_flags()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*new_ident		pEp_identity
- *  @param[in]	*stored_ident		pEp_identity
+ *  @param[in]    *new_ident        pEp_identity
+ *  @param[in]    *stored_ident        pEp_identity
  *  
  */
 static void transfer_ident_lang_and_flags(pEp_identity* new_ident,
@@ -546,10 +558,10 @@ static void transfer_ident_lang_and_flags(pEp_identity* new_ident,
  *  
  *  <!--       adjust_pEp_trust_status()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*identity		pEp_identity
+ *  @param[in]    session            session handle
+ *  @param[in]    *identity        pEp_identity
  *  
  */
 static void adjust_pEp_trust_status(PEP_SESSION session, pEp_identity* identity) {
@@ -586,13 +598,16 @@ static void adjust_pEp_trust_status(PEP_SESSION session, pEp_identity* identity)
  *  
  *  <!--       prepare_updated_identity()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*return_id		pEp_identity
- *  @param[in]	*stored_ident		pEp_identity
- *  @param[in]	store		bool
+ *  @param[in]    session         session handle
+ *  @param[in]    *return_id        pEp_identity
+ *  @param[in]    *stored_ident    pEp_identity
+ *  @param[in]    store            bool
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval any other value on error
  */
 static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
                                                  pEp_identity* return_id,
@@ -1126,11 +1141,15 @@ pEp_free:
  *  
  *  <!--       elect_ownkey()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*identity		pEp_identity
+ *  @param[in]    session     session handle
+ *  @param[in]    *identity    pEp_identity
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  */
 PEP_STATUS elect_ownkey(
         PEP_SESSION session, pEp_identity * identity
@@ -1210,12 +1229,15 @@ PEP_STATUS elect_ownkey(
  *  
  *  <!--       _has_usable_priv_key()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*fpr		char
- *  @param[in]	*is_usable		bool
+ *  @param[in]    session            session handle
+ *  @param[in]    *fpr            char
+ *  @param[in]    *is_usable        bool
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval any other value on error
  */
 PEP_STATUS _has_usable_priv_key(PEP_SESSION session, char* fpr,
                                 bool* is_usable) {
@@ -2091,6 +2113,58 @@ DYNAMIC_API PEP_STATUS own_keys_retrieve(PEP_SESSION session, stringlist_t **key
     return _own_keys_retrieve(session, keylist, 0, true);
 }
 
+
+PEP_STATUS update_key_sticky_bit_for_user(PEP_SESSION session,
+                                          pEp_identity* ident,
+                                          const char* fpr,
+                                          bool sticky) {
+    if (!session || !ident || EMPTYSTR(ident->user_id) || EMPTYSTR(fpr))
+        return PEP_ILLEGAL_VALUE;
+
+    sqlite3_reset(session->update_key_sticky_bit_for_user);
+    sqlite3_bind_int(session->update_key_sticky_bit_for_user, 1, sticky);
+    sqlite3_bind_text(session->update_key_sticky_bit_for_user, 2, ident->user_id, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(session->update_key_sticky_bit_for_user, 3, fpr, -1,
+            SQLITE_STATIC);
+    int result = sqlite3_step(session->update_key_sticky_bit_for_user);
+    sqlite3_reset(session->update_key_sticky_bit_for_user);
+    if (result != SQLITE_DONE) {
+        return PEP_CANNOT_SET_TRUST;
+    }
+
+    return PEP_STATUS_OK;
+
+}
+
+PEP_STATUS get_key_sticky_bit_for_user(PEP_SESSION session,
+                                       const char* user_id,
+                                       const char* fpr,
+                                       bool* is_sticky) {
+
+    PEP_STATUS status = PEP_STATUS_OK;
+    if (!session || !is_sticky || EMPTYSTR(user_id) || EMPTYSTR(fpr))
+        return PEP_ILLEGAL_VALUE;
+
+    sqlite3_reset(session->is_key_sticky_for_user);
+    sqlite3_bind_text(session->is_key_sticky_for_user, 1, user_id, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(session->is_key_sticky_for_user, 2, fpr, -1,
+            SQLITE_STATIC);
+
+    int result = sqlite3_step(session->is_key_sticky_for_user);
+    switch (result) {
+    case SQLITE_ROW: {
+        *is_sticky = sqlite3_column_int(session->is_key_sticky_for_user, 0);
+        break;
+    }
+    default:
+        status = PEP_KEY_NOT_FOUND;
+    }
+
+    return status;
+}
+
 // Returns PASSPHRASE errors when necessary
 DYNAMIC_API PEP_STATUS set_own_key(
        PEP_SESSION session,
@@ -2115,7 +2189,7 @@ DYNAMIC_API PEP_STATUS set_own_key(
 
     // renew if needed, but do not generate
     status = _myself(session, me, false, true, true, false);
-    // we do not need a valid key but dislike other errors
+    // Pass through invalidity errors, and reject other errors
     if (status != PEP_STATUS_OK && status != PEP_GET_KEY_FAILED && status != PEP_KEY_UNSUITABLE)
         return status;
     status = PEP_STATUS_OK;
@@ -2147,6 +2221,41 @@ DYNAMIC_API PEP_STATUS set_own_key(
 
     return status;
 }
+
+// This differs from set_own_key because it can set a manually-imported bit in the trust DB
+// and tests to see if the key will encrypt
+DYNAMIC_API PEP_STATUS set_own_imported_key(
+        PEP_SESSION session,
+        pEp_identity* me,
+        const char* fpr,
+        bool sticky) {
+
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session && me);
+    assert(!EMPTYSTR(fpr));
+    assert(!EMPTYSTR(me->address));
+    assert(!EMPTYSTR(me->user_id));
+    assert(!EMPTYSTR(me->username));
+
+    if (!session || !me || EMPTYSTR(fpr) || EMPTYSTR(me->address) ||
+            EMPTYSTR(me->user_id) || EMPTYSTR(me->username))
+        return PEP_ILLEGAL_VALUE;
+
+    // Last, but not least, be sure we can encrypt with it
+    status = probe_encrypt(session, fpr);
+    if (status)
+        return status;
+
+    status = set_own_key(session, me, fpr);
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    status = update_key_sticky_bit_for_user(session, me, fpr, sticky);
+
+    return status;
+}
+
 
 PEP_STATUS contains_priv_key(PEP_SESSION session, const char *fpr,
                              bool *has_private) {
@@ -2243,11 +2352,15 @@ PEP_STATUS is_mistrusted_key(PEP_SESSION session, const char* fpr,
  *  
  *  <!--       _wipe_default_key_if_invalid()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	session		PEP_SESSION
- *  @param[in]	*ident		pEp_identity
+ *  @param[in]    session        session handle
+ *  @param[in]    *ident        pEp_identity
  *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
  */
 static PEP_STATUS _wipe_default_key_if_invalid(PEP_SESSION session,
                                          pEp_identity* ident) {

@@ -11,6 +11,7 @@
 #include "TestConstants.h"
 
 #include "pEpEngine.h"
+#include "pEp_internal.h"
 
 
 

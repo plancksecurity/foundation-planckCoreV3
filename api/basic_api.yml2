@@ -1,0 +1,439 @@
+// p≡p Basic API
+
+// Copyleft (c) 2019, p≡p foundation
+// this file is under GNU General Public License 3.0
+// see LICENSE.txt
+
+// written by Nana Karlstetter and Volker Birk
+
+
+type ISO639_1 is string size=2 > a-z;
+
+type hexcode is string > a-f0-9;
+
+type hash doc="32bit Key ID to SHA512 in hexcode"
+    is hexcode min=16, max=128;
+
+type hash_list doc="sequence of fingerprints of keys"
+    is list< hash >;
+
+type TID doc="UUID version 4 variant 1"
+    is binary size=16;
+
+type binary_ref is weak< binary >;
+
+enum content_disposition {
+    item attachment 0;
+    item inline 1;
+    item other -1  doc="must be affirmatively set";
+}
+
+struct blob {
+    field function=free binary_ref value;
+
+    field size_t size;
+    field string mime_type;
+    field string filename;
+    field content_disposition disposition;
+}
+
+
+type blob_list is list< blob >;
+
+type identity_list is list< identity >;
+
+type string_list is list< string >; 
+
+type string_pair is pair< string, string >;
+
+type string_pair_list is list< string_pair >;
+
+type any_ref is weak< any >;
+
+
+enum cipher_suite {
+    item default 0;
+    item cv25519 1;
+    item p256 2;
+    item p384 3;
+    item p521 4;
+    item rsa2k 5;
+    item rsa3k 6;
+    item rsa4k 7;
+    item rsa8k 8;
+}
+
+
+enum comm_type {
+    hex unknown 0;
+
+    doc > range 0x01 to 0x09: no encryption, 0x0a to 0x0e: nothing reasonable
+
+    hex no_encryption 0x01;
+    hex no_encrypted_channel 0x02;
+    hex key_not_found 0x03;
+    hex key_expired 0x04;
+    hex key_revoked 0x05;
+    hex key_b0rken 0x06;
+
+    hex key_expired_but_confirmed 0x07 
+        doc="NOT with confirmed bit. Just retaining info here in case of renewal.";
+
+    hex my_key_not_included 0x09;
+
+    hex security_by_obscurity 0x0a;
+    hex b0rken_crypto 0x0b;
+    hex key_too_short 0x0c;
+
+    hex compromised 0x0e                   doc="known compromised connection";
+    hex mistrusted 0x0f                    doc="known mistrusted key";
+
+    doc > range 0x10 to 0x3f: unconfirmed encryption
+
+    hex unconfirmed_encryption 0x10        doc="generic";
+    hex OpenPGP_weak_unconfirmed 0x11      doc="RSA 1024 is weak";
+
+    hex to_be_checked 0x20                 doc="generic";
+    hex SMIME_unconfirmed 0x21             doc="encrypted with S/MIME";
+    hex CMS_unconfirmed 0x22;
+
+    hex strong_but_unconfirmed 0x30        doc="generic";
+    hex OpenPGP_unconfirmed 0x38           doc="key at least 2048 bit RSA, EC, or anything useful";
+    hex OTR_unconfirmed 0x3a               doc="encrypted with OTR";
+
+    doc > range 0x40 to 0x7f: unconfirmed encryption and anonymization
+
+    hex unconfirmed_enc_anon 0x40          doc="generic";
+    hex pEp_unconfirmed 0x7f               doc="encrypted with pEp";
+
+    hex confirmed 0x80                     doc="this bit decides if trust is confirmed";
+
+    doc > range 0x81 to 0x8f: reserved
+    doc > range 0x90 to 0xbf: confirmed encryption
+
+    hex confirmed_encryption 0x90          doc="generic";
+    hex OpenPGP_weak 0x91                  doc="RSA 1024 is weak (unused)";
+
+    hex to_be_checked_confirmed 0xa0       doc="generic";
+    hex SMIME 0xa1;
+    hex CMS 0xa2;
+
+    hex strong_encryption 0xb0             doc="generic";
+    hex OpenPGP 0xb8                       doc="key at least 2048 bit RSA or EC";
+    hex OTR 0xba;
+
+    doc > range 0xc0 to 0xff: confirmed encryption and anonymization
+
+    hex confirmed_enc_anon 0xc0            doc="generic";
+    hex pEp 0xff;
+
+} // enum comm_type
+
+
+struct identity {
+    field string address doc="SMTP address or URI. String with address UTF-8 encoded";
+    field hash fpr doc="fingerprint of key being used as ID. String with fingerprint UTF-8 encoded";
+    field string user_id doc="ID for person or system in case of M2M";
+    doc ||
+        user_id MIGHT be set to "pEp_own_userId" (use PEP_OWN_USERID preprocessor define)
+        if this is own user's identity. But it is not REQUIRED to be.
+        ||
+    field string username doc="descriptive string. String with user name UTF-8 encoded";
+    field comm_type comm_type doc="type of communication with this ID";
+    field ISO639_1 lang[3] doc="ISO 639-1 ALPHA-2, last byte is 0";
+    field bool me doc="if this is the local user herself/himself";
+    field unsigned major_ver doc="highest version of pEp message received, if any";
+    field unsigned minor_ver doc="highest version of pEp message received, if any";
+
+    flags {
+        flag not_for_sync 0x0001
+            doc="don't use this identity for Sync";
+
+        flag list 0x0002
+            doc="identity of list of persons";
+
+        doc | the second octet flags are calculated
+
+        flag devicegroup 0x0100
+            doc="identity of a device group member";
+    }
+} // struct Identity
+
+
+protocol session {
+    callback messageToSend doc="a message needs to be delivered by application"
+    {
+        // parms
+
+        provide struct_message msg doc="message struct with message to send";
+
+        // exceptions
+
+        throws any doc="error status";
+    }
+
+
+    method config_passive_mode doc="enable passive mode"
+    {
+        // parms
+
+       use bool enable doc="flag if enabled or disabled";
+    }
+
+
+    method config_unencrypted_subject doc="disable subject encryption"
+    {
+        // parms
+
+        use bool enable doc="flag if enabled or disabled";
+    }
+
+
+    method config_use_only_own_private_keys doc="enable passive mode"
+    {
+        // parms
+
+        use bool enable doc="flag if enabled or disabled";
+    }
+
+
+    method config_service_log doc="log more for service purposes"
+    {
+        // parms
+
+        use bool enable doc="flag if enabled or disabled";
+    }
+
+
+    method config_cipher_suite doc="cipher suite being used when encrypting"
+    {
+        // parms
+
+        use suite cipher_suite doc="cipher suite to use";
+
+        // exceptions
+
+        throws cannot_config 
+        doc="""
+            configuration failed; falling back to default. the default
+            ciphersuite for a crypt tech implementation is implementation 
+            defined.
+            """;
+    }
+
+
+    method log_event
+    doc="""
+        log a user defined event defined by UTF-8 encoded strings into 
+        management log.
+        """
+    {
+        // parms
+
+        use string title doc="string with event name";
+
+        use string entity doc="string with name of entity which is logging";
+
+        use string description doc="string with long description for event or NULL if omitted";
+
+        use string comment doc="string with user defined comment or NULL if omitted";
+    }
+
+
+    method get_default own_userid doc="get the user_id of the own user"
+    {
+        // parms
+
+        create string userid 
+        doc="""
+            own user id (if it exists). userid will be NULL if not found; otherwise, 
+            returned string belongs to the caller.
+            """;
+
+        // exceptions
+
+        throws cannot_find_identity doc="no own_user found in the DB";
+
+        throws unknown_error 
+        doc="""
+            results were returned, but no ID found (no reason this 
+            should ever occur).
+            """;
+    }
+
+
+    method mark_as_compromised doc="mark key in trust db as compromised"
+    {
+        // parms
+
+        use hash fpr doc="fingerprint of key to mark";
+    }
+
+
+    method mark_as_compromized doc="deprecated to fix misspelling. Please move to mark_as_compromised"
+
+
+    method import_key doc="import key from data"
+    {
+        // parms
+
+        use string key_data doc="key data, i.e. ASCII armored OpenPGP key";
+
+        use size_t size doc="amount of data to handle";
+
+        create identity_list private_keys 
+        doc="""
+            list of private keys that have been imported. private_keys can 
+            be left NULL, it is then ignored.
+            """;
+    }
+
+
+    method export_key doc="export ascii armored key"
+    {
+        // parms
+
+        use hash fpr doc="key id or fingerprint of key";
+
+        create string key_data 
+        doc="""
+            ASCII armored OpenPGP key. The key_data goes to the ownership of the 
+            caller. The caller is responsible to free() it (on Windoze use pEp_free())
+            """;
+
+        return size_t size doc="amount of data to handle";
+
+        // exceptions
+
+        throws out_of_memory doc="out of memory";
+
+        throws key_not_found doc="key not found";
+    }
+
+
+    method export_secret_key doc="export secret key ascii armored"
+    {
+        // parms
+
+        use hash fpr doc="fingerprint of key, at least 16 hex digits";
+
+        create string key_data 
+        doc="""
+            ASCII armored OpenPGP secret key. The key_data goes to the ownership of the 
+            caller. The caller is responsible to free() it (on Windoze use pEp_free()).
+            beware of leaking secret key data - overwrite it in memory after use!
+            """;
+
+        return size_t size doc="amount of data to handle";
+
+        // exceptions
+
+        throws out_of_memory doc="out of memory";
+
+        throws key_not_found doc="key not found";
+
+        throws cannot_export_key doc="cannot export secret key (i.e. it's on an HKS)";
+    }
+
+
+    method export_secrect_key doc="deprecated misspelled function. Please replace with export_secret_key"
+
+
+    method get_crashdump_log doc="get the last log messages out"
+    {
+        // parms
+
+        use int maxlines doc="maximum number of lines (0 for default)";
+
+        create string logdata 
+        doc="""
+            logdata as string in double quoted CSV format
+            column1 is title
+            column2 is entity
+            column3 is description
+            column4 is comment
+            """;
+    }
+
+
+    method get_languagelist doc="get the list of languages"
+    {
+        //parms
+
+        create string language 
+        doc="""
+            languages as string in double quoted CSV format
+            column 1 is the ISO 639-1 language code
+            column 2 is the name of the language
+            """;
+    }
+
+
+    method get_phrase doc="get phrase in a dedicated language through i18n"
+    {
+        // parms
+
+        use string lang doc="string with ISO 639-1 language code";
+
+        use int phrase_id doc="id of phrase in i18n";
+
+        create string phrase doc="phrase as UTF-8 string";
+    }
+
+
+    method get_engine_version
+    doc="""
+        returns the current version of pEpEngine (this is different
+        from the pEp protocol version!).
+        """
+    {
+        // parms doc="none"
+
+        // exceptions
+
+        throws any doc="string to the engine version string constant"; 
+    }
+
+    method is_pEp_user
+    doc="""
+        returns true if the USER corresponding to this identity has been listed 
+        in the *person* table as a pEp user.
+        This *does not check comm_type*.
+        """
+    {
+        // parms
+
+        use identity ident
+        doc="""
+            identity containing the user_id to check (this is the only part of 
+            the struct we require to be set).
+            """;
+
+        return bool is_pEp
+        doc="""
+            boolean pointer - will return true or false by reference with respect 
+            to whether or not user is a known pEp user
+            """;
+
+        // exceptions
+
+        throws illegal_value doc="if no user_id in input";
+
+        throws cannot_find_person doc="if user_id doesn't exist";
+    }
+
+
+    method per_user_directory doc="returns the directory for pEp management db"
+    {
+        // exceptions
+
+        throws any doc="path to actual per user directory or NULL on failure";
+    }
+
+    method per_machine_directory doc="returns the directory for pEp system db"
+    {
+        // exceptions
+
+        throws any doc="path to actual per user directory or NULL on failure";
+    }
+}

@@ -1,8 +1,10 @@
-/** @file */
-/** @brief File description for doxygen missing. FIXME */
-
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    base64.c 
+ * @brief   Convert base64 to a binary blob - this is the implementation of 
+ *          a convenience function used mainly to convert keys which are
+ *          base64 rather than radix64 (i.e. PGP armoured) encoded
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -33,9 +35,11 @@ static char translate_char_to_bits(char input) {
  *  
  *  <!--       _is_whitespace()       -->
  *  
- *  @brief			TODO
+ *  @brief      checks if a character is a whitespace character
+ *              end returns true if so, false otherwise
  *  
- *  @param[in]	in		constchar
+ *  @param[in]  in      char to be checked  
+ *  @retval     bool    true if whitespace, false otherwise
  *  
  */
 static bool _is_whitespace(const char in) {
@@ -55,10 +59,12 @@ static bool _is_whitespace(const char in) {
  *  
  *  <!--       subtract_whitespace()       -->
  *  
- *  @brief			TODO
+ *  @brief      returns the length of the C string
+ *              not counting whitespaces
  *  
- *  @param[in]	*input		constchar
- *  @param[in]	length		int
+ *  @param[in]  *input      C string
+ *  @param[in]  length      length of the C string
+ *  @retval     size_t      actual size of string without whitespaces 
  *  
  */
 static size_t subtract_whitespace(const char* input, int length) {
@@ -77,10 +83,11 @@ static size_t subtract_whitespace(const char* input, int length) {
  *  
  *  <!--       trim_end()       -->
  *  
- *  @brief			TODO
+ *  @brief      determine length of C string without
+ *              trailing whitespace characters
  *  
- *  @param[in]	*input		constchar
- *  @param[in]	*length		int
+ *  @param[in]   *input     C string to check
+ *  @param[out]  *length    returns the resulting lenght
  *  
  */
 static void trim_end(const char* input, int* length) {
@@ -102,10 +109,12 @@ static void trim_end(const char* input, int* length) {
  *  
  *  <!--       next_char()       -->
  *  
- *  @brief			TODO
+ *  @brief    returns the next non-whitespace character in a C string
  *  
- *  @param[in]	**input_ptr		constchar
- *  @param[in]	*end		constchar
+ *  @param[in]  **input_ptr     pointer to C string
+ *  @param[in]  *end            pointer to last char of input string
+ *
+ *  @retval     char            next non-whitespace character
  *  
  */
 char next_char(const char** input_ptr, const char* end) {
@@ -125,17 +134,19 @@ char next_char(const char** input_ptr, const char* end) {
     return this_ch;
 }
 
-// 4 chars = 3 output bytes
 /**
  *  @internal
  *  
  *  <!--       base64_str_to_binary_blob()       -->
  *  
- *  @brief			TODO
+ *  @brief      converts base64 to a binary blob, putting 4 characters into
+ *              3 output bytes, returning a pointer to a bloblist containing
+ *              the binary blob.
  *  
- *  @param[in]	*input		const char 
- *  @param[in]	length		int 
+ *  @param[in]  *input    input as C string
+ *  @param[in]  int       length of C string
  *  
+ *  @retval     pointer to bloblist, or NULL on failure  
  */
 bloblist_t* base64_str_to_binary_blob(const char* input, int length) {
     if (length == 0)

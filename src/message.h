@@ -77,7 +77,7 @@ typedef struct _message {
     stringlist_t *in_reply_to;              // list of UTF-8 strings with
                                             // MessageIDs of refering messages
     struct _message *refering_msg_ref;      // reference to refering message
-    stringlist_t *references;               // list of UTF-8 strings with references
+    stringlist_t * references;               // list of UTF-8 strings with references
     struct _message_ref_list *refered_by;   // list of references to messages being
                                             // refered
     stringlist_t *keywords;                 // list of UTF-8 strings with keywords
@@ -141,8 +141,8 @@ DYNAMIC_API void free_message(message *msg);
  *  @param[in]   msg    message to duplicate
  *  
  *  @retval pointer to duplicate of message pointed by msg or NULL
- *  @retval NOTA BENE:
- *  @retval not owned pointees (msg->rawmsg_ref and msg->refering_msg_ref) are shared!
+ *          NOTA BENE:
+ *          not owned pointees (msg->rawmsg_ref and msg->refering_msg_ref) are shared!
  *  
  *  
  */
@@ -224,7 +224,7 @@ DYNAMIC_API message_ref_list *message_ref_list_dup(
  *  @param[in]   msg         message to add a reference to
  *  
  *  @retval pointer to the last element of message_ref_list or NULL if out of
- *  @retval memory
+ *          memory
  *  
  *  
  */

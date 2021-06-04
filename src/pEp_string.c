@@ -1,8 +1,8 @@
-/** @file */
-/** @brief File description for doxygen missing. FIXME */
-
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    pEp_string.c
+ * @brief   implementation of external interface for allocation and deletion of NUL-terminated char strings within the engine
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #include "platform.h"
 #include "pEp_string.h"

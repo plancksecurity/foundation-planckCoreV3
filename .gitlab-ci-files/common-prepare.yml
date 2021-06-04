@@ -1,0 +1,22 @@
+.ensure_docker: &ensure_docker
+  # Check for docker and install if missing
+  - 'which docker || ( sudo apt-get update -y && sudo apt-get install docker.io -y )'
+
+.ensure_rsync: &ensure_rsync
+  # Install rsync and deps if missing
+  - 'which ssh-agent || ( sudo apt-get update -y && sudo apt-get install openssh-client -y )'
+  - 'which rsync || ( sudo apt-get update -y && sudo apt-get install rsync -y )'
+  - 'which make || ( sudo apt-get update -y && sudo apt-get install make -y )'
+
+.standard_job:
+  tags: [kvm]
+  before_script:
+    - *ensure_docker
+    - *ensure_rsync
+
+.make_in_docker:
+  extends: .standard_job
+  script:
+    - docker login -u ${DOCKER_REGISTRY_USER} -p ${DOCKER_REGISTRY_PASS} ${DOCKER_REGISTRY_HOST}
+    - cd scripts/${CI_DISTRO_TARGET}
+    - make

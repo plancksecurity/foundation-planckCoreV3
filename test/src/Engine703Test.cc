@@ -5,6 +5,7 @@
 #include <fstream>
 
 #include "pEpEngine.h"
+#include "pEp_internal.h"
 #include "test_util.h"
 #include "TestConstants.h"
 #include "Engine.h"

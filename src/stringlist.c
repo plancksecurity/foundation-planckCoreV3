@@ -61,11 +61,11 @@ DYNAMIC_API stringlist_t *stringlist_dup(const stringlist_t *src)
  *  
  *  <!--       _stringlist_add_first()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*stringlist		stringlist_t
- *  @param[in]	**result		stringlist_t
- *  @param[in]	*value		constchar
+ *  @param[in]    *stringlist        stringlist_t
+ *  @param[in]    **result        stringlist_t
+ *  @param[in]    *value        constchar
  *  
  */
 static bool _stringlist_add_first(
@@ -279,10 +279,10 @@ DYNAMIC_API stringlist_t *stringlist_delete(
  *  
  *  <!--       stringlist_multi_delete()       -->
  *  
- *  @brief			TODO
+ *  @brief            TODO
  *  
- *  @param[in]	*stringlist		stringlist_t
- *  @param[in]	*value		constchar
+ *  @param[in]    *stringlist        stringlist_t
+ *  @param[in]    *value             constchar
  *  
  */
 static stringlist_t* stringlist_multi_delete(stringlist_t* stringlist, const char* value) {

@@ -1,0 +1,31 @@
+// This file is under GNU General Public License 3.0
+// see LICENSE.txt
+
+include yslt.yml2
+
+tstylesheet {
+    template "protocol/fsm[count(state)>0]" document "{@name}.dot", "text"
+    ||
+    digraph finite_state_machine {
+        rankdir=LR;
+        node [shape=point];
+        InitState;
+        node [shape=doublecircle];
+        End;
+        node [shape=circle, style=filled, fillcolor=lightgrey];
+
+        `` apply "descendant::transition";
+    }
+    ||
+
+    template "transition" {
+        const "event", "ancestor::event/@name";
+        choose {
+            when "ancestor::fsm/message[@name=$event]"
+                | «ancestor::state/@name» -> «@target» [ label="«ancestor::event/@name»", color=blue ];
+            otherwise
+                | «ancestor::state/@name» -> «@target» [ label="«ancestor::event/@name»", color=red ];
+        }
+    }
+}
+
