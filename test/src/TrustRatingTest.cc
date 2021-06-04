@@ -297,16 +297,19 @@ the_end:
 /*
     Test Cases for Trust Rating of Incoming Messages
 
+    Dramatis personae
+
+    Alice: the own user
+    Bob: Alice frequent comm partner
+    Sylvia: a new comm partner of Alice
+
     A) Handshake and TOFU
 
     1)  Sylvia sends an unencrypted mail without key
         => unencrypted, no default key
     2)  Sylvia sends an unencrypted mail with key attached, no claim
         => unencrypted, no default key
-    3)  Sylvia sends an unencrypted mail with key attached, wrong claim for
-        sender key
-        => b0rken, no default key
-    4)  Sylvia sends an unencrypted mail with key attached, correct sender key
+    3)  Sylvia sends an unencrypted mail with sender key identified
         => default key set, unencrypted
 
     B) Reliable Channel to Bob
@@ -406,7 +409,22 @@ TEST_F(TrustRatingTest, check_incoming_message_rating) {
     ASSERT_EQ(rating, PEP_rating_unencrypted);
     ASSERT_EQ(default_key_set(session, sylvia), false);
 
+    // 3)  Sylvia sends an unencrypted mail with sender key identified
+    //     => default key set, unencrypted
+    
+    ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/sylvia-pub.asc"));
+
+    stringlist_t *known_keys = new_stringlist("79CC4076D5277ED9A3123FBC7BC6B76B6BB9379B");
+    assert(known_keys);
+
+    status = incoming_message_rating(session, src, nullptr, known_keys, nullptr,
+            PEP_UNENCRYPTED, &rating);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(rating, PEP_rating_unencrypted);
+    ASSERT_EQ(default_key_set(session, sylvia), true);
+    
 the_end:
+    free_stringlist(known_keys);
     free_message(src);
     free_identity(alice);
     free_identity(bob);

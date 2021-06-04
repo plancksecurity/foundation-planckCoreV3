@@ -22,7 +22,7 @@ TARGET:=EngineTests
 
 GTEST_SUITE_SYM:=test_suite_name
 
-ifeq ($(shell grep -c $(GTEST_SUITE_SYM) $(GTEST_SRC_DIR)/src/gtest.cc),0)
+ifeq ($(shell grep -qc $(GTEST_SUITE_SYM) $(GTEST_SRC_DIR)/src/gtest.cc 2>/dev/null),0)
     GTEST_SUITE_SYM=test_case_name
 endif
 

@@ -740,6 +740,10 @@ DYNAMIC_API PEP_STATUS incoming_message_rating(
             return PEP_ILLEGAL_VALUE;
     }
 
+    // unencrypted messages may have exactly one element in known_keys
+    if (!dst && known_keys && known_keys->value && known_keys->next)
+        return PEP_ILLEGAL_VALUE;
+
     *rating = PEP_rating_undefined;
     PEP_rating _rating = decrypt_rating(decrypt_status);;
 
