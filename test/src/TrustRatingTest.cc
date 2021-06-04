@@ -27,6 +27,13 @@ namespace {
             Engine* engine;
             PEP_SESSION session;
 
+            // Don't clutter the global namespace
+            static const char* alice_fpr; // = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
+            static const char* bob_fpr; // = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
+
+            const char* test_suite_name;
+            const char* test_name;
+
         protected:
             // You can remove any or all of the following functions if its body
             // is empty.
@@ -75,9 +82,6 @@ namespace {
                 session = NULL;
             }
 
-        public:
-            const char* test_suite_name;
-            const char* test_name;
         private:
             string test_path;
             // Objects declared here can be used by all tests in the TrustRatingTest suite.
@@ -86,34 +90,16 @@ namespace {
 
 }  // namespace
 
-static const char* alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
-static const char* bob_fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
+const char* TrustRatingTest::alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
+const char* TrustRatingTest::bob_fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
 
 static void alice_and_bob(PEP_SESSION session, pEp_identity *&alice, pEp_identity *&bob)
 {
     output_stream << "\nsetting up Alice and Bob…\n";
 
-    PEP_STATUS status = read_file_and_import_key(session,
-                "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");
-    ASSERT_EQ(status , PEP_KEY_IMPORTED);
-    status = set_up_ident_from_scratch(session,
-                "test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc",
-                "pep.test.alice@pep-project.org", alice_fpr,
-                PEP_OWN_USERID, "Alice in Wonderland", NULL, true
-            );
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc"));
-
+    alice = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::ALICE);
+    bob = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::BOB, true, false);
     message* msg = new_message(PEP_dir_outgoing);
-    alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, NULL);
-    bob = new_identity("pep.test.bob@pep-project.org", NULL, "Bob", NULL);
-    status = myself(session, alice);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    status = update_identity(session, bob);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-
-    status = set_as_pEp_user(session, bob);
-    ASSERT_EQ(status , PEP_STATUS_OK);
 
     output_stream << "\ndone\n";
 }
