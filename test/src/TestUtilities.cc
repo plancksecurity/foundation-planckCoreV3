@@ -31,6 +31,37 @@ std::string _main_test_home_dir;
 
 #define BUF_MAX_PATHLEN 4097
 
+
+const TestUtilsPreset::IdentityInfo TestUtilsPreset::presets[]     = {
+                TestUtilsPreset::IdentityInfo("Alice Spivak Hyatt", "ALICE", "pep.test.alice@pep-project.org", "pep-test-alice-0x6FF00E97", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97"),
+                TestUtilsPreset::IdentityInfo("Apple of my Computer", "APPLE", "pep.test.apple@pep-project.org", "pep-test-apple-0x1CCBC7D7", "3D8D9423D03DDF61B60161150313D94A1CCBC7D7"),
+                TestUtilsPreset::IdentityInfo("Bob Dog", "BOB", "pep.test.bob@pep-project.org", "pep-test-bob-0xC9C2EE39", "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39"),
+                TestUtilsPreset::IdentityInfo("Carol Burnett", "CAROL", "pep-test-carol@pep-project.org", "pep-test-carol-0x42A85A42", "8DD4F5827B45839E9ACCA94687BDDFFB42A85A42"),
+                TestUtilsPreset::IdentityInfo("The Hoff", "DAVE", "pep-test-dave@pep-project.org", "pep-test-dave-0xBB5BCCF6", "E8AC9779A2D13A15D8D55C84B049F489BB5BCCF6"),
+                TestUtilsPreset::IdentityInfo("Erin Ireland", "ERIN", "pep-test-erin@pep-project.org", "pep-test-erin-0x9F8D7CBA", "1B0E197E8AE66277B8A024B9AEA69F509F8D7CBA"),
+                TestUtilsPreset::IdentityInfo("Frank N. Furter", "FRANK", "pep-test-frank@pep-project.org", "pep-test-frank-0x9A7FC670", "B022B74476D8A8E1F01E55FBAB6972569A7FC670"),  // currently expired
+                TestUtilsPreset::IdentityInfo("Gabrielle Gonzales", "GABI", "pep-test-gabrielle@pep-project.org", "pep-test-gabrielle-0xE203586C", "906C9B8349954E82C5623C3C8C541BD4E203586C"),
+                TestUtilsPreset::IdentityInfo("John Denver", "JOHN", "pep.test.john@pep-project.org", "pep-test-john-0x70DCF575", "AA2E4BEB93E5FE33DEFD8BE1135CD6D170DCF575"),
+                TestUtilsPreset::IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander@peptest.ch", "pep.test.alexander-0x26B54E4E", "3AD9F60FAEB22675DB873A1362D6981326B54E4E"),
+                TestUtilsPreset::IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander0@darthmama.org", "pep.test.alexander0-0x3B7302DB", "F4598A17D4690EB3B5B0F6A344F04E963B7302DB"),
+                TestUtilsPreset::IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander1@darthmama.org", "pep.test.alexander1-0x541260F6", "59AF4C51492283522F6904531C09730A541260F6"),
+                TestUtilsPreset::IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander2@darthmama.org", "pep.test.alexander2-0xA6512F30", "46A994F19077C05610870273C4B8AB0BA6512F30"),
+                TestUtilsPreset::IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander3@darthmama.org", "pep.test.alexander3-0x724B3975", "5F7076BBD92E14EA49F0DF7C2CE49419724B3975"),
+                TestUtilsPreset::IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander4@darthmama.org", "pep.test.alexander4-0x844B9DCF", "E95FFF95B8E2FDD4A12C3374395F1485844B9DCF"),
+                TestUtilsPreset::IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander5@darthmama.org", "pep.test.alexander5-0x0773CD29", "58BCC2BF2AE1E3C4FBEAB89AD7838ACA0773CD29"),
+                TestUtilsPreset::IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander6@darthmama.org", "pep.test.alexander6-0x0019697D", "74D79B4496E289BD8A71B70BA8E2C4530019697D"),
+                TestUtilsPreset::IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander6@darthmama.org", "pep.test.alexander6-0x503B14D8", "2E21325D202A44BFD9C607FCF095B202503B14D8"),
+                TestUtilsPreset::IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander6@darthmama.org", "pep.test.alexander6-0xA216E95A", "3C1E713D8519D7F907E3142D179EAA24A216E95A"),
+                TestUtilsPreset::IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander6@darthmama.org", "pep.test.alexander6-0xBDA17020", "B4CE2F6947B6947C500F0687AEFDE530BDA17020"),
+                TestUtilsPreset::IdentityInfo("Bella Cat", "BELLA", "pep.test.bella@peptest.ch", "pep.test.bella-0xAF516AAE", "5631BF1357326A02AA470EEEB815EF7FA4516AAE"),
+                TestUtilsPreset::IdentityInfo("Fenris Leto Hawke", "FENRIS", "pep.test.fenris@thisstilldoesntwork.lu", "pep.test.fenris-0x4F3D2900", "0969FA229DF21C832A64A04711B1B9804F3D2900"),
+                TestUtilsPreset::IdentityInfo("Cullen Rutherford", "CULLEN", "sercullen-test@darthmama.org", "sercullen-0x3CEAADED4", "1C9666D8B3E28F4AA3847DA89A6E75E3CEAADED4"),  // NB expired on purpose
+                TestUtilsPreset::IdentityInfo("Inquisitor Claire Trevelyan", "INQUISITOR", "inquisitor@darthmama.org", "inquisitor-0xA4728718_renewed", "8E8D2381AE066ABE1FEE509821BA977CA4728718"),
+                TestUtilsPreset::IdentityInfo("Bernd das Brot", "BERNDI", "bernd.das.brot@darthmama.org", "bernd.das.brot-0xCAFAA422", "F8CE0F7E24EB190A2FCBFD38D4B088A7CAFAA422"),
+                TestUtilsPreset::IdentityInfo("Sylvia Plath", "SYLVIA", "sylvia@darthmama.org", "sylvia-0x585A6780", "0C0F053EED87058C7330A11F10B89D31585A6780")
+    };
+
+
 bool is_pEpmsg(const message *msg)
 {
     for (stringpair_list_t *i = msg->opt_fields; i && i->value ; i=i->next) {
@@ -894,7 +925,7 @@ PEP_STATUS TestUtilsPreset::set_up_preset(PEP_SESSION session,
 
     pEp_identity* retval = NULL;
 
-    if (preset_name >= PRESETS_LEN)
+    if ((int)preset_name >= sizeof(presets))
         return PEP_ILLEGAL_VALUE;
 
     const TestUtilsPreset::IdentityInfo& preset = presets[preset_name];
