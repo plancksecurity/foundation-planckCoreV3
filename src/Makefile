@@ -10,7 +10,6 @@ LDFLAGS+= $(ETPAN_LIB) $(PEP_MIME_LIB) -L../asn.1
 ifneq ($(BUILD_ON),OS/390)
 LDFLAGS+= -shared
 endif
-LDLIBS+= -lc -lasn1
 NO_SOURCE=
 
 ifndef PEP_MIME
@@ -27,13 +26,16 @@ endif
 CFLAGS+= -I../asn.1 $(EXTRA_MACROS)
 CPPFLAGS+= -DSQLITE_THREADSAFE=1
 
-LDFLAGS+= -L../asn.1 -shared
-LDLIBS+= -lc -lasn1
-
+LDFLAGS+= -L../asn.1
+ifneq ($(BUILD_ON),OS/390)
+LDFLAGS+= -shared
+LDLIBS+= -lc
+endif
+LDLIBS+= -lasn1
 
 ifeq ($(BUILD_ON),OS/390)
-    OPENPGP=ZOS
-    SQLITE3_FROM_OS=1
+    OPENPGP=NETPGP
+    LDLIBS+= -lzz
 else ifeq ($(BUILD_ON),Darwin)
     ifeq ($(BUILD_FOR),Darwin)
         LDLIBS+= -lz -liconv -mmacosx-version-min=10.10
@@ -77,7 +79,8 @@ ALL_SOURCE=$(filter-out $(NO_SOURCE),$(wildcard *.c))
 DEPENDS=$(subst .c,.d,$(ALL_SOURCE))
 ALL_OBJECTS=$(subst .c,.o,$(ALL_SOURCE))
 ifeq ($(BUILD_ON),OS/390)
-    ALL_OBJECTS+=/usr/lpp/java/J8.0_64/bin/classic/libjvm.x 
+    ALL_OBJECTS+=/usr/lib/GSKCMS64.x
+    ALL_OBJECTS+=/usr/lib/CSNPCA64.x
 endif
 
 all: $(TARGET)
