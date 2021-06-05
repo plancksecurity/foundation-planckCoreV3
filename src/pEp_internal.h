@@ -66,7 +66,9 @@
 #define LOCAL_DB windoze_local_db()
 #define SYSTEM_DB windoze_system_db()
 #else // UNIX
+#ifndef ZOS
 #define _POSIX_C_SOURCE 200809L
+#endif
 #include <dlfcn.h>
 #ifdef NDEBUG
 #define LOCAL_DB unix_local_db()
@@ -106,8 +108,6 @@
 
 #if defined(USE_SEQUOIA)
 #include "pgp_sequoia_internal.h"
-#elif defined(USE_NETPGP)
-#include "pgp_netpgp_internal.h"
 #endif
 
 #include "../asn.1/Distribution.h"
