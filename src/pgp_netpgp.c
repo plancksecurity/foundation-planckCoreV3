@@ -1,6 +1,16 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
+/*
+** Check to see if this machine uses EBCDIC.  (Yes, believe it or
+** not, there are still machines out there that use EBCDIC.)
+*/
+#if 'A' == '\301'
+# define NETPGP_EBCDIC 1
+#else
+# define NETPGP_ASCII 1
+#endif
+
 #include "pEp_internal.h"
 #include "pgp_netpgp.h"
 
@@ -18,6 +28,17 @@
 
 #include <pthread.h>
 #include <regex.h>
+#if defined(NETPGP_EBCDIC)
+#include <unistd.h>
+#endif
+
+inline char A(char c)
+{
+#if defined(NETPGP_EBCDIC)
+    __e2a_l(&c,1);
+#endif
+    return c;
+}
 
 static netpgp_t netpgp;
 static pthread_mutex_t netpgp_mutex;
@@ -27,13 +48,13 @@ static PEP_STATUS init_netpgp()
     PEP_STATUS status = PEP_STATUS_OK;
     const char *home = NULL;
 
-    if(pthread_mutex_init(&netpgp_mutex, NULL)){
-        return PEP_OUT_OF_MEMORY;
-    }
+    //if(pthread_mutex_init(&netpgp_mutex, NULL)){
+    //    return PEP_OUT_OF_MEMORY;
+    //}
 
-    if(pthread_mutex_lock(&netpgp_mutex)){
-        return PEP_UNKNOWN_ERROR;
-    }
+    //if(pthread_mutex_lock(&netpgp_mutex)){
+    //    return PEP_UNKNOWN_ERROR;
+    //}
 
     if (strcmp(setlocale(LC_ALL, NULL), "C") == 0)
         setlocale(LC_ALL, "");
@@ -72,20 +93,20 @@ static PEP_STATUS init_netpgp()
     // netpgp_set_debug("packet-parse.c");
 
 unlock_netpgp:
-    pthread_mutex_unlock(&netpgp_mutex);
+    //pthread_mutex_unlock(&netpgp_mutex);
 
     return status;
 }
 
 static void release_netpgp()
 {
-    if(pthread_mutex_lock(&netpgp_mutex)){
-        return;
-    }
+    //if(pthread_mutex_lock(&netpgp_mutex)){
+    //    return;
+    //}
     netpgp_end(&netpgp);
     memset(&netpgp, 0x0, sizeof(netpgp_t));
 
-    pthread_mutex_destroy(&netpgp_mutex);
+    //pthread_mutex_destroy(&netpgp_mutex);
 
     return;
 }
@@ -134,7 +155,7 @@ static unsigned
 fpr_to_str (char **str, const uint8_t *fpr, size_t length)
 {
     unsigned i;
-    int	n;
+    int    n;
 
     /* 4 hexes per short + null */
     *str = malloc((length / 2) * 4 + 1);
@@ -169,12 +190,12 @@ str_to_fpr (const char *str, uint8_t *fpr, size_t *length)
             for (i = 0; i < 2; i++) {
                 if (i > 0)
                     *byte = *byte << 4;
-                if (*str >= 'a' && *str <= 'f')
-                    *byte += 10 + *str - 'a';
-                else if (*str >= 'A' && *str <= 'F')
+                if (A(*str) >= A('a') && A(*str) <= A('f'))
+                    *byte += 10 + A(*str) - A('a');
+                else if (A(*str) >= A('A') && A(*str) <= A('F'))
                     *byte += 10 + *str - 'A';
                 else if (*str >= '0' && *str <= '9')
-                    *byte += *str - '0';
+                    *byte += A(*str) - '0';
                 else
                     return 0;
                 str++;
@@ -226,7 +247,7 @@ static PEP_STATUS _validation_results(
         unsigned c = 0;
         for (unsigned n = 0; n < vresult->validc; ++n) {
             unsigned from = 0;
-            const pgp_key_t	 *signer;
+            const pgp_key_t     *signer;
             char *fprstr = NULL;
             const uint8_t *keyid = vresult->valid_sigs[n].signer_id;
 
@@ -303,9 +324,9 @@ PEP_STATUS pgp_decrypt_and_verify(
     if(!session || !ctext || !csize || !ptext || !psize || !keylist)
         return PEP_ILLEGAL_VALUE;
 
-    if(pthread_mutex_lock(&netpgp_mutex)){
-        return PEP_UNKNOWN_ERROR;
-    }
+    //if(pthread_mutex_lock(&netpgp_mutex)){
+    //    return PEP_UNKNOWN_ERROR;
+    //}
 
     *ptext = NULL;
     *psize = 0;
@@ -360,7 +381,7 @@ PEP_STATUS pgp_decrypt_and_verify(
     stringlist_t *k = _keylist;
     for (unsigned n = 0; n < recipients_count; ++n) {
         unsigned from = 0;
-        const pgp_key_t	 *rcpt;
+        const pgp_key_t     *rcpt;
         char *fprstr = NULL;
         key_id_t *keyid = &recipients_key_ids[n];
 
@@ -415,7 +436,7 @@ free_pgp:
 
 unlock_netpgp:
     free(recipients_key_ids);
-    pthread_mutex_unlock(&netpgp_mutex);
+    //pthread_mutex_unlock(&netpgp_mutex);
 
     return result;
 }
@@ -443,9 +464,9 @@ PEP_STATUS pgp_verify_text(
     if(!session || !text || !size || !signature || !sig_size || !keylist)
         return PEP_ILLEGAL_VALUE;
 
-    if(pthread_mutex_lock(&netpgp_mutex)){
-        return PEP_UNKNOWN_ERROR;
-    }
+    //if(pthread_mutex_lock(&netpgp_mutex)){
+    //    return PEP_UNKNOWN_ERROR;
+    //}
 
     *keylist = NULL;
 
@@ -505,7 +526,7 @@ free_pgp:
     pgp_validate_result_free(vresult);
 
 unlock_netpgp:
-    pthread_mutex_unlock(&netpgp_mutex);
+    //pthread_mutex_unlock(&netpgp_mutex);
 
     return result;
 }
@@ -535,9 +556,9 @@ static PEP_STATUS _encrypt_and_sign(
     if(!session || !ptext || !psize || !ctext || !csize || !keylist)
         return PEP_ILLEGAL_VALUE;
 
-    if(pthread_mutex_lock(&netpgp_mutex)){
-        return PEP_UNKNOWN_ERROR;
-    }
+    //if(pthread_mutex_lock(&netpgp_mutex)){
+    //    return PEP_UNKNOWN_ERROR;
+    //}
 
     *ctext = NULL;
     *csize = 0;
@@ -671,7 +692,7 @@ free_signedmem :
 free_rcpts :
     pgp_keyring_free(rcpts);
 unlock_netpgp:
-    pthread_mutex_unlock(&netpgp_mutex);
+    //pthread_mutex_unlock(&netpgp_mutex);
 
     return result;
 }
@@ -686,13 +707,13 @@ PEP_STATUS pgp_sign_only(
     pgp_seckey_t *seckey = NULL;
     pgp_memory_t *signedmem = NULL;
     pgp_memory_t *text = NULL;
-	pgp_output_t *output;
+    pgp_output_t *output;
     
     const char *hashalg;
     pgp_keyring_t *snrs;
 
-	pgp_create_sig_t	*sig;
-	uint8_t	keyid[PGP_KEY_ID_SIZE];
+    pgp_create_sig_t    *sig;
+    uint8_t    keyid[PGP_KEY_ID_SIZE];
 
     PEP_STATUS result;
 
@@ -706,9 +727,9 @@ PEP_STATUS pgp_sign_only(
     if(!session || !ptext || !psize || !stext || !ssize || !fpr || !fpr[0])
         return PEP_ILLEGAL_VALUE;
 
-    if(pthread_mutex_lock(&netpgp_mutex)){
-        return PEP_UNKNOWN_ERROR;
-    }
+    //if(pthread_mutex_lock(&netpgp_mutex)){
+    //    return PEP_UNKNOWN_ERROR;
+    //}
 
     *stext = NULL;
     *ssize = 0;
@@ -763,29 +784,29 @@ PEP_STATUS pgp_sign_only(
     const char *_stext;
     size_t _ssize;
 
-	text = pgp_memory_new();
+    text = pgp_memory_new();
     pgp_memory_add(text, (const uint8_t*)ptext, psize);
 
     pgp_setup_memory_write(&output, &signedmem, psize);
-	pgp_writer_push_armor_msg(output);
+    pgp_writer_push_armor_msg(output);
 
     pgp_hash_alg_t hash_alg = pgp_str_to_hash_alg(hashalg);
     
-	sig = pgp_create_sig_new();
-	pgp_start_sig(sig, seckey, hash_alg, PGP_SIG_BINARY);
+    sig = pgp_create_sig_new();
+    pgp_start_sig(sig, seckey, hash_alg, PGP_SIG_BINARY);
 
-	pgp_sig_add_data(sig, pgp_mem_data(text), pgp_mem_len(text));
-	pgp_memory_free(text);
+    pgp_sig_add_data(sig, pgp_mem_data(text), pgp_mem_len(text));
+    pgp_memory_free(text);
 
-	pgp_add_creation_time(sig, time(NULL));
-	pgp_add_sig_expiration_time(sig, 0);
-	pgp_keyid(keyid, sizeof(keyid), &seckey->pubkey, hash_alg);
-	pgp_add_issuer_keyid(sig, keyid);
-	pgp_end_hashed_subpkts(sig);
+    pgp_add_creation_time(sig, time(NULL));
+    pgp_add_sig_expiration_time(sig, 0);
+    pgp_keyid(keyid, sizeof(keyid), &seckey->pubkey, hash_alg);
+    pgp_add_issuer_keyid(sig, keyid);
+    pgp_end_hashed_subpkts(sig);
 
     pgp_write_sig(output, sig, &seckey->pubkey, seckey);
-	pgp_writer_close(output);
-	pgp_create_sig_delete(sig);
+    pgp_writer_close(output);
+    pgp_create_sig_delete(sig);
    
     if (!signedmem) {
         result = PEP_UNENCRYPTED;
@@ -815,7 +836,7 @@ free_signedmem :
 free_snrs :
     pgp_keyring_free(snrs);
 unlock_netpgp:
-    pthread_mutex_unlock(&netpgp_mutex);
+    //pthread_mutex_unlock(&netpgp_mutex);
 
     return result;
 }
@@ -848,8 +869,8 @@ PEP_STATUS pgp_generate_keypair(
     PEP_SESSION session, pEp_identity *identity
     )
 {
-    pgp_key_t	newseckey;
-    pgp_key_t	*newpubkey;
+    pgp_key_t    newseckey;
+    pgp_key_t    *newpubkey;
 
     PEP_STATUS result;
     char newid[1024];
@@ -866,9 +887,9 @@ PEP_STATUS pgp_generate_keypair(
        !identity->address || identity->fpr || !identity->username)
         return PEP_ILLEGAL_VALUE;
 
-    if(pthread_mutex_lock(&netpgp_mutex)){
-        return PEP_UNKNOWN_ERROR;
-    }
+    //if(pthread_mutex_lock(&netpgp_mutex)){
+    //    return PEP_UNKNOWN_ERROR;
+    //}
 
     if(snprintf(newid, sizeof(newid),
         "%s <%s>", identity->username, identity->address) >= sizeof(newid)){
@@ -955,7 +976,7 @@ delete_pubkey:
 free_seckey:
     pgp_key_free(&newseckey);
 unlock_netpgp:
-    pthread_mutex_unlock(&netpgp_mutex);
+    //pthread_mutex_unlock(&netpgp_mutex);
 
     return result;
 }
@@ -973,9 +994,9 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fprstr)
     if (!session || !fprstr)
         return PEP_ILLEGAL_VALUE;
 
-    if(pthread_mutex_lock(&netpgp_mutex)){
-        return PEP_UNKNOWN_ERROR;
-    }
+    //if(pthread_mutex_lock(&netpgp_mutex)){
+    //    return PEP_UNKNOWN_ERROR;
+    //}
 
     if (str_to_fpr(fprstr, fpr, &length)) {
         unsigned insec = pgp_deletekeybyfpr(netpgp.io,
@@ -1005,7 +1026,7 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fprstr)
     }
 
 unlock_netpgp:
-    pthread_mutex_unlock(&netpgp_mutex);
+    //pthread_mutex_unlock(&netpgp_mutex);
 
     return result;
 }
@@ -1033,9 +1054,9 @@ PEP_STATUS pgp_import_keydata(
     if(!session || !key_data)
         return PEP_ILLEGAL_VALUE;
 
-    if(pthread_mutex_lock(&netpgp_mutex)){
+    /*if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
-    }
+    }*/
 
     mem = pgp_memory_new();
     if (mem == NULL) {
@@ -1044,26 +1065,22 @@ PEP_STATUS pgp_import_keydata(
     }
     pgp_memory_add(mem, (const uint8_t*)key_data, size);
 
-    if (pgp_keyring_read_from_mem(netpgp.io, netpgp.pubring, netpgp.secring,
-                                  _armoured(key_data, size, ARMOR_KEY_HEAD),
-                                  mem) == 0){
+    if (pgp_keyring_read_from_mem(netpgp.io, netpgp.pubring, netpgp.secring, _armoured(key_data, size, ARMOR_KEY_HEAD), mem) == 0){
         result = PEP_ILLEGAL_VALUE;
     }
 
     pgp_memory_free(mem);
 
     // save rings
-    if (netpgp_save_pubring(&netpgp) &&
-        netpgp_save_secring(&netpgp))
+    if (netpgp_save_pubring(&netpgp) && netpgp_save_secring(&netpgp))
     {
-        // we never really know if a key was imported. MEH.
-        result = PEP_KEY_IMPORT_STATUS_UNKNOWN;
-    }else{
+        result = PEP_KEY_IMPORTED;
+    } else {
         result = PEP_UNKNOWN_ERROR;
     }
 
 unlock_netpgp:
-    pthread_mutex_unlock(&netpgp_mutex);
+//    pthread_mutex_unlock(&netpgp_mutex);
 
     return result;
 }
@@ -1075,9 +1092,9 @@ static PEP_STATUS _export_keydata(
     )
 {
     PEP_STATUS result;
-	pgp_output_t *output;
+    pgp_output_t *output;
     pgp_memory_t *mem;
-	pgp_setup_memory_write(&output, &mem, 128);
+    pgp_setup_memory_write(&output, &mem, 128);
 
     if (mem == NULL || output == NULL) {
         return PEP_ILLEGAL_VALUE;
@@ -1105,7 +1122,7 @@ static PEP_STATUS _export_keydata(
     return PEP_STATUS_OK;
 
 free_mem :
-	pgp_teardown_memory_write(output, mem);
+    pgp_teardown_memory_write(output, mem);
 
     return result;
 }
@@ -1134,19 +1151,16 @@ PEP_STATUS pgp_export_keydata(
     else
         srcring = netpgp.pubring;
     
-    if (!session || !fprstr || !key_data || !size)
-        return PEP_ILLEGAL_VALUE;
+    //if (!session || !fprstr || !key_data || !size)
+    //    return PEP_ILLEGAL_VALUE;
 
-    if(pthread_mutex_lock(&netpgp_mutex)){
-        return PEP_UNKNOWN_ERROR;
-    }
+    //if(pthread_mutex_lock(&netpgp_mutex)){
+    //    return PEP_UNKNOWN_ERROR;
+    //}
 
     if (str_to_fpr(fprstr, fpr, &fprlen)) {
         unsigned from = 0;
-
-        if ((key = (pgp_key_t *)pgp_getkeybyfpr(netpgp.io, srcring,
-                                                fpr, fprlen, &from,
-                                                NULL,0,0)) == NULL) {
+        if ((key = (pgp_key_t *)pgp_getkeybyfpr(netpgp.io, srcring, fpr, fprlen, &from, NULL,0,0)) == NULL) {
             result = PEP_KEY_NOT_FOUND;
             goto unlock_netpgp;
         }
@@ -1165,7 +1179,7 @@ PEP_STATUS pgp_export_keydata(
     }
 
 unlock_netpgp:
-    pthread_mutex_unlock(&netpgp_mutex);
+    //pthread_mutex_unlock(&netpgp_mutex);
 
     return result;
 }
@@ -1237,7 +1251,7 @@ static PEP_STATUS find_keys_do(pgp_keyring_t* keyring,
         while((key = (pgp_key_t *)pgp_getnextkeybyname(
                         netpgp.io,
                         keyring,
-			            (const char *)pattern,
+                        (const char *)pattern,
                         &from)) != NULL) {
 
             result = cb(cb_arg, key);
@@ -1342,10 +1356,10 @@ PEP_STATUS pgp_find_keys(
         return PEP_ILLEGAL_VALUE;
     }
 
-    if (pthread_mutex_lock(&netpgp_mutex))
-    {
-        return PEP_UNKNOWN_ERROR;
-    }
+    //if (pthread_mutex_lock(&netpgp_mutex))
+    //{
+    //    return PEP_UNKNOWN_ERROR;
+    //}
 
     *keylist = NULL;
     _keylist = new_stringlist(NULL);
@@ -1367,7 +1381,7 @@ PEP_STATUS pgp_find_keys(
     free_stringlist(_keylist);
 
 unlock_netpgp:
-    pthread_mutex_unlock(&netpgp_mutex);
+    //pthread_mutex_unlock(&netpgp_mutex);
 
     return result;
 }
@@ -1405,9 +1419,9 @@ PEP_STATUS pgp_get_key_rating(
 
     *comm_type = PEP_ct_unknown;
 
-    if(pthread_mutex_lock(&netpgp_mutex)){
-        return PEP_UNKNOWN_ERROR;
-    }
+    //if(pthread_mutex_lock(&netpgp_mutex)){
+    //    return PEP_UNKNOWN_ERROR;
+    //}
 
     if (!str_to_fpr(fprstr, fpr, &length)) {
         status = PEP_ILLEGAL_VALUE;
@@ -1426,7 +1440,7 @@ PEP_STATUS pgp_get_key_rating(
     }
 
     switch(pgp_key_get_rating(key)){
-	case PGP_VALID:
+    case PGP_VALID:
         *comm_type = PEP_ct_OpenPGP_unconfirmed;
         break;
     case PGP_WEAK:
@@ -1435,10 +1449,10 @@ PEP_STATUS pgp_get_key_rating(
     case PGP_TOOSHORT:
         *comm_type = PEP_ct_key_too_short;
         break;
-	case PGP_INVALID:
+    case PGP_INVALID:
         *comm_type = PEP_ct_key_b0rken;
         break;
-	case PGP_EXPIRED:
+    case PGP_EXPIRED:
         *comm_type = PEP_ct_key_expired;
         break;
     case PGP_REVOKED:
@@ -1449,7 +1463,7 @@ PEP_STATUS pgp_get_key_rating(
     }
 
 unlock_netpgp:
-    pthread_mutex_unlock(&netpgp_mutex);
+    //pthread_mutex_unlock(&netpgp_mutex);
 
     return status;
 }
@@ -1491,9 +1505,9 @@ PEP_STATUS pgp_renew_key(
         duration = 365*24*3600;
     }
 
-    if(pthread_mutex_lock(&netpgp_mutex)){
-        return PEP_UNKNOWN_ERROR;
-    }
+    //if(pthread_mutex_lock(&netpgp_mutex)){
+    //    return PEP_UNKNOWN_ERROR;
+    //}
 
 
     if (!str_to_fpr(fprstr, fpr, &length)) {
@@ -1549,7 +1563,7 @@ PEP_STATUS pgp_renew_key(
     }
 
 unlock_netpgp:
-    pthread_mutex_unlock(&netpgp_mutex);
+    //pthread_mutex_unlock(&netpgp_mutex);
 
     return status;
 }
@@ -1572,9 +1586,9 @@ PEP_STATUS pgp_revoke_key(
     if (!session || !fprstr)
         return PEP_UNKNOWN_ERROR;
 
-    if(pthread_mutex_lock(&netpgp_mutex)){
-        return PEP_UNKNOWN_ERROR;
-    }
+    //if(pthread_mutex_lock(&netpgp_mutex)){
+    //    return PEP_UNKNOWN_ERROR;
+    //}
 
     // FIXME : deduplicate that code w/ renew
     if (!str_to_fpr(fprstr, fpr, &length)) {
@@ -1612,7 +1626,7 @@ PEP_STATUS pgp_revoke_key(
                    reason);
 
 unlock_netpgp:
-    pthread_mutex_unlock(&netpgp_mutex);
+    //pthread_mutex_unlock(&netpgp_mutex);
 
     return status;
 }
@@ -1699,9 +1713,9 @@ PEP_STATUS pgp_key_created(
 
     *created = 0;
 
-    if(pthread_mutex_lock(&netpgp_mutex)){
-        return PEP_UNKNOWN_ERROR;
-    }
+    //if(pthread_mutex_lock(&netpgp_mutex)){
+    //    return PEP_UNKNOWN_ERROR;
+    //}
 
     if (!str_to_fpr(fprstr, fpr, &length)) {
         status = PEP_ILLEGAL_VALUE;
@@ -1726,7 +1740,7 @@ PEP_STATUS pgp_key_created(
 
 
 unlock_netpgp:
-    pthread_mutex_unlock(&netpgp_mutex);
+    //pthread_mutex_unlock(&netpgp_mutex);
 
     return status;
 }
@@ -1739,10 +1753,10 @@ PEP_STATUS pgp_list_keyinfo(
     if (!session || !keyinfo_list)
         return PEP_UNKNOWN_ERROR;
 
-    if (pthread_mutex_lock(&netpgp_mutex))
-    {
-        return PEP_UNKNOWN_ERROR;
-    }
+    //if (pthread_mutex_lock(&netpgp_mutex))
+    //{
+    //    return PEP_UNKNOWN_ERROR;
+    //}
 
 // Unused:
 //    pgp_key_t *key;
@@ -1755,7 +1769,7 @@ PEP_STATUS pgp_list_keyinfo(
     if (!keyinfo_list)
         result = PEP_KEY_NOT_FOUND;
 
-    pthread_mutex_unlock(&netpgp_mutex);
+    //pthread_mutex_unlock(&netpgp_mutex);
 
     return result;
 }
@@ -1776,10 +1790,10 @@ PEP_STATUS pgp_find_private_keys(
         return PEP_ILLEGAL_VALUE;
     }
 
-    if (pthread_mutex_lock(&netpgp_mutex))
-    {
-        return PEP_UNKNOWN_ERROR;
-    }
+    //if (pthread_mutex_lock(&netpgp_mutex))
+    //{
+    //    return PEP_UNKNOWN_ERROR;
+    //}
 
     *keylist = NULL;
     _keylist = new_stringlist(NULL);
@@ -1801,7 +1815,7 @@ PEP_STATUS pgp_find_private_keys(
     free_stringlist(_keylist);
 
 unlock_netpgp:
-    pthread_mutex_unlock(&netpgp_mutex);
+    //pthread_mutex_unlock(&netpgp_mutex);
 
     return result;
 }
