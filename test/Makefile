@@ -17,8 +17,13 @@ OBJS:=$(addsuffix .o,$(basename $(SRCS)))
 DEPS:=$(OBJS:.o=.d)
 
 ifeq ($(BUILD_ON),OS/390)
-    OBJS+=../src/libpEpEngine.x
+    OBJS+=../src/libpEpEngine.a
+    OBJS+=/usr/lib/GSKCMS64.x
+    OBJS+=/usr/lib/CSNPCA64.x
+    OBJS+=/user/lev/lib/libetpan-no-mt.a
 endif
+
+#endif
 
 LDFLAGS+= -L../asn.1 -L../src $(ETPAN_LIB) $(GTEST_LDFLAGS)
 
@@ -35,14 +40,11 @@ CPPFLAGS+= -DGTEST_SUITE_SYM=$(GTEST_SUITE_SYM)
 ifdef PEP_MIME
     LDLIBS+= -lpEpMIME
 else
-    LDLIBS+= -letpan
+    ifneq ($(BUILD_ON),OS/390)
+        LDLIBS+= -letpan -lpEpEngine -lstdc++
+    endif
 endif
 
-ifeq ($(BUILD_ON),OS/390)
-    LDLIBS+= -letpan-no-mt
-else
-    LDLIBS+= -letpan -lpEpEngine -lstdc++
-endif
 LDLIBS+= -lasn1
 
 ifeq ($(BUILD_FOR),Linux)
@@ -109,7 +111,9 @@ all:
 	$(CXX) -MM $(CXXFLAGS) $(CPPFLAGS) $< | sed -e 's,\($*\)\.o[ :]*,\1.o $@: ,g' > $@
 
 LDLIBS+=-lgtest -lgtest_main
-ifneq ($(BUILD_ON),OS/390)
+ifeq ($(BUILD_ON),OS/390)
+    LDLIBS+=-lzz
+else
     LDLIBS+=-lsequoia_openpgp_ffi 
 endif
 
