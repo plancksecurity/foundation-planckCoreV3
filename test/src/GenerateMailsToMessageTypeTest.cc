@@ -10,7 +10,7 @@
 
 #include <gtest/gtest.h>
 
-#define GMTMTT_WRITEOUT 0
+#define GMTMTT_WRITEOUT 1
 namespace {
 
 	//The fixture for GenerateMailsToMessageTypeTest
@@ -240,7 +240,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_2_
 /////// No keys
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_unencrypted_bob_no_attached_key) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAliceUnencrypted.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAliceUnencrypted_NoKey.eml";
     pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::BOB);
     pEp_identity* alice = TestUtilsPreset::generateOnlyPartnerIdentity(session, TestUtilsPreset::ALICE);
     message* msg = gen_outgoing_message_template(me, alice);
@@ -249,7 +249,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_unen
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_unencrypted_sylvia_no_attached_key) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAliceUnencrypted.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAliceUnencrypted_NoKey.eml";
     pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::SYLVIA);
     pEp_identity* alice = TestUtilsPreset::generateOnlyPartnerIdentity(session, TestUtilsPreset::ALICE);
     message* msg = gen_outgoing_message_template(me, alice);
@@ -258,7 +258,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_unen
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_OpenPGP_bob_no_attached_key) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_OpenPGP.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_OpenPGP_NoKey.eml";
     pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::BOB);
     pEp_identity* alice = TestUtilsPreset::generateAndSetOpenPGPPartnerIdentity(session, TestUtilsPreset::ALICE, true, false);
     message* msg = gen_outgoing_message_template(me, alice);
@@ -267,7 +267,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_Open
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_OpenPGP_sylvia_no_attached_key) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_OpenPGP.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_OpenPGP_NoKey.eml";
     pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::SYLVIA);
     pEp_identity* alice = TestUtilsPreset::generateAndSetOpenPGPPartnerIdentity(session, TestUtilsPreset::ALICE, true, false);
     message* msg = gen_outgoing_message_template(me, alice);
@@ -276,7 +276,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_Open
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_1_0_bob_no_attached_key) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_1_0.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_1_0_NoKey.eml";
     pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::BOB);
     pEp_identity* alice = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::ALICE, true, true);
     int alice_major = 1;
@@ -288,7 +288,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_1_0_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_1_0_sylvia_no_attached_key) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_1_0.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_1_0_NoKey.eml";
     pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::SYLVIA);
     pEp_identity* alice = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::ALICE, true, false);
     int alice_major = 1;
@@ -300,7 +300,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_1_0_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_0_bob_no_attached_key) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_2_0.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_2_0_NoKey.eml";
     pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::BOB);
     pEp_identity* alice = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::ALICE, true, true);
     int alice_major = 2;
@@ -313,7 +313,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_0_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_0_sylvia_no_attached_key) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_2_0.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_2_0_NoKey.eml";
     pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::SYLVIA);
     pEp_identity* alice = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::ALICE, true, true);
     int alice_major = 2;
@@ -326,7 +326,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_0_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_1_bob_no_attached_key) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_2_1.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_2_1_NoKey.eml";
     pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::BOB);
     pEp_identity* alice = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::ALICE, true, true);
     int alice_major = 2;
@@ -339,7 +339,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_1_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_1_sylvia_no_attached_key) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_2_1.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_2_1_NoKey.eml";
     pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::SYLVIA);
     pEp_identity* alice = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::ALICE, true, true);
     int alice_major = 2;
@@ -352,7 +352,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_1_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_2_bob_no_attached_key) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_2_2.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_2_2_NoKey.eml";
     pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::BOB);
     pEp_identity* alice = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::ALICE, true, true);
     int alice_major = 2;
@@ -365,7 +365,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_2_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_2_sylvia_no_attached_key) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_2_2.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_2_2_NoKey.eml";
     pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::SYLVIA);
     pEp_identity* alice = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::ALICE, true, true);
     int alice_major = 2;
