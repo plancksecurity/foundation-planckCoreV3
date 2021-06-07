@@ -10,7 +10,7 @@
 
 #include <gtest/gtest.h>
 
-#define GMTMTT_WRITEOUT 1
+#define GMTMTT_WRITEOUT 0
 namespace {
 
 	//The fixture for GenerateMailsToMessageTypeTest
