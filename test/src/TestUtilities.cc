@@ -543,7 +543,12 @@ PEP_STATUS vanilla_encrypt_and_write_to_file(PEP_SESSION session, message* msg, 
  
 // For when you ONLY care about the message
 PEP_STATUS vanilla_read_file_and_decrypt(PEP_SESSION session, message** msg, const char* filename) {
-    if (!session || !msg || !filename)
+    PEP_rating rating = PEP_rating_undefined;
+    return vanilla_read_file_and_decrypt_with_rating(session, msg, filename, &rating);
+}
+
+PEP_STATUS vanilla_read_file_and_decrypt_with_rating(PEP_SESSION session, message** msg, const char* filename, PEP_rating* rating) {
+    if (!session || !msg || !filename || !rating)
         return PEP_ILLEGAL_VALUE;
     PEP_STATUS status = PEP_STATUS_OK;
     std::string inbox = slurp(filename);
@@ -556,16 +561,14 @@ PEP_STATUS vanilla_read_file_and_decrypt(PEP_SESSION session, message** msg, con
     message* dec_msg = NULL;
     stringlist_t* keylist = NULL;
     PEP_decrypt_flags_t flags = 0;
-    PEP_rating rating;
 
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, rating, &flags);
     if (dec_msg)
         *msg = dec_msg;
     free_stringlist(keylist); // no one cares
     free_message(enc_msg);
     return status;
 }
-
 
 
 int util_delete_filepath(const char *filepath,

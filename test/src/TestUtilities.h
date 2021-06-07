@@ -191,6 +191,7 @@ message* string_to_msg(std::string infile);
 // For when you ONLY care about the message
 PEP_STATUS vanilla_encrypt_and_write_to_file(PEP_SESSION session, message* msg, const char* filename, PEP_encrypt_flags_t flags = 0);
 PEP_STATUS vanilla_read_file_and_decrypt(PEP_SESSION session, message** msg, const char* filename);
+PEP_STATUS vanilla_read_file_and_decrypt_with_rating(PEP_SESSION session, message** msg, const char* filename, PEP_rating* rating);
 
 int util_delete_filepath(const char *filepath, 
                          const struct stat *file_stat, 
