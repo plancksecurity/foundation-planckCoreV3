@@ -123,7 +123,6 @@ namespace {
 // this is written in 2.2, I suspect, so others should ignore this blathery part.
 //
 
-
 TEST_F(DefaultFromEmailTest, check_encrypt_to_OpenPGP_simple_key) {
     PEP_STATUS status = PEP_STATUS_OK;
 

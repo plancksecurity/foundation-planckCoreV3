@@ -36,6 +36,7 @@ const TestUtilsPreset::IdentityInfo TestUtilsPreset::presets[]     = {
                 TestUtilsPreset::IdentityInfo("Alice Spivak Hyatt", "ALICE", "pep.test.alice@pep-project.org", "pep-test-alice-0x6FF00E97", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97"),
                 TestUtilsPreset::IdentityInfo("Apple of my Computer", "APPLE", "pep.test.apple@pep-project.org", "pep-test-apple-0x1CCBC7D7", "3D8D9423D03DDF61B60161150313D94A1CCBC7D7"),
                 TestUtilsPreset::IdentityInfo("Bob Dog", "BOB", "pep.test.bob@pep-project.org", "pep-test-bob-0xC9C2EE39", "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39"),
+                TestUtilsPreset::IdentityInfo("Bob Dog", "BOB", "pep.test.bob@pep-project.org", "pep-test-bob-0xC9C2EE39", "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39"),
                 TestUtilsPreset::IdentityInfo("Carol Burnett", "CAROL", "pep-test-carol@pep-project.org", "pep-test-carol-0x42A85A42", "8DD4F5827B45839E9ACCA94687BDDFFB42A85A42"),
                 TestUtilsPreset::IdentityInfo("The Hoff", "DAVE", "pep-test-dave@pep-project.org", "pep-test-dave-0xBB5BCCF6", "E8AC9779A2D13A15D8D55C84B049F489BB5BCCF6"),
                 TestUtilsPreset::IdentityInfo("Erin Ireland", "ERIN", "pep-test-erin@pep-project.org", "pep-test-erin-0x9F8D7CBA", "1B0E197E8AE66277B8A024B9AEA69F509F8D7CBA"),
@@ -58,6 +59,7 @@ const TestUtilsPreset::IdentityInfo TestUtilsPreset::presets[]     = {
                 TestUtilsPreset::IdentityInfo("Cullen Rutherford", "CULLEN", "sercullen-test@darthmama.org", "sercullen-0x3CEAADED4", "1C9666D8B3E28F4AA3847DA89A6E75E3CEAADED4"),  // NB expired on purpose
                 TestUtilsPreset::IdentityInfo("Inquisitor Claire Trevelyan", "INQUISITOR", "inquisitor@darthmama.org", "inquisitor-0xA4728718_renewed", "8E8D2381AE066ABE1FEE509821BA977CA4728718"),
                 TestUtilsPreset::IdentityInfo("Bernd das Brot", "BERNDI", "bernd.das.brot@darthmama.org", "bernd.das.brot-0xCAFAA422", "F8CE0F7E24EB190A2FCBFD38D4B088A7CAFAA422"),
+                TestUtilsPreset::IdentityInfo("Sylvia Plath", "SYLVIA", "sylvia@darthmama.org", "sylvia-0x585A6780", "0C0F053EED87058C7330A11F10B89D31585A6780"),
                 TestUtilsPreset::IdentityInfo("Sylvia Plath", "SYLVIA", "sylvia@darthmama.org", "sylvia-0x585A6780", "0C0F053EED87058C7330A11F10B89D31585A6780")
     };
 
@@ -907,6 +909,24 @@ PEP_STATUS set_fpr_preserve_ident(PEP_SESSION session, const pEp_identity* ident
     return status;
 }
 
+PEP_STATUS TestUtilsPreset::import_preset_key(PEP_SESSION session,
+                                              TestUtilsPreset::ident_preset preset_name,
+                                              bool private_also) {
+    string pubkey_dir = "test_keys/pub/";
+    string privkey_dir = "test_keys/priv/";
+    const char* key_prefix = TestUtilsPreset::presets[preset_name].key_prefix;
+    string pubkey_file = pubkey_dir + key_prefix + "_pub.asc";
+    string privkey_file = privkey_dir + key_prefix + "_priv.asc";
+    if (!slurp_and_import_key(session, pubkey_file.c_str()))
+        return PEP_KEY_NOT_FOUND;
+    if (private_also) {
+        if (!slurp_and_import_key(session, privkey_file.c_str()))
+            return PEP_KEY_NOT_FOUND;
+    }
+
+    return PEP_STATUS_OK;
+}
+
 PEP_STATUS TestUtilsPreset::set_up_preset(PEP_SESSION session,
                                           ident_preset preset_name,
                                           bool set_ident,
@@ -919,8 +939,6 @@ PEP_STATUS TestUtilsPreset::set_up_preset(PEP_SESSION session,
     if (set_own && !set_ident)
         return PEP_ILLEGAL_VALUE;
 
-    string pubkey_dir = "test_keys/pub/";
-    string privkey_dir = "test_keys/priv/";
     PEP_STATUS status = PEP_STATUS_OK;
 
     if (ident)
@@ -933,16 +951,9 @@ PEP_STATUS TestUtilsPreset::set_up_preset(PEP_SESSION session,
 
     const TestUtilsPreset::IdentityInfo& preset = presets[preset_name];
 
-    string pubkey_file = pubkey_dir + preset.key_prefix + "_pub.asc";
-    string privkey_file = privkey_dir + preset.key_prefix + "_priv.asc";
-
-    if (!slurp_and_import_key(session, pubkey_file.c_str()))
-        return PEP_KEY_NOT_FOUND;
-
-    if (setup_private) {
-        if (!slurp_and_import_key(session, privkey_file.c_str()))
-            return PEP_KEY_NOT_FOUND;
-    }
+    status = TestUtilsPreset::import_preset_key(session, preset_name, setup_private);
+    if (status != PEP_STATUS_OK)
+        return status;
 
     retval = new_identity(preset.email, NULL, preset.user_id, preset.name);
     if (!retval)
@@ -1052,7 +1063,6 @@ pEp_identity* TestUtilsPreset::generateOnlyPrivateIdentityGrabFPR(PEP_SESSION se
     return retval;
 }
 
-
 pEp_identity* TestUtilsPreset::generateOnlyPartnerIdentity(PEP_SESSION session,
                                                            ident_preset preset_name) {
     pEp_identity* retval = NULL;
@@ -1077,7 +1087,6 @@ pEp_identity* TestUtilsPreset::generateOnlyPartnerIdentityGrabFPR(PEP_SESSION se
     }
     return retval;
 }
-
 
 int NullBuffer::overflow(int c) {
     return c;
