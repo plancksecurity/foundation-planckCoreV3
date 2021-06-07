@@ -3,9 +3,9 @@ To: Alice Spivak Hyatt <pep.test.alice@pep-project.org>
 Subject: This is a canonical mail from someone to Alice
 X-pEp-Version: 2.2
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="239e5fe561efc18d73a291fd32175d64"
+Content-Type: multipart/mixed; boundary="3a5481b6524e9263601900e97d7f791b"
 
---239e5fe561efc18d73a291fd32175d64
+--3a5481b6524e9263601900e97d7f791b
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 
@@ -13,7 +13,7 @@ Fa una canzona senza note nere
 Se mai bramasti la mia grazia havere
 Falla d'un tuono ch'invita al dormire,
 Dolcemente, dolcemente facendo la finire.
---239e5fe561efc18d73a291fd32175d64
+--3a5481b6524e9263601900e97d7f791b
 Content-Type: application/pgp-keys
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="sender_key.asc"
@@ -76,4 +76,4 @@ MDFOTFVBQ2tNWGEyaWsKVExINmxqakdZcWFKakJRVjRJREdVbzJVOFErS0hYa0oraU5DcnI0OHJR
 QjJ4cHhIeDFQQy9XRjBPUUhYSE5WRApsSzROa0xHcE1LRXZiT2dacnlXNVRxbElxeERVZmREcVI4
 TFBlUmdSSUE9PQo9VEdNaAotLS0tLUVORCBQR1AgUFVCTElDIEtFWSBCTE9DSy0tLS0tCg==
 
---239e5fe561efc18d73a291fd32175d64--
+--3a5481b6524e9263601900e97d7f791b--

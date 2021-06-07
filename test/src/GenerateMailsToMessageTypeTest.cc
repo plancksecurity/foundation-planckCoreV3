@@ -199,7 +199,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_1_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_1_sylvia) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_2_1.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_2_1.eml";
     pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::SYLVIA);
     pEp_identity* alice = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::ALICE, true, true);
     int alice_major = 2;
