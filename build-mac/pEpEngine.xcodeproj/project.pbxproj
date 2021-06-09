@@ -168,6 +168,13 @@
 			remoteGlobalIDString = 644297BE1BE11C65002BC73B;
 			remoteInfo = pEpTrustWords;
 		};
+		156AFE822670E6D800AF0039 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = C69AB10910546FE500F32FBD;
+			remoteInfo = "static libetpan";
+		};
 		15A322F4260E0B75009D07EB /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 15A3203B260E030B009D07EB /* pEpASN1.xcodeproj */;
@@ -694,6 +701,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				156AFE832670E6D800AF0039 /* PBXTargetDependency */,
 				15A3266826120623009D07EB /* PBXTargetDependency */,
 				15B21C3F25FB8E160097927A /* PBXTargetDependency */,
 				1508460725F24D1100D46DA6 /* PBXTargetDependency */,
@@ -1025,6 +1033,11 @@
 			isa = PBXTargetDependency;
 			target = 644297BE1BE11C65002BC73B /* pEpTrustWords */;
 			targetProxy = 1508460625F24D1100D46DA6 /* PBXContainerItemProxy */;
+		};
+		156AFE832670E6D800AF0039 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "static libetpan";
+			targetProxy = 156AFE822670E6D800AF0039 /* PBXContainerItemProxy */;
 		};
 		15A32305260E0C6F009D07EB /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
