@@ -135,15 +135,18 @@ namespace {
                         // Do NOT use update_identity, which will create it in the DB!
                         status = get_identity(session, sender_info.email, sender_info.user_id, &recip);
                         ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
-                        // And also not in TOFU form
-                        string TOFU = string("TOFU_") + sender_info.email;
-                        status = get_identity(session, sender_info.email, TOFU.c_str(), &recip);
-                        ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
                         break;
                     }
                     default:
                         ASSERT_FALSE(true);
                 }
+                // Make sure also doesn't exist in TOFU form
+                free_identity(recip);
+                recip = NULL;
+                string TOFU = string("TOFU_") + sender_info.email;
+                status = get_identity(session, sender_info.email, TOFU.c_str(), &recip);
+                ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
+
                 free_identity(recip);
             }
 
@@ -918,82 +921,30 @@ TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_bob_no_key) {
 
 // Bob is a known OpenPGP partner - we use the "wrong filename" version because OpenPGP doesn't use our conventions
 TEST_F(DefaultFromEmailTest, check_encrypted_key_import_bob_no_pep) {
-    pEp_identity* alice = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::ALICE);
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
-
-    // We need recip to exist in DB without a known key.
-    pEp_identity* recip = new_identity(sender_info.email, NULL, sender_info.user_id, sender_info.name);
-    PEP_STATUS status = set_identity(session, recip);
-    ASSERT_OK;
-
-    // Make sure identity exists
-    free_identity(recip);
-    recip = NULL;
-    status = get_identity(session, sender_info.email, sender_info.user_id, &recip);
-    ASSERT_OK;
-    free_identity(recip);
-    recip = NULL;
-    // And *not* in TOFU form
-    string TOFU = string("TOFU_") + sender_info.email;
-    status = get_identity(session, sender_info.email, TOFU.c_str(), &recip);
-    ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
+    set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
 
     // Ok, we now the desired state. Run the import mail fun.
-    const char* filename = "test_mails/CanonicalFrom2.2BobToAlice_1_0_wrong_key_filename_no_pEp.eml";
-    message* infile = NULL;
-    status = vanilla_read_file_and_decrypt(session, &infile, filename);
-    ASSERT_OK;
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_1_0_wrong_key_filename_no_pEp.eml", 
+                                     PEP_rating_reliable, PEP_STATUS_OK);
 
-    // Ensure we now have a default key for recip - NOTE: IF THE NAME IS NULL OR DOES NOT MATCH THE TOFU INPUT NAME,
-    // WE WILL GET NO KEY. THIS IS APPARENTLY BY DESIGN.
-    //
-    // I did ask. Often. ;)
-    recip = new_identity(sender_info.email, NULL, sender_info.user_id, sender_info.name);
-    ASSERT_NOTNULL(recip);
-    status = update_identity(session, recip);
-    ASSERT_NOTNULL(recip->fpr);
-    ASSERT_STREQ(recip->fpr, sender_info.fpr);
-    ASSERT_EQ(recip->comm_type, PEP_ct_OpenPGP_unconfirmed);
-
-    free_message(infile);
-    free_identity(alice);
-    free_identity(recip);
+     // Check that the default key matches the canonical default key for this sender,
+    // if expected to be present.
+    check_sender_default_key_status(sender_info, PEP_ct_OpenPGP_unconfirmed);
 }
 
 // Sylvia is an unknown OpenPGP partner
 TEST_F(DefaultFromEmailTest, check_encrypted_key_import_sylvia_no_pep) {
-    pEp_identity* alice = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::ALICE);
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::SYLVIA];
-    pEp_identity* recip = NULL;
-
-    // Make sure identity doesn't exist - do NOT use update_identity, which will create it in the DB
-    PEP_STATUS status = get_identity(session, sender_info.email, sender_info.user_id, &recip);
-    ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
-    // And also not in TOFU form
-    string TOFU = string("TOFU_") + sender_info.email;
-    status = get_identity(session, sender_info.email, TOFU.c_str(), &recip);
-    ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
+    set_up_and_check_initial_identities(TestUtilsPreset::SYLVIA, sender_info);
 
     // Ok, we now have a blank slate. Run the import mail fun.
-    const char* filename = "test_mails/CanonicalFrom2.2SylviaToAlice_1_0_wrong_key_filename_no_pEp.eml";
-    message* infile = NULL;
-    status = vanilla_read_file_and_decrypt(session, &infile, filename);
-    ASSERT_OK;
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2SylviaToAlice_1_0_wrong_key_filename_no_pEp.eml", 
+                                     PEP_rating_reliable, PEP_STATUS_OK);
 
-    // Ensure we now have a default key for recip - NOTE: IF THE NAME IS NULL OR DOES NOT MATCH THE TOFU INPUT NAME,
-    // WE WILL GET NO KEY. THIS IS APPARENTLY BY DESIGN.
-    //
-    // I did ask. Often. ;)
-    recip = new_identity(sender_info.email, NULL, sender_info.user_id, sender_info.name);
-    ASSERT_NOTNULL(recip);
-    status = update_identity(session, recip);
-    ASSERT_NOTNULL(recip->fpr);
-    ASSERT_STREQ(recip->fpr, sender_info.fpr);
-    ASSERT_EQ(recip->comm_type, PEP_ct_OpenPGP_unconfirmed);
-
-    free_message(infile);
-    free_identity(alice);
-    free_identity(recip);
+     // Check that the default key matches the canonical default key for this sender,
+    // if expected to be present.
+    check_sender_default_key_status(sender_info, PEP_ct_OpenPGP_unconfirmed);
 }
 
 TEST_F(DefaultFromEmailTest, check_encrypted_key_import_sylvia_2_2) {
@@ -1086,7 +1037,7 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_sylvia_1_0) {
     set_up_and_check_initial_identities(TestUtilsPreset::SYLVIA, sender_info);
 
     // Ok, we now have a blank slate. Run the import mail fun.
-    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2SylviaToAlice_1_0_wrong_key_filename_ModifiedVersion.eml", 
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2SylviaToAlice_1_0_wrong_key_filename_Modified_Version.eml",
                                      PEP_rating_reliable, PEP_STATUS_OK);
 
     // Check that the default key matches the canonical default key for this sender,
@@ -1114,83 +1065,29 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_bob_1_0) {
 // Failure case 1) No key attached
 
 TEST_F(DefaultFromEmailTest, check_encrypted_key_import_sylvia_no_pep_no_key) {
-    pEp_identity* alice = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::ALICE);
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::SYLVIA];
-    pEp_identity* recip = NULL;
-
-    // Make sure identity doesn't exist - do NOT use update_identity, which will create it in the DB
-    PEP_STATUS status = get_identity(session, sender_info.email, sender_info.user_id, &recip);
-    ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
-    // And also not in TOFU form
-    string TOFU = string("TOFU_") + sender_info.email;
-    status = get_identity(session, sender_info.email, TOFU.c_str(), &recip);
-    ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
+    set_up_and_check_initial_identities(TestUtilsPreset::SYLVIA, sender_info);
 
     // Ok, we now have a blank slate. Run the import mail fun.
-    const char* filename = "test_mails/CanonicalFrom2.2SylviaToAlice_1_0_NoKey_no_pEp.eml";
-    message* infile = NULL;
-    PEP_rating rating = PEP_rating_undefined;
-    status = vanilla_read_file_and_decrypt_with_rating(session, &infile, filename, &rating);
-    ASSERT_EQ(status, PEP_DECRYPTED);
-    ASSERT_EQ(rating, PEP_rating_unreliable);
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2SylviaToAlice_1_0_NoKey_no_pEp.eml", 
+                                     PEP_rating_unreliable, PEP_DECRYPTED);
 
-    // Ensure we now have a default key for recip - NOTE: IF THE NAME IS NULL OR DOES NOT MATCH THE TOFU INPUT NAME,
-    // WE WILL GET NO KEY. THIS IS APPARENTLY BY DESIGN.
-    //
-    // I did ask. Often. ;)
-    recip = new_identity(sender_info.email, NULL, sender_info.user_id, sender_info.name);
-    ASSERT_NOTNULL(recip);
-    status = update_identity(session, recip);
-    ASSERT_NULL(recip->fpr);
-    ASSERT_EQ(recip->comm_type, PEP_ct_key_not_found);
-
-    free_message(infile);
-    free_identity(alice);
-    free_identity(recip);
+     // Check that the default key matches the canonical default key for this sender,
+    // if expected to be present.
+    check_sender_default_key_status(sender_info, PEP_ct_key_not_found);
 }
 
 TEST_F(DefaultFromEmailTest, check_encrypted_key_import_bob_no_pep_no_key) {
-    pEp_identity* alice = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::ALICE);
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
-
-    // We need recip to exist in DB without a known key.
-    pEp_identity* recip = new_identity(sender_info.email, NULL, sender_info.user_id, sender_info.name);
-    PEP_STATUS status = set_identity(session, recip);
-    ASSERT_OK;
-
-    // Make sure identity exists
-    free_identity(recip);
-    recip = NULL;
-    status = get_identity(session, sender_info.email, sender_info.user_id, &recip);
-    ASSERT_OK;
-    free_identity(recip);
-    recip = NULL;
-    // And *not* in TOFU form
-    string TOFU = string("TOFU_") + sender_info.email;
-    status = get_identity(session, sender_info.email, TOFU.c_str(), &recip);
-    ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
+    set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
 
     // Ok, we now the desired state. Run the import mail fun.
-    const char* filename = "test_mails/CanonicalFrom2.2BobToAlice_1_0_NoKey_no_pEp.eml";
-    message* infile = NULL;
-    PEP_rating rating = PEP_rating_undefined;
-    status = vanilla_read_file_and_decrypt_with_rating(session, &infile, filename, &rating);
-    ASSERT_EQ(status, PEP_DECRYPTED);
-    ASSERT_EQ(rating, PEP_rating_unreliable);
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_1_0_NoKey_no_pEp.eml", 
+                                     PEP_rating_unreliable, PEP_DECRYPTED);
 
-    // Ensure we now have a default key for recip - NOTE: IF THE NAME IS NULL OR DOES NOT MATCH THE TOFU INPUT NAME,
-    // WE WILL GET NO KEY. THIS IS APPARENTLY BY DESIGN.
-    //
-    // I did ask. Often. ;)
-    recip = new_identity(sender_info.email, NULL, sender_info.user_id, sender_info.name);
-    ASSERT_NOTNULL(recip);
-    status = update_identity(session, recip);
-    ASSERT_NULL(recip->fpr);
-    ASSERT_EQ(recip->comm_type, PEP_ct_key_not_found);
-
-    free_message(infile);
-    free_identity(alice);
-    free_identity(recip);
+     // Check that the default key matches the canonical default key for this sender,
+    // if expected to be present.
+    check_sender_default_key_status(sender_info, PEP_ct_key_not_found);
 }
 
 TEST_F(DefaultFromEmailTest, check_encrypted_key_import_sylvia_2_2_no_key) {
@@ -1307,47 +1204,16 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_bob_1_0_no_key) {
 
 // Failure case 2) Wrong key attached
 TEST_F(DefaultFromEmailTest, check_encrypted_key_import_bob_no_pep_wrong_sender_key_attached) {
-    pEp_identity* alice = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::ALICE);
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
-
-    // We need recip to exist in DB without a known key.
-    pEp_identity* recip = new_identity(sender_info.email, NULL, sender_info.user_id, sender_info.name);
-    PEP_STATUS status = set_identity(session, recip);
-    ASSERT_OK;
-
-    // Make sure identity exists
-    free_identity(recip);
-    recip = NULL;
-    status = get_identity(session, sender_info.email, sender_info.user_id, &recip);
-    ASSERT_OK;
-    free_identity(recip);
-    recip = NULL;
-    // And *not* in TOFU form
-    string TOFU = string("TOFU_") + sender_info.email;
-    status = get_identity(session, sender_info.email, TOFU.c_str(), &recip);
-    ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
+    set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
 
     // Ok, we now the desired state. Run the import mail fun.
-    const char* filename = "test_mails/CanonicalFrom2.2BobToAlice_1_0_wrong_sender_key_attached_no_pEp.eml";
-    message* infile = NULL;
-    PEP_rating rating = PEP_rating_undefined;
-    status = vanilla_read_file_and_decrypt_with_rating(session, &infile, filename, &rating);
-    ASSERT_EQ(status, PEP_DECRYPTED);
-    ASSERT_EQ(rating, PEP_rating_unreliable);
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_1_0_wrong_sender_key_attached_no_pEp.eml", 
+                                     PEP_rating_unreliable, PEP_DECRYPTED);
 
-    // Ensure we now have a default key for recip - NOTE: IF THE NAME IS NULL OR DOES NOT MATCH THE TOFU INPUT NAME,
-    // WE WILL GET NO KEY. THIS IS APPARENTLY BY DESIGN.
-    //
-    // I did ask. Often. ;)
-    recip = new_identity(sender_info.email, NULL, sender_info.user_id, sender_info.name);
-    ASSERT_NOTNULL(recip);
-    status = update_identity(session, recip);
-    ASSERT_NULL(recip->fpr);
-    ASSERT_EQ(recip->comm_type, PEP_ct_key_not_found);
-
-    free_message(infile);
-    free_identity(alice);
-    free_identity(recip);
+     // Check that the default key matches the canonical default key for this sender,
+    // if expected to be present.
+    check_sender_default_key_status(sender_info, PEP_ct_key_not_found);
 }
 
 TEST_F(DefaultFromEmailTest, check_encrypted_key_import_sylvia_no_pep_wrong_sender_key_attached) {
@@ -1542,322 +1408,105 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_john_two_keys) {
 }
 
 TEST_F(DefaultFromEmailTest, check_encrypted_key_import_sylvia_2_2_two_keys) {
-    pEp_identity* alice = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::ALICE);
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::SYLVIA];
-    pEp_identity* recip = NULL;
-
-    // Make sure identity doesn't exist - do NOT use update_identity, which will create it in the DB
-    PEP_STATUS status = get_identity(session, sender_info.email, sender_info.user_id, &recip);
-    ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
-    // And also not in TOFU form
-    string TOFU = string("TOFU_") + sender_info.email;
-    status = get_identity(session, sender_info.email, TOFU.c_str(), &recip);
-    ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
+    set_up_and_check_initial_identities(TestUtilsPreset::SYLVIA, sender_info);
 
     // Ok, we now have a blank slate. Run the import mail fun.
-    const char* filename = "test_mails/CanonicalFrom2.2SylviaToAlice_2_2_TwoKeys.eml";
-    message* infile = NULL;
-    status = vanilla_read_file_and_decrypt(session, &infile, filename);
-    ASSERT_OK;
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2SylviaToAlice_2_2_TwoKeys.eml", 
+                                     PEP_rating_reliable, PEP_STATUS_OK);
 
-    // Ensure we now have a default key for recip - NOTE: IF THE NAME IS NULL OR DOES NOT MATCH THE TOFU INPUT NAME,
-    // WE WILL GET NO KEY. THIS IS APPARENTLY BY DESIGN.
-    //
-    // I did ask. Often. ;)
-    recip = new_identity(sender_info.email, NULL, sender_info.user_id, sender_info.name);
-    ASSERT_NOTNULL(recip);
-    status = update_identity(session, recip);
-    ASSERT_NOTNULL(recip->fpr);
-    ASSERT_STREQ(recip->fpr, sender_info.fpr);
-    ASSERT_EQ(recip->comm_type, PEP_ct_pEp_unconfirmed);
-
-    free_message(infile);
-    free_identity(alice);
-    free_identity(recip);
+     // Check that the default key matches the canonical default key for this sender,
+    // if expected to be present.
+    check_sender_default_key_status(sender_info, PEP_ct_pEp_unconfirmed);
 }
 
 TEST_F(DefaultFromEmailTest, check_encrypted_key_import_bob_2_2_two_keys) {
-    pEp_identity* alice = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::ALICE);
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
-
-    // We need recip to exist in DB without a known key.
-    pEp_identity* recip = new_identity(sender_info.email, NULL, sender_info.user_id, sender_info.name);
-    PEP_STATUS status = set_identity(session, recip);
-    ASSERT_OK;
-
-    // Make sure identity exists
-    free_identity(recip);
-    recip = NULL;
-    status = get_identity(session, sender_info.email, sender_info.user_id, &recip);
-    ASSERT_OK;
-    free_identity(recip);
-    recip = NULL;
-    // And *not* in TOFU form
-    string TOFU = string("TOFU_") + sender_info.email;
-    status = get_identity(session, sender_info.email, TOFU.c_str(), &recip);
-    ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
+    set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
 
     // Ok, we now the desired state. Run the import mail fun.
-    const char* filename = "test_mails/CanonicalFrom2.2BobToAlice_2_2_TwoKeys.eml";
-    message* infile = NULL;
-    status = vanilla_read_file_and_decrypt(session, &infile, filename);
-    ASSERT_OK;
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_2_TwoKeys.eml", 
+                                     PEP_rating_reliable, PEP_STATUS_OK);
 
-    // Ensure we now have a default key for recip - NOTE: IF THE NAME IS NULL OR DOES NOT MATCH THE TOFU INPUT NAME,
-    // WE WILL GET NO KEY. THIS IS APPARENTLY BY DESIGN.
-    //
-    // I did ask. Often. ;)
-    recip = new_identity(sender_info.email, NULL, sender_info.user_id, sender_info.name);
-    ASSERT_NOTNULL(recip);
-    status = update_identity(session, recip);
-    ASSERT_NOTNULL(recip->fpr);
-    ASSERT_STREQ(recip->fpr, sender_info.fpr);
-    ASSERT_EQ(recip->comm_type, PEP_ct_pEp_unconfirmed);
-
-    free_message(infile);
-    free_identity(alice);
-    free_identity(recip);
+     // Check that the default key matches the canonical default key for this sender,
+    // if expected to be present.
+    check_sender_default_key_status(sender_info, PEP_ct_pEp_unconfirmed);
 }
 
 TEST_F(DefaultFromEmailTest, check_encrypted_key_import_sylvia_2_1_two_keys) {
-    pEp_identity* alice = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::ALICE);
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::SYLVIA];
-    pEp_identity* recip = NULL;
-
-    // Make sure identity doesn't exist - do NOT use update_identity, which will create it in the DB
-    PEP_STATUS status = get_identity(session, sender_info.email, sender_info.user_id, &recip);
-    ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
-    // And also not in TOFU form
-    string TOFU = string("TOFU_") + sender_info.email;
-    status = get_identity(session, sender_info.email, TOFU.c_str(), &recip);
-    ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
+    set_up_and_check_initial_identities(TestUtilsPreset::SYLVIA, sender_info);
 
     // Ok, we now have a blank slate. Run the import mail fun.
-    const char* filename = "test_mails/CanonicalFrom2.2SylviaToAlice_2_1_TwoKeys.eml";
-    message* infile = NULL;
-    PEP_rating rating = PEP_rating_undefined;
-    status = vanilla_read_file_and_decrypt_with_rating(session, &infile, filename, &rating);
-    ASSERT_OK;
-    ASSERT_EQ(rating, PEP_rating_reliable);
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2SylviaToAlice_2_1_TwoKeys.eml", 
+                                     PEP_rating_reliable, PEP_STATUS_OK);
 
-    // Ensure we now have a default key for recip - NOTE: IF THE NAME IS NULL OR DOES NOT MATCH THE TOFU INPUT NAME,
-    // WE WILL GET NO KEY. THIS IS APPARENTLY BY DESIGN.
-    //
-    // I did ask. Often. ;)
-    recip = new_identity(sender_info.email, NULL, sender_info.user_id, sender_info.name);
-    ASSERT_NOTNULL(recip);
-    status = update_identity(session, recip);
-    ASSERT_NOTNULL(recip->fpr);
-    ASSERT_STREQ(recip->fpr, sender_info.fpr);
-    ASSERT_EQ(recip->comm_type, PEP_ct_pEp_unconfirmed);
-
-    free_message(infile);
-    free_identity(alice);
-    free_identity(recip);
+     // Check that the default key matches the canonical default key for this sender,
+    // if expected to be present.
+    check_sender_default_key_status(sender_info, PEP_ct_pEp_unconfirmed);
 }
 
 TEST_F(DefaultFromEmailTest, check_encrypted_key_import_bob_2_1_two_keys) {
-    pEp_identity* alice = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::ALICE);
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
-
-    // We need recip to exist in DB without a known key.
-    pEp_identity* recip = new_identity(sender_info.email, NULL, sender_info.user_id, sender_info.name);
-    PEP_STATUS status = set_identity(session, recip);
-    ASSERT_OK;
-
-    // Make sure identity exists
-    free_identity(recip);
-    recip = NULL;
-    status = get_identity(session, sender_info.email, sender_info.user_id, &recip);
-    ASSERT_OK;
-    free_identity(recip);
-    recip = NULL;
-    // And *not* in TOFU form
-    string TOFU = string("TOFU_") + sender_info.email;
-    status = get_identity(session, sender_info.email, TOFU.c_str(), &recip);
-    ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
+    set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
 
     // Ok, we now the desired state. Run the import mail fun.
-    const char* filename = "test_mails/CanonicalFrom2.2BobToAlice_2_1_TwoKeys.eml";
-    message* infile = NULL;
-    PEP_rating rating = PEP_rating_undefined;
-    status = vanilla_read_file_and_decrypt_with_rating(session, &infile, filename, &rating);
-    ASSERT_OK;
-    ASSERT_EQ(rating, PEP_rating_reliable);
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_1_TwoKeys.eml", 
+                                     PEP_rating_reliable, PEP_STATUS_OK);
 
-    // Ensure we now have a default key for recip - NOTE: IF THE NAME IS NULL OR DOES NOT MATCH THE TOFU INPUT NAME,
-    // WE WILL GET NO KEY. THIS IS APPARENTLY BY DESIGN.
-    //
-    // I did ask. Often. ;)
-    recip = new_identity(sender_info.email, NULL, sender_info.user_id, sender_info.name);
-    ASSERT_NOTNULL(recip);
-    status = update_identity(session, recip);
-    ASSERT_NOTNULL(recip->fpr);
-    ASSERT_STREQ(recip->fpr, sender_info.fpr);
-    ASSERT_EQ(recip->comm_type, PEP_ct_pEp_unconfirmed);
-
-    free_message(infile);
-    free_identity(alice);
-    free_identity(recip);
+     // Check that the default key matches the canonical default key for this sender,
+    // if expected to be present.
+    check_sender_default_key_status(sender_info, PEP_ct_pEp_unconfirmed);
 }
 
 TEST_F(DefaultFromEmailTest, check_encrypted_key_import_sylvia_2_0_two_keys) {
-    pEp_identity* alice = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::ALICE);
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::SYLVIA];
-    pEp_identity* recip = NULL;
-
-    // Make sure identity doesn't exist - do NOT use update_identity, which will create it in the DB
-    PEP_STATUS status = get_identity(session, sender_info.email, sender_info.user_id, &recip);
-    ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
-    // And also not in TOFU form
-    string TOFU = string("TOFU_") + sender_info.email;
-    status = get_identity(session, sender_info.email, TOFU.c_str(), &recip);
-    ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
+    set_up_and_check_initial_identities(TestUtilsPreset::SYLVIA, sender_info);
 
     // Ok, we now have a blank slate. Run the import mail fun.
-    const char* filename = "test_mails/CanonicalFrom2.2SylviaToAlice_2_0_TwoKeys.eml";
-    message* infile = NULL;
-    PEP_rating rating = PEP_rating_undefined;
-    status = vanilla_read_file_and_decrypt_with_rating(session, &infile, filename, &rating);
-    ASSERT_OK;
-    ASSERT_EQ(rating, PEP_rating_reliable);
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2SylviaToAlice_2_0_TwoKeys.eml", 
+                                     PEP_rating_reliable, PEP_STATUS_OK);
 
-    // Ensure we now have a default key for recip - NOTE: IF THE NAME IS NULL OR DOES NOT MATCH THE TOFU INPUT NAME,
-    // WE WILL GET NO KEY. THIS IS APPARENTLY BY DESIGN.
-    //
-    // I did ask. Often. ;)
-    recip = new_identity(sender_info.email, NULL, sender_info.user_id, sender_info.name);
-    ASSERT_NOTNULL(recip);
-    status = update_identity(session, recip);
-    ASSERT_NOTNULL(recip->fpr);
-    ASSERT_STREQ(recip->fpr, sender_info.fpr);
-    ASSERT_EQ(recip->comm_type, PEP_ct_pEp_unconfirmed);
-
-    free_message(infile);
-    free_identity(alice);
-    free_identity(recip);
+     // Check that the default key matches the canonical default key for this sender,
+    // if expected to be present.
+    check_sender_default_key_status(sender_info, PEP_ct_pEp_unconfirmed);
 }
 
 TEST_F(DefaultFromEmailTest, check_encrypted_key_import_bob_2_0_two_keys) {
-    pEp_identity* alice = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::ALICE);
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
-
-    // We need recip to exist in DB without a known key.
-    pEp_identity* recip = new_identity(sender_info.email, NULL, sender_info.user_id, sender_info.name);
-    PEP_STATUS status = set_identity(session, recip);
-    ASSERT_OK;
-
-    // Make sure identity exists
-    free_identity(recip);
-    recip = NULL;
-    status = get_identity(session, sender_info.email, sender_info.user_id, &recip);
-    ASSERT_OK;
-    free_identity(recip);
-    recip = NULL;
-    // And *not* in TOFU form
-    string TOFU = string("TOFU_") + sender_info.email;
-    status = get_identity(session, sender_info.email, TOFU.c_str(), &recip);
-    ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
+    set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
 
     // Ok, we now the desired state. Run the import mail fun.
-    const char* filename = "test_mails/CanonicalFrom2.2BobToAlice_2_0_TwoKeys.eml";
-    message* infile = NULL;
-    PEP_rating rating = PEP_rating_undefined;
-    status = vanilla_read_file_and_decrypt_with_rating(session, &infile, filename, &rating);
-    ASSERT_OK;
-    ASSERT_EQ(rating, PEP_rating_reliable);
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_0_TwoKeys.eml", 
+                                     PEP_rating_reliable, PEP_STATUS_OK);
 
-    // Ensure we now have a default key for recip - NOTE: IF THE NAME IS NULL OR DOES NOT MATCH THE TOFU INPUT NAME,
-    // WE WILL GET NO KEY. THIS IS APPARENTLY BY DESIGN.
-    //
-    // I did ask. Often. ;)
-    recip = new_identity(sender_info.email, NULL, sender_info.user_id, sender_info.name);
-    ASSERT_NOTNULL(recip);
-    status = update_identity(session, recip);
-    ASSERT_NULL(recip->fpr);
-    ASSERT_EQ(recip->comm_type, PEP_ct_key_not_found);
-
-    free_message(infile);
-    free_identity(alice);
-    free_identity(recip);
+     // Check that the default key matches the canonical default key for this sender,
+    // if expected to be present.
+    check_sender_default_key_status(sender_info, PEP_ct_key_not_found);
 }
 
 TEST_F(DefaultFromEmailTest, check_encrypted_key_import_sylvia_1_0_two_keys) {
-    pEp_identity* alice = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::ALICE);
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::SYLVIA];
-    pEp_identity* recip = NULL;
-
-    // Make sure identity doesn't exist - do NOT use update_identity, which will create it in the DB
-    PEP_STATUS status = get_identity(session, sender_info.email, sender_info.user_id, &recip);
-    ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
-    // And also not in TOFU form
-    string TOFU = string("TOFU_") + sender_info.email;
-    status = get_identity(session, sender_info.email, TOFU.c_str(), &recip);
-    ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
+    set_up_and_check_initial_identities(TestUtilsPreset::SYLVIA, sender_info);
 
     // Ok, we now have a blank slate. Run the import mail fun.
-    const char* filename = "test_mails/CanonicalFrom2.2SylviaToAlice_1_0_TwoKeys.eml";
-    message* infile = NULL;
-    PEP_rating rating = PEP_rating_undefined;
-    status = vanilla_read_file_and_decrypt_with_rating(session, &infile, filename, &rating);
-    ASSERT_OK;
-    ASSERT_EQ(rating, PEP_rating_reliable);
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2SylviaToAlice_1_0_TwoKeys.eml", 
+                                     PEP_rating_reliable, PEP_STATUS_OK);
 
-    // Ensure we now have a default key for recip - NOTE: IF THE NAME IS NULL OR DOES NOT MATCH THE TOFU INPUT NAME,
-    // WE WILL GET NO KEY. THIS IS APPARENTLY BY DESIGN.
-    //
-    // I did ask. Often. ;)
-    recip = new_identity(sender_info.email, NULL, sender_info.user_id, sender_info.name);
-    ASSERT_NOTNULL(recip);
-    status = update_identity(session, recip);
-    ASSERT_NULL(recip->fpr);
-    ASSERT_EQ(recip->comm_type, PEP_ct_key_not_found);
-
-    free_message(infile);
-    free_identity(alice);
-    free_identity(recip);
+     // Check that the default key matches the canonical default key for this sender,
+    // if expected to be present.
+    check_sender_default_key_status(sender_info, PEP_ct_key_not_found);
 }
 
 TEST_F(DefaultFromEmailTest, check_encrypted_key_import_bob_1_0_two_keys) {
-    pEp_identity* alice = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::ALICE);
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
-
-    // We need recip to exist in DB without a known key.
-    pEp_identity* recip = new_identity(sender_info.email, NULL, sender_info.user_id, sender_info.name);
-    PEP_STATUS status = set_identity(session, recip);
-    ASSERT_OK;
-
-    // Make sure identity exists
-    free_identity(recip);
-    recip = NULL;
-    status = get_identity(session, sender_info.email, sender_info.user_id, &recip);
-    ASSERT_OK;
-    free_identity(recip);
-    recip = NULL;
-    // And *not* in TOFU form
-    string TOFU = string("TOFU_") + sender_info.email;
-    status = get_identity(session, sender_info.email, TOFU.c_str(), &recip);
-    ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
+    set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
 
     // Ok, we now the desired state. Run the import mail fun.
-    const char* filename = "test_mails/CanonicalFrom2.2BobToAlice_1_0_TwoKeys.eml";
-    message* infile = NULL;
-    PEP_rating rating = PEP_rating_undefined;
-    status = vanilla_read_file_and_decrypt_with_rating(session, &infile, filename, &rating);
-    ASSERT_OK;
-    ASSERT_EQ(rating, PEP_rating_reliable);
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_1_0_TwoKeys.eml", 
+                                     PEP_rating_reliable, PEP_STATUS_OK);
 
-    // Ensure we now have a default key for recip - NOTE: IF THE NAME IS NULL OR DOES NOT MATCH THE TOFU INPUT NAME,
-    // WE WILL GET NO KEY. THIS IS APPARENTLY BY DESIGN.
-    //
-    // I did ask. Often. ;)
-    recip = new_identity(sender_info.email, NULL, sender_info.user_id, sender_info.name);
-    ASSERT_NOTNULL(recip);
-    status = update_identity(session, recip);
-    ASSERT_NULL(recip->fpr);
-    ASSERT_EQ(recip->comm_type, PEP_ct_key_not_found);
-
-    free_message(infile);
-    free_identity(alice);
-    free_identity(recip);
+     // Check that the default key matches the canonical default key for this sender,
+    // if expected to be present.
+    check_sender_default_key_status(sender_info, PEP_ct_key_not_found);
 }
