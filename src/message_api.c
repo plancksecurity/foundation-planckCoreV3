@@ -5331,47 +5331,57 @@ static PEP_STATUS _decrypt_message(
                                                         &_changed_keys,
                                                         &imported_sender_key_fpr);
 
-                if (src->from && !is_me(session, src->from)) {
-                    if (status == PEP_STATUS_OK && !has_inner) {
-                        // If we're claiming to have a pEp version 2.2 or greater, we only take it
-                        // if it had the right name during the import and if it was the ONLY key on the message?
-                        //
-                        // FIXME: From SENDER >= 2.2, we should be VERY careful here -- check back on this one
-                        //
-                        const char* sender_key = NULL;
-                        if ((major_ver == 2 && minor_ver > 1) || major_ver > 2) {
-                            if (imported_sender_key_fpr)
-                                sender_key = imported_sender_key_fpr;
+                if (src->from) {
+                    if (!is_me(session, src->from)) {
+
+                        /* if decrypted, but not verified... */
+                        if (status == PEP_STATUS_OK && decrypt_status == PEP_DECRYPTED) {
+                            if (src->from)
+                                status = verify_decrypted(session,
+                                                          src, msg,
+                                                          ptext, psize,
+                                                          &_keylist,
+                                                          &decrypt_status,
+                                                          crypto);
                         }
-                        else if (header_key_imported && _imported_key_list)
-                            sender_key = _imported_key_list->value;
-                        else if (*start && !((*start)->next))
-                            sender_key = (*start)->value; // signer if sent from < 2.1
+
+                        if (status == PEP_STATUS_OK && !has_inner) {
+                            // If we're claiming to have a pEp version 2.2 or greater, we only take it
+                            // if it had the right name during the import and if it was the ONLY key on the message?
+                            //
+                            // FIXME: From SENDER >= 2.2, we should be VERY careful here -- check back on this one
+                            //
+                            const char *sender_key = NULL;
+                            // FIXME: No, not possible. Has to come from INNER message.
+                            if ((major_ver == 2 && minor_ver > 1) || major_ver > 2) {
+                                if (imported_sender_key_fpr)
+                                    sender_key = imported_sender_key_fpr;
+                            }
+                            else if (header_key_imported && _imported_key_list) {
+                                sender_key = _imported_key_list->value;
+                            }
+                            else if (*start && !((*start)->next)) {
+                                if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
+                                    if (_keylist && !EMPTYSTR(_keylist->value) && *start && !EMPTYSTR((*start)->value)) {
+                                        sender_key = (*start)->value; // signer if sent from < 2.1
+                                    }
+                                }
+                            }
 
 
-                        status = _check_and_set_default_key(session, src->from, sender_key);
-                        free(imported_sender_key_fpr);
-                        imported_sender_key_fpr = NULL;
+                            status = _check_and_set_default_key(session, src->from, sender_key);
+                            free(imported_sender_key_fpr);
+                            imported_sender_key_fpr = NULL;
 
-                        if (status == PEP_OUT_OF_MEMORY)
-                            goto enomem;    
-                    }    
-                } // else, it needs to get set from INNER keys.
+                            if (status == PEP_OUT_OF_MEMORY)
+                                goto enomem;
+                        } // else, it needs to get set from INNER keys.
+                    }
+                }
 
                 if (status != PEP_STATUS_OK)
                     goto pEp_error;            
 
-                /* if decrypted, but not verified... */
-                if (decrypt_status == PEP_DECRYPTED) {
-                    
-                    if (src->from)                                                                 
-                        status = verify_decrypted(session,
-                                                  src, msg,
-                                                  ptext, psize,
-                                                  &_keylist,
-                                                  &decrypt_status,
-                                                  crypto);
-                }
                 break;
 
             case PEP_enc_inline:

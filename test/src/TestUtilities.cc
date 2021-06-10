@@ -36,7 +36,7 @@ const TestUtilsPreset::IdentityInfo TestUtilsPreset::presets[]     = {
                 TestUtilsPreset::IdentityInfo("Alice Spivak Hyatt", "ALICE", "pep.test.alice@pep-project.org", "pep-test-alice-0x6FF00E97", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97"),
                 TestUtilsPreset::IdentityInfo("Apple of my Computer", "APPLE", "pep.test.apple@pep-project.org", "pep-test-apple-0x1CCBC7D7", "3D8D9423D03DDF61B60161150313D94A1CCBC7D7"),
                 TestUtilsPreset::IdentityInfo("Bob Dog", "BOB", "pep.test.bob@pep-project.org", "pep-test-bob-0xC9C2EE39", "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39"),
-                TestUtilsPreset::IdentityInfo("Bob Dog", "BOB", "pep.test.bob@pep-project.org", "pep-test-bob-0xC9C2EE39", "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39"),
+                TestUtilsPreset::IdentityInfo("Bob Dog", "BOB", "pep.test.bob@pep-project.org", "pep-test-bob-0x9667F61D", "C47ADE6207C7C3098C6E83D9FF3D3F669667F61D"),
                 TestUtilsPreset::IdentityInfo("Carol Burnett", "CAROL", "pep-test-carol@pep-project.org", "pep-test-carol-0x42A85A42", "8DD4F5827B45839E9ACCA94687BDDFFB42A85A42"),
                 TestUtilsPreset::IdentityInfo("The Hoff", "DAVE", "pep-test-dave@pep-project.org", "pep-test-dave-0xBB5BCCF6", "E8AC9779A2D13A15D8D55C84B049F489BB5BCCF6"),
                 TestUtilsPreset::IdentityInfo("Erin Ireland", "ERIN", "pep-test-erin@pep-project.org", "pep-test-erin-0x9F8D7CBA", "1B0E197E8AE66277B8A024B9AEA69F509F8D7CBA"),
@@ -60,7 +60,7 @@ const TestUtilsPreset::IdentityInfo TestUtilsPreset::presets[]     = {
                 TestUtilsPreset::IdentityInfo("Inquisitor Claire Trevelyan", "INQUISITOR", "inquisitor@darthmama.org", "inquisitor-0xA4728718_renewed", "8E8D2381AE066ABE1FEE509821BA977CA4728718"),
                 TestUtilsPreset::IdentityInfo("Bernd das Brot", "BERNDI", "bernd.das.brot@darthmama.org", "bernd.das.brot-0xCAFAA422", "F8CE0F7E24EB190A2FCBFD38D4B088A7CAFAA422"),
                 TestUtilsPreset::IdentityInfo("Sylvia Plath", "SYLVIA", "sylvia@darthmama.org", "sylvia-0x585A6780", "0C0F053EED87058C7330A11F10B89D31585A6780"),
-                TestUtilsPreset::IdentityInfo("Sylvia Plath", "SYLVIA", "sylvia@darthmama.org", "sylvia-0x585A6780", "0C0F053EED87058C7330A11F10B89D31585A6780")
+                TestUtilsPreset::IdentityInfo("Sylvia Plath", "SYLVIA", "sylvia@darthmama.org", "sylvia-0x2E5A78A9", "3FB4EB6F00E96E163FB05C0374B8F0832E5A78A9")
     };
 
 

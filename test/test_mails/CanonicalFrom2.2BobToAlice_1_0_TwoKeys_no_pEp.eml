@@ -1,7 +1,6 @@
 From: Bob Dog <pep.test.bob@pep-project.org>
 To: Alice Spivak Hyatt <pep.test.alice@pep-project.org>
-Subject: =?utf-8?Q?p=E2=89=A1p?=
-X-pEp-Version: 2.2
+Subject: No pEp
 MIME-Version: 1.0
 Content-Type: multipart/encrypted; boundary="21d16ce04e65e34b57f06df123987fba"; 
  protocol="application/pgp-encrypted"
