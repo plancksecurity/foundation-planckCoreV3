@@ -15,15 +15,14 @@ COPY . ${BUILDROOT}/pEpEngine
 
 USER root
 
+RUN yum install -y python3 python3-lxml binutils && yum clean all
+
 RUN chown -R pep-builder:pep-builder ${BUILDROOT}/pEpEngine
 WORKDIR ${BUILDROOT}/pEpEngine
 
 ARG YML2_VERSION
 ARG ENGINE_VERSION
 ARG CURRENT_DISTRO
-
-RUN  apt-get update && apt-get install -y bzip2 && \
-     rm -rf /var/lib/apt/lists/*
 
 ### Build pEpEngine dependencies
 USER pep-builder

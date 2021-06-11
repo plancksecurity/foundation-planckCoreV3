@@ -1,0 +1,105 @@
+// p≡p API C data types mapping
+
+// Copyleft (c) 2019, p≡p foundation
+// this file is under GNU General Public License 3.0
+// see LICENSE.txt
+
+// written by Volker Birk
+
+
+template "*", mode=name {
+    param "abbr", "false()";
+    if ".!=/*" {
+        apply "..", 0, mode=name;
+        if "@name!='basic' and @name != string(../@name)"
+            > _
+    }
+    if "@name!='basic' and @name != string(../@name)"
+        > «@name»
+}
+
+function "name" {
+    param "abbr", "false()";
+    apply ".", mode=name with "abbr", "$abbr";
+}
+
+def "func:name" {
+    param "abbr", "false()";
+    result call "name" with "abbr", "$abbr";
+}
+
+def "func:basetype" {
+    param "type";
+    const "definition", "//type[@name=$type]";
+    choose {
+        when "$definition/extends"
+            result "func:c-type($definition/extends/@type)";
+        otherwise
+            result "func:c-type($type)";
+    }
+}
+
+def "func:c-type" {
+    param "dsltype";
+
+    choose {
+        // base types
+        when "$dsltype = 'string'"
+            result > char *
+        when "$dsltype = 'binary'"
+            result > char *
+        when "$dsltype = 'int'"
+            result > int
+        when "$dsltype = 'unsigned'"
+            result > unsigned int
+        when "$dsltype = 'size_t'"
+            result > size_t
+        when "$dsltype = 'bool'"
+            result > bool
+        when "$dsltype = 'timestamp'"
+            result > timestamp
+        when "$dsltype = 'any'"
+            result > void *
+
+        // basic type definitions
+        when "/package/package[@name='basic']/type[@name=$dsltype]"
+            result > «$dsltype»
+        when "/package/package[@name='basic']/struct[@name=$dsltype]"
+            result > pEp_«$dsltype»
+        when "/package/package[@name='basic']/enum[@name=$dsltype]"
+            result > pEp_«$dsltype»
+
+        // definitions in local module
+        when "../../type[@name=$dsltype]"
+            for "../../type[@name=$dsltype]"
+                result > «$dsltype»
+        when "../../struct[@name=$dsltype]"
+            for "../../struct[@name=$dsltype]"
+                result > «func:name()»
+        when "../../enum[@name=$dsltype]"
+            for "../../enum[@name=$dsltype]"
+                result > «func:name()»
+
+        // definitions in other module
+        when "/package/package/type[@name=$dsltype]"
+            for "/package/package/type[@name=$dsltype]" {
+                warning value "concat('WARNING: type ', $dsltype, ' found in non-local module')";
+                result > «$dsltype»
+            }
+        when "/package/package/struct[@name=$dsltype]"
+            for "/package/package/struct[@name=$dsltype]" {
+                warning value "concat('WARNING: type ', $dsltype, ' found in non-local module')";
+                result > «func:name()»
+            }
+        when "/package/package/enum[@name=$dsltype]"
+            for "/package/package/enum[@name=$dsltype]" {
+                warning value "concat('WARNING: type ', $dsltype, ' found in non-local module')";
+                result > «func:name()»
+            }
+
+        // other
+        otherwise
+            error value "concat('type “', $dsltype, '” not found')";
+    }
+}
+

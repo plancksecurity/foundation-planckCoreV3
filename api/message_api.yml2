@@ -1,0 +1,569 @@
+// p≡p Message API
+
+// Copyleft (c) 2019-2020, p≡p foundation
+// this file is under GNU General Public License 3.0
+// see LICENSE.txt
+
+// written by Volker Birk and Nana Karlstetter
+
+
+enum text_format {
+    hex plain 0;
+    hex html 1;
+    hex other 0xff;
+}
+
+
+enum direction {
+    item incoming 0;
+    item outgoing 1;
+}
+
+
+enum enc_format {
+    item none 0 doc='message is not encrypted';
+    item pieces 1 doc='inline PGP + PGP extensions';
+    item S_MIME 2 doc='RFC5751';
+    item PGP_MIME 3 doc='RFC3156';
+    item PEP 4 doc='pEp encryption format';
+    item PGP_MIME_Outlook1 5 doc='Message B0rken by Outlook type 1';
+}
+
+
+enum rating {
+    item undefined 0 doc="no rating available";
+
+    doc "no color";
+
+    item cannot_decrypt 1;
+    item have_no_key 2;
+    item unencrypted 3;
+    // 4 is reserved
+    item unreliable 5;
+
+    doc "yellow";
+
+    item reliable 6;
+
+    doc "green";
+
+    item trusted 7;
+    item trusted_and_anonymized 8;
+    item fully_anonymous 9;
+
+    doc "red";
+
+    item mistrust -1;
+    item b0rken -2;
+    item under_attack -3;
+}
+    
+
+enum color {
+    item no_color 0;
+    item yellow 1;
+    item green 2;
+    item red -1;
+}
+
+
+struct message {
+    field direction dir;
+    field string id doc='string of message ID';
+    field string shortmsg doc='string of short message';
+    field string longmsg doc='string of long message (plain)';
+    field string longmsg_formatted doc='string of long message (formatted)';
+    field blob_list attachments doc='blobs with attachements';
+    field binary_ref rawmsg_ref doc='reference to raw message data';
+    field size_t rawmsg_size doc='size of raw message data';
+    field timestamp sent doc='when the message is sent';
+    field timestamp recv doc='when the message is received';
+    field identity from doc='whom the message is from';
+    field identity_list to doc='whom the message is to';
+    field identity recv_by doc='via which identity the message is received';
+    field identity_list cc doc='whom a CC is being sent';
+    field identity_list bcc doc='whom a BCC is being sent';
+    field identity_list reply_to doc='where a reply should go to';
+    field string_list in_reply_to doc='list of strings with MessageIDs of refering messages';
+    field any_ref refering_msg_ref doc='reference to refering message';
+    field string_list references doc='list of strings with references';
+    field string_list refered_by doc='list of references to messages being refered';
+    field string_list keywords doc='list of strings with keywords';
+    field string comments doc='string with comments';
+    field string_pair_list opt_fields doc='optional fields';
+    field enc_format format doc='format of encrypted data';
+
+    new (msg_direction dir);
+}
+
+
+protocol session {
+    method encrypt_message 
+    doc="""
+        encrypt message in memory. enc_format PEP_enc_inline_EA:
+        internal format of the encrypted attachments is changing, see
+        https://dev.pep.foundation/Engine/ElevatedAttachments
+
+        Only use this for transports without support for attachments
+        when attached data must be sent inline
+        """
+    {
+        // parms
+
+        lend message src
+        doc="""
+            message to encrypt - usually in-only, but can be in-out for
+            unencrypted messages; in that case, we may attach the key and
+            decorate the message
+            """;
+
+        use hash_list extra doc="extra keys for encryption";
+
+        create message dst
+        doc="""
+            pointer to new encrypted message or #NV if no encryption could
+            take place
+            """;
+
+        use enc_format format doc="The desired format this message should be encrypted with";
+
+        // flags
+
+        flags {
+            flag default 0x0 doc='"default" means whatever the default behaviour for the function is.';
+            flag force_encryption 0x1;
+            flag force_unsigned 0x2 doc='This flag is for special use cases and should not be used by normal pEp clients!';
+            flag force_no_attached_key 0x4;
+            flag inner_message 0x8 doc='This is mainly used by pEp clients to send private keys to their own PGP-only device.';
+            flag force_version_1 0x10 doc='This is mainly used by pEp clients to send private keys to their own PGP-only device';
+            flag key_reset_only 0x20 
+            doc="""This flag is used to let internal functions know that an encryption call is being 
+                used as part of a reencryption operation
+                """;
+            flag encrypt_reencrypt 0x40;
+        }
+
+        // exceptions
+
+        throws key_has_ambig_name doc="at least one of the receipient keys has an ambiguous name";
+
+        throws unencrypted
+        doc="""
+            on demand or no recipients with usable key, is left unencrypted,
+            and key is attached to it 
+            """;
+    }
+
+
+    method encrypt_message_and_add_priv_key
+    doc="""
+        encrypt message in memory, adding an encrypted private key (encrypted separately 
+        and sent within the inner message)
+        """
+    {
+        // parms
+
+        use message src doc="message to encrypt";
+
+        create message dst
+            doc="pointer to new encrypted message or empty if no encryption could take place";
+
+        use hash to_fpr
+            doc="fingerprint of the recipient key to which the private key should be encrypted";
+
+        use enc_format format doc="encrypted format";
+
+        // flags
+
+        flags {
+            flag default 0x0 doc='"default" means whatever the default behaviour for the function is.';
+            flag force_encryption 0x1;
+            flag force_unsigned 0x2 doc='This flag is for special use cases and should not be used by normal pEp clients!';
+            flag force_no_attached_key 0x4;
+            flag inner_message 0x8 doc='This is mainly used by pEp clients to send private keys to their own PGP-only device.';
+            flag force_version_1 0x10 doc='This is mainly used by pEp clients to send private keys to their own PGP-only device';
+            flag key_reset_only 0x20;
+        }
+
+        // exceptions
+
+        throws key_has_ambig_name doc="at least one of the receipient keys has an ambiguous name";
+
+        throws unencrypted
+            doc="""
+                on demand or no recipients with usable key, is left unencrypted, 
+                and key is attached to it
+                """;
+    }
+
+
+    method encrypt_message_for_self
+    doc="""
+        encrypt message in memory for user's identity only,
+        ignoring recipients and other identities from the message
+        """
+    {
+        // parms
+
+        use identity target_id
+        doc="""
+            self identity this message should be encrypted for. Message is NOT encrypted for 
+            identities other than the target_id (and then, only if the target_id refers to self!).
+            """;
+
+        use message src doc="message to encrypt";
+
+        use hash_list extra doc="extra keys for encryption";
+
+        create message dst doc="pointer to new encrypted message or empty on failure";
+
+        use enc_format format doc="encrypted format";
+
+        // flags
+
+        flags {
+            flag default 0x0 doc='"default" means whatever the default behaviour for the function is.';
+            flag force_encryption 0x1;
+            flag force_unsigned 0x2 doc='This flag is for special use cases and should not be used by normal pEp clients!';
+            flag force_no_attached_key 0x4;
+            flag inner_message 0x8 doc='This is mainly used by pEp clients to send private keys to their own PGP-only device.';
+            flag force_version_1 0x10 doc='This is mainly used by pEp clients to send private keys to their own PGP-only device';
+            flag key_reset_only 0x20;
+        }
+
+        doc | (FIXME: The exceptions may not be correct or complete)
+
+        throws key_not_found doc="at least one of the receipient keys could not be found";
+
+        throws key_has_ambig_name doc="at least one of the receipient keys has an ambiguous name";
+
+        throws get_key_failed doc="cannot retrieve key";
+    }
+
+
+    method decrypt_message doc="decrypt message in memory"
+    {
+        // parms
+
+        lend message src
+        doc="""
+            message to decrypt. 
+            The ownership of src remains with the caller - however, the contents 
+            might be modified (strings freed and allocated anew or set to empty,
+            etc) intentionally; when this happens, decrypt_flag_src_modified is set.
+            """;
+
+        create message dst doc="pointer to new decrypted message or empty on failure";
+
+        lend hash_list keylist
+        doc="""
+            in: stringlist with additional keyids for reencryption if needed
+                (will be freed and replaced with output keylist)
+            out: stringlist with keyids used for signing and encryption. first
+                first key is signer, additional keys are the ones it was encrypted
+                to. Only signer and whichever of the user's keys was used are reliable.
+            The ownership of keylist goes to the caller.
+            If src is unencrypted this function returns unencrypted and sets dst to empty.
+            """;
+
+        return rating msg_rating doc="rating for the message";
+
+        // flags
+        
+        flags {
+            flag decrypt_flag_own_private_key 0x1 
+            doc="""
+                private key was imported for one of our addresses (NOT trusted
+                or set to be used - handshake/trust is required for that)
+                """;
+            flag decrypt_flag_consume 0x2 doc='used by sync';
+            flag decrypt_flag_ignore 0x4 doc='used by sync';
+            flag decrypt_flag_src_modified 0x8 
+            doc="""
+                indicates that the src object has been modified. At the moment,
+                this is always as a direct result of the behaviour driven
+                by the input flags. This flag is the ONLY value that should be
+                relied upon to see if such changes have taken place.
+                """;
+            flag decrypt_flag_untrusted_server 0x100 
+            doc="""
+                input flag. Used to signal that decrypt function should engage in behaviour
+                specified for when the server storing the source is untrusted.
+                """;
+            flag decrypt_flag_dont_trigger_sync 0x200;
+        }
+
+        // exceptions
+    
+        throws decrypted doc="if message decrypted but not verified";
+
+        throws cannot_reencrypt
+        doc="""
+            if message was decrypted (and possibly verified) but a reencryption 
+            operation is expected by the caller and failed.
+            """;
+
+        throws unencrypted
+        doc="""
+            if src is unencrypted this function returns unencrypted and sets
+            dst to empty.
+            """;
+
+        throws any doc="all error status values allowed";
+    }
+
+
+    method own_message_private_key_details
+    doc="""
+        details on own key in own message. Note: In order to obtain details about key 
+        to be possibly imported as a replacement of key currently used as own identity, 
+        application passes message that have been previously flagged by decrypt_message() 
+        as own message containing own key to this function.
+        """
+    {
+        // parms
+
+        use message msg
+        doc="""
+            message to decrypt. msg MUST be encrypted so that this function 
+            can check own signature.
+            """;
+
+        create identity ident doc="identity containing uid, address and fpr of key";
+
+        // exceptions
+
+        throws any doc="error status";
+    }
+
+
+    method outgoing_message_rating doc="get rating for an outgoing message"
+    {
+        // parms
+
+        use message msg
+        doc="""
+            message to get the rating for. From must point to a valid pEp_identity.
+            Dir must be dir_outgoing.
+            """;
+
+        return rating msg_rating doc="rating for the message";
+
+        // exceptions
+
+        throws any doc="error status";
+    }
+
+
+    method outgoing_message_rating_preview doc="get rating preview"
+    {
+        // parms
+
+        use message msg
+        doc="""
+            message to get the rating for. From must point to a valid pEp_identity.
+            Dir must be dir_outgoing.
+            """;
+
+        return rating msg_rating doc="rating preview for the message";
+
+        // exceptions
+
+        throws any doc="error status";
+    }
+
+
+    method identity_rating doc="get rating for a single identity"
+    {
+        // parms
+
+        use identity ident doc="identity to get the rating for";
+
+        return rating identity_rating doc="rating for the identity";
+
+        // exceptions
+
+        throws any doc="error status";
+    }
+
+
+    method get_trustwords doc="get full trustwords string for a *pair* of identities"
+    {
+        // parms
+
+        use identity id1 doc="identity of first party in communication - fpr can't be empty";
+
+        use identity id2 doc="identity of second party in communication - fpr can't be empty";
+
+        use ISO639_1 lang doc="string with ISO 639-1 language code";
+
+        create string words
+        doc="""
+            string with all trustwords, separated 
+            by a blank each. Empty if language is not supported or trustword 
+            wordlist is damaged or unavailable. 
+            The word pointer goes to the ownership of the caller. 
+            The caller is responsible to free() it (on Windoze use pEp_free())
+            """;
+
+        use bool full
+        doc="""
+            if true, generate ALL trustwords for these identities.
+            else, generate a fixed-size subset. (TODO: fixed-minimum-entropy
+            subset in next version)
+            """;
+
+        // exceptions
+
+        throws out_of_memory doc="out of memory";
+
+        throws trustword_not_found doc="at least one trustword not found";
+    }
+
+
+    method get_message_trustwords doc="get full trustwords string for message sender and reciever identities"
+    {
+        // parms
+
+        use message msg doc="message to get sender identity from";
+
+        use hash_list keylist doc="empty if message to be decrypted, keylist returned by decrypt_message() otherwise.";
+
+        use identity received_by doc="identity for account receiving message can't be empty";
+
+        use ISO639_1 lang doc="string with ISO 639-1 language code";
+
+        create string words
+        doc="""
+            string with all trustwords, separated by a blank each.
+            Empty if language is not supported or trustword  wordlist is damaged or unavailable.
+            """;
+
+        use bool full
+        doc="""
+            if true, generate ALL trustwords for these identities.
+            else, generate a fixed-size subset. (TODO: fixed-minimum-entropy
+            subset in next version)
+            """;
+
+        // exceptions
+
+        throws out_of_memory doc="out of memory";
+
+        throws trustword_not_found doc="at least one trustword not found";
+
+        throws like decrypt_message doc="error status of decrypt_message() if decryption fails";
+    }
+
+
+    method get_trustwords_for_fprs doc="get full trustwords string for a pair of fingerprints"
+    {
+        // parms
+
+        use string fpr1 doc="fingerprint 1";
+
+        use string fpr2 doc="fingerprint 2";
+
+        use ISO639_1 lang doc="string with ISO 639-1 language code";
+
+        create string words 
+        doc="""
+            pointer to string with all trustwords UTF-8 encoded, separated by a blank each. 
+            NULL if language is not supported or trustword wordlist is damaged or unavailable.
+            The caller is responsible to free() it (on Windoze use pEp_free()).
+            """;
+
+        return size_t wsize doc="length of full trustwords string";
+
+        use bool full
+        doc="""
+            if true, generate ALL trustwords for these identities. Else, generate a fixed-size
+            subset. (TODO: fixed-minimum-entropy subset in next version)
+            """;
+
+        // exceptions
+
+        throws out_of_memory doc="out of memory";
+
+        throws trustword_not_found doc="at least one trustword not found";
+    }
+
+
+    method re_evaluate_message_rating doc="re-evaluate already decrypted message rating"
+    {
+        // parms
+
+        use message msg doc="message to get the rating for. msg->from must point to a valid pEp_identity";
+
+        use hash_list x_keylist doc="decrypted message recipients keys fpr";
+
+        use rating x_enc_status doc="original rating for the decrypted message";
+
+        return rating msg_rating doc="rating for the message";
+
+        // exceptions
+
+        throws illegal_value
+        doc="""
+            if decrypted message doesn't contain X-EncStatus optional field and 
+            x_enc_status is pEp_rating_udefined or if decrypted message doesn't 
+            contain X-Keylist optional field and x_keylist is empty.
+            """;
+
+        throws out_of_memory doc="if not enough memory could be allocated";
+    }
+
+
+    method get_key_rating_for_user doc="get the rating of a certain key for a certain user"
+    {
+        // parms
+
+        use string user_id doc="string with user ID";
+
+        use string fpr doc="string with fingerprint";
+
+        return rating key_rating doc="rating of key for this user";
+        
+        // exceptions
+
+        throws record_not_found doc="if no trust record for user_id and fpr can be found";
+    }
+
+
+    method rating_from_comm_type doc="get the rating for a comm type"
+    {
+        // parms
+
+        use comm_type ct doc="the comm type to deliver the rating for";
+
+        // exceptions
+
+        throws any doc="rating value for comm type ct";
+    }
+}
+
+
+func color_from_rating doc="calculate color from rating"
+{
+    // parms
+
+    use color_from_rating rating doc="color representing that rating";
+
+    // return value
+
+    return color rating_color doc="color representing that rating";
+}
+
+
+func get_binary_path doc="retrieve path of cryptotech binary if available"
+{
+    //parms
+
+    use cryptotech tech doc="cryptotech to get the binary for";
+
+    use string path
+    doc="""
+        path to cryptotech binary or empty if not available. **path is owned by 
+        the library, do not change it!
+        """;
+}
