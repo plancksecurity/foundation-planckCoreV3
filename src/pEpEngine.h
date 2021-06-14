@@ -1152,6 +1152,45 @@ DYNAMIC_API PEP_STATUS delete_keypair(PEP_SESSION session, const char *fpr);
 
 
 /**
+ *  <!--       import_key_with_fpr_return()       -->
+ *
+ *  @brief import keys from data, return optional list of fprs imported
+ *
+ *  @param[in]     session                session handle
+ *  @param[in]     key_data               key data, i.e. ASCII armored OpenPGP key
+ *  @param[in]     size                   amount of data to handle
+ *  @param[out]    private_keys           list of identities containing the
+ *                                        private keys that have been imported
+ *  @param[out]    imported_keys          if non-NULL, list of actual keys imported
+ *  @param[out]    changed_public_keys    if non-NULL AND imported_keys is non-NULL:
+ *                                        bitvector - corresponds to the first 64 keys
+ *                                        imported. If nth bit is set, import changed a
+ *                                        key corresponding to the nth element in
+ *                                        imported keys (i.e. key was in DB and was
+ *                                        changed by import)
+ *
+ *  @retval PEP_KEY_IMPORTED        key was successfully imported
+ *  @retval PEP_OUT_OF_MEMORY       out of memory
+ *  @retval PEP_ILLEGAL_VALUE       there is no key data to import, or imported keys was NULL and
+ *                                  changed_public_keys was not
+ *
+ *  @warning private_keys and imported_keys goes to the ownership of the caller
+ *           private_keys and imported_keys can be left NULL, it is then ignored
+ *           *** THIS IS THE ACTUAL FUNCTION IMPLEMENTED BY CRYPTOTECH "import_key" ***
+ *
+ */
+
+DYNAMIC_API PEP_STATUS import_key_with_fpr_return(
+        PEP_SESSION session,
+        const char *key_data,
+        size_t size,
+        identity_list** private_keys,
+        stringlist_t** imported_keys,
+        uint64_t* changed_public_keys // use as bit field for the first 64 changed keys
+);
+
+
+/**
  *  <!--       import_key()       -->
  *  
  *  @brief Import key from data

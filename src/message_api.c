@@ -2169,7 +2169,7 @@ bool import_attached_keys(
                 }
             }
             identity_list *local_private_idents = NULL;
-            PEP_STATUS import_status = _import_key_with_fpr_return(
+            PEP_STATUS import_status = import_key_with_fpr_return(
                                                   session, blob_value, blob_size, 
                                                   &local_private_idents,
                                                   imported_key_list,
@@ -4521,7 +4521,7 @@ static bool import_header_keys(PEP_SESSION session, message* src, stringlist_t**
     bloblist_t* the_key = base64_str_to_binary_blob(start_key, length);
     if (!the_key)
         return false;
-    PEP_STATUS status = _import_key_with_fpr_return(session, 
+    PEP_STATUS status = import_key_with_fpr_return(session, 
                                                     the_key->value, 
                                                     the_key->size, 
                                                     NULL, 
