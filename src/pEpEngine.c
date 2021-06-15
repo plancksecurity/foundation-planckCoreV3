@@ -1820,6 +1820,30 @@ DYNAMIC_API PEP_STATUS init(
                     return PEP_UNKNOWN_DB_ERROR;
 
             }
+            // Do this for everybody - this is Release_2.1 patch code, because this
+            // code is located elsewhere in 3.x releases
+
+            // Version should now be "latest" - we want to upgrade the default message
+            // version to 2.1 for any pEp partner.
+            int_result = sqlite3_exec(
+                    _session->db,
+                    "update identity\n"
+                    "   set pEp_version_major = 2,\n"
+                    "       pEp_version_minor = 1\n"
+                    "   where exists (select * from person\n"
+                    "                     where identity.user_id = person.id\n"
+                    "                     and identity.is_own = 0\n"
+                    "                     and identity.pEp_version_major = 2\n"
+                    "                     and identity.pEp_version_minor = 0\n"
+                    "                     and person.is_pEp_user = 1);\n",
+                    NULL,
+                    NULL,
+                    NULL
+            );
+            assert(int_result == SQLITE_OK);
+        
+            if (int_result != SQLITE_OK)
+                return PEP_UNKNOWN_DB_ERROR;            
                     
         }        
         else { 
