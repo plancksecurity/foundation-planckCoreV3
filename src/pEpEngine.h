@@ -22,10 +22,10 @@ extern "C" {
 
 // RELEASE version this targets
 // (string: major.minor.patch)
-#define PEP_ENGINE_VERSION "2.1.37"
+#define PEP_ENGINE_VERSION "2.1.38"
 #define PEP_ENGINE_VERSION_MAJOR 2
 #define PEP_ENGINE_VERSION_MINOR 1
-#define PEP_ENGINE_VERSION_PATCH 37
+#define PEP_ENGINE_VERSION_PATCH 38
 #define PEP_ENGINE_VERSION_RC    0
 
 
@@ -938,9 +938,8 @@ DYNAMIC_API PEP_STATUS import_key(
         identity_list **private_keys       
     );
 
-// _import_key_with_fpr_return() - 
-//                INTERNAL FUNCTION - import keys from data, return optional list 
-//                of fprs imported
+// import_key_with_fpr_return() - 
+//                import keys from data, return optional list of fprs imported
 //
 //  parameters:
 //      session (in)                session handle
@@ -967,7 +966,7 @@ DYNAMIC_API PEP_STATUS import_key(
 //      private_keys and imported_keys can be left NULL, it is then ignored
 //      *** THIS IS THE ACTUAL FUNCTION IMPLEMENTED BY CRYPTOTECH "import_key" ***
 
-PEP_STATUS _import_key_with_fpr_return(
+DYNAMIC_API PEP_STATUS import_key_with_fpr_return(
         PEP_SESSION session,
         const char *key_data,
         size_t size,
