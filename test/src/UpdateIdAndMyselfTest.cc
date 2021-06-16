@@ -799,6 +799,13 @@ TEST_F(UpdateIdAndMyselfTest, check_myself_renewal_requires_password) {
     ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);    
 }
 
+TEST_F(UpdateIdAndMyselfTest, check_update_identity_from_API_only_address_userid) {
+    pEp_identity* whatever = new_identity("bob@yermama.com", NULL, "BOB", NULL);
+    PEP_STATUS status = update_identity(session, whatever);
+    ASSERT_OK;
+}
+
+
 TEST_F(UpdateIdAndMyselfTest, check_update_identity_own_renewal_password) {
     ASSERT_TRUE(slurp_and_import_key(session, testy_filename));
     stringlist_t* found_key = NULL;
