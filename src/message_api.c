@@ -4307,7 +4307,7 @@ static PEP_STATUS _decrypt_message(
                     else if (strcasecmp(mime_type, "application/pEp.distribution") == 0)
                         filename = "file://distribution.pEp";
                     else if (strcasecmp(mime_type, "application/pgp-keys") == 0)
-                        filename = "file://pEpkey.asc";
+                        filename = "file://sender_key.asc";
                     else if (strcasecmp(mime_type, "application/pgp-signature") == 0)
                         filename = "file://electronic_signature.asc";
                     bloblist_t *bl = new_bloblist(value, size, mime_type, filename);
