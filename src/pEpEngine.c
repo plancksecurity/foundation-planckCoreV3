@@ -2979,10 +2979,10 @@ DYNAMIC_API PEP_STATUS import_key(
         size_t size,
         identity_list **private_keys)
 {
-    return _import_key_with_fpr_return(session, key_data, size, private_keys, NULL, NULL);
+    return import_key_with_fpr_return(session, key_data, size, private_keys, NULL, NULL);
 }
 
-PEP_STATUS _import_key_with_fpr_return(
+DYNAMIC_API PEP_STATUS import_key_with_fpr_return(
         PEP_SESSION session,
         const char *key_data,
         size_t size,
