@@ -620,6 +620,7 @@ TEST_F(DefaultFromEmailTest, check_to_pEp_v1_import_bare_default) {
 TEST_F(DefaultFromEmailTest, check_pEp_v1_import_default_alternate_available) {
 }
 
+// We don't accept default keys from 2.0 messages anymore
 TEST_F(DefaultFromEmailTest, check_to_pEp_v2_0_import_bare_default) {
     string email = slurp(v2_0_file);
     // We shouldn't rely on MIME_encrypt/decrypt (and should fix other tests) -
@@ -651,13 +652,11 @@ TEST_F(DefaultFromEmailTest, check_to_pEp_v2_0_import_bare_default) {
 
     pEp_identity* john = idents->ident;
     ASSERT_NOTNULL(john);
-    ASSERT_NOTNULL(john->fpr);
-    ASSERT_STREQ(john_fpr, john->fpr);
+    ASSERT_NULL(john->fpr);
 
     // Now make sure update identity returns the same
     status = update_identity(session, john);
-    ASSERT_NOTNULL(john->fpr);
-    ASSERT_STREQ(john_fpr, john->fpr);
+    ASSERT_NULL(john->fpr);
 
     // FIXME: free stuff    
 }
@@ -1003,6 +1002,7 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_bob_2_1) {
 
 }
 
+// We no longer accept keys from 2.0 messages, so this should fail
 TEST_F(DefaultFromEmailTest, check_encrypted_key_import_sylvia_2_0) {
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::SYLVIA];
     set_up_and_check_initial_identities(TestUtilsPreset::SYLVIA, sender_info);
@@ -1013,10 +1013,11 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_sylvia_2_0) {
 
     // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
-    check_sender_default_key_status(sender_info, PEP_ct_pEp_unconfirmed);
+    check_sender_default_key_status(sender_info, PEP_ct_key_not_found);
 
 }
 
+// We no longer accept keys from 2.0 messages, so this should fail
 TEST_F(DefaultFromEmailTest, check_encrypted_key_import_bob_2_0) {
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
     set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
@@ -1027,7 +1028,7 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_bob_2_0) {
 
     // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
-    check_sender_default_key_status(sender_info, PEP_ct_pEp_unconfirmed);
+    check_sender_default_key_status(sender_info, PEP_ct_key_not_found);
 
 }
 
@@ -1469,7 +1470,7 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_sylvia_2_0_two_keys) {
 
      // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
-    check_sender_default_key_status(sender_info, PEP_ct_pEp_unconfirmed);
+    check_sender_default_key_status(sender_info, PEP_ct_key_not_found);
 }
 
 TEST_F(DefaultFromEmailTest, check_encrypted_key_import_bob_2_0_two_keys) {
