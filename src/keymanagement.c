@@ -915,12 +915,14 @@ DYNAMIC_API PEP_STATUS update_identity(
                     bool candidate_has_real_id = strstr(candidate_id, "TOFU_") != candidate_id;
                     bool candidate_has_username = !EMPTYSTR(candidate->username);
                     bool candidate_name_is_addr = candidate_has_username ? strcmp(candidate->address, candidate->username) == 0 : false;
-                    bool weak_candidate_name = !candidate_has_username || candidate_name_is_addr;
 
-                    bool names_match = (weak_candidate_name && weak_input_name) ||
-                                           ((input_has_username && candidate_has_username) && 
-                                           (strcmp(identity->username, candidate->username) == 0));
-                        
+                    // No longer necessary, as we don't compare usernames anymore
+//                    bool weak_candidate_name = !candidate_has_username || candidate_name_is_addr;
+//
+//                    bool names_match = (weak_candidate_name && weak_input_name) ||
+//                                           ((input_has_username && candidate_has_username) &&
+//                                           (strcmp(identity->username, candidate->username) == 0));
+
                     // This is where the optimisation gets a little weird:
                     //
                     // Decide whether to accept and patch the database and stored id from the input,
@@ -932,8 +934,8 @@ DYNAMIC_API PEP_STATUS update_identity(
                     bool input_addr_only = !input_has_username && !input_has_user_id;
                     bool candidate_id_best = candidate_has_real_id && !input_has_real_id;
                     bool input_id_best = input_has_real_id && !candidate_has_real_id;
-                    bool patch_input_id_conditions = input_has_user_id || names_match || weak_candidate_name;
-                    if (input_addr_only || (candidate_id_best && patch_input_id_conditions)) {
+                    // bool patch_input_id_conditions = input_has_user_id || names_match || weak_candidate_name; // No longer necessary, as we don't compare usernames
+                    if (input_addr_only || candidate_id_best) {
                         identity->user_id = strdup(candidate_id);
                         assert(identity->user_id);
                         if (!identity->user_id)
@@ -942,7 +944,7 @@ DYNAMIC_API PEP_STATUS update_identity(
                         stored_ident = identity_dup(candidate);
                         break;
                     }
-                    else if (input_id_best && (names_match || (input_has_username && weak_candidate_name))) {
+                    else if (input_id_best) {
                         // Replace the TOFU db in the database with the input ID globally
                         status = replace_userid(session, 
                                                 candidate_id, 
@@ -961,6 +963,8 @@ DYNAMIC_API PEP_STATUS update_identity(
                         break;
                     } // End else if
                     // Else, we reject this candidate and try the next one, if there is one.
+                    // Remember, the "user_id"s match case was already taken care of by get_identity
+                    // above.
                     stored_curr = stored_curr->next;
                 }
                 // Ok, we've checked all of the candidates, and if there's a stored identity, there's a duplicate.
