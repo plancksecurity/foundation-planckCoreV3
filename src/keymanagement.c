@@ -783,8 +783,6 @@ DYNAMIC_API PEP_STATUS update_identity(
     bool input_has_user_id = !EMPTYSTR(identity->user_id);
     bool input_has_username = !EMPTYSTR(identity->username);
     bool input_has_real_id = input_has_user_id ? (strstr(identity->user_id, "TOFU_") != identity->user_id) : false;
-    bool input_name_is_addr = input_has_username ? strcmp(identity->username, identity->address) == 0 : false;
-    bool weak_input_name = input_name_is_addr || !input_has_username;
 
     char* default_own_id = NULL;
     pEp_identity* stored_ident = NULL;
@@ -871,11 +869,10 @@ DYNAMIC_API PEP_STATUS update_identity(
     // following properties (not in order of priority, and not for every case - the logic here is a mess):
     //
     // 1. Did the input have a user_id?
-    // 2. Did the input hava a username?
+    // 2. Did the input have a username? N.B. This is, as of ENGINE-828, less important than it was.
     // 3. Is the input user_id a real id?
     // 4. Is the stored user_id a real id?
     // 5. Does the stored user_id have a username?
-    // 6. Do the names match?
     //
     // Based on this, if we find an acceptable candidate, we do one:
     //
@@ -883,8 +880,7 @@ DYNAMIC_API PEP_STATUS update_identity(
     //    (this may be different than 1, though in practice it seems we always do both)
     // 2. Patch the output identity's user_id from the stored identity
     //
-    // If we find none, in the case if the has-username-but-no-user_id input case, we'll try a TOFU id
-    // fetch before giving up on stored identity candidates.
+    // If we find none, we'll try a TOFU id fetch before giving up on stored identity candidates.
     //
     // Acceptable candidates are then passed to prepare_update_identity which will patch usernames and
     // find any applicable keys.
@@ -915,13 +911,6 @@ DYNAMIC_API PEP_STATUS update_identity(
                     bool candidate_has_real_id = strstr(candidate_id, "TOFU_") != candidate_id;
                     bool candidate_has_username = !EMPTYSTR(candidate->username);
                     bool candidate_name_is_addr = candidate_has_username ? strcmp(candidate->address, candidate->username) == 0 : false;
-
-                    // No longer necessary, as we don't compare usernames anymore
-//                    bool weak_candidate_name = !candidate_has_username || candidate_name_is_addr;
-//
-//                    bool names_match = (weak_candidate_name && weak_input_name) ||
-//                                           ((input_has_username && candidate_has_username) &&
-//                                           (strcmp(identity->username, candidate->username) == 0));
 
                     // This is where the optimisation gets a little weird:
                     //
@@ -983,14 +972,14 @@ DYNAMIC_API PEP_STATUS update_identity(
             snprintf(identity->user_id, strlen(identity->address) + 6,
                      "TOFU_%s", identity->address);                    
             
-            // Try one last time to see if there is an ident for us with a TOFU id, if there was no ID but there
-            // was a usernames
-            if (input_has_username) {
-                status = get_identity(session, 
-                                      identity->address, 
-                                      identity->user_id, 
-                                      &stored_ident);
-            }
+            // Try one last time to see if there is an ident for us with a TOFU id
+            //
+            // We no longer use the username as a qualifying condition.
+            //
+            status = get_identity(session,
+                                  identity->address,
+                                  identity->user_id,
+                                  &stored_ident);
         }
     }        
 

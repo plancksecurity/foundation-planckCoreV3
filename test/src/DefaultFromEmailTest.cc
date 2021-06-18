@@ -834,10 +834,9 @@ TEST_F(DefaultFromEmailTest, check_pEp_v2_2_import_two_alternate_available) {
 ///////////////////////////////////////////////////////////////
 
 // Identity Key:
-// Bob: known pEp partner
-// Carol: known OpenPGP partner
-// Sylvia: unknown pEp partner
-// John: unknown OpenPGP partner
+// Bob: known partner
+// Sylvia: unknown partner
+//
 
 // Case 1: Partner didn't have our key
 
