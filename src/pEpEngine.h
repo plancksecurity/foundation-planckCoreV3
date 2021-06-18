@@ -87,7 +87,7 @@ typedef enum {
     PEP_CANNOT_SET_PGP_KEYPAIR                      = 0x0382,
     PEP_CANNOT_SET_IDENTITY                         = 0x0383,
     PEP_CANNOT_SET_TRUST                            = 0x0384,
-    PEP_KEY_BLACKLISTED                             = 0x0385,
+    PEP_KEY_BLACKLISTED                             = 0x0385,       /// @deprecated
     PEP_CANNOT_FIND_PERSON                          = 0x0386,
     PEP_CANNOT_SET_PEP_VERSION                      = 0X0387,
     

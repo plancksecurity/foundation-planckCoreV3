@@ -7,7 +7,6 @@
 #include "dynamic_api.h"
 #include "cryptotech.h"
 #include "transport.h"
-#include "blacklist.h"
 #include "KeySync_fsm.h"
 #include "engine_sql.h"
 

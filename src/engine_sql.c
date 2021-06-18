@@ -807,10 +807,6 @@ static PEP_STATUS _create_group_tables(PEP_SESSION session) {
 static PEP_STATUS _create_supplementary_key_tables(PEP_SESSION session) {
     int int_result = sqlite3_exec(
             session->db,
-            // blacklist
-            "create table if not exists blacklist_keys (\n"
-            "   fpr text primary key\n"
-            ");\n"
             "create table if not exists revoked_keys (\n"
             "   revoked_fpr text primary key,\n"
             "   replacement_fpr text not null\n"
@@ -2249,44 +2245,6 @@ PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session) {
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
-
-    // blacklist
-
-    int_result = sqlite3_prepare_v2(session->db, sql_blacklist_add,
-                                    (int)strlen(sql_blacklist_add), &session->blacklist_add, NULL);
-    assert(int_result == SQLITE_OK);
-
-    if (int_result != SQLITE_OK)
-        return PEP_UNKNOWN_DB_ERROR;
-
-
-    int_result = sqlite3_prepare_v2(session->db, sql_blacklist_delete,
-                                    (int)strlen(sql_blacklist_delete), &session->blacklist_delete,
-                                    NULL);
-    assert(int_result == SQLITE_OK);
-
-    if (int_result != SQLITE_OK)
-        return PEP_UNKNOWN_DB_ERROR;
-
-
-    int_result = sqlite3_prepare_v2(session->db, sql_blacklist_is_listed,
-                                    (int)strlen(sql_blacklist_is_listed),
-                                    &session->blacklist_is_listed, NULL);
-    assert(int_result == SQLITE_OK);
-
-    if (int_result != SQLITE_OK)
-        return PEP_UNKNOWN_DB_ERROR;
-
-
-    int_result = sqlite3_prepare_v2(session->db, sql_blacklist_retrieve,
-                                    (int)strlen(sql_blacklist_retrieve), &session->blacklist_retrieve,
-                                    NULL);
-    assert(int_result == SQLITE_OK);
-
-    if (int_result != SQLITE_OK)
-        return PEP_UNKNOWN_DB_ERROR;
-
-
     // Own keys
 
     int_result = sqlite3_prepare_v2(session->db, sql_own_key_is_listed,
@@ -2693,14 +2651,6 @@ PEP_STATUS pEp_finalize_sql_stmts(PEP_SESSION session) {
         sqlite3_finalize(session->get_main_user_fpr);
     if (session->refresh_userid_default_key)
         sqlite3_finalize(session->refresh_userid_default_key);
-    if (session->blacklist_add)
-        sqlite3_finalize(session->blacklist_add);
-    if (session->blacklist_delete)
-        sqlite3_finalize(session->blacklist_delete);
-    if (session->blacklist_is_listed)
-        sqlite3_finalize(session->blacklist_is_listed);
-    if (session->blacklist_retrieve)
-        sqlite3_finalize(session->blacklist_retrieve);
     if (session->own_key_is_listed)
         sqlite3_finalize(session->own_key_is_listed);
     if (session->is_own_address)

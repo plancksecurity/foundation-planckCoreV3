@@ -10,7 +10,6 @@
 
 #include "platform.h"
 #include "mime.h"
-#include "blacklist.h"
 #include "baseprotocol.h"
 #include "KeySync_fsm.h"
 #include "base64.h"
@@ -2583,27 +2582,6 @@ static PEP_STATUS _update_state_for_ident_list(
                                  max_version_major, max_version_minor);
             }
             
-            bool is_blacklisted = false;
-            if (_il->ident->fpr && IS_PGP_CT(_il->ident->comm_type)) {
-                status = blacklist_is_listed(session, _il->ident->fpr, &is_blacklisted);
-                if (status != PEP_STATUS_OK) {
-                    // DB error
-                    status = PEP_UNENCRYPTED;
-                    goto pEp_done;
-                }
-                if (is_blacklisted) {
-                    bool user_default, ident_default, address_default; 
-                    status = get_valid_pubkey(session, _il->ident,
-                                               &ident_default, &user_default,
-                                               &address_default,
-                                               true);
-                                               
-                    if (status != PEP_STATUS_OK || _il->ident->fpr == NULL) {
-                        _il->ident->comm_type = PEP_ct_key_not_found;
-                        status = PEP_STATUS_OK;                        
-                    }
-                }    
-            }
             if (!(*has_pEp_user) && !EMPTYSTR(_il->ident->user_id))
                 is_pEp_user(session, _il->ident, has_pEp_user);
             
@@ -4905,7 +4883,7 @@ static PEP_STATUS set_default_key_fpr_if_valid(
         return PEP_OUT_OF_MEMORY;
         
     // this will check to see that the key is usable as well as get its comm_type    
-    PEP_STATUS status = validate_fpr(session, ident, true, true, true);
+    PEP_STATUS status = validate_fpr(session, ident, true, true);
     if (status == PEP_STATUS_OK)
         status = set_identity(session, ident);            
     else { 
@@ -4935,11 +4913,7 @@ static PEP_STATUS _check_and_set_default_key(
         // Right now, we just want to know if there's a DB default, NOT 
         // if it matches what update_identity gives us (there are good reasons it might not)
         status = get_default_identity_fpr(session, src_ident->address, src_ident->user_id, &default_from_fpr);
-        bool on_blacklist = false;
-        if (!EMPTYSTR(default_from_fpr)) {
-            blacklist_is_listed(session, default_from_fpr, &on_blacklist);
-        }
-        if (on_blacklist || status == PEP_KEY_NOT_FOUND || status == PEP_CANNOT_FIND_IDENTITY) {
+        if (status == PEP_KEY_NOT_FOUND || status == PEP_CANNOT_FIND_IDENTITY) {
             if (!EMPTYSTR(sender_key))
                 status = set_default_key_fpr_if_valid(session, src_ident, sender_key);
         }
@@ -6451,25 +6425,7 @@ static void _max_comm_type_from_identity_list(
             *max_comm_type = _get_comm_type(session, *max_comm_type,
                 il->ident);            
             *comm_type_determined = true;
-            
-            bool is_blacklisted = false;
-            if (il->ident->fpr && IS_PGP_CT(il->ident->comm_type)) {
-                status = blacklist_is_listed(session, il->ident->fpr, &is_blacklisted);
-                if (is_blacklisted) {
-                    bool user_default, ident_default, address_default; 
-                    status = get_valid_pubkey(session, il->ident,
-                                              &ident_default, &user_default,
-                                              &address_default,
-                                              true);
-                    
-                    if (status != PEP_STATUS_OK || il->ident->fpr == NULL) {                            
-                        il->ident->comm_type = PEP_ct_key_not_found;
-                        if (*max_comm_type > PEP_ct_no_encryption)
-                            *max_comm_type = PEP_ct_no_encryption;
-                    }
-                }    
-            }
-    
+
             // check for the return statuses which might not a representative
             // value in the comm_type
             if (status == PEP_ILLEGAL_VALUE || status == PEP_CANNOT_SET_PERSON ||
@@ -6616,29 +6572,8 @@ DYNAMIC_API PEP_STATUS identity_rating(
 
     if (ident->me)
         status = _myself(session, ident, false, true, true, true);
-    else { // Since we don't blacklist own keys, we only check it in here
+    else
         status = update_identity(session, ident);
-
-        bool is_blacklisted = false;
-        
-        if (ident->fpr && IS_PGP_CT(ident->comm_type)) {
-            status = blacklist_is_listed(session, ident->fpr, &is_blacklisted);
-            if (status != PEP_STATUS_OK) {
-                return status; // DB ERROR
-            }
-            if (is_blacklisted) {
-                bool user_default, ident_default, address_default; 
-                status = get_valid_pubkey(session, ident,
-                                           &ident_default, &user_default,
-                                           &address_default,
-                                           true);
-                if (status != PEP_STATUS_OK || ident->fpr == NULL) {
-                    ident->comm_type = PEP_ct_key_not_found;
-                    status = PEP_STATUS_OK;                        
-                }
-            }    
-        }
-    }
 
     if (status == PEP_STATUS_OK)
         *rating = _rating(ident->comm_type);
@@ -7293,7 +7228,6 @@ got_keylist:
     switch (status) {
         case PEP_KEY_NOT_FOUND:
         case PEP_KEY_UNSUITABLE:
-        case PEP_KEY_BLACKLISTED:
         case PEP_CANNOT_FIND_IDENTITY:
         case PEP_CANNOT_FIND_ALIAS:
             status = PEP_STATUS_OK;

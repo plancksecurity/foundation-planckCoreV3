@@ -888,7 +888,7 @@ PEP_STATUS set_default_fpr_for_test(PEP_SESSION session, pEp_identity* ident,  b
             return PEP_UNKNOWN_ERROR;
     }
     if (!unconditional)
-        status = validate_fpr(session, ident, true, true, true);
+        status = validate_fpr(session, ident, true, true);
     if (status == PEP_STATUS_OK)
         status = set_identity(session, ident);            
     return status;

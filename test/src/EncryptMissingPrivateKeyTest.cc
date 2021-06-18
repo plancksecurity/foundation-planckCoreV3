@@ -9,7 +9,6 @@
 #include <cstring> // for strcmp()
 #include <assert.h>
 
-#include "blacklist.h"
 #include "keymanagement.h"
 #include "message_api.h"
 #include "mime.h"

@@ -152,8 +152,7 @@ PEP_STATUS get_user_default_key(PEP_SESSION session, const char* user_id,
  *  @param[in]  is_identity_default   bool*
  *  @param[in]  is_user_default       bool*
  *  @param[in]  is_address_default    bool*
- *  @param[in]  check_blacklist       bool
- *  
+ *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
  *  @retval any other value on error
@@ -162,8 +161,7 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
                             pEp_identity* stored_identity,
                             bool* is_identity_default,
                             bool* is_user_default,
-                            bool* is_address_default,
-                            bool check_blacklist);
+                            bool* is_address_default);
 
 /**
  *  <!--       get_key_sticky_bit_for_user()       -->
@@ -192,7 +190,6 @@ PEP_STATUS get_key_sticky_bit_for_user(PEP_SESSION session,
  *
  *  @param[in]    session                     session handle
  *  @param[in]    *ident                        pEp_identity
- *  @param[in]    check_blacklist                bool
  *  @param[in]    own_must_contain_private    bool
  *  @param[in]    renew_private                bool
  *
@@ -207,7 +204,6 @@ PEP_STATUS get_key_sticky_bit_for_user(PEP_SESSION session,
  */
 PEP_STATUS validate_fpr(PEP_SESSION session,
                         pEp_identity* ident,
-                        bool check_blacklist,
                         bool own_must_contain_private,
                         bool renew_private);
 
