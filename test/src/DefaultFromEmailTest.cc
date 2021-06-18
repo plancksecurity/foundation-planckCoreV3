@@ -550,8 +550,6 @@ TEST_F(DefaultFromEmailTest, check_to_to_OpenPGP_import_bare_default) {
     ASSERT_OK;
     ASSERT_NOTNULL(dec_msg);
 
-    print_mail(dec_msg);
-
     identity_list* idents = NULL;
     status = get_identities_by_address(session, dec_msg->from->address, &idents);
     ASSERT_OK;
@@ -595,8 +593,6 @@ TEST_F(DefaultFromEmailTest, check_to_pEp_v1_import_bare_default) {
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_OK;
     ASSERT_NOTNULL(dec_msg);
-
-    print_mail(dec_msg);
 
     identity_list* idents = NULL;
     status = get_identities_by_address(session, dec_msg->from->address, &idents);
@@ -642,8 +638,6 @@ TEST_F(DefaultFromEmailTest, check_to_pEp_v2_0_import_bare_default) {
     ASSERT_OK;
     ASSERT_NOTNULL(dec_msg);
 
-    print_mail(dec_msg);
-
     identity_list* idents = NULL;
     status = get_identities_by_address(session, dec_msg->from->address, &idents);
     ASSERT_OK;
@@ -684,8 +678,6 @@ TEST_F(DefaultFromEmailTest, check_to_pEp_v2_1_import_bare_default) {
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_OK;
     ASSERT_NOTNULL(dec_msg);
-
-    print_mail(dec_msg);
 
     identity_list* idents = NULL;
     status = get_identities_by_address(session, dec_msg->from->address, &idents);
@@ -730,8 +722,6 @@ TEST_F(DefaultFromEmailTest, check_to_pEp_v2_2_import_bare_default) {
     ASSERT_OK;
     ASSERT_NOTNULL(dec_msg);
 
-    print_mail(dec_msg);
-
     identity_list* idents = NULL;
     status = get_identities_by_address(session, dec_msg->from->address, &idents);
     ASSERT_OK;
@@ -774,8 +764,6 @@ TEST_F(DefaultFromEmailTest, check_to_pEp_v10_111_import_bare_default) {
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_OK;
     ASSERT_NOTNULL(dec_msg);
-
-    print_mail(dec_msg);
 
     identity_list* idents = NULL;
     status = get_identities_by_address(session, dec_msg->from->address, &idents);
@@ -1215,7 +1203,8 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_bob_1_0_no_key) {
 
 }
 
-// Failure case 2) Wrong key attached
+// Failure case 2) Wrong key attached - Note: 1.0 only looks at the number of keys attached, so there's no concept of "wrong sender key"
+
 TEST_F(DefaultFromEmailTest, check_encrypted_key_import_bob_no_pep_wrong_sender_key_attached) {
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
     set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
@@ -1334,8 +1323,8 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_sylvia_2_2_wrong_keyfile
     set_up_and_check_initial_identities(TestUtilsPreset::SYLVIA, sender_info);
 
     // Ok, we now have a blank slate. Run the import mail fun.
-    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2SylviaToAlice_2_2_wrong_sender_key_attached.eml", 
-                                     PEP_rating_unreliable, PEP_DECRYPTED);
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2SylviaToAlice_2_2_wrong_key_filename.eml",
+                                     PEP_rating_reliable, PEP_STATUS_OK);
 
     // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
@@ -1348,8 +1337,8 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_bob_2_2_wrong_keyfilenam
     set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
 
     // Ok, we now the desired state. Run the import mail fun.
-    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_2_wrong_sender_key_attached.eml", 
-                                     PEP_rating_unreliable, PEP_DECRYPTED);
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_2_wrong_key_filename.eml",
+                                     PEP_rating_reliable, PEP_STATUS_OK);
 
     // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
@@ -1362,8 +1351,8 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_sylvia_2_1_wrong_keyfile
     set_up_and_check_initial_identities(TestUtilsPreset::SYLVIA, sender_info);
 
     // Ok, we now have a blank slate. Run the import mail fun.
-    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2SylviaToAlice_2_1_wrong_sender_key_attached.eml", 
-                                     PEP_rating_unreliable, PEP_DECRYPTED);
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2SylviaToAlice_2_1_wrong_key_filename.eml",
+                                     PEP_rating_reliable, PEP_STATUS_OK);
 
     // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
@@ -1376,8 +1365,8 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_bob_2_1_wrong_keyfilenam
     set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
 
     // Ok, we now the desired state. Run the import mail fun.
-    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_1_wrong_sender_key_attached.eml", 
-                                     PEP_rating_unreliable, PEP_DECRYPTED);
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_1_wrong_key_filename.eml",
+                                     PEP_rating_reliable, PEP_STATUS_OK);
 
     // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
@@ -1390,8 +1379,8 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_sylvia_2_0_wrong_keyfile
     set_up_and_check_initial_identities(TestUtilsPreset::SYLVIA, sender_info);
 
     // Ok, we now have a blank slate. Run the import mail fun.
-    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2SylviaToAlice_2_0_wrong_sender_key_attached.eml", 
-                                     PEP_rating_unreliable, PEP_DECRYPTED);
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2SylviaToAlice_2_0_wrong_key_filename.eml",
+                                     PEP_rating_reliable, PEP_STATUS_OK);
 
     // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
@@ -1404,8 +1393,8 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_bob_2_0_wrong_keyfilenam
     set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
 
     // Ok, we now the desired state. Run the import mail fun.
-    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_0_wrong_sender_key_attached.eml", 
-                                     PEP_rating_unreliable, PEP_DECRYPTED);
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_0_wrong_key_filename.eml",
+                                     PEP_rating_reliable, PEP_STATUS_OK);
 
     // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
@@ -1413,15 +1402,34 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_bob_2_0_wrong_keyfilenam
 
 }
 
-// Note: 1.0 only looks at the number of keys attached, so there's no concept of "wrong sender key"
 
 // C. Cases which may fail or succeed based on source
 // Two keys attached
 
-TEST_F(DefaultFromEmailTest, check_encrypted_key_import_carol_two_keys) {
+TEST_F(DefaultFromEmailTest, check_encrypted_key_import_bob_two_keys_no_pEp) {
+    const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
+    set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
+
+    // Ok, we now the desired state. Run the import mail fun.
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_1_0_TwoKeys_no_pEp.eml",
+                                     PEP_rating_reliable, PEP_STATUS_OK);
+
+     // Check that the default key matches the canonical default key for this sender,
+    // if expected to be present.
+    check_sender_default_key_status(sender_info, PEP_ct_key_not_found);
 }
 
-TEST_F(DefaultFromEmailTest, check_encrypted_key_import_john_two_keys) {
+TEST_F(DefaultFromEmailTest, check_encrypted_key_import_sylvia_two_keys_no_pEp) {
+    const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::SYLVIA];
+    set_up_and_check_initial_identities(TestUtilsPreset::SYLVIA, sender_info);
+
+    // Ok, we now the desired state. Run the import mail fun.
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2SylviaToAlice_1_0_TwoKeys_no_pEp.eml",
+                                     PEP_rating_reliable, PEP_STATUS_OK);
+
+     // Check that the default key matches the canonical default key for this sender,
+    // if expected to be present.
+    check_sender_default_key_status(sender_info, PEP_ct_key_not_found);
 }
 
 TEST_F(DefaultFromEmailTest, check_encrypted_key_import_sylvia_2_2_two_keys) {

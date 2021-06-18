@@ -5388,11 +5388,14 @@ static PEP_STATUS _decrypt_message(
                                                                       _imported_key_list, true);
                                 }
                                 else {
-                                    stringlist_t* claim_node = header_key_imported ? _imported_key_list : *start;
-                                    key_claim_fpr = process_key_claim(src, NULL,
-                                                                      claim_node ? claim_node->value : NULL,
-                                                                      0, 0,
-                                                                      _imported_key_list, false);
+                                    bool is_only_key = *start && !EMPTYSTR((*start)->value) && !((*start)->next);
+                                    if (header_key_imported || is_only_key) {
+                                        stringlist_t *claim_node = header_key_imported ? _imported_key_list : *start;
+                                        key_claim_fpr = process_key_claim(src, NULL,
+                                                                          claim_node ? claim_node->value : NULL,
+                                                                          0, 0,
+                                                                          _imported_key_list, false);
+                                    }
                                 }
                             }
                             if (!EMPTYSTR(key_claim_fpr))
