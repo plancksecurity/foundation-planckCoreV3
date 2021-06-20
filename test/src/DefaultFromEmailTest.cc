@@ -182,6 +182,19 @@ namespace {
                 free_identity(sender);
             }
 
+            void force_sender_default_to_be_set(TestUtilsPreset::ident_preset sender_key) {
+                const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[sender_key];
+                pEp_identity* sender = new_identity(sender_info.email, sender_info.fpr, sender_info.user_id, sender_info.name);
+                PEP_STATUS status = set_comm_partner_key(session, sender, sender_info.fpr);
+                ASSERT_OK;
+                status = TestUtilsPreset::import_preset_key(session, sender_key, false);
+                ASSERT_OK;
+                status = update_identity(session, sender);
+                ASSERT_OK;
+                ASSERT_NOTNULL(sender->fpr);
+                ASSERT_STREQ(sender->fpr, sender_info.fpr);
+                free_identity(sender);
+            }
         private:
             const char* test_suite_name;
             const char* test_name;
@@ -191,632 +204,6 @@ namespace {
 
 }  // namespace
 
-// Should be rerun to generate additional test mails every time the message version changes IMHO
-// Add in more version strings I guess. So inelegant, but... sigh. Who has time? Not me.
-// You can step through this and force some other paths to generate other paths and create emails 
-// which will be otherwise difficult to get, but that shouldn't be necessary beyond the first time 
-// this is written in 2.2, I suspect, so others should ignore this blathery part.
-//
-
-TEST_F(DefaultFromEmailTest, check_encrypt_to_OpenPGP_simple_key) {
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    message* unenc_msg = NULL;
-    message* enc_msg = NULL;
-    create_base_test_msg(&unenc_msg, 0, 0, false);
-
-    status = encrypt_message(session, unenc_msg, NULL, &enc_msg, PEP_enc_PEP, 0);
-    ASSERT_OK;
-    ASSERT_NOTNULL(enc_msg);
-
-    // N.B. Actual check happens on decrypt later. But we can check that the encryption path doesn't fail, anyway.
-    if (DEFAULT_FROM_TEST_GEN) {
-        char* enc_text = NULL;
-        status = mime_encode_message(enc_msg, false, &enc_text, false);
-        ASSERT_OK;
-        ASSERT_NOTNULL(enc_text);
-        dump_out(OpenPGP_file.c_str(), enc_text);
-        free(enc_text);
-    }
-    free_message(unenc_msg);
-    free_message(enc_msg);
-}
-
-TEST_F(DefaultFromEmailTest, check_encrypt_to_pEp_1_0_simple_key) {
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    message* unenc_msg = NULL;
-    message* enc_msg = NULL;
-    create_base_test_msg(&unenc_msg, 1, 0, true);
-
-    status = encrypt_message(session, unenc_msg, NULL, &enc_msg, PEP_enc_PEP, 0);
-    ASSERT_OK;
-    ASSERT_NOTNULL(enc_msg);
-
-    // N.B. Actual check happens on decrypt later. But we can check that the encryption path doesn't fail, anyway.
-    if (DEFAULT_FROM_TEST_GEN) {
-        char* enc_text = NULL;
-        status = mime_encode_message(enc_msg, false, &enc_text, false);
-        ASSERT_OK;
-        ASSERT_NOTNULL(enc_text);
-        dump_out(v1_0_file.c_str(), enc_text);
-        free(enc_text);
-    }
-    free_message(unenc_msg);
-    free_message(enc_msg);
-}
-
-TEST_F(DefaultFromEmailTest, check_encrypt_to_pEp_2_0_simple_key) {
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    message* unenc_msg = NULL;
-    message* enc_msg = NULL;
-    create_base_test_msg(&unenc_msg, 2, 0, true);
-
-    status = encrypt_message(session, unenc_msg, NULL, &enc_msg, PEP_enc_PEP, 0);
-    ASSERT_OK;
-    ASSERT_NOTNULL(enc_msg);
-
-    // N.B. Actual check happens on decrypt later. But we can check that the encryption path doesn't fail, anyway.
-    if (DEFAULT_FROM_TEST_GEN) {
-        char* enc_text = NULL;
-        status = mime_encode_message(enc_msg, false, &enc_text, false);
-        ASSERT_OK;
-        ASSERT_NOTNULL(enc_text);
-        dump_out(v2_0_file.c_str(), enc_text);
-        free(enc_text);
-    }
-    free_message(unenc_msg);
-    free_message(enc_msg);
-}
-
-TEST_F(DefaultFromEmailTest, check_encrypt_to_pEp_2_1_simple_key) {
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    message* unenc_msg = NULL;
-    message* enc_msg = NULL;
-    create_base_test_msg(&unenc_msg, 2, 1, true);
-
-    status = encrypt_message(session, unenc_msg, NULL, &enc_msg, PEP_enc_PEP, 0);
-    ASSERT_OK;
-    ASSERT_NOTNULL(enc_msg);
-
-    // N.B. Actual check happens on decrypt later. But we can check that the encryption path doesn't fail, anyway.
-    if (DEFAULT_FROM_TEST_GEN) {
-        char* enc_text = NULL;
-        status = mime_encode_message(enc_msg, false, &enc_text, false);
-        ASSERT_OK;
-        ASSERT_NOTNULL(enc_text);
-        dump_out(v2_1_file.c_str(), enc_text);
-        free(enc_text);
-    }
-    free_message(unenc_msg);
-    free_message(enc_msg);
-}
-
-TEST_F(DefaultFromEmailTest, check_encrypt_to_pEp_2_2_simple_key) {
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    message* unenc_msg = NULL;
-    message* enc_msg = NULL;
-    create_base_test_msg(&unenc_msg, 2, 2, true);
-
-    status = encrypt_message(session, unenc_msg, NULL, &enc_msg, PEP_enc_PEP, 0);
-    ASSERT_OK;
-    ASSERT_NOTNULL(enc_msg);
-
-    // N.B. Actual check happens on decrypt later. But we can check that the encryption path doesn't fail, anyway.
-    if (DEFAULT_FROM_TEST_GEN) {
-        char* enc_text = NULL;
-        status = mime_encode_message(enc_msg, false, &enc_text, false);
-        ASSERT_OK;
-        ASSERT_NOTNULL(enc_text);
-        dump_out(v2_2_file.c_str(), enc_text);
-        free(enc_text);
-    }
-    free_message(unenc_msg);
-    free_message(enc_msg);
-}
-
-TEST_F(DefaultFromEmailTest, check_encrypt_to_pEp_10_111_simple_key) {
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    message* unenc_msg = NULL;
-    message* enc_msg = NULL;
-    create_base_test_msg(&unenc_msg, 10, 111, true);
-
-    status = encrypt_message(session, unenc_msg, NULL, &enc_msg, PEP_enc_PEP, 0);
-    ASSERT_OK;
-    ASSERT_NOTNULL(enc_msg);
-
-    // N.B. Actual check happens on decrypt later. But we can check that the encryption path doesn't fail, anyway.
-    if (DEFAULT_FROM_TEST_GEN) {
-        char* enc_text = NULL;
-        status = mime_encode_message(enc_msg, false, &enc_text, false);
-        ASSERT_OK;
-        ASSERT_NOTNULL(enc_text);
-        dump_out(v10_111_file.c_str(), enc_text);
-        free(enc_text);
-    }
-    free_message(unenc_msg);
-    free_message(enc_msg);
-}
-
-TEST_F(DefaultFromEmailTest, check_unencrypted_from_pEp_simple_key) {
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    message* unenc_msg = NULL;
-    message* enc_msg = NULL;
-    create_base_test_msg(&unenc_msg, 1, 0, true);
-
-    // We actually want this to be to someone we don't have the key for, so we remove
-    // the set up "to"
-    free_identity_list(unenc_msg->to);
-    pEp_identity* ramoth = new_identity("ramoth_cat@darthmama.org", NULL, "RAMOTH", "Ramoth T. Cat, Spy Queen of Orlais");
-    unenc_msg->to = new_identity_list(ramoth);
-    status = encrypt_message(session, unenc_msg, NULL, &enc_msg, PEP_enc_PEP, 0);
-    ASSERT_EQ(status, PEP_UNENCRYPTED);
-    ASSERT_EQ(enc_msg, nullptr);
-
-    // N.B. Actual check happens on decrypt later. But we can check that the encryption path doesn't fail, anyway.
-    if (DEFAULT_FROM_TEST_GEN) {
-        char* enc_text = NULL;
-        status = mime_encode_message(unenc_msg, false, &enc_text, false);
-        ASSERT_OK;
-        ASSERT_NOTNULL(enc_text);
-        dump_out("test_mails/unencrypted_from_pEp.eml", enc_text);
-        free(enc_text);
-    }
-    free_message(unenc_msg);
-    free_message(enc_msg);
-}
-TEST_F(DefaultFromEmailTest, check_unencrypted_OpenPGP_from_TB_import_bare_default) {
-    PEP_STATUS status = PEP_STATUS_OK;
-    pEp_identity* ramoth = new_identity("ramoth_cat@darthmama.org", NULL, PEP_OWN_USERID, "Ramoth T. Cat, Spy Queen of Orlais");
-    status = myself(session, ramoth);
-    ASSERT_OK;
-
-    // Import the message which contains a single key. Be sure we get this key back.
-    string email = slurp("test_mails/unencrypted_OpenPGP_with_key_attached.eml");
-
-    // We shouldn't rely on MIME_encrypt/decrypt (and should fix other tests) -
-    // otherwise, we're also testing the parser driver.
-    message* enc_msg = NULL;
-    status = mime_decode_message(email.c_str(), email.size(), &enc_msg, NULL);
-    ASSERT_OK;
-    ASSERT_NOTNULL(enc_msg);
-
-    const char* sender_key_fpr = "89047BFE779999F77CFBEDB284593ADAC6406F81";
-    message* dec_msg = NULL;
-    stringlist_t* keylist = NULL;
-    PEP_rating rating;
-    PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
-    ASSERT_EQ(status, PEP_UNENCRYPTED);
-    ASSERT_NULL(dec_msg);
-
-    identity_list* idents = NULL;
-    status = get_identities_by_address(session, enc_msg->from->address, &idents);
-    ASSERT_OK;
-    ASSERT_NOTNULL(idents);
-    ASSERT_NULL(idents->next);
-
-    pEp_identity* bcc = idents->ident;
-    ASSERT_NOTNULL(bcc);
-    ASSERT_NOTNULL(bcc->fpr);
-    ASSERT_STREQ(sender_key_fpr, bcc->fpr);
-
-    // Now make sure update identity returns the same
-    status = update_identity(session, bcc);
-    ASSERT_NOTNULL(bcc->fpr);
-    ASSERT_STREQ(sender_key_fpr, bcc->fpr);
-
-    // FIXME: free stuff
-}
-
-TEST_F(DefaultFromEmailTest, check_unencrypted_OpenPGP_import_default_alternate_available) {
-    // PEP_STATUS status = PEP_STATUS_OK;
-    // const char* sender_key_fpr = "62D4932086185C15917B72D30571AFBCA5493553";
-    // pEp_identity* ramoth = new_identity("ramoth_cat@darthmama.org", NULL, PEP_OWN_USERID, "Ramoth T. Cat, Spy Queen of Orlais");
-    // status = myself(session, ramoth);
-    // ASSERT_OK;
-
-    // // FIXME: change this message to an non-expiring key, btw.
-    // // Import the message which contains a single key. Be sure we get this key back.
-    // string email = slurp("test_mails/unencrypted_OpenPGP_with_key_attached.eml");
-
-    // ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/big_clumsy_cat_0xC6406F81_pub.asc"));
-    // pEp_identity* bcc = NULL;
-
-    // // We shouldn't rely on MIME_encrypt/decrypt (and should fix other tests) -
-    // // otherwise, we're also testing the parser driver.
-    // message* enc_msg = NULL;
-    // status = mime_decode_message(email.c_str(), email.size(), &enc_msg, NULL);
-    // ASSERT_OK;
-    // ASSERT_NOTNULL(enc_msg);
-
-    // message* dec_msg = NULL;
-    // stringlist_t* keylist = NULL;
-    // PEP_rating rating;
-    // PEP_decrypt_flags_t flags = 0;
-    // status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
-    // ASSERT_EQ(status, PEP_UNENCRYPTED);
-    // ASSERT_NULL(dec_msg);
-
-    // identity_list* idents = NULL;
-    // status = get_identities_by_address(session, enc_msg->from->address, &idents);
-    // ASSERT_OK;
-    // ASSERT_NOTNULL(idents);
-    // ASSERT_NULL(idents->next);
-
-    // bcc = idents->ident;
-    // ASSERT_NOTNULL(bcc);
-    // ASSERT_NOTNULL(bcc->fpr);
-    // ASSERT_STREQ(sender_key_fpr, bcc->fpr);
-
-    // // Now make sure update identity returns the same
-    // status = update_identity(session, bcc);
-    // ASSERT_NOTNULL(bcc->fpr);
-    // ASSERT_STREQ(sender_key_fpr, bcc->fpr);
-
-    // // FIXME: free stuff
-}
-TEST_F(DefaultFromEmailTest, check_unencrypted_pEp_OpenPGP_import_bare_default) {
-}
-
-TEST_F(DefaultFromEmailTest, check_unencrypted_pEp_v1_import_bare_default) {
-    PEP_STATUS status = PEP_STATUS_OK;
-    pEp_identity* ramoth = new_identity("ramoth_cat@darthmama.org", NULL, PEP_OWN_USERID, "Ramoth T. Cat, Spy Queen of Orlais");
-    status = myself(session, ramoth);
-    ASSERT_OK;
-
-    // FIXME: change this message to an non-expiring key, btw.
-    // Import the message which contains a single key. Be sure we get this key back.
-    string email = slurp("test_mails/unencrypted_from_pEp_1.0.eml");
-
-    // We shouldn't rely on MIME_encrypt/decrypt (and should fix other tests) -
-    // otherwise, we're also testing the parser driver.
-    message* enc_msg = NULL;
-    status = mime_decode_message(email.c_str(), email.size(), &enc_msg, NULL);
-    ASSERT_OK;
-    ASSERT_NOTNULL(enc_msg);
-
-    message* dec_msg = NULL;
-    stringlist_t* keylist = NULL;
-    PEP_rating rating;
-    PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
-    ASSERT_EQ(status, PEP_UNENCRYPTED);
-    ASSERT_NULL(dec_msg);
-
-    identity_list* idents = NULL;
-    status = get_identities_by_address(session, enc_msg->from->address, &idents);
-    ASSERT_OK;
-    ASSERT_NOTNULL(idents);
-    ASSERT_NULL(idents->next);
-
-    pEp_identity* bcc = idents->ident;
-    ASSERT_NOTNULL(bcc);
-    ASSERT_NOTNULL(bcc->fpr);
-    ASSERT_STREQ(john_fpr, bcc->fpr);
-
-    // Now make sure update identity returns the same
-    status = update_identity(session, bcc);
-    ASSERT_NOTNULL(bcc->fpr);
-    ASSERT_STREQ(john_fpr, bcc->fpr);
-
-    // FIXME: free stuff    
-}
-
-TEST_F(DefaultFromEmailTest, check_unencrypted_pEp_v1_import_default_alternate_available) {
-}
-
-TEST_F(DefaultFromEmailTest, check_unencrypted_pEp_v2_0_import_bare_default) {
-}
-
-TEST_F(DefaultFromEmailTest, check_unencrypted_pEp_v2_0_import_default_alternate_available) {
-}
-
-TEST_F(DefaultFromEmailTest, check_unencrypted_pEp_v2_1_import_bare_default) {
-}
-
-TEST_F(DefaultFromEmailTest, check_unencrypted_pEp_v2_1_import_default_alternate_available) {
-}
-
-TEST_F(DefaultFromEmailTest, check_unencrypted_pEp_v2_2_import_bare_default) {
-}
-
-TEST_F(DefaultFromEmailTest, check_unencrypted_pEp_v2_2_import_default_alternate_available) {
-}
-
-TEST_F(DefaultFromEmailTest, check_to_to_OpenPGP_import_bare_default) {
-    string email = slurp(OpenPGP_file);
-    // We shouldn't rely on MIME_encrypt/decrypt (and should fix other tests) -
-    // otherwise, we're also testing the parser driver.
-    message* enc_msg = NULL;
-    PEP_STATUS status = mime_decode_message(email.c_str(), email.size(), &enc_msg, NULL);
-    ASSERT_OK;
-    ASSERT_NOTNULL(enc_msg);
-
-    pEp_identity* me = NULL;
-    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::INQUISITOR, true, true, true, true, true, true, &me);
-    ASSERT_OK;
-
-    message* dec_msg = NULL;
-    stringlist_t* keylist = NULL;
-    PEP_rating rating;
-    PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
-    ASSERT_OK;
-    ASSERT_NOTNULL(dec_msg);
-
-    identity_list* idents = NULL;
-    status = get_identities_by_address(session, dec_msg->from->address, &idents);
-    ASSERT_OK;
-    ASSERT_NOTNULL(idents);
-    ASSERT_NULL(idents->next);
-
-    pEp_identity* john = idents->ident;
-    ASSERT_NOTNULL(john);
-    ASSERT_NOTNULL(john->fpr);
-    ASSERT_STREQ(john_fpr, john->fpr);
-
-    // Now make sure update identity returns the same
-    status = update_identity(session, john);
-    ASSERT_NOTNULL(john->fpr);
-    ASSERT_STREQ(john_fpr, john->fpr);
-
-    // FIXME: free stuff    
-
-}
-
-TEST_F(DefaultFromEmailTest, check_OpenPGP_import_default_alternate_available) {
-}
-
-TEST_F(DefaultFromEmailTest, check_to_pEp_v1_import_bare_default) {
-    string email = slurp(v1_0_file);
-    // We shouldn't rely on MIME_encrypt/decrypt (and should fix other tests) -
-    // otherwise, we're also testing the parser driver.
-    message* enc_msg = NULL;
-    PEP_STATUS status = mime_decode_message(email.c_str(), email.size(), &enc_msg, NULL);
-    ASSERT_OK;
-    ASSERT_NOTNULL(enc_msg);
-
-    pEp_identity* me = NULL;
-    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::INQUISITOR, true, true, true, true, true, true, &me);
-    ASSERT_OK;
-
-    message* dec_msg = NULL;
-    stringlist_t* keylist = NULL;
-    PEP_rating rating;
-    PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
-    ASSERT_OK;
-    ASSERT_NOTNULL(dec_msg);
-
-    identity_list* idents = NULL;
-    status = get_identities_by_address(session, dec_msg->from->address, &idents);
-    ASSERT_OK;
-    ASSERT_NOTNULL(idents);
-    ASSERT_NULL(idents->next);
-
-    pEp_identity* john = idents->ident;
-    ASSERT_NOTNULL(john);
-    ASSERT_NOTNULL(john->fpr);
-    ASSERT_STREQ(john_fpr, john->fpr);
-
-    // Now make sure update identity returns the same
-    status = update_identity(session, john);
-    ASSERT_NOTNULL(john->fpr);
-    ASSERT_STREQ(john_fpr, john->fpr);
-
-    // FIXME: free stuff    
-}
-
-TEST_F(DefaultFromEmailTest, check_pEp_v1_import_default_alternate_available) {
-}
-
-// We don't accept default keys from 2.0 messages anymore
-TEST_F(DefaultFromEmailTest, check_to_pEp_v2_0_import_bare_default) {
-    string email = slurp(v2_0_file);
-    // We shouldn't rely on MIME_encrypt/decrypt (and should fix other tests) -
-    // otherwise, we're also testing the parser driver.
-    message* enc_msg = NULL;
-    PEP_STATUS status = mime_decode_message(email.c_str(), email.size(), &enc_msg, NULL);
-    ASSERT_OK;
-    ASSERT_NOTNULL(enc_msg);
-
-    pEp_identity* me = NULL;
-    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::INQUISITOR, true, true, true, true, true, true, &me);
-    ASSERT_OK;
-
-    message* dec_msg = NULL;
-    stringlist_t* keylist = NULL;
-    PEP_rating rating;
-    PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
-    ASSERT_OK;
-    ASSERT_NOTNULL(dec_msg);
-
-    identity_list* idents = NULL;
-    status = get_identities_by_address(session, dec_msg->from->address, &idents);
-    ASSERT_OK;
-    ASSERT_NOTNULL(idents);
-    ASSERT_NULL(idents->next);
-
-    pEp_identity* john = idents->ident;
-    ASSERT_NOTNULL(john);
-    ASSERT_NULL(john->fpr);
-
-    // Now make sure update identity returns the same
-    status = update_identity(session, john);
-    ASSERT_NULL(john->fpr);
-
-    // FIXME: free stuff    
-}
-
-TEST_F(DefaultFromEmailTest, check_pEp_v2_0_import_default_alternate_available) {
-}
-
-TEST_F(DefaultFromEmailTest, check_to_pEp_v2_1_import_bare_default) {
-    string email = slurp(v2_1_file);
-    // We shouldn't rely on MIME_encrypt/decrypt (and should fix other tests) -
-    // otherwise, we're also testing the parser driver.
-    message* enc_msg = NULL;
-    PEP_STATUS status = mime_decode_message(email.c_str(), email.size(), &enc_msg, NULL);
-    ASSERT_OK;
-    ASSERT_NOTNULL(enc_msg);
-
-    pEp_identity* me = NULL;
-    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::INQUISITOR, true, true, true, true, true, true, &me);
-    ASSERT_OK;
-
-    message* dec_msg = NULL;
-    stringlist_t* keylist = NULL;
-    PEP_rating rating;
-    PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
-    ASSERT_OK;
-    ASSERT_NOTNULL(dec_msg);
-
-    identity_list* idents = NULL;
-    status = get_identities_by_address(session, dec_msg->from->address, &idents);
-    ASSERT_OK;
-    ASSERT_NOTNULL(idents);
-    ASSERT_NULL(idents->next);
-
-    pEp_identity* john = idents->ident;
-    ASSERT_NOTNULL(john);
-    ASSERT_NOTNULL(john->fpr);
-    ASSERT_STREQ(john_fpr, john->fpr);
-
-    // Now make sure update identity returns the same
-    status = update_identity(session, john);
-    ASSERT_NOTNULL(john->fpr);
-    ASSERT_STREQ(john_fpr, john->fpr);
-
-    // FIXME: free stuff        
-}
-
-TEST_F(DefaultFromEmailTest, check_pEp_v2_1_import_default_alternate_available) {
-}
-
-TEST_F(DefaultFromEmailTest, check_to_pEp_v2_2_import_bare_default) {
-    string email = slurp(v2_2_file);
-    // We shouldn't rely on MIME_encrypt/decrypt (and should fix other tests) -
-    // otherwise, we're also testing the parser driver.
-    message* enc_msg = NULL;
-    PEP_STATUS status = mime_decode_message(email.c_str(), email.size(), &enc_msg, NULL);
-    ASSERT_OK;
-    ASSERT_NOTNULL(enc_msg);
-
-    pEp_identity* me = NULL;
-    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::INQUISITOR, true, true, true, true, true, true, &me);
-    ASSERT_OK;
-
-    message* dec_msg = NULL;
-    stringlist_t* keylist = NULL;
-    PEP_rating rating;
-    PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
-    ASSERT_OK;
-    ASSERT_NOTNULL(dec_msg);
-
-    identity_list* idents = NULL;
-    status = get_identities_by_address(session, dec_msg->from->address, &idents);
-    ASSERT_OK;
-    ASSERT_NOTNULL(idents);
-    ASSERT_NULL(idents->next);
-
-    pEp_identity* john = idents->ident;
-    ASSERT_NOTNULL(john);
-    ASSERT_NOTNULL(john->fpr);
-    ASSERT_STREQ(john_fpr, john->fpr);
-
-    // Now make sure update identity returns the same
-    status = update_identity(session, john);
-    ASSERT_NOTNULL(john->fpr);
-    ASSERT_STREQ(john_fpr, john->fpr);
-
-    // FIXME: free stuff        
-}
-
-TEST_F(DefaultFromEmailTest, check_pEp_v2_2_import_default_alternate_available) {
-}
-
-TEST_F(DefaultFromEmailTest, check_to_pEp_v10_111_import_bare_default) {
-    string email = slurp(v10_111_file);
-    // We shouldn't rely on MIME_encrypt/decrypt (and should fix other tests) -
-    // otherwise, we're also testing the parser driver.
-    message* enc_msg = NULL;
-    PEP_STATUS status = mime_decode_message(email.c_str(), email.size(), &enc_msg, NULL);
-    ASSERT_OK;
-    ASSERT_NOTNULL(enc_msg);
-
-    pEp_identity* me = NULL;
-    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::INQUISITOR, true, true, true, true, true, true, &me);
-    ASSERT_OK;
-
-    message* dec_msg = NULL;
-    stringlist_t* keylist = NULL;
-    PEP_rating rating;
-    PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
-    ASSERT_OK;
-    ASSERT_NOTNULL(dec_msg);
-
-    identity_list* idents = NULL;
-    status = get_identities_by_address(session, dec_msg->from->address, &idents);
-    ASSERT_OK;
-    ASSERT_NOTNULL(idents);
-    ASSERT_NULL(idents->next);
-
-    pEp_identity* john = idents->ident;
-    ASSERT_NOTNULL(john);
-    ASSERT_NOTNULL(john->fpr);
-    ASSERT_STREQ(john_fpr, john->fpr);
-
-    // Now make sure update identity returns the same
-    status = update_identity(session, john);
-    ASSERT_NOTNULL(john->fpr);
-    ASSERT_STREQ(john_fpr, john->fpr);
-
-    // FIXME: free stuff        
-}
-/////////////////////////////////////////////////////
-// The following require key election removal to function correctly
-/////////////////////////////////////////////////////
-
-TEST_F(DefaultFromEmailTest, check_unencrypted_OpenPGP_import_two_alternate_available) {
-}
-
-TEST_F(DefaultFromEmailTest, check_unencrypted_pEp_v1_import_two_alternate_available) {
-}
-
-TEST_F(DefaultFromEmailTest, check_unencrypted_pEp_v2_import_two_alternate_available) {
-}
-
-TEST_F(DefaultFromEmailTest, check_unencrypted_pEp_v2_1_import_two_alternate_available) {
-}
-
-TEST_F(DefaultFromEmailTest, check_unencrypted_pEp_v2_2_import_two_alternate_available) {
-}
-
-TEST_F(DefaultFromEmailTest, check_OpenPGP_import_two_alternate_available) {
-}
-
-TEST_F(DefaultFromEmailTest, check_pEp_v1_import_two_alternate_available) {
-}
-
-TEST_F(DefaultFromEmailTest, check_pEp_v2_import_two_alternate_available) {
-}
-
-TEST_F(DefaultFromEmailTest, check_pEp_v2_1_import_two_alternate_available) {
-}
-
-TEST_F(DefaultFromEmailTest, check_pEp_v2_2_import_two_alternate_available) {
-}
-
 ///////////////////////////////////////////////////////////////
 // New start with canonical emails added for fdik's tests
 ///////////////////////////////////////////////////////////////
@@ -825,6 +212,89 @@ TEST_F(DefaultFromEmailTest, check_pEp_v2_2_import_two_alternate_available) {
 // Bob: known partner
 // Sylvia: unknown partner
 //
+
+// Case 0: We already have a default key. Make sure we don't step on it.
+
+TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_bob_no_pEp_default_exists) {
+    const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
+    const TestUtilsPreset::IdentityInfo& sender_info2 = TestUtilsPreset::presets[TestUtilsPreset::BOB2];
+
+    set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
+
+    force_sender_default_to_be_set(TestUtilsPreset::BOB2);
+
+    // Ok, we now have a blank slate. Run the import mail fun.
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAliceUnencrypted_OpenPGP.eml",
+                                     PEP_rating_unencrypted, PEP_UNENCRYPTED);
+
+    // Make sure import didn't overwrite default
+    check_sender_default_key_status(sender_info2, PEP_ct_OpenPGP_unconfirmed);
+}
+
+TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_bob_2_2_default_exists) {
+    const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
+    const TestUtilsPreset::IdentityInfo& sender_info2 = TestUtilsPreset::presets[TestUtilsPreset::BOB2];
+
+    set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
+
+    force_sender_default_to_be_set(TestUtilsPreset::BOB2);
+
+    // Ok, we now have a blank slate. Run the import mail fun.
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_2.eml",
+                                     PEP_rating_reliable, PEP_STATUS_OK);
+
+    // Make sure import didn't overwrite default
+    check_sender_default_key_status(sender_info2, PEP_ct_pEp_unconfirmed);
+}
+
+TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_bob_2_1_default_exists) {
+    const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
+    const TestUtilsPreset::IdentityInfo& sender_info2 = TestUtilsPreset::presets[TestUtilsPreset::BOB2];
+
+    set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
+
+    force_sender_default_to_be_set(TestUtilsPreset::BOB2);
+
+    // Ok, we now have a blank slate. Run the import mail fun.
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_1.eml",
+                                     PEP_rating_reliable, PEP_STATUS_OK);
+
+    // Make sure import didn't overwrite default
+    check_sender_default_key_status(sender_info2, PEP_ct_pEp_unconfirmed);
+}
+
+TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_bob_2_0_default_exists) {
+    const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
+    const TestUtilsPreset::IdentityInfo& sender_info2 = TestUtilsPreset::presets[TestUtilsPreset::BOB2];
+
+    set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
+
+    force_sender_default_to_be_set(TestUtilsPreset::BOB2);
+
+    // Ok, we now have a blank slate. Run the import mail fun.
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_0.eml",
+                                     PEP_rating_reliable, PEP_STATUS_OK);
+
+    // Make sure import didn't overwrite default
+    check_sender_default_key_status(sender_info2, PEP_ct_pEp_unconfirmed);
+}
+
+TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_bob_1_0_default_exists) {
+    const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
+    const TestUtilsPreset::IdentityInfo& sender_info2 = TestUtilsPreset::presets[TestUtilsPreset::BOB2];
+
+    set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
+
+    force_sender_default_to_be_set(TestUtilsPreset::BOB2);
+
+    // Ok, we now have a blank slate. Run the import mail fun.
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_1_0.eml",
+                                     PEP_rating_reliable, PEP_STATUS_OK);
+
+    // Make sure import didn't overwrite default
+    check_sender_default_key_status(sender_info2, PEP_ct_pEp_unconfirmed);
+}
+
 
 // Case 1: Partner didn't have our key
 
