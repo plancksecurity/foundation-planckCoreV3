@@ -18,8 +18,6 @@
 #include "keymanagement_internal.h"
 #include "KeySync_fsm.h"
 
-#include "blacklist.h"
-
 static bool key_matches_address(PEP_SESSION session, const char* address,
                                 const char* fpr) {
     if (!session || !address || !fpr)
@@ -45,114 +43,13 @@ static bool key_matches_address(PEP_SESSION session, const char* address,
     return retval;                             
 }
 
-// Does not return PASSPHRASE errors
-/**
- *  @internal
- *  
- *  <!--       elect_pubkey()       -->
- *  
- *  @brief            TODO
- *  
- *  @param[in]    session             session handle
- *  @param[in]    *identity            pEp_identity
- *  @param[in]    check_blacklist        bool
- *  
- *  @retval PEP_STATUS_OK
- *  @retval PEP_OUT_OF_MEMORY   out of memory
- */
-PEP_STATUS elect_pubkey(
-        PEP_SESSION session, pEp_identity * identity, bool check_blacklist
-    )
-{
-    PEP_STATUS status;
-    stringlist_t *keylist = NULL;
-    char *_fpr = "";
-    identity->comm_type = PEP_ct_unknown;
-
-    status = find_keys(session, identity->address, &keylist);
-    assert(status != PEP_OUT_OF_MEMORY);
-    if (status == PEP_OUT_OF_MEMORY)
-        return PEP_OUT_OF_MEMORY;
-    
-    if (!keylist || !keylist->value)
-        identity->comm_type = PEP_ct_key_not_found;    
-    else {
-        stringlist_t *_keylist;
-        for (_keylist = keylist; _keylist && _keylist->value; _keylist = _keylist->next) {
-            PEP_comm_type _comm_type_key;
-
-            status = get_key_rating(session, _keylist->value, &_comm_type_key);
-            if (status == PEP_OUT_OF_MEMORY) {
-                free_stringlist(keylist);
-                return PEP_OUT_OF_MEMORY;
-            }
-
-            if (_comm_type_key != PEP_ct_compromised &&
-                _comm_type_key != PEP_ct_unknown)
-            {
-                if (identity->comm_type == PEP_ct_unknown ||
-                    _comm_type_key > identity->comm_type)
-                {
-                    bool blacklisted = false;
-                    bool mistrusted = false;
-                    status = is_mistrusted_key(session, _keylist->value, &mistrusted);
-                    if (status == PEP_STATUS_OK && check_blacklist)
-                        status = blacklist_is_listed(session, _keylist->value, &blacklisted);
-                    if (status == PEP_STATUS_OK && !mistrusted && !blacklisted) {
-                        identity->comm_type = _comm_type_key;
-                        _fpr = _keylist->value;
-                    }
-                }
-            }
-        }
-    }
-    free(identity->fpr);
-
-    if (!_fpr || _fpr[0] == '\0')
-        identity->fpr = NULL;
-    else {    
-        identity->fpr = strdup(_fpr);
-        if (identity->fpr == NULL) {
-            free_stringlist(keylist);
-            return PEP_OUT_OF_MEMORY;
-        }
-    }
-    
-    free_stringlist(keylist);
-    return PEP_STATUS_OK;
-}
-
-
 // own_must_contain_private is usually true when calling;
 // we only set it to false when we have the idea of
 // possibly having an own pubkey that we need to check on its own
 // N.B. Checked for PASSPHRASE errors - will now return them always
 // False value of "renew_private" prevents their possibility, though.
-/**
- *  @internal
- *  
- *  <!--       validate_fpr()       -->
- *  
- *  @brief            TODO
- *  
- *  @param[in]    session                     session handle
- *  @param[in]    *ident                        pEp_identity
- *  @param[in]    check_blacklist                bool
- *  @param[in]    own_must_contain_private    bool
- *  @param[in]    renew_private                bool
- *  
- *  @retval PEP_STATUS_OK
- *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
- *  @retval PEP_OUT_OF_MEMORY   out of memory
- *  @retval PEP_KEY_UNSUITABLE
- *  @retval PEP_PASSPHRASE_REQUIRED
- *  @retval PEP_WRONG_PASSPHRASE
- *  @retval any other value on error
- *
- */
 PEP_STATUS validate_fpr(PEP_SESSION session,
                         pEp_identity* ident,
-                        bool check_blacklist,
                         bool own_must_contain_private,
                         bool renew_private) {
     
@@ -228,8 +125,7 @@ PEP_STATUS validate_fpr(PEP_SESSION session,
     }
     
     bool revoked, expired;
-    bool blacklisted = false;
-    
+
     // Should not need to decrypt key material
     status = key_revoked(session, fpr, &revoked);    
         
@@ -250,15 +146,6 @@ PEP_STATUS validate_fpr(PEP_SESSION session,
         if (status != PEP_STATUS_OK)
             return status;
 
-        if (check_blacklist && IS_PGP_CT(ct) &&
-            !ident->me) {
-            status = blacklist_is_listed(session, 
-                                         fpr, 
-                                         &blacklisted);
-                                         
-            if (status != PEP_STATUS_OK)
-                return status;
-        }
     }
             
     // Renew key if it's expired, our own, has a private part,
@@ -300,13 +187,7 @@ PEP_STATUS validate_fpr(PEP_SESSION session,
         else
             ct = PEP_ct_key_expired;
     }
-    else if (blacklisted) { // never true for .me
-        ident->comm_type = ct = PEP_ct_key_not_found;
-        free(ident->fpr);
-            ident->fpr = strdup("");
-        status = PEP_KEY_BLACKLISTED;
-    }
-    
+
     switch (ct) {
         case PEP_ct_key_revoked:
         case PEP_ct_key_b0rken:
@@ -416,8 +297,7 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
                          pEp_identity* stored_identity,
                          bool* is_identity_default,
                          bool* is_user_default,
-                         bool* is_address_default,
-                         bool check_blacklist) {
+                         bool* is_address_default) {
 
     if (!session)
         return PEP_ILLEGAL_VALUE;
@@ -441,7 +321,7 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
         
         // Won't ask for passphrase, won't return PASSPHRASE status
         // Because of non-renewal
-        status = validate_fpr(session, stored_identity, check_blacklist, true, false);
+        status = validate_fpr(session, stored_identity, true, false);
         switch (status) {
             case PEP_STATUS_OK:
                 if (!EMPTYSTR(stored_identity->fpr)) {
@@ -469,7 +349,7 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
         
         // Won't ask for passphrase, won't return PASSPHRASE status
         // Because of non-renewal
-        status = validate_fpr(session, stored_identity, check_blacklist, true, false);
+        status = validate_fpr(session, stored_identity, true, false);
 
         switch (status) {
             case PEP_STATUS_OK:
@@ -492,20 +372,7 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
     }
 
     // If we got here, there's no usable default.
-    
-    // status = elect_pubkey(session, stored_identity, check_blacklist);
-    // if (status == PEP_STATUS_OK) {
-    //     if (!EMPTYSTR(stored_identity->fpr)) {
-    //         // Won't ask for passphrase, won't return PASSPHRASE status
-    //         // Because of non-renewal            
-    //         status = validate_fpr(session, stored_identity, false, true, false); // blacklist already filtered of needed
-    //     }    
-    // }    
-    // else if (status != PEP_KEY_NOT_FOUND && first_reject_status != PEP_KEY_NOT_FOUND) {
-    //     first_reject_status = status;
-    //     first_reject_comm_type = stored_identity->comm_type;
-    // }
-    
+
     switch (first_reject_comm_type) {
         case PEP_ct_key_revoked:
         case PEP_ct_key_b0rken:
@@ -520,11 +387,6 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
             stored_identity->comm_type = first_reject_comm_type;
             break;    
         default:
-            if (check_blacklist && status == PEP_KEY_BLACKLISTED) {
-                free(stored_identity->fpr);
-                stored_identity->fpr = NULL;
-                stored_identity->comm_type = PEP_ct_key_not_found;
-            }
             break;
     }
     
@@ -634,8 +496,7 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     status = get_valid_pubkey(session, stored_ident,
                                 &is_identity_default,
                                 &is_user_default,
-                                &is_address_default,
-                                false);
+                                &is_address_default);
 
     bool is_pEp = false;
 
@@ -783,8 +644,6 @@ DYNAMIC_API PEP_STATUS update_identity(
     bool input_has_user_id = !EMPTYSTR(identity->user_id);
     bool input_has_username = !EMPTYSTR(identity->username);
     bool input_has_real_id = input_has_user_id ? (strstr(identity->user_id, "TOFU_") != identity->user_id) : false;
-    bool input_name_is_addr = input_has_username ? strcmp(identity->username, identity->address) == 0 : false;
-    bool weak_input_name = input_name_is_addr || !input_has_username;
 
     char* default_own_id = NULL;
     pEp_identity* stored_ident = NULL;
@@ -871,11 +730,10 @@ DYNAMIC_API PEP_STATUS update_identity(
     // following properties (not in order of priority, and not for every case - the logic here is a mess):
     //
     // 1. Did the input have a user_id?
-    // 2. Did the input hava a username?
+    // 2. Did the input have a username? N.B. This is, as of ENGINE-828, less important than it was.
     // 3. Is the input user_id a real id?
     // 4. Is the stored user_id a real id?
     // 5. Does the stored user_id have a username?
-    // 6. Do the names match?
     //
     // Based on this, if we find an acceptable candidate, we do one:
     //
@@ -883,8 +741,7 @@ DYNAMIC_API PEP_STATUS update_identity(
     //    (this may be different than 1, though in practice it seems we always do both)
     // 2. Patch the output identity's user_id from the stored identity
     //
-    // If we find none, in the case if the has-username-but-no-user_id input case, we'll try a TOFU id
-    // fetch before giving up on stored identity candidates.
+    // If we find none, we'll try a TOFU id fetch before giving up on stored identity candidates.
     //
     // Acceptable candidates are then passed to prepare_update_identity which will patch usernames and
     // find any applicable keys.
@@ -915,12 +772,7 @@ DYNAMIC_API PEP_STATUS update_identity(
                     bool candidate_has_real_id = strstr(candidate_id, "TOFU_") != candidate_id;
                     bool candidate_has_username = !EMPTYSTR(candidate->username);
                     bool candidate_name_is_addr = candidate_has_username ? strcmp(candidate->address, candidate->username) == 0 : false;
-                    bool weak_candidate_name = !candidate_has_username || candidate_name_is_addr;
 
-                    bool names_match = (weak_candidate_name && weak_input_name) ||
-                                           ((input_has_username && candidate_has_username) && 
-                                           (strcmp(identity->username, candidate->username) == 0));
-                        
                     // This is where the optimisation gets a little weird:
                     //
                     // Decide whether to accept and patch the database and stored id from the input,
@@ -932,8 +784,8 @@ DYNAMIC_API PEP_STATUS update_identity(
                     bool input_addr_only = !input_has_username && !input_has_user_id;
                     bool candidate_id_best = candidate_has_real_id && !input_has_real_id;
                     bool input_id_best = input_has_real_id && !candidate_has_real_id;
-                    bool patch_input_id_conditions = input_has_user_id || names_match || weak_candidate_name;
-                    if (input_addr_only || (candidate_id_best && patch_input_id_conditions)) {
+                    // bool patch_input_id_conditions = input_has_user_id || names_match || weak_candidate_name; // No longer necessary, as we don't compare usernames
+                    if (input_addr_only || candidate_id_best) {
                         identity->user_id = strdup(candidate_id);
                         assert(identity->user_id);
                         if (!identity->user_id)
@@ -942,7 +794,7 @@ DYNAMIC_API PEP_STATUS update_identity(
                         stored_ident = identity_dup(candidate);
                         break;
                     }
-                    else if (input_id_best && (names_match || (input_has_username && weak_candidate_name))) {
+                    else if (input_id_best) {
                         // Replace the TOFU db in the database with the input ID globally
                         status = replace_userid(session, 
                                                 candidate_id, 
@@ -961,6 +813,8 @@ DYNAMIC_API PEP_STATUS update_identity(
                         break;
                     } // End else if
                     // Else, we reject this candidate and try the next one, if there is one.
+                    // Remember, the "user_id"s match case was already taken care of by get_identity
+                    // above.
                     stored_curr = stored_curr->next;
                 }
                 // Ok, we've checked all of the candidates, and if there's a stored identity, there's a duplicate.
@@ -979,14 +833,14 @@ DYNAMIC_API PEP_STATUS update_identity(
             snprintf(identity->user_id, strlen(identity->address) + 6,
                      "TOFU_%s", identity->address);                    
             
-            // Try one last time to see if there is an ident for us with a TOFU id, if there was no ID but there
-            // was a usernames
-            if (input_has_username) {
-                status = get_identity(session, 
-                                      identity->address, 
-                                      identity->user_id, 
-                                      &stored_ident);
-            }
+            // Try one last time to see if there is an ident for us with a TOFU id
+            //
+            // We no longer use the username as a qualifying condition.
+            //
+            status = get_identity(session,
+                                  identity->address,
+                                  identity->user_id,
+                                  &stored_ident);
         }
     }        
 
@@ -1279,7 +1133,7 @@ PEP_STATUS _myself(PEP_SESSION session,
     if (stored_identity) {
         if (!EMPTYSTR(stored_identity->fpr)) {
             // Fall back / retrieve
-            status = validate_fpr(session, stored_identity, false, true, do_renew);
+            status = validate_fpr(session, stored_identity, true, do_renew);
         
             switch (status) {
                 // Only possible if we called this with do_renew = true
@@ -1682,7 +1536,7 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
     // Set up a temp trusted identity for the input fpr without a comm type;
     tmp_id = new_identity(ident->address, ident->fpr, ident->user_id, NULL);
     
-    status = validate_fpr(session, tmp_id, false, true, false);
+    status = validate_fpr(session, tmp_id, true, false);
         
     if (status == PEP_STATUS_OK) {
         // Validate fpr gets trust DB or, when that fails, key comm type. we checked
@@ -1742,7 +1596,7 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
                     if (!tmp_user_ident)
                         status = PEP_OUT_OF_MEMORY;
                     else {
-                        status = validate_fpr(session, tmp_user_ident, false, true, false);
+                        status = validate_fpr(session, tmp_user_ident, true, false);
                         
                         if (status != PEP_STATUS_OK ||
                             tmp_user_ident->comm_type < PEP_ct_strong_but_unconfirmed ||
@@ -1783,8 +1637,8 @@ DYNAMIC_API PEP_STATUS trust_own_key(
     if (!is_me(session, ident))
         return PEP_ILLEGAL_VALUE;
 
-    // don't check blacklist or require a private key
-    PEP_STATUS status = validate_fpr(session, ident, false, false, true);
+    // don't require a private key
+    PEP_STATUS status = validate_fpr(session, ident, false, true);
 
     if (status != PEP_STATUS_OK)
         return status;
@@ -2151,7 +2005,7 @@ DYNAMIC_API PEP_STATUS set_own_key(
     if (!me->fpr)
         return PEP_OUT_OF_MEMORY;
 
-    status = validate_fpr(session, me, false, true, true);
+    status = validate_fpr(session, me, true, true);
     if (status)
         return status;
 
@@ -2321,7 +2175,7 @@ static PEP_STATUS _wipe_own_default_key_if_invalid(PEP_SESSION session,
     if (!ident->fpr)
         return PEP_OUT_OF_MEMORY;
         
-    PEP_STATUS keystatus = validate_fpr(session, ident, true, false, true);
+    PEP_STATUS keystatus = validate_fpr(session, ident, false, true);
     if (PASS_ERROR(status))
         return status;
         
@@ -2334,8 +2188,7 @@ static PEP_STATUS _wipe_own_default_key_if_invalid(PEP_SESSION session,
                 break;
             }        
         case PEP_KEY_UNSUITABLE:
-        case PEP_KEY_BLACKLISTED:
-            // Remove key as default for all identities and users 
+            // Remove key as default for all identities and users
             status = remove_fpr_as_default(session, cached_fpr);
             break;   
         default:

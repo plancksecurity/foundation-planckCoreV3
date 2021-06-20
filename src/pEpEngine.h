@@ -21,13 +21,13 @@ extern "C" {
 #include "labeled_int_list.h"    
 #include "timestamp.h"
 
-#define PEP_VERSION "2.2" // pEp *protocol* version
+#define PEP_VERSION "3.1" // pEp *protocol* version
 
 // RELEASE version this targets
 // (string: major.minor.patch)
-#define PEP_ENGINE_VERSION "3.2.0"
+#define PEP_ENGINE_VERSION "3.1.0"
 #define PEP_ENGINE_VERSION_MAJOR 3
-#define PEP_ENGINE_VERSION_MINOR 2
+#define PEP_ENGINE_VERSION_MINOR 1
 #define PEP_ENGINE_VERSION_PATCH 0
 #define PEP_ENGINE_VERSION_RC    1
 
@@ -87,7 +87,7 @@ typedef enum {
     PEP_CANNOT_SET_PGP_KEYPAIR                      = 0x0382,
     PEP_CANNOT_SET_IDENTITY                         = 0x0383,
     PEP_CANNOT_SET_TRUST                            = 0x0384,
-    PEP_KEY_BLACKLISTED                             = 0x0385,
+    PEP_KEY_BLACKLISTED                             = 0x0385,       /// @deprecated
     PEP_CANNOT_FIND_PERSON                          = 0x0386,
     PEP_CANNOT_SET_PEP_VERSION                      = 0X0387,
     
@@ -1184,6 +1184,45 @@ DYNAMIC_API PEP_STATUS generate_keypair(
  */
 
 DYNAMIC_API PEP_STATUS delete_keypair(PEP_SESSION session, const char *fpr);
+
+
+/**
+ *  <!--       import_key_with_fpr_return()       -->
+ *
+ *  @brief import keys from data, return optional list of fprs imported
+ *
+ *  @param[in]     session                session handle
+ *  @param[in]     key_data               key data, i.e. ASCII armored OpenPGP key
+ *  @param[in]     size                   amount of data to handle
+ *  @param[out]    private_keys           list of identities containing the
+ *                                        private keys that have been imported
+ *  @param[out]    imported_keys          if non-NULL, list of actual keys imported
+ *  @param[out]    changed_public_keys    if non-NULL AND imported_keys is non-NULL:
+ *                                        bitvector - corresponds to the first 64 keys
+ *                                        imported. If nth bit is set, import changed a
+ *                                        key corresponding to the nth element in
+ *                                        imported keys (i.e. key was in DB and was
+ *                                        changed by import)
+ *
+ *  @retval PEP_KEY_IMPORTED        key was successfully imported
+ *  @retval PEP_OUT_OF_MEMORY       out of memory
+ *  @retval PEP_ILLEGAL_VALUE       there is no key data to import, or imported keys was NULL and
+ *                                  changed_public_keys was not
+ *
+ *  @warning private_keys and imported_keys goes to the ownership of the caller
+ *           private_keys and imported_keys can be left NULL, it is then ignored
+ *           *** THIS IS THE ACTUAL FUNCTION IMPLEMENTED BY CRYPTOTECH "import_key" ***
+ *
+ */
+
+DYNAMIC_API PEP_STATUS import_key_with_fpr_return(
+        PEP_SESSION session,
+        const char *key_data,
+        size_t size,
+        identity_list** private_keys,
+        stringlist_t** imported_keys,
+        uint64_t* changed_public_keys // use as bit field for the first 64 changed keys
+);
 
 
 /**

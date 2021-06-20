@@ -243,12 +243,6 @@ struct _pEpSession {
     sqlite3_stmt *i18n_token;
     sqlite3_stmt *replace_userid;
 
-    // blacklist
-    sqlite3_stmt *blacklist_add;
-    sqlite3_stmt *blacklist_delete;
-    sqlite3_stmt *blacklist_is_listed;
-    sqlite3_stmt *blacklist_retrieve;
-    
     // Keys
     sqlite3_stmt *own_key_is_listed;
     sqlite3_stmt *is_own_address;

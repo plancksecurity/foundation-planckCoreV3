@@ -10,7 +10,7 @@
 
 #include <gtest/gtest.h>
 
-#define GMTMTT_WRITEOUT 1
+#define GMTMTT_WRITEOUT 0
 namespace {
 
 	//The fixture for GenerateMailsToMessageTypeTest
@@ -76,12 +76,57 @@ namespace {
                 msg->to = new_identity_list(to);
                 msg->shortmsg = strdup("This is a canonical mail from someone to Alice");
                 msg->longmsg = strdup("Fa una canzona senza note nere\n"
-                                          "Se mai bramasti la mia grazia havere\n"
-                                          "Falla d'un tuono ch'invita al dormire,\n"
-                                          "Dolcemente, dolcemente facendo la finire.");
+                                      "Se mai bramasti la mia grazia havere\n"
+                                      "Falla d'un tuono ch'invita al dormire,\n"
+                                      "Dolcemente, dolcemente facendo la finire.");
                 return msg;
             }
 
+            PEP_STATUS add_alternate_key_attachment(PEP_SESSION session,
+                                                    message* msg,
+                                                    TestUtilsPreset::ident_preset preset_name) {
+                const TestUtilsPreset::IdentityInfo& ident_info = TestUtilsPreset::presets[preset_name];
+                PEP_STATUS status = TestUtilsPreset::import_preset_key(session, preset_name, false);
+                if (status != PEP_STATUS_OK)
+                    return status;
+                // Shamelessly copied from message_api.c. If you want to do this more often, make
+                // the function non-static and expose it through message_api_internal.h.
+                // As is, this is a hack to break default key import for testing
+                char *keydata = NULL;
+                size_t size = 0;
+                status = export_key(session, ident_info.fpr, &keydata, &size);
+                if (status != PEP_STATUS_OK)
+                    return status;
+
+                bloblist_t *bl = bloblist_add(msg->attachments, keydata, size, "application/pgp-keys",
+                                              "file://pEpKey.asc");
+
+                if (msg->attachments == NULL && bl)
+                    msg->attachments = bl;
+
+                return PEP_STATUS_OK;
+            }
+
+            PEP_STATUS gen_testcase_message(TestUtilsPreset::ident_preset preset_name, bool have_key,
+                                            bool to_pep, bool trust, int major, int minor, message** outmsg) {
+                PEP_STATUS status = PEP_STATUS_OK;
+                pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, preset_name);
+                pEp_identity* alice = NULL;
+                if (!have_key) {
+                    alice = TestUtilsPreset::generateOnlyPartnerIdentity(session, TestUtilsPreset::ALICE);
+                }
+                else if (to_pep) {
+                    alice = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::ALICE, true, trust);
+                }
+                else {
+                    alice = TestUtilsPreset::generateAndSetOpenPGPPartnerIdentity(session, TestUtilsPreset::ALICE, true, trust);
+                }
+                if (major > 0) {
+                    status = set_pEp_version(session, alice, major, minor);
+                }
+                *outmsg = gen_outgoing_message_template(me, alice);
+                return status;
+            }
         private:
             const char* test_suite_name;
             const char* test_name;
@@ -101,138 +146,108 @@ namespace {
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_unencrypted_bob) {
     string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAliceUnencrypted.eml";
-    pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::BOB);
-    pEp_identity* alice = TestUtilsPreset::generateOnlyPartnerIdentity(session, TestUtilsPreset::ALICE);
-    message* msg = gen_outgoing_message_template(me, alice);
-    PEP_STATUS status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, false,  false, false, -1, -1, &msg);
+    ASSERT_OK;
+    status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
     ASSERT_OK;
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_unencrypted_sylvia) {
     string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAliceUnencrypted.eml";
-    pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::SYLVIA);
-    pEp_identity* alice = TestUtilsPreset::generateOnlyPartnerIdentity(session, TestUtilsPreset::ALICE);
-    message* msg = gen_outgoing_message_template(me, alice);
-    PEP_STATUS status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, false,  false, false, -1, -1, &msg);
+    ASSERT_OK;
+    status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
     ASSERT_OK;
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_OpenPGP_bob) {
     string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_OpenPGP.eml";
-    pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::BOB);
-    pEp_identity* alice = TestUtilsPreset::generateAndSetOpenPGPPartnerIdentity(session, TestUtilsPreset::ALICE, true, false);
-    message* msg = gen_outgoing_message_template(me, alice);
-    PEP_STATUS status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  false, false, -1, -1, &msg);
+    ASSERT_OK;
+    status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
     ASSERT_OK;
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_OpenPGP_sylvia) {
     string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_OpenPGP.eml";
-    pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::SYLVIA);
-    pEp_identity* alice = TestUtilsPreset::generateAndSetOpenPGPPartnerIdentity(session, TestUtilsPreset::ALICE, true, false);
-    message* msg = gen_outgoing_message_template(me, alice);
-    PEP_STATUS status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  false, false, -1, -1, &msg);
+    ASSERT_OK;
+    status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
     ASSERT_OK;
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_1_0_bob) {
     string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_1_0.eml";
-    pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::BOB);
-    pEp_identity* alice = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::ALICE, true, true);
-    int alice_major = 1;
-    int alice_minor = 0;
-    PEP_STATUS status = set_pEp_version(session, alice, alice_major, alice_minor);
-    message* msg = gen_outgoing_message_template(me, alice);
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  true, true, 1, 0, &msg);
+    ASSERT_OK;
     status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
     ASSERT_OK;
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_1_0_sylvia) {
     string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_1_0.eml";
-    pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::SYLVIA);
-    pEp_identity* alice = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::ALICE, true, false);
-    int alice_major = 1;
-    int alice_minor = 0;
-    PEP_STATUS status = set_pEp_version(session, alice, alice_major, alice_minor);
-    message* msg = gen_outgoing_message_template(me, alice);
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  true, false, 1, 0, &msg);
+    ASSERT_OK;
     status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
     ASSERT_OK;
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_0_bob) {
     string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_2_0.eml";
-    pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::BOB);
-    pEp_identity* alice = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::ALICE, true, true);
-    int alice_major = 2;
-    int alice_minor = 0;
-    PEP_STATUS status = set_pEp_version(session, alice, alice_major, alice_minor);
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  true, true, 2, 0, &msg);
     ASSERT_OK;
-    message* msg = gen_outgoing_message_template(me, alice);
     status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
     ASSERT_OK;
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_0_sylvia) {
     string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_2_0.eml";
-    pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::SYLVIA);
-    pEp_identity* alice = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::ALICE, true, true);
-    int alice_major = 2;
-    int alice_minor = 0;
-    PEP_STATUS status = set_pEp_version(session, alice, alice_major, alice_minor);
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  true, true, 2, 0, &msg);
     ASSERT_OK;
-    message* msg = gen_outgoing_message_template(me, alice);
     status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
     ASSERT_OK;
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_1_bob) {
     string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_2_1.eml";
-    pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::BOB);
-    pEp_identity* alice = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::ALICE, true, true);
-    int alice_major = 2;
-    int alice_minor = 1;
-    PEP_STATUS status = set_pEp_version(session, alice, alice_major, alice_minor);
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  true, true, 2, 1, &msg);
     ASSERT_OK;
-    message* msg = gen_outgoing_message_template(me, alice);
     status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
     ASSERT_OK;
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_1_sylvia) {
     string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_2_1.eml";
-    pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::SYLVIA);
-    pEp_identity* alice = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::ALICE, true, true);
-    int alice_major = 2;
-    int alice_minor = 1;
-    PEP_STATUS status = set_pEp_version(session, alice, alice_major, alice_minor);
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  true, true, 2, 1, &msg);
     ASSERT_OK;
-    message* msg = gen_outgoing_message_template(me, alice);
     status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
     ASSERT_OK;
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_2_bob) {
     string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_2_2.eml";
-    pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::BOB);
-    pEp_identity* alice = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::ALICE, true, true);
-    int alice_major = 2;
-    int alice_minor = 2;
-    PEP_STATUS status = set_pEp_version(session, alice, alice_major, alice_minor);
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  true, true, 2, 2, &msg);
     ASSERT_OK;
-    message* msg = gen_outgoing_message_template(me, alice);
     status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
     ASSERT_OK;
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_2_sylvia) {
     string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_2_2.eml";
-    pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::SYLVIA);
-    pEp_identity* alice = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::ALICE, true, true);
-    int alice_major = 2;
-    int alice_minor = 2;
-    PEP_STATUS status = set_pEp_version(session, alice, alice_major, alice_minor);
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  true, true, 2, 2, &msg);
     ASSERT_OK;
-    message* msg = gen_outgoing_message_template(me, alice);
     status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
     ASSERT_OK;
 }
@@ -241,139 +256,244 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_2_
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_unencrypted_bob_no_attached_key) {
     string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAliceUnencrypted_NoKey.eml";
-    pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::BOB);
-    pEp_identity* alice = TestUtilsPreset::generateOnlyPartnerIdentity(session, TestUtilsPreset::ALICE);
-    message* msg = gen_outgoing_message_template(me, alice);
-    PEP_STATUS status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str(), PEP_encrypt_flag_force_no_attached_key);
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, false,  false, false, -1, -1, &msg);
+    ASSERT_OK;
+    status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str(), PEP_encrypt_flag_force_no_attached_key);
     ASSERT_OK;
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_unencrypted_sylvia_no_attached_key) {
     string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAliceUnencrypted_NoKey.eml";
-    pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::SYLVIA);
-    pEp_identity* alice = TestUtilsPreset::generateOnlyPartnerIdentity(session, TestUtilsPreset::ALICE);
-    message* msg = gen_outgoing_message_template(me, alice);
-    PEP_STATUS status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str(), PEP_encrypt_flag_force_no_attached_key);
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, false,  false, false, -1, -1, &msg);
+    ASSERT_OK;
+    status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str(), PEP_encrypt_flag_force_no_attached_key);
     ASSERT_OK;
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_OpenPGP_bob_no_attached_key) {
     string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_OpenPGP_NoKey.eml";
-    pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::BOB);
-    pEp_identity* alice = TestUtilsPreset::generateAndSetOpenPGPPartnerIdentity(session, TestUtilsPreset::ALICE, true, false);
-    message* msg = gen_outgoing_message_template(me, alice);
-    PEP_STATUS status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str(), PEP_encrypt_flag_force_no_attached_key);
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  false, false, -1, -1, &msg);
+    ASSERT_OK;
+    status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str(), PEP_encrypt_flag_force_no_attached_key);
     ASSERT_OK;
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_OpenPGP_sylvia_no_attached_key) {
     string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_OpenPGP_NoKey.eml";
-    pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::SYLVIA);
-    pEp_identity* alice = TestUtilsPreset::generateAndSetOpenPGPPartnerIdentity(session, TestUtilsPreset::ALICE, true, false);
-    message* msg = gen_outgoing_message_template(me, alice);
-    PEP_STATUS status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str(), PEP_encrypt_flag_force_no_attached_key);
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  false, false, -1, -1, &msg);
+    ASSERT_OK;
+    status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str(), PEP_encrypt_flag_force_no_attached_key);
     ASSERT_OK;
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_1_0_bob_no_attached_key) {
     string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_1_0_NoKey.eml";
-    pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::BOB);
-    pEp_identity* alice = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::ALICE, true, true);
-    int alice_major = 1;
-    int alice_minor = 0;
-    PEP_STATUS status = set_pEp_version(session, alice, alice_major, alice_minor);
-    message* msg = gen_outgoing_message_template(me, alice);
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  true, true, 1, 0, &msg);
+    ASSERT_OK;
     status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str(), PEP_encrypt_flag_force_no_attached_key);
     ASSERT_OK;
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_1_0_sylvia_no_attached_key) {
     string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_1_0_NoKey.eml";
-    pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::SYLVIA);
-    pEp_identity* alice = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::ALICE, true, false);
-    int alice_major = 1;
-    int alice_minor = 0;
-    PEP_STATUS status = set_pEp_version(session, alice, alice_major, alice_minor);
-    message* msg = gen_outgoing_message_template(me, alice);
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  true, false, 1, 0, &msg);
+    ASSERT_OK;
     status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str(), PEP_encrypt_flag_force_no_attached_key);
     ASSERT_OK;
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_0_bob_no_attached_key) {
     string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_2_0_NoKey.eml";
-    pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::BOB);
-    pEp_identity* alice = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::ALICE, true, true);
-    int alice_major = 2;
-    int alice_minor = 0;
-    PEP_STATUS status = set_pEp_version(session, alice, alice_major, alice_minor);
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  true, true, 2, 0, &msg);
     ASSERT_OK;
-    message* msg = gen_outgoing_message_template(me, alice);
     status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str(), PEP_encrypt_flag_force_no_attached_key);
     ASSERT_OK;
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_0_sylvia_no_attached_key) {
     string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_2_0_NoKey.eml";
-    pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::SYLVIA);
-    pEp_identity* alice = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::ALICE, true, true);
-    int alice_major = 2;
-    int alice_minor = 0;
-    PEP_STATUS status = set_pEp_version(session, alice, alice_major, alice_minor);
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  true, true, 2, 0, &msg);
     ASSERT_OK;
-    message* msg = gen_outgoing_message_template(me, alice);
     status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str(), PEP_encrypt_flag_force_no_attached_key);
     ASSERT_OK;
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_1_bob_no_attached_key) {
     string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_2_1_NoKey.eml";
-    pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::BOB);
-    pEp_identity* alice = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::ALICE, true, true);
-    int alice_major = 2;
-    int alice_minor = 1;
-    PEP_STATUS status = set_pEp_version(session, alice, alice_major, alice_minor);
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  true, true, 2, 1, &msg);
     ASSERT_OK;
-    message* msg = gen_outgoing_message_template(me, alice);
     status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str(), PEP_encrypt_flag_force_no_attached_key);
     ASSERT_OK;
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_1_sylvia_no_attached_key) {
     string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_2_1_NoKey.eml";
-    pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::SYLVIA);
-    pEp_identity* alice = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::ALICE, true, true);
-    int alice_major = 2;
-    int alice_minor = 1;
-    PEP_STATUS status = set_pEp_version(session, alice, alice_major, alice_minor);
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  true, true, 2, 1, &msg);
     ASSERT_OK;
-    message* msg = gen_outgoing_message_template(me, alice);
     status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str(), PEP_encrypt_flag_force_no_attached_key);
     ASSERT_OK;
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_2_bob_no_attached_key) {
     string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_2_2_NoKey.eml";
-    pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::BOB);
-    pEp_identity* alice = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::ALICE, true, true);
-    int alice_major = 2;
-    int alice_minor = 2;
-    PEP_STATUS status = set_pEp_version(session, alice, alice_major, alice_minor);
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  true, true, 2, 2, &msg);
     ASSERT_OK;
-    message* msg = gen_outgoing_message_template(me, alice);
     status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str(), PEP_encrypt_flag_force_no_attached_key);
     ASSERT_OK;
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_2_sylvia_no_attached_key) {
     string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_2_2_NoKey.eml";
-    pEp_identity* me = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::SYLVIA);
-    pEp_identity* alice = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::ALICE, true, true);
-    int alice_major = 2;
-    int alice_minor = 2;
-    PEP_STATUS status = set_pEp_version(session, alice, alice_major, alice_minor);
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  true, true, 2, 2, &msg);
     ASSERT_OK;
-    message* msg = gen_outgoing_message_template(me, alice);
     status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str(), PEP_encrypt_flag_force_no_attached_key);
     ASSERT_OK;
 }
+
+// Multiple keys
+TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_unencrypted_bob_two_keys) {
+    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAliceUnencrypted_TwoKeys.eml";
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, false,  false, false, -1, -1, &msg);
+    ASSERT_OK;
+    status = add_alternate_key_attachment(session, msg, TestUtilsPreset::BOB2);
+    ASSERT_OK;
+    status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
+    ASSERT_OK;
+}
+
+TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_unencrypted_sylvia_two_keys) {
+    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAliceUnencrypted_TwoKeys.eml";
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, false,  false, false, -1, -1, &msg);
+    ASSERT_OK;
+    status = add_alternate_key_attachment(session, msg, TestUtilsPreset::SYLVIA2);
+    ASSERT_OK;
+    status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
+    ASSERT_OK;
+}
+
+TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_OpenPGP_bob_two_keys) {
+    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_OpenPGP_TwoKeys.eml";
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  false, false, -1, -1, &msg);
+    ASSERT_OK;
+    status = add_alternate_key_attachment(session, msg, TestUtilsPreset::BOB2);
+    ASSERT_OK;
+    status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
+    ASSERT_OK;
+}
+
+TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_OpenPGP_sylvia_two_keys) {
+    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_OpenPGP_TwoKeys.eml";
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  false, false, -1, -1, &msg);
+    ASSERT_OK;
+    status = add_alternate_key_attachment(session, msg, TestUtilsPreset::SYLVIA2);
+    ASSERT_OK;
+    status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
+    ASSERT_OK;
+}
+
+TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_1_0_bob_two_keys) {
+    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_1_0_TwoKeys.eml";
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  true, true, 1, 0, &msg);
+    ASSERT_OK;
+    status = add_alternate_key_attachment(session, msg, TestUtilsPreset::BOB2);
+    ASSERT_OK;
+    status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
+    ASSERT_OK;
+}
+
+TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_1_0_sylvia_two_keys) {
+    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_1_0_TwoKeys.eml";
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  true, false, 1, 0, &msg);
+    ASSERT_OK;
+    status = add_alternate_key_attachment(session, msg, TestUtilsPreset::SYLVIA2);
+    ASSERT_OK;
+    status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
+    ASSERT_OK;
+}
+
+TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_0_bob_two_keys) {
+    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_2_0_TwoKeys.eml";
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  true, true, 2, 0, &msg);
+    ASSERT_OK;
+    status = add_alternate_key_attachment(session, msg, TestUtilsPreset::BOB2);
+    ASSERT_OK;
+    status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
+    ASSERT_OK;
+}
+
+TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_0_sylvia_two_keys) {
+    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_2_0_TwoKeys.eml";
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  true, true, 2, 0, &msg);
+    ASSERT_OK;
+    status = add_alternate_key_attachment(session, msg, TestUtilsPreset::SYLVIA2);
+    ASSERT_OK;
+    status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
+    ASSERT_OK;
+}
+
+TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_1_bob_two_keys) {
+    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_2_1_TwoKeys.eml";
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  true, true, 2, 1, &msg);
+    ASSERT_OK;
+    status = add_alternate_key_attachment(session, msg, TestUtilsPreset::BOB2);
+    ASSERT_OK;
+    status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
+    ASSERT_OK;
+}
+
+TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_1_sylvia_two_keys) {
+    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_2_1_TwoKeys.eml";
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  true, true, 2, 1, &msg);
+    ASSERT_OK;
+    status = add_alternate_key_attachment(session, msg, TestUtilsPreset::SYLVIA2);
+    ASSERT_OK;
+    status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
+    ASSERT_OK;
+}
+
+TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_2_bob_two_keys) {
+    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_2_2_TwoKeys.eml";
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  true, true, 2, 2, &msg);
+    ASSERT_OK;
+    status = add_alternate_key_attachment(session, msg, TestUtilsPreset::BOB2);
+    ASSERT_OK;
+    status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
+    ASSERT_OK;
+}
+
+TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_2_sylvia_two_keys) {
+    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_2_2_TwoKeys.eml";
+    message* msg = NULL;
+    PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  true, true, 2, 2, &msg);
+    ASSERT_OK;
+    status = add_alternate_key_attachment(session, msg, TestUtilsPreset::SYLVIA2);
+    ASSERT_OK;
+    status = vanilla_encrypt_and_write_to_file(session, msg, filename.c_str());
+    ASSERT_OK;
+}
+
+
 #endif

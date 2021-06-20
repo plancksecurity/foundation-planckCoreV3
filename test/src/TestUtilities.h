@@ -79,29 +79,31 @@ public:
         ALICE       = 0,
         APPLE       = 1,
         BOB         = 2,
-        CAROL       = 3,
-        DAVE        = 4,
-        ERIN        = 5,
-        FRANK       = 6,
-        GABRIELLE   = 7,
-        JOHN        = 8,
-        ALEX        = 9,
-        ALEX_0      = 10,
-        ALEX_1      = 11,
-        ALEX_2      = 12,
-        ALEX_3      = 13,
-        ALEX_4      = 14,
-        ALEX_5      = 15,
-        ALEX_6A     = 16,
-        ALEX_6B     = 17,
-        ALEX_6C     = 18,
-        ALEX_6D     = 19,
-        BELLA       = 20,
-        FENRIS      = 21,
-        SERCULLEN   = 22,
-        INQUISITOR  = 23,
-        BERND       = 24,
-        SYLVIA      = 25
+        BOB2        = 3,
+        CAROL       = 4,
+        DAVE        = 5,
+        ERIN        = 6,
+        FRANK       = 7,
+        GABRIELLE   = 8,
+        JOHN        = 9,
+        ALEX        = 10,
+        ALEX_0      = 11,
+        ALEX_1      = 12,
+        ALEX_2      = 13,
+        ALEX_3      = 14,
+        ALEX_4      = 15,
+        ALEX_5      = 16,
+        ALEX_6A     = 17,
+        ALEX_6B     = 18,
+        ALEX_6C     = 19,
+        ALEX_6D     = 20,
+        BELLA       = 21,
+        FENRIS      = 22,
+        SERCULLEN   = 23,
+        INQUISITOR  = 24,
+        BERND       = 25,
+        SYLVIA      = 26,
+        SYLVIA2     = 27
     } ident_preset;
 
     static PEP_STATUS set_up_preset(PEP_SESSION session,
@@ -113,6 +115,10 @@ public:
                          bool set_own,
                          bool setup_private,
                          pEp_identity** ident);
+
+    static PEP_STATUS import_preset_key(PEP_SESSION session,
+                                    ident_preset preset_name,
+                                    bool private_also);
 
     static pEp_identity* generateAndSetOpenPGPPartnerIdentity(PEP_SESSION session,
                                                               ident_preset preset_name,
@@ -138,7 +144,6 @@ public:
 
     static pEp_identity* generateOnlyPartnerIdentityGrabFPR(PEP_SESSION session,
                                                             ident_preset preset_name);
-
     static const IdentityInfo presets[];
 };
 

@@ -407,22 +407,6 @@ static const char *sql_languagelist =
 static const char *sql_i18n_token =
         "select phrase from i18n_token where lang = lower(?1) and id = ?2 ;";
 
-// blacklist
-static const char *sql_blacklist_add =
-        "insert or ignore into blacklist_keys (fpr) values (upper(replace(?1,' ',''))) ;"
-        "delete from identity where main_key_id = upper(replace(?1,' ','')) ;"
-        "delete from pgp_keypair where fpr = upper(replace(?1,' ','')) ;";
-
-static const char *sql_blacklist_delete =
-        "delete from blacklist_keys where fpr = upper(replace(?1,' ','')) ;";
-
-static const char *sql_blacklist_is_listed =
-        "select count(*) from blacklist_keys where fpr = upper(replace(?1,' ','')) ;";
-
-static const char *sql_blacklist_retrieve =
-        "select * from blacklist_keys ;";
-
-
 // Own keys
 // We only care if it's 0 or non-zero
 static const char *sql_own_key_is_listed =

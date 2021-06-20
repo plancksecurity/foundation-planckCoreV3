@@ -98,6 +98,7 @@
 		1552DC882577D71800A92F71 /* internal_format.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C37788246A8C0300962D22 /* internal_format.h */; };
 		1552DC892577D71800A92F71 /* status_to_string.h in Headers */ = {isa = PBXBuildFile; fileRef = 1549189322B9401E0091B6D6 /* status_to_string.h */; };
 		1552DC8A2577D71800A92F71 /* distribution_codec.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188ABF23C4BBDE008EF79C /* distribution_codec.h */; };
+		156AFEB82672089100AF0039 /* libetpan.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64289E351B8B630200FC617B /* libetpan.a */; };
 		159EF42722B6D3E900149C0C /* pgp_sequoia.c in Sources */ = {isa = PBXBuildFile; fileRef = 159EF42422B6D3E900149C0C /* pgp_sequoia.c */; };
 		159EF42822B6D3E900149C0C /* pgp_sequoia.h in Headers */ = {isa = PBXBuildFile; fileRef = 159EF42522B6D3E900149C0C /* pgp_sequoia.h */; };
 		159EF42922B6D3E900149C0C /* pgp_sequoia_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 159EF42622B6D3E900149C0C /* pgp_sequoia_internal.h */; };
@@ -167,6 +168,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 644297BE1BE11C65002BC73B;
 			remoteInfo = pEpTrustWords;
+		};
+		156AFE822670E6D800AF0039 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = C69AB10910546FE500F32FBD;
+			remoteInfo = "static libetpan";
 		};
 		15A322F4260E0B75009D07EB /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -396,6 +404,7 @@
 			files = (
 				15A326E826120AB6009D07EB /* libPEPSQLITE3_macOS.a in Frameworks */,
 				15A32429260E1873009D07EB /* libpEpASN1_macOS.a in Frameworks */,
+				156AFEB82672089100AF0039 /* libetpan.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -694,6 +703,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				156AFE832670E6D800AF0039 /* PBXTargetDependency */,
 				15A3266826120623009D07EB /* PBXTargetDependency */,
 				15B21C3F25FB8E160097927A /* PBXTargetDependency */,
 				1508460725F24D1100D46DA6 /* PBXTargetDependency */,
@@ -883,7 +893,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "CUSTOM_BUILD_DIR=${PROJECT_DIR}/build\nmkdir -p ${CUSTOM_BUILD_DIR}\ncp -r \"${BUILD_DIR}/${CONFIGURATION}/libpEpEngine_macOS.a\" ${CUSTOM_BUILD_DIR}\n\n# Copy system.db also\ncp ${PROJECT_DIR}/../db/system.db ${CUSTOM_BUILD_DIR}\n";
+			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nmkdir -p \"${CUSTOM_BUILD_DIR}\"\ncp -r \"${BUILD_DIR}/${CONFIGURATION}/libpEpEngine_macOS.a\" \"${CUSTOM_BUILD_DIR}/libpEpEngine.a\"\n\n# COPY HEADERS\nCUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include/pEp\"\nmkdir -p \"${CUSTOM_INCLUDE_DIR}\"\n\n#pushd ${PROJECT_DIR}/../asn.1\n#    cp *h \"${CUSTOM_INCLUDE_DIR}\"\n#popd\n\npushd ${PROJECT_DIR}/../sync/generated\n    cp *h \"${CUSTOM_INCLUDE_DIR}\"\npopd\n\npushd ${PROJECT_DIR}/../src\n    cp *h \"${CUSTOM_INCLUDE_DIR}\"\npopd\n\n# Copy system.db also\ncp ${PROJECT_DIR}/../db/system.db \"${CUSTOM_BUILD_DIR}\"\n";
 		};
 		150845EA25F13CF100D46DA6 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1026,6 +1036,11 @@
 			target = 644297BE1BE11C65002BC73B /* pEpTrustWords */;
 			targetProxy = 1508460625F24D1100D46DA6 /* PBXContainerItemProxy */;
 		};
+		156AFE832670E6D800AF0039 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "static libetpan";
+			targetProxy = 156AFE822670E6D800AF0039 /* PBXContainerItemProxy */;
+		};
 		15A32305260E0C6F009D07EB /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = pEpASN1_macOS;
@@ -1108,17 +1123,16 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/../../sequoia4macos/build/include",
-					"$(PROJECT_DIR)/Subprojects/pEpASN1/build/include",
 					"$(PROJECT_DIR)/../../local/include",
+					"$(PROJECT_DIR)/Subprojects/pEpASN1/build/include",
 					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				OTHER_CFLAGS = "";
-				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../sequoia4macos/build/lib/libnettle.a ${PROJECT_DIR}/../../sequoia4macos/build/lib/libgmp.a ${PROJECT_DIR}/../../sequoia4macos/build/lib/libhogweed.a ${PROJECT_DIR}/../../sequoia4macos/build/lib/libsequoia_openpgp_ffi.a ${PROJECT_DIR}/../../local/lib/libetpan.a";
+				OTHER_LDFLAGS = "-Objc";
+				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../sequoia4macos/build/lib/libnettle.a ${PROJECT_DIR}/../../sequoia4macos/build/lib/libgmp.a ${PROJECT_DIR}/../../sequoia4macos/build/lib/libhogweed.a ${PROJECT_DIR}/../../sequoia4macos/build/lib/libsequoia_openpgp_ffi.a ${PROJECT_DIR}/../../local/lib/libiconv.a";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -1141,16 +1155,15 @@
 				EXECUTABLE_PREFIX = lib;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/../../sequoia4macos/build/include",
-					"$(PROJECT_DIR)/Subprojects/pEpASN1/build/include",
 					"$(PROJECT_DIR)/../../local/include",
+					"$(PROJECT_DIR)/Subprojects/pEpASN1/build/include",
 					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_FAST_MATH = YES;
 				OTHER_CFLAGS = "";
-				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../sequoia4macos/build/lib/libnettle.a ${PROJECT_DIR}/../../sequoia4macos/build/lib/libgmp.a ${PROJECT_DIR}/../../sequoia4macos/build/lib/libhogweed.a ${PROJECT_DIR}/../../sequoia4macos/build/lib/libsequoia_openpgp_ffi.a ${PROJECT_DIR}/../../local/lib/libetpan.a";
+				OTHER_LDFLAGS = "-Objc";
+				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../sequoia4macos/build/lib/libnettle.a ${PROJECT_DIR}/../../sequoia4macos/build/lib/libgmp.a ${PROJECT_DIR}/../../sequoia4macos/build/lib/libhogweed.a ${PROJECT_DIR}/../../sequoia4macos/build/lib/libsequoia_openpgp_ffi.a ${PROJECT_DIR}/../../local/lib/libiconv.a";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;

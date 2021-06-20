@@ -10,7 +10,6 @@
 
 #include "platform.h"
 #include "mime.h"
-#include "blacklist.h"
 #include "baseprotocol.h"
 #include "KeySync_fsm.h"
 #include "base64.h"
@@ -1924,7 +1923,7 @@ bool import_attached_keys(
                 }
             }
             identity_list *local_private_idents = NULL;
-            PEP_STATUS import_status = _import_key_with_fpr_return(
+            PEP_STATUS import_status = import_key_with_fpr_return(
                                                   session, blob_value, blob_size, 
                                                   &local_private_idents,
                                                   &_keylist,
@@ -2292,27 +2291,6 @@ static PEP_STATUS _update_state_for_ident_list(
                                  max_version_major, max_version_minor);
             }
             
-            bool is_blacklisted = false;
-            if (_il->ident->fpr && IS_PGP_CT(_il->ident->comm_type)) {
-                status = blacklist_is_listed(session, _il->ident->fpr, &is_blacklisted);
-                if (status != PEP_STATUS_OK) {
-                    // DB error
-                    status = PEP_UNENCRYPTED;
-                    goto pEp_done;
-                }
-                if (is_blacklisted) {
-                    bool user_default, ident_default, address_default; 
-                    status = get_valid_pubkey(session, _il->ident,
-                                               &ident_default, &user_default,
-                                               &address_default,
-                                               true);
-                                               
-                    if (status != PEP_STATUS_OK || _il->ident->fpr == NULL) {
-                        _il->ident->comm_type = PEP_ct_key_not_found;
-                        status = PEP_STATUS_OK;                        
-                    }
-                }    
-            }
             if (!(*has_pEp_user) && !EMPTYSTR(_il->ident->user_id))
                 is_pEp_user(session, _il->ident, has_pEp_user);
             
@@ -4214,7 +4192,7 @@ static bool import_header_keys(PEP_SESSION session, message* src, stringlist_t**
     bloblist_t* the_key = base64_str_to_binary_blob(start_key, length);
     if (!the_key)
         return false;
-    PEP_STATUS status = _import_key_with_fpr_return(session, 
+    PEP_STATUS status = import_key_with_fpr_return(session, 
                                                     the_key->value, 
                                                     the_key->size, 
                                                     NULL, 
@@ -4477,10 +4455,10 @@ static void get_message_version_from_headers(
 {
     *major_ver = 0;
     *minor_ver = 0;
-    const stringpair_list_t* pEp_protocol_version = stringpair_list_find(field_list, X_PEP_MSG_VER_KEY);
+    const stringpair_list_t* pEp_message_version = stringpair_list_find(field_list, X_PEP_MSG_VER_KEY);
                         
-    if (pEp_protocol_version && pEp_protocol_version->value)
-        pEp_version_major_minor(pEp_protocol_version->value->value, major_ver, minor_ver);           
+    if (pEp_message_version && pEp_message_version->value)
+        pEp_version_major_minor(pEp_message_version->value->value, major_ver, minor_ver);           
 }
 
 // CAN return PASS errors
@@ -4499,7 +4477,7 @@ static PEP_STATUS set_default_key_fpr_if_valid(
         return PEP_OUT_OF_MEMORY;
         
     // this will check to see that the key is usable as well as get its comm_type    
-    PEP_STATUS status = validate_fpr(session, ident, true, true, true);
+    PEP_STATUS status = validate_fpr(session, ident, true, true);
     if (status == PEP_STATUS_OK)
         status = set_identity(session, ident);            
     else { 
@@ -4529,11 +4507,7 @@ static PEP_STATUS _check_and_set_default_key(
         // Right now, we just want to know if there's a DB default, NOT 
         // if it matches what update_identity gives us (there are good reasons it might not)
         status = get_default_identity_fpr(session, src_ident->address, src_ident->user_id, &default_from_fpr);
-        bool on_blacklist = false;
-        if (!EMPTYSTR(default_from_fpr)) {
-            blacklist_is_listed(session, default_from_fpr, &on_blacklist);
-        }
-        if (on_blacklist || status == PEP_KEY_NOT_FOUND || status == PEP_CANNOT_FIND_IDENTITY) {
+        if (status == PEP_KEY_NOT_FOUND || status == PEP_CANNOT_FIND_IDENTITY) {
             if (!EMPTYSTR(sender_key))
                 status = set_default_key_fpr_if_valid(session, src_ident, sender_key);
         }
@@ -4546,6 +4520,52 @@ static PEP_STATUS _check_and_set_default_key(
     return PEP_STATUS_OK;  // We don't care about other errors here.    
 }
 
+static const char* process_key_claim(message* src,
+                                     const char* imported_sender_key_fpr,
+                                     const char* signer_fpr,
+                                     int msg_major, int msg_minor,
+                                     stringlist_t* imported_key_list,
+                                     bool pEp_conformant) {
+
+    if (msg_major == 2 && msg_minor == 0)
+        return NULL;
+
+    // Senders with pEp versions >= than 2.2 will never send us a 2.0 message or less
+    // IF they know we are a pEp user.
+    //
+    // However, they COULD think we're OpenPGP - maybe imported the key from somewhere.
+    //
+    // So we have to only take the key IF the from-2.2-message-version is listed as
+    // 1.0. Everything else we support would have an inner message. And only then
+    // if the sender key has the right name. (FIXME: Have we changed 2.1 to do this?)
+    // FIXME: From SENDER >= 2.2, we should be VERY careful here -- check back on this one
+    //
+    const char *sender_key = NULL;
+
+    if (msg_major == 1) // pEp only: We only import from 2.1.34+ clients, which will use the correct name.
+        sender_key = imported_sender_key_fpr;
+    else if ((msg_major == 2 && msg_minor >= 1) || msg_major > 2) {
+        // We've been sent the inner message
+        // we require sender key filename to be correct and material to be present in this case
+        if (!EMPTYSTR(imported_sender_key_fpr) && !EMPTYSTR(src->_sender_fpr)) {
+            if (strcmp(imported_sender_key_fpr, src->_sender_fpr) == 0)
+                sender_key = src->_sender_fpr;
+        }
+    }
+    else if (!pEp_conformant) {
+        // For header keys, we will have been sent the head of the list here.
+        // For others, we were sent a reference to the last set of keys imported before this and checked to be
+        // sure there was only one.
+        if (imported_key_list) // not necessarily signer key!
+            sender_key = imported_key_list->value;
+    }
+    if (!EMPTYSTR(sender_key) && !EMPTYSTR(signer_fpr)) {
+        if (strcmp(sender_key, signer_fpr) != 0)
+            sender_key = NULL;
+    }
+
+    return sender_key;
+}
 
 // Rule for this function, since it is one of the three most complicated functions in this whole damned
 // business:
@@ -4799,17 +4819,15 @@ static PEP_STATUS _decrypt_message(
             if (src->from->address) {
                 PEP_STATUS incoming_status = status;
                 const char* sender_key = NULL;
-                if (imported_sender_key_fpr) {// pEp message version 2.2 or greater
+                if (imported_sender_key_fpr) { // pEp protocol version 2.2 or greater, or someone knows to use the filename
                     sender_key = imported_sender_key_fpr; // FIXME: free
                 }
                 else if (!is_pEp_msg && header_key_imported) // autocrypt
                     sender_key = _imported_key_list->value;
                 else {
-                    // We do this only with pEp messages 2.1 or less, or OpenPGP messages
-                    if (!is_pEp_msg || (major_ver == 2 && minor_ver < 2) || major_ver < 2) {
-                        if (_imported_key_list && !(_imported_key_list->next))
-                            sender_key = _imported_key_list->value;
-                    }
+                    // Basically, this is everything else, since we can trust nothing on the wire really.
+                    if (_imported_key_list && !(_imported_key_list->next))
+                        sender_key = _imported_key_list->value;
                 } // Otherwise, too bad.
 
                 status = _check_and_set_default_key(session, src->from, sender_key);
@@ -4925,47 +4943,71 @@ static PEP_STATUS _decrypt_message(
                                                         &_changed_keys,
                                                         &imported_sender_key_fpr);
 
-                if (src->from && !is_me(session, src->from)) {
-                    if (status == PEP_STATUS_OK && !has_inner) {
-                        // If we're claiming to have a pEp version 2.2 or greater, we only take it
-                        // if it had the right name during the import and if it was the ONLY key on the message?
-                        //
-                        // FIXME: From SENDER >= 2.2, we should be VERY careful here -- check back on this one
-                        //
-                        const char* sender_key = NULL;
-                        if ((major_ver == 2 && minor_ver > 1) || major_ver > 2) {
-                            if (imported_sender_key_fpr)
-                                sender_key = imported_sender_key_fpr;
+                if (src->from) {
+                    if (!is_me(session, src->from)) {
+
+                        /* if decrypted, but not verified... */
+                        if (status == PEP_STATUS_OK && decrypt_status == PEP_DECRYPTED) {
+                            if (src->from)
+                                status = verify_decrypted(session,
+                                                          src, msg,
+                                                          ptext, psize,
+                                                          &_keylist,
+                                                          &decrypt_status,
+                                                          crypto);
                         }
-                        else if (header_key_imported && _imported_key_list)
-                            sender_key = _imported_key_list->value;
-                        else if (*start && !((*start)->next))
-                            sender_key = (*start)->value; // signer if sent from < 2.1
+
+                        if (status == PEP_STATUS_OK && !has_inner) {
+                            // Senders with pEp versions greater than 2.2 will never send us a 2.0 message or less
+                            // IF they know we are a pEp user.
+                            //
+                            // However, they COULD think we're OpenPGP - maybe imported the key from somewhere.
+                            //
+                            // So we have to only take the key IF the from-2.2-message-version is listed as
+                            // 1.0. Everything else we support would have an inner message. And only then
+                            // if the sender key has the right name. (FIXME: Have we changed 2.1 to do this?)
+                            // FIXME: From SENDER >= 2.2, we should be VERY careful here -- check back on this one
+                            //
+
+                            get_message_version_from_headers(src->opt_fields, &msg_major_ver, &msg_minor_ver);
+
+                            const char* key_claim_fpr = NULL;
+
+                            if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED && _imported_key_list) {
+                                // This is correct - we require sender key filename to be correct and material to be present in this case from any non-2.2+ version or OpenPGP, and we'll get 1 from 2.2+. Otherwise,
+                                // we call shenanigans and don't trust the key to set defaults from.
+                                if (imported_sender_key_fpr) {
+                                    key_claim_fpr = process_key_claim(src, imported_sender_key_fpr,
+                                                                      _imported_key_list->value, 1, 0,
+                                                                      _imported_key_list, true);
+                                }
+                                else {
+                                    bool is_only_key = *start && !EMPTYSTR((*start)->value) && !((*start)->next);
+                                    if (header_key_imported || is_only_key) {
+                                        stringlist_t *claim_node = header_key_imported ? _imported_key_list : *start;
+                                        key_claim_fpr = process_key_claim(src, NULL,
+                                                                          claim_node ? claim_node->value : NULL,
+                                                                          0, 0,
+                                                                          _imported_key_list, false);
+                                    }
+                                }
+                            }
+                            if (!EMPTYSTR(key_claim_fpr))
+                                status = _check_and_set_default_key(session, src->from, key_claim_fpr);
 
 
-                        status = _check_and_set_default_key(session, src->from, sender_key);
-                        free(imported_sender_key_fpr);
-                        imported_sender_key_fpr = NULL;
+                            free(imported_sender_key_fpr);
+                            imported_sender_key_fpr = NULL;
 
-                        if (status == PEP_OUT_OF_MEMORY)
-                            goto enomem;    
-                    }    
-                } // else, it needs to get set from INNER keys.
+                            if (status == PEP_OUT_OF_MEMORY)
+                                goto enomem;
+                        } // else, it needs to get set from INNER keys.
+                    }
+                }
 
                 if (status != PEP_STATUS_OK)
                     goto pEp_error;            
 
-                /* if decrypted, but not verified... */
-                if (decrypt_status == PEP_DECRYPTED) {
-                    
-                    if (src->from)                                                                 
-                        status = verify_decrypted(session,
-                                                  src, msg,
-                                                  ptext, psize,
-                                                  &_keylist,
-                                                  &decrypt_status,
-                                                  crypto);
-                }
                 break;
 
             case PEP_enc_inline:
@@ -5001,7 +5043,7 @@ static PEP_STATUS _decrypt_message(
                     else if (strcasecmp(mime_type, "application/pEp.distribution") == 0)
                         filename = "file://distribution.pEp";
                     else if (strcasecmp(mime_type, "application/pgp-keys") == 0)
-                        filename = "file://pEpkey.asc";
+                        filename = "file://sender_key.asc";
                     else if (strcasecmp(mime_type, "application/pgp-signature") == 0)
                         filename = "file://electronic_signature.asc";
                     bloblist_t *bl = new_bloblist(value, size, mime_type, filename);
@@ -5038,19 +5080,20 @@ static PEP_STATUS _decrypt_message(
                                                         &_changed_keys,
                                                         &imported_sender_key_fpr);
 
-                if (status == PEP_STATUS_OK && src->from && !is_me(session, src->from)) {
-                    // If we're claiming to have a pEp version 2.2 or greater, we only take it
-                    // if it had the right name during the import and if it was the ONLY key on the message?
-                    const char* sender_key = NULL;
-                    if ((major_ver == 2 && minor_ver > 1) || major_ver > 2) {
-                        if (imported_sender_key_fpr)
-                            sender_key = imported_sender_key_fpr;
-                    }             
-                    else if (*start && !((*start)->next))
-                        sender_key = (*start)->value; // signer if sent from < 2.1
+                const char* key_claim_fpr = NULL;
 
-                    status = _check_and_set_default_key(session, src->from, sender_key);
-                } 
+                if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED && _imported_key_list) {
+                    bool filename_matched = !EMPTYSTR(imported_sender_key_fpr);
+                    key_claim_fpr = process_key_claim(src, imported_sender_key_fpr,
+                                                      _imported_key_list->value,
+                                                      filename_matched ? 1 : 0, 0, // Not as redundant as you think
+                                                      filename_matched ? _imported_key_list : *start,
+                                                      filename_matched);
+                }
+
+                if (!EMPTYSTR(key_claim_fpr))
+                    status = _check_and_set_default_key(session, src->from, key_claim_fpr);
+
                 break;
 
             default:
@@ -5082,9 +5125,6 @@ static PEP_STATUS _decrypt_message(
         
             // FIXME: replace with enums, check status
             if (has_inner || wrap_info) { // Given that only wrap_info OUTER happens as of the end of wrap_info use, we don't need to strcmp it
-                // if (strcmp(wrap_info, "OUTER") == 0) {
-                //     // this only occurs in with a direct outer wrapper
-                //     // where the actual content is in the inner wrapper
                 message* inner_message = NULL;
                     
                 // For a wrapped message, this is ALWAYS the second attachment; the 
@@ -5267,11 +5307,9 @@ static PEP_STATUS _decrypt_message(
                             imported_private_key_address = false;
                             free(private_il); 
                             private_il = NULL;
-                            
-                            free(imported_sender_key_fpr);
-                            imported_sender_key_fpr = NULL;
 
-
+                            // Generally imported from the outer decryption - inner messages lie along side it in the message.
+                            // So should we always pass NULL here? Probably. FIXME.
                             // import keys from decrypted INNER source
                             status = import_keys_from_decrypted_msg(session, inner_message, is_pEp_msg,
                                                                     &keys_were_imported,
@@ -5279,23 +5317,20 @@ static PEP_STATUS _decrypt_message(
                                                                     private_il,
                                                                     &_imported_key_list, 
                                                                     &_changed_keys,
-                                                                    &imported_sender_key_fpr);
+                                                                    EMPTYSTR(imported_sender_key_fpr) ? &imported_sender_key_fpr : NULL);
 
                             if (status != PEP_STATUS_OK)
                                 goto pEp_error;            
 
-                            if (!breaks_protocol && inner_message->from && !is_me(session, inner_message->from)) {                                         
-                                const char* sender_key = NULL;
+                            // Set default?
+                            if (!breaks_protocol && inner_message->from && !is_me(session, inner_message->from) && _imported_key_list) {
+                                // We don't consider the pEp 2.0 case anymore, so no special processing
+                                const char* key_claim_fpr = process_key_claim(inner_message, imported_sender_key_fpr,
+                                                                              _imported_key_list->value, msg_major_ver, msg_minor_ver,
+                                                                              NULL, true);
 
-                                // Messages from clients 2.1 or greater should ALWAYS have sender_fpr on the inside. So...
-                                if (!EMPTYSTR(inner_message->_sender_fpr))
-                                    sender_key = inner_message->_sender_fpr;
-                                else { // !breaks_protocol is true, so this is a 2.0 message FROM a 2.0 client
-                                    if (_keylist) { // signer key, 2.0 sent from 2.0 client
-                                        sender_key = _keylist->value; // can be empty
-                                    }
-                                }
-                                status = _check_and_set_default_key(session, inner_message->from, sender_key);
+
+                                status = _check_and_set_default_key(session, inner_message->from, key_claim_fpr);
                                 if (status == PEP_OUT_OF_MEMORY)
                                     goto enomem;
                             }   
@@ -5984,29 +6019,8 @@ DYNAMIC_API PEP_STATUS identity_rating(
 
     if (ident->me)
         status = _myself(session, ident, false, true, true, true);
-    else { // Since we don't blacklist own keys, we only check it in here
+    else
         status = update_identity(session, ident);
-
-        bool is_blacklisted = false;
-        
-        if (ident->fpr && IS_PGP_CT(ident->comm_type)) {
-            status = blacklist_is_listed(session, ident->fpr, &is_blacklisted);
-            if (status != PEP_STATUS_OK) {
-                return status; // DB ERROR
-            }
-            if (is_blacklisted) {
-                bool user_default, ident_default, address_default; 
-                status = get_valid_pubkey(session, ident,
-                                           &ident_default, &user_default,
-                                           &address_default,
-                                           true);
-                if (status != PEP_STATUS_OK || ident->fpr == NULL) {
-                    ident->comm_type = PEP_ct_key_not_found;
-                    status = PEP_STATUS_OK;                        
-                }
-            }    
-        }
-    }
 
     if (status == PEP_STATUS_OK)
         *rating = rating_from_comm_type(ident->comm_type);
@@ -6647,7 +6661,6 @@ got_keylist:
     switch (status) {
         case PEP_KEY_NOT_FOUND:
         case PEP_KEY_UNSUITABLE:
-        case PEP_KEY_BLACKLISTED:
         case PEP_CANNOT_FIND_IDENTITY:
         case PEP_CANNOT_FIND_ALIAS:
             status = PEP_STATUS_OK;

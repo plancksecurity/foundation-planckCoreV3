@@ -7,7 +7,6 @@
 #include "dynamic_api.h"
 #include "cryptotech.h"
 #include "transport.h"
-#include "blacklist.h"
 #include "KeySync_fsm.h"
 #include "engine_sql.h"
 
@@ -1158,7 +1157,7 @@ static PEP_STATUS _set_or_update_identity_entry(PEP_SESSION session,
     sqlite3_reset(set_or_update);
     sqlite3_bind_text(set_or_update, 1, identity->address, -1,
             SQLITE_STATIC);
-    sqlite3_bind_text(set_or_update, 2, identity->fpr, -1,
+    sqlite3_bind_text(set_or_update, 2, EMPTYSTR(identity->fpr) ? NULL : identity->fpr, -1,
             SQLITE_STATIC);
     sqlite3_bind_text(set_or_update, 3, identity->user_id, -1,
             SQLITE_STATIC);
@@ -1210,7 +1209,7 @@ static PEP_STATUS _set_or_update_person(PEP_SESSION session,
                 SQLITE_STATIC);
     else
         sqlite3_bind_null(set_or_update, 3);
-    sqlite3_bind_text(set_or_update, 4, identity->fpr, -1,
+    sqlite3_bind_text(set_or_update, 4, EMPTYSTR(identity->fpr) ? NULL : identity->fpr, -1,
                       SQLITE_STATIC);
     int result = sqlite3_step(set_or_update);
     sqlite3_reset(set_or_update);
@@ -2979,10 +2978,10 @@ DYNAMIC_API PEP_STATUS import_key(
         size_t size,
         identity_list **private_keys)
 {
-    return _import_key_with_fpr_return(session, key_data, size, private_keys, NULL, NULL);
+    return import_key_with_fpr_return(session, key_data, size, private_keys, NULL, NULL);
 }
 
-PEP_STATUS _import_key_with_fpr_return(
+DYNAMIC_API PEP_STATUS import_key_with_fpr_return(
         PEP_SESSION session,
         const char *key_data,
         size_t size,

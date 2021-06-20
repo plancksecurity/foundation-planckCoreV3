@@ -264,7 +264,11 @@ TEST_F(UserIdCollisionTest, simple_tofu_collision) {
 // Create TOFU identity, set its FPR in the DB, test real id collision
 // with different usernames. Real ID shouldn't pick up the TOFU information
 // OR its key, since key election has been removed.
-// 
+//
+// This should no longer fail, because we don't use username matches to determine
+// what happens in update_identity. So we SHOULD replace the user_id and consolidate
+// identities.
+//
 TEST_F(UserIdCollisionTest, simple_tofu_collision_different_usernames) {
     slurp_and_import_key(session,alex_keyfile);
     tofu_alex->username = strdup("Alexander Hamilton");
@@ -279,19 +283,16 @@ TEST_F(UserIdCollisionTest, simple_tofu_collision_different_usernames) {
     ASSERT_OK;
     ASSERT_STREQ(tofu_alex->fpr, alex_keyid);
 
-    // Ok, so we had a TOFU id with a real username. It's different from THIS
-    // username. As such, we shouldn't find a key here, because things won't 
-    // be merged. // FIXME: This should change, probably. Discuss with Volker.
     status = update_identity(session, real_alex);
     ASSERT_OK;
-    ASSERT_NULL(real_alex->fpr);
+    ASSERT_NOTNULL(real_alex->fpr);
+    ASSERT_STREQ(real_alex->fpr, alex_keyid);
 
     bool tofu_still_exists = false;
     status = exists_person(session, tofu_alex, &tofu_still_exists);
     ASSERT_OK;
 
-    // SHOULD still exist, because we don't replace when usernames differ
-    ASSERT_TRUE(tofu_still_exists);
+    ASSERT_FALSE(tofu_still_exists);
 }
 
 //
