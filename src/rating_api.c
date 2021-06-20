@@ -8,7 +8,6 @@
 #include "pEp_internal.h"
 #include "rating_api.h"
 #include "keymanagement.h"
-#include "blacklist.h"
 #include "baseprotocol.h"
 #include "KeySync_fsm.h"
 #include "sync_codec.h"
@@ -313,43 +312,6 @@ the_end:
     return PEP_STATUS_OK;
 }
 
-static PEP_STATUS _blacklisted_key(PEP_SESSION session, const identity_list *il, bool *listed)
-{
-    for (const identity_list *_il = il; _il && _il->ident; _il = _il->next) {
-        if (_il->ident->comm_type == PEP_ct_OpenPGP_unconfirmed || _il->ident->comm_type == PEP_ct_OpenPGP) {
-            if (!EMPTYSTR(_il->ident->fpr)) {
-                PEP_STATUS status = blacklist_is_listed(session, _il->ident->fpr, listed);
-                if (status)
-                    return status;
-                if (*listed)
-                    return PEP_STATUS_OK;
-            }
-        }
-    }
-    return PEP_STATUS_OK;
-}
-
-static PEP_STATUS has_blacklisted_key(PEP_SESSION session, const message *msg, bool *listed)
-{
-    PEP_STATUS status = _blacklisted_key(session, msg->to, listed);
-    if (status)
-        return status;
-    if (*listed)
-        return PEP_STATUS_OK;
-
-    status = _blacklisted_key(session, msg->cc, listed);
-    if (status)
-        return status;
-    if (*listed)
-        return PEP_STATUS_OK;
-
-    status = _blacklisted_key(session, msg->bcc, listed);
-    if (status)
-        return status;
-
-    return PEP_STATUS_OK;
-}
-
 DYNAMIC_API PEP_STATUS outgoing_message_rating(
         PEP_SESSION session,
         message *msg,
@@ -371,12 +333,7 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
     if (status)
         goto the_end;
 
-    bool listed = false;
-    status = has_blacklisted_key(session, msg, &listed);
-    if (status)
-        goto the_end;
-
-    if (listed && _rating > PEP_rating_unencrypted)
+    if (_rating > PEP_rating_unencrypted)
         _rating = PEP_rating_unencrypted;
 
     *rating = (_rating == PEP_rating_have_no_key) ? PEP_rating_unencrypted : _rating;
@@ -406,12 +363,7 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating_preview(
     if (status)
         goto the_end;
 
-    bool listed = false;
-    status = has_blacklisted_key(session, msg, &listed);
-    if (status)
-        goto the_end;
-
-    if (listed && _rating > PEP_rating_unencrypted)
+    if (_rating > PEP_rating_unencrypted)
         _rating = PEP_rating_unencrypted;
 
     *rating = (_rating == PEP_rating_have_no_key) ? PEP_rating_unencrypted : _rating;
