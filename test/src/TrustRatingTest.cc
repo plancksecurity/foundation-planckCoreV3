@@ -289,26 +289,38 @@ the_end:
     Bob: Alice frequent comm partner
     Sylvia: a new comm partner of Alice
 
+    Note: these are now marked with the status of whether or not they are covered in DefaultFromMailTest instead
+
     A) Handshake and TOFU
 
-    1)  Sylvia sends an unencrypted mail without key
+    1)  *Sylvia sends an unencrypted mail without key
         => unencrypted, no default key
-    2)  Sylvia sends an unencrypted mail with key attached, no claim
+        (COVERED IN DFMT)
+    2)  *Sylvia sends an unencrypted mail with key attached, no claim
+        *** NOTE: This just means there's more than one key attached
         => unencrypted, no default key
-    3)  Sylvia sends an unencrypted mail with sender key identified
+        (COVERED IN DFMT)
+    3)  *Sylvia sends an unencrypted mail with sender key identified
         => default key set, unencrypted
+        (COVERED IN DFMT)
 
     B) Reliable Channel to Bob
 
     5)  Bob sends an unencrypted mail without key
         => unencrypted
     6)  Bob sends an unencrypted mail with key attached, no claim
+        *** Note: This just means there's more than one key attached
         => key imported, default key not changed, unencrypted
-    7)  Bob sends an unencrypted mail with key attached, wrong claim for sender key
+
+    X)  Bob sends an unencrypted mail with key attached, wrong claim for sender key
+        *** Note: Case does not exist for unencrypted mails, no verifiable "sender"
         => b0rken
-    8)  Bob sends an unencrypted mail with key attached, correct sender key
+    X)  Bob sends an unencrypted mail with key attached, correct sender key
+        *** Note: Case does not exist for unencrypted mails, no verifiable "sender"
         => unencrypted
 
+    // NOTE: THESE DEPEND ON WHAT KIND OF PARTNER BOB IS AND WHAT KIND OF MESSAGES HE IS SENDING.
+    //       CLAIMS ARE NOT AS CUT-AND-DRIED AS THIS OUTLINE MAKES THEM OUT TO BE
     9)  Bob sends an encrypted mail, wrong claim for sender key
         => b0rken
     10) Bob sends an encrypted mail, correct sender key but not default key
