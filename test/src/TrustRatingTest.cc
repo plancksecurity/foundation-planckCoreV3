@@ -296,54 +296,52 @@ the_end:
     1)  *Sylvia sends an unencrypted mail without key
         => unencrypted, no default key
         (COVERED IN DFMT)
-    2)  *Sylvia sends an unencrypted mail with key attached, no claim
-        *** NOTE: This just means there's more than one key attached
+    2)  *Sylvia sends an unencrypted mail with multiple keys attached and no sender_key.asc
         => unencrypted, no default key
         (COVERED IN DFMT)
-    3)  *Sylvia sends an unencrypted mail with sender key identified
+    3)  *Sylvia sends an unencrypted mail with sender_key.asc filename
+        => default key set, unencrypted
+        (COVERED IN DFMT)
+    4)  *Sylvia sends an unencrypted mail with single key attached
         => default key set, unencrypted
         (COVERED IN DFMT)
 
     B) Reliable Channel to Bob
 
-    5)  Bob sends an unencrypted mail without key
+    5)  *Bob sends an unencrypted mail without key
         => unencrypted
-    6)  Bob sends an unencrypted mail with key attached, no claim
-        *** Note: This just means there's more than one key attached
+        (COVERED IN DFMT)
+    6)  *Bob sends an unencrypted mail with key attached - all cases
         => key imported, default key not changed, unencrypted
-
-    X)  Bob sends an unencrypted mail with key attached, wrong claim for sender key
-        *** Note: Case does not exist for unencrypted mails, no verifiable "sender"
-        => b0rken
-    X)  Bob sends an unencrypted mail with key attached, correct sender key
-        *** Note: Case does not exist for unencrypted mails, no verifiable "sender"
-        => unencrypted
+        (COVERED IN DFMT)
 
     // NOTE: THESE DEPEND ON WHAT KIND OF PARTNER BOB IS AND WHAT KIND OF MESSAGES HE IS SENDING.
     //       CLAIMS ARE NOT AS CUT-AND-DRIED AS THIS OUTLINE MAKES THEM OUT TO BE
-    9)  Bob sends an encrypted mail, wrong claim for sender key
+    //       (Only really reasonable for 2.1+))
+    7)  Bob sends a 2.2+ encrypted mail, wrong claim for sender key
         => b0rken
-    10) Bob sends an encrypted mail, correct sender key but not default key
+    8) Bob sends a 2.2+ encrypted mail, correct sender key but not default key
         => unreliable
-    11) Bob sends an encrypted mail, correct sender key and default key
+    9) Bob sends a 2.2+ encrypted mail, correct sender key and default key
         => reliable
 
     C) Trustwords check between Alice and Bob was successful
 
-    12) Bob sends an unencrypted mail without key
+    10) *Bob sends an unencrypted mail without key
         => unencrypted
-    13) Bob sends an unencrypted mail with key attached, no claim
+        (COVERED IN DFMT)
+    11) *Bob sends an unencrypted mail with key attached - all cases
         => key imported, default key not changed, unencrypted
-    14) Bob sends an unencrypted mail with key attached, wrong claim for sender key
-        => b0rken
-    15) Bob sends an unencrypted mail with key attached, correct sender key
-        => unencrypted
+        (COVERED IN DFMT)
 
-    16) Bob sends an encrypted mail, wrong claim for sender key
+    // NOTE: THESE DEPEND ON WHAT KIND OF PARTNER BOB IS AND WHAT KIND OF MESSAGES HE IS SENDING.
+    //       CLAIMS ARE NOT AS CUT-AND-DRIED AS THIS OUTLINE MAKES THEM OUT TO BE
+    //       (Only really reasonable for 2.1+))
+    12) Bob sends a 2.2 encrypted mail, wrong claim for sender key
         => b0rken
-    17) Bob sends an encrypted mail, correct sender key but not default key
+    13) Bob sends a 2.2 encrypted mail, correct sender key but not default key
         => unreliable
-    18) Bob sends an encrypted mail, correct sender key and default key
+    14) Bob sends a 2.2 encrypted mail, correct sender key and default key
         => trusted
 
 */
