@@ -89,10 +89,8 @@
       <Command>cargo build --manifest-path="$(SolutionDir)sequoia\Cargo.toml"</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>
-        xcopy "$(SolutionDir)sequoia\target\debug\sequoia_openpgp_ffi.dll" "$(TargetDir)" /Y
-        xcopy "$(SolutionDir)sequoia\target\debug\sq.exe" "$(TargetDir)" /Y
-      </Command>
+      <Command>xcopy "$(SolutionDir)sequoia\target\debug\sequoia_openpgp_ffi.dll" "$(TargetDir)" /Y</Command>
+      <Command>xcopy "$(SolutionDir)sequoia\target\debug\sq.exe" "$(TargetDir)" /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -124,22 +122,22 @@
       <Command>cargo build --manifest-path="$(SolutionDir)sequoia\Cargo.toml" --release</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>
-        xcopy "$(SolutionDir)sequoia\target\release\sequoia_openpgp_ffi.dll" "$(TargetDir)" /Y
-        xcopy "$(SolutionDir)sequoia\target\release\sq.exe" "$(TargetDir)" /Y
-      </Command>
+      <Command>xcopy "$(SolutionDir)sequoia\target\release\sequoia_openpgp_ffi.dll" "$(TargetDir)" /Y</Command>
+      <Command>xcopy "$(SolutionDir)sequoia\target\release\sq.exe" "$(TargetDir)" /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\src\aux_mime_msg.c" />
     <ClCompile Include="..\src\base64.c" />
     <ClCompile Include="..\src\baseprotocol.c" />
-    <ClCompile Include="..\src\blacklist.c" />
     <ClCompile Include="..\src\bloblist.c" />
     <ClCompile Include="..\src\cryptotech.c" />
     <ClCompile Include="..\src\distribution_codec.c" />
     <ClCompile Include="..\src\email.c" />
+    <ClCompile Include="..\src\engine_sql.c" />
     <ClCompile Include="..\src\etpan_mime.c" />
+    <ClCompile Include="..\src\group.c" />
+    <ClCompile Include="..\src\GroupSync_fsm.c" />
     <ClCompile Include="..\src\growing_buf.c" />
     <ClCompile Include="..\src\identity_list.c" />
     <ClCompile Include="..\src\internal_format.c" />
@@ -171,13 +169,13 @@
     <ClCompile Include="..\src\timestamp.c" />
     <ClCompile Include="..\src\transport.c" />
     <ClCompile Include="..\src\trans_auto.c" />
+    <ClCompile Include="..\src\TrustSync_fsm.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\asn1_helper.h" />
     <ClInclude Include="..\src\aux_mime_msg.h" />
     <ClInclude Include="..\src\base64.h" />
     <ClInclude Include="..\src\baseprotocol.h" />
-    <ClInclude Include="..\src\blacklist.h" />
     <ClInclude Include="..\src\bloblist.h" />
     <ClInclude Include="..\src\cryptotech.h" />
     <ClInclude Include="..\src\distribution_codec.h" />
@@ -185,6 +183,7 @@
     <ClInclude Include="..\src\email.h" />
     <ClInclude Include="..\src\etpan_mime.h" />
     <ClInclude Include="..\src\fsm_common.h" />
+    <ClInclude Include="..\src\group.h" />
     <ClInclude Include="..\src\growing_buf.h" />
     <ClInclude Include="..\src\identity_list.h" />
     <ClInclude Include="..\src\internal_format.h" />
