@@ -118,6 +118,8 @@ namespace {
                         *min_inout = 0;
                         return false;
                 }
+                free(ptext);
+                free_stringlist(keylist);
             }
 
         private:
@@ -285,6 +287,58 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_1) {
     free_message(msg);
     free_message(enc_msg);
 }
+
+#if 0
+TEST_F(Message2_1Test, check_message2_1_recip_2_1_perf_encrypt_1000) {
+    // set recip to 2.1
+
+    pEp_identity* alice = NULL;
+    pEp_identity* carol = NULL;
+
+    PEP_STATUS status = set_up_preset(session, ALICE,
+                                      true, true, true, true, true, &alice);
+
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_NE(alice, nullptr);
+
+    status = set_up_preset(session, CAROL,
+                           true, true, false, false, false, &carol);
+
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_NE(carol, nullptr);
+
+    status = set_pEp_version(session, carol, 2, 1);
+
+    // default should be 2.1 after setting pep status
+    status = _update_identity(session, carol, true);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_EQ(carol->major_ver , 2);
+    ASSERT_EQ(carol->minor_ver , 1);
+    // generate message
+    pEp_identity* carol_to = new_identity(carol->address, NULL, NULL, NULL);
+
+    message* msg = new_message(PEP_dir_outgoing);
+
+    msg->from = alice;
+    msg->to = new_identity_list(carol_to);
+    msg->shortmsg = strdup("Boom shaka laka");
+    msg->longmsg = strdup("Don't you get sick of these?");
+
+    for (int i = 0; i < 1000; i++) {
+        message *enc_msg = NULL;
+
+        status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+        ASSERT_EQ(status, PEP_STATUS_OK);
+        free_message(enc_msg);
+        enc_msg = NULL;
+        if (i % 10 == 0)
+            cout << i << endl;
+    }
+
+    free_identity(carol);
+    free_message(msg);
+}
+#endif
 
 TEST_F(Message2_1Test, check_message2_1_recip_1_0_from_msg_OpenPGP) {
     pEp_identity* alex = NULL;

@@ -1929,6 +1929,8 @@ DYNAMIC_API PEP_STATUS probe_encrypt(PEP_SESSION session, const char *fpr)
     size_t csize = 0;
     PEP_STATUS status = encrypt_and_sign(session, keylist, "pEp", 4, &ctext, &csize);
     free(ctext);
+    // fpr owned by caller, all fine.
+    free_stringlist(keylist);
 
     return status;
 }
@@ -2098,7 +2100,9 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     if (failed_test(status))
         return status;
 
+    // Sender fpr on the input message is ignored and replaced.
     char* send_fpr = strdup(src->from->fpr ? src->from->fpr : "");
+    free(src->_sender_fpr);
     src->_sender_fpr = send_fpr;
     
     keys = new_stringlist(send_fpr);
