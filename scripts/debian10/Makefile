@@ -1,8 +1,8 @@
 include ../../DEPENDENCIES
 export
 PEP_MACHINE_DIR= $(PKG_INSTALL_PATH)/share/pEp
-SEQUOIA_VERSION=${sequoia}
 YML2_VERSION=${yml2}
+SEQUOIA_VERSION=$(shell echo ${sequoia} | sed 's/\//-/')
 CURRENT_DISTRO=$(shell basename $(shell pwd))
 IMAGE_NAME=${DOCKER_REGISTRY_HOST}/pep-$(CURRENT_DISTRO)-engine
 DOCKERFILE=pEpEngine.$(CURRENT_DISTRO).Dockerfile
