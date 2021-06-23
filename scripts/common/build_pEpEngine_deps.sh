@@ -9,7 +9,7 @@ rm -f ${YML2_VERSION}.tar*
 
 
 ### libetpan
-git clone https://github.com/fdik/libetpan $BUILDROOT/libetpan
+git clone https://gitea.pep.foundation/pEp.foundation/libetpan $BUILDROOT/libetpan
 cd $BUILDROOT/libetpan
 test -f configure || NOCONFIGURE=absolutely ./autogen.sh
 ./configure --prefix=${INSTPREFIX}/libetpan \
