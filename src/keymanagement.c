@@ -453,7 +453,7 @@ static void adjust_pEp_trust_status(PEP_SESSION session, pEp_identity* identity)
         identity->comm_type = PEP_ct_pEp_unconfirmed | confirmation_status;
         if (identity->major_ver == 0) {
             identity->major_ver = 2;
-            identity->minor_ver = 0;
+            identity->minor_ver = 1;
         }    
     }
 }
