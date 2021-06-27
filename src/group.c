@@ -54,9 +54,9 @@ static PEP_STATUS _build_managed_group_message_payload(PEP_SESSION session,
     Identity_t* other_identity_Ident = NULL;
 
     switch (managed_group_msg_type) {
-        case ManagedGroup_PR_groupCreate:
-            group_identity_Ident = &(outdist->choice.managedgroup.choice.groupCreate.groupIdentity);
-            other_identity_Ident = &(outdist->choice.managedgroup.choice.groupCreate.manager);
+        case ManagedGroup_PR_groupInvite:
+            group_identity_Ident = &(outdist->choice.managedgroup.choice.groupInvite.groupIdentity);
+            other_identity_Ident = &(outdist->choice.managedgroup.choice.groupInvite.manager);
             break;
         case ManagedGroup_PR_groupDissolve:
             group_identity_Ident = &(outdist->choice.managedgroup.choice.groupDissolve.groupIdentity);
@@ -1271,7 +1271,7 @@ pEp_error:
     return status;
 }
 
-PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rating, GroupCreate_t* gc) {
+PEP_STATUS receive_GroupInvite(PEP_SESSION session, message* msg, PEP_rating rating, GroupInvite_t* gc) {
     PEP_STATUS status = PEP_STATUS_OK;
     if (rating < PEP_rating_reliable)
         return PEP_NO_TRUST; // Find better error
@@ -1714,8 +1714,8 @@ PEP_STATUS receive_managed_group_message(PEP_SESSION session, message* msg, PEP_
         return PEP_ILLEGAL_VALUE;
 
     switch (dist->choice.managedgroup.present) {
-        case ManagedGroup_PR_groupCreate:
-            return receive_GroupCreate(session, msg, rating, &(dist->choice.managedgroup.choice.groupCreate));
+        case ManagedGroup_PR_groupInvite:
+            return receive_GroupInvite(session, msg, rating, &(dist->choice.managedgroup.choice.groupInvite));
         case ManagedGroup_PR_groupDissolve:
             return receive_GroupDissolve(session, msg, rating, &(dist->choice.managedgroup.choice.groupDissolve));
         case ManagedGroup_PR_groupAdopted:
@@ -2005,7 +2005,7 @@ DYNAMIC_API PEP_STATUS group_create(
 
     // Ok, mail em.
     if (is_me(session, manager))
-        status = _send_managed_group_message_to_list(session, _group, ManagedGroup_PR_groupCreate);
+        status = _send_managed_group_message_to_list(session, _group, ManagedGroup_PR_groupInvite);
 
     if (group)
         *group = _group;
@@ -2232,7 +2232,7 @@ DYNAMIC_API PEP_STATUS group_invite_member(
 
             status = _build_managed_group_message_payload(session, group_identity,
                                                           manager, &data, &size,
-                                                          ManagedGroup_PR_groupCreate);
+                                                          ManagedGroup_PR_groupInvite);
 
             if (status != PEP_STATUS_OK)
                 goto pEp_free;
