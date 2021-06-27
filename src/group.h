@@ -307,7 +307,7 @@ DYNAMIC_API PEP_STATUS group_dissolve(
  *
  *  @ownership      FIXME
  *
- *  @note           This generates a GroupCreate message even though the group already exists - this is because
+ *  @note           This generates a GroupInvite message even though the group already exists - this is because
  *                  this is the accepted message format for invitations to potential members
  *
  */
