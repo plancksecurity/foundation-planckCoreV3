@@ -10,6 +10,7 @@
 #include "distribution_codec.h"
 #include "map_asn1.h"
 #include "baseprotocol.h"
+#include "sync_api.h"
 
 // ** Static functions
 /******************************************************************************************
@@ -1285,6 +1286,8 @@ PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rat
     pEp_identity* member_ident = NULL;
     pEp_identity* group_identity = NULL;
     pEp_identity* manager = NULL;
+    identity_list* list = NULL;
+
     pEp_group* group = NULL;
 
     char* own_id = NULL;
@@ -1322,6 +1325,13 @@ PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rat
         status = PEP_KEY_NOT_FOUND;
         goto pEp_free;
     }
+    if (status != PEP_STATUS_OK)
+        goto pEp_free;
+
+    // If we are the manager of this group, we should ignore this message - Volker, fixme if groupsync should be different here
+    // when you implement it
+    if (is_me(session, manager))
+        goto pEp_free;
 
     // Ok then - let's do this:
     // First, we need to ensure the group_ident has an own ident instead
@@ -1362,7 +1372,7 @@ PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rat
         goto pEp_free;
     }
 
-    identity_list* list = new_identity_list(member_ident);
+    list = new_identity_list(member_ident);
     if (!list) {
         status = PEP_OUT_OF_MEMORY;
         goto pEp_free;
@@ -1374,6 +1384,15 @@ PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rat
         goto pEp_free;
 
     status = add_own_membership_entry(session, group_identity, manager, msg->to->ident);
+
+    // Ok, we did all we have to do and it worked out. Notify the app.
+    if (status == PEP_STATUS_OK && session->notifyHandshake) {
+        // identities go to the callee, so we have to dup them here because the normal ones belong
+        // to the returned group. #notmyspec ;)
+        pEp_identity* grp = identity_dup(group_identity);
+        pEp_identity* mgr = identity_dup(manager);
+        status = session->notifyHandshake(grp, mgr, SYNC_NOTIFY_GROUP_INVITATION);
+    }
 
 pEp_free:
     if (!group) {
