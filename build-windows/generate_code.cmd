@@ -16,43 +16,45 @@ IF NOT EXIST "%ProgramData%\pEp" "MKDIR %ProgramData%\pEp"
 DEL "%ProgramData%\pEp\system.db"
 MOVE system.db "%ProgramData%\pEp\system.db"
 
-:: Generate code in ...\pEpEngine\sync
-CD ..\sync
+:: Generate code in ...\pEpEngine\codegen
+CD ..\codegen
 
 :: Make sure YML2 is installed
 PY -m pip install --upgrade pip
 PY -m pip install wheel
 PY -m pip install yml2
 
+SET YML2PROC="%yml2_directory%\yml2proc"
+
 :: Generate the Sync code
 IF NOT EXIST generated MKDIR generated
 
-ECHO PY -m yml2.yml2proc -E utf-8 -y gen_actions.ysl2 sync.fsm
-PY -m yml2.yml2proc -E utf-8 -y gen_actions.ysl2 sync.fsm
+ECHO PY %YML2PROC% -E utf-8 -y gen_actions.ysl2 sync.fsm
+ECHO define actfile = "./sync.act"; | PY %YML2PROC% - gen_actions.ysl2 | PY %YML2PROC% -X - sync.fsm -o sync.act.gen
 IF %ERRORLEVEL% NEQ 0 GOTO end
 
-ECHO PY -m yml2.yml2proc -E utf-8 -y gen_codec.ysl2 distribution.fsm
-PY -m yml2.yml2proc -E utf-8 -y gen_codec.ysl2 distribution.fsm
+ECHO PY %YML2PROC% -E utf-8 -y gen_codec.ysl2 distribution.fsm
+PY %YML2PROC% -E utf-8 -y gen_codec.ysl2 distribution.fsm
 IF %ERRORLEVEL% NEQ 0 GOTO end
 
-ECHO PY -m yml2.yml2proc -E utf-8 -y gen_codec.ysl2 sync.fsm
-PY -m yml2.yml2proc -E utf-8 -y gen_codec.ysl2 sync.fsm
+ECHO PY %YML2PROC% -E utf-8 -y gen_codec.ysl2 sync.fsm
+PY %YML2PROC% -E utf-8 -y gen_codec.ysl2 sync.fsm
 IF %ERRORLEVEL% NEQ 0 GOTO end
 
-ECHO PY -m yml2.yml2proc -E utf-8 -y gen_messages.ysl2 sync.fsm
-PY -m yml2.yml2proc -E utf-8 -y gen_messages.ysl2 sync.fsm
+ECHO PY %YML2PROC% -E utf-8 -y gen_messages.ysl2 sync.fsm
+PY %YML2PROC% -E utf-8 -y gen_messages.ysl2 sync.fsm
 IF %ERRORLEVEL% NEQ 0 GOTO end
 
-ECHO PY -m yml2.yml2proc -E utf-8 -y gen_messages.ysl2 distribution.fsm
-PY -m yml2.yml2proc -E utf-8 -y gen_messages.ysl2 distribution.fsm
+ECHO PY %YML2PROC% -E utf-8 -y gen_messages.ysl2 distribution.fsm
+PY %YML2PROC% -E utf-8 -y gen_messages.ysl2 distribution.fsm
 IF %ERRORLEVEL% NEQ 0 GOTO end
 
-ECHO PY -m yml2.yml2proc -E utf-8 -y gen_message_func.ysl2 sync.fsm
-PY -m yml2.yml2proc -E utf-8 -y gen_message_func.ysl2 sync.fsm
+ECHO PY %YML2PROC% -E utf-8 -y gen_message_func.ysl2 sync.fsm
+PY %YML2PROC% -E utf-8 -y gen_message_func.ysl2 sync.fsm
 IF %ERRORLEVEL% NEQ 0 GOTO end
 
-ECHO PY -m yml2.yml2proc -E utf-8 -y gen_statemachine.ysl2 sync.fsm
-PY -m yml2.yml2proc -E utf-8 -y gen_statemachine.ysl2 sync.fsm
+ECHO PY %YML2PROC% -E utf-8 -y gen_statemachine.ysl2 sync.fsm
+PY %YML2PROC% -E utf-8 -y gen_statemachine.ysl2 sync.fsm
 IF %ERRORLEVEL% NEQ 0 GOTO end
 
 XCOPY /y generated\*.asn1 ..\asn.1\
@@ -64,10 +66,10 @@ CD %engine_directory%\asn.1
 DEL *.h
 DEL *.c
 
-..\..\Tools\asn1c\bin\asn1c -S ../../Tools/asn1c/share/asn1c -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keysync.asn1 sync.asn1
+..\..\Tools\asn1c\bin\asn1c -S ../../Tools/asn1c/share/asn1c -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keysync.asn1 sync.asn1 trustsync.asn1 groupsync.asn1 managedgroup.asn1 keyreset.asn1 distribution.asn1 exploration.asn1
 IF %ERRORLEVEL% NEQ 0 GOTO end
 
-..\..\Tools\asn1c\bin\asn1c -S ../../Tools/asn1c/share/asn1c -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keyreset.asn1 distribution.asn1
+..\..\Tools\asn1c\bin\asn1c -S ../../Tools/asn1c/share/asn1c -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keyreset.asn1 distribution.asn1 managedgroup.asn1 exploration.asn1 
 IF %ERRORLEVEL% NEQ 0 GOTO end
 
 DEL *-sample.c
@@ -75,8 +77,8 @@ DEL *-sample.c
 CD %engine_directory%\..
 MKDIR pEp
 XCOPY pEpEngine\src\*.h pEp\ /Y/F/I
-XCOPY libpEpAdapter\*.hh pEp\ /Y/F/I
-XCOPY libpEpAdapter\*.hxx pEp\ /Y/F/I
+XCOPY libpEpAdapter\src\*.hh pEp\ /Y/F/I
+XCOPY libpEpAdapter\src\*.hxx pEp\ /Y/F/I
 
 :end
 
