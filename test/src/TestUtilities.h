@@ -24,6 +24,19 @@ bool is_pEpmsg(const message *msg); // duplicates static func in message_api.c, 
 #define ASSERT_OK ASSERT_EQ(status, PEP_STATUS_OK)
 #endif
 
+#ifndef ASSERT_NOTNULL
+#define ASSERT_NOTNULL(X) ASSERT_NE((X), nullptr)
+#endif
+
+#ifndef ASSERT_NULL
+#define ASSERT_NULL(X) ASSERT_EQ((X), nullptr)
+#endif
+
+// Makefile actually handles this - this is just to please IDE error indicators tbh
+#ifndef GTEST_SUITE_SYM
+#define GTEST_SUITE_SYM test_suite_name
+#endif
+
 extern std::string _main_test_home_dir;
 
 #ifndef DEBUG_OUTPUT
@@ -32,46 +45,110 @@ extern std::ostream output_stream;
 #define output_stream std::cerr
 #endif
 
-std::string get_main_test_home_dir();
-std::string random_string( size_t length );
+class TestUtilsPreset {
+public:
 
-typedef enum _pEp_test_ident_preset {
-    ALICE,
-    APPLE,
-    BOB,
-    CAROL,
-    DAVE,
-    ERIN,
-    FRANK,
-    GABRIELLE,
-    JOHN,
-    ALEX,
-    ALEX_0,
-    ALEX_1,
-    ALEX_2,
-    ALEX_3,
-    ALEX_4,
-    ALEX_5,
-    ALEX_6A,
-    ALEX_6B,
-    ALEX_6C,
-    ALEX_6D,
-    BELLA,
-    FENRIS,
-    SERCULLEN,
-    INQUISITOR,
-    BERND
-} pEp_test_ident_preset;
+    class IdentityInfo {
+    public:
+        // instance stuff
+        char* name;
+        char* user_id;
+        char* email;
+        char* key_prefix;
+        char* fpr;
 
-PEP_STATUS set_up_preset(PEP_SESSION session,
-                         pEp_test_ident_preset preset_name,
-                         bool set_identity, 
+        IdentityInfo(const char* name, const char* user_id, const char* email, const char* key_prefix, const char* fpr) {
+            this->name = strdup(name);
+            this->user_id = strdup(user_id);
+            this->email = strdup(email);
+            this->key_prefix = strdup(key_prefix);
+            this->fpr = strdup(fpr);
+        }
+        ~IdentityInfo() {
+            free(name);
+            free(user_id);
+            free(email);
+            free(key_prefix);
+            free(fpr);
+        }
+    };
+    // static stuff
+
+
+    typedef enum _ident_preset {
+        ALICE       = 0,
+        APPLE       = 1,
+        BOB         = 2,
+        BOB2        = 3,
+        CAROL       = 4,
+        DAVE        = 5,
+        ERIN        = 6,
+        FRANK       = 7,
+        GABRIELLE   = 8,
+        JOHN        = 9,
+        ALEX        = 10,
+        ALEX_0      = 11,
+        ALEX_1      = 12,
+        ALEX_2      = 13,
+        ALEX_3      = 14,
+        ALEX_4      = 15,
+        ALEX_5      = 16,
+        ALEX_6A     = 17,
+        ALEX_6B     = 18,
+        ALEX_6C     = 19,
+        ALEX_6D     = 20,
+        BELLA       = 21,
+        FENRIS      = 22,
+        SERCULLEN   = 23,
+        INQUISITOR  = 24,
+        BERND       = 25,
+        SYLVIA      = 26,
+        SYLVIA2     = 27
+    } ident_preset;
+
+    static PEP_STATUS set_up_preset(PEP_SESSION session,
+                         ident_preset preset_name,
+                         bool set_identity,
+                         bool set_fpr,
                          bool set_pep,
                          bool trust,
-                         bool set_own, 
-                         bool setup_private, 
+                         bool set_own,
+                         bool setup_private,
                          pEp_identity** ident);
 
+    static PEP_STATUS import_preset_key(PEP_SESSION session,
+                                    ident_preset preset_name,
+                                    bool private_also);
+
+    static pEp_identity* generateAndSetOpenPGPPartnerIdentity(PEP_SESSION session,
+                                                              ident_preset preset_name,
+                                                              bool set_fpr,
+                                                              bool trust);
+    static pEp_identity* generateAndSetpEpPartnerIdentity(PEP_SESSION session,
+                                                          ident_preset preset_name,
+                                                          bool set_fpr,
+                                                          bool trust);
+
+
+    static pEp_identity* generateAndSetPrivateIdentity(PEP_SESSION session,
+                                                       ident_preset preset_name);
+
+    static pEp_identity* generateOnlyPrivateIdentity(PEP_SESSION session,
+                                                     ident_preset preset_name);
+
+    static pEp_identity* generateOnlyPartnerIdentity(PEP_SESSION session,
+                                                     ident_preset preset_name);
+
+    static pEp_identity* generateOnlyPrivateIdentityGrabFPR(PEP_SESSION session,
+                                                            ident_preset preset_name);
+
+    static pEp_identity* generateOnlyPartnerIdentityGrabFPR(PEP_SESSION session,
+                                                            ident_preset preset_name);
+    static const IdentityInfo presets[];
+};
+
+std::string get_main_test_home_dir();
+std::string random_string( size_t length );
 
 PEP_STATUS read_file_and_import_key(PEP_SESSION session, const char* fname);
 PEP_STATUS set_up_ident_from_scratch(PEP_SESSION session, 
@@ -116,6 +193,11 @@ bool slurp_message_and_import_key(PEP_SESSION session, const char* message_fname
 char* message_to_str(message* msg);
 message* string_to_msg(std::string infile);
 
+// For when you ONLY care about the message
+PEP_STATUS vanilla_encrypt_and_write_to_file(PEP_SESSION session, message* msg, const char* filename, PEP_encrypt_flags_t flags = 0);
+PEP_STATUS vanilla_read_file_and_decrypt(PEP_SESSION session, message** msg, const char* filename);
+PEP_STATUS vanilla_read_file_and_decrypt_with_rating(PEP_SESSION session, message** msg, const char* filename, PEP_rating* rating);
+
 int util_delete_filepath(const char *filepath, 
                          const struct stat *file_stat, 
                          int ftw_info, 
@@ -127,6 +209,10 @@ class NullBuffer : public std::streambuf {
 };                         
                          
 PEP_STATUS config_valid_passphrase(PEP_SESSION session, const char* fpr, std::vector<std::string> passphrases);
+PEP_STATUS set_default_fpr_for_test(PEP_SESSION session, pEp_identity* ident, bool unconditional);
+PEP_STATUS set_fpr_preserve_ident(PEP_SESSION session, const pEp_identity* ident, const char* fpr, bool valid_only);
+
+void print_mail(message* msg);
 
 #ifndef ENIGMAIL_MAY_USE_THIS
 

@@ -1,0 +1,107 @@
+// p≡p API header generator
+
+// Copyleft (c) 2019-2020, p≡p foundation
+// this file is under GNU General Public License 3.0
+// see LICENSE.txt
+
+// written by Volker Birk
+
+
+include yslt.yml2
+include ./config.yml2
+
+tstylesheet {
+    include ./to_c.ysl2
+    include standardlib.ysl2
+
+    const "version" **version;
+    const "copyleft" **copyleft;
+
+    template "/package"
+        apply "package", 0;
+
+    template "package" document "{@name}_{@type}.h", "text" {
+    ||
+    // «../@name» «$version»
+    // «@name»_«@type».h
+
+    // «$copyleft»
+
+
+    #pragma once
+
+    #ifdef __cplusplus
+    extern "C" {
+    #endif
+
+    #include <pEp/basic_types.h>
+
+    ||
+    apply "doc|type|enum|struct", 0;
+    ||
+
+    #ifdef __cplusplus
+    } // extern "C"
+    #endif
+
+    ||
+    }
+
+    template "type" {
+        apply "@doc", 0;
+        | typedef «func:basetype(@name)» «@name»;
+        |
+    }
+
+    template "struct" {
+    ||
+    typedef struct _«func:name()» {
+    ||
+    apply "field|internal|doc";
+    apply "field[@function='free']", mode=free;
+    ||
+    } «func:name()»;
+
+    ||
+    }
+
+    template "field|internal" {
+        apply "@doc", 0;
+        | «func:c-type(@type)» «@name»;
+    }
+
+    template "field", mode=free
+    ||
+    
+    // free function for «@name»
+    void (*release_«@name»)(«func:c-type(@type)» «@name»);
+    ||
+
+    template "enum" {
+    ||
+    typedef enum _«func:name()» {
+    ||
+    apply "item|doc";
+    ||
+    } «func:name()»;
+
+    ||
+    }
+
+    template "doc|@doc" {
+        > \n
+        for "str:split(., '\n')"
+            | // «.»
+    }
+
+    template "item" {
+        apply "@doc", 0;
+        choose {
+            when "@output='hex'"
+                | «func:name()»`if "text()" { " = 0x" value "yml:dec2hex(., 2)" }``if "position()!=last()" > ,`
+            otherwise
+                | «func:name()»`if "text()" { " = " value "." }``if "position()!=last()" > ,`
+        }
+    }
+}
+

@@ -11,7 +11,7 @@
 
 #include "stringpair.h"
 
-#include "test_util.h"
+#include "TestUtilities.h"
 
 #include "Engine.h"
 
@@ -61,23 +61,23 @@ TEST_F(StringpairListTest, check_stringpair_lists) {
     output_stream << "creating one-element stringpair_list...\n";
 
     stringpair_t* strpair = new_stringpair(val_1_arr[0], val_2_arr[0]);
-    ASSERT_NE(strpair, nullptr);
+    ASSERT_NOTNULL(strpair);
     stringpair_list_t* pairlist = new_stringpair_list(strpair);
-    ASSERT_NE(pairlist->value, nullptr);
+    ASSERT_NOTNULL(pairlist->value);
     ASSERT_TRUE(test_stringpair_equals(strpair, pairlist->value));
-    ASSERT_EQ(pairlist->next , nullptr);
+    ASSERT_NULL(pairlist->next );
     output_stream << "one-element stringpair_list created, next element is NULL\n\n";
 
     output_stream << "duplicating one-element list...\n";
     stringpair_list_t* duplist = stringpair_list_dup(pairlist);
     stringpair_t* srcpair = pairlist->value;
     stringpair_t* dstpair = duplist->value;
-    ASSERT_NE(dstpair, nullptr);
-    ASSERT_NE(dstpair->value, nullptr);
+    ASSERT_NOTNULL(dstpair);
+    ASSERT_NOTNULL(dstpair->value);
     ASSERT_TRUE(test_stringpair_equals(srcpair, dstpair));
     ASSERT_NE(srcpair->key , dstpair->key);   // test deep copies (to be fixed in next 2 commits)
     ASSERT_NE(srcpair->value , dstpair->value);
-    ASSERT_EQ(duplist->next , nullptr);
+    ASSERT_NULL(duplist->next );
     output_stream << "one-element stringpair_list duplicated.\n\n";
 
     output_stream << "freeing stringpair_lists...\n";
@@ -92,21 +92,21 @@ TEST_F(StringpairListTest, check_stringpair_lists) {
     pairlist = stringpair_list_add(pairlist, new_stringpair(val_1_arr[0], val_2_arr[0]));
     for (i = 1; i < 4; i++) {
         p = stringpair_list_add(pairlist, new_stringpair(val_1_arr[i], val_2_arr[i]));
-        ASSERT_NE(p, nullptr);
+        ASSERT_NOTNULL(p);
     }
 
     p = pairlist;
 
     for (i = 0; i < 4; i++) {
-        ASSERT_NE(p, nullptr);
+        ASSERT_NOTNULL(p);
 
         strpair = p->value;
-        ASSERT_NE(strpair, nullptr);
+        ASSERT_NOTNULL(strpair);
 
-        ASSERT_NE(strpair->key, nullptr);
+        ASSERT_NOTNULL(strpair->key);
         ASSERT_STREQ(val_1_arr[i], strpair->key);
 
-        ASSERT_NE(strpair->value, nullptr);
+        ASSERT_NOTNULL(strpair->value);
         ASSERT_STREQ(val_2_arr[i], strpair->value);
 
         ASSERT_NE(val_1_arr[i] , strpair->key);
@@ -114,7 +114,7 @@ TEST_F(StringpairListTest, check_stringpair_lists) {
 
         p = p->next;
     }
-    ASSERT_EQ(p , nullptr);
+    ASSERT_NULL(p );
 
     output_stream << "\nduplicating four-element list...\n\n";
     duplist = stringpair_list_dup(pairlist);
@@ -126,8 +126,8 @@ TEST_F(StringpairListTest, check_stringpair_lists) {
         srcpair = p->value;
         dstpair = dup_p->value;
 
-        ASSERT_NE(dstpair, nullptr);
-        ASSERT_NE(dstpair->value, nullptr);
+        ASSERT_NOTNULL(dstpair);
+        ASSERT_NOTNULL(dstpair->value);
 
         output_stream << srcpair->key << ":" << srcpair->value << " / " << dstpair->key << ":" << dstpair->value << "\n";
         ASSERT_TRUE(test_stringpair_equals(srcpair, dstpair));

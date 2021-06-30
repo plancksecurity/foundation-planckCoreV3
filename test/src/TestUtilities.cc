@@ -3,7 +3,7 @@
 #include "pEp_internal.h"
 #include "pEp_internal.h"
 #include "message_api.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 #include "TestConstants.h"
 #include "mime.h"
 #include "message_api.h"
@@ -22,12 +22,47 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <ftw.h>
+#include <fstream>
+#include <iostream>
 
 using namespace std;
 
 std::string _main_test_home_dir;
 
 #define BUF_MAX_PATHLEN 4097
+
+
+const TestUtilsPreset::IdentityInfo TestUtilsPreset::presets[]     = {
+                TestUtilsPreset::IdentityInfo("Alice Spivak Hyatt", "ALICE", "pep.test.alice@pep-project.org", "pep-test-alice-0x6FF00E97", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97"),
+                TestUtilsPreset::IdentityInfo("Apple of my Computer", "APPLE", "pep.test.apple@pep-project.org", "pep-test-apple-0x1CCBC7D7", "3D8D9423D03DDF61B60161150313D94A1CCBC7D7"),
+                TestUtilsPreset::IdentityInfo("Bob Dog", "BOB", "pep.test.bob@pep-project.org", "pep-test-bob-0xC9C2EE39", "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39"),
+                TestUtilsPreset::IdentityInfo("Bob Dog", "BOB", "pep.test.bob@pep-project.org", "pep-test-bob-0x9667F61D", "C47ADE6207C7C3098C6E83D9FF3D3F669667F61D"),
+                TestUtilsPreset::IdentityInfo("Carol Burnett", "CAROL", "pep-test-carol@pep-project.org", "pep-test-carol-0x42A85A42", "8DD4F5827B45839E9ACCA94687BDDFFB42A85A42"),
+                TestUtilsPreset::IdentityInfo("The Hoff", "DAVE", "pep-test-dave@pep-project.org", "pep-test-dave-0xBB5BCCF6", "E8AC9779A2D13A15D8D55C84B049F489BB5BCCF6"),
+                TestUtilsPreset::IdentityInfo("Erin Ireland", "ERIN", "pep-test-erin@pep-project.org", "pep-test-erin-0x9F8D7CBA", "1B0E197E8AE66277B8A024B9AEA69F509F8D7CBA"),
+                TestUtilsPreset::IdentityInfo("Frank N. Furter", "FRANK", "pep-test-frank@pep-project.org", "pep-test-frank-0x9A7FC670", "B022B74476D8A8E1F01E55FBAB6972569A7FC670"),  // currently expired
+                TestUtilsPreset::IdentityInfo("Gabrielle Gonzales", "GABI", "pep-test-gabrielle@pep-project.org", "pep-test-gabrielle-0xE203586C", "906C9B8349954E82C5623C3C8C541BD4E203586C"),
+                TestUtilsPreset::IdentityInfo("John Denver", "JOHN", "pep.test.john@pep-project.org", "pep-test-john-0x70DCF575", "AA2E4BEB93E5FE33DEFD8BE1135CD6D170DCF575"),
+                TestUtilsPreset::IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander@peptest.ch", "pep.test.alexander-0x26B54E4E", "3AD9F60FAEB22675DB873A1362D6981326B54E4E"),
+                TestUtilsPreset::IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander0@darthmama.org", "pep.test.alexander0-0x3B7302DB", "F4598A17D4690EB3B5B0F6A344F04E963B7302DB"),
+                TestUtilsPreset::IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander1@darthmama.org", "pep.test.alexander1-0x541260F6", "59AF4C51492283522F6904531C09730A541260F6"),
+                TestUtilsPreset::IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander2@darthmama.org", "pep.test.alexander2-0xA6512F30", "46A994F19077C05610870273C4B8AB0BA6512F30"),
+                TestUtilsPreset::IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander3@darthmama.org", "pep.test.alexander3-0x724B3975", "5F7076BBD92E14EA49F0DF7C2CE49419724B3975"),
+                TestUtilsPreset::IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander4@darthmama.org", "pep.test.alexander4-0x844B9DCF", "E95FFF95B8E2FDD4A12C3374395F1485844B9DCF"),
+                TestUtilsPreset::IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander5@darthmama.org", "pep.test.alexander5-0x0773CD29", "58BCC2BF2AE1E3C4FBEAB89AD7838ACA0773CD29"),
+                TestUtilsPreset::IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander6@darthmama.org", "pep.test.alexander6-0x0019697D", "74D79B4496E289BD8A71B70BA8E2C4530019697D"),
+                TestUtilsPreset::IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander6@darthmama.org", "pep.test.alexander6-0x503B14D8", "2E21325D202A44BFD9C607FCF095B202503B14D8"),
+                TestUtilsPreset::IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander6@darthmama.org", "pep.test.alexander6-0xA216E95A", "3C1E713D8519D7F907E3142D179EAA24A216E95A"),
+                TestUtilsPreset::IdentityInfo("Alex Braithwaite", "ALEX", "pep.test.alexander6@darthmama.org", "pep.test.alexander6-0xBDA17020", "B4CE2F6947B6947C500F0687AEFDE530BDA17020"),
+                TestUtilsPreset::IdentityInfo("Bella Cat", "BELLA", "pep.test.bella@peptest.ch", "pep.test.bella-0xAF516AAE", "5631BF1357326A02AA470EEEB815EF7FA4516AAE"),
+                TestUtilsPreset::IdentityInfo("Fenris Leto Hawke", "FENRIS", "pep.test.fenris@thisstilldoesntwork.lu", "pep.test.fenris-0x4F3D2900", "0969FA229DF21C832A64A04711B1B9804F3D2900"),
+                TestUtilsPreset::IdentityInfo("Cullen Rutherford", "CULLEN", "sercullen-test@darthmama.org", "sercullen-0x3CEAADED4", "1C9666D8B3E28F4AA3847DA89A6E75E3CEAADED4"),  // NB expired on purpose
+                TestUtilsPreset::IdentityInfo("Inquisitor Claire Trevelyan", "INQUISITOR", "inquisitor@darthmama.org", "inquisitor-0xA4728718_renewed", "8E8D2381AE066ABE1FEE509821BA977CA4728718"),
+                TestUtilsPreset::IdentityInfo("Bernd das Brot", "BERNDI", "bernd.das.brot@darthmama.org", "bernd.das.brot-0xCAFAA422", "F8CE0F7E24EB190A2FCBFD38D4B088A7CAFAA422"),
+                TestUtilsPreset::IdentityInfo("Sylvia Plath", "SYLVIA", "sylvia@darthmama.org", "sylvia-0x585A6780", "0C0F053EED87058C7330A11F10B89D31585A6780"),
+                TestUtilsPreset::IdentityInfo("Sylvia Plath", "SYLVIA", "sylvia@darthmama.org", "sylvia-0x2E5A78A9", "3FB4EB6F00E96E163FB05C0374B8F0832E5A78A9")
+    };
+
 
 bool is_pEpmsg(const message *msg)
 {
@@ -98,9 +133,14 @@ PEP_STATUS set_up_ident_from_scratch(PEP_SESSION session,
         if (status == PEP_STATUS_OK)
             status = myself(session, ident);
     }
-    else
+    else {
+        if (!EMPTYSTR(fpr)) {
+            status = set_fpr_preserve_ident(session, ident, fpr, false);
+            if (status != PEP_STATUS_OK)
+                goto pep_free;
+        }        
         status = update_identity(session, ident);
-
+    }    
     if (status != PEP_STATUS_OK)
         goto pep_free;
 
@@ -477,6 +517,61 @@ message* string_to_msg(string infile) {
     return out_msg;
 }
 
+PEP_STATUS vanilla_encrypt_and_write_to_file(PEP_SESSION session, message* msg, const char* filename, PEP_encrypt_flags_t flags) {
+    if (!session || !msg || !filename)
+        return PEP_ILLEGAL_VALUE;
+    message* enc_msg = NULL;
+    char *msg_str = NULL;
+    PEP_STATUS status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, flags);
+    if (status != PEP_UNENCRYPTED) {
+        if (status != PEP_STATUS_OK)
+            return status;
+        if (!enc_msg)
+            return PEP_UNKNOWN_ERROR;
+        msg_str = message_to_str(enc_msg);
+        if (!msg_str)
+            return PEP_UNKNOWN_ERROR;
+    }
+    else {
+        msg_str = message_to_str(msg);
+        if (!msg_str)
+            return PEP_UNKNOWN_ERROR;
+    }
+    dump_out(filename, msg_str);
+    free_message(enc_msg);
+    free(msg_str);
+    return PEP_STATUS_OK;
+ }
+ 
+// For when you ONLY care about the message
+PEP_STATUS vanilla_read_file_and_decrypt(PEP_SESSION session, message** msg, const char* filename) {
+    PEP_rating rating = PEP_rating_undefined;
+    return vanilla_read_file_and_decrypt_with_rating(session, msg, filename, &rating);
+}
+
+PEP_STATUS vanilla_read_file_and_decrypt_with_rating(PEP_SESSION session, message** msg, const char* filename, PEP_rating* rating) {
+    if (!session || !msg || !filename || !rating)
+        return PEP_ILLEGAL_VALUE;
+    PEP_STATUS status = PEP_STATUS_OK;
+    std::string inbox = slurp(filename);
+    if (inbox.empty())
+        return PEP_UNKNOWN_ERROR;
+
+    message* enc_msg = NULL;
+    mime_decode_message(inbox.c_str(), inbox.size(), &enc_msg, NULL);
+
+    message* dec_msg = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_decrypt_flags_t flags = 0;
+
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, rating, &flags);
+    if (dec_msg)
+        *msg = dec_msg;
+    free_stringlist(keylist); // no one cares
+    free_message(enc_msg);
+    return status;
+}
+
 
 int util_delete_filepath(const char *filepath,
                          const struct stat *file_stat,
@@ -778,24 +873,72 @@ pEp_error:
 
 #endif
 
-PEP_STATUS set_up_preset(PEP_SESSION session,
-                         pEp_test_ident_preset preset_name,
-                         bool set_ident,
-                         bool set_pep,
-                         bool trust,
-                         bool set_own,
-                         bool setup_private,
-                         pEp_identity** ident) {
+PEP_STATUS set_default_fpr_for_test(PEP_SESSION session, pEp_identity* ident,  bool unconditional) {
+    if (EMPTYSTR(ident->fpr))
+        return PEP_ILLEGAL_VALUE;
+    PEP_STATUS status = PEP_STATUS_OK;
+    if (EMPTYSTR(ident->user_id)) {
+        char* cache_fpr = ident->fpr;
+        ident->fpr = NULL;
+        status = update_identity(session, ident);
+        ident->fpr = cache_fpr;
+        if (status != PEP_STATUS_OK)
+            return status;
+        if (EMPTYSTR(ident->user_id)) 
+            return PEP_UNKNOWN_ERROR;
+    }
+    if (!unconditional)
+        status = validate_fpr(session, ident, true, true);
+    if (status == PEP_STATUS_OK)
+        status = set_identity(session, ident);            
+    return status;
+}
+
+PEP_STATUS set_fpr_preserve_ident(PEP_SESSION session, const pEp_identity* ident, const char* fpr, bool valid_only) {
+    if (!ident || EMPTYSTR(fpr))
+        return PEP_ILLEGAL_VALUE;
+    pEp_identity* clone = identity_dup(ident);
+    PEP_STATUS status = update_identity(session, clone);
+    if (status != PEP_STATUS_OK)
+        return status;
+    if (clone->fpr)
+        free(clone->fpr);    
+    clone->fpr = strdup(fpr);
+    status = set_default_fpr_for_test(session, clone, !valid_only);
+    free_identity(clone);
+    return status;
+}
+
+PEP_STATUS TestUtilsPreset::import_preset_key(PEP_SESSION session,
+                                              TestUtilsPreset::ident_preset preset_name,
+                                              bool private_also) {
+    string pubkey_dir = "test_keys/pub/";
+    string privkey_dir = "test_keys/priv/";
+    const char* key_prefix = TestUtilsPreset::presets[preset_name].key_prefix;
+    string pubkey_file = pubkey_dir + key_prefix + "_pub.asc";
+    string privkey_file = privkey_dir + key_prefix + "_priv.asc";
+    if (!slurp_and_import_key(session, pubkey_file.c_str()))
+        return PEP_KEY_NOT_FOUND;
+    if (private_also) {
+        if (!slurp_and_import_key(session, privkey_file.c_str()))
+            return PEP_KEY_NOT_FOUND;
+    }
+
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS TestUtilsPreset::set_up_preset(PEP_SESSION session,
+                                          ident_preset preset_name,
+                                          bool set_ident,
+                                          bool set_fpr,
+                                          bool set_pep,
+                                          bool trust,
+                                          bool set_own,
+                                          bool setup_private,
+                                          pEp_identity** ident) {
     if (set_own && !set_ident)
         return PEP_ILLEGAL_VALUE;
 
-    const char* name = NULL;
-    const char* user_id = NULL;
-    const char* email = NULL;
-    const char* key_prefix = NULL;
-    string pubkey_dir = "test_keys/pub/";
-    string privkey_dir = "test_keys/priv/";
-    const char* fpr = NULL;
     PEP_STATUS status = PEP_STATUS_OK;
 
     if (ident)
@@ -803,208 +946,28 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
 
     pEp_identity* retval = NULL;
 
-    switch (preset_name) {
-        case ALICE:
-            name = "Alice Spivak Hyatt";
-            user_id = "ALICE";
-            email = "pep.test.alice@pep-project.org";
-            key_prefix = "pep-test-alice-0x6FF00E97";
-            fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
-            break;
-        case APPLE:
-            name = "Apple of my Computer";
-            user_id = "APPLE";
-            email = "pep.test.apple@pep-project.org";
-            key_prefix = "pep-test-apple-0x1CCBC7D7";
-            fpr = "3D8D9423D03DDF61B60161150313D94A1CCBC7D7";
-            break;
-        case BOB:
-            name = "Bob Dog";
-            user_id = "BOB";
-            email = "pep.test.bob@pep-project.org";
-            key_prefix = "pep-test-bob-0xC9C2EE39";
-            fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
-            break;
-        case CAROL:
-            name = "Carol Burnett";
-            user_id = "CAROL";
-            email = "pep-test-carol@pep-project.org";
-            key_prefix = "pep-test-carol-0x42A85A42";
-            fpr = "8DD4F5827B45839E9ACCA94687BDDFFB42A85A42";
-            break;
-        case DAVE:
-            name = "The Hoff";
-            user_id = "DAVE";
-            email = "pep-test-dave@pep-project.org";
-            key_prefix = "pep-test-dave-0xBB5BCCF6";
-            fpr = "E8AC9779A2D13A15D8D55C84B049F489BB5BCCF6";
-            break;
-        case ERIN:
-            name = "Erin Ireland";
-            user_id = "ERIN";
-            email = "pep-test-erin@pep-project.org";
-            key_prefix = "pep-test-erin-0x9F8D7CBA";
-            fpr = "1B0E197E8AE66277B8A024B9AEA69F509F8D7CBA";
-            break;
-        case FRANK:
-            name = "Frank N. Furter";
-            user_id = "FRANK";
-            email = "pep-test-frank@pep-project.org";
-            key_prefix = "pep-test-frank-0x9A7FC670";
-            fpr = "B022B74476D8A8E1F01E55FBAB6972569A7FC670"; // currently expired
-            break;
-        case GABRIELLE:
-            name = "Gabrielle Gonzales";
-            user_id = "GABI";
-            email = "pep-test-gabrielle@pep-project.org";
-            key_prefix = "pep-test-gabrielle-0xE203586C";
-            fpr = "906C9B8349954E82C5623C3C8C541BD4E203586C";
-            break;
-        case JOHN:
-            name = "John Denver";
-            user_id = "JOHN";
-            email = "pep.test.john@pep-project.org";
-            key_prefix = "pep-test-john-0x70DCF575";
-            fpr = "AA2E4BEB93E5FE33DEFD8BE1135CD6D170DCF575";
-            break;
-        case ALEX:
-            name = "Alex Braithwaite";
-            user_id = "ALEX";
-            email = "pep.test.alexander@peptest.ch";
-            key_prefix = "pep.test.alexander-0x26B54E4E";
-            fpr = "3AD9F60FAEB22675DB873A1362D6981326B54E4E";
-            break;
-        case ALEX_0:
-            name = "Alex Braithwaite";
-            user_id = "ALEX";
-            email = "pep.test.alexander0@darthmama.org";
-            key_prefix = "pep.test.alexander0-0x3B7302DB";
-            fpr = "F4598A17D4690EB3B5B0F6A344F04E963B7302DB";
-            break;
-        case ALEX_1:
-            name = "Alex Braithwaite";
-            user_id = "ALEX";
-            email = "pep.test.alexander1@darthmama.org";
-            key_prefix = "pep.test.alexander1-0x541260F6";
-            fpr = "59AF4C51492283522F6904531C09730A541260F6";
-            break;
-        case ALEX_2:
-            name = "Alex Braithwaite";
-            user_id = "ALEX";
-            email = "pep.test.alexander2@darthmama.org";
-            key_prefix = "pep.test.alexander2-0xA6512F30";
-            fpr = "46A994F19077C05610870273C4B8AB0BA6512F30";
-            break;
-        case ALEX_3:
-            name = "Alex Braithwaite";
-            user_id = "ALEX";
-            email = "pep.test.alexander3@darthmama.org";
-            key_prefix = "pep.test.alexander3-0x724B3975";
-            fpr = "5F7076BBD92E14EA49F0DF7C2CE49419724B3975";
-            break;
-        case ALEX_4:
-            name = "Alex Braithwaite";
-            user_id = "ALEX";
-            email = "pep.test.alexander4@darthmama.org";
-            key_prefix = "pep.test.alexander4-0x844B9DCF";
-            fpr = "E95FFF95B8E2FDD4A12C3374395F1485844B9DCF";
-            break;
-        case ALEX_5:
-            name = "Alex Braithwaite";
-            user_id = "ALEX";
-            email = "pep.test.alexander5@darthmama.org";
-            key_prefix = "pep.test.alexander5-0x0773CD29";
-            fpr = "58BCC2BF2AE1E3C4FBEAB89AD7838ACA0773CD29";
-            break;
-        case ALEX_6A:
-            name = "Alex Braithwaite";
-            user_id = "ALEX";
-            email = "pep.test.alexander6@darthmama.org";
-            key_prefix = "pep.test.alexander6-0x0019697D";
-            fpr = "74D79B4496E289BD8A71B70BA8E2C4530019697D";
-            break;
-        case ALEX_6B:
-            name = "Alex Braithwaite";
-            user_id = "ALEX";
-            email = "pep.test.alexander6@darthmama.org";
-            key_prefix = "pep.test.alexander6-0x503B14D8";
-            fpr = "2E21325D202A44BFD9C607FCF095B202503B14D8";
-            break;
-        case ALEX_6C:
-            name = "Alex Braithwaite";
-            user_id = "ALEX";
-            email = "pep.test.alexander6@darthmama.org";
-            key_prefix = "pep.test.alexander6-0xA216E95A";
-            fpr = "3C1E713D8519D7F907E3142D179EAA24A216E95A";
-            break;
-        case ALEX_6D:
-            name = "Alex Braithwaite";
-            user_id = "ALEX";
-            email = "pep.test.alexander6@darthmama.org";
-            key_prefix = "pep.test.alexander6-0xBDA17020";
-            fpr = "B4CE2F6947B6947C500F0687AEFDE530BDA17020";
-            break;
-        case BELLA:
-            name = "Bella Cat";
-            user_id = "BELLA";
-            email = "pep.test.bella@peptest.ch";
-            key_prefix = "pep.test.bella-0xAF516AAE";
-            fpr = "5631BF1357326A02AA470EEEB815EF7FA4516AAE";
-            break;
-        case FENRIS:
-            name = "Fenris Leto Hawke";
-            user_id = "FENRIS";
-            email = "pep.test.fenris@thisstilldoesntwork.lu";
-            key_prefix = "pep.test.fenris-0x4F3D2900";
-            fpr = "0969FA229DF21C832A64A04711B1B9804F3D2900";
-            break;
-        case SERCULLEN:
-            name = "Cullen Rutherford";
-            user_id = "CULLEN";
-            email = "sercullen-test@darthmama.org";
-            key_prefix = "sercullen-0x3CEAADED4"; // NB expired on purpose
-            fpr = "1C9666D8B3E28F4AA3847DA89A6E75E3CEAADED4";
-            break;
-        case INQUISITOR:
-            name = "Inquisitor Claire Trevelyan";
-            user_id = "INQUISITOR";
-            email = "inquisitor@darthmama.org";
-            key_prefix = "inquisitor-0xA4728718_renewed";
-            fpr = "8E8D2381AE066ABE1FEE509821BA977CA4728718";
-            break;
-        case BERND:
-            name = "Bernd das Brot";
-            user_id = "BERNDI";
-            email = "bernd.das.brot@darthmama.org";
-            key_prefix = "bernd.das.brot-0xCAFAA422";
-            fpr = "F8CE0F7E24EB190A2FCBFD38D4B088A7CAFAA422";
-            break;
-        default:
-            return PEP_CANNOT_SET_IDENTITY;
-    }
+    if ((int)preset_name >= sizeof(presets))
+        return PEP_ILLEGAL_VALUE;
 
-    string pubkey_file = pubkey_dir + key_prefix + "_pub.asc";
-    string privkey_file = privkey_dir + key_prefix + "_priv.asc";
+    const TestUtilsPreset::IdentityInfo& preset = presets[preset_name];
 
-    if (!slurp_and_import_key(session, pubkey_file.c_str()))
-        return PEP_KEY_NOT_FOUND;
+    status = TestUtilsPreset::import_preset_key(session, preset_name, setup_private);
+    if (status != PEP_STATUS_OK)
+        return status;
 
-    if (setup_private) {
-        if (!slurp_and_import_key(session, privkey_file.c_str()))
-            return PEP_KEY_NOT_FOUND;
-    }
-
-    retval = new_identity(email, NULL, user_id, name);
+    retval = new_identity(preset.email, NULL, preset.user_id, preset.name);
     if (!retval)
         return PEP_OUT_OF_MEMORY;
 
     // honestly probably happens anyway
-    if (set_ident && status == PEP_STATUS_OK)
+    if (set_ident && status == PEP_STATUS_OK) {
+        retval->fpr = set_fpr ? strdup(preset.fpr) : NULL;
         status = set_identity(session, retval);
+    }
 
     if (set_own) {
         retval->me = true;
-        status = set_own_key(session, retval, fpr);
+        status = set_own_key(session, retval, preset.fpr);
     }
 
     if (set_pep && status == PEP_STATUS_OK)
@@ -1019,13 +982,110 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
         }
     }
 
-
     if (ident)
         *ident = retval;
     else
         free_identity(retval);
 
     return status;
+}
+/*
+static PEP_STATUS set_up_preset(PEP_SESSION session,
+                     ident_preset preset_name,
+                     bool set_identity,
+                     bool set_fpr,
+                     bool set_pep,
+                     bool trust,
+                     bool set_own,
+                     bool setup_private,
+                     pEp_identity** ident);
+*/
+pEp_identity* TestUtilsPreset::generateAndSetOpenPGPPartnerIdentity(PEP_SESSION session,
+                                                                    ident_preset preset_name,
+                                                                    bool set_fpr,
+                                                                    bool trust) {
+    pEp_identity* retval = NULL;
+    PEP_STATUS status = set_up_preset(session, preset_name, true, set_fpr, false, trust, false, false, &retval);
+    if (status != PEP_STATUS_OK) {
+        free(retval);
+        retval = NULL;
+    }
+    return retval;
+
+}
+
+pEp_identity* TestUtilsPreset::generateAndSetpEpPartnerIdentity(PEP_SESSION session,
+                                                                    ident_preset preset_name,
+                                                                    bool set_fpr,
+                                                                    bool trust) {
+    pEp_identity* retval = NULL;
+    PEP_STATUS status = set_up_preset(session, preset_name, true, set_fpr, true, trust, false, false, &retval);
+    if (status != PEP_STATUS_OK) {
+        free(retval);
+        retval = NULL;
+    }
+    return retval;
+}
+
+pEp_identity* TestUtilsPreset::generateAndSetPrivateIdentity(PEP_SESSION session,
+                                                             ident_preset preset_name) {
+    pEp_identity* retval = NULL;
+    PEP_STATUS status = set_up_preset(session, preset_name, true, true, true, true, true, true, &retval);
+    if (status != PEP_STATUS_OK) {
+        free(retval);
+        retval = NULL;
+    }
+    return retval;
+}
+
+pEp_identity* TestUtilsPreset::generateOnlyPrivateIdentity(PEP_SESSION session,
+                                                           ident_preset preset_name) {
+    pEp_identity* retval = NULL;
+    PEP_STATUS status = set_up_preset(session, preset_name, false, false, false, false, false, true, &retval);
+    if (status != PEP_STATUS_OK) {
+        free(retval);
+        retval = NULL;
+    }
+    return retval;
+}
+pEp_identity* TestUtilsPreset::generateOnlyPrivateIdentityGrabFPR(PEP_SESSION session,
+                                                           ident_preset preset_name) {
+    pEp_identity* retval = NULL;
+    PEP_STATUS status = set_up_preset(session, preset_name, false, false, false, false, false, true, &retval);
+    if (status != PEP_STATUS_OK) {
+        free(retval);
+        retval = NULL;
+    }
+    else {
+        retval->fpr = strdup(TestUtilsPreset::presets[preset_name].fpr);
+    }
+
+    return retval;
+}
+
+pEp_identity* TestUtilsPreset::generateOnlyPartnerIdentity(PEP_SESSION session,
+                                                           ident_preset preset_name) {
+    pEp_identity* retval = NULL;
+    PEP_STATUS status = set_up_preset(session, preset_name, false, false, false, false, false, false, &retval);
+    if (status != PEP_STATUS_OK) {
+        free(retval);
+        retval = NULL;
+    }
+    return retval;
+}
+
+pEp_identity* TestUtilsPreset::generateOnlyPartnerIdentityGrabFPR(PEP_SESSION session,
+                                                                  ident_preset preset_name) {
+    pEp_identity* retval = NULL;
+    PEP_STATUS status = set_up_preset(session, preset_name, false, false, false, false, false, true, &retval);
+    if (status != PEP_STATUS_OK) {
+        free(retval);
+        retval = NULL;
+    }
+    else {
+        retval->fpr = strdup(TestUtilsPreset::presets[preset_name].fpr);
+    }
+    return retval;
 }
 
 int NullBuffer::overflow(int c) {
@@ -1037,3 +1097,11 @@ int NullBuffer::overflow(int c) {
 #ifndef DEBUG_OUTPUT
 std::ostream output_stream(new NullBuffer());
 #endif
+
+void print_mail(message* msg) {
+    char* outmsg = NULL;
+    mime_encode_message(msg, false, &outmsg, false);
+ //   output_stream << outmsg << endl;
+    cout << outmsg << endl;
+    free(outmsg);
+}

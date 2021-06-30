@@ -15,7 +15,7 @@ import time
 from glob import glob
 
 
-timeout = 5
+timeout = 500
 
 
 def send_message(to, msg):
@@ -53,17 +53,14 @@ def recv_message(inbox=None):
 def wait_for_message():
     "wait until a message arrives and return the message"
 
-    found = False
     for i in range(timeout):
         try:
             msg = recv_message()
-        except IndexError:
-            time.sleep(1)
-        else:
-            found = True
             break
-
-    if not found:
+        except IndexError:
+            time.sleep(0.01)
+    else:
+        # not found
         raise RuntimeError("timeout")
 
     return msg

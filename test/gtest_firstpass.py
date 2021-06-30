@@ -94,12 +94,12 @@ for filename in os.listdir("src"):
                         newfile.write(tb(4) + "std::vector<std::pair<std::string, std::string>> init_files = std::vector<std::pair<std::string, std::string>>();\n")                                        
                         newfile.write("\n" + tb(4) + "// Get a new test Engine.\n")                    
                         newfile.write(tb(4) + "engine = new Engine(test_path);\n");
-                        newfile.write(tb(4) + "ASSERT_NE(engine, nullptr);\n")
+                        newfile.write(tb(4) + "ASSERT_NOTNULL(engine);\n")
                         newfile.write("\n" + tb(4) + "// Ok, let's initialize test directories etc.\n")                                        
                         newfile.write(tb(4) + "engine->prep(NULL, NULL, init_files);\n")
                         newfile.write("\n" + tb(4) + "// Ok, try to start this bugger.\n")                    
                         newfile.write(tb(4) + "engine->start();\n")                    
-                        newfile.write(tb(4) + "ASSERT_NE(engine->session, nullptr);\n")                    
+                        newfile.write(tb(4) + "ASSERT_NOTNULL(engine->session);\n")                    
                         newfile.write(tb(4) + "session = engine->session;\n") 
                         newfile.write("\n" + tb(4) + "// Engine is up. Keep on truckin\'\n");                                                            
                         newfile.write(tb(3) + "}\n\n")
@@ -159,24 +159,24 @@ for filename in os.listdir("src"):
                     
                 #TEST_ASSERT_MSG(<x> == NULL, *);
                 #TEST_ASSERT(<x> == NULL);
-                # -> ASSERT_EQ(<x>, nullptr);
-                modline = re.sub(r'TEST_ASSERT_MSG\((.*)\s*==\s*NULL,.*\);',r'ASSERT_EQ(\1, nullptr);', line)
+                # -> ASSERT_NULL(<x>);
+                modline = re.sub(r'TEST_ASSERT_MSG\((.*)\s*==\s*NULL,.*\);',r'ASSERT_NULL(\1);', line)
                 if (line != modline):
                     newfile.write(modline + "\n")
                     continue
-                modline = re.sub(r'TEST_ASSERT\((.*)\s*==\s*NULL\);', r'ASSERT_EQ(\1, nullptr);',line)
+                modline = re.sub(r'TEST_ASSERT\((.*)\s*==\s*NULL\);', r'ASSERT_NULL(\1);',line)
                 if (line != modline):
                     newfile.write(modline + "\n")
                     continue
                 
                 #TEST_ASSERT_MSG(<x> != NULL, *);
                 #TEST_ASSERT(<x> != NULL);
-                # -> ASSERT_NE(<x>, nullptr);
-                modline = re.sub(r'TEST_ASSERT_MSG\((.*)\s*!=\s*NULL,.*\);',r'ASSERT_NE(\1, nullptr);', line)
+                # -> ASSERT_NOTNULL(<x>);
+                modline = re.sub(r'TEST_ASSERT_MSG\((.*)\s*!=\s*NULL,.*\);',r'ASSERT_NOTNULL(\1);', line)
                 if (line != modline):
                     newfile.write(modline + "\n")
                     continue
-                modline = re.sub(r'TEST_ASSERT\((.*)\s*!=\s*NULL\);', r'ASSERT_NE(\1, nullptr);',line)
+                modline = re.sub(r'TEST_ASSERT\((.*)\s*!=\s*NULL\);', r'ASSERT_NOTNULL(\1);',line)
                 if (line != modline):
                     newfile.write(modline + "\n")
                     continue
@@ -289,11 +289,11 @@ for filename in os.listdir("src"):
                         break;       
                     
                     if (is_pointer):
-                        modline = re.sub(r'TEST_ASSERT_MSG\(!(.*),.*\);',r'ASSERT_NE(\1, nullptr);', line)
+                        modline = re.sub(r'TEST_ASSERT_MSG\(!(.*),.*\);',r'ASSERT_NOTNULL(\1);', line)
                         if (line != modline):
                             newfile.write(modline + "\n")
                             continue
-                        modline = re.sub(r'TEST_ASSERT\(!(.*)\);', r'ASSERT_NE(\1, nullptr);',line)
+                        modline = re.sub(r'TEST_ASSERT\(!(.*)\);', r'ASSERT_NOTNULL(\1);',line)
                         if (line != modline):
                             newfile.write(modline + "\n")
                             continue
@@ -328,11 +328,11 @@ for filename in os.listdir("src"):
                         break;       
                     
                     if (is_pointer):
-                        modline = re.sub(r'TEST_ASSERT_MSG\((.*),.*\);',r'ASSERT_NE(\1, nullptr);', line)
+                        modline = re.sub(r'TEST_ASSERT_MSG\((.*),.*\);',r'ASSERT_NOTNULL(\1);', line)
                         if (line != modline):
                             newfile.write(modline + "\n")
                             continue
-                        modline = re.sub(r'TEST_ASSERT\((.*)\);', r'ASSERT_NE(\1, nullptr);',line)
+                        modline = re.sub(r'TEST_ASSERT\((.*)\);', r'ASSERT_NOTNULL(\1);',line)
                         if (line != modline):
                             newfile.write(modline + "\n")
                             continue

@@ -9,7 +9,7 @@
 
 #include "pEpEngine.h"
 #include "pEp_internal.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 #include "TestConstants.h"
 #include "Engine.h"
 
@@ -50,14 +50,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -123,9 +123,9 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_NULL) {
     // This is just a dummy test case. The convention is check_whatever_you_are_checking
     // so for multiple test cases in a suite, be more explicit ;)
     pEp_identity* carol = NULL;
-    PEP_STATUS status = set_up_preset(session, CAROL, true, true, true, true, true, &carol); 
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL, true, true, true, true, true, true, &carol);
     pEp_identity* dave = NULL;
-    status = set_up_preset(session, DAVE, true, true, true, false, false, &dave);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE, true, true, true, true, false, false, &dave);
     
     message* msg = new_message(PEP_dir_outgoing);
     msg->from = carol;
@@ -144,9 +144,9 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_text_att) {
     // This is just a dummy test case. The convention is check_whatever_you_are_checking
     // so for multiple test cases in a suite, be more explicit ;)
     pEp_identity* carol = NULL;
-    PEP_STATUS status = set_up_preset(session, CAROL, true, true, true, true, true, &carol); 
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL, true, true, true, true, true, true, &carol);
     pEp_identity* dave = NULL;
-    status = set_up_preset(session, DAVE, true, true, true, false, false, &dave);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE, true, true, true, true, false, false, &dave);
     
     message* msg = new_message(PEP_dir_outgoing);
     msg->from = carol;
@@ -160,7 +160,7 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_text_att) {
     char* outmsg = NULL;
     mime_encode_message(msg, false, &outmsg, false);
     
-    ASSERT_EQ(strstr(outmsg, "alternative"), nullptr);
+    ASSERT_NULL(strstr(outmsg, "alternative"));
     
     cout << outmsg << endl;
     
@@ -170,9 +170,9 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_html_att) {
     // This is just a dummy test case. The convention is check_whatever_you_are_checking
     // so for multiple test cases in a suite, be more explicit ;)
     pEp_identity* carol = NULL;
-    PEP_STATUS status = set_up_preset(session, CAROL, true, true, true, true, true, &carol); 
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL, true, true, true, true, true, true, &carol);
     pEp_identity* dave = NULL;
-    status = set_up_preset(session, DAVE, true, true, true, false, false, &dave);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE, true, true, true, true, false, false, &dave);
     
     message* msg = new_message(PEP_dir_outgoing);
     msg->from = carol;
@@ -186,9 +186,9 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_html_att) {
     char* outmsg = NULL;
     mime_encode_message(msg, false, &outmsg, false);
     
-    ASSERT_EQ(strstr(outmsg, "alternative"), nullptr);
-    ASSERT_EQ(strstr(outmsg, "related"), nullptr);
-    ASSERT_NE(strstr(outmsg, "mixed"), nullptr);
+    ASSERT_NULL(strstr(outmsg, "alternative"));
+    ASSERT_NULL(strstr(outmsg, "related"));
+    ASSERT_NOTNULL(strstr(outmsg, "mixed"));
             
     cout << outmsg << endl;
     
@@ -198,9 +198,9 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_text_html_atts) {
     // This is just a dummy test case. The convention is check_whatever_you_are_checking
     // so for multiple test cases in a suite, be more explicit ;)
     pEp_identity* carol = NULL;
-    PEP_STATUS status = set_up_preset(session, CAROL, true, true, true, true, true, &carol); 
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL, true, true, true, true, true, true, &carol);
     pEp_identity* dave = NULL;
-    status = set_up_preset(session, DAVE, true, true, true, false, false, &dave);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE, true, true, true, true, false, false, &dave);
     
     message* msg = new_message(PEP_dir_outgoing);
     msg->from = carol;
@@ -217,32 +217,32 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_text_html_atts) {
     mime_encode_message(msg, false, &outmsg, false);
     
     // Could do more here, but honestly, these are just sanity checks, as mostly this is getting checked by inspection
-    ASSERT_EQ(strstr(outmsg, "alternative"), nullptr);
-    ASSERT_EQ(strstr(outmsg, "related"), nullptr);
-    ASSERT_NE(strstr(outmsg, "mixed"), nullptr);
+    ASSERT_NULL(strstr(outmsg, "alternative"));
+    ASSERT_NULL(strstr(outmsg, "related"));
+    ASSERT_NOTNULL(strstr(outmsg, "mixed"));
     
     cout << outmsg << endl;
     
     const char* body_html_text = strstr(outmsg, "HTML Mail");
-    ASSERT_NE(body_html_text, nullptr);
+    ASSERT_NOTNULL(body_html_text);
     const char* att_html_text = strstr(body_html_text + 1, "Warning");
     ASSERT_GT(att_html_text, body_html_text);
 
             
     const char* chkstr = strstr(outmsg, "Content-Disposition: attachment");
-    ASSERT_NE(chkstr, nullptr);
+    ASSERT_NOTNULL(chkstr);
     chkstr = strstr(chkstr + strlen("Content-Disposition: attachment"), "Content-Disposition: attachment");    
-    ASSERT_NE(chkstr, nullptr);        
+    ASSERT_NOTNULL(chkstr);        
     chkstr = strstr(chkstr + strlen("Content-Disposition: attachment"), "Content-Disposition: attachment");
-    ASSERT_EQ(chkstr, nullptr);
+    ASSERT_NULL(chkstr);
     
 }
 
 TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_html_text_atts) {
     pEp_identity* carol = NULL;
-    PEP_STATUS status = set_up_preset(session, CAROL, true, true, true, true, true, &carol); 
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL, true, true, true, true, true, true, &carol);
     pEp_identity* dave = NULL;
-    status = set_up_preset(session, DAVE, true, true, true, false, false, &dave);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE, true, true, true, true, false, false, &dave);
     
     message* msg = new_message(PEP_dir_outgoing);
     msg->from = carol;
@@ -261,20 +261,20 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_html_text_atts) {
     cout << outmsg << endl;
         
     // Could do more here, but honestly, these are just sanity checks, as mostly this is getting checked by inspection
-    ASSERT_EQ(strstr(outmsg, "alternative"), nullptr);
-    ASSERT_EQ(strstr(outmsg, "related"), nullptr);    
-    ASSERT_NE(strstr(outmsg, "mixed"), nullptr);    
+    ASSERT_NULL(strstr(outmsg, "alternative"));
+    ASSERT_NULL(strstr(outmsg, "related"));    
+    ASSERT_NOTNULL(strstr(outmsg, "mixed"));    
     const char* body_html_text = strstr(outmsg, "HTML Mail");
-    ASSERT_NE(body_html_text, nullptr);
+    ASSERT_NOTNULL(body_html_text);
     const char* att_html_text = strstr(body_html_text + 1, "Warning");
     ASSERT_GT(att_html_text, body_html_text);
         
     const char* chkstr = strstr(outmsg, "Content-Disposition: attachment");
-    ASSERT_NE(chkstr, nullptr);
+    ASSERT_NOTNULL(chkstr);
     chkstr = strstr(chkstr + strlen("Content-Disposition: attachment"), "Content-Disposition: attachment");    
-    ASSERT_NE(chkstr, nullptr);        
+    ASSERT_NOTNULL(chkstr);        
     chkstr = strstr(chkstr + strlen("Content-Disposition: attachment"), "Content-Disposition: attachment");
-    ASSERT_EQ(chkstr, nullptr);
+    ASSERT_NULL(chkstr);
     
 }
 
@@ -282,9 +282,9 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_text_empty) {
     // This is just a dummy test case. The convention is check_whatever_you_are_checking
     // so for multiple test cases in a suite, be more explicit ;)
     pEp_identity* carol = NULL;
-    PEP_STATUS status = set_up_preset(session, CAROL, true, true, true, true, true, &carol); 
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL, true, true, true, true, true, true, &carol);
     pEp_identity* dave = NULL;
-    status = set_up_preset(session, DAVE, true, true, true, false, false, &dave);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE, true, true, true, true, false, false, &dave);
     
     message* msg = new_message(PEP_dir_outgoing);
     msg->from = carol;
@@ -304,9 +304,9 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_text_inline_att) 
     // This is just a dummy test case. The convention is check_whatever_you_are_checking
     // so for multiple test cases in a suite, be more explicit ;)
     pEp_identity* carol = NULL;
-    PEP_STATUS status = set_up_preset(session, CAROL, true, true, true, true, true, &carol); 
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL, true, true, true, true, true, true, &carol);
     pEp_identity* dave = NULL;
-    status = set_up_preset(session, DAVE, true, true, true, false, false, &dave);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE, true, true, true, true, false, false, &dave);
     
     message* msg = new_message(PEP_dir_outgoing);
     msg->from = carol;
@@ -341,9 +341,9 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_text_inline_att) 
     char* outmsg = NULL;
     mime_encode_message(msg, false, &outmsg, false);
         
-    ASSERT_EQ(strstr(outmsg, "alternative"), nullptr);
-    ASSERT_NE(strstr(outmsg, "related"), nullptr);
-    ASSERT_EQ(strstr(outmsg, "Content-Disposition: attachment"), nullptr);
+    ASSERT_NULL(strstr(outmsg, "alternative"));
+    ASSERT_NOTNULL(strstr(outmsg, "related"));
+    ASSERT_NULL(strstr(outmsg, "Content-Disposition: attachment"));
             
     cout << outmsg << endl;
     
@@ -353,9 +353,9 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_text_inline_att_p
     // This is just a dummy test case. The convention is check_whatever_you_are_checking
     // so for multiple test cases in a suite, be more explicit ;)
     pEp_identity* carol = NULL;
-    PEP_STATUS status = set_up_preset(session, CAROL, true, true, true, true, true, &carol); 
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL, true, true, true, true, true, true, &carol);
     pEp_identity* dave = NULL;
-    status = set_up_preset(session, DAVE, true, true, true, false, false, &dave);
+    status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::DAVE, true, true, true, true, false, false, &dave);
     
     message* msg = new_message(PEP_dir_outgoing);
     msg->from = carol;
@@ -391,11 +391,11 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_text_inline_att_p
     char* outmsg = NULL;
     mime_encode_message(msg, false, &outmsg, false);
         
-    ASSERT_EQ(strstr(outmsg, "alternative"), nullptr);
-    ASSERT_NE(strstr(outmsg, "related"), nullptr);
-    ASSERT_NE(strstr(outmsg, "mixed"), nullptr);      
-    ASSERT_NE(strstr(outmsg, "Content-ID: <part1.21156198.7E41C8BF@darthmama.org>"), nullptr);
-    ASSERT_NE(strstr(outmsg, "Content-Disposition: attachment; filename=\"meow.jpg\""), nullptr);
+    ASSERT_NULL(strstr(outmsg, "alternative"));
+    ASSERT_NOTNULL(strstr(outmsg, "related"));
+    ASSERT_NOTNULL(strstr(outmsg, "mixed"));      
+    ASSERT_NOTNULL(strstr(outmsg, "Content-ID: <part1.21156198.7E41C8BF@darthmama.org>"));
+    ASSERT_NOTNULL(strstr(outmsg, "Content-Disposition: attachment; filename=\"meow.jpg\""));
     cout << outmsg << endl;
 }
 
@@ -406,10 +406,10 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_parse_simple_html_only) {
     int size = 0;
     mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
     
-    ASSERT_NE(msg, nullptr);
-    ASSERT_EQ(msg->longmsg, nullptr);
-    ASSERT_NE(msg->longmsg_formatted, nullptr);
-    ASSERT_EQ(msg->attachments, nullptr);
+    ASSERT_NOTNULL(msg);
+    ASSERT_NULL(msg->longmsg);
+    ASSERT_NOTNULL(msg->longmsg_formatted);
+    ASSERT_NULL(msg->attachments);
     
     cout << msg->longmsg_formatted << endl;
 }
@@ -420,14 +420,14 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_parse_simple_html_text_attachment) {
     int size = 0;
     mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
     
-    ASSERT_NE(msg, nullptr);
-    ASSERT_EQ(msg->longmsg, nullptr);
-    ASSERT_NE(msg->longmsg_formatted, nullptr);
-    ASSERT_NE(msg->attachments, nullptr);
+    ASSERT_NOTNULL(msg);
+    ASSERT_NULL(msg->longmsg);
+    ASSERT_NOTNULL(msg->longmsg_formatted);
+    ASSERT_NOTNULL(msg->attachments);
     ASSERT_STREQ(msg->attachments->mime_type, "text/plain");
     string att_txt = "Your mother was a hamster\nAnd your father smelt of elterberries";
     ASSERT_EQ(memcmp(att_txt.c_str(), msg->attachments->value, att_txt.size()), 0);
-    ASSERT_EQ(msg->attachments->next, nullptr);    
+    ASSERT_NULL(msg->attachments->next);    
     cout << msg->longmsg_formatted << endl;
 }
 
@@ -437,18 +437,18 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_parse_simple_html_text_html_attachment) {
     int size = 0;
     mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
     
-    ASSERT_NE(msg, nullptr);
-    ASSERT_EQ(msg->longmsg, nullptr);
-    ASSERT_NE(msg->longmsg_formatted, nullptr);
-    ASSERT_NE(msg->attachments, nullptr);
+    ASSERT_NOTNULL(msg);
+    ASSERT_NULL(msg->longmsg);
+    ASSERT_NOTNULL(msg->longmsg_formatted);
+    ASSERT_NOTNULL(msg->attachments);
     ASSERT_STREQ(msg->attachments->mime_type, "text/plain");
     string att_txt = "\nBAH.\n";
     ASSERT_EQ(memcmp(att_txt.c_str(), msg->attachments->value, att_txt.size()), 0);
-    ASSERT_NE(msg->attachments->next, nullptr);    
+    ASSERT_NOTNULL(msg->attachments->next);    
     ASSERT_STREQ(msg->attachments->next->mime_type, "text/html");
     string html_txt = "<html>\n<body>\n<h1>HTML Mail is For Losers</h1>\n<p>But people use it.</p>\n</body>\n</html>\n";
     ASSERT_EQ(memcmp(html_txt.c_str(), msg->attachments->next->value, html_txt.size()), 0);        
-    ASSERT_EQ(msg->attachments->next->next, nullptr);
+    ASSERT_NULL(msg->attachments->next->next);
 }
 
 
@@ -458,17 +458,17 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_parse_simple_html_html_text_attachment) {
     int size = 0;
     mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
 
-    ASSERT_EQ(msg->longmsg, nullptr);
-    ASSERT_NE(msg->longmsg_formatted, nullptr);
-    ASSERT_NE(msg->attachments, nullptr);
-    ASSERT_NE(msg->attachments->next, nullptr);    
+    ASSERT_NULL(msg->longmsg);
+    ASSERT_NOTNULL(msg->longmsg_formatted);
+    ASSERT_NOTNULL(msg->attachments);
+    ASSERT_NOTNULL(msg->attachments->next);    
     ASSERT_STREQ(msg->attachments->mime_type, "text/html");
     string att_txt = "\nBAH.\n";
     string html_txt = "<html>\n<body>\n<h1>HTML Mail is For Losers</h1>\n<p>But people use it.</p>\n</body>\n</html>\n";
     ASSERT_EQ(memcmp(html_txt.c_str(), msg->attachments->value, html_txt.size()), 0);        
     ASSERT_STREQ(msg->attachments->next->mime_type, "text/plain");
     ASSERT_EQ(memcmp(att_txt.c_str(), msg->attachments->next->value, att_txt.size()), 0);
-    ASSERT_EQ(msg->attachments->next->next, nullptr);
+    ASSERT_NULL(msg->attachments->next->next);
 }
 
 
@@ -478,10 +478,10 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_parse_simple_inline_html) {
     int size = 0;
     mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
     
-    ASSERT_NE(msg, nullptr);
-    ASSERT_EQ(msg->longmsg, nullptr);
-    ASSERT_NE(msg->longmsg_formatted, nullptr);
-    ASSERT_NE(msg->attachments, nullptr);
+    ASSERT_NOTNULL(msg);
+    ASSERT_NULL(msg->longmsg);
+    ASSERT_NOTNULL(msg->longmsg_formatted);
+    ASSERT_NOTNULL(msg->attachments);
     ASSERT_STREQ(msg->attachments->mime_type, "image/jpeg");
 
     int retval = 0;
@@ -505,7 +505,7 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_parse_simple_inline_html) {
     
     ASSERT_EQ(memcmp(img, msg->attachments->value, msg->attachments->size), 0);
     ASSERT_EQ(msg->attachments->disposition, PEP_CONTENT_DISP_INLINE);    
-    ASSERT_EQ(msg->attachments->next, nullptr);    
+    ASSERT_NULL(msg->attachments->next);    
     cout << msg->longmsg_formatted << endl;    
 }
 
@@ -515,14 +515,14 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_parse_inline_html_text_attachment) {
     int size = 0;
     mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
     
-    ASSERT_NE(msg, nullptr);
-    ASSERT_EQ(msg->longmsg, nullptr);
-    ASSERT_NE(msg->longmsg_formatted, nullptr);
-    ASSERT_NE(msg->attachments, nullptr);
+    ASSERT_NOTNULL(msg);
+    ASSERT_NULL(msg->longmsg);
+    ASSERT_NOTNULL(msg->longmsg_formatted);
+    ASSERT_NOTNULL(msg->attachments);
     
     // there should be 2 attachments
-    ASSERT_NE(msg->attachments->next, nullptr);
-    ASSERT_EQ(msg->attachments->next->next, nullptr);    
+    ASSERT_NOTNULL(msg->attachments->next);
+    ASSERT_NULL(msg->attachments->next->next);    
     
     bloblist_t* text_att = NULL;
     bloblist_t* img_att = NULL;    
@@ -555,14 +555,14 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_parse_inline_html_img_attachment) {
     int size = 0;
     mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
     
-    ASSERT_NE(msg, nullptr);
-    ASSERT_EQ(msg->longmsg, nullptr);
-    ASSERT_NE(msg->longmsg_formatted, nullptr);
-    ASSERT_NE(msg->attachments, nullptr);
+    ASSERT_NOTNULL(msg);
+    ASSERT_NULL(msg->longmsg);
+    ASSERT_NOTNULL(msg->longmsg_formatted);
+    ASSERT_NOTNULL(msg->attachments);
     
     // there should be 2 attachments
-    ASSERT_NE(msg->attachments->next, nullptr);
-    ASSERT_EQ(msg->attachments->next->next, nullptr);    
+    ASSERT_NOTNULL(msg->attachments->next);
+    ASSERT_NULL(msg->attachments->next->next);    
     
     bloblist_t* img_not_inline_att = NULL;
     bloblist_t* img_inline_att = NULL;

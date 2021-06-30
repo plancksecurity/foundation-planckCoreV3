@@ -11,7 +11,7 @@
 #include "pEp_internal.h"
 #include "map_asn1.h"
 
-#include "test_util.h"
+#include "TestUtilities.h"
 
 #include "Engine.h"
 
@@ -52,14 +52,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -91,7 +91,7 @@ TEST_F(MapAsn1Test, check_map_asn1) {
 
     pEp_identity *ident1 = new_identity("vb@dingens.org",
             "DB4713183660A12ABAFA7714EBE90D44146F62F4", "42", "Volker Birk");
-    ASSERT_NE(ident1, nullptr);
+    ASSERT_NOTNULL(ident1);
     ident1->lang[0] = 'd';
     ident1->lang[1] = 'e';
     ident1->comm_type = PEP_ct_pEp;
@@ -99,12 +99,12 @@ TEST_F(MapAsn1Test, check_map_asn1) {
     output_stream << "converting identity to ASN.1...\n";
 
     Identity_t *ident_asn1 = Identity_from_Struct(ident1, NULL);
-    ASSERT_NE(ident_asn1, nullptr);
+    ASSERT_NOTNULL(ident_asn1);
 
     output_stream << "converting identity from ASN.1...\n";
 
     pEp_identity *ident2 = Identity_to_Struct(ident_asn1, NULL);
-    ASSERT_NE(ident2, nullptr);
+    ASSERT_NOTNULL(ident2);
 
     ASSERT_STREQ(ident1->address,ident2->address);
     ASSERT_STREQ(ident1->fpr,ident2->fpr);

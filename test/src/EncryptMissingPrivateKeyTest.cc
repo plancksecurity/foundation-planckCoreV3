@@ -9,11 +9,10 @@
 #include <cstring> // for strcmp()
 #include <assert.h>
 
-#include "blacklist.h"
 #include "keymanagement.h"
 #include "message_api.h"
 #include "mime.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 
 #include "pEpEngine.h"
 #include "pEp_internal.h"
@@ -60,21 +59,28 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
                 string recip_key = slurp("test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");
+                const char* bob_fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
                 PEP_STATUS status = import_key(session, recip_key.c_str(), recip_key.size(), NULL);
                 ASSERT_EQ(status, PEP_TEST_KEY_IMPORT_SUCCESS);
-
+                pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", bob_fpr, NULL, "Bob");
+                status = update_identity(session, bob);
+                ASSERT_OK;
+                bob->fpr = strdup(bob_fpr);
+                status = set_fpr_preserve_ident(session, bob, bob_fpr, true);
+                ASSERT_OK;
+                free_identity(bob);
             }
 
             void TearDown() override {
@@ -107,6 +113,8 @@ TEST_F(EncryptMissingPrivateKeyTest, check_encrypt_missing_private_key) {
     PEP_STATUS status8 = myself(session, no_key_identity);
     ASSERT_EQ(status8, PEP_STATUS_OK);
 
+    const char* cached_new_fpr = strdup(no_key_identity->fpr);
+    ASSERT_NE(cached_new_fpr, nullptr);
     /* Now let's try to encrypt a message. */
 
     message* tmp_msg = NULL;
@@ -118,6 +126,7 @@ TEST_F(EncryptMissingPrivateKeyTest, check_encrypt_missing_private_key) {
     ASSERT_EQ(status, PEP_STATUS_OK);
 
     status = update_identity(session, tmp_msg->from);
+    ASSERT_OK;
     identity_list* to_list = tmp_msg->to;
 
     while (to_list) {

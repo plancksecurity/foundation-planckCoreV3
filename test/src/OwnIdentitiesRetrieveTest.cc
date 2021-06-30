@@ -8,7 +8,7 @@
 #include "pEp_internal.h"
 #include "keymanagement.h"
 
-#include "test_util.h"
+#include "TestUtilities.h"
 #include "TestConstants.h"
 
 #include "Engine.h"
@@ -50,14 +50,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -86,8 +86,8 @@ namespace {
 TEST_F(OwnIdentitiesRetrieveTest, check_own_identities_retrieve) {
     stringlist_t* keylist = NULL;
     PEP_STATUS status = own_keys_retrieve(session, &keylist);
-    ASSERT_EQ(keylist , nullptr);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_NULL(keylist );
+    ASSERT_OK;
 
     identity_list* id_list = NULL;
     status = own_identities_retrieve(session, &id_list);
@@ -97,21 +97,21 @@ TEST_F(OwnIdentitiesRetrieveTest, check_own_identities_retrieve) {
     pEp_identity* me = new_identity("krista_b@darthmama.cool", NULL, "MyOwnId", "Krista B.");
     status = myself(session, me);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(me->fpr, nullptr);
+    ASSERT_NOTNULL(me->fpr);
 
     // Ok, there's a me identity in the DB.
     // Call the naughty function.
 
     status = own_keys_retrieve(session, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(keylist, nullptr);
-    ASSERT_NE(keylist->value, nullptr);
+    ASSERT_NOTNULL(keylist);
+    ASSERT_NOTNULL(keylist->value);
     output_stream << keylist->value << endl;
 
     status = own_identities_retrieve(session, &id_list);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(id_list, nullptr);
-    ASSERT_NE(id_list->ident, nullptr);
+    ASSERT_NOTNULL(id_list);
+    ASSERT_NOTNULL(id_list->ident);
 }
 
 TEST_F(OwnIdentitiesRetrieveTest, check_own_identities_retrieve_filter) {
@@ -182,7 +182,7 @@ TEST_F(OwnIdentitiesRetrieveTest, check_own_identities_retrieve_filter) {
     identity_list* id_list = NULL;
     status = _own_identities_retrieve(session, &id_list, PEP_idf_not_for_sync);
     ASSERT_OK;
-    ASSERT_NE(id_list, nullptr);    
+    ASSERT_NOTNULL(id_list);    
     
     const char* synced[] = {"alice@darthmama.org", "bob@darthmama.org", "dave@darthmama.org", "gordon@darthmama.org"};
     const char* unsynced[] = {"carol@darthmama.org", "eddie@darthmama.org", "felicia@darthmama.org"};
@@ -211,7 +211,7 @@ TEST_F(OwnIdentitiesRetrieveTest, check_own_identities_retrieve_filter) {
     
     status = _own_identities_retrieve(session, &id_list, PEP_idf_devicegroup);
     ASSERT_OK;
-    ASSERT_NE(id_list, nullptr);    
+    ASSERT_NOTNULL(id_list);    
     
     bool no_sync_found = false;
 

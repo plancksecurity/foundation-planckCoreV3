@@ -13,7 +13,7 @@
 #include "keymanagement.h"
 #include "message_api.h"
 #include "mime.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 
 
 
@@ -56,14 +56,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -104,19 +104,38 @@ TEST_F(LeastCommonDenomColorTest, check_least_common_denom_color) {
     PEP_STATUS statuskey3 = import_key(session, keytextkey3.c_str(), keytextkey3.length(), NULL);
     PEP_STATUS statuskey4 = import_key(session, keytextkey4.c_str(), keytextkey4.length(), NULL);
 
+    /*
+    banmeonce@kgrothoff.org|9F371BACD583EE26347899F21CCE13DE07B29090
+    banmetwice@kgrothoff.org|84A33862CC664EA1086B7E94ADF10A134080C3E7
+    pep.never.me.test@kgrothoff.org|8314EF2E19278F9800527EA887601BD579C11D1D
+    */
+
     pEp_identity * sender = new_identity("pep.never.me.test@kgrothoff.org", NULL, "TOFU_pep.never.me.test@kgrothoff.org", "pEp Never Me Test");
     sender->me = false;
     PEP_STATUS status = update_identity(session, sender);
+    ASSERT_OK;
+    free(sender->fpr);
+    sender->fpr = strdup("8314EF2E19278F9800527EA887601BD579C11D1D");
+    status = set_identity(session, sender);
+    ASSERT_OK;
 
     // reset the trust on both keys before we start
     pEp_identity * recip1 = new_identity("banmeonce@kgrothoff.org", NULL, "TOFU_banmeonce@kgrothoff.org", "Ban Me Once");
     recip1->me = false;
     status = update_identity(session, recip1);
+    free(recip1->fpr);
+    recip1->fpr = strdup("9F371BACD583EE26347899F21CCE13DE07B29090");
+    status = set_identity(session, recip1);
+    ASSERT_OK;
     key_reset_trust(session, recip1);
 
     pEp_identity * recip2 = new_identity("banmetwice@kgrothoff.org", NULL, "TOFU_banmetwice@kgrothoff.org", "Ban Me Twice");
     recip2->me = false;
     status = update_identity(session, recip2);
+    free(recip2->fpr);
+    recip2->fpr = strdup("84A33862CC664EA1086B7E94ADF10A134080C3E7");
+    status = set_identity(session, recip2);
+    ASSERT_OK;
     key_reset_trust(session, recip2);
 
     const string mailtext = slurp(mailfile);
@@ -132,13 +151,13 @@ TEST_F(LeastCommonDenomColorTest, check_least_common_denom_color) {
     PEP_decrypt_flags_t flags;
 
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(msg_ptr, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(msg_ptr);
 
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(dest_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(dest_msg);
     /* message is signed and no recip is mistrusted... */
     ASSERT_EQ(color_from_rating(rating) , PEP_color_yellow);
 
@@ -150,12 +169,12 @@ TEST_F(LeastCommonDenomColorTest, check_least_common_denom_color) {
 
     /* re-evaluate rating, counting on optional fields */
     status = re_evaluate_message_rating(session, dest_msg, NULL, PEP_rating_undefined, &rating);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(color_from_rating(rating) , PEP_color_yellow);
 
     /* re-evaluate rating, without optional fields */
     status = re_evaluate_message_rating(session, dest_msg, keylist, decrypt_rating, &rating);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(color_from_rating(rating) , PEP_color_yellow);
 
     /* Ok, now mistrust one recip */
@@ -163,12 +182,12 @@ TEST_F(LeastCommonDenomColorTest, check_least_common_denom_color) {
 
     /* re-evaluate rating, counting on optional fields */
     status = re_evaluate_message_rating(session, dest_msg, NULL, PEP_rating_undefined, &rating);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(color_from_rating(rating) , PEP_color_red);
 
     /* re-evaluate rating, without optional fields */
     status = re_evaluate_message_rating(session, dest_msg, keylist, decrypt_rating, &rating);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(color_from_rating(rating) , PEP_color_red);
 
     free_message(dest_msg);
@@ -181,8 +200,8 @@ TEST_F(LeastCommonDenomColorTest, check_least_common_denom_color) {
     rating = PEP_rating_unreliable;
 
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(msg_ptr, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(msg_ptr);
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
 

@@ -14,7 +14,7 @@
 #include "mime.h"
 #include "message_api.h"
 #include "keymanagement.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 
 #include "Engine.h"
 
@@ -55,14 +55,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -129,7 +129,7 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
 
     identity_list* to_list = new_identity_list(bob); // to bob
     message* outgoing_message = new_message(PEP_dir_outgoing);
-    ASSERT_NE(outgoing_message, nullptr);
+    ASSERT_NOTNULL(outgoing_message);
     outgoing_message->from = alice;
     outgoing_message->to = to_list;
     outgoing_message->shortmsg = strdup("Greetings, humans!");
@@ -140,7 +140,7 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
     char* encoded_text = nullptr;
     PEP_STATUS status = mime_encode_message(outgoing_message, false, &encoded_text, false);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(encoded_text, nullptr);
+    ASSERT_NOTNULL(encoded_text);
 
     output_stream << "decrypted:\n\n";
     output_stream << encoded_text << "\n";
@@ -152,12 +152,12 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
     status = encrypt_message_for_self(session, alice, outgoing_message, NULL, &encrypted_msg, PEP_enc_PGP_MIME, PEP_encrypt_flag_force_unsigned | PEP_encrypt_flag_force_no_attached_key);
     output_stream << "encrypt_message() returns " << tl_status_string(status) << '.' << endl;
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(encrypted_msg, nullptr);
+    ASSERT_NOTNULL(encrypted_msg);
     output_stream << "message encrypted.\n";
 
     status = mime_encode_message(encrypted_msg, false, &encoded_text, false);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(encoded_text, nullptr);
+    ASSERT_NOTNULL(encoded_text);
 
     output_stream << "encrypted:\n\n";
     output_stream << encoded_text << "\n";
@@ -180,8 +180,8 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
 
     flags = 0;
     status = decrypt_message(session, encrypted_msg, &decrypted_msg, &keylist_used, &rating, &flags);
-    ASSERT_NE(decrypted_msg, nullptr);
-    ASSERT_NE(keylist_used, nullptr);
+    ASSERT_NOTNULL(decrypted_msg);
+    ASSERT_NOTNULL(keylist_used);
     ASSERT_NE(rating, 0);
     ASSERT_TRUE(status == PEP_DECRYPTED && rating == PEP_rating_unreliable);
     PEP_comm_type ct = encrypted_msg->from->comm_type;
@@ -222,13 +222,13 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
     status = encrypt_message_for_self(session, alice, outgoing_message, extra_keys, &encrypted_msg, PEP_enc_PGP_MIME, PEP_encrypt_flag_force_unsigned | PEP_encrypt_flag_force_no_attached_key);
     output_stream << "encrypt_message() returns " << tl_status_string(status) << '.' << endl;
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(encrypted_msg, nullptr);
+    ASSERT_NOTNULL(encrypted_msg);
     output_stream << "message encrypted.\n";
 
     flags = 0;
     status = decrypt_message(session, encrypted_msg, &decrypted_msg, &keylist_used, &rating, &flags);
-    ASSERT_NE(decrypted_msg, nullptr);
-    ASSERT_NE(keylist_used, nullptr);
+    ASSERT_NOTNULL(decrypted_msg);
+    ASSERT_NOTNULL(keylist_used);
     ASSERT_NE(rating, 0);
     ASSERT_TRUE(status == PEP_DECRYPTED && rating == PEP_rating_unreliable);
     ct = encrypted_msg->from->comm_type;
@@ -331,8 +331,8 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
                                   &mimeflags,
 				  &modified_src);
 
-    ASSERT_NE(decrypted_mimetext, nullptr);
-    ASSERT_NE(keylist_used, nullptr);
+    ASSERT_NOTNULL(decrypted_mimetext);
+    ASSERT_NOTNULL(keylist_used);
     ASSERT_NE(mimerating, 0);
 
     ASSERT_TRUE(status == PEP_DECRYPTED && mimerating == PEP_rating_unreliable);
@@ -401,7 +401,7 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity_with_URI) {
 
     identity_list* to_list = new_identity_list(bob); // to bob
     message* outgoing_message = new_message(PEP_dir_outgoing);
-    ASSERT_NE(outgoing_message, nullptr);
+    ASSERT_NOTNULL(outgoing_message);
     outgoing_message->from = alice;
     outgoing_message->to = to_list;
     outgoing_message->shortmsg = strdup("Greetings, humans!");
@@ -412,7 +412,7 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity_with_URI) {
     char* encoded_text = nullptr;
     PEP_STATUS status = mime_encode_message(outgoing_message, false, &encoded_text, false);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(encoded_text, nullptr);
+    ASSERT_NOTNULL(encoded_text);
 
     output_stream << "decrypted:\n\n";
     output_stream << encoded_text << "\n";
@@ -424,12 +424,12 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity_with_URI) {
     status = encrypt_message_for_self(session, alice, outgoing_message, NULL, &encrypted_msg, PEP_enc_PGP_MIME, PEP_encrypt_flag_force_unsigned | PEP_encrypt_flag_force_no_attached_key);
     output_stream << "encrypt_message() returns " << tl_status_string(status) << '.' << endl;
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(encrypted_msg, nullptr);
+    ASSERT_NOTNULL(encrypted_msg);
     output_stream << "message encrypted.\n";
 
     status = mime_encode_message(encrypted_msg, false, &encoded_text, false);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(encoded_text, nullptr);
+    ASSERT_NOTNULL(encoded_text);
 
     output_stream << "encrypted:\n\n";
     output_stream << encoded_text << "\n";
@@ -452,8 +452,8 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity_with_URI) {
 
     flags = 0;
     status = decrypt_message(session, encrypted_msg, &decrypted_msg, &keylist_used, &rating, &flags);
-    ASSERT_NE(decrypted_msg, nullptr);
-    ASSERT_NE(keylist_used, nullptr);
+    ASSERT_NOTNULL(decrypted_msg);
+    ASSERT_NOTNULL(keylist_used);
     ASSERT_NE(rating, 0);
     ASSERT_TRUE(status == PEP_DECRYPTED && rating == PEP_rating_unreliable);
     PEP_comm_type ct = encrypted_msg->from->comm_type;
@@ -494,13 +494,13 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity_with_URI) {
     status = encrypt_message_for_self(session, alice, outgoing_message, extra_keys, &encrypted_msg, PEP_enc_PGP_MIME, PEP_encrypt_flag_force_unsigned | PEP_encrypt_flag_force_no_attached_key);
     output_stream << "encrypt_message() returns " << tl_status_string(status) << '.' << endl;
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(encrypted_msg, nullptr);
+    ASSERT_NOTNULL(encrypted_msg);
     output_stream << "message encrypted.\n";
 
     flags = 0;
     status = decrypt_message(session, encrypted_msg, &decrypted_msg, &keylist_used, &rating, &flags);
-    ASSERT_NE(decrypted_msg, nullptr);
-    ASSERT_NE(keylist_used, nullptr);
+    ASSERT_NOTNULL(decrypted_msg);
+    ASSERT_NOTNULL(keylist_used);
     ASSERT_NE(rating, 0);
     ASSERT_TRUE(status == PEP_DECRYPTED && rating == PEP_rating_unreliable);
     ct = encrypted_msg->from->comm_type;
@@ -603,8 +603,8 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity_with_URI) {
                                   &mimeflags,
 				  &modified_src);
 
-    ASSERT_NE(decrypted_mimetext, nullptr);
-    ASSERT_NE(keylist_used, nullptr);
+    ASSERT_NOTNULL(decrypted_mimetext);
+    ASSERT_NOTNULL(keylist_used);
     ASSERT_NE(mimerating, 0);
 
     ASSERT_TRUE(status == PEP_DECRYPTED && mimerating == PEP_rating_unreliable);

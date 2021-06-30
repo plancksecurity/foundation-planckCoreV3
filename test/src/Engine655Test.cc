@@ -6,7 +6,7 @@
 
 #include "pEpEngine.h"
 #include "pEp_internal.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 #include "TestConstants.h"
 #include "Engine.h"
 #include "mime.h"
@@ -49,14 +49,14 @@ namespace {
                 init_files.push_back(std::pair<std::string, std::string>(std::string("test_files/655_keys.db"), std::string("keys.db")));
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -93,7 +93,7 @@ TEST_F(Engine655Test, check_engine655) {
         stringlist_t* keylist = NULL;        
 //        PEP_STATUS tmp = find_keys(session, "6E046FF9A390C79BA4D195368430B7E4E086F04B", &keylist);
 //        ASSERT_NE(tmp, PEP_KEY_NOT_FOUND);
-//        ASSERT_NE(keylist, nullptr);
+//        ASSERT_NOTNULL(keylist);
         
         keylist = new_stringlist(strdup("16F07F382FB3CF5DF977005D1069C7CACF9C23C6"));
         stringlist_add(keylist, strdup("ECBA9555D9ADB1B68861B508032CCA777FFDBA14"));
@@ -112,14 +112,14 @@ TEST_F(Engine655Test, check_engine655) {
             outfile.open(keyfile_655_prefix + curr_string->value + ".asc");
             keystatus = export_key(session, curr_string->value, &keyval, &keysize);
             EXPECT_EQ(keystatus, PEP_STATUS_OK);
-            ASSERT_NE(keyval, nullptr);
+            ASSERT_NOTNULL(keyval);
             ASSERT_NE(keysize, 0);
             outfile << keyval;
             if (j != 3) {
                 free(keyval);
                 keyval = NULL;
                 keystatus = export_secret_key(session, curr_string->value, &keyval, &keysize);
-                ASSERT_NE(keyval, nullptr);                
+                ASSERT_NOTNULL(keyval);                
                 ASSERT_NE(keysize, 0);                
                 outfile << endl << keyval;
             }    

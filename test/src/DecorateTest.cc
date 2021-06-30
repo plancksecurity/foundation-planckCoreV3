@@ -11,7 +11,7 @@
 #include <sstream>
 #include "mime.h"
 #include "message_api.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 
 
 
@@ -54,14 +54,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -89,6 +89,8 @@ namespace {
 
 TEST_F(DecorateTest, check_decorate) {
 
+    const char* bob_fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
+
     const string alice_pub_key = slurp("test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");
     const string alice_priv_key = slurp("test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc");
     const string bob_pub_key = slurp("test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");
@@ -103,20 +105,24 @@ TEST_F(DecorateTest, check_decorate) {
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, "Alice Test");
     pEp_identity* alice_dup = identity_dup(alice);
     PEP_STATUS status = set_own_key(session, alice_dup, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     free_identity(alice_dup);
+    alice->me = true;
 
     pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, "42", "Bob Test");
-    alice->me = true;
+    // Set bob's key - key election removal    
+    set_fpr_preserve_ident(session, bob, bob_fpr, true);
+    ASSERT_OK;
+
     identity_list* to_list = new_identity_list(bob); // to bob
     message* outgoing_message = new_message(PEP_dir_outgoing);
-    ASSERT_NE(outgoing_message, nullptr);
+    ASSERT_NOTNULL(outgoing_message);
     outgoing_message->from = alice;
     outgoing_message->to = to_list;
     outgoing_message->shortmsg = strdup("Greetings, humans!");
     outgoing_message->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
     outgoing_message->longmsg = strdup("This is a dumb message.\nBut it's done.\n");
-    ASSERT_NE(outgoing_message->longmsg, nullptr);
+    ASSERT_NOTNULL(outgoing_message->longmsg);
     output_stream << "message created.\n";
 
     char* encoded_text = nullptr;
@@ -125,13 +131,13 @@ TEST_F(DecorateTest, check_decorate) {
     output_stream << "calling encrypt_message\n";
     status = encrypt_message (session, outgoing_message, NULL, &encrypted_msg, PEP_enc_PGP_MIME, 0);
     output_stream << "encrypt_message() returns " << tl_status_string(status) << '.' << endl;
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(encrypted_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(encrypted_msg);
     output_stream << "message encrypted.\n";
 
     status = mime_encode_message(encrypted_msg, false, &encoded_text, false);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(encoded_text, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(encoded_text);
 
     bool contains_version = false;
 

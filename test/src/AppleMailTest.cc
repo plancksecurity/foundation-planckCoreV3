@@ -14,15 +14,12 @@
 #include "keymanagement.h"
 #include "message_api.h"
 #include "mime.h"
-#include "test_util.h" // for slurp()
+#include "TestUtilities.h" // for slurp()
 #include "TestConstants.h"
-
-
 
 #include "Engine.h"
 
 #include <gtest/gtest.h>
-
 
 namespace {
 
@@ -58,14 +55,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -108,13 +105,17 @@ TEST_F(AppleMailTest, check_apple_mail_text_signed_encrypted) {
     me->me = true;
     PEP_STATUS status = set_own_key(session, me, "5668C4BA76A87874CEAB50710401383F39CB6DB8");
 
-    pEp_identity * you = new_identity("krista@darthmama.org", NULL, "NOT_ME", "Krista Bennett");
+    // Key election removal: Key must be set as default explicitly or through mail
+    pEp_identity * you = new_identity("krista@darthmama.org", "62D4932086185C15917B72D30571AFBCA5493553", "NOT_ME", "Krista Bennett");
     you->me = false;
+    status = set_identity(session, you);
+    ASSERT_OK;
     status = update_identity(session, you);
-
-    trust_personal_key(session, you);
-
+    ASSERT_OK;
+    status = trust_personal_key(session, you);
+    ASSERT_OK;
     status = update_identity(session, you);
+    ASSERT_OK;
 
     message* msg_ptr = nullptr;
     message* dest_msg = nullptr;
@@ -124,8 +125,8 @@ TEST_F(AppleMailTest, check_apple_mail_text_signed_encrypted) {
 
     message* final_ptr = nullptr;
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(msg_ptr, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(msg_ptr);
 
     update_identity(session, msg_ptr->from);
     update_identity(session, msg_ptr->to->ident);
@@ -165,13 +166,17 @@ TEST_F(AppleMailTest, check_apple_mail_html_signed_encrypted) {
     me->me = true;
     PEP_STATUS status = set_own_key(session, me, "5668C4BA76A87874CEAB50710401383F39CB6DB8");
 
-    pEp_identity * you = new_identity("krista@darthmama.org", NULL, "NOT_ME", "Krista Bennett");
+    // Key election removal: Key must be set as default explicitly or through mail
+    pEp_identity * you = new_identity("krista@darthmama.org", "62D4932086185C15917B72D30571AFBCA5493553", "NOT_ME", "Krista Bennett");
     you->me = false;
+    status = set_identity(session, you);
+    ASSERT_OK;
     status = update_identity(session, you);
-
-    trust_personal_key(session, you);
-
+    ASSERT_OK;
+    status = trust_personal_key(session, you);
+    ASSERT_OK;
     status = update_identity(session, you);
+    ASSERT_OK;
 
     // End state copy
 
@@ -187,7 +192,7 @@ TEST_F(AppleMailTest, check_apple_mail_html_signed_encrypted) {
 
     status = mime_decode_message(mailtext2.c_str(), mailtext2.length(), &msg_ptr, NULL);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(msg_ptr, nullptr);
+    ASSERT_NOTNULL(msg_ptr);
     final_ptr = msg_ptr;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;

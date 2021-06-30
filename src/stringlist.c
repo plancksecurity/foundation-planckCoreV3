@@ -398,3 +398,13 @@ stringlist_t* string_to_stringlist(const char* str) {
     }
     return retval;
 }
+
+stringlist_t* stringlist_get_tail(stringlist_t* sl) {
+    if (!sl || !sl->value) // empty string is a value, yes?
+        return NULL;
+    
+    while (sl->next) {
+        sl = sl->next;
+    }
+    return sl;
+}

@@ -7,7 +7,6 @@
 #include "dynamic_api.h"
 #include "cryptotech.h"
 #include "transport.h"
-#include "blacklist.h"
 #include "KeySync_fsm.h"
 #include "engine_sql.h"
 
@@ -1158,14 +1157,16 @@ static PEP_STATUS _set_or_update_identity_entry(PEP_SESSION session,
     sqlite3_reset(set_or_update);
     sqlite3_bind_text(set_or_update, 1, identity->address, -1,
             SQLITE_STATIC);
-    sqlite3_bind_text(set_or_update, 2, identity->fpr, -1,
+    sqlite3_bind_text(set_or_update, 2, EMPTYSTR(identity->fpr) ? NULL : identity->fpr, -1,
             SQLITE_STATIC);
     sqlite3_bind_text(set_or_update, 3, identity->user_id, -1,
             SQLITE_STATIC);
-    sqlite3_bind_int(set_or_update, 4, identity->flags);
-    sqlite3_bind_int(set_or_update, 5, identity->me);
-    sqlite3_bind_int(set_or_update, 6, identity->major_ver);
-    sqlite3_bind_int(set_or_update, 7, identity->minor_ver);
+    sqlite3_bind_text(set_or_update, 4, identity->username, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_int(set_or_update, 5, identity->flags);
+    sqlite3_bind_int(set_or_update, 6, identity->me);
+    sqlite3_bind_int(set_or_update, 7, identity->major_ver);
+    sqlite3_bind_int(set_or_update, 8, identity->minor_ver);
         
     int result = sqlite3_step(set_or_update);
     sqlite3_reset(set_or_update);
@@ -1208,7 +1209,7 @@ static PEP_STATUS _set_or_update_person(PEP_SESSION session,
                 SQLITE_STATIC);
     else
         sqlite3_bind_null(set_or_update, 3);
-    sqlite3_bind_text(set_or_update, 4, identity->fpr, -1,
+    sqlite3_bind_text(set_or_update, 4, EMPTYSTR(identity->fpr) ? NULL : identity->fpr, -1,
                       SQLITE_STATIC);
     int result = sqlite3_step(set_or_update);
     sqlite3_reset(set_or_update);
@@ -1317,6 +1318,7 @@ PEP_STATUS set_identity_entry(PEP_SESSION session, pEp_identity* identity,
                                        guard_transaction);
 }
 
+
 // This will NOT call set_as_pEp_user, nor set_pEp_version; you have to do that separately.
 DYNAMIC_API PEP_STATUS set_identity(
         PEP_SESSION session, const pEp_identity *identity
@@ -1358,6 +1360,7 @@ DYNAMIC_API PEP_STATUS set_identity(
     if (!ident_copy)
         return PEP_OUT_OF_MEMORY;
 
+    // For now, we ALWAYS set the person.username.
     status = set_person(session, ident_copy, false);
     if (status != PEP_STATUS_OK) {
         sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
@@ -1395,6 +1398,39 @@ pEp_free:
     return status;
 }
 
+//static const char* sql_force_set_identity_username =
+//        "update identity "
+//        "   set username = coalesce(username, ?3) "
+//        "   where (case when (address = ?1) then (1)"
+//        "               when (lower(address) = lower(?1)) then (1)"
+//        "               when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1) "
+//        "               else 0 "
+//        "          end) = 1 "
+//        "          and user_id = ?2 ;";
+
+PEP_STATUS force_set_identity_username(PEP_SESSION session, pEp_identity* ident, const char* username) {
+    if (!ident || EMPTYSTR(ident->user_id) || EMPTYSTR(ident->address))
+        return PEP_ILLEGAL_VALUE;
+
+    // If username is NULL, it's fine. This defaults to sqlite3_bind_null() and clears the username, which
+    // might be intended. The caller should decide that before calling this. This is really the force-bludgeon.
+    sqlite3_reset(session->force_set_identity_username);
+    sqlite3_bind_text(session->force_set_identity_username, 1, ident->address, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_text(session->force_set_identity_username, 2, ident->user_id, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_text(session->force_set_identity_username, 3, username, -1,
+                      SQLITE_STATIC);
+    int result = sqlite3_step(session->force_set_identity_username);
+
+    sqlite3_reset(session->force_set_identity_username);
+
+    if (result != SQLITE_DONE)
+        return PEP_CANNOT_SET_IDENTITY;
+
+    return PEP_STATUS_OK;
+}
+
 /**
  *  @internal
  *
@@ -1422,7 +1458,7 @@ PEP_STATUS update_pEp_user_trust_vals(PEP_SESSION session,
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_TRUST;
 
-    PEP_STATUS status = upgrade_pEp_version_by_user_id(session, user, 2, 0);
+    PEP_STATUS status = upgrade_pEp_version_by_user_id(session, user, 2, 1);
     
     return status;
 }
@@ -2360,7 +2396,7 @@ PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
             SQLITE_STATIC);
     result = sqlite3_step(session->replace_userid);
 #ifndef NDEBUG
-    if (result) {
+    if (result != SQLITE_DONE) {
         const char *errmsg = sqlite3_errmsg(session->db);
         log_event(session, "SQLite3 error", "replace_userid", errmsg, NULL);
     }
@@ -2493,6 +2529,80 @@ PEP_STATUS get_main_user_fpr(PEP_SESSION session,
     sqlite3_reset(session->get_main_user_fpr);
     return status;
 }
+
+
+PEP_STATUS set_default_identity_fpr(PEP_SESSION session,
+                                    const char* user_id,
+                                    const char* address,
+                                    const char* fpr) {
+    if (!session || EMPTYSTR(user_id) || EMPTYSTR(address) || EMPTYSTR(fpr))
+        return PEP_ILLEGAL_VALUE;
+
+    // Make sure fpr is in the management DB
+    PEP_STATUS status = set_pgp_keypair(session, fpr);
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    int result;
+
+    sqlite3_reset(session->set_default_identity_fpr);
+    sqlite3_bind_text(session->set_default_identity_fpr, 1, user_id, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(session->set_default_identity_fpr, 2, address, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(session->set_default_identity_fpr, 3, fpr, -1,
+            SQLITE_STATIC);
+    result = sqlite3_step(session->set_default_identity_fpr);
+    sqlite3_reset(session->set_default_identity_fpr);
+    if (result != SQLITE_DONE)
+        return PEP_CANNOT_SET_PGP_KEYPAIR;
+
+    return PEP_STATUS_OK;
+}
+
+
+
+PEP_STATUS get_default_identity_fpr(PEP_SESSION session, 
+                                    const char* address,                            
+                                    const char* user_id,
+                                    char** main_fpr)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    int result;
+        
+    if (!session || EMPTYSTR(address) || EMPTYSTR(user_id) || !main_fpr)
+        return PEP_ILLEGAL_VALUE;
+        
+    *main_fpr = NULL;
+    
+    sqlite3_reset(session->get_default_identity_fpr);
+    sqlite3_bind_text(session->get_default_identity_fpr, 1, address, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_text(session->get_default_identity_fpr, 2, user_id, -1,
+                      SQLITE_STATIC);
+    result = sqlite3_step(session->get_default_identity_fpr);
+    switch (result) {
+    case SQLITE_ROW: {
+        const char* _fpr = 
+            (const char *) sqlite3_column_text(session->get_default_identity_fpr, 0);
+        if (_fpr) {
+            *main_fpr = strdup(_fpr);
+            if (!(*main_fpr))
+                status = PEP_OUT_OF_MEMORY;
+        }
+        else {
+            status = PEP_KEY_NOT_FOUND;
+        }
+        break;
+    }
+    default:
+        status = PEP_CANNOT_FIND_IDENTITY;
+    }
+
+    sqlite3_reset(session->get_default_identity_fpr);
+    return status;
+}
+
 
 // Deprecated
 DYNAMIC_API PEP_STATUS mark_as_compromized(
@@ -2868,10 +2978,10 @@ DYNAMIC_API PEP_STATUS import_key(
         size_t size,
         identity_list **private_keys)
 {
-    return _import_key_with_fpr_return(session, key_data, size, private_keys, NULL, NULL);
+    return import_key_with_fpr_return(session, key_data, size, private_keys, NULL, NULL);
 }
 
-PEP_STATUS _import_key_with_fpr_return(
+DYNAMIC_API PEP_STATUS import_key_with_fpr_return(
         PEP_SESSION session,
         const char *key_data,
         size_t size,

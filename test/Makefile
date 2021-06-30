@@ -77,7 +77,8 @@ CXXFLAGS:=$(filter-out -DNDEBUG,$(CXXFLAGS))
 # FIXME Possibly missing incdirs: ASN1C_INC
 CXXFLAGS+= -I$(GTEST_INC_DIR) -I./src -I../sync $(INC_FLAGS) -Wno-deprecated -Wno-unused-variable
 
-CXXFLAGS+= -I./src -I../src -I ../asn.1 -I../sync $(INC_FLAGS) -Wno-deprecated -Wno-unused-variable
+CXXFLAGS+= -I./src -I../src -I ../asn.1 -I../sync $(INC_FLAGS)
+CXXFLAGS+= -Wno-deprecated -Wno-unused-variable
 
 EXTRA_LIB_PATHS=.:../src:
 ifndef PEP_MIME
@@ -108,7 +109,8 @@ all:
 	make $(TARGET)
 
 %.d: %.cc
-	$(CXX) -MM $(CXXFLAGS) $(CPPFLAGS) $< | sed -e 's,\($*\)\.o[ :]*,\1.o $@: ,g' > $@
+	$(CXX) -MM $(CXXFLAGS) $(CPPFLAGS) $< \
+	| sed -e 's,\($*\)\.o[ :]*,\1.o $@: ,g' > $@
 
 LDLIBS+=-lgtest -lgtest_main
 ifeq ($(BUILD_ON),OS/390)
@@ -122,11 +124,16 @@ $(TARGET): $(OBJS)
 
 test: all
 	$(RM) -rf ./pEp_test_home/*
-	$(TEST_CMD_PFX) $(TEST_DEBUGGER) GTEST_COLOR=no python3 $(GTEST_PL) --gtest_color=no ./$(TARGET)
+	$(TEST_CMD_PFX) $(TEST_DEBUGGER) GTEST_COLOR=no python3 $(GTEST_PL) \
+		--gtest_color=no ./$(TARGET)
+
 clean:
-	$(RM) $(TARGET) $(TARGET).o $(TARGET).d $(OBJS) $(notdir $(basename $(OBJS))) $(DEPS)
+	$(RM) $(TARGET) $(TARGET).o $(TARGET).d $(OBJS) \
+		$(notdir $(basename $(OBJS))) $(DEPS)
 	$(RM) -rf ./pEp_test_home/*
-# If only the goal 'clean' is given, do not generate and include the '%.d' files.¬
+
+# If only the target 'clean' is given, do not generate and include the
+# '%.d' files.¬
 ifneq ($(MAKECMDGOALS),clean)
     -include $(DEPS)
 endif

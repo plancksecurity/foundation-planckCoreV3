@@ -8,7 +8,7 @@
 
 #include "pEpEngine.h"
 #include "pEp_internal.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 #include "TestConstants.h"
 
 #include "Engine.h"
@@ -65,14 +65,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -100,35 +100,35 @@ namespace {
 
                 status = set_up_ident_from_scratch(session,
                             "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc",
-                            "pep.test.bob@pep-project.org", NULL, bob_user_id.c_str(), "Bob's Burgers",
+                            "pep.test.bob@pep-project.org", bob_fpr, bob_user_id.c_str(), "Bob's Burgers",
                             NULL, false
                         );
                 assert(status == PEP_STATUS_OK);
 
                 status = set_up_ident_from_scratch(session,
                             "test_keys/pub/pep-test-carol-0x42A85A42_pub.asc",
-                            "pep-test-carol@pep-project.org", NULL, carol_user_id.c_str(), "Carol Burnett",
+                            "pep-test-carol@pep-project.org", carol_fpr, carol_user_id.c_str(), "Carol Burnett",
                             NULL, false
                         );
                 assert(status == PEP_STATUS_OK);
 
                 status = set_up_ident_from_scratch(session,
                             "test_keys/pub/pep-test-dave-0xBB5BCCF6_pub.asc",
-                            "pep-test-dave@pep-project.org", NULL, dave_user_id.c_str(),
+                            "pep-test-dave@pep-project.org", dave_fpr, dave_user_id.c_str(),
                             "David Hasselhoff (Germans Love Me)", NULL, false
                         );
                 assert(status == PEP_STATUS_OK);
 
                 status = set_up_ident_from_scratch(session,
                             "test_keys/pub/pep-test-erin-0x9F8D7CBA_pub.asc",
-                            "pep-test-erin@pep-project.org", NULL, erin_user_id.c_str(),
+                            "pep-test-erin@pep-project.org", erin_fpr, erin_user_id.c_str(),
                             "Éirinn go Brách", NULL, false
                         );
                 assert(status == PEP_STATUS_OK);
 
                 status = set_up_ident_from_scratch(session,
                             "test_keys/pub/pep.test.fenris-0x4F3D2900_pub.asc",
-                            "pep.test.fenris@thisstilldoesntwork.lu", NULL, fenris_user_id.c_str(),
+                            "pep.test.fenris@thisstilldoesntwork.lu", fenris_fpr, fenris_user_id.c_str(),
                             "Fenris Leto Hawke", NULL, false
                         );
                 assert(status == PEP_STATUS_OK);
@@ -164,7 +164,7 @@ TEST_F(DeleteKeyTest, check_delete_single_pubkey) {
     // Is it gone?
     status = find_keys(session, fenris_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_EQ(keylist, nullptr);
+    ASSERT_NULL(keylist);
 
     // Yay.
 }
@@ -188,7 +188,7 @@ TEST_F(DeleteKeyTest, check_delete_pub_priv_keypair) {
     // Is it gone?
     status = find_keys(session, alice_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_EQ(keylist, nullptr);
+    ASSERT_NULL(keylist);
 
     // Yay.
 }
@@ -232,15 +232,15 @@ TEST_F(DeleteKeyTest, check_delete_multiple_keys) {
     // Is it gone?
     status = find_keys(session, alice_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_EQ(keylist, nullptr);
+    ASSERT_NULL(keylist);
 
     status = find_keys(session, dave_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_EQ(keylist, nullptr);
+    ASSERT_NULL(keylist);
 
     status = find_keys(session, fenris_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_EQ(keylist, nullptr);
+    ASSERT_NULL(keylist);
 
     // Yay. Make sure everyone else is still there.
     status = find_keys(session, bob_fpr, &keylist);
@@ -334,37 +334,37 @@ TEST_F(DeleteKeyTest, check_delete_all_keys) {
     // Is it gone?
     status = find_keys(session, alice_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_EQ(keylist, nullptr);
+    ASSERT_NULL(keylist);
     free_stringlist(keylist);
     keylist = NULL;
 
     status = find_keys(session, bob_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_EQ(keylist, nullptr);
+    ASSERT_NULL(keylist);
     free_stringlist(keylist);
     keylist = NULL;
 
     status = find_keys(session, carol_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_EQ(keylist, nullptr);
+    ASSERT_NULL(keylist);
     free_stringlist(keylist);
     keylist = NULL;
 
     status = find_keys(session, dave_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_EQ(keylist, nullptr);
+    ASSERT_NULL(keylist);
     free_stringlist(keylist);
     keylist = NULL;
 
     status = find_keys(session, erin_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_EQ(keylist, nullptr);
+    ASSERT_NULL(keylist);
     free_stringlist(keylist);
     keylist = NULL;
 
     status = find_keys(session, fenris_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_EQ(keylist, nullptr);
+    ASSERT_NULL(keylist);
     free_stringlist(keylist);
     keylist = NULL;
 
@@ -378,7 +378,7 @@ TEST_F(DeleteKeyTest, check_delete_key_not_found) {
     // Is it there?
     PEP_STATUS status = find_keys(session, "74D79B4496E289BD8A71B70BA8E2C4530019697D", &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_EQ(keylist, nullptr);
+    ASSERT_NULL(keylist);
     free_stringlist(keylist);
     keylist = NULL;
 
@@ -389,7 +389,7 @@ TEST_F(DeleteKeyTest, check_delete_key_not_found) {
     // Is it still gone?
     status = find_keys(session, "74D79B4496E289BD8A71B70BA8E2C4530019697D", &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_EQ(keylist, nullptr);
+    ASSERT_NULL(keylist);
     free_stringlist(keylist);
     keylist = NULL;
 
@@ -402,7 +402,7 @@ TEST_F(DeleteKeyTest, check_delete_empty_keyring) {
     // Is it there?
     PEP_STATUS status = find_keys(session, "74D79B4496E289BD8A71B70BA8E2C4530019697D", &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_EQ(keylist, nullptr);
+    ASSERT_NULL(keylist);
     free_stringlist(keylist);
     keylist = NULL;
 
@@ -413,7 +413,7 @@ TEST_F(DeleteKeyTest, check_delete_empty_keyring) {
     // Is it still gone?
     status = find_keys(session, "74D79B4496E289BD8A71B70BA8E2C4530019697D", &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_EQ(keylist, nullptr);
+    ASSERT_NULL(keylist);
     free_stringlist(keylist);
     keylist = NULL;
 

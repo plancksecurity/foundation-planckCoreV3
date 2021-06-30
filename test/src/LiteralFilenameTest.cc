@@ -9,7 +9,7 @@
 #include "pEpEngine.h"
 #include "pEp_internal.h"
 
-#include "test_util.h"
+#include "TestUtilities.h"
 #include "TestConstants.h"
 
 #include "Engine.h"
@@ -51,14 +51,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -103,7 +103,7 @@ TEST_F(LiteralFilenameTest, check) {
                                            &keylist, &filename);
 
     ASSERT_EQ(status , PEP_DECRYPTED_AND_VERIFIED);
-    ASSERT_NE(filename, nullptr);
+    ASSERT_NOTNULL(filename);
     ASSERT_STREQ(filename, "filename.txt");
 #else
     ASSERT_TRUE(true); // DOH 

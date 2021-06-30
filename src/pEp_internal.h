@@ -59,6 +59,15 @@
 #define X_PEP_SNDR_FPR_KEY "X-pEp-Sender-FPR"
 #endif
  
+#ifndef X_PEP_MSG_VER_KEY
+#define X_PEP_MSG_VER_KEY "X-pEp-Message-Version"
+#endif
+
+#define VER_1_0 "1.0"
+#define VER_2_0 "2.0"
+#define VER_2_1 "2.1"
+#define VER_2_2 "2.2"
+
 #include "platform.h"
 
 #ifdef WIN32
@@ -180,6 +189,8 @@ struct _pEpSession {
     sqlite3_stmt *replace_main_user_fpr;
     sqlite3_stmt *replace_main_user_fpr_if_equal;
     sqlite3_stmt *get_main_user_fpr;
+    sqlite3_stmt *set_default_identity_fpr;
+    sqlite3_stmt *get_default_identity_fpr;
     sqlite3_stmt *refresh_userid_default_key;
     sqlite3_stmt *delete_key;
     sqlite3_stmt *remove_fpr_as_identity_default;
@@ -205,7 +216,8 @@ struct _pEpSession {
     sqlite3_stmt *unset_pgp_keypair_flags;
     sqlite3_stmt *set_identity_entry;
     sqlite3_stmt *update_identity_entry;
-    sqlite3_stmt *exists_identity_entry;        
+    sqlite3_stmt *exists_identity_entry;
+    sqlite3_stmt *force_set_identity_username;
     sqlite3_stmt *set_identity_flags;
     sqlite3_stmt *unset_identity_flags;
     sqlite3_stmt *set_ident_enc_format;
@@ -228,12 +240,6 @@ struct _pEpSession {
     sqlite3_stmt *i18n_token;
     sqlite3_stmt *replace_userid;
 
-    // blacklist
-    sqlite3_stmt *blacklist_add;
-    sqlite3_stmt *blacklist_delete;
-    sqlite3_stmt *blacklist_is_listed;
-    sqlite3_stmt *blacklist_retrieve;
-    
     // Keys
     sqlite3_stmt *own_key_is_listed;
     sqlite3_stmt *is_own_address;

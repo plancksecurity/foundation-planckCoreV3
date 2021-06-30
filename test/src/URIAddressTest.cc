@@ -7,7 +7,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "test_util.h"
+#include "TestUtilities.h"
 #include "TestConstants.h"
 
 #include "pEpEngine.h"
@@ -54,14 +54,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -94,7 +94,7 @@ TEST_F(URIAddressTest, check_uri_address_not_a_test) {
 
     PEP_STATUS status = myself(session, me);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_TRUE(me->fpr && me->fpr[0] != '\0');
 
     char* keydata = NULL;
@@ -133,7 +133,7 @@ TEST_F(URIAddressTest, check_uri_address_genkey) {
 
     PEP_STATUS status = myself(session, me);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_TRUE(me->fpr && me->fpr[0] != '\0');
 
     char* keydata = NULL;
@@ -157,7 +157,7 @@ TEST_F(URIAddressTest, check_uri_address_genkey_empty_uname) {
 
     PEP_STATUS status = myself(session, me);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_TRUE(me->fpr && me->fpr[0] != '\0');
 
     char* keydata = NULL;
@@ -172,7 +172,7 @@ TEST_F(URIAddressTest, check_uri_address_genkey_empty_uname) {
     pEp_identity* me_copy = new_identity(uri_addr, NULL, "SystemB", NULL);
     status = myself(session, me_copy);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_TRUE(me_copy->fpr && me_copy->fpr[0] != '\0');
     ASSERT_TRUE(me_copy->username && me_copy->username[0] != '\0');
         
@@ -198,8 +198,8 @@ TEST_F(URIAddressTest, check_uri_address_encrypt_2_keys_no_uname) {
     pEp_identity* me = new_identity(uri_addr_a, NULL, uid_a, NULL);
     status = myself(session, me);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(me->fpr, nullptr);
-    ASSERT_NE(me->username, nullptr);    
+    ASSERT_NOTNULL(me->fpr);
+    ASSERT_NOTNULL(me->username);    
     ASSERT_STREQ(me->fpr, fpr_a);
     ASSERT_STREQ(me->username, uri_addr_a);
     
@@ -207,11 +207,21 @@ TEST_F(URIAddressTest, check_uri_address_encrypt_2_keys_no_uname) {
     pEp_identity* you = new_identity(uri_addr_b, NULL, NULL, NULL);
     status = update_identity(session, you);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(you->fpr, nullptr);
-    ASSERT_NE(you->username, nullptr);    
+    // Post-key-election: has to be set
+    ASSERT_NULL(you->fpr);
+    you->fpr = strdup(fpr_b);
+    status = set_default_fpr_for_test(session,  you, false);
+    ASSERT_OK;
+    free_identity(you);
+    you = new_identity(uri_addr_b, NULL, NULL, NULL);
+    status = update_identity(session, you);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    ASSERT_NOTNULL(you->fpr);
+    ASSERT_NOTNULL(you->username);    
     ASSERT_STREQ(you->fpr, fpr_b);
     ASSERT_STREQ(you->username, uri_addr_b);
-    ASSERT_NE(you->user_id, nullptr);
+    ASSERT_NOTNULL(you->user_id);
     
     // Ok, all good. Let's go with fresh, ugly identities.
     message* msg = new_message(PEP_dir_outgoing);
@@ -226,7 +236,7 @@ TEST_F(URIAddressTest, check_uri_address_encrypt_2_keys_no_uname) {
     message* outmsg = NULL;
     status = encrypt_message(session, msg, NULL, &outmsg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(outmsg, nullptr);
+    ASSERT_NOTNULL(outmsg);
     free_message(msg);
     free_message(outmsg);
     free_identity(me_setup);
@@ -243,7 +253,7 @@ TEST_F(URIAddressTest, check_uri_address_encrypt) {
 
     PEP_STATUS status = myself(session, me);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_TRUE(me->fpr && me->fpr[0] != '\0');
 
 
@@ -251,16 +261,22 @@ TEST_F(URIAddressTest, check_uri_address_encrypt) {
     const char* youname = "Nemo, the delicious fish";
     pEp_identity* you = new_identity(you_uri_addr, NULL, "Food for Shark", youname);
     status = generate_keypair(session, you);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     stringlist_t* keylist = NULL;
     status = find_keys(session, you_uri_addr, &keylist);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_TRUE(keylist && keylist->value);
 
+    // Ah, but now there is no key election, so we have to set it explicitly.
+    you->fpr = strdup(keylist->value);
+    set_default_fpr_for_test(session,  you, false);
+    free(you->fpr);
+    you->fpr = NULL;
+
     status = update_identity(session, you);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_TRUE(you->fpr && you->fpr[0] != '\0');
+    ASSERT_OK;
+    ASSERT_FALSE(EMPTYSTR(you->fpr));
 
     message* msg = new_message(PEP_dir_outgoing);
 
@@ -275,6 +291,9 @@ TEST_F(URIAddressTest, check_uri_address_encrypt) {
     // We don't check for anything here??? FIXME! WTF!
 }
 
+// FIXME:
+// KB: I'm not really sure what we're now testing here, since key election is now gone.
+//
 TEST_F(URIAddressTest, check_uri_address_tofu_1) {
     const char* sys_a_addr = "payto://BIC/SYSTEMA";
     const char* sys_b_addr = "payto://BIC/SYSTEMB";
@@ -287,18 +306,24 @@ TEST_F(URIAddressTest, check_uri_address_tofu_1) {
 
     pEp_identity* me = new_identity(sys_a_addr, NULL, PEP_OWN_USERID, sys_a_addr);
     PEP_STATUS status = set_own_key(session, me, sys_a_fpr);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     status = myself(session, me);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_TRUE(me->fpr && me->fpr[0] != '\0');
 
+    // No more key election.
     pEp_identity* you = new_identity(sys_b_addr, NULL, "SYSTEM_B", NULL);
+    status = update_identity(session, you);
+    you->fpr = strdup(sys_b_fpr);
+    status = set_identity(session, you);
+    ASSERT_OK;
+
 
 /*
     stringlist_t* keylist = NULL;
     status = update_identity(session, you);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_TRUE(you->fpr && you->fpr[0] != '\0');
 */
     message* msg = new_message(PEP_dir_outgoing);
@@ -310,7 +335,7 @@ TEST_F(URIAddressTest, check_uri_address_tofu_1) {
 
     message* enc_msg = NULL;
     
-    // We are doing key election here on purpose.
+    // We were doing key election here on purpose. Too bad now...
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
@@ -341,14 +366,18 @@ TEST_F(URIAddressTest, check_uri_address_tofu_2) {
 
     pEp_identity* me = new_identity(sys_b_addr, NULL, PEP_OWN_USERID, sys_b_addr);
     PEP_STATUS status = set_own_key(session, me, sys_b_fpr);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     status = myself(session, me);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_TRUE(me->fpr && me->fpr[0] != '\0');  
     
     pEp_identity* you = new_identity(sys_b_addr, NULL, "SYSTEM_B", NULL);
     status = update_identity(session, you);
+    // No more key election.
+    you->fpr = strdup(sys_b_fpr);
+    status = set_identity(session, you);
+    ASSERT_OK;
         
     string msg_txt = slurp("test_mails/system_a_to_b_755_part_1.eml");
     message* msg = NULL;
@@ -363,10 +392,10 @@ TEST_F(URIAddressTest, check_uri_address_tofu_2) {
     status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags); 
 
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(dec_msg, nullptr);
-    ASSERT_NE(dec_msg->from, nullptr);
-    ASSERT_NE(dec_msg->to, nullptr);
-    ASSERT_NE(dec_msg->to->ident, nullptr);
+    ASSERT_NOTNULL(dec_msg);
+    ASSERT_NOTNULL(dec_msg->from);
+    ASSERT_NOTNULL(dec_msg->to);
+    ASSERT_NOTNULL(dec_msg->to->ident);
     ASSERT_STREQ(dec_msg->from->address, "payto://BIC/SYSTEMA");
     ASSERT_STREQ(dec_msg->to->ident->address, "payto://BIC/SYSTEMB");    
 }

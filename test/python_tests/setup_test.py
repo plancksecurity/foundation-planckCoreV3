@@ -34,7 +34,7 @@ def link_if_exists(dirname, arthome):
             os.symlink(orig, dirname, True)
 
 
-def create_own_identities(mydir, arthome, username):
+def create_own_identities(mydir, arthome, addr, username):
     "create own identities as part of the test setup"
 
     os.environ["HOME"] = os.path.join(mydir, arthome)
@@ -42,7 +42,7 @@ def create_own_identities(mydir, arthome, username):
 
     import pEp
     me = pEp.Identity()
-    me.address = arthome + "@peptest.ch"
+    me.address = addr + "@peptest.ch"
     me.username = username
 
     pEp.myself(me)
@@ -57,7 +57,7 @@ def link_file(filename):
         os.symlink(src, filename, False)
 
 
-def create_home(mydir, arthome, username):
+def create_home(mydir, arthome, addr, username):
     "create an artificial home directory for testing"
 
     os.chdir(mydir)
@@ -65,14 +65,17 @@ def create_home(mydir, arthome, username):
 
     os.chdir(arthome)
 
-    link_if_exists("bin", arthome)
-    link_if_exists("include", arthome)
-    link_if_exists("lib", arthome)
-    link_if_exists("share", arthome)
-    link_if_exists(".local", arthome)
-    link_if_exists("Library", arthome) # this may exist on macOS
+    # What is this required for? It has unwanted side-effects like
+    # making pytest search all tests from ~/.local/lib/python*/site-packages
+    #link_if_exists("bin", arthome)
+    #link_if_exists("include", arthome)
+    #link_if_exists("lib", arthome)
+    #link_if_exists("share", arthome)
+    #link_if_exists(".local", arthome)
+    #link_if_exists("Library", arthome) # this may exist on macOS
 
-    p = Process(target=create_own_identities, args=(mydir, arthome, username))
+    p = Process(target=create_own_identities,
+                args=(mydir, arthome, addr, username))
     p.start()
     p.join()
 
@@ -83,20 +86,20 @@ def create_homes():
     "create two artificial home directories for the two parties"
 
     try:
-        os.stat("test1")
+        os.stat("dummyhome1")
     except FileNotFoundError:
-        create_home(mydir, "test1", "Alice One")
-        create_home(mydir, "test2", "Bob Two")
+        create_home(mydir, "dummyhome1", "test1", "Alice One")
+        create_home(mydir, "dummyhome2", "test2", "Bob Two")
         os.chdir(mydir);
         os.makedirs("common", exist_ok=True) # common inbox for Sync tests
     else:
         while True:
             try:
-                os.stat("test2/.ready")
-            except:
-                sleep(1)
-            else:
+                os.stat("dummyhome1/.ready")
+                os.stat("dummyhome2/.ready")
                 break
+            except:
+                sleep(0.01)
 
 
 def remove_homes():
@@ -104,8 +107,8 @@ def remove_homes():
     contents"""
 
     os.chdir(mydir)
-    shutil.rmtree("test1", ignore_errors=True)
-    shutil.rmtree("test2", ignore_errors=True)
+    shutil.rmtree("dummyhome1", ignore_errors=True)
+    shutil.rmtree("dummyhome2", ignore_errors=True)
     shutil.rmtree("common", ignore_errors=True)
     shutil.rmtree("__pycache__", ignore_errors=True)
 

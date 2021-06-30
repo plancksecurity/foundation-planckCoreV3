@@ -2,7 +2,7 @@
 // see LICENSE.txt
 
 #include "TestConstants.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 
 #include <stdlib.h>
 #include <string>
@@ -90,23 +90,23 @@ TEST_F(IdentityListTest, check_identity_list) {
     output_stream << "creating one-element identity_list...\n";
 
     pEp_identity* new_id = identity_dup(id1);
-    ASSERT_NE(new_id, nullptr);
+    ASSERT_NOTNULL(new_id);
     identity_list* idlist = new_identity_list(new_id);
-    ASSERT_NE(idlist->ident, nullptr);
+    ASSERT_NOTNULL(idlist->ident);
     ASSERT_TRUE(test_identity_equals(id1, idlist->ident));
-    ASSERT_EQ(idlist->next, nullptr);
+    ASSERT_NULL(idlist->next);
     output_stream << "one-element identity_list created, next element is NULL\n\n";
 
     output_stream << "duplicating one-element list...\n";
     identity_list* duplist = identity_list_dup(idlist);
     pEp_identity* srcid = idlist->ident;
     pEp_identity* dstid = duplist->ident;
-    ASSERT_NE(dstid, nullptr);
+    ASSERT_NOTNULL(dstid);
     ASSERT_TRUE(test_identity_equals(srcid, dstid));
     ASSERT_NE(srcid->address, dstid->address);   // test deep copies
     ASSERT_NE(srcid->fpr, dstid->fpr);
     ASSERT_NE(srcid->username, dstid->username);
-    ASSERT_EQ(duplist->next, nullptr);
+    ASSERT_NULL(duplist->next);
     output_stream << "one-element identity_list duplicated.\n\n";
 
     output_stream << "freeing identity_lists...\n";
@@ -121,16 +121,16 @@ TEST_F(IdentityListTest, check_identity_list) {
     idlist = identity_list_add(idlist, identity_dup(id_arr[0]));
     for (i = 1; i < 4; i++) {
         p = identity_list_add(idlist, identity_dup(id_arr[i]));
-        ASSERT_NE(p, nullptr);
+        ASSERT_NOTNULL(p);
     }
 
     p = idlist;
 
     for (i = 0; i < 4; i++) {
-        ASSERT_NE(p, nullptr);
+        ASSERT_NOTNULL(p);
 
         srcid = p->ident;
-        ASSERT_NE(srcid, nullptr);
+        ASSERT_NOTNULL(srcid);
 
         ASSERT_TRUE(test_identity_equals(srcid, id_arr[i]));
         ASSERT_NE(srcid->address , id_arr[i]->address);   // test deep copies
@@ -139,7 +139,7 @@ TEST_F(IdentityListTest, check_identity_list) {
 
         p = p->next;
     }
-    ASSERT_EQ(p , nullptr);
+    ASSERT_NULL(p );
 
     output_stream << "\nduplicating four-element list...\n\n";
     duplist = identity_list_dup(idlist);
@@ -151,7 +151,7 @@ TEST_F(IdentityListTest, check_identity_list) {
         srcid = p->ident;
         dstid = dup_p->ident;
 
-        ASSERT_NE(dstid, nullptr);
+        ASSERT_NOTNULL(dstid);
 
         ASSERT_TRUE(test_identity_equals(srcid, dstid));
 

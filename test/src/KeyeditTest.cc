@@ -12,7 +12,7 @@
 #include "pEp_internal.h"
 #include "platform.h"
 
-#include "test_util.h"
+#include "TestUtilities.h"
 
 #include "Engine.h"
 
@@ -53,14 +53,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -109,7 +109,7 @@ TEST_F(KeyeditTest, check_keyedit) {
             "423",
             "expire test key"
         );
-    ASSERT_NE(identity, nullptr);
+    ASSERT_NOTNULL(identity);
     PEP_STATUS generate_status = generate_keypair(session, identity);
     output_stream << "generate_keypair() exits with " << generate_status << "\n";
     ASSERT_EQ(generate_status, PEP_STATUS_OK);
@@ -156,8 +156,8 @@ TEST_F(KeyeditTest, check_renew_key_correct_passphrase) {
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, bob_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     
     config_passphrase(session, "bob");
 
@@ -175,8 +175,8 @@ TEST_F(KeyeditTest, check_renew_key_needs_passphrase) {
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, bob_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
 
     time_t now = time(NULL);
     output_stream << "Time is " << now << endl;
@@ -193,8 +193,8 @@ TEST_F(KeyeditTest, check_renew_key_wrong_passphrase) {
     stringlist_t* found_key = NULL;
     PEP_STATUS status = find_keys(session, bob_fpr, &found_key);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(found_key, nullptr);
-    ASSERT_NE(found_key->value, nullptr);
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
     
     config_passphrase(session, "julio");
 

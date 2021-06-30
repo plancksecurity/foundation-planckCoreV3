@@ -178,6 +178,7 @@ DYNAMIC_API void free_stringlist(stringlist_t *stringlist);
  *  
  */
 stringlist_t* stringlist_search(stringlist_t* head, const char* value);
+stringlist_t* stringlist_get_tail(stringlist_t* sl);
 
 // create comma-separated string
 /**

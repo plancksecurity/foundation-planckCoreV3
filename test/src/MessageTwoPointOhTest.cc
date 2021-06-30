@@ -14,7 +14,7 @@
 #include "mime.h"
 #include "message_api.h"
 #include "keymanagement.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 
 
 
@@ -57,14 +57,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -112,13 +112,17 @@ TEST_F(MessageTwoPointOhTest, check_message_two_point_oh) {
 
     output_stream << "creating message…\n";
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", PEP_OWN_USERID, "Alice Test");
+    PEP_STATUS alice_status = set_own_key(session, alice, alice->fpr);
+    ASSERT_EQ(alice_status, PEP_STATUS_OK);
+
     pEp_identity* carol = new_identity("pep-test-carol@pep-project.org", NULL, "TOFU_pep-test-carol@pep-project.org", "Carol Test");
+    const char* carol_fpr = "8DD4F5827B45839E9ACCA94687BDDFFB42A85A42";
+    PEP_STATUS carol_status = set_fpr_preserve_ident(session, carol, carol_fpr, true);
+    ASSERT_EQ(carol_status, PEP_STATUS_OK);
+    carol_status = update_identity(session, carol);
+    ASSERT_EQ(carol_status, PEP_STATUS_OK);
 
-    PEP_STATUS alice_status = update_identity(session, alice);
-    PEP_STATUS carol_status = update_identity(session, carol);
-
-    PEP_STATUS status = update_trust_for_fpr(session, alice->fpr, PEP_ct_pEp);
-    status = update_trust_for_fpr(session, carol->fpr, carol_comm_type);
+    PEP_STATUS status = update_trust_for_fpr(session, carol->fpr, carol_comm_type);
 
     PEP_STATUS mystatus = myself(session, alice);
     ASSERT_EQ(mystatus , PEP_STATUS_OK);
@@ -129,7 +133,7 @@ TEST_F(MessageTwoPointOhTest, check_message_two_point_oh) {
 
     identity_list* to_list = new_identity_list(carol); // to carol
     message* outgoing_message = new_message(PEP_dir_outgoing);
-    ASSERT_NE(outgoing_message, nullptr);
+    ASSERT_NOTNULL(outgoing_message);
     outgoing_message->from = alice;
     outgoing_message->to = to_list;
     outgoing_message->shortmsg = strdup("Greetings, humans!");
@@ -144,8 +148,8 @@ TEST_F(MessageTwoPointOhTest, check_message_two_point_oh) {
 
     char* encoded_text = nullptr;
     status = mime_encode_message(outgoing_message, false, &encoded_text, false);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(encoded_text, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(encoded_text);
 
     output_stream << "unencrypted:\n\n";
     output_stream << encoded_text << "\n";
@@ -158,14 +162,14 @@ TEST_F(MessageTwoPointOhTest, check_message_two_point_oh) {
     status = encrypt_message(session, outgoing_message, NULL,
         &encrypted_msg, PEP_enc_PGP_MIME, 0);
     output_stream << "encrypt_message() returns " << tl_status_string(status) << '.' << endl;
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(encrypted_msg, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(encrypted_msg);
     output_stream << "message encrypted.\n";
 
     encrypted_msg->enc_format = PEP_enc_none;
     status = mime_encode_message(encrypted_msg, false, &encoded_text, false);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(encoded_text, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(encoded_text);
 
     output_stream << "encrypted:\n\n";
     output_stream << encoded_text << "\n";
@@ -185,7 +189,7 @@ TEST_F(MessageTwoPointOhTest, check_message_two_point_oh) {
 
     message* decoded_msg = nullptr;
     status = mime_decode_message(encoded_text, strlen(encoded_text), &decoded_msg, NULL);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     const string string3 = encoded_text;
 
     unlink("tmp/msg_2.0.asc");
@@ -203,8 +207,8 @@ TEST_F(MessageTwoPointOhTest, check_message_two_point_oh) {
     stringpair_list_add(encrypted_msg->opt_fields, autoconsume);
     flags = 0;
     status = decrypt_message(session, encrypted_msg, &decrypted_msg, &keylist_used, &rating, &flags);
-    ASSERT_NE(decrypted_msg, nullptr);
-    ASSERT_NE(keylist_used, nullptr);
+    ASSERT_NOTNULL(decrypted_msg);
+    ASSERT_NOTNULL(keylist_used);
     ASSERT_NE(rating, 0);
     //ASSERT_EQ(status == PEP_STATUS_OK && rating , PEP_rating_reliable);
     //PEP_comm_type ct = encrypted_msg->from->comm_type;
@@ -219,8 +223,8 @@ TEST_F(MessageTwoPointOhTest, check_message_two_point_oh) {
 
     decrypted_msg->enc_format = PEP_enc_none;
     status = mime_encode_message(decrypted_msg, false, &encoded_text, false);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(encoded_text, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(encoded_text);
     output_stream << "Decrypted message: " << endl;
     output_stream << encoded_text << endl;
 

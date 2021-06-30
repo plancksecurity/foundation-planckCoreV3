@@ -1,0 +1,226 @@
+// p≡p Keymanagement API version 0.1
+
+// Copyleft (c) 2019, p≡p foundation
+// this file is under GNU General Public License 3.0
+// see LICENSE.txt
+
+// written by Nana Karlstetter and Volker Birk
+
+
+protocol session {
+    method update_identity doc="update identity information"
+    {
+        // parms
+
+        lend identity identity
+        doc="""
+            identity information of communication partner
+            (identity->fpr is OUT ONLY), and at least
+            .address must be set. 
+            If .username is set, it will be used to set or patch
+            the username record for this identity.
+            at least identity->address must be a non-empty UTF-8 string as input
+            update_identity() never writes flags; use set_identity_flags() for
+            writing
+            this function NEVER reads the incoming fpr, only writes to it.
+            this function will fail if called on an identity which, with its input
+            values, *explicitly* indicates it is an own identity (i.e. .me is set
+            to true on input, or a user_id is given AND it is a known own user_id).
+            however, it can RETURN an own identity if this is not indicated a
+            priori, and in fact will do so with prejudice when not faced with a
+            matching default (i.e. it is forced to search by address only).
+            if the identity is known to be an own identity (or the caller wishes
+            to make it one), call myself() on the identity instead.
+
+            FIXME: is this next point accurate?
+            if this function returns PEP_ct_unknown or PEP_ct_key_expired in
+            identity->comm_type, the caller must insert the identity into the
+            asynchronous management implementation, so retrieve_next_identity()
+            will return this identity later
+            END FIXME
+            """;
+
+        // exceptions
+
+        throws illegal_value
+        doc="""
+            if called with illegal inputs, including an identity
+            with .me set or with an own user_id specified in the
+            *input* (see caveats)
+            """;
+
+        throws key_unsuitable
+        doc="""
+            if a default key was found for this identity, no
+            other acceptable keys were found; if this is returned,
+            the reason for rejecting the first default key found    
+            may be found in the comm_type
+            """;
+    }
+
+
+    method myself doc="ensures that an own identity is complete"
+    {
+        // parms
+
+        lend identity ident
+        doc="""
+            identity of local user
+            both .address and .user_id must be set.
+            if .fpr is set, an attempt will be made to make
+            that the default key for this identity after key validation
+            if .fpr is not set, key retrieval is performed.
+            If .username is set, it will be used to set or patch
+            the username record for this identity. 
+     
+            If an fpr was entered and is not a valid key, the reason for failure
+            is immediately returned in the status and, possibly, identity->comm_type
+            If a default own user_id exists in the database, an alias will 
+            be created for the default for the input user_id. The ENGINE'S default
+            user_id is always returned in the .user_id field
+            myself() NEVER elects keys from the keyring; it will only choose keys
+            which have been set up explicitly via myself(), or which were imported
+            during a first time DB setup from an OpenPGP keyring (compatibility only) 
+            this function generates a keypair on demand; because it's synchronous
+            it can need a decent amount of time to return
+            if you need to do this asynchronous, you need to return an identity
+            with retrieve_next_identity() where identity.me is true.
+            """;
+    }
+
+
+    method key_mistrusted doc="mark key as being compromised"
+    {
+        //parms
+
+        use identity ident
+        doc="""
+            person and key which was compromised
+            ident is INPUT ONLY. If you want updated trust on the identity, you'll have
+            to call update_identity or myself respectively after this.
+            N.B. If you are calling this on a key that is the identity or user default,
+            it will be removed as the default key for ANY identity and user for which
+            it is the default. Please keep in mind that the undo in undo_last_mistrust
+            will only undo the current identity's / it's user's default, not any
+            other identities which may be impacted (this will not affect most use
+            cases)
+            """;
+    }
+
+
+    method trust_personal_key doc="mark a key as trusted for a user"
+    {
+        // parms
+
+        use identity ident
+        doc="""
+            person and key to trust in - this must not be an own_identity in which 
+            the .me flag is set or the user_id is an own user_id. The fields user_id, 
+            address and fpr must be supplied own identities will result in a return 
+            of illegal_value.
+            For non-own users, this will 1) set the trust bit on its comm type in the DB,
+            2) set this key as the identity default if the current identity default
+            is not trusted, and 3) set this key as the user default if the current user
+            default is not trusted.
+            """;
+    }
+
+
+    method trust_own_key
+    doc="""
+        mark a key as trusted for self, generally used when we need to trust 
+        a public key associated with outselves for issues like manual key import.
+        """
+    {
+        // parms
+
+        use identity ident
+        doc="""
+            own ident containing fpr to trust. 
+            If this is a public key only, keep in mind that if the private part of the 
+            keypair is later added, it will not undergo separate trust evaluation. This 
+            is fine - even desired - as long as the semantics of this function are 
+            understood as both trusting the key and verifying it as an own key. This will 
+            NEVER cause replacement of or setting of a default *alone*. However, if a 
+            private key is ever associated with this fpr, please keep in mind that trusting 
+            it here makes it an eligible key for selection for encryption later. So use 
+            this function on purpose with an understanding of what you're doing!
+            """;
+    }
+
+
+    method key_reset_trust
+    doc="""
+        reset trust bit or explicitly mistrusted status for an identity and its 
+        accompanying key/user_id pair.
+        """
+    {
+        // parms
+
+        use ientity ident
+        doc="""
+            identity for person and key whose trust status is to be reset.
+            Ident is INPUT ONLY. If you want updated trust on the identity, you'll have 
+            to call update_identity or myself respectively after this.
+            N.B. If you are calling this on a key that is the identity or user default,
+            it will be removed as the default key for the identity and user (but is still
+            available for key election, it is just not the cached default anymore).
+            """;
+    }
+
+
+    method own_key_is_listed doc="returns true id key is listed as own key"
+    {
+        // parms
+
+        use hash fpr doc="fingerprint of key to test";
+
+        return bool listed doc="flags if key is own";
+    }
+
+
+    method own_identities_retrieve doc="retrieve all own identities"
+    {
+
+        // parms
+
+        create identity_list own_identities 
+        doc="""
+            list of own identities. 
+            The ownership of the copy of own_identities goes to the caller.
+            """;
+    }
+
+
+    method own_keys_retrieve doc="retrieve all flagged keypair fingerprints/private keypair fingerprints" 
+    {
+        // parms
+
+        create hashlist keylist 
+        doc="""
+            list of fingerprints. This function does not return keys without 
+            a private key part.
+            """;
+    }
+
+
+    method set_own_key doc="mark a key as own key"
+    {
+        // parms
+
+        lend identity me 
+        doc="""
+            own identity this key is used for. The key has to be in the key ring already.
+            me->address, me->user_id and me->username must be set to valid data.
+            myself is called by set_own_key without key generation.
+            me->flags are ignored
+            me->address must not be an alias
+            me->fpr will be ignored and replaced by fpr, but caller MUST surrender ownership of the 
+            me->fpr reference, because it may be freed and replaced within the myself call. caller 
+            owns me->fpr memory again upon return.
+            """;
+
+        use hash fpr doc="fingerprint of the key to mark as own key";
+    }
+}
+

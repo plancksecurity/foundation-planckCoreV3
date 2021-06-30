@@ -14,7 +14,7 @@
 #include "platform.h"
 #include "mime.h"
 
-#include "test_util.h"
+#include "TestUtilities.h"
 
 #include "Engine.h"
 
@@ -55,14 +55,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -135,7 +135,7 @@ TEST_F(MimeTest, check_mime) {
     // testing multipart/alternative
 
     message *msg2 = new_message(PEP_dir_incoming);
-    ASSERT_NE(msg2, nullptr);
+    ASSERT_NOTNULL(msg2);
     msg2->from = new_identity("vb@dingens.org", NULL, NULL, "Volker Birk");
     msg2->to = new_identity_list(new_identity("trischa@dingens.org", NULL, NULL, "Patricia Bädnar")),
     msg2->shortmsg = strdup("my sübject");
@@ -144,12 +144,12 @@ TEST_F(MimeTest, check_mime) {
     msg2->longmsg = strdup(text2.c_str());
     string html2 = "<html><body><p>my message to you</p></body></html>";
     msg2->longmsg_formatted = strdup(html2.c_str());
-    ASSERT_NE(msg2->longmsg_formatted, nullptr);
+    ASSERT_NOTNULL(msg2->longmsg_formatted);
 
     output_stream << "encoding message…\n";
     char *result2;
     PEP_STATUS status2 = mime_encode_message(msg2, false, &result2, false);
-    ASSERT_NE(result2, nullptr);
+    ASSERT_NOTNULL(result2);
     ASSERT_EQ(status2, PEP_STATUS_OK);
 
     output_stream << "result:\n";

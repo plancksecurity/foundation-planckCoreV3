@@ -13,7 +13,7 @@
 #include "mime.h"
 #include "message_api.h"
 #include "keymanagement.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 
 
 
@@ -56,14 +56,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -150,11 +150,11 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj) {
     config_unencrypted_subject(session, true);
     pEp_identity* carol = NULL;
 
-    PEP_STATUS status = set_up_preset(session, CAROL,
-                                      true, true, true, true, true, &carol);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL,
+                                      true, true, true, true, true, true, &carol);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(carol, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(carol);
 
     status = set_identity_flags(session, carol, PEP_idf_org_ident);
     ASSERT_EQ(status , PEP_STATUS_OK);
@@ -194,7 +194,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj) {
 
     message* src_msg = NULL;
     status = mime_decode_message(mailfile.c_str(), mailfile.size(), &src_msg, NULL);
-    ASSERT_NE(src_msg, nullptr);
+    ASSERT_NOTNULL(src_msg);
     ASSERT_STREQ(src_msg->attachments->next->value, checker->attachments->next->value);
     config_unencrypted_subject(session, false);
 
@@ -204,11 +204,11 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_check_effici
     config_unencrypted_subject(session, true);
     pEp_identity* carol = NULL;
 
-    PEP_STATUS status = set_up_preset(session, CAROL,
-                                      true, true, true, true, true, &carol);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL,
+                                      true, true, true, true, true, true, &carol);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(carol, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(carol);
 
     status = set_identity_flags(session, carol, PEP_idf_org_ident);
     ASSERT_EQ(status , PEP_STATUS_OK);
@@ -247,7 +247,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_check_effici
 
     message* src_msg = NULL;
     status = mime_decode_message(mailfile.c_str(), mailfile.size(), &src_msg, NULL);
-    ASSERT_NE(src_msg, nullptr);
+    ASSERT_NOTNULL(src_msg);
     ASSERT_STREQ(src_msg->attachments->next->value, checker->attachments->next->value);
 
     free_message(dec_msg);
@@ -257,12 +257,12 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_check_effici
     keys = NULL; // remember, this is no extra_keys in this test
 
     status = decrypt_message(session, checker, &dec_msg, &keys, &rating, &flags);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(dec_msg , nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(dec_msg );
     ASSERT_EQ(flags & PEP_decrypt_flag_src_modified, 0);
-    ASSERT_NE(checker, nullptr);
-    ASSERT_NE(dec_msg->_sender_fpr, nullptr);
-    ASSERT_NE(keys, nullptr);
+    ASSERT_NOTNULL(checker);
+    ASSERT_NOTNULL(dec_msg->_sender_fpr);
+    ASSERT_NOTNULL(keys);
     ASSERT_STREQ(dec_msg->_sender_fpr, keys->value); // should be the same, since not reencrypted
     
     config_unencrypted_subject(session, false);    
@@ -280,11 +280,11 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys) 
     
     pEp_identity* carol = NULL;
 
-    PEP_STATUS status = set_up_preset(session, CAROL,
-                                      true, true, true, true, true, &carol);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL,
+                                      true, true, true, true, true, true, &carol);
 
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(carol, nullptr);
+    ASSERT_NOTNULL(carol);
 
     status = set_identity_flags(session, carol, PEP_idf_org_ident);
     ASSERT_EQ(status , PEP_STATUS_OK);
@@ -323,7 +323,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys) 
 
     message* src_msg = NULL;
     status = mime_decode_message(mailfile.c_str(), mailfile.size(), &src_msg, NULL);
-    ASSERT_NE(src_msg, nullptr);
+    ASSERT_NOTNULL(src_msg);
     ASSERT_STRNE(src_msg->attachments->next->value, checker->attachments->next->value);
 
     flags = 0;
@@ -371,11 +371,11 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys_e
     
     pEp_identity* carol = NULL;
 
-    PEP_STATUS status = set_up_preset(session, CAROL,
-                                      true, true, true, true, true, &carol);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL,
+                                      true, true, true, true, true, true, &carol);
 
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(carol, nullptr);
+    ASSERT_NOTNULL(carol);
 
     status = set_identity_flags(session, carol, PEP_idf_org_ident);
     ASSERT_EQ(status , PEP_STATUS_OK);
@@ -415,7 +415,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys_e
 
     message* src_msg = NULL;
     status = mime_decode_message(mailfile.c_str(), mailfile.size(), &src_msg, NULL);
-    ASSERT_NE(src_msg, nullptr);
+    ASSERT_NOTNULL(src_msg);
     ASSERT_STRNE(src_msg->attachments->next->value, checker->attachments->next->value);
 
     free_stringlist(keys);
@@ -424,12 +424,12 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys_e
     flags = PEP_decrypt_flag_untrusted_server;
     message* decryptomatic = NULL;
     status = decrypt_message(session, checker, &decryptomatic, &keys, &rating, &flags);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(decryptomatic, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(decryptomatic);
     ASSERT_EQ(flags & PEP_decrypt_flag_src_modified, 0);
-    ASSERT_NE(checker, nullptr);
-    ASSERT_NE(decryptomatic->_sender_fpr, nullptr);
-    ASSERT_NE(keys, nullptr);
+    ASSERT_NOTNULL(checker);
+    ASSERT_NOTNULL(decryptomatic->_sender_fpr);
+    ASSERT_NOTNULL(keys);
     ASSERT_STREQ(decryptomatic->_sender_fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
     ASSERT_STREQ(keys->value, "8DD4F5827B45839E9ACCA94687BDDFFB42A85A42");
     // ofstream outfile;
@@ -451,11 +451,11 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys_e
     
     pEp_identity* carol = NULL;
 
-    PEP_STATUS status = set_up_preset(session, CAROL,
-                                      true, true, true, true, true, &carol);
+    PEP_STATUS status = TestUtilsPreset::set_up_preset(session, TestUtilsPreset::CAROL,
+                                      true, true, true, true, true, true, &carol);
 
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(carol, nullptr);
+    ASSERT_NOTNULL(carol);
 
 
     status = set_identity_flags(session, carol, PEP_idf_org_ident);
@@ -494,7 +494,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys_e
     ASSERT_STREQ(checker->shortmsg, "Boom shaka laka");
     message* src_msg = NULL;
     status = mime_decode_message(mailfile.c_str(), mailfile.size(), &src_msg, NULL);
-    ASSERT_NE(src_msg, nullptr);
+    ASSERT_NOTNULL(src_msg);
     ASSERT_STRNE(src_msg->attachments->next->value, checker->attachments->next->value);
 
     free_stringlist(keys);
@@ -506,12 +506,12 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys_e
     message* decryptomatic = NULL;
     checker->recv_by = identity_dup(carol);
     status = decrypt_message(session, checker, &decryptomatic, &keys, &rating, &flags);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(decryptomatic, nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(decryptomatic);
     ASSERT_EQ(flags & PEP_decrypt_flag_src_modified, PEP_decrypt_flag_src_modified);
-    ASSERT_NE(checker, nullptr);
-    ASSERT_NE(decryptomatic->_sender_fpr, nullptr);
-    ASSERT_NE(keys, nullptr);
+    ASSERT_NOTNULL(checker);
+    ASSERT_NOTNULL(decryptomatic->_sender_fpr);
+    ASSERT_NOTNULL(keys);
     ASSERT_STREQ(decryptomatic->_sender_fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
     ASSERT_STREQ(keys->value, "8DD4F5827B45839E9ACCA94687BDDFFB42A85A42");
     // ofstream outfile;
@@ -536,7 +536,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
 
     output_stream << "Inserting own identities and keys into database." << endl;
     status = set_own_key(session, me_recip_2, fpr_own_recip_2_key);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     output_stream << "Done: inserting own identities and keys into database." << endl;
 
     status = set_identity_flags(session, me_recip_2, PEP_idf_org_ident);
@@ -774,7 +774,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
     keys = NULL;
 
     status = set_own_key(session, me_recip_1, fpr_own_recip_key);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
 
     status = set_identity_flags(session, me_recip_1, PEP_idf_org_ident);
     ASSERT_EQ(status , PEP_STATUS_OK);
@@ -898,7 +898,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt_from_enigmail) {
 
     output_stream << "Inserting own identities and keys into database." << endl;
     status = set_own_key(session, me_recip_2, fpr_own_recip_2_key);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     output_stream << "Done: inserting own identities and keys into database." << endl;
 
     status = set_identity_flags(session, me_recip_2, PEP_idf_org_ident);
@@ -928,15 +928,15 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt_from_enigmail) {
     // Put the original message into a message struct
     status = mime_decode_message(to_reencrypt_from_enigmail.c_str(), to_reencrypt_from_enigmail.size(), &enc_msg, NULL);
 
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(enc_msg , nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(enc_msg );
     enc_msg->recv_by = identity_dup(me_recip_2);
     // First reencryption - should give us a reencrypted message
     status = decrypt_message(session, enc_msg, &dec_msg, &keys, &rating, &flags);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(dec_msg , nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(dec_msg );
     ASSERT_NE(flags & PEP_decrypt_flag_src_modified, 0);
-    ASSERT_NE(enc_msg , nullptr);
+    ASSERT_NOTNULL(enc_msg );
 
     // Second reencryption - should NOT give us a reencrypted message
     output_stream << "CHECK: Do it again, and make sure there's no modified source!" << endl;
@@ -949,12 +949,12 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt_from_enigmail) {
     stringlist_add(keys, fpr_pub_extra_key_1);
 
     status = decrypt_message(session, enc_msg, &dec_msg, &keys, &rating, &flags);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(dec_msg , nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(dec_msg );
     ASSERT_EQ(flags & PEP_decrypt_flag_src_modified, 0);
-    ASSERT_NE(enc_msg , nullptr);
-    ASSERT_NE(dec_msg->_sender_fpr, nullptr);
-    ASSERT_NE(keys, nullptr);
+    ASSERT_NOTNULL(enc_msg );
+    ASSERT_NOTNULL(dec_msg->_sender_fpr);
+    ASSERT_NOTNULL(keys);
     ASSERT_STRNE(dec_msg->_sender_fpr, keys->value);
     free_stringlist(keys);
     free_message(enc_msg);
@@ -977,7 +977,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt_from_enigmail_w_own
 
     output_stream << "Inserting own identities and keys into database." << endl;
     status = set_own_key(session, me_recip_2, fpr_own_recip_2_key);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     output_stream << "Done: inserting own identities and keys into database." << endl;
 
     status = set_identity_flags(session, me_recip_2, PEP_idf_org_ident);
@@ -1008,15 +1008,15 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt_from_enigmail_w_own
 
     status = mime_decode_message(to_reencrypt_from_enigmail_BCC.c_str(), to_reencrypt_from_enigmail_BCC.size(), &enc_msg, NULL);
     enc_msg->recv_by = identity_dup(me_recip_2);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(enc_msg , nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(enc_msg );
 
     // First reencryption - should give us a reencrypted message
     status = decrypt_message(session, enc_msg, &dec_msg, &keys, &rating, &flags);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(dec_msg , nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(dec_msg );
     ASSERT_NE(flags & PEP_decrypt_flag_src_modified, 0);
-    ASSERT_NE(enc_msg , nullptr);
+    ASSERT_NOTNULL(enc_msg );
 
     // Second reencryption - should NOT give us a reencrypted message
     output_stream << "CHECK: Do it again, and make sure there's no modified source!" << endl;
@@ -1029,12 +1029,12 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt_from_enigmail_w_own
     stringlist_add(keys, fpr_pub_extra_key_1);    
 
     status = decrypt_message(session, enc_msg, &dec_msg, &keys, &rating, &flags);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(dec_msg , nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(dec_msg );
     ASSERT_EQ(flags & PEP_decrypt_flag_src_modified, 0);
-    ASSERT_NE(enc_msg , nullptr);
-    ASSERT_NE(dec_msg->_sender_fpr, nullptr);
-    ASSERT_NE(keys, nullptr);
+    ASSERT_NOTNULL(enc_msg );
+    ASSERT_NOTNULL(dec_msg->_sender_fpr);
+    ASSERT_NOTNULL(keys);
     ASSERT_STRNE(dec_msg->_sender_fpr, keys->value);
 
     free_stringlist(keys);
@@ -1057,7 +1057,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt_from_pEp_2_0) {
 
     output_stream << "Inserting own identities and keys into database." << endl;
     status = set_own_key(session, me_recip_2, fpr_own_recip_2_key);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     output_stream << "Done: inserting own identities and keys into database." << endl;
 
     status = set_identity_flags(session, me_recip_2, PEP_idf_org_ident);
@@ -1090,7 +1090,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt_from_pEp_2_0) {
     enc_msg->recv_by = identity_dup(me_recip_2);
 
     ASSERT_OK;
-    ASSERT_NE(enc_msg , nullptr);
+    ASSERT_NOTNULL(enc_msg );
 
     // First reencryption - should give us a reencrypted message
     status = decrypt_message(session, enc_msg, &dec_msg, &keys, &rating, &flags);
@@ -1098,7 +1098,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt_from_pEp_2_0) {
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(dec_msg , nullptr);
     ASSERT_NE(flags & PEP_decrypt_flag_src_modified, 0);
-    ASSERT_NE(enc_msg , nullptr);
+    ASSERT_NOTNULL(enc_msg );
 
     // Second reencryption - should NOT give us a reencrypted message
     output_stream << "CHECK: Do it again, and make sure there's no modified source!" << endl;
@@ -1111,12 +1111,12 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt_from_pEp_2_0) {
     stringlist_add(keys, fpr_pub_extra_key_1);    
 
     status = decrypt_message(session, enc_msg, &dec_msg, &keys, &rating, &flags);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(dec_msg , nullptr);
+    ASSERT_OK;
+    ASSERT_NOTNULL(dec_msg );
     ASSERT_EQ(flags & PEP_decrypt_flag_src_modified, 0);
-    ASSERT_NE(enc_msg , nullptr);
-    ASSERT_NE(dec_msg->_sender_fpr, nullptr);
-    ASSERT_NE(keys, nullptr);
+    ASSERT_NOTNULL(enc_msg );
+    ASSERT_NOTNULL(dec_msg->_sender_fpr);
+    ASSERT_NOTNULL(keys);
     ASSERT_STRNE(dec_msg->_sender_fpr, keys->value);
 
     free_stringlist(keys);

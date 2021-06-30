@@ -10,7 +10,7 @@
 #include <fstream>
 #include "mime.h"
 #include "message_api.h"
-#include "test_util.h"
+#include "TestUtilities.h"
 
 
 
@@ -53,14 +53,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -102,7 +102,7 @@ TEST_F(TrustManipulationTest, check_trust_manipulation) {
     output_stream << uniqname << "\n";
     pEp_identity * user = new_identity(uniqname, NULL, user_id, "Test User");
     status = generate_keypair(session, user);
-    ASSERT_NE(user->fpr, nullptr);
+    ASSERT_NOTNULL(user->fpr);
 
     char* keypair1 = strdup(user->fpr);
     output_stream << "generated fingerprint \n";
@@ -116,7 +116,7 @@ TEST_F(TrustManipulationTest, check_trust_manipulation) {
 
     pEp_identity * user_again = new_identity(uniqname, NULL, user_id, "Test User");
     status = generate_keypair(session, user_again);
-    ASSERT_NE(user_again->fpr, nullptr);
+    ASSERT_NOTNULL(user_again->fpr);
 
     char* keypair2 = strdup(user_again->fpr);
     output_stream << "generated fingerprint \n";
@@ -149,9 +149,18 @@ TEST_F(TrustManipulationTest, check_trust_manipulation) {
     ASSERT_STREQ(user->fpr, keypair2);
     ASSERT_EQ(user->comm_type , PEP_ct_mistrusted);
     output_stream << "Hoorah, we now do not trust key 2. (We never liked key 2 anyway.)" << endl;
-    output_stream << "Now we call update_identity to see what gifts it gives us (should be key 1 with key 1's initial trust.)" << endl;
+
+    // Ok, here's where the test breaks when we remove key election. Update identity won't be giving us anything because there's no default.
+
+//    output_stream << "Now we call update_identity to see what gifts it gives us (should be key 1 with key 1's initial trust.)" << endl;
+    output_stream << "Now we call update_identity to see what gifts it gives us (should be NOTHING.)" << endl;
     status = update_identity(session, user);
-    ASSERT_NE(user->fpr, nullptr);
+    ASSERT_NULL(user->fpr);
+    // Now set key 1 as the default again
+    status = set_fpr_preserve_ident(session, user, keypair1, true);
+    ASSERT_OK;
+    status = update_identity(session, user);
+    ASSERT_NOTNULL(user->fpr);
     ASSERT_STREQ(user->fpr, keypair1);
     ASSERT_EQ(user->comm_type , PEP_ct_OpenPGP_unconfirmed);
     output_stream << "Yup, got key 1, and the trust status is PEP_ct_OpenPGP_unconfirmed." << endl;
@@ -164,7 +173,7 @@ TEST_F(TrustManipulationTest, check_trust_manipulation) {
     output_stream << "Hoorah, we now do not trust key 1. (TRUST NO ONE)" << endl;
     output_stream << "Now we call update_identity to see what gifts it gives us (should be an empty key and a key not found comm_type.)" << endl;
     status = update_identity(session, user);
-    ASSERT_EQ(user->fpr , nullptr);
+    ASSERT_NULL(user->fpr );
     ASSERT_EQ(user->comm_type , PEP_ct_key_not_found);
     output_stream << "Yup, we trust no keys from " << uniqname << endl;
 

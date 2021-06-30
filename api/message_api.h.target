@@ -1,0 +1,45 @@
+/**
+ *  <!--       encrypt_message()       -->
+ *
+ *  @brief Encrypt message in memory
+ *
+ *  @param[in]     session       session handle
+ *  @param[in,out] src           message to encrypt - usually in-only, but can be
+ *                               in-out for unencrypted messages; in that case,
+ *                               we may attach the key and decorate the message
+ *  @param[in]     extra         extra keys for encryption
+ *  @param[out]    dst           pointer to new encrypted message or NULL if no
+ *                               encryption could take place
+ *  @param[in]     enc_format    The desired format this message should be encrypted with
+ *  @param[in]     flags         flags to set special encryption features
+ *
+ *  @retval PEP_STATUS_OK                   on success
+ *  @retval PEP_KEY_HAS_AMBIG_NAME          at least one of the receipient keys has
+ *                                          an ambiguous name
+ *  @retval PEP_UNENCRYPTED                 on demand or no recipients with usable
+ *                                          key, is left unencrypted, and key is
+ *                                          attached to it
+ *  @retval PEP_ILLEGAL_VALUE               illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY               out of memory
+ *  @retval any other value on error
+ *
+ *  @warning the ownership of src remains with the caller
+ *           the ownership of dst goes to the caller
+ *
+ *           enc_format PEP_enc_inline_EA:
+ *              internal format of the encrypted attachments is changing, see
+ *              https://dev.pep.foundation/Engine/ElevatedAttachments
+ *
+ *               Only use this for transports without support for attachments
+ *               when attached data must be sent inline
+ *
+ */
+
+DYNAMIC_API PEP_STATUS encrypt_message(
+        PEP_SESSION session,
+        message *src,
+        stringlist_t *extra,
+        message **dst,
+        PEP_enc_format enc_format,
+        PEP_encrypt_flags_t flags
+    );

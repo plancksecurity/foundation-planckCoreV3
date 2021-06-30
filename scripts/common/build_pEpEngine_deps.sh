@@ -3,9 +3,9 @@ set -exo
 
 ### YML2
 cd $INSTPREFIX
-wget https://fdik.org/yml2.tar.bz2
-tar -xf yml2.tar.bz2
-rm yml2.tar.bz2
+curl -O "https://gitea.pep.foundation/fdik/yml2/archive/${YML2_VERSION}.tar.gz"
+tar -xf "${YML2_VERSION}.tar.gz"
+rm -f ${YML2_VERSION}.tar*
 
 
 ### libetpan

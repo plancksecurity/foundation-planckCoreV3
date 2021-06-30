@@ -9,7 +9,7 @@
 #include "pEpEngine.h"
 #include "pEp_internal.h"
 
-#include "test_util.h"
+#include "TestUtilities.h"
 #include "TestConstants.h"
 
 #include "Engine.h"
@@ -51,14 +51,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -99,7 +99,7 @@ TEST_F(SignOnlyTest, check_sign_only) {
     stringlist_t* keylist = NULL;
 
     PEP_STATUS status = sign_only(session, msg_text.c_str(), msg_text.size(), alice_fpr, &signed_text, &signed_text_size);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     output_stream << signed_text << endl;
     test_file.open("tmp/signature.txt");
     test_file << signed_text;
@@ -113,8 +113,8 @@ TEST_F(SignOnlyTest, check_sign_only) {
 #else
     ASSERT_EQ(status , PEP_VERIFIED_AND_TRUSTED);
 #endif
-    ASSERT_NE(keylist, nullptr);
-    ASSERT_NE(keylist->value, nullptr);
+    ASSERT_NOTNULL(keylist);
+    ASSERT_NOTNULL(keylist->value);
     ASSERT_STREQ(keylist->value, alice_fpr);
 
     // FIXME: free stuff

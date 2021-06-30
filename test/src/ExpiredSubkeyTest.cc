@@ -4,7 +4,7 @@
 #include "TestConstants.h"
 #include <stdlib.h>
 #include <string>
-#include "test_util.h"
+#include "TestUtilities.h"
 
 #include "pEpEngine.h"
 #include "pEp_internal.h"
@@ -50,14 +50,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -87,12 +87,15 @@ TEST_F(ExpiredSubkeyTest, check_expired_subkey_with_valid_subkeys_and_main_key) 
     slurp_and_import_key(session,"test_keys/pub/eb_0_valid_pub.asc");
     pEp_identity* expired_0 = new_identity("expired_in_bits_0@darthmama.org",
                                            NULL, NULL, "Expired 0");
-    PEP_STATUS status = update_identity(session, expired_0);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(expired_0->fpr, nullptr);
+    const char* fpr = "0FF62390752BA26A64D8BD270D72E0A54E705C46";
+    PEP_STATUS status = set_fpr_preserve_ident(session, expired_0, fpr, false);
+    ASSERT_OK;
+    status = update_identity(session, expired_0);
+    ASSERT_OK;
+    ASSERT_NOTNULL(expired_0->fpr);
     PEP_rating rating;
     status = identity_rating(session, expired_0, &rating);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(rating , PEP_rating_reliable);
 }
 
@@ -100,25 +103,37 @@ TEST_F(ExpiredSubkeyTest, check_expired_subkey_with_valid_subkeys_expired_main) 
     slurp_and_import_key(session,"test_keys/pub/master_key_test_sign_and_encrypt_added.asc");
     pEp_identity* expired_0 = new_identity("master_key_test@darthmama.org",
                                            NULL, NULL, "Master Key Test");
-    PEP_STATUS status = update_identity(session, expired_0);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(expired_0->fpr, nullptr);
+    const char* fpr = "D9087C86F06ED33AC6A90F8F487559CB3A0711E7";
+    PEP_STATUS status = set_fpr_preserve_ident(session, expired_0, fpr, false);
+    ASSERT_OK;
+    status = update_identity(session, expired_0);
+    ASSERT_OK;
     PEP_rating rating;
     status = identity_rating(session, expired_0, &rating);
-    ASSERT_EQ(status , PEP_KEY_UNSUITABLE);
-    ASSERT_EQ(rating , PEP_rating_undefined);
+    ASSERT_OK;
+    ASSERT_EQ(rating , PEP_rating_have_no_key);
+    PEP_comm_type ct = PEP_ct_unknown;
+    status = get_key_rating(session, fpr, &ct);
+    ASSERT_OK;
+    ASSERT_EQ(ct, PEP_ct_key_expired);
+    status = get_key_rating_for_user(session, expired_0->user_id, fpr, &rating);
+    ASSERT_OK;
+    ASSERT_EQ(rating, PEP_rating_unreliable);
 }
 
 TEST_F(ExpiredSubkeyTest, check_all_valid_with_leftover_expired_subkeys) {
     slurp_and_import_key(session,"test_keys/pub/master_key_test_certify_extended_pub.asc");
     pEp_identity* expired_0 = new_identity("master_key_test@darthmama.org",
                                            NULL, NULL, "Master Key Test");
-    PEP_STATUS status = update_identity(session, expired_0);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(expired_0->fpr, nullptr);
+    const char* fpr = "D9087C86F06ED33AC6A90F8F487559CB3A0711E7";
+    PEP_STATUS status = set_fpr_preserve_ident(session, expired_0, fpr, false);
+    ASSERT_OK;
+    status = update_identity(session, expired_0);
+    ASSERT_OK;
+    ASSERT_NOTNULL(expired_0->fpr);
     PEP_rating rating;
     status = identity_rating(session, expired_0, &rating);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(rating , PEP_rating_reliable);
 }
 
@@ -126,11 +141,24 @@ TEST_F(ExpiredSubkeyTest, check_no_valid_encryption_subkey) {
     slurp_and_import_key(session,"test_keys/pub/master_key_test_deleted_valid_enc_key_pub.asc");
     pEp_identity* expired_0 = new_identity("master_key_test@darthmama.org",
                                            NULL, NULL, "Master Key Test");
-    PEP_STATUS status = update_identity(session, expired_0);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(expired_0->fpr, nullptr);
+    const char* fpr = "D9087C86F06ED33AC6A90F8F487559CB3A0711E7";
+    PEP_STATUS status = set_fpr_preserve_ident(session, expired_0, fpr, false);
+    ASSERT_OK;
+    status = update_identity(session, expired_0);
+    ASSERT_OK;
+
+    status = update_identity(session, expired_0);
+    ASSERT_OK;
+    ASSERT_NULL(expired_0->fpr);
     PEP_rating rating;
     status = identity_rating(session, expired_0, &rating);
-    ASSERT_EQ(status , PEP_KEY_UNSUITABLE);
-    ASSERT_EQ(rating , PEP_rating_undefined);
+    ASSERT_OK;
+    ASSERT_EQ(rating , PEP_rating_have_no_key);
+    PEP_comm_type ct = PEP_ct_unknown;
+    status = get_key_rating(session, fpr, &ct);
+    ASSERT_OK;
+    ASSERT_EQ(ct, PEP_ct_key_expired);
+    status = get_key_rating_for_user(session, expired_0->user_id, fpr, &rating);
+    ASSERT_OK;
+    ASSERT_EQ(rating, PEP_rating_unreliable);
 }

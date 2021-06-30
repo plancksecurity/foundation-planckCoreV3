@@ -703,6 +703,7 @@ static PEP_STATUS _create_core_tables(PEP_SESSION session) {
             "   main_key_id text\n"
             "       references pgp_keypair (fpr)\n"
             "       on delete set null,\n"
+            "   username text,\n"
             "   comment text,\n"
             "   flags integer default 0,\n"
             "   is_own integer default 0,\n"
@@ -806,10 +807,6 @@ static PEP_STATUS _create_group_tables(PEP_SESSION session) {
 static PEP_STATUS _create_supplementary_key_tables(PEP_SESSION session) {
     int int_result = sqlite3_exec(
             session->db,
-            // blacklist
-            "create table if not exists blacklist_keys (\n"
-            "   fpr text primary key\n"
-            ");\n"
             "create table if not exists revoked_keys (\n"
             "   revoked_fpr text primary key,\n"
             "   replacement_fpr text not null\n"
@@ -928,33 +925,48 @@ PEP_STATUS get_db_user_version(PEP_SESSION session, int* version) {
     return PEP_STATUS_OK;
 }
 
+// Only called if input version is 1
 static PEP_STATUS _verify_version(PEP_SESSION session, int* version) {
     // Sometimes the user_version wasn't set correctly.
     bool version_changed = true;
     int int_result;
-    if (table_contains_column(session, "groups", "group_identity")) {
+    if (table_contains_column(session, "identity", "username")) {
+        *version = 17;
+    }
+    else if (table_contains_column(session, "trust", "sticky")) {
+        *version = 16;
+    }
+    else if (table_contains_column(session, "groups", "group_identity")) {
         *version = 15;
     }
     else if (table_contains_column(session, "identity", "enc_format")) {
         *version = 14;
-    } else if (table_contains_column(session, "revocation_contact_list", "own_address")) {
+    }
+    else if (table_contains_column(session, "revocation_contact_list", "own_address")) {
         *version = 13;
-    } else if (table_contains_column(session, "identity", "pEp_version_major")) {
+    }
+    else if (table_contains_column(session, "identity", "pEp_version_major")) {
         *version = 12;
-    } else if (db_contains_table(session, "social_graph") > 0) {
+    }
+    else if (db_contains_table(session, "social_graph") > 0) {
         if (!table_contains_column(session, "person", "device_group"))
             *version = 10;
         else
             *version = 9;
-    } else if (table_contains_column(session, "identity", "timestamp") > 0) {
+    }
+    else if (table_contains_column(session, "identity", "timestamp") > 0) {
         *version = 8;
-    } else if (table_contains_column(session, "person", "is_pEp_user") > 0) {
+    }
+    else if (table_contains_column(session, "person", "is_pEp_user") > 0) {
         *version = 7;
-    } else if (table_contains_column(session, "identity", "is_own") > 0) {
+    }
+    else if (table_contains_column(session, "identity", "is_own") > 0) {
         *version = 6;
-    } else if (table_contains_column(session, "pgp_keypair", "flags") > 0) {
+    }
+    else if (table_contains_column(session, "pgp_keypair", "flags") > 0) {
         *version = 2;
-    } else {
+    }
+    else {
         version_changed = false;
     }
 
@@ -1342,50 +1354,7 @@ static PEP_STATUS _upgrade_DB_to_ver_10(PEP_SESSION session) {
     return PEP_STATUS_OK;
 }
 
-static PEP_STATUS _upgrade_DB_to_ver_12(PEP_SESSION session) {
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    int int_result = sqlite3_exec(
-            session->db,
-            "create index if not exists identity_userid_addr on identity(address, user_id);\n",
-            NULL,
-            NULL,
-            NULL
-    );
-    assert(int_result == SQLITE_OK);
-
-    if (int_result != SQLITE_OK)
-        return PEP_UNKNOWN_DB_ERROR;
-
-
-    int_result = sqlite3_exec(
-            session->db,
-            "alter table identity\n"
-            "   add column pEp_version_major integer default 0;\n"
-            "alter table identity\n"
-            "   add column pEp_version_minor integer default 0;\n",
-            NULL,
-            NULL,
-            NULL
-    );
-    if (status != PEP_STATUS_OK)
-        return status;
-
-    int_result = sqlite3_exec(
-            session->db,
-            "update identity\n"
-            "   set pEp_version_major = 2\n"
-            "   where exists (select * from person\n"
-            "                     where identity.user_id = person.id\n"
-            "                     and identity.is_own = 0\n"
-            "                     and person.is_pEp_user = 1);\n",
-            NULL,
-            NULL,
-            NULL
-    );
-    if (status != PEP_STATUS_OK)
-        return status;
-
+static PEP_STATUS _force_upgrade_own_latest_message_version(PEP_SESSION session) {
     // N.B. WE DEFINE PEP_VERSION - IF WE'RE AT 9-DIGIT MAJOR OR MINOR VERSIONS, ER, BAD.
     char major_buf[10];
     char minor_buf[10];
@@ -1414,39 +1383,92 @@ static PEP_STATUS _upgrade_DB_to_ver_12(PEP_SESSION session) {
     }
     *bufptr = '\0';
 
-    const char *_ver_12_startstr =
+    const char *version_upgrade_startstr =
             "update identity\n"
             "    set pEp_version_major = ";
-    const char *_ver_12_midstr = ",\n"
+    const char *version_upgrade_midstr = ",\n"
                                  "        pEp_version_minor = ";
-    const char *_ver_12_endstr =
+    const char *version_upgrade_endstr =
             "\n"
-            "    where identity.is_own = 1;\n";
+            "    where identity.is_own = 1;\n"; // FIXME: Group idents?
 
-    size_t new_stringlen = strlen(_ver_12_startstr) + major_len +
-                           strlen(_ver_12_midstr) + minor_len +
-                           strlen(_ver_12_endstr);
+    size_t new_stringlen = strlen(version_upgrade_startstr) + major_len +
+                           strlen(version_upgrade_midstr) + minor_len +
+                           strlen(version_upgrade_endstr);
 
-    char *_ver_12_stmt = calloc(new_stringlen + 1, 1);
-    snprintf(_ver_12_stmt, new_stringlen + 1, "%s%s%s%s%s",
-             _ver_12_startstr, major_buf, _ver_12_midstr, minor_buf, _ver_12_endstr);
+    char *version_upgrade_stmt = calloc(new_stringlen + 1, 1);
+    snprintf(version_upgrade_stmt, new_stringlen + 1, "%s%s%s%s%s",
+             version_upgrade_startstr, major_buf, version_upgrade_midstr, minor_buf, version_upgrade_endstr);
 
-    int_result = sqlite3_exec(
+    int int_result = sqlite3_exec(
             session->db,
-            _ver_12_stmt,
+            version_upgrade_stmt,
             NULL,
             NULL,
             NULL
     );
-    free(_ver_12_stmt);
-    if (status != PEP_STATUS_OK)
-        return status;
+    free(version_upgrade_stmt);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
 
     return PEP_STATUS_OK;
 }
 
+static PEP_STATUS _upgrade_DB_to_ver_12(PEP_SESSION session) {
+    int int_result = sqlite3_exec(
+            session->db,
+            "create index if not exists identity_userid_addr on identity(address, user_id);\n",
+            NULL,
+            NULL,
+            NULL
+    );
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
+    int_result = sqlite3_exec(
+            session->db,
+            "alter table identity\n"
+            "   add column pEp_version_major integer default 0;\n"
+            "alter table identity\n"
+            "   add column pEp_version_minor integer default 0;\n",
+            NULL,
+            NULL,
+            NULL
+    );
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+    int_result = sqlite3_exec(
+            session->db,
+            "update identity\n"
+            "   set pEp_version_major = 2,\n"
+            "       pEp_version_minor = 1\n"
+            "   where exists (select * from person\n"
+            "                     where identity.user_id = person.id\n"
+            "                     and identity.is_own = 0\n"
+            "                     and person.is_pEp_user = 1);\n",
+            NULL,
+            NULL,
+            NULL
+    );
+     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+    return PEP_STATUS_OK;
+    // Superceded by the -to-version-18 upgrade.
+//    return _force_upgrade_own_latest_message_version(session);
+}
+
 static PEP_STATUS _upgrade_DB_to_ver_14(PEP_SESSION session) {
-    int  int_result = sqlite3_exec(
+    int int_result = sqlite3_exec(
             session->db,
             "alter table identity\n"
             "   add column enc_format integer default 0;\n",
@@ -1484,6 +1506,49 @@ static PEP_STATUS _upgrade_DB_to_ver_16(PEP_SESSION session) {
     return PEP_STATUS_OK;
 }
 
+static PEP_STATUS _upgrade_DB_to_ver_17(PEP_SESSION session) {
+    int int_result = sqlite3_exec(
+            session->db,
+            "alter table identity\n"
+            "   add column username;\n",
+            NULL,
+            NULL,
+            NULL
+    );
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+    return PEP_STATUS_OK;
+}
+
+// Version 2.0 and earlier will now no longer be supported with other
+// pEp users.
+static PEP_STATUS _upgrade_DB_to_ver_18(PEP_SESSION session) {
+    int int_result = sqlite3_exec(
+            session->db,
+            "update identity\n"
+            "   set pEp_version_major = 2,\n"
+            "       pEp_version_minor = 1\n"
+            "   where exists (select * from person\n"
+            "                     where identity.user_id = person.id\n"
+            "                     and identity.pEp_version_major = 2\n"
+            "                     and identity.pEp_version_minor = 0\n"
+            "                     and person.is_pEp_user = 1);\n",
+            NULL,
+            NULL,
+            NULL
+    );
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+    return _force_upgrade_own_latest_message_version(session);
+}
+
+// Honestly, the upgrades should be redone in a transaction IMHO.
 static PEP_STATUS _check_and_execute_upgrades(PEP_SESSION session, int version) {
     PEP_STATUS status = PEP_STATUS_OK;
 
@@ -1547,13 +1612,20 @@ static PEP_STATUS _check_and_execute_upgrades(PEP_SESSION session, int version) 
             if (status != PEP_STATUS_OK)
                 return status;
         case 16:
+            status = _upgrade_DB_to_ver_17(session);
+            if (status != PEP_STATUS_OK)
+                return status;
+        case 17:
+            status = _upgrade_DB_to_ver_18(session);
+            if (status != PEP_STATUS_OK)
+                return status;
+        case 18:
             break;
         default:
             return PEP_ILLEGAL_VALUE;
     }
     return PEP_STATUS_OK;
 }
-
 
 PEP_STATUS pEp_sql_init(PEP_SESSION session) {
     bool very_first = false;
@@ -1698,6 +1770,19 @@ PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session) {
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
+    int_result = sqlite3_prepare_v2(session->db, sql_set_default_identity_fpr,
+                                    (int)strlen(sql_set_default_identity_fpr), &session->set_default_identity_fpr, NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+    
+    int_result = sqlite3_prepare_v2(session->db, sql_get_default_identity_fpr,
+                                    (int)strlen(sql_get_default_identity_fpr), &session->get_default_identity_fpr, NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
 
     int_result = sqlite3_prepare_v2(session->db, sql_get_user_default_key,
                                     (int)strlen(sql_get_user_default_key), &session->get_user_default_key, NULL);
@@ -1987,6 +2072,12 @@ PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session) {
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
+    int_result = sqlite3_prepare_v2(session->db, sql_force_set_identity_username,
+                                    (int)strlen(sql_force_set_identity_username), &session->force_set_identity_username, NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
 
     int_result = sqlite3_prepare_v2(session->db, sql_set_identity_flags,
                                     (int)strlen(sql_set_identity_flags), &session->set_identity_flags,
@@ -2153,44 +2244,6 @@ PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session) {
 
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
-
-
-    // blacklist
-
-    int_result = sqlite3_prepare_v2(session->db, sql_blacklist_add,
-                                    (int)strlen(sql_blacklist_add), &session->blacklist_add, NULL);
-    assert(int_result == SQLITE_OK);
-
-    if (int_result != SQLITE_OK)
-        return PEP_UNKNOWN_DB_ERROR;
-
-
-    int_result = sqlite3_prepare_v2(session->db, sql_blacklist_delete,
-                                    (int)strlen(sql_blacklist_delete), &session->blacklist_delete,
-                                    NULL);
-    assert(int_result == SQLITE_OK);
-
-    if (int_result != SQLITE_OK)
-        return PEP_UNKNOWN_DB_ERROR;
-
-
-    int_result = sqlite3_prepare_v2(session->db, sql_blacklist_is_listed,
-                                    (int)strlen(sql_blacklist_is_listed),
-                                    &session->blacklist_is_listed, NULL);
-    assert(int_result == SQLITE_OK);
-
-    if (int_result != SQLITE_OK)
-        return PEP_UNKNOWN_DB_ERROR;
-
-
-    int_result = sqlite3_prepare_v2(session->db, sql_blacklist_retrieve,
-                                    (int)strlen(sql_blacklist_retrieve), &session->blacklist_retrieve,
-                                    NULL);
-    assert(int_result == SQLITE_OK);
-
-    if (int_result != SQLITE_OK)
-        return PEP_UNKNOWN_DB_ERROR;
-
 
     // Own keys
 
@@ -2506,6 +2559,8 @@ PEP_STATUS pEp_finalize_sql_stmts(PEP_SESSION session) {
         sqlite3_finalize(session->add_userid_alias);
     if (session->replace_identities_fpr)
         sqlite3_finalize(session->replace_identities_fpr);
+    if (session->get_default_identity_fpr)
+        sqlite3_finalize(session->get_default_identity_fpr);
     if (session->remove_fpr_as_identity_default)
         sqlite3_finalize(session->remove_fpr_as_identity_default);
     if (session->remove_fpr_as_user_default)
@@ -2544,6 +2599,8 @@ PEP_STATUS pEp_finalize_sql_stmts(PEP_SESSION session) {
         sqlite3_finalize(session->set_identity_entry);
     if (session->update_identity_entry)
         sqlite3_finalize(session->update_identity_entry);
+    if (session->force_set_identity_username)
+        sqlite3_finalize(session->force_set_identity_username);
     if (session->set_identity_flags)
         sqlite3_finalize(session->set_identity_flags);
     if (session->unset_identity_flags)
@@ -2594,14 +2651,6 @@ PEP_STATUS pEp_finalize_sql_stmts(PEP_SESSION session) {
         sqlite3_finalize(session->get_main_user_fpr);
     if (session->refresh_userid_default_key)
         sqlite3_finalize(session->refresh_userid_default_key);
-    if (session->blacklist_add)
-        sqlite3_finalize(session->blacklist_add);
-    if (session->blacklist_delete)
-        sqlite3_finalize(session->blacklist_delete);
-    if (session->blacklist_is_listed)
-        sqlite3_finalize(session->blacklist_is_listed);
-    if (session->blacklist_retrieve)
-        sqlite3_finalize(session->blacklist_retrieve);
     if (session->own_key_is_listed)
         sqlite3_finalize(session->own_key_is_listed);
     if (session->is_own_address)

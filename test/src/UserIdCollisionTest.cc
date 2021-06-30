@@ -9,7 +9,7 @@
 #include "pEpEngine.h"
 #include "pEp_internal.h"
 
-#include "test_util.h"
+#include "TestUtilities.h"
 
 
 #include "Engine.h"
@@ -132,14 +132,14 @@ namespace {
 
                 // Get a new test Engine.
                 engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
+                ASSERT_NOTNULL(engine);
 
                 // Ok, let's initialize test directories etc.
                 engine->prep(NULL, NULL, NULL, init_files);
 
                 // Ok, try to start this bugger.
                 engine->start();
-                ASSERT_NE(engine->session, nullptr);
+                ASSERT_NOTNULL(engine->session);
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
@@ -234,44 +234,73 @@ namespace {
 
 }  // namespace
 
-
-
+//
+// Create TOFU identity, set its FPR in the DB, test real id collision
+// 
 TEST_F(UserIdCollisionTest, simple_tofu_collision) {
     slurp_and_import_key(session,alex_keyfile);
     tofu_alex->username = strdup("Alexander the Mediocre");
     PEP_STATUS status = update_identity(session, tofu_alex);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_STREQ(tofu_alex->fpr, alex_keyid);
+    ASSERT_OK;
     string tofu_id = string("TOFU_") + alex_email;
     ASSERT_STREQ(tofu_alex->user_id, tofu_id.c_str());
+    ASSERT_NULL(tofu_alex->fpr);
+    status = set_fpr_preserve_ident(session, tofu_alex, alex_keyid, false);
+    ASSERT_OK;
+    status = update_identity(session, tofu_alex);
+    ASSERT_OK;
+    ASSERT_STREQ(tofu_alex->fpr, alex_keyid);
+
     status = update_identity(session, real_alex);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_STREQ(real_alex->fpr, alex_keyid);
     bool tofu_still_exists = false;
     status = exists_person(session, tofu_alex, &tofu_still_exists);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_FALSE(tofu_still_exists);
 }
 
+//
+// Create TOFU identity, set its FPR in the DB, test real id collision
+// with different usernames. Real ID shouldn't pick up the TOFU information
+// OR its key, since key election has been removed.
+//
+// This should no longer fail, because we don't use username matches to determine
+// what happens in update_identity. So we SHOULD replace the user_id and consolidate
+// identities.
+//
 TEST_F(UserIdCollisionTest, simple_tofu_collision_different_usernames) {
     slurp_and_import_key(session,alex_keyfile);
     tofu_alex->username = strdup("Alexander Hamilton");
     PEP_STATUS status = update_identity(session, tofu_alex);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_STREQ(tofu_alex->fpr, alex_keyid);
+    ASSERT_OK;
     string tofu_id = string("TOFU_") + alex_email;
     ASSERT_STREQ(tofu_alex->user_id, tofu_id.c_str());
+    ASSERT_NULL(tofu_alex->fpr);
+    status = set_fpr_preserve_ident(session, tofu_alex, alex_keyid, false);
+    ASSERT_OK;
+    status = update_identity(session, tofu_alex);
+    ASSERT_OK;
+    ASSERT_STREQ(tofu_alex->fpr, alex_keyid);
+
     status = update_identity(session, real_alex);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
+    ASSERT_NOTNULL(real_alex->fpr);
     ASSERT_STREQ(real_alex->fpr, alex_keyid);
+
     bool tofu_still_exists = false;
     status = exists_person(session, tofu_alex, &tofu_still_exists);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    // SHOULD still exist, because we don't replace when usernames differ
-    ASSERT_TRUE(tofu_still_exists);
+    ASSERT_OK;
+
+    ASSERT_FALSE(tofu_still_exists);
 }
 
-TEST_F(UserIdCollisionTest, tofu_collision_two_tofus) {
+//
+// Create TOFU identity, set its FPR in the DB, test second same tofu id collision
+// with same usernames. Mostly, this test appears to check if things don't blow up
+// when you don't update the TOFU id?
+// 
+TEST_F(UserIdCollisionTest, tofu_two_tofus_no_collision) {
     slurp_and_import_key(session,alex6a_keyfile);
 
     tofu_alex_6a->username = strdup("Alexander Hamilton");
@@ -281,26 +310,31 @@ TEST_F(UserIdCollisionTest, tofu_collision_two_tofus) {
     tofu_alex_6a->lang[1] = 'p';
 
     PEP_STATUS status = update_identity(session, tofu_alex_6a);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_STREQ(tofu_alex_6a->fpr, alex6a_keyid);
+    ASSERT_OK;
     string tofu_id = string("TOFU_") + alex6_email;
     ASSERT_STREQ(tofu_alex_6a->user_id, tofu_id.c_str());
+    ASSERT_NULL(tofu_alex_6a->fpr);
+    status = set_fpr_preserve_ident(session, tofu_alex_6a, alex6a_keyid, false);
+    ASSERT_OK;
+    status = update_identity(session, tofu_alex_6a);
+    ASSERT_OK;
+    ASSERT_STREQ(tofu_alex_6a->fpr, alex6a_keyid);
 
-    // Ok, NOW we put in an explicit TOFU
+    // Ok, we call with the same explicit TOFU id (?)
     tofu_alex_6b->user_id = strdup(tofu_id.c_str());
     status = update_identity(session, tofu_alex_6b);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_STREQ(tofu_alex_6b->fpr, alex6a_keyid);
     bool tofu_still_exists = false;
     status = exists_person(session, tofu_alex_6a, &tofu_still_exists);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    // SHOULD still exist, because we don't replace when usernames differ
+    ASSERT_OK;
+
     ASSERT_TRUE(tofu_still_exists);
     ASSERT_EQ(tofu_alex_6b->lang[0] , 'j');
     ASSERT_EQ(tofu_alex_6b->lang[1] , 'p');
 }
 
-TEST_F(UserIdCollisionTest, tofu_collision_two_tofus_diff_usernames) {
+TEST_F(UserIdCollisionTest, tofu_collision_same_tofus_diff_usernames) {
     slurp_and_import_key(session,alex6a_keyfile);
 
     tofu_alex_6a->username = strdup("Alexander Hamilton");
@@ -310,19 +344,26 @@ TEST_F(UserIdCollisionTest, tofu_collision_two_tofus_diff_usernames) {
     tofu_alex_6a->lang[1] = 'p';
 
     PEP_STATUS status = update_identity(session, tofu_alex_6a);
-    ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_STREQ(tofu_alex_6a->fpr, alex6a_keyid);
+    ASSERT_OK;
     string tofu_id = string("TOFU_") + alex6_email;
     ASSERT_STREQ(tofu_alex_6a->user_id, tofu_id.c_str());
+    ASSERT_NULL(tofu_alex_6a->fpr);
+    status = set_fpr_preserve_ident(session, tofu_alex_6a, alex6a_keyid, false);
+    ASSERT_OK;
+    status = update_identity(session, tofu_alex_6a);
+    ASSERT_OK;
+    ASSERT_STREQ(tofu_alex_6a->fpr, alex6a_keyid);
 
+    // FIXME: This is such a weird thing... check this
+    //
     // Ok, NOW we put in an explicit TOFU
     tofu_alex_6b->user_id = strdup(tofu_id.c_str());
     status = update_identity(session, tofu_alex_6b);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_STREQ(tofu_alex_6b->fpr, alex6a_keyid);
     bool tofu_still_exists = false;
     status = exists_person(session, tofu_alex_6a, &tofu_still_exists);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     // SHOULD still exist, because we don't replace when usernames differ
     ASSERT_TRUE(tofu_still_exists);
     ASSERT_EQ(tofu_alex_6b->lang[0] , 'j');
@@ -333,20 +374,27 @@ TEST_F(UserIdCollisionTest, tofu_collision_two_tofus_diff_usernames) {
 TEST_F(UserIdCollisionTest, real_followed_by_explicit_tofu) {
     slurp_and_import_key(session,alex_keyfile);
     real_alex->username = strdup("Alexander the Mediocre");
+ 
     PEP_STATUS status = update_identity(session, real_alex);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
+    ASSERT_NULL(real_alex->fpr);
+    status = set_fpr_preserve_ident(session, real_alex, alex_keyid, false);
+    ASSERT_OK;
+    status = update_identity(session, real_alex);
+    ASSERT_OK;
     ASSERT_STREQ(real_alex->fpr, alex_keyid);
+
     string tofu_id = string("TOFU_") + alex_email;
     tofu_alex->username = strdup(real_alex->username);
     tofu_alex->user_id = strdup(tofu_id.c_str());
     status = update_identity(session, tofu_alex);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_STREQ(tofu_alex->user_id, "AlexID");
     bool tofu_still_exists = false;
     free(tofu_alex->user_id);
     tofu_alex->user_id = strdup(tofu_id.c_str());
     status = exists_person(session, tofu_alex, &tofu_still_exists);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_FALSE(tofu_still_exists);
 }
 
@@ -369,13 +417,13 @@ TEST_F(UserIdCollisionTest, merge_records_normal) {
     status = set_identity(session, tofu_alex_6a);
     real_alex_6a->username = strdup(tofu_alex_6a->username);
     status = update_identity(session, real_alex_6a);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(real_alex_6a->lang[0] , 'e');
     ASSERT_EQ(real_alex_6a->comm_type , PEP_ct_pEp_unconfirmed);
     free(real_alex_6a->fpr);
     real_alex_6a->fpr = strdup(alex6c_keyid);
     status = get_trust(session, real_alex_6a);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(real_alex_6a->comm_type , PEP_ct_OpenPGP);
 }
 
@@ -402,9 +450,9 @@ TEST_F(UserIdCollisionTest, merge_records_set) {
     free(real_alex_6a->fpr);
     real_alex_6a->fpr = strdup(alex6d_keyid);
     status = set_person(session, real_alex_6a, true); // NOT identit
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     status = update_identity(session, real_alex_6a);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(real_alex_6a->lang[0] , 'e');
     ASSERT_EQ(real_alex_6a->comm_type , PEP_ct_pEp);
     bool pEp_peep = false;
@@ -442,11 +490,11 @@ TEST_F(UserIdCollisionTest, merge_records_set_2) {
     free(real_alex_6a->fpr);
     real_alex_6a->fpr = strdup(alex6d_keyid);
     status = set_person(session, real_alex_6a, true); // NOT identity
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     status = set_as_pEp_user(session, real_alex_6a);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     status = update_identity(session, real_alex_6a);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_OK;
     ASSERT_EQ(real_alex_6a->lang[0] , 'e');
     ASSERT_EQ(real_alex_6a->comm_type , PEP_ct_pEp);
     bool pEp_peep = false;
