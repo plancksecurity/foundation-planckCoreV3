@@ -1123,7 +1123,6 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
-					"$(PROJECT_DIR)/../../local/include",
 					"$(PROJECT_DIR)/Subprojects/pEpASN1/build/include",
 					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
 					"$(PROJECT_DIR)/../../sequoia4macos/build/include",
@@ -1156,7 +1155,6 @@
 				EXECUTABLE_PREFIX = lib;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				HEADER_SEARCH_PATHS = (
-					"$(PROJECT_DIR)/../../local/include",
 					"$(PROJECT_DIR)/Subprojects/pEpASN1/build/include",
 					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
 					"$(PROJECT_DIR)/../../sequoia4macos/build/include",
