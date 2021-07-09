@@ -1126,6 +1126,7 @@
 					"$(PROJECT_DIR)/../../local/include",
 					"$(PROJECT_DIR)/Subprojects/pEpASN1/build/include",
 					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
+					"$(PROJECT_DIR)/../../sequoia4macos/build/include",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -1158,6 +1159,7 @@
 					"$(PROJECT_DIR)/../../local/include",
 					"$(PROJECT_DIR)/Subprojects/pEpASN1/build/include",
 					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
+					"$(PROJECT_DIR)/../../sequoia4macos/build/include",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_FAST_MATH = YES;
