@@ -64,9 +64,9 @@ ifdef SQLITE3_FROM_OS
 endif
 
 ifeq ($(OPENPGP),GPG)
-    #LDLIBS+= -lgpgme
+    LDLIBS+= -lgpgme
 else ifeq ($(OPENPGP),NETPGP)
-    LDLIBS+= -lnetpgp
+    LDLIBS+=$(NETPGP_LIB)
     ifeq ($(BUILD_FOR),Linux)
         LDLIBS+= -ltre
     endif
@@ -115,7 +115,9 @@ all:
 LDLIBS+=-lgtest -lgtest_main
 ifeq ($(BUILD_ON),OS/390)
     LDLIBS+=-lzz
-else
+endif
+
+ifeq ($(OPENPGP),SEQUOIA)
     LDLIBS+=-lsequoia_openpgp_ffi 
 endif
 
