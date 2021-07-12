@@ -1458,7 +1458,7 @@ PEP_STATUS update_pEp_user_trust_vals(PEP_SESSION session,
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_TRUST;
 
-    PEP_STATUS status = upgrade_pEp_version_by_user_id(session, user, 2, 0);
+    PEP_STATUS status = upgrade_pEp_version_by_user_id(session, user, 2, 1);
     
     return status;
 }
@@ -2396,7 +2396,7 @@ PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
             SQLITE_STATIC);
     result = sqlite3_step(session->replace_userid);
 #ifndef NDEBUG
-    if (result) {
+    if (result != SQLITE_DONE) {
         const char *errmsg = sqlite3_errmsg(session->db);
         log_event(session, "SQLite3 error", "replace_userid", errmsg, NULL);
     }

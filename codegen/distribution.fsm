@@ -26,7 +26,7 @@ protocol Distribution 2 {
     fsm ManagedGroup 2 {
         version 1, 0;
 
-        message GroupCreate 2, security=untrusted {
+        message GroupInvite 2, security=untrusted {
             field Identity groupIdentity;
             field Identity manager;
         }

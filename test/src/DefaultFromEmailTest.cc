@@ -1287,5 +1287,48 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_trusted_bob_noclobber_1_
 
 }
 
+TEST_F(DefaultFromEmailTest, check_encrypted_key_import_bob_2_2_bad_sender_claim) {
+    const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
+    set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
 
+    // Ok, we now the desired state. Run the import mail fun.
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom3.1BobToAlice_2_2_claim_doesnt_match_signer.eml",
+                                     PEP_rating_unreliable, PEP_DECRYPTED);
 
+    // Check that the default key matches the canonical default key for this sender,
+    // if expected to be present.
+    check_sender_default_key_status(sender_info, PEP_ct_key_not_found);
+
+}
+
+TEST_F(DefaultFromEmailTest, check_encrypted_key_import_reliable_bob_2_2_bad_sender_claim) {
+    const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
+    set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
+
+    force_sender_default_to_be_set(TestUtilsPreset::BOB, false);
+
+    // Ok, we now the desired state. Run the import mail fun.
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom3.1BobToAlice_2_2_claim_doesnt_match_signer.eml",
+                                     PEP_rating_unreliable, PEP_DECRYPTED);
+
+    // Check that the default key matches the canonical default key for this sender,
+    // if expected to be present.
+    check_sender_default_key_status(sender_info, PEP_ct_pEp_unconfirmed);
+
+}
+
+TEST_F(DefaultFromEmailTest, check_encrypted_key_import_trusted_bob_2_2_bad_sender_claim) {
+    const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
+    set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
+
+    force_sender_default_to_be_set(TestUtilsPreset::BOB, true);
+
+    // Ok, we now the desired state. Run the import mail fun.
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom3.1BobToAlice_2_2_claim_doesnt_match_signer.eml",
+                                     PEP_rating_unreliable, PEP_DECRYPTED);
+
+    // Check that the default key matches the canonical default key for this sender,
+    // if expected to be present.
+    check_sender_default_key_status(sender_info, PEP_ct_pEp);
+
+}

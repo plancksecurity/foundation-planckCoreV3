@@ -5886,7 +5886,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     // with protocol families.
     if (msg && msg->from) {
         size_t size;
-        const char *data;
+        const char *data = NULL;
         char *sender_fpr = NULL;
 
         PEP_STATUS tmp_status = PEP_UNKNOWN_ERROR; // We start with error because OK means we successfully matched
