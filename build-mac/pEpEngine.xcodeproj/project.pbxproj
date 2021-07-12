@@ -100,6 +100,7 @@
 		1552DC8A2577D71800A92F71 /* distribution_codec.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188ABF23C4BBDE008EF79C /* distribution_codec.h */; };
 		156AFEB82672089100AF0039 /* libetpan.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64289E351B8B630200FC617B /* libetpan.a */; };
 		1585EC1B269C33FB00B822E1 /* stringlist.h in Headers */ = {isa = PBXBuildFile; fileRef = 64A8266E1B455D0800EECAF0 /* stringlist.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1585EC1F269C351100B822E1 /* stringlist.h in Headers */ = {isa = PBXBuildFile; fileRef = 64A8266E1B455D0800EECAF0 /* stringlist.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		159EF42722B6D3E900149C0C /* pgp_sequoia.c in Sources */ = {isa = PBXBuildFile; fileRef = 159EF42422B6D3E900149C0C /* pgp_sequoia.c */; };
 		159EF42822B6D3E900149C0C /* pgp_sequoia.h in Headers */ = {isa = PBXBuildFile; fileRef = 159EF42522B6D3E900149C0C /* pgp_sequoia.h */; };
 		159EF42922B6D3E900149C0C /* pgp_sequoia_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 159EF42622B6D3E900149C0C /* pgp_sequoia_internal.h */; };
@@ -641,6 +642,7 @@
 				1543DA462577F8BE0041EFB5 /* sync_codec.h in Headers */,
 				1552DC552577D6D700A92F71 /* pEp_string.h in Headers */,
 				1552DC192577D69300A92F71 /* pEpEngine.h in Headers */,
+				1585EC1F269C351100B822E1 /* stringlist.h in Headers */,
 				1543DA492577F8BE0041EFB5 /* KeySync_fsm.h in Headers */,
 				1552DB142577D4F100A92F71 /* pEpEngine_macOS.h in Headers */,
 				1552DC842577D71800A92F71 /* keyreset_command.h in Headers */,
