@@ -1222,7 +1222,7 @@ decrypt_cb(void *cookie_opaque,
 
     for (size_t i = 0; i < pkesk_count; i ++) {
         pgp_pkesk_t pkesk = pkesks[i];
-        pgp_keyid_t keyid = pgp_pkesk_recipient(pkesk); /* Reference. */
+        pgp_keyid_t keyid = pgp_pkesk_recipient(pkesk);
         char *keyid_str = pgp_keyid_to_hex(keyid);
         pgp_cert_key_iter_t key_iter = NULL;
         pgp_key_amalgamation_t ka = NULL;
@@ -1324,6 +1324,7 @@ decrypt_cb(void *cookie_opaque,
         cookie->decrypted = 1;
 
     eol:
+        pgp_keyid_free (keyid);
         pgp_session_key_free (sk);
         free(keyid_str);
         pgp_key_free (key);
@@ -1335,7 +1336,7 @@ decrypt_cb(void *cookie_opaque,
     // Consider wildcard recipients.
     if (wildcards) for (size_t i = 0; i < pkesk_count && !cookie->decrypted; i ++) {
         pgp_pkesk_t pkesk = pkesks[i];
-        pgp_keyid_t keyid = pgp_pkesk_recipient(pkesk); /* Reference. */
+        pgp_keyid_t keyid = pgp_pkesk_recipient(pkesk);
         char *keyid_str = pgp_keyid_to_hex(keyid);
         pgp_cert_key_iter_t key_iter = NULL;
         pgp_key_amalgamation_t ka = NULL;
@@ -1426,6 +1427,7 @@ decrypt_cb(void *cookie_opaque,
             key_iter = NULL;
         }
     eol2:
+        pgp_keyid_free (keyid);
         pgp_session_key_free (sk);
         free(keyid_str);
         pgp_key_free (key);
@@ -1755,10 +1757,13 @@ PEP_STATUS pgp_decrypt_and_verify(
         stringlist_add(cookie.signer_keylist, "");
 
     *keylist = cookie.signer_keylist;
+    cookie.signer_keylist = NULL; /* Moved.  */
     stringlist_append(*keylist, cookie.recipient_keylist);
 
-    if (filename_ptr)
+    if (filename_ptr) {
         *filename_ptr = cookie.filename;
+        cookie.filename = NULL; /* Moved.  */
+    }
 
  out:
     if (status == PEP_STATUS_OK) {
@@ -1789,12 +1794,13 @@ PEP_STATUS pgp_decrypt_and_verify(
             status = PEP_DECRYPTED;
         }
     } else {
-        free_stringlist(cookie.recipient_keylist);
-        free_stringlist(cookie.signer_keylist);
-        free(cookie.filename);
         free(*ptext);
+        *ptext = NULL;
     }
 
+    free_stringlist(cookie.recipient_keylist);
+    free_stringlist(cookie.signer_keylist);
+    free(cookie.filename);
     pgp_reader_free(reader);
     pgp_reader_free(decryptor);
     pgp_writer_free(writer);
@@ -1902,6 +1908,7 @@ PEP_STATUS pgp_verify_text(
         stringlist_add(cookie.signer_keylist, "");
 
     *keylist = cookie.signer_keylist;
+    cookie.signer_keylist = NULL; /* Moved.  */
     stringlist_append(*keylist, cookie.recipient_keylist);
 
  out:
@@ -1932,10 +1939,10 @@ PEP_STATUS pgp_verify_text(
             // don't have the keys).
             status = PEP_UNENCRYPTED;
         }
-    } else {
-        free_stringlist(cookie.recipient_keylist);
-        free_stringlist(cookie.signer_keylist);
     }
+
+    free_stringlist(cookie.recipient_keylist);
+    free_stringlist(cookie.signer_keylist);
 
     pgp_reader_free(reader);
     pgp_reader_free(dsig_reader);
