@@ -229,7 +229,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nCUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include\"\nmkdir -p ${CUSTOM_INCLUDE_DIR}\ncp -R \"${PROJECT_DIR}\"/../../../../sqlite/*.h ${CUSTOM_INCLUDE_DIR}\ncp  \"${TARGET_BUILD_DIR}/libPEPSQLITE3_iOS.a\" ${CUSTOM_BUILD_DIR}\n\n";
+			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nCUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include\"\nmkdir -p ${CUSTOM_INCLUDE_DIR}\ncp -R \"${PROJECT_DIR}\"/../../../../sqlite/*.h ${CUSTOM_INCLUDE_DIR}\ncp  \"${BUILT_PRODUCTS_DIR}/libPEPSQLITE3_iOS.a\" ${CUSTOM_BUILD_DIR}\n\n";
 			showEnvVarsInLog = 0;
 		};
 		15A3268A26120757009D07EB /* Copy Artefacts & Headers to Custom Build Dir */ = {
@@ -248,7 +248,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nCUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include\"\nmkdir -p ${CUSTOM_INCLUDE_DIR}\ncp \"${PROJECT_DIR}\"/../../../../sqlite/sqlite3.h ${CUSTOM_INCLUDE_DIR}\ncp  \"${TARGET_BUILD_DIR}/libPEPSQLITE3_macOS.a\" ${CUSTOM_BUILD_DIR}\n";
+			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nCUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include\"\nmkdir -p ${CUSTOM_INCLUDE_DIR}\ncp \"${PROJECT_DIR}\"/../../../../sqlite/sqlite3.h ${CUSTOM_INCLUDE_DIR}\ncp  \"${BUILT_PRODUCTS_DIR}/libPEPSQLITE3_macOS.a\" ${CUSTOM_BUILD_DIR}\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */

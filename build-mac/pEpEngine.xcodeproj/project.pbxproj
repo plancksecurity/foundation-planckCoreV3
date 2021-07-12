@@ -99,6 +99,8 @@
 		1552DC892577D71800A92F71 /* status_to_string.h in Headers */ = {isa = PBXBuildFile; fileRef = 1549189322B9401E0091B6D6 /* status_to_string.h */; };
 		1552DC8A2577D71800A92F71 /* distribution_codec.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188ABF23C4BBDE008EF79C /* distribution_codec.h */; };
 		156AFEB82672089100AF0039 /* libetpan.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64289E351B8B630200FC617B /* libetpan.a */; };
+		1585EC1B269C33FB00B822E1 /* stringlist.h in Headers */ = {isa = PBXBuildFile; fileRef = 64A8266E1B455D0800EECAF0 /* stringlist.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1585EC1F269C351100B822E1 /* stringlist.h in Headers */ = {isa = PBXBuildFile; fileRef = 64A8266E1B455D0800EECAF0 /* stringlist.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		159EF42722B6D3E900149C0C /* pgp_sequoia.c in Sources */ = {isa = PBXBuildFile; fileRef = 159EF42422B6D3E900149C0C /* pgp_sequoia.c */; };
 		159EF42822B6D3E900149C0C /* pgp_sequoia.h in Headers */ = {isa = PBXBuildFile; fileRef = 159EF42522B6D3E900149C0C /* pgp_sequoia.h */; };
 		159EF42922B6D3E900149C0C /* pgp_sequoia_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 159EF42622B6D3E900149C0C /* pgp_sequoia_internal.h */; };
@@ -640,6 +642,7 @@
 				1543DA462577F8BE0041EFB5 /* sync_codec.h in Headers */,
 				1552DC552577D6D700A92F71 /* pEp_string.h in Headers */,
 				1552DC192577D69300A92F71 /* pEpEngine.h in Headers */,
+				1585EC1F269C351100B822E1 /* stringlist.h in Headers */,
 				1543DA492577F8BE0041EFB5 /* KeySync_fsm.h in Headers */,
 				1552DB142577D4F100A92F71 /* pEpEngine_macOS.h in Headers */,
 				1552DC842577D71800A92F71 /* keyreset_command.h in Headers */,
@@ -680,6 +683,7 @@
 				431F04B722733A7E00CCE960 /* key_reset.h in Headers */,
 				64A8268C1B455D9D00EECAF0 /* pEpEngine.h in Headers */,
 				154918AC22B940200091B6D6 /* status_to_string.h in Headers */,
+				1585EC1B269C33FB00B822E1 /* stringlist.h in Headers */,
 				430BCC482015EE800077E998 /* pEp_string.h in Headers */,
 				159EF42922B6D3E900149C0C /* pgp_sequoia_internal.h in Headers */,
 				43188AA923C4B4B3008EF79C /* keyreset_command.h in Headers */,
@@ -740,6 +744,7 @@
 				64796A3C1B455AA5004B1C24 /* Frameworks */,
 				64796A3D1B455AA5004B1C24 /* CopyFiles */,
 				64A8268B1B455D8D00EECAF0 /* Headers */,
+				1585EC74269C3A7000B822E1 /* Copy Artefacts to Custom Build Dir */,
 			);
 			buildRules = (
 			);
@@ -893,7 +898,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nmkdir -p \"${CUSTOM_BUILD_DIR}\"\ncp -r \"${BUILD_DIR}/${CONFIGURATION}/libpEpEngine_macOS.a\" \"${CUSTOM_BUILD_DIR}/libpEpEngine.a\"\n\n# COPY HEADERS\nCUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include/pEp\"\nmkdir -p \"${CUSTOM_INCLUDE_DIR}\"\n\n#pushd ${PROJECT_DIR}/../asn.1\n#    cp *h \"${CUSTOM_INCLUDE_DIR}\"\n#popd\n\npushd ${PROJECT_DIR}/../sync/generated\n    cp *h \"${CUSTOM_INCLUDE_DIR}\"\npopd\n\npushd ${PROJECT_DIR}/../src\n    cp *h \"${CUSTOM_INCLUDE_DIR}\"\npopd\n\n# Copy system.db also\ncp ${PROJECT_DIR}/../db/system.db \"${CUSTOM_BUILD_DIR}\"\n";
+			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nmkdir -p \"${CUSTOM_BUILD_DIR}\"\ncp -r \"${BUILT_PRODUCTS_DIR}/libpEpEngine_macOS.a\" \"${CUSTOM_BUILD_DIR}/libpEpEngine.a\"\n\n# COPY HEADERS\nCUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include/pEp\"\nmkdir -p \"${CUSTOM_INCLUDE_DIR}\"\n\npushd ${PROJECT_DIR}/../sync/generated\n    cp *h \"${CUSTOM_INCLUDE_DIR}\"\npopd\n\npushd ${PROJECT_DIR}/../src\n    cp *h \"${CUSTOM_INCLUDE_DIR}\"\npopd\n\n# Copy system.db also\ncp ${PROJECT_DIR}/../db/system.db \"${CUSTOM_BUILD_DIR}\"\n";
 		};
 		150845EA25F13CF100D46DA6 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -913,6 +918,24 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "export LANG=en_US.UTF-8\n\necho \"***************************************\"\necho \"*** Generate files: ACTION: $ACTION ***\"\necho \"***************************************\"\n\ncd \"$SRCROOT/..\"\n\nbash -l -c \"gmake -C sync\"\nbash -l -c \"make -C asn.1 Sync.c Distribution.c\"\n";
+		};
+		1585EC74269C3A7000B822E1 /* Copy Artefacts to Custom Build Dir */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Artefacts to Custom Build Dir";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nmkdir -p \"${CUSTOM_BUILD_DIR}\"\n\ncp -r \"${BUILT_PRODUCTS_DIR}/libpEpEngine.a\" \"${CUSTOM_BUILD_DIR}\"\n\n# COPY HEADERS\nCUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include/pEp\"\nmkdir -p \"${CUSTOM_INCLUDE_DIR}\"\n\npushd ${PROJECT_DIR}/../sync/generated\n    cp *h \"${CUSTOM_INCLUDE_DIR}\"\npopd\n\npushd ${PROJECT_DIR}/../src\n    cp *h \"${CUSTOM_INCLUDE_DIR}\"\npopd\n\n# Copy system.db also\ncp ${PROJECT_DIR}/../db/system.db \"${CUSTOM_BUILD_DIR}\"\n";
 		};
 		644297C61BE11D00002BC73B /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1123,9 +1146,9 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
-					"$(PROJECT_DIR)/../../local/include",
 					"$(PROJECT_DIR)/Subprojects/pEpASN1/build/include",
 					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
+					"$(PROJECT_DIR)/../../sequoia4macos/build/include",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -1155,9 +1178,9 @@
 				EXECUTABLE_PREFIX = lib;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				HEADER_SEARCH_PATHS = (
-					"$(PROJECT_DIR)/../../local/include",
 					"$(PROJECT_DIR)/Subprojects/pEpASN1/build/include",
 					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
+					"$(PROJECT_DIR)/../../sequoia4macos/build/include",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_FAST_MATH = YES;
