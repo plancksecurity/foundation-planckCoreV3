@@ -97,5 +97,6 @@ TEST_F(EncryptSignDirectLoopTest, check_encrypt_sign_optional_loop) {
             cout << i << endl;
         free(ctext);
     }
+    free_stringlist(keylist);
 }
 #endif

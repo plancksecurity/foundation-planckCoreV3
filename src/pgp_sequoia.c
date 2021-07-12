@@ -2685,7 +2685,7 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
 
     // Because we also import binary keys we have to be careful with this.
     // 
-    if (strlen(key_data + prefix_len) > prefix_len) {
+    if ((size - prefix_len) > 0) {
         const char* subtract_junk = strnstr(key_data, pgp_begin, size);
         // If it's not in there, we just try to import it as is...
         if (subtract_junk) {
@@ -2694,6 +2694,9 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
         }    
     }
 
+    // This will only be greater than 1 IF we are importing ASCII keys
+    // and those keys are in a concatenated keyfile with ASCII armour around each key.
+    // However, see caveat below.
     unsigned int keycount = count_keydata_parts(key_data, size);
     if (keycount < 2) {
         retval = _pgp_import_keydata(session, key_data, size, private_idents,
@@ -2708,15 +2711,21 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
     identity_list* collected_idents = NULL;
 
     retval = PEP_KEY_IMPORTED;
-            
+
+    // Binary keys should never get here. HOWEVER, someone could be sinister
+    // and create a binary key file and add the string from the armor
+    // somewhere in there, which could fool us above. Thus, we're still
+    // not safe with a strlen.
     for (i = 0, curr_begin = key_data; i < keycount; i++) {
         const char* next_begin = NULL;
+
+        size_t size_remaining = size - (curr_begin - key_data);
 
         // This is assured to be OK because the count function above
         // made sure that THIS round contains at least prefix_len chars
         // We used strnstr to count, so we know that strstr will be ok.
-        if (strlen(curr_begin + prefix_len) > prefix_len)
-            next_begin = strstr(curr_begin + prefix_len, pgp_begin);
+        if ((size_remaining - prefix_len) > 0)
+            next_begin = strnstr(curr_begin + prefix_len, pgp_begin, size_remaining);
 
         if (next_begin)
             curr_size = next_begin - curr_begin;
