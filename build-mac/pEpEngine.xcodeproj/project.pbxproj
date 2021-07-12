@@ -99,6 +99,7 @@
 		1552DC892577D71800A92F71 /* status_to_string.h in Headers */ = {isa = PBXBuildFile; fileRef = 1549189322B9401E0091B6D6 /* status_to_string.h */; };
 		1552DC8A2577D71800A92F71 /* distribution_codec.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188ABF23C4BBDE008EF79C /* distribution_codec.h */; };
 		156AFEB82672089100AF0039 /* libetpan.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64289E351B8B630200FC617B /* libetpan.a */; };
+		1585EC1B269C33FB00B822E1 /* stringlist.h in Headers */ = {isa = PBXBuildFile; fileRef = 64A8266E1B455D0800EECAF0 /* stringlist.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		159EF42722B6D3E900149C0C /* pgp_sequoia.c in Sources */ = {isa = PBXBuildFile; fileRef = 159EF42422B6D3E900149C0C /* pgp_sequoia.c */; };
 		159EF42822B6D3E900149C0C /* pgp_sequoia.h in Headers */ = {isa = PBXBuildFile; fileRef = 159EF42522B6D3E900149C0C /* pgp_sequoia.h */; };
 		159EF42922B6D3E900149C0C /* pgp_sequoia_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 159EF42622B6D3E900149C0C /* pgp_sequoia_internal.h */; };
@@ -680,6 +681,7 @@
 				431F04B722733A7E00CCE960 /* key_reset.h in Headers */,
 				64A8268C1B455D9D00EECAF0 /* pEpEngine.h in Headers */,
 				154918AC22B940200091B6D6 /* status_to_string.h in Headers */,
+				1585EC1B269C33FB00B822E1 /* stringlist.h in Headers */,
 				430BCC482015EE800077E998 /* pEp_string.h in Headers */,
 				159EF42922B6D3E900149C0C /* pgp_sequoia_internal.h in Headers */,
 				43188AA923C4B4B3008EF79C /* keyreset_command.h in Headers */,
