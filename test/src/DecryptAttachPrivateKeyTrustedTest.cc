@@ -147,23 +147,22 @@ TEST_F(DecryptAttachPrivateKeyTrustedTest, check_decrypt_attach_private_key_trus
 
     output_stream << "Reading in message..." << endl;
 
-    string encoded_text = slurp("test_mails/priv_key_attach.eml");
+    message* encoded_text = slurp_message_file_into_struct("test_mails/priv_key_attach.eml");
 
     output_stream << "Starting test..." << endl;
+
     // Case 1:
     // Same address, same user_id, untrusted
     output_stream << "decrypt with attached private key: Same address, same user_id, trusted" << endl;
-    char* decrypted_text = NULL;
+    message* decrypted_text = NULL;
     stringlist_t* keylist_used = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    char* modified_src = NULL;
 
     output_stream << "Trusting own key for " << same_addr_same_uid->user_id << " and " << same_addr_same_uid->fpr << endl;
     status = trust_own_key(session, same_addr_same_uid);
     output_stream << "Status is " << tl_status_string(status) << endl;
     ASSERT_EQ(status, PEP_STATUS_OK);
-    free(decrypted_text);
     decrypted_text = NULL;
 
     status = get_trust(session, same_addr_same_uid);
@@ -172,19 +171,16 @@ TEST_F(DecryptAttachPrivateKeyTrustedTest, check_decrypt_attach_private_key_trus
     ASSERT_EQ(same_addr_same_uid->comm_type, PEP_ct_pEp);
 
     flags = 0;
-    status = MIME_decrypt_message(session, encoded_text.c_str(),
-                                  encoded_text.size(), &decrypted_text,
-                                  &keylist_used, &rating, &flags,
-                                  &modified_src);
+    status = decrypt_message(session, encoded_text, &decrypted_text,
+                                  &keylist_used, &rating, &flags);
 
     status = get_trust(session, same_addr_same_uid);
     ASSERT_EQ(same_addr_same_uid->comm_type, PEP_ct_pEp);
+    wipe_message_ptr(&decrypted_text);
 
     flags = 0;
-    status = MIME_decrypt_message(session, encoded_text.c_str(),
-                                  encoded_text.size(), &decrypted_text,
-                                  &keylist_used, &rating, &flags,
-                                  &modified_src);
+    status = decrypt_message(session, encoded_text, &decrypted_text,
+                                  &keylist_used, &rating, &flags);
 
     output_stream << "Status: " << tl_status_string(status) << endl;
     ASSERT_EQ(status, PEP_STATUS_OK);

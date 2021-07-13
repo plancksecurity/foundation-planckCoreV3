@@ -637,18 +637,17 @@ TEST_F(PassphraseTest, check_bob_primary_pass_subkey_no_passphrase_nopass_decryp
     status = set_identity(session, to_ident);
     ASSERT_EQ(status, PEP_STATUS_OK);
     
-    string msg = slurp("test_mails/encrypt_to_bob.eml");
-    char* decrypted_msg = NULL;
-    char* modified_src = NULL;  
+    message* enc_msg = slurp_message_file_into_struct("test_mails/encrypt_to_bob.eml");
+    message* decrypted_msg = NULL;
     stringlist_t* keylist_used = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
+    status = decrypt_message(session, enc_msg, &decrypted_msg, &keylist_used, &rating, &flags);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(decrypted_msg);
-    
-    free(decrypted_msg);
-    free(modified_src);
+
+    free_message(enc_msg);
+    free_message(decrypted_msg);
     free_stringlist(keylist_used);
 }
 
@@ -678,18 +677,17 @@ TEST_F(PassphraseTest, check_carol_primary_unenc_subkeys_passphrase_nopass_decry
     status = set_identity(session, to_ident);
     ASSERT_EQ(status, PEP_STATUS_OK);
     
-    string msg = slurp("test_mails/encrypt_to_carol.eml");
-    char* decrypted_msg = NULL;
-    char* modified_src = NULL;  
+    message* enc_msg = slurp_message_file_into_struct("test_mails/encrypt_to_carol.eml");
+    message* decrypted_msg = NULL;
     stringlist_t* keylist_used = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
+    status = decrypt_message(session, enc_msg, &decrypted_msg, &keylist_used, &rating, &flags);
     ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);
     ASSERT_NULL(decrypted_msg);
-    
-    free(decrypted_msg);
-    free(modified_src);
+
+    free_message(enc_msg);
+    free_message(decrypted_msg);
     free_stringlist(keylist_used);
 }    
 
@@ -962,18 +960,17 @@ TEST_F(PassphraseTest, check_carol_primary_unenc_subkeys_passphrase_withpass_dec
     status = config_passphrase(session, pass);    
     ASSERT_EQ(status, PEP_STATUS_OK);    
     
-    string msg = slurp("test_mails/encrypt_to_carol.eml");
-    char* decrypted_msg = NULL;
-    char* modified_src = NULL;  
+    message* enc_msg = slurp_message_file_into_struct("test_mails/encrypt_to_carol.eml");
+    message* decrypted_msg = NULL;
     stringlist_t* keylist_used = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
+    status = decrypt_message(session, enc_msg, &decrypted_msg, &keylist_used, &rating, &flags);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(decrypted_msg);
-    
-    free(decrypted_msg);
-    free(modified_src);
+
+    free_message(enc_msg);
+    free_message(decrypted_msg);
     free_stringlist(keylist_used);
 }    
 
@@ -1007,18 +1004,17 @@ TEST_F(PassphraseTest, check_carol_primary_unenc_subkeys_passphrase_wrongpass_de
     status = config_passphrase(session, pass);    
     ASSERT_EQ(status, PEP_STATUS_OK);    
     
-    string msg = slurp("test_mails/encrypt_to_carol.eml");
-    char* decrypted_msg = NULL;
-    char* modified_src = NULL;  
+    message* enc_msg = slurp_message_file_into_struct("test_mails/encrypt_to_carol.eml");
+    message* decrypted_msg = NULL;
     stringlist_t* keylist_used = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
+    status = decrypt_message(session, enc_msg, &decrypted_msg, &keylist_used, &rating, &flags);
     ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);
     ASSERT_NULL(decrypted_msg);
-    
-    free(decrypted_msg);
-    free(modified_src);
+
+    free_message(enc_msg);
+    free_message(decrypted_msg);
     free_stringlist(keylist_used);
 }    
 

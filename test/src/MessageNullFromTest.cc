@@ -130,40 +130,17 @@ TEST_F(MessageNullFromTest, check_message_null_from_header_key_unencrypted) {
 
 TEST_F(MessageNullFromTest, check_message_null_from_encrypted_not_signed) {
     import_alice_pub();
-    string null_from_msg = slurp("test_files/432_no_from_encrypted_not_signed.eml");
-    output_stream << null_from_msg << endl;
-    stringlist_t* keylist = NULL;
-    PEP_decrypt_flags_t flags = 0;
-    PEP_rating rating;
-    char* mime_plaintext = NULL;
-    char* modified_src = NULL;
-    PEP_STATUS status = MIME_decrypt_message(session, null_from_msg.c_str(),
-                                             null_from_msg.size(),
-                                             &mime_plaintext,
-                                             &keylist,
-                                             &rating,
-                                             &flags,
-                                             &modified_src);
+    message* plaintext_msg = NULL;
+    PEP_STATUS status = vanilla_read_file_and_decrypt(session, &plaintext_msg, "test_files/432_no_from_encrypted_not_signed.eml");
     ASSERT_EQ(status , PEP_DECRYPTED);
-    ASSERT_NOTNULL(mime_plaintext);
+    ASSERT_NOTNULL(plaintext_msg);
+    free_message(plaintext_msg);
 }
 
 TEST_F(MessageNullFromTest, check_message_null_from_encrypted_and_signed) {
     import_alice_pub();
-    string null_from_msg = slurp("test_files/432_no_from_encrypted_and_signed.eml");
-    output_stream << null_from_msg << endl;
-    stringlist_t* keylist = NULL;
-    PEP_decrypt_flags_t flags = 0;
-    PEP_rating rating;
-    char* mime_plaintext = NULL;
-    char* modified_src = NULL;
-    PEP_STATUS status = MIME_decrypt_message(session, null_from_msg.c_str(),
-                                             null_from_msg.size(),
-                                             &mime_plaintext,
-                                             &keylist,
-                                             &rating,
-                                             &flags,
-                                             &modified_src);
+    message* plaintext_msg = NULL;
+    PEP_STATUS status = vanilla_read_file_and_decrypt(session, &plaintext_msg, "test_files/432_no_from_encrypted_and_signed.eml");
     ASSERT_OK;
-    ASSERT_NOTNULL(mime_plaintext);
+    ASSERT_NOTNULL(plaintext_msg);
 }

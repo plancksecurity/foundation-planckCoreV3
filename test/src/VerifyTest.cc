@@ -292,15 +292,24 @@ TEST_F(VerifyTest, check_expired_signing_key) {
     
     // Let's try again though, this time doing the whole thing, because we should get 
     // an unreliable rating back.
+
+    // Note: we have to add a "from" here or Volker's new ratings tests will scream on
+    // asserts. I don't want to get into another discussion on our "check by assert" problems - it's a lost
+    // cause - but we'll miss testing code failure paths unless you guys find a way to run in debug mode
+    // with asserts off.
     free(plaintext);
     plaintext = NULL;
     free_stringlist(keylist);
     keylist = NULL;
     PEP_decrypt_flags_t flags = 0;
     PEP_rating rating;
-    char* mod_src = NULL;
-    MIME_decrypt_message(session, ciphertext.c_str(), ciphertext.size(), 
-                         &plaintext, &keylist, &rating, &flags, &mod_src);
+    message* msg = new_message(PEP_dir_incoming);
+    msg->longmsg = strdup(ciphertext.c_str());
+    msg->from = new_identity("1960@example.org", NULL, "MARY", "Mary Susan Maria Karen Lisa Linda Donna Patricia Smith");
+    message* pt_msg = NULL;
+    decrypt_message(session, msg, &pt_msg, &keylist, &rating, &flags);
+    free_message(msg);
+    free_message(pt_msg);
     ASSERT_EQ(rating, PEP_rating_unreliable);
 
     string text = slurp("test_files/pep-test-mary-signed.txt");
