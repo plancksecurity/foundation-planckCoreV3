@@ -424,20 +424,12 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
 
     // Ok, so I want to make sure we make an entry, so I'll try to decrypt the message WITH
     // the expired key:
-    const string msg = slurp("test_mails/ENGINE-463-attempt-numero-dos.eml");
-
-    char* decrypted_msg = NULL;
-    stringlist_t* keylist_used = nullptr;
-    char* modified_src = NULL;
-
-    PEP_rating rating;
-    PEP_decrypt_flags_t flags = 0;
-
-    status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
+    message* decrypted_msg = NULL;
+    status = vanilla_read_file_and_decrypt(session, &decrypted_msg, "test_mails/ENGINE-463-attempt-numero-dos.eml");
     ASSERT_EQ(status , PEP_DECRYPTED);
 
-    free(decrypted_msg);
-    decrypted_msg = NULL;
+    free_message(decrypted_msg);
+
     ok = slurp_and_import_key(session, "test_keys/pub/inquisitor-0xA4728718_renewed_pub.asc");
     ASSERT_TRUE(ok);
 
@@ -449,6 +441,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     ASSERT_EQ(expired_inquisitor1->comm_type, PEP_ct_pEp);
 
     message* msg2 = new_message(PEP_dir_outgoing);
+    PEP_rating rating = PEP_rating_undefined;
 
     msg2->from = alice_from;
     msg2->to = new_identity_list(expired_inquisitor1);

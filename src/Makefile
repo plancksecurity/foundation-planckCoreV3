@@ -106,7 +106,7 @@ install_headers: $(TARGET)
 	   timestamp.h identity_list.h bloblist.h stringpair.h message.h mime.h group.h \
 	   cryptotech.h sync_api.h pEp_string.h openpgp_compat.h engine_sql.h rating_api.h \
 	   labeled_int_list.h key_reset.h base64.h sync_codec.h distribution_codec.h storage_codec.h \
-	   status_to_string.h aux_mime_msg.h keyreset_command.h platform.h platform_unix.h ../asn.1/*.h \
+	   status_to_string.h keyreset_command.h platform.h platform_unix.h ../asn.1/*.h \
 	   $(DESTDIR)$(PREFIX)/include/pEp/
 
 # FIXME: Does anyone but Roker use install_headers? Otherwise, remove the dependency.

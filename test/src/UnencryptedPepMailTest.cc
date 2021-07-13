@@ -139,17 +139,6 @@ TEST_F(UnencryptedPepMailTest, check_unencrypted_pep_mail_outgoing_MIME) {
 
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(alice);
-/*
-PEP_STATUS set_up_preset(PEP_SESSION session,
-                         ident_preset preset_name,
-                         bool set_ident,
-                         bool set_pep,
-                         bool trust,
-                         bool set_own,
-                         bool setup_private,
-                         pEp_identity** ident) {
-*/
-
 
     dave = new_identity("pep-test-dave@pep-project.org", NULL, NULL, "The Hoff");
     
@@ -161,19 +150,16 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
     msg->longmsg = strdup("Look, Dave... it's creepy. I'm not getting into your car.\n\n" 
                           "I do not want a cup of 'Hoffee', and you are not singlehandedly\n" 
                           "responsible for bringing down the Berlin Wall.\n\nGo away. - Alice");
-    char* outmsg = NULL;
-    mime_encode_message(msg, false, &outmsg, false);
-    char* encmsg = NULL;
+
+    message* encmsg = NULL;
         
-    status = MIME_encrypt_message(session, outmsg, strlen(outmsg), NULL, &encmsg, PEP_enc_PGP_MIME, 0);
+    status = encrypt_message(session, msg, NULL, &encmsg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_UNENCRYPTED);
-    ASSERT_NOTNULL(encmsg);
-    
+
     const char* contains = NULL;
     
-    contains = strstr(encmsg, "X-pEp-Version");
-    ASSERT_NOTNULL(encmsg);
-    
+    const stringpair_list_t* sp = stringpair_list_find(msg->opt_fields, X_PEP_MSG_VER_KEY);
+
     // char* outmsg = NULL;
     // mime_encode_message(msg, false, &outmsg, false);
     // ofstream outfile;

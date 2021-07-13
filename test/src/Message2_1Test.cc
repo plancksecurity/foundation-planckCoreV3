@@ -296,15 +296,8 @@ TEST_F(Message2_1Test, check_message2_1_recip_1_0_from_msg_OpenPGP) {
     ASSERT_NOTNULL(alex);
 
     // receive 1.0 message from OpenPGP
-    string incoming = slurp("test_mails/From_M1_0.eml");
-
-    char* dec_msg;
-    char* mod_src = NULL;
-    PEP_decrypt_flags_t flags = 0;
-    stringlist_t* keylist_used = NULL;
-    PEP_rating rating;
-
-    status = MIME_decrypt_message(session, incoming.c_str(), incoming.size(), &dec_msg, &keylist_used, &rating, &flags, &mod_src);
+    message* dec_msg;
+    status = vanilla_read_file_and_decrypt(session, &dec_msg, "test_mails/From_M1_0.eml");
 
     ASSERT_OK;
     // generate message
@@ -329,7 +322,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_1_0_from_msg_OpenPGP) {
     free_message(msg);
     free_message(enc_msg);
     free(dec_msg);
-    free(mod_src);
+   
 }
 
 // Note, this will now create a 2.1 message ANYWAY.
@@ -344,15 +337,8 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_0_from_msg) {
     ASSERT_NOTNULL(carol);
 
     // receive 1.0 message from OpenPGP
-    string incoming = slurp("test_mails/2_0_msg.eml");
-
-    char* dec_msg;
-    char* mod_src = NULL;
-    PEP_decrypt_flags_t flags = 0;
-    stringlist_t* keylist_used = NULL;
-    PEP_rating rating;
-
-    status = MIME_decrypt_message(session, incoming.c_str(), incoming.size(), &dec_msg, &keylist_used, &rating, &flags, &mod_src);
+    message* dec_msg;
+    status = vanilla_read_file_and_decrypt(session, &dec_msg, "test_mails/2_0_msg.eml");
 
     ASSERT_OK;
     // generate message
@@ -377,7 +363,6 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_0_from_msg) {
     free_message(msg);
     free_message(enc_msg);
     free(dec_msg);
-    free(mod_src);
 }
 
 TEST_F(Message2_1Test, check_message2_1_recip_2_1_from_msg) {
@@ -391,15 +376,8 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_1_from_msg) {
     ASSERT_NOTNULL(carol);
 
     // receive 1.0 message from OpenPGP
-    string incoming = slurp("test_mails/From_M2_1.eml");
-
-    char* dec_msg;
-    char* mod_src = NULL;
-    PEP_decrypt_flags_t flags = 0;
-    stringlist_t* keylist_used = NULL;
-    PEP_rating rating;
-
-    status = MIME_decrypt_message(session, incoming.c_str(), incoming.size(), &dec_msg, &keylist_used, &rating, &flags, &mod_src);
+    message* dec_msg;
+    status = vanilla_read_file_and_decrypt(session, &dec_msg, "test_mails/From_M2_1.eml");
 
     ASSERT_OK;
     // generate message
@@ -429,7 +407,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_1_from_msg) {
     free_message(msg);
     free_message(enc_msg);
     free(dec_msg);
-    free(mod_src);
+   
 }
 
 TEST_F(Message2_1Test, check_message2_1_recip_mixed_2_0) {

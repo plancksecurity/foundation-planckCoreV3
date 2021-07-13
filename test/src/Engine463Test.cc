@@ -95,16 +95,14 @@ TEST_F(Engine463Test, check_engine_463_no_own_key) {
     ASSERT_EQ(status , PEP_TEST_KEY_IMPORT_SUCCESS);
 
     // Ok, bring in message, decrypt, and see what happens.
-    const string msg = slurp("test_mails/notfound-alt.msg");
+    message* msg = slurp_message_file_into_struct("test_mails/notfound-alt.msg");
 
-    char* decrypted_msg = NULL;
+    message* decrypted_msg = NULL;
     stringlist_t* keylist_used = nullptr;
-    char* modified_src = NULL;
-
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
-    status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
+    status = decrypt_message(session, msg, &decrypted_msg, &keylist_used, &rating, &flags);
     ASSERT_OK;
 }
 
@@ -124,16 +122,14 @@ TEST_F(Engine463Test, check_engine_463_sender_expired_and_renewed) {
 
     // Ok, so I want to make sure we make an entry, so I'll try to decrypt the message WITH
     // the expired key:
-    const string msg = slurp("test_mails/ENGINE-463-attempt-numero-dos.eml");
+    message* msg = slurp_message_file_into_struct("test_mails/ENGINE-463-attempt-numero-dos.eml");
 
-    char* decrypted_msg = NULL;
+    message* decrypted_msg = NULL;
     stringlist_t* keylist_used = nullptr;
-    char* modified_src = NULL;
-
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
-    status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
+    status = decrypt_message(session, msg, &decrypted_msg, &keylist_used, &rating, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
 
     free(decrypted_msg);
@@ -149,7 +145,7 @@ TEST_F(Engine463Test, check_engine_463_sender_expired_and_renewed) {
 
     flags = 0;
 
-    status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
+    status = decrypt_message(session, msg, &decrypted_msg, &keylist_used, &rating, &flags);
     ASSERT_NOTNULL(decrypted_msg);
     ASSERT_OK;
     ASSERT_EQ(rating , PEP_rating_reliable);
@@ -180,16 +176,14 @@ TEST_F(Engine463Test, check_engine_463_sender_expired_and_renewed) {
 
     // Ok, so I want to make sure we make an entry, so I'll try to decrypt the message WITH
     // the expired key:
-    const string msg = slurp("test_mails/ENGINE-463-attempt-numero-dos.eml");
+    message* msg = slurp_message_file_into_struct("test_mails/ENGINE-463-attempt-numero-dos.eml");
 
-    char* decrypted_msg = NULL;
+    message* decrypted_msg = NULL;
     stringlist_t* keylist_used = nullptr;
-    char* modified_src = NULL;
-
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
-    status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
+    status = decrypt_message(session, msg, &decrypted_msg, &keylist_used, &rating, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
 
     free(decrypted_msg);
