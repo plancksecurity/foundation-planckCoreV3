@@ -2153,17 +2153,6 @@ DYNAMIC_API PEP_STATUS init(
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
-
-    int_result = sqlite3_prepare_v2(_session->db, 
-            sql_get_own_address_binding_from_contact,
-            (int)strlen(sql_get_own_address_binding_from_contact), 
-            &_session->get_own_address_binding_from_contact, NULL);
-    assert(int_result == SQLITE_OK);
-
-    if (int_result != SQLITE_OK)
-        return PEP_UNKNOWN_DB_ERROR;
-
-
     int_result = sqlite3_prepare_v2(_session->db, sql_set_pgp_keypair,
             (int)strlen(sql_set_pgp_keypair), &_session->set_pgp_keypair,
             NULL);
