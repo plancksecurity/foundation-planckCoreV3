@@ -2817,6 +2817,8 @@ DYNAMIC_API PEP_STATUS log_event(
         const char *comment
     )
 {
+    if (!(session && title && entity))
+        return PEP_ILLEGAL_VALUE;
 
 #if defined(_WIN32) && !defined(NDEBUG)
     log_output_debug(title, entity, description, comment);
@@ -2840,10 +2842,7 @@ DYNAMIC_API PEP_STATUS log_event(
     session->service_log = true;
 
     int result;
-        
-    if (!(session && title && entity))
-        return PEP_ILLEGAL_VALUE;
-    
+
     sqlite3_reset(session->log);
     sqlite3_bind_text(session->log, 1, title, -1, SQLITE_STATIC);
     sqlite3_bind_text(session->log, 2, entity, -1, SQLITE_STATIC);
@@ -3895,7 +3894,8 @@ pEp_free:
 
 PEP_STATUS update_pEp_user_trust_vals(PEP_SESSION session,
                                       pEp_identity* user) {
-    if (!user->user_id)
+    
+    if (!session || !user || EMPTYSTR(user->user_id))
         return PEP_ILLEGAL_VALUE;
     
     sqlite3_reset(session->update_trust_to_pEp);
