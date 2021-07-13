@@ -182,11 +182,6 @@ TEST_F(MessageTwoPointOhTest, check_message_two_point_oh) {
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
-//    MIME_decrypt_message(session, encoded_text, strlen(encoded_text), &decrypted_text, &keylist_used, &rating, &flags);
-
-//    output_stream << "HEY!" << endl;
-//    output_stream << decrypted_text << endl;
-
     message* decoded_msg = nullptr;
     status = mime_decode_message(encoded_text, strlen(encoded_text), &decoded_msg, NULL);
     ASSERT_OK;

@@ -288,57 +288,44 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
     keylist_used = NULL;
 
 
-    output_stream << "*** Now testing MIME_encrypt_for_self ***" << endl;
+    output_stream << "*** Now testing encrypt_for_self ***" << endl;
 
     alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, "Alice Test");
     bob = new_identity("pep.test.bob@pep-project.org", NULL, "42", "Bob Test");
 
     output_stream << "Reading in alice_bob_encrypt_test_plaintext_mime.eml..." << endl;
 
-    const string mimetext = slurp("test_mails/alice_bob_encrypt_test_plaintext_mime.eml");
+    message* dec_msg = slurp_message_file_into_struct("test_mails/alice_bob_encrypt_test_plaintext_mime.eml");
+    message* enc_msg = NULL;
 
-    output_stream << "Text read:" << endl;
-    output_stream << mimetext.c_str() << endl;
-    char* encrypted_mimetext = nullptr;
-
-    output_stream << "Calling MIME_encrypt_message_for_self" << endl;
-    status = MIME_encrypt_message_for_self(session, alice, mimetext.c_str(),
-                                           mimetext.size(),
-                                           NULL,
-                                           &encrypted_mimetext,
-                                           PEP_enc_PGP_MIME,
-                                           PEP_encrypt_flag_force_unsigned | PEP_encrypt_flag_force_no_attached_key);
+    output_stream << "Calling encrypt_message_for_self" << endl;
+    status = encrypt_message_for_self(session, alice, dec_msg, NULL, &enc_msg,PEP_enc_PGP_MIME,
+                                 PEP_encrypt_flag_force_unsigned | PEP_encrypt_flag_force_no_attached_key);
 
     output_stream << "Encrypted message:" << endl;
-    output_stream << encrypted_mimetext << endl;
+    print_mail(enc_msg);
+    wipe_message_ptr(&dec_msg);
 
-    output_stream << "Calling MIME_decrypt_message" << endl;
+    output_stream << "Calling decrypt_message" << endl;
 
-    char* decrypted_mimetext = nullptr;
     free_stringlist(keylist_used);
     keylist_used = nullptr;
     PEP_decrypt_flags_t mimeflags;
     PEP_rating mimerating;
-    char* modified_src = NULL;
 
     mimeflags = 0;
-    status = MIME_decrypt_message(session,
-                                  encrypted_mimetext,
-                                  strlen(encrypted_mimetext),
-                                  &decrypted_mimetext,
-                                  &keylist_used,
-                                  &mimerating,
-                                  &mimeflags,
-				  &modified_src);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist_used, &mimerating, &mimeflags);
 
-    ASSERT_NOTNULL(decrypted_mimetext);
+    ASSERT_NOTNULL(dec_msg);
     ASSERT_NOTNULL(keylist_used);
     ASSERT_NE(mimerating, 0);
 
     ASSERT_TRUE(status == PEP_DECRYPTED && mimerating == PEP_rating_unreliable);
 
     output_stream << "Decrypted message:" << endl;
-    output_stream << decrypted_mimetext << endl;
+    print_mail(dec_msg);
+    wipe_message_ptr(&dec_msg);
+    wipe_message_ptr(&enc_msg);
 
     output_stream << "keys used:\n";
 
@@ -558,75 +545,4 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity_with_URI) {
     decrypted_msg = NULL;
     free_stringlist(keylist_used);
     keylist_used = NULL;
-
-
-    output_stream << "*** Now testing MIME_encrypt_for_self ***" << endl;
-
-    alice = new_identity("payto://BIC/SYSTEMA", NULL, PEP_OWN_USERID, "Alice Test");
-    bob = new_identity("payto://BIC/SYSTEMB", NULL, "42", "Bob Test");
-
-    output_stream << "Reading in alice_bob_encrypt_test_plaintext_mime.eml..." << endl;
-
-    const string mimetext = slurp("test_mails/alice_bob_encrypt_test_plaintext_mime.eml");
-
-    output_stream << "Text read:" << endl;
-    output_stream << mimetext.c_str() << endl;
-    char* encrypted_mimetext = nullptr;
-
-    output_stream << "Calling MIME_encrypt_message_for_self" << endl;
-    status = MIME_encrypt_message_for_self(session, alice, mimetext.c_str(),
-                                           mimetext.size(),
-                                           NULL,
-                                           &encrypted_mimetext,
-                                           PEP_enc_PGP_MIME,
-                                           PEP_encrypt_flag_force_unsigned | PEP_encrypt_flag_force_no_attached_key);
-
-    output_stream << "Encrypted message:" << endl;
-    output_stream << encrypted_mimetext << endl;
-
-    output_stream << "Calling MIME_decrypt_message" << endl;
-
-    char* decrypted_mimetext = nullptr;
-    free_stringlist(keylist_used);
-    keylist_used = nullptr;
-    PEP_decrypt_flags_t mimeflags;
-    PEP_rating mimerating;
-    char* modified_src = NULL;
-
-    mimeflags = 0;
-    status = MIME_decrypt_message(session,
-                                  encrypted_mimetext,
-                                  strlen(encrypted_mimetext),
-                                  &decrypted_mimetext,
-                                  &keylist_used,
-                                  &mimerating,
-                                  &mimeflags,
-				  &modified_src);
-
-    ASSERT_NOTNULL(decrypted_mimetext);
-    ASSERT_NOTNULL(keylist_used);
-    ASSERT_NE(mimerating, 0);
-
-    ASSERT_TRUE(status == PEP_DECRYPTED && mimerating == PEP_rating_unreliable);
-
-    output_stream << "Decrypted message:" << endl;
-    output_stream << decrypted_mimetext << endl;
-
-    output_stream << "keys used:\n";
-
-    i = 0;
-
-    for (stringlist_t* kl4 = keylist_used; kl4 && kl4->value; kl4 = kl4->next, i++)
-    {
-        if (i == 0) {
-            ASSERT_STRCASEEQ("",kl4->value);
-        }
-        else {
-            output_stream << "\t " << kl4->value << endl;
-            ASSERT_STRCASEEQ("4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", kl4->value);
-            output_stream << "Encrypted for Alice! Yay! It worked!" << endl;
-        }
-        ASSERT_LT(i , 2);
-    }
-    output_stream << "Encrypted ONLY for Alice! Test passed. Move along. These are not the bugs you are looking for." << endl;
 }
