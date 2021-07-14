@@ -4026,10 +4026,7 @@ PEP_STATUS is_own_address(PEP_SESSION session, const char* address, bool* is_own
         return PEP_ILLEGAL_VALUE;
     
     *is_own_addr = false;
-                
-    if (!session || EMPTYSTR(address))
-        return PEP_ILLEGAL_VALUE;
-        
+                     
     sqlite3_reset(session->is_own_address);
     sqlite3_bind_text(session->is_own_address, 1, address, -1,
             SQLITE_STATIC);
