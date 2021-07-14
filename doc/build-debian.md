@@ -25,7 +25,7 @@ apt install -y uuid-dev libgpgme-dev libsqlite3-dev sqlite3
 
 ~~~
 mkdir -p ~/code/yml2
-hg clone https://pep.foundation/dev/repos/yml2/ ~/code/yml2
+git clone https://gitea.pep.foundation/fdik/yml2.git ~/code/yml2
 ~~~
 
 ## libetpan
@@ -33,7 +33,8 @@ pEp Engine requires libetpan with a set of patches that have not been upstreamed
 
 ~~~
 mkdir -p ~/code/libetpan
-git clone https://github.com/fdik/libetpan ~/code/libetpan
+
+git clone https://gitea.pep.foundation/pEp.foundation/libetpan.git ~/code/libetpan
 cd ~/code/libetpan
 mkdir ~/code/libetpan/build
 ./autogen.sh --prefix="$HOME/code/libetpan/build"
