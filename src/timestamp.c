@@ -12,22 +12,23 @@
 
 DYNAMIC_API time_t timegm_with_gmtoff(const timestamp* ts)
 {
-    if (!ts)
-        return -1;
+    time_t retval = -1;
+    timestamp *_ts = NULL;
 
-    timestamp *_ts = timestamp_dup(ts);
-    if (!_ts)
-        return -1;
+    if (ts) {
+        _ts = timestamp_dup(ts);
 
-    const time_t raw_time = timegm(_ts);
-    if(raw_time==-1)
-        return -1;
- 
-    free_timestamp(_ts);
+        if (_ts) {
+            const time_t raw_time = timegm(_ts);
+            if (raw_time != -1) {
+                retval = raw_time - ts->tm_gmtoff;
+            }
+        }
+    }
 
-    return raw_time - ts->tm_gmtoff;
+    free_timestamp(_ts); // Safe if NULL
+    return retval;
 }
-
 
 DYNAMIC_API timestamp * new_timestamp(time_t clock)
 {
