@@ -127,7 +127,6 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\aux_mime_msg.c" />
     <ClCompile Include="..\src\base64.c" />
     <ClCompile Include="..\src\baseprotocol.c" />
     <ClCompile Include="..\src\bloblist.c" />
@@ -173,7 +172,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\asn1_helper.h" />
-    <ClInclude Include="..\src\aux_mime_msg.h" />
     <ClInclude Include="..\src\base64.h" />
     <ClInclude Include="..\src\baseprotocol.h" />
     <ClInclude Include="..\src\bloblist.h" />
