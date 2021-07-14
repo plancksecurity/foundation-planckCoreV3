@@ -126,9 +126,6 @@
     <ClCompile Include="..\src\internal_format.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\aux_mime_msg.c">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\security_checks.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
@@ -282,9 +279,6 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="..\src\internal_format.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\aux_mime_msg.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="..\src\distribution_codec.h">
