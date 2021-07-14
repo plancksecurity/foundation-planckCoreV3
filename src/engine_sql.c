@@ -2014,17 +2014,6 @@ PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session) {
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
-
-    int_result = sqlite3_prepare_v2(session->db,
-                                    sql_get_own_address_binding_from_contact,
-                                    (int)strlen(sql_get_own_address_binding_from_contact),
-                                    &session->get_own_address_binding_from_contact, NULL);
-    assert(int_result == SQLITE_OK);
-
-    if (int_result != SQLITE_OK)
-        return PEP_UNKNOWN_DB_ERROR;
-
-
     int_result = sqlite3_prepare_v2(session->db, sql_set_pgp_keypair,
                                     (int)strlen(sql_set_pgp_keypair), &session->set_pgp_keypair,
                                     NULL);
@@ -2533,198 +2522,103 @@ PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session) {
 }
 
 PEP_STATUS pEp_finalize_sql_stmts(PEP_SESSION session) {
-    if (session->log)
-        sqlite3_finalize(session->log);
-    if (session->trustword)
-        sqlite3_finalize(session->trustword);
-    if (session->get_identity)
-        sqlite3_finalize(session->get_identity);
-    if (session->get_identity_without_trust_check)
-        sqlite3_finalize(session->get_identity_without_trust_check);
-    if (session->get_identities_by_address)
-        sqlite3_finalize(session->get_identities_by_address);
-    if (session->get_identities_by_userid)
-        sqlite3_finalize(session->get_identities_by_userid);
-    if (session->get_identities_by_main_key_id)
-        sqlite3_finalize(session->get_identities_by_main_key_id);
-    if (session->get_user_default_key)
-        sqlite3_finalize(session->get_user_default_key);
-    if (session->get_all_keys_for_user)
-        sqlite3_finalize(session->get_all_keys_for_user);
-    if (session->get_default_own_userid)
-        sqlite3_finalize(session->get_default_own_userid);
-    if (session->get_userid_alias_default)
-        sqlite3_finalize(session->get_userid_alias_default);
-    if (session->add_userid_alias)
-        sqlite3_finalize(session->add_userid_alias);
-    if (session->replace_identities_fpr)
-        sqlite3_finalize(session->replace_identities_fpr);
-    if (session->get_default_identity_fpr)
-        sqlite3_finalize(session->get_default_identity_fpr);
-    if (session->remove_fpr_as_identity_default)
-        sqlite3_finalize(session->remove_fpr_as_identity_default);
-    if (session->remove_fpr_as_user_default)
-        sqlite3_finalize(session->remove_fpr_as_user_default);
-    if (session->set_person)
-        sqlite3_finalize(session->set_person);
-    if (session->delete_person)
-        sqlite3_finalize(session->delete_person);
-    if (session->set_as_pEp_user)
-        sqlite3_finalize(session->set_as_pEp_user);
-    if (session->upgrade_pEp_version_by_user_id)
-        sqlite3_finalize(session->upgrade_pEp_version_by_user_id);
-    if (session->is_pEp_user)
-        sqlite3_finalize(session->is_pEp_user);
-    if (session->exists_person)
-        sqlite3_finalize(session->exists_person);
-    if (session->add_into_social_graph)
-        sqlite3_finalize(session->add_into_social_graph);
-    if (session->get_own_address_binding_from_contact)
-        sqlite3_finalize(session->get_own_address_binding_from_contact);
-    if (session->set_revoke_contact_as_notified)
-        sqlite3_finalize(session->set_revoke_contact_as_notified);
-    if (session->get_contacted_ids_from_revoke_fpr)
-        sqlite3_finalize(session->get_contacted_ids_from_revoke_fpr);
-    if (session->was_id_for_revoke_contacted)
-        sqlite3_finalize(session->was_id_for_revoke_contacted);
-    if (session->has_id_contacted_address)
-        sqlite3_finalize(session->has_id_contacted_address);
-    if (session->get_last_contacted)
-        sqlite3_finalize(session->get_last_contacted);
-    if (session->set_pgp_keypair)
-        sqlite3_finalize(session->set_pgp_keypair);
-    if (session->exists_identity_entry)
-        sqlite3_finalize(session->exists_identity_entry);
-    if (session->set_identity_entry)
-        sqlite3_finalize(session->set_identity_entry);
-    if (session->update_identity_entry)
-        sqlite3_finalize(session->update_identity_entry);
-    if (session->force_set_identity_username)
-        sqlite3_finalize(session->force_set_identity_username);
-    if (session->set_identity_flags)
-        sqlite3_finalize(session->set_identity_flags);
-    if (session->unset_identity_flags)
-        sqlite3_finalize(session->unset_identity_flags);
-    if (session->set_ident_enc_format)
-        sqlite3_finalize(session->set_ident_enc_format);
-    if (session->set_pEp_version)
-        sqlite3_finalize(session->set_pEp_version);
-    if (session->exists_trust_entry)
-        sqlite3_finalize(session->exists_trust_entry);
-    if (session->clear_trust_info)
-        sqlite3_finalize(session->clear_trust_info);
-    if (session->set_trust)
-        sqlite3_finalize(session->set_trust);
-    if (session->update_trust)
-        sqlite3_finalize(session->update_trust);
-    if (session->update_trust_to_pEp)
-        sqlite3_finalize(session->update_trust_to_pEp);
-    if (session->update_trust_for_fpr)
-        sqlite3_finalize(session->update_trust_for_fpr);
-    if (session->get_trust)
-        sqlite3_finalize(session->get_trust);
-    if (session->get_trust_by_userid)
-        sqlite3_finalize(session->get_trust_by_userid);
-    if (session->least_trust)
-        sqlite3_finalize(session->least_trust);
-    if (session->update_key_sticky_bit_for_user)
-        sqlite3_finalize(session->update_key_sticky_bit_for_user);
-    if (session->is_key_sticky_for_user)
-        sqlite3_finalize(session->is_key_sticky_for_user);
-    if (session->mark_compromised)
-        sqlite3_finalize(session->mark_compromised);
-    if (session->crashdump)
-        sqlite3_finalize(session->crashdump);
-    if (session->languagelist)
-        sqlite3_finalize(session->languagelist);
-    if (session->i18n_token)
-        sqlite3_finalize(session->i18n_token);
-    if (session->replace_userid)
-        sqlite3_finalize(session->replace_userid);
-    if (session->delete_key)
-        sqlite3_finalize(session->delete_key);
-    if (session->replace_main_user_fpr)
-        sqlite3_finalize(session->replace_main_user_fpr);
-    if (session->replace_main_user_fpr_if_equal)
-        sqlite3_finalize(session->replace_main_user_fpr_if_equal);
-    if (session->get_main_user_fpr)
-        sqlite3_finalize(session->get_main_user_fpr);
-    if (session->refresh_userid_default_key)
-        sqlite3_finalize(session->refresh_userid_default_key);
-    if (session->own_key_is_listed)
-        sqlite3_finalize(session->own_key_is_listed);
-    if (session->is_own_address)
-        sqlite3_finalize(session->is_own_address);
-    if (session->own_identities_retrieve)
-        sqlite3_finalize(session->own_identities_retrieve);
-    if (session->own_keys_retrieve)
-        sqlite3_finalize(session->own_keys_retrieve);
-    // if (session->set_own_key)
+    sqlite3_finalize(session->log);
+    sqlite3_finalize(session->trustword);
+    sqlite3_finalize(session->get_identity);
+    sqlite3_finalize(session->get_identity_without_trust_check);
+    sqlite3_finalize(session->get_identities_by_address);
+    sqlite3_finalize(session->get_identities_by_userid);
+    sqlite3_finalize(session->get_identities_by_main_key_id);
+    sqlite3_finalize(session->get_user_default_key);
+    sqlite3_finalize(session->get_all_keys_for_user);
+    sqlite3_finalize(session->get_default_own_userid);
+    sqlite3_finalize(session->get_userid_alias_default);
+    sqlite3_finalize(session->add_userid_alias);
+    sqlite3_finalize(session->replace_identities_fpr);
+    sqlite3_finalize(session->get_default_identity_fpr);
+    sqlite3_finalize(session->remove_fpr_as_identity_default);
+    sqlite3_finalize(session->remove_fpr_as_user_default);
+    sqlite3_finalize(session->set_person);
+    sqlite3_finalize(session->delete_person);
+    sqlite3_finalize(session->update_person);
+    sqlite3_finalize(session->set_as_pEp_user);
+    sqlite3_finalize(session->upgrade_pEp_version_by_user_id);
+    sqlite3_finalize(session->is_pEp_user);
+    sqlite3_finalize(session->exists_person);
+    sqlite3_finalize(session->add_into_social_graph);
+    sqlite3_finalize(session->get_own_address_binding_from_contact);
+    sqlite3_finalize(session->set_revoke_contact_as_notified);
+    sqlite3_finalize(session->get_contacted_ids_from_revoke_fpr);
+    sqlite3_finalize(session->was_id_for_revoke_contacted);
+    sqlite3_finalize(session->has_id_contacted_address);
+    sqlite3_finalize(session->get_last_contacted);
+    sqlite3_finalize(session->set_pgp_keypair);
+    sqlite3_finalize(session->exists_identity_entry);
+    sqlite3_finalize(session->set_identity_entry);
+    sqlite3_finalize(session->update_identity_entry);
+    sqlite3_finalize(session->force_set_identity_username);
+    sqlite3_finalize(session->set_identity_flags);
+    sqlite3_finalize(session->unset_identity_flags);
+    sqlite3_finalize(session->set_ident_enc_format);
+    sqlite3_finalize(session->set_pEp_version);
+    sqlite3_finalize(session->exists_trust_entry);
+    sqlite3_finalize(session->clear_trust_info);
+    sqlite3_finalize(session->set_trust);
+    sqlite3_finalize(session->update_trust);
+    sqlite3_finalize(session->update_trust_to_pEp);
+    sqlite3_finalize(session->update_trust_for_fpr);
+    sqlite3_finalize(session->get_trust);
+    sqlite3_finalize(session->get_trust_by_userid);
+    sqlite3_finalize(session->least_trust);
+    sqlite3_finalize(session->update_key_sticky_bit_for_user);
+    sqlite3_finalize(session->is_key_sticky_for_user);
+    sqlite3_finalize(session->mark_compromised);
+    sqlite3_finalize(session->crashdump);
+    sqlite3_finalize(session->languagelist);
+    sqlite3_finalize(session->i18n_token);
+    sqlite3_finalize(session->replace_userid);
+    sqlite3_finalize(session->delete_key);
+    sqlite3_finalize(session->replace_main_user_fpr);
+    sqlite3_finalize(session->replace_main_user_fpr_if_equal);
+    sqlite3_finalize(session->get_main_user_fpr);
+    sqlite3_finalize(session->refresh_userid_default_key);
+    sqlite3_finalize(session->own_key_is_listed);
+    sqlite3_finalize(session->is_own_address);
+    sqlite3_finalize(session->own_identities_retrieve);
+    sqlite3_finalize(session->own_keys_retrieve);
     //     sqlite3_finalize(session->set_own_key);
-    if (session->sequence_value1)
-        sqlite3_finalize(session->sequence_value1);
-    if (session->sequence_value2)
-        sqlite3_finalize(session->sequence_value2);
-    if (session->set_revoked)
-        sqlite3_finalize(session->set_revoked);
-    if (session->get_revoked)
-        sqlite3_finalize(session->get_revoked);
-    if (session->get_replacement_fpr)
-        sqlite3_finalize(session->get_replacement_fpr);
-    if (session->add_mistrusted_key)
-        sqlite3_finalize(session->add_mistrusted_key);
-    if (session->delete_mistrusted_key)
-        sqlite3_finalize(session->delete_mistrusted_key);
-    if (session->is_mistrusted_key)
-        sqlite3_finalize(session->is_mistrusted_key);
-    if (session->create_group)
-        sqlite3_finalize(session->create_group);
-    if (session->enable_group)
-        sqlite3_finalize(session->enable_group);
-    if (session->disable_group)
-        sqlite3_finalize(session->disable_group);
-    if (session->exists_group_entry)
-        sqlite3_finalize(session->exists_group_entry);
-    if (session->group_add_member)
-        sqlite3_finalize(session->group_add_member);
-    if (session->group_delete_member)
-        sqlite3_finalize(session->group_delete_member);
-    if (session->set_group_member_status)
-        sqlite3_finalize(session->set_group_member_status);
-    if (session->group_join)
-        sqlite3_finalize(session->group_join);
-    if (session->leave_group)
-        sqlite3_finalize(session->leave_group);
-    if (session->get_all_members)
-        sqlite3_finalize(session->get_all_members);
-    if (session->get_active_members)
-        sqlite3_finalize(session->get_active_members);
-    if (session->get_active_groups)
-        sqlite3_finalize(session->get_active_groups);
-    if (session->get_all_groups)
-        sqlite3_finalize(session->get_all_groups);
-    if (session->add_own_membership_entry)
-        sqlite3_finalize(session->add_own_membership_entry);
-    if (session->get_own_membership_status)
-        sqlite3_finalize(session->get_own_membership_status);
-    if (session->retrieve_own_membership_info_for_group_and_ident)
-        sqlite3_finalize(session->retrieve_own_membership_info_for_group_and_ident);
-    if (session->retrieve_own_membership_info_for_group)
-        sqlite3_finalize(session->retrieve_own_membership_info_for_group);
-    if (session->get_group_manager)
-        sqlite3_finalize(session->get_group_manager);
-    if (session->is_invited_group_member)
-        sqlite3_finalize(session->is_invited_group_member);
-    if (session->is_active_group_member)
-        sqlite3_finalize(session->is_active_group_member);
-    if (session->is_group_active)
-        sqlite3_finalize(session->is_group_active);
-    if (session->set_pgp_keypair_flags)
-        sqlite3_finalize(session->set_pgp_keypair_flags);
-    if (session->unset_pgp_keypair_flags)
-        sqlite3_finalize(session->unset_pgp_keypair_flags);
+    sqlite3_finalize(session->sequence_value1);
+    sqlite3_finalize(session->sequence_value2);
+    sqlite3_finalize(session->set_revoked);
+    sqlite3_finalize(session->get_revoked);
+    sqlite3_finalize(session->get_replacement_fpr);
+    sqlite3_finalize(session->add_mistrusted_key);
+    sqlite3_finalize(session->delete_mistrusted_key);
+    sqlite3_finalize(session->is_mistrusted_key);
+    sqlite3_finalize(session->create_group);
+    sqlite3_finalize(session->enable_group);
+    sqlite3_finalize(session->disable_group);
+    sqlite3_finalize(session->exists_group_entry);
+    sqlite3_finalize(session->group_add_member);
+    sqlite3_finalize(session->group_delete_member);
+    sqlite3_finalize(session->set_group_member_status);
+    sqlite3_finalize(session->group_join);
+    sqlite3_finalize(session->leave_group);
+    sqlite3_finalize(session->get_all_members);
+    sqlite3_finalize(session->get_active_members);
+    sqlite3_finalize(session->get_active_groups);
+    sqlite3_finalize(session->get_all_groups);
+    sqlite3_finalize(session->add_own_membership_entry);
+    sqlite3_finalize(session->get_own_membership_status);
+    sqlite3_finalize(session->retrieve_own_membership_info_for_group_and_ident);
+    sqlite3_finalize(session->retrieve_own_membership_info_for_group);
+    sqlite3_finalize(session->get_group_manager);
+    sqlite3_finalize(session->is_invited_group_member);
+    sqlite3_finalize(session->is_active_group_member);
+    sqlite3_finalize(session->is_group_active);
+    sqlite3_finalize(session->set_pgp_keypair_flags);
+    sqlite3_finalize(session->unset_pgp_keypair_flags);
     // retrieve_own_membership_info_for_group_and_ident
-    //    if (session->group_invite_exists)
 //        sqlite3_finalize(session->group_invite_exists);
     return PEP_STATUS_OK;
 }
