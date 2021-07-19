@@ -730,7 +730,8 @@ PEP_STATUS _update_identity(
                 // we also set is_own_user here and force PEP_ILLEGAL_VALUE                
                 if (_own_addr) {
                     free(identity->user_id);
-                    identity->user_id = strdup(default_own_id);
+                    // ENGINE-952: Ownership transfer. Allocated and checked above.
+                    identity->user_id = default_own_id;
                     // Do not renew, do not generate
                     return _myself(session, identity, false, false, false, true);
                 }    
