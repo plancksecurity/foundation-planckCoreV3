@@ -77,6 +77,7 @@ DEL *-sample.c
 CD %engine_directory%\..
 MKDIR pEp
 XCOPY pEpEngine\src\*.h pEp\ /Y/F/I
+XCOPY libpEpAdapter\src\*.h pEp\ /Y/F/I
 XCOPY libpEpAdapter\src\*.hh pEp\ /Y/F/I
 XCOPY libpEpAdapter\src\*.hxx pEp\ /Y/F/I
 
