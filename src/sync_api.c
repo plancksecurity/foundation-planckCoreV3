@@ -4,6 +4,7 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
+
 #include "pEp_internal.h"
 
 #include <memory.h>
@@ -293,10 +294,6 @@ DYNAMIC_API PEP_STATUS enable_identity_for_sync(PEP_SESSION session,
     ident->flags = stored_ident->flags;
     free_identity(stored_ident);
 
-    // this is an invalid state; detect while debugging
-
-    assert(!((ident->flags & PEP_idf_devicegroup) && (ident->flags & PEP_idf_not_for_sync)));
-
     // if we're grouped and this identity is enabled already we can stop here
 
     if ((ident->flags & PEP_idf_devicegroup) && !(ident->flags & PEP_idf_not_for_sync))
@@ -349,13 +346,9 @@ DYNAMIC_API PEP_STATUS disable_identity_for_sync(PEP_SESSION session,
     ident->flags = stored_ident->flags;
     free_identity(stored_ident);
 
-    // this is an invalid state; detect while debugging
+    // if this identity is disabled and not part of a device group already we can end here
 
-    assert(!((ident->flags & PEP_idf_devicegroup) && (ident->flags & PEP_idf_not_for_sync)));
-
-    // if this identity is disabled already we can end here
-
-    if (ident->flags & PEP_idf_not_for_sync)
+    if ((ident->flags & PEP_idf_not_for_sync) && !(ident->flags & PEP_idf_devicegroup))
         return PEP_STATUS_OK;
 
     // if the identity is not part of a device group just disable it to keep this
