@@ -49,13 +49,7 @@ protocol session {
             *input* (see caveats)
             """;
 
-        throws key_unsuitable
-        doc="""
-            if a default key was found for this identity, no
-            other acceptable keys were found; if this is returned,
-            the reason for rejecting the first default key found    
-            may be found in the comm_type
-            """;
+        throws any doc="any other value on error";
     }
 
 
@@ -86,6 +80,14 @@ protocol session {
             if you need to do this asynchronous, you need to return an identity
             with retrieve_next_identity() where identity.me is true.
             """;
+
+        // exceptions
+
+        throws illegal_value doc="illegal parameter values";
+        
+        throws out_of_memory doc="out of memory";
+        
+        throws any doc="any other value on error";
     }
 
 
@@ -123,6 +125,16 @@ protocol session {
             is not trusted, and 3) set this key as the user default if the current user
             default is not trusted.
             """;
+            
+        // exceptions
+
+        throws key_unsuitable;
+        
+        throws illegal_value doc="illegal parameter values";
+        
+        throws out_of_memory doc="out of memory";
+        
+        throws any doc="any other value on error";
     }
 
 
@@ -146,6 +158,16 @@ protocol session {
             it here makes it an eligible key for selection for encryption later. So use 
             this function on purpose with an understanding of what you're doing!
             """;
+            
+        // exceptions
+
+        throws key_unsuitable;
+        
+        throws illegal_value doc="illegal parameter values";
+        
+        throws out_of_memory doc="out of memory";
+        
+        throws any doc="any other value on error";
     }
 
 
@@ -166,6 +188,14 @@ protocol session {
             it will be removed as the default key for the identity and user (but is still
             available for key election, it is just not the cached default anymore).
             """;
+            
+        // exceptions
+        
+        throws illegal_value doc="illegal parameter values";
+        
+        throws out_of_memory doc="out of memory";
+        
+        throws any doc="any other value on error";
     }
 
 
@@ -176,6 +206,12 @@ protocol session {
         use hash fpr doc="fingerprint of key to test";
 
         return bool listed doc="flags if key is own";
+        
+        // exceptions
+        
+        throws illegal_value doc="illegal parameter values";
+        
+        throws any doc="any other value on error";
     }
 
 
@@ -189,6 +225,14 @@ protocol session {
             list of own identities. 
             The ownership of the copy of own_identities goes to the caller.
             """;
+        
+        // exceptions
+        
+        throws illegal_value doc="illegal parameter values";
+        
+        throws out_of_memory doc="out of memory";
+        
+        throws any doc="any other value on error";
     }
 
 
@@ -201,6 +245,14 @@ protocol session {
             list of fingerprints. This function does not return keys without 
             a private key part.
             """;
+            
+        // exceptions
+        
+        throws illegal_value doc="illegal parameter values";
+        
+        throws out_of_memory doc="out of memory";
+        
+        throws any doc="any other value on error";
     }
 
 
@@ -210,17 +262,28 @@ protocol session {
 
         lend identity me 
         doc="""
-            own identity this key is used for. The key has to be in the key ring already.
-            me->address, me->user_id and me->username must be set to valid data.
-            myself is called by set_own_key without key generation.
-            me->flags are ignored
-            me->address must not be an alias
-            me->fpr will be ignored and replaced by fpr, but caller MUST surrender ownership of the 
-            me->fpr reference, because it may be freed and replaced within the myself call. caller 
-            owns me->fpr memory again upon return.
+            own identity this key is used for. 
+            The key has to be in the key ring already identity->address must be set to valid 
+            data update_identity() is called by this function and will create a TOFU user_id + 
+            new entry if none is indicated and heuristic fails to match extant identity identity-
+            >fpr will NOT be updated with the set identity fpr; it is only in,out because 
+            update_identity() is called before setting it.
             """;
 
         use hash fpr doc="fingerprint of the key to mark as own key";
+        
+        // exceptions
+        
+        throws key_unsuitable;
+        
+        throws illegal_value 
+        doc="""
+            illegal parameter values, including if update_identity determines this is an own 
+            identity""";
+        
+        throws out_of_memory doc="out of memory";
+        
+        throws any doc="any other value on error";
     }
 }
 
