@@ -169,7 +169,7 @@ protocol session {
 
         // exceptions
 
-        throws any doc="error status";
+        throws any doc="any other value on error";
     }
 
 
@@ -219,6 +219,8 @@ protocol session {
             ciphersuite for a crypt tech implementation is implementation 
             defined.
             """;
+            
+       throws illegal_value doc="illegal parameter values";
     }
 
 
@@ -237,6 +239,10 @@ protocol session {
         use string description doc="string with long description for event or NULL if omitted";
 
         use string comment doc="string with user defined comment or NULL if omitted";
+        
+        // exceptions
+
+       throws illegal_value doc="illegal parameter values";
     }
 
 
@@ -259,6 +265,10 @@ protocol session {
             results were returned, but no ID found (no reason this 
             should ever occur).
             """;
+            
+       throws illegal_value doc="illegal parameter value";
+       
+       throws out_of_memory doc="out of memory";
     }
 
 
@@ -267,13 +277,22 @@ protocol session {
         // parms
 
         use hash fpr doc="fingerprint of key to mark";
+        
+        // exceptions
+            
+       throws illegal_value doc="illegal parameter value";
+       
+       throws cannot_set_trust:
     }
 
 
     method mark_as_compromized doc="deprecated to fix misspelling. Please move to mark_as_compromised"
 
 
-    method import_key doc="import key from data"
+    method import_key_with_fpr_return 
+    doc="""
+        import keys from data, return optional list of fprs imported
+        """;
     {
         // parms
 
@@ -283,9 +302,29 @@ protocol session {
 
         create identity_list private_keys 
         doc="""
-            list of private keys that have been imported. private_keys can 
-            be left NULL, it is then ignored.
+            list of identities containing the private keys that have been imported. Private_keys
+            and imported_keys can be left NULL, it is then ignored.
+            *** THIS IS THE ACTUAL FUNCTION IMPLEMENTED BY CRYPTOTECH "import_key" ***
             """;
+            
+        create identity_list imported keys doc="if non-NULL, list of actual keys imported"
+        
+        create identity_list changed_public_keys
+        doc="""
+            if non-NULL AND imported_keys is non-NULL: bitvector - corresponds to the first 
+            64 keys imported. If nth bit is set, import changed a key corresponding to the nth 
+            element in imported keys (i.e. key was in DB and was changed by import).
+            """;
+            
+        // exceptions
+
+        throws out_of_memory doc="out of memory";
+        
+        throws illegal_value 
+        doc="""
+            there is no key data to import, or imported keys was NULL and changed_public_keys 
+            was not.
+            """;    
     }
 
 
@@ -293,7 +332,7 @@ protocol session {
     {
         // parms
 
-        use hash fpr doc="key id or fingerprint of key";
+        use hash fpr doc="fingerprint of key";
 
         create string key_data 
         doc="""
@@ -308,6 +347,8 @@ protocol session {
         throws out_of_memory doc="out of memory";
 
         throws key_not_found doc="key not found";
+        
+        throws illegal_value doc="illegal parameter value";
     }
 
 
@@ -333,6 +374,8 @@ protocol session {
         throws key_not_found doc="key not found";
 
         throws cannot_export_key doc="cannot export secret key (i.e. it's on an HKS)";
+        
+        throws illegal_value doc="illegal parameter value";
     }
 
 
@@ -353,6 +396,14 @@ protocol session {
             column3 is description
             column4 is comment
             """;
+            
+        // exceptions
+
+        throws out_of_memory doc="out of memory";
+        
+        throws illegal_value doc="illegal parameter value";
+        
+        throws unknown_error;
     }
 
 
@@ -366,6 +417,14 @@ protocol session {
             column 1 is the ISO 639-1 language code
             column 2 is the name of the language
             """;
+            
+       // exceptions
+
+        throws out_of_memory doc="out of memory";
+        
+        throws illegal_value doc="illegal parameter value";
+        
+        throws unknown_error;
     }
 
 
@@ -378,6 +437,16 @@ protocol session {
         use int phrase_id doc="id of phrase in i18n";
 
         create string phrase doc="phrase as UTF-8 string";
+        
+        // exceptions
+
+        throws out_of_memory doc="out of memory";
+        
+        throws illegal_value doc="illegal parameter value";
+        
+        throws unknown_db_error:
+        
+        throws phrase_not_found;
     }
 
 
@@ -391,14 +460,13 @@ protocol session {
 
         // exceptions
 
-        throws any doc="string to the engine version string constant"; 
+        throws engine_version; 
     }
 
     method is_pEp_user
     doc="""
         returns true if the USER corresponding to this identity has been listed 
         in the *person* table as a pEp user.
-        This *does not check comm_type*.
         """
     {
         // parms
@@ -427,13 +495,17 @@ protocol session {
     {
         // exceptions
 
-        throws any doc="path to actual per user directory or NULL on failure";
+        throws char* doc="path to actual per user directory";
+        
+        throws NULL doc="on failure";
     }
 
     method per_machine_directory doc="returns the directory for pEp system db"
     {
         // exceptions
 
-        throws any doc="path to actual per user directory or NULL on failure";
+        throws char* doc="path to actual per machine directory";
+        
+        throws NULL doc="on failure";
     }
 }

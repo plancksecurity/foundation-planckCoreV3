@@ -53,6 +53,9 @@ typedef enum _sync_handshake_signal {
     // message cannot be sent, need passphrase
     SYNC_PASSPHRASE_REQUIRED = 128,
 
+    // notify that a (managed or managed, NOT device) group invite message has been received
+    SYNC_NOTIFY_GROUP_INVITATION = 192,     // whatever. This shouldn't be bundled with sync. FIXME.
+
     // notification of actual group status
     SYNC_NOTIFY_SOLE = 254,
     SYNC_NOTIFY_IN_GROUP = 255

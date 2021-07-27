@@ -3,7 +3,8 @@
 
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
-
+#include "platform.h"
+#include "dynamic_api.h"
 #include "message_api.h"
 
 #ifdef __cplusplus
@@ -307,7 +308,7 @@ DYNAMIC_API PEP_STATUS group_dissolve(
  *
  *  @ownership      FIXME
  *
- *  @note           This generates a GroupCreate message even though the group already exists - this is because
+ *  @note           This generates a GroupInvite message even though the group already exists - this is because
  *                  this is the accepted message format for invitations to potential members
  *
  */

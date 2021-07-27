@@ -152,17 +152,19 @@ TEST_F(DecryptAttachPrivateKeyUntrustedTest, check_decrypt_attach_private_key_un
 
     output_stream << "Reading in message..." << endl;
 
-    string encoded_text = slurp("test_mails/priv_key_attach.eml");
+    output_stream << "Reading in message..." << endl;
 
-    output_stream << "Starting tests..." << endl;
+    message* encoded_text = slurp_message_file_into_struct("test_mails/priv_key_attach.eml");
+
+    output_stream << "Starting test..." << endl;
+
     // Case 1:
     // Same address, same user_id, untrusted
     output_stream << "Same address, same user_id, untrusted" << endl;
-    char* decrypted_text = NULL;
+    message* decrypted_text = NULL;
     stringlist_t* keylist_used = NULL;
     PEP_rating rating;
-    PEP_decrypt_flags_t flags;
-    char* modified_src = NULL;
+    PEP_decrypt_flags_t flags = 0;
 
     status = get_trust(session, same_addr_same_uid);
     output_stream << tl_ct_string(same_addr_same_uid->comm_type) << endl;
@@ -170,10 +172,13 @@ TEST_F(DecryptAttachPrivateKeyUntrustedTest, check_decrypt_attach_private_key_un
     ASSERT_NE(same_addr_same_uid->comm_type & PEP_ct_confirmed, PEP_ct_confirmed);
 
     flags = 0;
-    status = MIME_decrypt_message(session, encoded_text.c_str(),
-                                  encoded_text.size(), &decrypted_text,
-                                  &keylist_used, &rating, &flags,
-				  &modified_src);
+    output_stream << tl_ct_string(same_addr_same_uid->comm_type) << endl;
+
+    ASSERT_NE(same_addr_same_uid->comm_type & PEP_ct_confirmed, PEP_ct_confirmed);
+
+    flags = 0;
+    status = decrypt_message(session, encoded_text, &decrypted_text,
+                                  &keylist_used, &rating, &flags);
 
     status = get_trust(session, same_addr_same_uid);
     ASSERT_EQ(same_addr_same_uid->comm_type, PEP_ct_pEp_unconfirmed);
@@ -183,8 +188,9 @@ TEST_F(DecryptAttachPrivateKeyUntrustedTest, check_decrypt_attach_private_key_un
     output_stream << "PASS!" << endl;
 
     // Case 2:
-    output_stream << decrypted_text << endl;
 
     status = key_reset_trust(session, main_me);
     status = key_reset_trust(session, same_addr_same_uid);
+
+    // FIXME: This looks unfinished???
 }

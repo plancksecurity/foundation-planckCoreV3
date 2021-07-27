@@ -424,8 +424,6 @@ TEST_F(KeyResetMessageTest, check_non_reset_receive_revoked) {
     status = mime_decode_message(received_mail.c_str(), received_mail.size(), &enc_msg_obj, NULL);
     ASSERT_OK;
     status = decrypt_message(session, enc_msg_obj, &dec_msg_obj, &keylist, &rating, &flags);
-//    status = MIME_decrypt_message(session, received_mail.c_str(), received_mail.size(),
-//                                  &decrypted_msg, &keylist, &rating, &flags, &modified_src);
 
     ASSERT_OK;
 
@@ -472,14 +470,13 @@ TEST_F(KeyResetMessageTest, check_reset_receive_revoked) {
     ASSERT_OK;
     ASSERT_STREQ(alice_fpr, alice_ident->fpr);
 
-    string received_mail = slurp("test_files/398_reset_from_alice_to_fenris.eml");
-    char* decrypted_msg = NULL;
-    char* modified_src = NULL;
+    message* received_mail = slurp_message_file_into_struct("test_files/398_reset_from_alice_to_fenris.eml");
+    message* decrypted_msg = NULL;
     stringlist_t* keylist = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = MIME_decrypt_message(session, received_mail.c_str(), received_mail.size(),
-                                  &decrypted_msg, &keylist, &rating, &flags, &modified_src);
+    status = decrypt_message(session, received_mail,
+                                  &decrypted_msg, &keylist, &rating, &flags);
 
     ASSERT_OK;
     ASSERT_NOTNULL(keylist);
@@ -544,17 +541,16 @@ TEST_F(KeyResetMessageTest, check_receive_message_to_revoked_key_from_unknown) {
     ASSERT_OK;
     m_queue.clear();
 
-    string received_mail = slurp("test_files/398_gabrielle_to_alice.eml");
-    char* decrypted_msg = NULL;
-    char* modified_src = NULL;
+    message* received_mail = slurp_message_file_into_struct("test_files/398_gabrielle_to_alice.eml");
+    message* decrypted_msg = NULL;
     stringlist_t* keylist = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = MIME_decrypt_message(session, received_mail.c_str(), received_mail.size(),
-                                  &decrypted_msg, &keylist, &rating, &flags, &modified_src);
+    status = decrypt_message(session, received_mail,
+                                  &decrypted_msg, &keylist, &rating, &flags);
     ASSERT_EQ(m_queue.size() , 0);
-    free(decrypted_msg);
-    free(modified_src);
+    free_message(decrypted_msg);
+    free_message(received_mail);
     free_stringlist(keylist);
     free_identity(from_ident);
 }
@@ -612,14 +608,18 @@ TEST_F(KeyResetMessageTest, check_receive_message_to_revoked_key_from_contact) {
 
     // Now we get mail from Gabi, who only has our old key AND has become
     // a pEp user in the meantime...
-    string received_mail = slurp("test_files/398_gabrielle_to_alice.eml");
-    char* decrypted_msg = NULL;
-    char* modified_src = NULL;
+    message* received_mail = slurp_message_file_into_struct("test_files/398_gabrielle_to_alice.eml");
+    message* decrypted_msg = NULL;
     stringlist_t* keylist = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = MIME_decrypt_message(session, received_mail.c_str(), received_mail.size(),
-                                  &decrypted_msg, &keylist, &rating, &flags, &modified_src);
+
+    // We expect the app to provide user_ids wherever it has them on incoming messages, and since it breaks things
+    // here if we don't put it there, we do now.
+    received_mail->to->ident->user_id = strdup(PEP_OWN_USERID);
+
+    status = decrypt_message(session, received_mail,
+                                  &decrypted_msg, &keylist, &rating, &flags);
 
     ASSERT_EQ(m_queue.size() , 1);
     vector<message*>::iterator it = m_queue.begin();
@@ -771,14 +771,13 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_recv) {
     status = myself(session, alice);
     ASSERT_OK;
 
-    string received_mail = slurp("test_mails/check_reset_grouped_own_recv.eml");
-    char* decrypted_msg = NULL;
-    char* modified_src = NULL;
+    message* received_mail = slurp_message_file_into_struct("test_mails/check_reset_grouped_own_recv.eml");
+    message* decrypted_msg = NULL;
     stringlist_t* keylist = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = MIME_decrypt_message(session, received_mail.c_str(), received_mail.size(),
-                                  &decrypted_msg, &keylist, &rating, &flags, &modified_src);
+    status = decrypt_message(session, received_mail,
+                                  &decrypted_msg, &keylist, &rating, &flags);
 
     status = myself(session, alice);
     ASSERT_OK;

@@ -686,7 +686,8 @@ DYNAMIC_API PEP_STATUS update_identity(
                 
                 if (_own_addr) {
                     free(identity->user_id);
-                    identity->user_id = strdup(default_own_id);
+                    // ENGINE-952: Ownership transfer. Allocated and checked above.
+                    identity->user_id = default_own_id;
                     // Do not renew, do not generate
                     return _myself(session, identity, false, false, false, true);
                 }    

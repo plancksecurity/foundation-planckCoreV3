@@ -223,45 +223,30 @@ TEST_F(OldMessageApiTest, check_message_api) {
     output_stream << "rating :" << rating2 << "\n";
     free_stringlist(keylist5);
 
-    output_stream << "\nTesting MIME_encrypt_message / MIME_decrypt_message...\n\n";
+    output_stream << "\nTesting encrypt_message / decrypt_message...\n\n";
 
     output_stream << "opening alice_bob_encrypt_test_plaintext_mime.eml for reading\n";
-    ifstream inFile4 ("test_mails/alice_bob_encrypt_test_plaintext_mime.eml");
-    ASSERT_TRUE(inFile4.is_open());
 
-    string text4;
+    message* dec_msg = slurp_message_file_into_struct("test_mails/alice_bob_encrypt_test_plaintext_mime.eml", PEP_dir_outgoing);
+    message* enc_msg = NULL;
 
-    output_stream << "reading alice_bob_encrypt_test_plaintext_mime.eml sample\n";
-    while (!inFile4.eof()) {
-        static string line;
-        getline(inFile4, line);
-        text4 += line + "\r\n";
-    }
-    inFile4.close();
-
-    const char* out_msg_plain = text4.c_str();
-
-//    const char* out_msg_plain = "From: krista@kgrothoff.org\nTo: Volker <vb@pep-project.org>\nSubject: Test\nContent-Type: text/plain; charset=utf-8\nContent-Language: en-US\nContent-Transfer-Encoding:quoted-printable\n\ngaga\n\n";
-    char* enc_msg = NULL;
-    char* dec_msg = NULL;
-
-    PEP_STATUS status7 = MIME_encrypt_message(session, text4.c_str(), text4.length(), NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
-//    PEP_STATUS status7 = MIME_encrypt_message(session, out_msg_plain, strlen(out_msg_plain), NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+    PEP_STATUS status7 = encrypt_message(session, dec_msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status7 , PEP_STATUS_OK);
 
-    output_stream << enc_msg << endl;
-
-    string text5 = enc_msg;
+    print_mail(enc_msg);
+    wipe_message_ptr(&dec_msg);
 
     PEP_decrypt_flags_t dec_flags;
     stringlist_t* keys_used;
 
     dec_flags = 0;
-    char* modified_src = NULL;
-    PEP_STATUS status8 = MIME_decrypt_message(session, text5.c_str(), text5.length(), &dec_msg, &keys_used, &rating, &dec_flags, &modified_src);
+
+    PEP_STATUS status8 = decrypt_message(session, enc_msg, &dec_msg, &keys_used, &rating, &dec_flags);
     ASSERT_EQ(status8 , PEP_STATUS_OK);
 
-    output_stream << dec_msg << endl;
+    print_mail(dec_msg);
+    wipe_message_ptr(&dec_msg);
+    wipe_message_ptr(&enc_msg);
 
     output_stream << "\nTesting encrypt_message() with enc_format = PEP_enc_none\n\n";
 
@@ -293,7 +278,4 @@ TEST_F(OldMessageApiTest, check_message_api) {
     free_message(msg2);
     free_message(enc_msg2);
     output_stream << "done.\n";
-
-    free(enc_msg);
-    free(dec_msg);
 }

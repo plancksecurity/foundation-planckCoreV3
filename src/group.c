@@ -10,6 +10,7 @@
 #include "distribution_codec.h"
 #include "map_asn1.h"
 #include "baseprotocol.h"
+#include "sync_api.h"
 
 // ** Static functions
 /******************************************************************************************
@@ -53,9 +54,9 @@ static PEP_STATUS _build_managed_group_message_payload(PEP_SESSION session,
     Identity_t* other_identity_Ident = NULL;
 
     switch (managed_group_msg_type) {
-        case ManagedGroup_PR_groupCreate:
-            group_identity_Ident = &(outdist->choice.managedgroup.choice.groupCreate.groupIdentity);
-            other_identity_Ident = &(outdist->choice.managedgroup.choice.groupCreate.manager);
+        case ManagedGroup_PR_groupInvite:
+            group_identity_Ident = &(outdist->choice.managedgroup.choice.groupInvite.groupIdentity);
+            other_identity_Ident = &(outdist->choice.managedgroup.choice.groupInvite.manager);
             break;
         case ManagedGroup_PR_groupDissolve:
             group_identity_Ident = &(outdist->choice.managedgroup.choice.groupDissolve.groupIdentity);
@@ -1270,7 +1271,7 @@ pEp_error:
     return status;
 }
 
-PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rating, GroupCreate_t* gc) {
+PEP_STATUS receive_GroupInvite(PEP_SESSION session, message* msg, PEP_rating rating, GroupInvite_t* gc) {
     PEP_STATUS status = PEP_STATUS_OK;
     if (rating < PEP_rating_reliable)
         return PEP_NO_TRUST; // Find better error
@@ -1285,6 +1286,8 @@ PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rat
     pEp_identity* member_ident = NULL;
     pEp_identity* group_identity = NULL;
     pEp_identity* manager = NULL;
+    identity_list* list = NULL;
+
     pEp_group* group = NULL;
 
     char* own_id = NULL;
@@ -1322,6 +1325,13 @@ PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rat
         status = PEP_KEY_NOT_FOUND;
         goto pEp_free;
     }
+    if (status != PEP_STATUS_OK)
+        goto pEp_free;
+
+    // If we are the manager of this group, we should ignore this message - Volker, fixme if groupsync should be different here
+    // when you implement it
+    if (is_me(session, manager))
+        goto pEp_free;
 
     // Ok then - let's do this:
     // First, we need to ensure the group_ident has an own ident instead
@@ -1362,7 +1372,7 @@ PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rat
         goto pEp_free;
     }
 
-    identity_list* list = new_identity_list(member_ident);
+    list = new_identity_list(member_ident);
     if (!list) {
         status = PEP_OUT_OF_MEMORY;
         goto pEp_free;
@@ -1374,6 +1384,15 @@ PEP_STATUS receive_GroupCreate(PEP_SESSION session, message* msg, PEP_rating rat
         goto pEp_free;
 
     status = add_own_membership_entry(session, group_identity, manager, msg->to->ident);
+
+    // Ok, we did all we have to do and it worked out. Notify the app.
+    if (status == PEP_STATUS_OK && session->notifyHandshake) {
+        // identities go to the callee, so we have to dup them here because the normal ones belong
+        // to the returned group. #notmyspec ;)
+        pEp_identity* grp = identity_dup(group_identity);
+        pEp_identity* mgr = identity_dup(manager);
+        status = session->notifyHandshake(grp, mgr, SYNC_NOTIFY_GROUP_INVITATION);
+    }
 
 pEp_free:
     if (!group) {
@@ -1695,8 +1714,8 @@ PEP_STATUS receive_managed_group_message(PEP_SESSION session, message* msg, PEP_
         return PEP_ILLEGAL_VALUE;
 
     switch (dist->choice.managedgroup.present) {
-        case ManagedGroup_PR_groupCreate:
-            return receive_GroupCreate(session, msg, rating, &(dist->choice.managedgroup.choice.groupCreate));
+        case ManagedGroup_PR_groupInvite:
+            return receive_GroupInvite(session, msg, rating, &(dist->choice.managedgroup.choice.groupInvite));
         case ManagedGroup_PR_groupDissolve:
             return receive_GroupDissolve(session, msg, rating, &(dist->choice.managedgroup.choice.groupDissolve));
         case ManagedGroup_PR_groupAdopted:
@@ -1986,7 +2005,7 @@ DYNAMIC_API PEP_STATUS group_create(
 
     // Ok, mail em.
     if (is_me(session, manager))
-        status = _send_managed_group_message_to_list(session, _group, ManagedGroup_PR_groupCreate);
+        status = _send_managed_group_message_to_list(session, _group, ManagedGroup_PR_groupInvite);
 
     if (group)
         *group = _group;
@@ -2213,7 +2232,7 @@ DYNAMIC_API PEP_STATUS group_invite_member(
 
             status = _build_managed_group_message_payload(session, group_identity,
                                                           manager, &data, &size,
-                                                          ManagedGroup_PR_groupCreate);
+                                                          ManagedGroup_PR_groupInvite);
 
             if (status != PEP_STATUS_OK)
                 goto pEp_free;

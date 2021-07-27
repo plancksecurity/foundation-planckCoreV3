@@ -132,8 +132,7 @@ namespace {
 }  // namespace
 
 
-
-TEST_F(Message2_1Test, check_message2_1_recip_2_0) {
+TEST_F(Message2_1Test, check_message2_1_recip_default_ver) {
 
     pEp_identity* alice = NULL;
     pEp_identity* carol = NULL;
@@ -150,11 +149,11 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_0) {
     ASSERT_OK;
     ASSERT_NOTNULL(carol);
 
-    // default should be 2.0 after setting pep status
+    // default should be 2.1 after setting pep status
     status = update_identity(session, carol);
     ASSERT_OK;
     ASSERT_EQ(carol->major_ver , 2);
-    ASSERT_EQ(carol->minor_ver , 0);
+    ASSERT_EQ(carol->minor_ver , 1);
     // generate message
     pEp_identity* carol_to = new_identity(carol->address, NULL, NULL, NULL);
 
@@ -170,9 +169,9 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_0) {
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_OK;
 
-    // ensure sent message is in 2.0 format
+    // ensure sent message is in 2.1 format
     unsigned int major = 2;
-    unsigned int minor = 0;
+    unsigned int minor = 1;
     ASSERT_TRUE(verify_message_version_produced(enc_msg, &major, &minor));
 
     free_identity(carol);
@@ -297,15 +296,8 @@ TEST_F(Message2_1Test, check_message2_1_recip_1_0_from_msg_OpenPGP) {
     ASSERT_NOTNULL(alex);
 
     // receive 1.0 message from OpenPGP
-    string incoming = slurp("test_mails/From_M1_0.eml");
-
-    char* dec_msg;
-    char* mod_src = NULL;
-    PEP_decrypt_flags_t flags = 0;
-    stringlist_t* keylist_used = NULL;
-    PEP_rating rating;
-
-    status = MIME_decrypt_message(session, incoming.c_str(), incoming.size(), &dec_msg, &keylist_used, &rating, &flags, &mod_src);
+    message* dec_msg;
+    status = vanilla_read_file_and_decrypt(session, &dec_msg, "test_mails/From_M1_0.eml");
 
     ASSERT_OK;
     // generate message
@@ -330,9 +322,10 @@ TEST_F(Message2_1Test, check_message2_1_recip_1_0_from_msg_OpenPGP) {
     free_message(msg);
     free_message(enc_msg);
     free(dec_msg);
-    free(mod_src);
+   
 }
 
+// Note, this will now create a 2.1 message ANYWAY.
 TEST_F(Message2_1Test, check_message2_1_recip_2_0_from_msg) {
     // receive 2.0 message
     pEp_identity* carol = NULL;
@@ -344,15 +337,8 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_0_from_msg) {
     ASSERT_NOTNULL(carol);
 
     // receive 1.0 message from OpenPGP
-    string incoming = slurp("test_mails/2_0_msg.eml");
-
-    char* dec_msg;
-    char* mod_src = NULL;
-    PEP_decrypt_flags_t flags = 0;
-    stringlist_t* keylist_used = NULL;
-    PEP_rating rating;
-
-    status = MIME_decrypt_message(session, incoming.c_str(), incoming.size(), &dec_msg, &keylist_used, &rating, &flags, &mod_src);
+    message* dec_msg;
+    status = vanilla_read_file_and_decrypt(session, &dec_msg, "test_mails/2_0_msg.eml");
 
     ASSERT_OK;
     // generate message
@@ -369,15 +355,14 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_0_from_msg) {
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_OK;
 
-    // ensure sent message is in 1.0 format
+    // ensure sent message is in 2.1 format
     unsigned int major = 2;
-    unsigned int minor = 0;
+    unsigned int minor = 1;
     ASSERT_TRUE(verify_message_version_produced(enc_msg, &major, &minor));
 
     free_message(msg);
     free_message(enc_msg);
     free(dec_msg);
-    free(mod_src);
 }
 
 TEST_F(Message2_1Test, check_message2_1_recip_2_1_from_msg) {
@@ -391,15 +376,8 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_1_from_msg) {
     ASSERT_NOTNULL(carol);
 
     // receive 1.0 message from OpenPGP
-    string incoming = slurp("test_mails/From_M2_1.eml");
-
-    char* dec_msg;
-    char* mod_src = NULL;
-    PEP_decrypt_flags_t flags = 0;
-    stringlist_t* keylist_used = NULL;
-    PEP_rating rating;
-
-    status = MIME_decrypt_message(session, incoming.c_str(), incoming.size(), &dec_msg, &keylist_used, &rating, &flags, &mod_src);
+    message* dec_msg;
+    status = vanilla_read_file_and_decrypt(session, &dec_msg, "test_mails/From_M2_1.eml");
 
     ASSERT_OK;
     // generate message
@@ -429,7 +407,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_1_from_msg) {
     free_message(msg);
     free_message(enc_msg);
     free(dec_msg);
-    free(mod_src);
+   
 }
 
 TEST_F(Message2_1Test, check_message2_1_recip_mixed_2_0) {

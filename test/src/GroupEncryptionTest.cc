@@ -19,6 +19,7 @@
 
 PEP_STATUS GECT_message_send_callback(message* msg);
 PEP_STATUS GECT_ensure_passphrase_callback(PEP_SESSION session, const char* key);
+PEP_STATUS GECT_notify_handshake_callback(pEp_identity* me, pEp_identity* partner, sync_handshake_signal signal);
 
 static void* GECT_fake_this;
 
@@ -32,6 +33,10 @@ namespace {
 
             vector<message*> m_queue;
             vector<string> pass_list;
+
+            pEp_identity* signal_check_ident_me = NULL;
+            pEp_identity* signal_check_ident_partner = NULL;
+            sync_handshake_signal signal = SYNC_NOTIFY_UNDEFINED;
 
         protected:
             // You can remove any or all of the following functions if its body
@@ -80,7 +85,7 @@ namespace {
             const char* group_2_name = "Vanus for Best Mage Ever Campaign";
             const char* group_2_fpr = "A39A9EE41E9D6380C8E5220E6DC64C166456E7C7";
             const char* group_2_prefix = "vanus_for_archmage_0x6456E7C7";
-            const char* group_1_replacement_revoke_1 = "A87B102645C0130A7FF6A26B352D442AF06B5F28"; // CHANGE ME
+            const char* group_1_replacement_revoke_1 = "B267A15D4873ADB8FF6B303E21C98B8ABC528ECC"; // CHANGE ME
 
             string kf_name(const char* prefix, bool priv) {
                 return string("test_keys/") + (priv ? "priv/" : "pub/") + prefix + (priv ? "_priv.asc" : "_pub.asc");
@@ -110,6 +115,7 @@ namespace {
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
+                session->notifyHandshake = &GECT_notify_handshake_callback;
                 m_queue.clear();
                 pass_list.clear();
             }
@@ -118,6 +124,8 @@ namespace {
                 // Code here will be called immediately after each test (right
                 // before the destructor).
                 GECT_fake_this = NULL;
+                free_identity(signal_check_ident_me);
+                free_identity(signal_check_ident_partner);
                 engine->shut_down();
                 delete engine;
                 engine = NULL;
@@ -154,6 +162,15 @@ PEP_STATUS GECT_message_send_callback(message* msg) {
 
 PEP_STATUS GECT_ensure_passphrase_callback(PEP_SESSION session, const char* fpr) {
     return config_valid_passphrase(session, fpr, ((GroupEncryptionTest*)GECT_fake_this)->pass_list);
+}
+
+PEP_STATUS GECT_notify_handshake_callback(pEp_identity* me, pEp_identity* partner, sync_handshake_signal signal) {
+    if (me && partner && signal == SYNC_NOTIFY_GROUP_INVITATION) {
+        ((GroupEncryptionTest*)GECT_fake_this)->signal_check_ident_me = me;
+        ((GroupEncryptionTest*)GECT_fake_this)->signal_check_ident_partner = partner;
+        ((GroupEncryptionTest*)GECT_fake_this)->signal = signal;
+    }
+    return PEP_STATUS_OK;
 }
 
 TEST_F(GroupEncryptionTest, check_member_create_w_ident) {
@@ -1045,6 +1062,13 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_1) {
     ASSERT_STREQ(msg->to->ident->username, member_1_name);
     ASSERT_STREQ(msg->to->ident->address, member_1_address);
 
+    // Check that the signal was raised
+    ASSERT_NOTNULL(signal_check_ident_me);
+    ASSERT_NOTNULL(signal_check_ident_partner);
+    ASSERT_EQ(signal, SYNC_NOTIFY_GROUP_INVITATION);
+    ASSERT_STREQ(signal_check_ident_me->address, group_identity->address);
+    ASSERT_STREQ(signal_check_ident_partner->address, manager->address);
+
     // Ok, now let's see what's inside the box
     pEp_group* group_info = NULL;
     status = retrieve_group_info(session, group_identity, &group_info);
@@ -1125,6 +1149,14 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_2) {
         status = update_identity(session, msg->to->ident);
         ASSERT_OK;
     }
+
+    // Check that the signal was raised
+    ASSERT_NOTNULL(signal_check_ident_me);
+    ASSERT_NOTNULL(signal_check_ident_partner);
+    ASSERT_EQ(signal, SYNC_NOTIFY_GROUP_INVITATION);
+    ASSERT_STREQ(signal_check_ident_me->address, group_identity->address);
+    ASSERT_STREQ(signal_check_ident_partner->address, manager->address);
+
     ASSERT_TRUE(is_me(session,msg->to->ident));
     ASSERT_STREQ(msg->to->ident->username, member_2_name);
     ASSERT_STREQ(msg->to->ident->address, member_2_address);
@@ -1182,6 +1214,14 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_3) {
         status = update_identity(session, msg->to->ident);
         ASSERT_OK;
     }
+
+    // Check that the signal was raised
+    ASSERT_NOTNULL(signal_check_ident_me);
+    ASSERT_NOTNULL(signal_check_ident_partner);
+    ASSERT_EQ(signal, SYNC_NOTIFY_GROUP_INVITATION);
+    ASSERT_STREQ(signal_check_ident_me->address, group_identity->address);
+    ASSERT_STREQ(signal_check_ident_partner->address, manager->address);
+
     ASSERT_TRUE(is_me(session,msg->to->ident));
     ASSERT_STREQ(msg->to->ident->username, member_3_name);
     ASSERT_STREQ(msg->to->ident->address, member_3_address);
@@ -1239,6 +1279,14 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_4) {
         status = update_identity(session, msg->to->ident);
         ASSERT_OK;
     }
+
+    // Check that the signal was raised
+    ASSERT_NOTNULL(signal_check_ident_me);
+    ASSERT_NOTNULL(signal_check_ident_partner);
+    ASSERT_EQ(signal, SYNC_NOTIFY_GROUP_INVITATION);
+    ASSERT_STREQ(signal_check_ident_me->address, group_identity->address);
+    ASSERT_STREQ(signal_check_ident_partner->address, manager->address);
+
     ASSERT_TRUE(is_me(session,msg->to->ident));
     ASSERT_STREQ(msg->to->ident->username, member_4_name);
     ASSERT_STREQ(msg->to->ident->address, member_4_address);
