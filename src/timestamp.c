@@ -24,12 +24,15 @@ DYNAMIC_API time_t timegm_with_gmtoff(const timestamp* ts)
         if (_ts) {
 #if defined(ZOS)
             const time_t raw_time = mktime(_ts);
+            if (raw_time != -1) {
+                retval = raw_time;
+            }
 #else
             const time_t raw_time = timegm(_ts);
-#endif
             if (raw_time != -1) {
-                retval = raw_time - ts->tm_gmtoff;
+                retval = raw_time - _ts->tm_gmtoff;
             }
+#endif
         }
     }
 
