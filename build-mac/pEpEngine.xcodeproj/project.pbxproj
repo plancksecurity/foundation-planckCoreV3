@@ -34,7 +34,6 @@
 		1543DA4C2577F8BE0041EFB5 /* Sync_event.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A8823C4B2DD008EF79C /* Sync_event.h */; };
 		1543DAA9257801880041EFB5 /* baseprotocol.c in Sources */ = {isa = PBXBuildFile; fileRef = 646C414C1D510D8800C63EFF /* baseprotocol.c */; };
 		1543DAAD257801A90041EFB5 /* resource_id.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F6921C1F164A47009418F5 /* resource_id.c */; };
-		1549181222B92EA20091B6D6 /* libiconv.2.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 1549180D22B92EA20091B6D6 /* libiconv.2.tbd */; };
 		154918AB22B940200091B6D6 /* fsm_common.h in Headers */ = {isa = PBXBuildFile; fileRef = 1549189222B9401D0091B6D6 /* fsm_common.h */; platformFilter = ios; };
 		154918AC22B940200091B6D6 /* status_to_string.h in Headers */ = {isa = PBXBuildFile; fileRef = 1549189322B9401E0091B6D6 /* status_to_string.h */; platformFilter = ios; };
 		154918B222B940200091B6D6 /* aux_mime_msg.h in Headers */ = {isa = PBXBuildFile; fileRef = 1549189922B9401E0091B6D6 /* aux_mime_msg.h */; platformFilter = ios; };
@@ -310,7 +309,6 @@
 		154917FA22B926700091B6D6 /* libsequoia_openpgp_ffi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsequoia_openpgp_ffi.a; path = ../../sequoia4ios/build/lib/libsequoia_openpgp_ffi.a; sourceTree = "<group>"; };
 		154917FB22B926700091B6D6 /* libhogweed.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libhogweed.a; path = ../../sequoia4ios/build/lib/libhogweed.a; sourceTree = "<group>"; };
 		154917FC22B926700091B6D6 /* libgmp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgmp.a; path = ../../sequoia4ios/build/lib/libgmp.a; sourceTree = "<group>"; };
-		1549180D22B92EA20091B6D6 /* libiconv.2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.2.tbd; path = usr/lib/libiconv.2.tbd; sourceTree = SDKROOT; };
 		1549189222B9401D0091B6D6 /* fsm_common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = fsm_common.h; path = ../src/fsm_common.h; sourceTree = "<group>"; };
 		1549189322B9401E0091B6D6 /* status_to_string.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = status_to_string.h; path = ../src/status_to_string.h; sourceTree = "<group>"; };
 		1549189922B9401E0091B6D6 /* aux_mime_msg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = aux_mime_msg.h; path = ../src/aux_mime_msg.h; sourceTree = "<group>"; };
@@ -426,7 +424,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1549181222B92EA20091B6D6 /* libiconv.2.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -546,7 +543,6 @@
 				1585EF5A26A08B2000B822E1 /* CommonPEPDependencies.xcodeproj */,
 				15A3261C2611F6B5009D07EB /* PEPSQLITE3.xcodeproj */,
 				15A3203B260E030B009D07EB /* pEpASN1.xcodeproj */,
-				1549180D22B92EA20091B6D6 /* libiconv.2.tbd */,
 				64951A1B1BE0FCD800B10E71 /* system.db */,
 				64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */,
 				43188A5523C4A7F8008EF79C /* sync-generated */,
