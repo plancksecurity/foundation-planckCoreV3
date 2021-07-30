@@ -13,7 +13,9 @@ ifeq ($(IS_TAGGED), true)
 else
 	PEPENGINE_VERSION=$(shell git rev-parse --short=8 HEAD)
 endif
-all:
+all: build
+
+build:
 	-docker pull $(IMAGE_NAME):latest
 	cd ../../ && docker build --build-arg CURRENT_DISTRO=$(CURRENT_DISTRO) \
 		      --build-arg DOCKER_REGISTRY_HOST=${DOCKER_REGISTRY_HOST} \

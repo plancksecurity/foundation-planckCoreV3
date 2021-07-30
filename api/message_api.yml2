@@ -152,6 +152,12 @@ protocol session {
             on demand or no recipients with usable key, is left unencrypted,
             and key is attached to it 
             """;
+            
+        throws illegal_value doc="illegal parameter values";
+        
+        throws out_of_memory doc="out of memory";
+        
+        throws any doc="any other value on error";
     }
 
 
@@ -194,6 +200,16 @@ protocol session {
                 on demand or no recipients with usable key, is left unencrypted, 
                 and key is attached to it
                 """;
+                
+        throws illegal_value doc="illegal parameter values";
+        
+        throws out_of_memory doc="out of memory";
+        
+        throws any doc="any other value on error";
+        
+        throws unknown_error;
+        
+        throws any doc="any other value on error";         
     }
 
 
@@ -231,13 +247,19 @@ protocol session {
             flag key_reset_only 0x20;
         }
 
-        doc | (FIXME: The exceptions may not be correct or complete)
+        // exceptions
 
         throws key_not_found doc="at least one of the receipient keys could not be found";
 
         throws key_has_ambig_name doc="at least one of the receipient keys has an ambiguous name";
 
         throws get_key_failed doc="cannot retrieve key";
+        
+        throws cannot_find_identity;
+        
+        throws illegal_value;
+        
+        throws out_of_memory;
     }
 
 
@@ -248,9 +270,23 @@ protocol session {
         lend message src
         doc="""
             message to decrypt. 
-            The ownership of src remains with the caller - however, the contents 
-            might be modified (strings freed and allocated anew or set to empty,
+            The ownership of src remains with the caller - HOWEVER, the contents 
+            might be modified (strings freed and allocated anew or set to empty, 
             etc) intentionally; when this happens, decrypt_flag_src_modified is set.
+            
+            if src is unencrypted this function returns PEP_UNENCRYPTED and sets dst to NULL
+            if src->enc_format is PEP_enc_inline_EA on input then elevated attachments
+            will be expected
+            
+            decrypt_message RELIES on the fact that identity information provided in src 
+            for recips and sender is AS TAKEN FROM THE ORIGINAL PARSED MESSAGE. This means 
+            that if update_identity or myself is called on those identities by the caller 
+            before passing the message struct to decrypt_message, the caller will have to 
+            cache and restore those to their original state before sending them to this  
+            function. ADAPTERS AND APPLICATIONS PLEASE TAKE NOTE OF THIS. (Obviously, this 
+            doesn't include information like user_ids, but we very specifically need the 
+            incoming usernames preserved so that they can be handled by the internal 
+            algorithm appropriately)
             """;
 
         create message dst doc="pointer to new decrypted message or empty on failure";
@@ -271,30 +307,33 @@ protocol session {
         // flags
         
         flags {
-            flag decrypt_flag_own_private_key 0x1 
-            doc="""
-                private key was imported for one of our addresses (NOT trusted
-                or set to be used - handshake/trust is required for that)
-                """;
-            flag decrypt_flag_consume 0x2 doc='used by sync';
-            flag decrypt_flag_ignore 0x4 doc='used by sync';
-            flag decrypt_flag_src_modified 0x8 
-            doc="""
-                indicates that the src object has been modified. At the moment,
-                this is always as a direct result of the behaviour driven
-                by the input flags. This flag is the ONLY value that should be
-                relied upon to see if such changes have taken place.
-                """;
             flag decrypt_flag_untrusted_server 0x100 
             doc="""
-                input flag. Used to signal that decrypt function should engage in behaviour
+                incoming flag. Used to signal that decrypt function should engage in behaviour
                 specified for when the server storing the source is untrusted.
                 """;
-            flag decrypt_flag_dont_trigger_sync 0x200;
+            flag decrypt_flag_own_private_key 0x1 
+            doc="""
+                outgoing flag: private key was imported for one of our addresses (NOT trusted
+                or set to be used - handshake/trust is required for that)
+                """;
+            flag decrypt_flag_src_modified 0x8 
+            doc="""
+                outgoing flag: indicates that the modified_src field should contain a modified 
+                version of the source, at the moment always as a result of the input flags. 
+                """;
+            flag decrypt_flag_consume 0x2 
+            doc="""
+                used by sync to indicate this was a pEp internal message and should be consumed 
+                externally without showing it as a normal message to the user
+                """;
+            flag decrypt_flag_ignore 0x4 doc='used by sync';
         }
 
         // exceptions
     
+        throws error doc="any error status";
+        
         throws decrypted doc="if message decrypted but not verified";
 
         throws cannot_reencrypt
@@ -308,18 +347,10 @@ protocol session {
             if src is unencrypted this function returns unencrypted and sets
             dst to empty.
             """;
-
-        throws any doc="all error status values allowed";
     }
 
 
-    method own_message_private_key_details
-    doc="""
-        details on own key in own message. Note: In order to obtain details about key 
-        to be possibly imported as a replacement of key currently used as own identity, 
-        application passes message that have been previously flagged by decrypt_message() 
-        as own message containing own key to this function.
-        """
+    method own_message_private_key_details doc="details on own key in own message."
     {
         // parms
 
@@ -329,11 +360,20 @@ protocol session {
             can check own signature.
             """;
 
-        create identity ident doc="identity containing uid, address and fpr of key";
+        create identity ident 
+        doc="""
+            identity containing uid, address and fpr of key. 
+            note: In order to obtain details about key to be possibly imported as a replacement 
+            of key currently used as own identity, application passes message that have been 
+            previously flagged by decrypt_message() as own message containing own key to this 
+            function.
+            """;
 
         // exceptions
 
-        throws any doc="error status";
+        throws illegal_value doc="illegal parameter values";
+        
+        throws any doc="any other value on error";
     }
 
 
@@ -343,15 +383,15 @@ protocol session {
 
         use message msg
         doc="""
-            message to get the rating for. From must point to a valid pEp_identity.
-            Dir must be dir_outgoing.
+            message to get the rating for. From must point to a valid pEp_identity
+            msg->dir must be PEP_dir_outgoing
             """;
 
         return rating msg_rating doc="rating for the message";
 
         // exceptions
 
-        throws any doc="error status";
+        throws illegal_value doc="illegal parameter values";
     }
 
 
@@ -362,14 +402,14 @@ protocol session {
         use message msg
         doc="""
             message to get the rating for. From must point to a valid pEp_identity.
-            Dir must be dir_outgoing.
+            msg->dir must be dir_outgoing.
             """;
 
         return rating msg_rating doc="rating preview for the message";
 
         // exceptions
 
-        throws any doc="error status";
+        throws illegal_value doc="illegal parameter values";
     }
 
 
@@ -383,7 +423,9 @@ protocol session {
 
         // exceptions
 
-        throws any doc="error status";
+        throws illegal_value doc="illegal parameter values";
+        
+        throws any doc="any other value on error";
     }
 
 
@@ -399,12 +441,14 @@ protocol session {
 
         create string words
         doc="""
-            string with all trustwords, separated 
+            pointer to string with all trustwords, separated 
             by a blank each. Empty if language is not supported or trustword 
             wordlist is damaged or unavailable. 
             The word pointer goes to the ownership of the caller. 
             The caller is responsible to free() it (on Windoze use pEp_free())
             """;
+            
+        create size_t wsize doc="length of full trustwords string";
 
         use bool full
         doc="""
@@ -416,6 +460,8 @@ protocol session {
         // exceptions
 
         throws out_of_memory doc="out of memory";
+        
+        throws illegal_value doc="illegal parameter values";
 
         throws trustword_not_found doc="at least one trustword not found";
     }
@@ -435,7 +481,7 @@ protocol session {
 
         create string words
         doc="""
-            string with all trustwords, separated by a blank each.
+            pointer to string with all trustwords, separated by a blank each.
             Empty if language is not supported or trustword  wordlist is damaged or unavailable.
             """;
 
@@ -448,11 +494,15 @@ protocol session {
 
         // exceptions
 
+        throws illegal_value doc="illegal parameter values";
+        
         throws out_of_memory doc="out of memory";
 
         throws trustword_not_found doc="at least one trustword not found";
 
-        throws like decrypt_message doc="error status of decrypt_message() if decryption fails";
+        throws cannot_find_identity doc="identity not found";
+        
+        throws error doc="status of decrypt_message() if decryption fails.";
     }
 
 
@@ -469,7 +519,7 @@ protocol session {
         create string words 
         doc="""
             pointer to string with all trustwords UTF-8 encoded, separated by a blank each. 
-            NULL if language is not supported or trustword wordlist is damaged or unavailable.
+            Empty if language is not supported or trustword wordlist is damaged or unavailable.
             The caller is responsible to free() it (on Windoze use pEp_free()).
             """;
 
@@ -484,6 +534,8 @@ protocol session {
         // exceptions
 
         throws out_of_memory doc="out of memory";
+        
+        throws illegal_value doc="illegal parameter values";
 
         throws trustword_not_found doc="at least one trustword not found";
     }
@@ -511,6 +563,8 @@ protocol session {
             """;
 
         throws out_of_memory doc="if not enough memory could be allocated";
+        
+        throws any doc="any other value on error";
     }
 
 
@@ -526,7 +580,13 @@ protocol session {
         
         // exceptions
 
+        throws illegal_value doc="illegal parameter values";
+        
+        throws out_of_memory doc="out of memory";
+        
         throws record_not_found doc="if no trust record for user_id and fpr can be found";
+        
+        throws any doc="any other value on error";
     }
 
 
@@ -538,7 +598,7 @@ protocol session {
 
         // exceptions
 
-        throws any doc="rating value for comm type ct";
+        throws rating doc="rating value for comm type ct";
     }
 }
 
