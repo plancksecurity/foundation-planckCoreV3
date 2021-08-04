@@ -46,6 +46,7 @@ Storage.c: $(STORAGE_FILES) pEp.asn1
 PEPMessage.c: message.asn1 pEp.asn1
 	$(ASN1C) -gen-PER $(ASN1C_OPTIONS) $+
 	rm -f converter-sample.c
+	touch PEPMessage.c
 
 clean:
 	rm -f *.a *.o *.c *.h *.sample \
