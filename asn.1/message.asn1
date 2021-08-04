@@ -14,7 +14,7 @@ DEFINITIONS
     AUTOMATIC TAGS EXTENSIBILITY IMPLIED ::=
 BEGIN
 
-EXPORTS Message;
+EXPORTS PEPMessage;
 
 IMPORTS
   PString, PStringList, Identity, IdentityList, StringPairList, Hash
