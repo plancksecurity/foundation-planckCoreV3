@@ -62,25 +62,9 @@ EncFormat ::= ENUMERATED {
 PEPMessage ::= SEQUENCE {
     direction   MessageDirection OPTIONAL, -- used only in "inner" messages
     id          PString          OPTIONAL, -- UTF-8 string of message ID
-
-    -- At least one of shortmsg, longmsg, longmsg-formatted must be present
-    -- FIXME: Can this be constrained?
-    shortmsg    PString          OPTIONAL, -- UTF-8 string of short message
-
-    -- longmsg must only be used if implementation can handle dynamic allocation
-    longmsg     UTF8String       OPTIONAL, -- UTF-8 string of long message
-                                           -- (plain)
-
-    -- longmsg-formatted must only be used if implementation can handle
-    -- dynamic allocation
-    longmsg-formatted UTF8String   OPTIONAL, -- UTF-8 string of long message
-                                             -- (formatted)
-
-    attachments BlobList        OPTIONAL,  -- blobs with attachments
-    -- internal: rawmsg
-    sent        Timestamp       OPTIONAL,  -- when the message is sent
-    recv        Timestamp       OPTIONAL,  -- when the message is received
-    from        Identity,                  -- whom the message is from
+    sent        Timestamp        OPTIONAL,  -- when the message is sent
+    recv        Timestamp        OPTIONAL,  -- when the message is received
+    from        Identity,                   -- whom the message is from
     -- At least one of to, cc must not be an empty list
     -- FIXME: Can this be constrained?
     to          IdentityList    OPTIONAL,  -- whom the message is to
@@ -99,7 +83,23 @@ PEPMessage ::= SEQUENCE {
     comments    PString         OPTIONAL, -- UTF-8 string with comments
     opt-fields  StringPairList  OPTIONAL, -- optional fields
     enc-format  EncFormat DEFAULT none,   -- format of encrypted data
-    sender-fpr  Hash            OPTIONAL  -- fingerprint of sending signer
+    sender-fpr  Hash            OPTIONAL,  -- fingerprint of sending signer
+
+    -- At least one of shortmsg, longmsg, longmsg-formatted must be present
+    -- FIXME: Can this be constrained?
+    shortmsg    PString          OPTIONAL, -- UTF-8 string of short message
+
+    -- longmsg must only be used if implementation can handle dynamic allocation
+    longmsg     UTF8String       OPTIONAL, -- UTF-8 string of long message
+                                           -- (plain)
+
+    -- longmsg-formatted must only be used if implementation can handle
+    -- dynamic allocation
+    longmsg-formatted UTF8String   OPTIONAL, -- UTF-8 string of long message
+                                             -- (formatted)
+
+    attachments BlobList        OPTIONAL     -- blobs with attachments
+    -- internal: rawmsg
 }
 
 END
