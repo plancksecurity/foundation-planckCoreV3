@@ -82,6 +82,18 @@ protocol Distribution 2 {
                 // comm-parnter started the agreement.
                 go StartingAgreement;
             }
+
+            on Start {
+               // Dummy event. This is required to have some event which
+               // can be send to the FSM to "start".
+               // For initializing the TempKeyAgreement protocol from our side,
+               // we need to start the FSM for the desired comm-partner.
+               // Starting the FSM will immediately send out the suggestions
+               // (see above). Anyhow, this separate event enables the upper
+               // layers of the implementation to exclicitly start a
+               // TempKeyAgreement protocol as needed.
+               go StartingAgreement;
+               }
         }
 
         state StartingAgreement {
