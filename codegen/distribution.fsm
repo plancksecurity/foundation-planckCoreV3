@@ -109,7 +109,7 @@ protocol Distribution 2 {
 
         state SuggestionReceived {
             on TemporaryKey { // from the comm-partner
-                if sameTemporaryKey {
+                if isSameTemporaryKey {
                     go Established;
                 }
                 else {  // for robustness
