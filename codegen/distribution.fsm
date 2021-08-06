@@ -75,6 +75,11 @@ protocol Distribution 2 {
 
         state InitState {
             on Init {
+                // Send suggestion as soon as we start. If the FSM was
+                // started by a suggestion received from the comm-partner,
+                // this will send out our suggestion even before processing
+                // the received one, leveraging the cases whether we or the
+                // comm-parnter started the agreement.
                 go StartingAgreement;
             }
         }
@@ -85,14 +90,14 @@ protocol Distribution 2 {
                 send Suggestion;
             }
 
-            on Suggestion { // from the other side
+            on Suggestion { // from the comm-partner
                 do computeTemporaryKey;
                 send TemporaryKey;
                 go SuggestionReceived;
             }
 
             // for robustness
-            on TemporaryKey { // from the other side
+            on TemporaryKey { // from the comm-partner
                 go StartingAgreement;
             }
 
@@ -103,15 +108,16 @@ protocol Distribution 2 {
         }
 
         state SuggestionReceived {
-            on TemporaryKey { // from the other side
+            on TemporaryKey { // from the comm-partner
                 if sameTemporaryKey {
                     go Established;
                 }
-                // for robustness
-                else {
+                else {  // for robustness
                     go StartingAgreement;
                 }
             }
+
+            // TODO: Suggestion
 
             on Reset {  // event
                 go StartingAgreement;
@@ -124,6 +130,7 @@ protocol Distribution 2 {
             }
 
             on Suggestion {
+                // TODO: rethink
                 do computeTemporaryKey;
                 send TemporaryKey;
                 go SuggestionReceived;
