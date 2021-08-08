@@ -523,6 +523,11 @@ bloblist_t *BlobList_to_bloblist(
 
     bloblist_t *r = result;
     for (int i=0; i<list->list.count; i++) {
+        // this should not happen
+        assert(list->list.array[i]);
+        if (!list->list.array[i])
+            goto enomem;
+
         if (list->list.array[i]->value.size > rest_blob_size)
             goto enomem;
         rest_blob_size -= list->list.array[i]->value.size;
