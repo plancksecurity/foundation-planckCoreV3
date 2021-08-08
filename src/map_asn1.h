@@ -15,6 +15,7 @@
 #include "../asn.1/StringPair.h"
 #include "../asn.1/StringPairList.h"
 #include "../asn.1/PStringList.h"
+#include "../asn.1/BlobList.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -203,11 +204,57 @@ PStringList_t *PStringList_from_stringlist(
  *  
  */
 
-stringlist_t *StringPairList_to_stringlist(
-        StringPairList_t *list,
+stringlist_t *PStringList_to_stringlist(
+        PStringList_t *list,
         stringlist_t *result
     );
 
+
+/**
+ *  <!--       BlobList_from_bloblist()       -->
+ *  
+ *  @brief Convert bloblist_t into ASN.1 BlobList_t
+ *  
+ *  @param list[in]           bloblist to convert
+ *  @param result[inout]      BlobList_t to update or NULL to alloc a new one
+ *  @param copy               copy data if true, move data otherwise
+ *  @param max_blob_size      reject if sum(blob.size) > max_blob_size
+ *  
+ *  @retval pointer to updated or allocated result
+ *  
+ *  @warning if a new struct is allocated, the ownership goes to the caller
+ *  
+ */
+
+BlobList_t *BlobList_from_bloblist(
+        bloblist_t *list,
+        BlobList_t *result,
+        bool copy,
+        size_t max_blob_size
+    );
+
+/**
+ *  <!--       BlobList_to_bloblist()       -->
+ *  
+ *  @brief Convert ASN.1 BlobList_t to bloblist_t
+ *  
+ *  @param list[in]           ASN.1 BlobList_t to convert
+ *  @param result[inout]      bloblist_t to update or NULL to alloc a new one
+ *  @param copy               copy data if true, move data otherwise
+ *  @param max_blob_size      reject if sum(blob.size) > max_blob_size
+ *  
+ *  @retval pointer to updated or allocated result
+ *  
+ *  @warning if a new struct is allocated, the ownership goes to the caller
+ *  
+ */
+
+bloblist_t *BlobList_to_bloblist(
+        BlobList_t *list,
+        bloblist_t *result,
+        bool copy,
+        size_t max_blob_size
+    );
 
 #ifdef __cplusplus
 }

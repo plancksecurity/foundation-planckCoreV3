@@ -401,3 +401,103 @@ enomem:
     return NULL;
 }
 
+BlobList_t *BlobList_from_bloblist(
+        bloblist_t *list,
+        BlobList_t *result,
+        bool copy,
+        size_t max_blob_size
+    )
+{
+    bool allocated = !result;
+
+    assert(list);
+    if (!list)
+        return NULL;
+
+    if (allocated) {
+        result = (BlobList_t *) calloc(1, sizeof(BlobList_t));
+        assert(result);
+        if (!result)
+            return NULL;
+    }
+    else {
+        asn_sequence_empty(result);
+    }
+
+    size_t rest_blob_size = max_blob_size;
+
+    for (bloblist_t *l = list; l && l->value; l=l->next) {
+        Blob_t *element = (Blob_t *) calloc(1, sizeof(Blob_t));
+        assert(element);
+        if (!element)
+            goto enomem;
+
+        int r = 0;
+
+        if (l->size > rest_blob_size)
+            goto enomem;
+        rest_blob_size -= l->size;
+
+        if (copy) {
+            r = OCTET_STRING_fromBuf(&element->value, l->value, l->size);
+            if (r)
+                goto enomem;
+        }
+        else /* move */ {
+#if defined(__CHAR_BIT__) && __CHAR_BIT__ == 8
+            element->value.buf = (uint8_t *) l->value;
+#else
+            // FIXME: this is problematic on platforms with bytes != octets
+            // we want this warning
+            element->value.buf = l->value;
+#endif
+            l->value = NULL;
+            element->value.size = l->size;
+            l->size = 0;
+        }
+
+        if (!EMPTYSTR(l->mime_type)) {
+            PString_t *_mime_type = NULL;
+            r = OCTET_STRING_fromBuf(_mime_type, l->mime_type, -1);
+            if (r)
+                goto enomem;
+            element->mime_type = _mime_type;
+        }
+
+        if (!EMPTYSTR(l->filename)) {
+            PString_t *_filename = NULL;
+            r = OCTET_STRING_fromBuf(_filename, l->filename, -1);
+            if (r)
+                goto enomem;
+            element->filename = _filename;
+        }
+
+        switch (l->disposition) {
+            case PEP_CONTENT_DISP_ATTACHMENT:
+                element->disposition = ContentDisposition_attachment;
+                break;
+            case PEP_CONTENT_DISP_INLINE:
+                element->disposition = ContentDisposition_inline;
+                break;
+            case PEP_CONTENT_DISP_OTHER:
+                element->disposition = ContentDisposition_other;
+                break;
+            default:
+                assert(0); // should not happen; use default
+                element->disposition = ContentDisposition_attachment;
+        }
+
+        if (ASN_SEQUENCE_ADD(&result->list, element)) {
+            ASN_STRUCT_FREE(asn_DEF_Blob, element);
+            goto enomem;
+        }
+    }
+    
+    return result;
+
+enomem:
+    if (allocated)
+        ASN_STRUCT_FREE(asn_DEF_BlobList, result);
+    return NULL;
+}
+

@@ -27,22 +27,28 @@ MessageDirection ::= ENUMERATED {
     outgoing (1)
 }
 
+ContentDisposition ::= ENUMERATED {
+    attachment (0),
+    inline (1),
+    other (2)
+}
 
 Blob ::= SEQUENCE {
     value       OCTET STRING (SIZE(0..102400000)),  -- up to 100 MB
     mime-type   PString OPTIONAL,
-    filename    PString OPTIONAL
+    filename    PString OPTIONAL,
+    disposition ContentDisposition
 }
 BlobList ::= SEQUENCE OF Blob
 
 
-/*
-For the purposes of this profile, GeneralizedTime values MUST be
-expressed in Coordinated Universal Time (UTC) and MUST include seconds
-(i.e., times are YYYYMMDDHHMMSSZ), even where the number of seconds
-is zero.  GeneralizedTime values MUST NOT include fractional seconds.
-To make this more explicit, the type-name "Timestamp" is used in this profile.
-*/
+-- For the purposes of this profile, GeneralizedTime values MUST be
+-- expressed in Coordinated Universal Time (UTC) and MUST include seconds
+-- (i.e., times are YYYYMMDDHHMMSSZ), even where the number of seconds
+-- is zero.  GeneralizedTime values MUST NOT include fractional seconds.
+-- To make this more explicit, the type-name "Timestamp" is used in this
+-- profile.
+
 Timestamp ::= GeneralizedTime
 
 
