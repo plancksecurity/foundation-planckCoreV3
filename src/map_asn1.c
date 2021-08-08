@@ -501,3 +501,98 @@ enomem:
     return NULL;
 }
 
+bloblist_t *BlobList_to_bloblist(
+        BlobList_t *list,
+        bloblist_t *result,
+        bool copy,
+        size_t max_blob_size
+    )
+{
+    bool allocated = !result;
+
+    assert(list);
+    if (!list)
+        return NULL;
+
+    if (allocated)
+        result = new_bloblist(NULL, 0, NULL, NULL);
+    if (!result)
+        return NULL;
+
+    size_t rest_blob_size = max_blob_size;
+
+    bloblist_t *r = result;
+    for (int i=0; i<list->list.count; i++) {
+        if (list->list.array[i]->value.size > rest_blob_size)
+            goto enomem;
+        rest_blob_size -= list->list.array[i]->value.size;
+
+        char *_mime_type = NULL;
+        if (list->list.array[i]->mime_type) {
+            _mime_type = strndup((char *) list->list.array[i]->mime_type->buf,
+                    list->list.array[i]->mime_type->size);
+            assert(_mime_type);
+            if (!_mime_type)
+                goto enomem;
+        }
+
+        char *_filename = NULL;
+        if (list->list.array[i]->filename) {
+            _filename = strndup((char *) list->list.array[i]->filename->buf,
+                    list->list.array[i]->filename->size);
+            assert(_filename);
+            if (!_filename)
+                goto enomem;
+        }
+
+#if defined(__CHAR_BIT__) && __CHAR_BIT__ == 8
+        char *_data = (char *) list->list.array[i]->value.buf;
+#else
+        // FIXME: this is problematic on platforms with bytes != octets
+        // we want this warning
+        char *_data = list->list.array[i]->value.buf;
+#endif
+
+        if (copy) {
+            _data = strndup(_data, list->list.array[i]->value.size);
+            assert(_data);
+            if (!_data)
+                goto enomem;
+        }
+
+        // bloblist_add() has move semantics
+        r = bloblist_add(r, _data, list->list.array[i]->value.size, _mime_type,
+                _filename);
+
+        if (!copy) {
+            list->list.array[i]->value.buf = NULL;
+            list->list.array[i]->value.size = 0;
+        }
+
+        if (!r)
+            goto enomem;
+
+        switch (list->list.array[i]->disposition) {
+            case ContentDisposition_attachment:
+                r->disposition = PEP_CONTENT_DISP_ATTACHMENT;
+                break;
+            case ContentDisposition_inline:
+                r->disposition = PEP_CONTENT_DISP_INLINE;
+                break;
+            case ContentDisposition_other:
+                r->disposition = PEP_CONTENT_DISP_OTHER;
+                break;
+            default:
+                assert(0); // should not happen; use default
+                r->disposition = PEP_CONTENT_DISP_ATTACHMENT;
+        }
+    }
+
+    return result;
+
+enomem:
+    if (allocated)
+        free_bloblist(result);
+    return NULL;
+}
+
