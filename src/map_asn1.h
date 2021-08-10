@@ -7,15 +7,8 @@
 #ifndef MAP_ASN1_H
 #define MAP_ASN1_H
 
-#include "pEpEngine.h"
-#include "identity_list.h"
-#include "../asn.1/Identity.h"
-#include "../asn.1/IdentityList.h"
-#include "../asn.1/StringPair.h"
-#include "../asn.1/StringPair.h"
-#include "../asn.1/StringPairList.h"
-#include "../asn.1/PStringList.h"
-#include "../asn.1/BlobList.h"
+#include "message.h"
+#include "../asn.1/PEPMessage.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -233,6 +226,7 @@ BlobList_t *BlobList_from_bloblist(
         size_t max_blob_size
     );
 
+
 /**
  *  <!--       BlobList_to_bloblist()       -->
  *  
@@ -255,6 +249,55 @@ bloblist_t *BlobList_to_bloblist(
         bool copy,
         size_t max_blob_size
     );
+
+
+/**
+ *  <!--       PEPMessage_from_message()       -->
+ *  
+ *  @brief Convert message into ASN.1 PEPMessage_t
+ *  
+ *  @param msg[in]            message to convert
+ *  @param result[inout]      PEPMessage_t to update or NULL to alloc a new one
+ *  @param copy               copy data if true, move data otherwise
+ *  @param max_blob_size      reject if sum(blob.size) > max_blob_size
+ *  
+ *  @retval pointer to updated or allocated result
+ *  
+ *  @warning if a new struct is allocated, the ownership goes to the caller
+ *  
+ */
+
+PEPMessage_t *PEPMessage_from_message(
+        message *msg,
+        PEPMessage_t *result,
+        bool copy,
+        size_t max_blob_size
+    );
+
+
+/**
+ *  <!--       PEPMessage_to_message()       -->
+ *  
+ *  @brief Convert ASN.1 PEPMessage_t to message
+ *  
+ *  @param msg[in]            ASN.1 PEPMessage_t to convert
+ *  @param result[inout]      message to update or NULL to alloc a new one
+ *  @param copy               copy data if true, move data otherwise
+ *  @param max_blob_size      reject if sum(blob.size) > max_blob_size
+ *  
+ *  @retval pointer to updated or allocated result
+ *  
+ *  @warning if a new struct is allocated, the ownership goes to the caller
+ *  
+ */
+
+message *PEPMessage_to_message(
+        PEPMessage_t *msg,
+        message *result,
+        bool copy,
+        size_t max_blob_size
+    );
+
 
 #ifdef __cplusplus
 }

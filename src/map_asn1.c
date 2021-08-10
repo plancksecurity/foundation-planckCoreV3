@@ -131,8 +131,8 @@ IdentityList_t *IdentityList_from_identity_list(
 {
     bool allocated = !result;
 
-    assert(list);
-    if (!list)
+    assert(list && list->ident);
+    if (!(list && list->ident))
         return NULL;
 
     if (allocated) {
@@ -267,8 +267,8 @@ StringPairList_t *StringPairList_from_stringpair_list(
 {
     bool allocated = !result;
 
-    assert(list);
-    if (!list)
+    assert(list && list->value);
+    if (!(list && list->value))
         return NULL;
 
     if (allocated) {
@@ -336,8 +336,8 @@ PStringList_t *PStringList_from_stringlist(
 {
     bool allocated = !result;
 
-    assert(list);
-    if (!list)
+    assert(list && list->value);
+    if (!(list && list->value))
         return NULL;
 
     if (allocated) {
@@ -410,8 +410,8 @@ BlobList_t *BlobList_from_bloblist(
 {
     bool allocated = !result;
 
-    assert(list);
-    if (!list)
+    assert(list && list->value);
+    if (!(list && list->value))
         return NULL;
 
     if (allocated) {
@@ -457,7 +457,11 @@ BlobList_t *BlobList_from_bloblist(
         }
 
         if (!EMPTYSTR(l->mime_type)) {
-            PString_t *_mime_type = NULL;
+            PString_t *_mime_type = (PString_t *) calloc(1, sizeof(PString_t));
+            assert(_mime_type);
+            if (!_mime_type)
+                goto enomem;
+
             r = OCTET_STRING_fromBuf(_mime_type, l->mime_type, -1);
             if (r)
                 goto enomem;
@@ -465,7 +469,11 @@ BlobList_t *BlobList_from_bloblist(
         }
 
         if (!EMPTYSTR(l->filename)) {
-            PString_t *_filename = NULL;
+            PString_t *_filename = (PString_t *) calloc(1, sizeof(PString_t));
+            assert(_filename);
+            if (!_filename)
+                goto enomem;
+
             r = OCTET_STRING_fromBuf(_filename, l->filename, -1);
             if (r)
                 goto enomem;
@@ -598,6 +606,276 @@ bloblist_t *BlobList_to_bloblist(
 enomem:
     if (allocated)
         free_bloblist(result);
+    return NULL;
+}
+
+PEPMessage_t *PEPMessage_from_message(
+        message *msg,
+        PEPMessage_t *result,
+        bool copy,
+        size_t max_blob_size
+    )
+{
+    bool allocated = !result;
+
+    assert(msg);
+    if (!msg)
+        return NULL;
+
+    if (allocated) {
+        result = (PEPMessage_t *) calloc(1, sizeof(PEPMessage_t));
+        assert(result);
+        if (!result)
+            return NULL;
+    }
+    else {
+        asn_sequence_empty(result);
+    }
+
+    // direction will be skipped on the line
+
+    if (!EMPTYSTR(msg->id)) {
+        PString_t *str = (PString_t *) calloc(1, sizeof(PString_t));
+        assert(str);
+        if (!str)
+            goto enomem;
+
+        int r = OCTET_STRING_fromBuf(str, msg->id, -1);
+        if (r)
+            goto enomem;
+
+        result->id = str;
+    }
+
+    if (msg->sent) {
+        Timestamp_t *ts = asn_time2GT(NULL, msg->sent, 1);
+        if (!ts)
+            goto enomem;
+
+        result->sent = ts;
+    }
+
+    if (msg->recv) {
+        Timestamp_t *ts = asn_time2GT(NULL, msg->recv, 1);
+        if (!ts)
+            goto enomem;
+
+        result->recv = ts;
+    }
+
+    if (!msg->from) // from is not optional
+        goto enomem;
+    Identity_from_Struct(msg->from, &result->from);
+
+    if (msg->to && msg->to->ident) {
+        IdentityList_t *l = IdentityList_from_identity_list(msg->to, NULL);
+        if (!l)
+            goto enomem;
+
+        result->to = l;
+    }
+
+    if (msg->cc && msg->cc->ident) {
+        IdentityList_t *l = IdentityList_from_identity_list(msg->cc, NULL);
+        if (!l)
+            goto enomem;
+
+        result->cc = l;
+    }
+
+    if (msg->bcc && msg->bcc->ident) {
+        IdentityList_t *l = IdentityList_from_identity_list(msg->bcc, NULL);
+        if (!l)
+            goto enomem;
+
+        result->bcc = l;
+    }
+
+    if (msg->recv_by) {
+        Identity_t *i = Identity_from_Struct(msg->recv_by, NULL);
+        if (!i)
+            goto enomem;
+
+        result->recv_by = i;
+    }
+
+    if (msg->reply_to && msg->reply_to->ident) {
+        IdentityList_t *l = IdentityList_from_identity_list(msg->reply_to, NULL);
+        if (!l)
+            goto enomem;
+
+        result->reply_to = l;
+    }
+
+    if (msg->in_reply_to && msg->in_reply_to->value) {
+        PStringList_t *l = PStringList_from_stringlist(msg->in_reply_to, NULL);
+        if (!l)
+            goto enomem;
+
+        result->in_reply_to = l;
+    }
+
+    if (msg->references && msg->references->value) {
+        PStringList_t *l = PStringList_from_stringlist(msg->references, NULL);
+        if (!l)
+            goto enomem;
+
+        result->references = l;
+    }
+
+    if (msg->keywords && msg->keywords->value) {
+        PStringList_t *l = PStringList_from_stringlist(msg->keywords, NULL);
+        if (!l)
+            goto enomem;
+
+        result->keywords = l;
+    }
+
+    if (!EMPTYSTR(msg->comments)) {
+        PString_t *str = (PString_t *) calloc(1, sizeof(PString_t));
+        assert(str);
+        if (!str)
+            goto enomem;
+
+        int r = OCTET_STRING_fromBuf(str, msg->comments, -1);
+        if (r)
+            goto enomem;
+
+        result->comments = str;
+    }
+
+    if (msg->opt_fields && msg->opt_fields->value) {
+        StringPairList_t *l = StringPairList_from_stringpair_list(msg->opt_fields, NULL);
+        if (!l)
+            goto enomem;
+
+        result->opt_fields = l;
+    }
+
+    switch (msg->enc_format) {
+        case PEP_enc_none:
+            result->enc_format = EncFormat_none;
+            break;
+        // case PEP_enc_pieces:
+        case PEP_enc_inline:
+            result->enc_format = EncFormat_inline;
+            break;
+        case PEP_enc_S_MIME:
+            result->enc_format = EncFormat_s_mime;
+            break;
+        case PEP_enc_PGP_MIME:
+            result->enc_format = EncFormat_pgp_mime;
+            break;
+        case PEP_enc_PEP:
+            result->enc_format = EncFormat_pEp;
+            break;
+        case PEP_enc_PGP_MIME_Outlook1:
+            result->enc_format = EncFormat_pgp_mime_outlook1;
+            break;
+        case PEP_enc_inline_EA:
+            result->enc_format = EncFormat_inline_ea;
+            break;
+        case PEP_enc_auto:
+            result->enc_format = EncFormat_pEp;
+            break;
+        default:
+            assert(0);
+            result->enc_format = EncFormat_pEp;
+    }
+
+    if (!EMPTYSTR(msg->_sender_fpr)) {
+        Hash_t *str = (Hash_t *) calloc(1, sizeof(Hash_t));
+        assert(str);
+        if (!str)
+            goto enomem;
+
+        int r = OCTET_STRING_fromBuf(str, msg->_sender_fpr, -1);
+        if (r)
+            goto enomem;
+
+        result->sender_fpr = str;
+    }
+
+    if (!EMPTYSTR(msg->shortmsg)) {
+        PString_t *str = (PString_t *) calloc(1, sizeof(PString_t));
+        assert(str);
+        if (!str)
+            goto enomem;
+
+        int r = OCTET_STRING_fromBuf(str, msg->shortmsg, -1);
+        if (r)
+            goto enomem;
+
+        result->shortmsg = str;
+    }
+
+    size_t rest_blob_size = max_blob_size;
+
+    if (!EMPTYSTR(msg->longmsg)) {
+        PString_t *str = (PString_t *) calloc(1, sizeof(PString_t));
+        assert(str);
+        if (!str)
+            goto enomem;
+
+        if (copy) {
+            int r = OCTET_STRING_fromBuf(str, msg->longmsg, -1);
+            if (r)
+                goto enomem;
+            if (str->size > rest_blob_size)
+                goto enomem;
+        }
+        else /* move */ {
+            str->size = strlen(msg->longmsg);
+            if (str->size > rest_blob_size)
+                goto enomem;
+
+            str->buf = (uint8_t *) msg->longmsg;
+            msg->longmsg = NULL;
+        }
+
+        rest_blob_size -= str->size;
+        result->longmsg = str;
+    }
+
+    if (!EMPTYSTR(msg->longmsg_formatted)) {
+        PString_t *str = (PString_t *) calloc(1, sizeof(PString_t));
+        assert(str);
+        if (!str)
+            goto enomem;
+
+        if (copy) {
+            int r = OCTET_STRING_fromBuf(str, msg->longmsg_formatted, -1);
+            if (r)
+                goto enomem;
+            if (str->size > rest_blob_size)
+                goto enomem;
+        }
+        else /* move */ {
+            str->size = strlen(msg->longmsg_formatted);
+            if (str->size > rest_blob_size)
+                goto enomem;
+
+            str->buf = (uint8_t *) msg->longmsg_formatted;
+            msg->longmsg_formatted = NULL;
+        }
+
+        rest_blob_size -= str->size;
+        result->longmsg_formatted = str;
+    }
+
+    if (msg->attachments && msg->attachments->value) {
+        BlobList_t *bl = BlobList_from_bloblist(msg->attachments, NULL, copy,
+                rest_blob_size);
+        if (!bl)
+            goto enomem;
+        result->attachments = bl;
+    }
+
+    return result;
+
+enomem:
+    if (allocated)
+        ASN_STRUCT_FREE(asn_DEF_PEPMessage, result);
     return NULL;
 }
 
