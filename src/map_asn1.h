@@ -114,15 +114,14 @@ StringPair_t *StringPair_from_Struct(
  *  @brief Convert ASN.1 StringPair_t into stringpair_t
  *  
  *  @param value[in]          StringPair_t to convert
- *  @param result[inout]      stringpair_t to update or NULL to alloc a new one
  *  
  *  @retval pointer to updated or allocated result
  *  
- *  @warning if a new struct is allocated, the ownership goes to the caller
+ *  @warning a new struct is allocated, the ownership goes to the caller
  *  
  */
 
-stringpair_t *StringPair_to_Struct(StringPair_t *value, stringpair_t *result);
+stringpair_t *StringPair_to_Struct(StringPair_t *value);
 
 
 /**
@@ -189,18 +188,14 @@ PStringList_t *PStringList_from_stringlist(
  *  @brief Convert ASN.1 PStringList_t to stringlist_t
  *  
  *  @param list[in]           ASN.1 PStringList_t to convert
- *  @param result[inout]      stringlist_t to update or NULL to alloc a new one
  *  
  *  @retval pointer to updated or allocated result
  *  
- *  @warning if a new struct is allocated, the ownership goes to the caller
+ *  @warning a new struct is allocated, the ownership goes to the caller
  *  
  */
 
-stringlist_t *PStringList_to_stringlist(
-        PStringList_t *list,
-        stringlist_t *result
-    );
+stringlist_t *PStringList_to_stringlist(PStringList_t *list);
 
 
 /**

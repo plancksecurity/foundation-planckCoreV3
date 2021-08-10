@@ -227,18 +227,16 @@ enomem:
     return NULL;
 }
 
-stringpair_t *StringPair_to_Struct(StringPair_t *value, stringpair_t *result)
+stringpair_t *StringPair_to_Struct(StringPair_t *value)
 {
-    bool allocated = !result;
-
     assert(value);
     if (!value)
         return NULL;
 
-    if (allocated)
-        result = new_stringpair(NULL, NULL);
+    stringpair_t *result = (stringpair_t *) calloc(1, sizeof(stringpair_t));
+    assert(result);
     if (!result)
-        return NULL;
+        goto enomem;
 
     result->key = strndup((char *) value->key.buf,
             value->key.size);
@@ -255,8 +253,7 @@ stringpair_t *StringPair_to_Struct(StringPair_t *value, stringpair_t *result)
     return result;
 
 enomem:
-    if (allocated)
-        free_stringpair(result);
+    free_stringpair(result);
     return NULL;
 }
 
@@ -315,7 +312,7 @@ stringpair_list_t *StringPairList_to_stringpair_list(
 
     stringpair_list_t *r = result;
     for (int i=0; i<list->list.count; i++) {
-        stringpair_t *value = StringPair_to_Struct(list->list.array[i], NULL);
+        stringpair_t *value = StringPair_to_Struct(list->list.array[i]);
         r = stringpair_list_add(r, value);
         if (!r)
             goto enomem;
@@ -351,7 +348,11 @@ PStringList_t *PStringList_from_stringlist(
     }
 
     for (const stringlist_t *l = list; l && l->value; l=l->next) {
-        PString_t *element = NULL;
+        PString_t *element = (PString_t *) calloc(1, sizeof(PString_t));
+        assert(element);
+        if (!element)
+            goto enomem;
+
         int r = OCTET_STRING_fromBuf(element, l->value, -1);
         if (r)
             goto enomem;
@@ -369,35 +370,39 @@ enomem:
     return NULL;
 }
 
-stringlist_t *PStringList_to_stringlist(
-        PStringList_t *list,
-        stringlist_t *result
-    )
+stringlist_t *PStringList_to_stringlist(PStringList_t *list)
 {
-    bool allocated = !result;
-
     assert(list);
     if (!list)
         return NULL;
 
-    if (allocated)
-        result = new_stringlist(NULL);
+    stringlist_t *result = (stringlist_t *) calloc(1, sizeof(stringlist_t));
+    assert(result);
     if (!result)
-        return NULL;
+        goto enomem;
+
+    stringlist_t *r = result;
 
     for (int i=0; i<list->list.count; i++) {
-        result->value = strndup((char *) list->list.array[i]->buf,
+        char *s = strndup((char *) list->list.array[i]->buf,
                 list->list.array[i]->size);
-        assert(result->value);
-        if (!result->value)
+        assert(s);
+        if (!s)
             goto enomem;
+        r->value = s;
+        if (i < list->list.count-1) {
+            r->next = (stringlist_t *) calloc(1, sizeof(stringlist_t));
+            assert(r->next);
+            if (!r->next)
+                goto enomem;
+            r = r->next;
+        }
     }
 
     return result;
 
 enomem:
-    if (allocated)
-        free_stringlist(result);
+    free_stringlist(result);
     return NULL;
 }
 
@@ -961,7 +966,7 @@ message *PEPMessage_to_message(
     }
 
     if (msg->in_reply_to) {
-        stringlist_t *l = PStringList_to_stringlist(msg->in_reply_to, NULL);
+        stringlist_t *l = PStringList_to_stringlist(msg->in_reply_to);
         if (!l)
             goto enomem;
 
@@ -969,7 +974,7 @@ message *PEPMessage_to_message(
     }
 
     if (msg->references) {
-        stringlist_t *l = PStringList_to_stringlist(msg->references, NULL);
+        stringlist_t *l = PStringList_to_stringlist(msg->references);
         if (!l)
             goto enomem;
 
@@ -977,7 +982,7 @@ message *PEPMessage_to_message(
     }
 
     if (msg->keywords) {
-        stringlist_t *l = PStringList_to_stringlist(msg->keywords, NULL);
+        stringlist_t *l = PStringList_to_stringlist(msg->keywords);
         if (!l)
             goto enomem;
 
@@ -1005,7 +1010,7 @@ message *PEPMessage_to_message(
     if (msg->sender_fpr) {
         char *_sender_fpr = strndup((char *) msg->sender_fpr->buf,
                 msg->sender_fpr->size);
-        if (_sender_fpr)
+        if (!_sender_fpr)
             goto enomem;
 
         result->_sender_fpr = _sender_fpr;
