@@ -409,6 +409,8 @@ BlobList_t *BlobList_from_bloblist(
     )
 {
     bool allocated = !result;
+    if (!max_blob_size)
+        max_blob_size = SIZE_MAX;
 
     assert(list && list->value);
     if (!(list && list->value))
@@ -517,6 +519,8 @@ bloblist_t *BlobList_to_bloblist(
     )
 {
     bool allocated = !result;
+    if (!max_blob_size)
+        max_blob_size = SIZE_MAX;
 
     assert(list);
     if (!list)
@@ -617,6 +621,8 @@ PEPMessage_t *PEPMessage_from_message(
     )
 {
     bool allocated = !result;
+    if (!max_blob_size)
+        max_blob_size = SIZE_MAX;
 
     assert(msg);
     if (!msg)
@@ -856,6 +862,8 @@ message *PEPMessage_to_message(
     )
 {
     bool allocated = !result;
+    if (!max_blob_size)
+        max_blob_size = SIZE_MAX;
 
     assert(msg);
     if (!msg)

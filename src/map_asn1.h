@@ -212,6 +212,7 @@ stringlist_t *PStringList_to_stringlist(
  *  @param result[inout]      BlobList_t to update or NULL to alloc a new one
  *  @param copy               copy data if true, move data otherwise
  *  @param max_blob_size      reject if sum(blob.size) > max_blob_size
+ *                            to disable set to 0
  *  
  *  @retval pointer to updated or allocated result
  *  
@@ -236,6 +237,7 @@ BlobList_t *BlobList_from_bloblist(
  *  @param result[inout]      bloblist_t to update or NULL to alloc a new one
  *  @param copy               copy data if true, move data otherwise
  *  @param max_blob_size      reject if sum(blob.size) > max_blob_size
+ *                            to disable set to 0
  *  
  *  @retval pointer to updated or allocated result
  *  
@@ -260,6 +262,7 @@ bloblist_t *BlobList_to_bloblist(
  *  @param result[inout]      PEPMessage_t to update or NULL to alloc a new one
  *  @param copy               copy data if true, move data otherwise
  *  @param max_blob_size      reject if sum(blob.size) > max_blob_size
+ *                            to disable set to 0
  *  
  *  @retval pointer to updated or allocated result
  *  
@@ -284,6 +287,7 @@ PEPMessage_t *PEPMessage_from_message(
  *  @param result[inout]      message to update or NULL to alloc a new one
  *  @param copy               copy data if true, move data otherwise
  *  @param max_blob_size      reject if sum(blob.size) > max_blob_size
+ *                            to disable set to 0
  *  
  *  @retval pointer to updated or allocated result
  *  
