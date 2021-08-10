@@ -52,19 +52,6 @@ BlobList ::= SEQUENCE OF Blob
 Timestamp ::= GeneralizedTime
 
 
-EncFormat ::= ENUMERATED {
-    none (0),                       -- message is not encrypted
-    inline (1),                     --
-    s-mime (2),                     -- RFC5751
-    pgp-mime (3),                   -- RFC3156
-    pEp (4),                        -- pEp encryption format
-    pgp-mime-outlook1 (5),          -- Message B0rken by Outlook type 1
-    inline-ea (6)
-    -- not used on wire:
-    -- auto (255)                -- -- figure out automatically where possible
-}
-
-
 PEPMessage ::= SEQUENCE {
     direction   MessageDirection OPTIONAL, -- used only in "inner" messages
     id          PString          OPTIONAL, -- UTF-8 string of message ID
@@ -88,7 +75,6 @@ PEPMessage ::= SEQUENCE {
     keywords    PStringList     OPTIONAL, -- list of UTF-8 strings with keywords
     comments    PString         OPTIONAL, -- UTF-8 string with comments
     opt-fields  StringPairList  OPTIONAL, -- optional fields
-    enc-format  EncFormat DEFAULT none,   -- format of encrypted data
     sender-fpr  Hash            OPTIONAL,  -- fingerprint of sending signer
 
     -- At least one of shortmsg, longmsg, longmsg-formatted must be present
