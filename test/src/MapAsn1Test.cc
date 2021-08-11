@@ -10,6 +10,7 @@
 #include "pEpEngine.h"
 #include "pEp_internal.h"
 #include "map_asn1.h"
+#include "message_codec.h"
 
 #include "TestUtilities.h"
 
@@ -156,7 +157,17 @@ TEST_F(MapAsn1Test, check_map_asn1_message) {
     msg->_sender_fpr = strdup("2342234223422342");
 
     PEPMessage_t *pm = PEPMessage_from_message(msg, NULL, false, 1024);
-    message *msg2 = PEPMessage_to_message(pm, NULL, false, 1024);
+
+    char *data = NULL;
+    size_t data_size = 0;
+    PEP_STATUS status = encode_PEPMessage_message(pm, &data, &data_size);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    PEPMessage_t *pm2 = NULL;
+    status = decode_PEPMessage_message(data, data_size, &pm2);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    message *msg2 = PEPMessage_to_message(pm2, NULL, false, 1024);
 
     ASSERT_STREQ(msg2->id, "423");
     ASSERT_STREQ(msg2->shortmsg, "hello, world");
@@ -184,7 +195,9 @@ TEST_F(MapAsn1Test, check_map_asn1_message) {
     ASSERT_STREQ(msg2->_sender_fpr, "2342234223422342");
 
     ASN_STRUCT_FREE(asn_DEF_PEPMessage, pm);
+    ASN_STRUCT_FREE(asn_DEF_PEPMessage, pm2);
     free_message(msg);
     free_message(msg2);
+    free(data);
 }
 
