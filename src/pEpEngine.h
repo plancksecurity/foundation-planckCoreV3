@@ -160,6 +160,7 @@ typedef enum {
 
     PEP_DISTRIBUTION_ILLEGAL_MESSAGE                = 0x1002,
     PEP_STORAGE_ILLEGAL_MESSAGE                     = 0x1102,
+    PEP_PEPMESSAGE_ILLEGAL_MESSAGE                  = 0x1202,
 
     PEP_COMMIT_FAILED                               = 0xff01,
     PEP_MESSAGE_CONSUME                             = 0xff02,
