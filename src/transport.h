@@ -40,19 +40,31 @@ typedef struct _PEP_transport_t PEP_transport_t;
 
 // functions offered by transport
 
-typedef PEP_STATUS (*init_transport_t)(PEP_transport_t *transport,
-        PEP_SESSION session, PEP_transport_status_code *tsc);
+typedef PEP_STATUS (*startup_transport_t)(PEP_transport_t *transport,
+        PEP_transport_status_code *tsc);
+
+typedef PEP_STATUS (*shutdown_transport_t)(PEP_transport_t *transport,
+        PEP_transport_status_code *tsc);
 
 typedef PEP_STATUS (*sendto_t)(PEP_SESSION session, message *msg,
-        stringlist_t **unreachable_addresses, PEP_transport_status_code *tsc);
+        PEP_transport_status_code *tsc);
 
 typedef PEP_STATUS (*recvnext_t)(PEP_SESSION session, message **msg,
         PEP_transport_status_code *tsc);
 
-// functions offered by transport system
+// callbacks
 
 typedef PEP_STATUS (*signal_statuschange_t)(PEP_transport_id id,
         PEP_transport_status_code tsc);
+
+typedef PEP_STATUS (*signal_sendto_result_t)(PEP_transport_id id, char *message_id,
+        char *address, PEP_transport_status_code tsc);
+
+// call this to receive signals
+// this function does not terminate until shutdown of the transport
+
+typedef PEP_STATUS (*notify_transport_t)(signal_statuschange_t status_change,
+        signal_sendto_result_t sendto_result);
 
 /**
  *  @struct    _PEP_transport_t
@@ -61,19 +73,21 @@ typedef PEP_STATUS (*signal_statuschange_t)(PEP_transport_id id,
  *  
  */
 struct _PEP_transport_t {
-    PEP_transport_id id;                      // transport ID
+    PEP_transport_id id;                    // transport ID
     const char *uri_scheme;                 // URI scheme this transport is
                                             // covering
 
     // functions offered by transport
 
-    init_transport_t init;
+    startup_transport_t startup;
+    shutdown_transport_t shutdown;
+
     sendto_t sendto;
-    recvnext_t readnext;
+    recvnext_t recvnext;
+
+    notify_transport_t notify;
 
     // functions offered by transport system
-
-    signal_statuschange_t signal_statuschange;
 
     bool is_online_transport;
 

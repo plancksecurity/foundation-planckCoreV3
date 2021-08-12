@@ -22,12 +22,15 @@ PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first)
         memset(transports, 0, sizeof(PEP_transport_t) * PEP_trans__count);
 
         transports[PEP_trans_auto].id = PEP_trans_auto;
+        transports[PEP_trans_auto].uri_scheme = "";
 
-        transports[PEP_trans_auto].init = auto_init;
+        transports[PEP_trans_auto].startup = auto_startup;
+        transports[PEP_trans_auto].shutdown = auto_shutdown;
+
         transports[PEP_trans_auto].sendto = auto_sendto;
-        transports[PEP_trans_auto].readnext = auto_readnext;
+        transports[PEP_trans_auto].recvnext = auto_recvnext;
 
-        transports[PEP_trans_auto].signal_statuschange = auto_signal_statuschange;
+        transports[PEP_trans_auto].notify = auto_notify;
     }
 
     return PEP_STATUS_OK;
