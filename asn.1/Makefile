@@ -19,7 +19,7 @@ STORAGE_FILES      = $(addsuffix .asn1, $(STORAGE))
 
 .PHONY: all clean install uninstall
 
-all: Sync.c Distribution.c Storage.c PEPMessage.c
+all: Sync.c Distribution.c Storage.c ASN1Message.c
 	$(MAKE) libasn1.a
 
 libasn1.a: $(ALL_OBJECTS)
@@ -43,10 +43,10 @@ Storage.c: $(STORAGE_FILES) pEp.asn1
 	rm -f converter-sample.c
 	touch Storage.c
 
-PEPMessage.c: message.asn1 pEp.asn1
+ASN1Message.c: message.asn1 pEp.asn1
 	$(ASN1C) -gen-PER $(ASN1C_OPTIONS) $+
 	rm -f converter-sample.c
-	touch PEPMessage.c
+	touch ASN1Message.c
 
 clean:
 	rm -f *.a *.o *.c *.h *.sample \

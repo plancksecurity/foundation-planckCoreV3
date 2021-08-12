@@ -8,7 +8,7 @@
 #define MAP_ASN1_H
 
 #include "message.h"
-#include "../asn.1/PEPMessage.h"
+#include "../asn.1/ASN1Message.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -249,12 +249,12 @@ bloblist_t *BlobList_to_bloblist(
 
 
 /**
- *  <!--       PEPMessage_from_message()       -->
+ *  <!--       ASN1Message_from_message()       -->
  *  
- *  @brief Convert message into ASN.1 PEPMessage_t
+ *  @brief Convert message into ASN.1 ASN1Message_t
  *  
  *  @param msg[in]            message to convert
- *  @param result[inout]      PEPMessage_t to update or NULL to alloc a new one
+ *  @param result[inout]      ASN1Message_t to update or NULL to alloc a new one
  *  @param copy               copy data if true, move data otherwise
  *  @param max_blob_size      reject if sum(blob.size) > max_blob_size
  *                            to disable set to 0
@@ -265,20 +265,20 @@ bloblist_t *BlobList_to_bloblist(
  *  
  */
 
-PEPMessage_t *PEPMessage_from_message(
+ASN1Message_t *ASN1Message_from_message(
         message *msg,
-        PEPMessage_t *result,
+        ASN1Message_t *result,
         bool copy,
         size_t max_blob_size
     );
 
 
 /**
- *  <!--       PEPMessage_to_message()       -->
+ *  <!--       ASN1Message_to_message()       -->
  *  
- *  @brief Convert ASN.1 PEPMessage_t to message
+ *  @brief Convert ASN.1 ASN1Message_t to message
  *  
- *  @param msg[in]            ASN.1 PEPMessage_t to convert
+ *  @param msg[in]            ASN.1 ASN1Message_t to convert
  *  @param result[inout]      message to update or NULL to alloc a new one
  *  @param copy               copy data if true, move data otherwise
  *  @param max_blob_size      reject if sum(blob.size) > max_blob_size
@@ -290,8 +290,8 @@ PEPMessage_t *PEPMessage_from_message(
  *  
  */
 
-message *PEPMessage_to_message(
-        PEPMessage_t *msg,
+message *ASN1Message_to_message(
+        ASN1Message_t *msg,
         message *result,
         bool copy,
         size_t max_blob_size

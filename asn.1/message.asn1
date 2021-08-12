@@ -14,7 +14,7 @@ DEFINITIONS
     AUTOMATIC TAGS EXTENSIBILITY IMPLIED ::=
 BEGIN
 
-EXPORTS PEPMessage;
+EXPORTS ASN1Message;
 
 IMPORTS
   PString, PStringList, Identity, IdentityList, StringPairList, Hash
@@ -52,7 +52,7 @@ BlobList ::= SEQUENCE OF Blob
 Timestamp ::= GeneralizedTime
 
 
-PEPMessage ::= SEQUENCE {
+ASN1Message ::= SEQUENCE {
     direction   MessageDirection OPTIONAL, -- used only in "inner" messages
     id          PString          OPTIONAL, -- UTF-8 string of message ID
     sent        Timestamp        OPTIONAL,  -- when the message is sent

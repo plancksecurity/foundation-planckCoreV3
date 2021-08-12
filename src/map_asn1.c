@@ -618,9 +618,9 @@ enomem:
     return NULL;
 }
 
-PEPMessage_t *PEPMessage_from_message(
+ASN1Message_t *ASN1Message_from_message(
         message *msg,
-        PEPMessage_t *result,
+        ASN1Message_t *result,
         bool copy,
         size_t max_blob_size
     )
@@ -634,7 +634,7 @@ PEPMessage_t *PEPMessage_from_message(
         return NULL;
 
     if (allocated) {
-        result = (PEPMessage_t *) calloc(1, sizeof(PEPMessage_t));
+        result = (ASN1Message_t *) calloc(1, sizeof(ASN1Message_t));
         assert(result);
         if (!result)
             return NULL;
@@ -855,12 +855,12 @@ PEPMessage_t *PEPMessage_from_message(
 
 enomem:
     if (allocated)
-        ASN_STRUCT_FREE(asn_DEF_PEPMessage, result);
+        ASN_STRUCT_FREE(asn_DEF_ASN1Message, result);
     return NULL;
 }
 
-message *PEPMessage_to_message(
-        PEPMessage_t *msg,
+message *ASN1Message_to_message(
+        ASN1Message_t *msg,
         message *result,
         bool copy,
         size_t max_blob_size
