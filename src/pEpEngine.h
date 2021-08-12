@@ -29,7 +29,7 @@ extern "C" {
 #define PEP_ENGINE_VERSION_MAJOR 3
 #define PEP_ENGINE_VERSION_MINOR 2
 #define PEP_ENGINE_VERSION_PATCH 0
-#define PEP_ENGINE_VERSION_RC    1
+#define PEP_ENGINE_VERSION_RC    2
 
 
 #define PEP_OWN_USERID "pEp_own_userId"
@@ -161,6 +161,7 @@ typedef enum {
 
     PEP_DISTRIBUTION_ILLEGAL_MESSAGE                = 0x1002,
     PEP_STORAGE_ILLEGAL_MESSAGE                     = 0x1102,
+    PEP_PEPMESSAGE_ILLEGAL_MESSAGE                  = 0x1202,
 
     PEP_COMMIT_FAILED                               = 0xff01,
     PEP_MESSAGE_CONSUME                             = 0xff02,
