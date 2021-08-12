@@ -10,7 +10,7 @@
 #include "transport.h"
 
 PEP_STATUS auto_sendto(PEP_SESSION session, message *msg,
-        PEP_transport_status_code *tsc);
+        stringlist_t **unreachable_addresses, PEP_transport_status_code *tsc);
 
 /**
  *  <!--       auto_readnext()       -->
@@ -23,7 +23,13 @@ PEP_STATUS auto_sendto(PEP_SESSION session, message *msg,
  *  
  */
 
+PEP_STATUS auto_init(PEP_transport_t *transport,
+        PEP_SESSION session, PEP_transport_status_code *tsc);
+
 PEP_STATUS auto_readnext(PEP_SESSION session, message **msg,
         PEP_transport_status_code *tsc);
+
+PEP_STATUS auto_signal_statuschange(PEP_transport_id id,
+        PEP_transport_status_code tsc);
 
 #endif

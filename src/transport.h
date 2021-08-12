@@ -15,19 +15,20 @@ extern "C" {
 #endif
 
 /**
- *  @enum    PEP_transports
+ *  @enum    PEP_transport_id
  *  
  *  @brief    TODO
  *  
  */
-typedef enum _PEP_transports {
+typedef enum _PEP_transport_id {
     // auto transport chooses transport per message automatically
     PEP_trans_auto = 0,
-//    PEP_trans_email,
-//    PEP_trans_whatsapp,
+//    PEP_trans_Email = 0x01,
+//    PEP_trans_RCE = 0x02,
 
-    PEP_trans__count
-} PEP_transports;
+    PEP_trans__count,
+    PEP_trans_CC = 0xfe
+} PEP_transport_id;
 
 // transports are delivering the transport status code
 // this is defined here:
@@ -37,11 +38,21 @@ typedef uint32_t PEP_transport_status_code;
 
 typedef struct _PEP_transport_t PEP_transport_t;
 
+// functions offered by transport
+
+typedef PEP_STATUS (*init_transport_t)(PEP_transport_t *transport,
+        PEP_SESSION session, PEP_transport_status_code *tsc);
+
 typedef PEP_STATUS (*sendto_t)(PEP_SESSION session, message *msg,
-        PEP_transport_status_code *tsc);
+        stringlist_t **unreachable_addresses, PEP_transport_status_code *tsc);
 
 typedef PEP_STATUS (*recvnext_t)(PEP_SESSION session, message **msg,
         PEP_transport_status_code *tsc);
+
+// functions offered by transport system
+
+typedef PEP_STATUS (*signal_statuschange_t)(PEP_transport_id id,
+        PEP_transport_status_code tsc);
 
 /**
  *  @struct    _PEP_transport_t
@@ -50,10 +61,19 @@ typedef PEP_STATUS (*recvnext_t)(PEP_SESSION session, message **msg,
  *  
  */
 struct _PEP_transport_t {
-    PEP_transports id;                      // transport ID
+    PEP_transport_id id;                      // transport ID
+    const char *uri_scheme;                 // URI scheme this transport is
+                                            // covering
 
-    sendto_t sendto;                        // sendto function
-    recvnext_t readnext;                    // readnext function
+    // functions offered by transport
+
+    init_transport_t init;
+    sendto_t sendto;
+    recvnext_t readnext;
+
+    // functions offered by transport system
+
+    signal_statuschange_t signal_statuschange;
 
     bool is_online_transport;
 
