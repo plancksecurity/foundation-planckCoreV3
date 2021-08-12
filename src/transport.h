@@ -87,8 +87,6 @@ struct _PEP_transport_t {
 
     notify_transport_t notify;
 
-    // functions offered by transport system
-
     bool is_online_transport;
 
     bool shortmsg_supported;
