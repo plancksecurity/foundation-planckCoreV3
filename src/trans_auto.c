@@ -6,13 +6,15 @@
 
 #include "trans_auto.h"
 
-PEP_STATUS auto_sendto(PEP_SESSION session, const message *msg)
+PEP_STATUS auto_sendto(PEP_SESSION session, message *msg,
+        PEP_transport_status_code *tsc)
 {
 
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS auto_readnext(PEP_SESSION session, message **msg, PEP_transport_t **via)
+PEP_STATUS auto_readnext(PEP_SESSION session, message **msg,
+        PEP_transport_status_code *tsc)
 {
 
     return PEP_STATUS_OK;
