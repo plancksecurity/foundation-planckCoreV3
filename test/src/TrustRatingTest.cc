@@ -283,6 +283,10 @@ the_end:
 /*
     Test Cases for Trust Rating of Incoming Messages
 
+    N.B. This text has been updated because it didn't reflect the reality of default key claims and how they work
+    (see https://dev.pep.foundation/Engine/RatingsTable for the only real information we have about how this
+    is supposed to work, along with https://dev.pep.foundation/Engine/TOFU).
+
     Dramatis personae
 
     Alice: the own user
@@ -454,6 +458,64 @@ TEST_F(TrustRatingTest, check_incoming_message_rating_unknown_sender_no_key_unen
     free_message(incoming);
 }
 
+TEST_F(TrustRatingTest, check_reliable_bob_sender_signer_match) {
+    pEp_identity *alice;
+    pEp_identity *bob;
+    alice_and_bob(session, alice, bob);
+
+    string filename = "test_mails/CanonicalFrom2.2BobToAlice_2_2.eml";
+    message* infile = NULL;
+    PEP_rating rating = PEP_rating_undefined;
+    PEP_STATUS status = vanilla_read_file_and_decrypt_with_rating(session, &infile,
+                                                                  filename.c_str(), &rating);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(rating, PEP_rating_reliable);
+
+    free_message(infile);
+}
+
+TEST_F(TrustRatingTest, check_trusted_bob_sender_signer_match) {
+    pEp_identity *alice;
+    pEp_identity *bob;
+    alice_and_bob(session, alice, bob);
+
+    string filename = "test_mails/CanonicalFrom2.2BobToAlice_2_2.eml";
+    message* infile = NULL;
+    PEP_rating rating = PEP_rating_undefined;
+    PEP_STATUS status = vanilla_read_file_and_decrypt_with_rating(session, &infile,
+                                                                  filename.c_str(), &rating);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(rating, PEP_rating_reliable);
+    free_message(infile);
+}
+
+TEST_F(TrustRatingTest, check_reliable_bob_sender_signer_mismatch) {
+    pEp_identity *alice;
+    pEp_identity *bob;
+    alice_and_bob(session, alice, bob);
+
+}
+
+TEST_F(TrustRatingTest, check_trusted_bob_sender_signer_mismatch) {
+    pEp_identity *alice;
+    pEp_identity *bob;
+    alice_and_bob(session, alice, bob);
+
+}
+
+TEST_F(TrustRatingTest, check_reliable_bob_sender_not_default) {
+    pEp_identity *alice;
+    pEp_identity *bob;
+    alice_and_bob(session, alice, bob);
+
+}
+
+TEST_F(TrustRatingTest, check_trusted_bob_sender_not_default) {
+    pEp_identity *alice;
+    pEp_identity *bob;
+    alice_and_bob(session, alice, bob);
+
+}
 
 
 TEST_F(TrustRatingTest, check_incoming_message_rating) {

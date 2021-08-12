@@ -669,6 +669,41 @@ PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rati
     return base_decorate_message(session, msg, BASE_SYNC, payload, size, msg->recv_by->fpr);
 }
 
+static PEP_STATUS _update_identity_list(PEP_SESSION session, identity_list* idents) {
+    PEP_STATUS status = PEP_STATUS_OK;
+    if (idents) {
+        identity_list* il = idents;
+        for ( ; il && il->ident; il = il->next) {
+            if (is_me(session, il->ident))
+                status = myself(session, il->ident);
+            else
+                status = update_identity(session, il->ident);
+        }
+    }
+    return status;
+}
+
+static PEP_STATUS _update_message_identities(PEP_SESSION session, message* msg) {
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    if (msg->from) {
+        if (is_me(session, msg->from))
+            status = myself(session, msg->from);
+        else
+            status = update_identity(session, msg->from);
+    }
+    if (status == PEP_STATUS_OK) {
+        status = _update_identity_list(session, msg->to);
+    }
+    if (status == PEP_STATUS_OK) {
+        status = _update_identity_list(session, msg->cc);
+    }
+    if (status == PEP_STATUS_OK) {
+        status = _update_identity_list(session, msg->bcc);
+    }
+    return status;
+}
+
 DYNAMIC_API PEP_STATUS incoming_message_rating(
         PEP_SESSION session,
         const message *src,
@@ -697,7 +732,7 @@ DYNAMIC_API PEP_STATUS incoming_message_rating(
         return PEP_ILLEGAL_VALUE;
 
     *rating = PEP_rating_undefined;
-    PEP_rating _rating = decrypt_rating(decrypt_status);;
+    PEP_rating _rating = decrypt_rating(decrypt_status);
 
     if (!dst) {
         *rating = _rating;
@@ -722,6 +757,9 @@ DYNAMIC_API PEP_STATUS incoming_message_rating(
     _rating = add_rating(_rating, crypto_rating);
 
     if (dst) {
+        status = _update_message_identities(session, dst);
+        if (status)
+            return status;
         PEP_rating identities_rating = PEP_rating_undefined;
         status = message_rating_for_identities(session, dst,
                 &identities_rating);
