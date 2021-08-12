@@ -9,7 +9,9 @@
 
 #include "transport.h"
 
-PEP_STATUS auto_sendto(PEP_SESSION session, const message *msg);
+PEP_STATUS auto_sendto(PEP_SESSION session, message *msg,
+        PEP_transport_status_code *tsc);
+
 /**
  *  <!--       auto_readnext()       -->
  *  
@@ -20,6 +22,8 @@ PEP_STATUS auto_sendto(PEP_SESSION session, const message *msg);
  *  @param[out]  via          PEP_transport_t**
  *  
  */
-PEP_STATUS auto_readnext(PEP_SESSION session, message **msg, PEP_transport_t **via);
+
+PEP_STATUS auto_readnext(PEP_SESSION session, message **msg,
+        PEP_transport_status_code *tsc);
 
 #endif

@@ -162,6 +162,21 @@ typedef enum {
     PEP_STORAGE_ILLEGAL_MESSAGE                     = 0x1102,
     PEP_PEPMESSAGE_ILLEGAL_MESSAGE                  = 0x1202,
 
+    // transport cannot init at all
+    PEP_TRANSPORT_CANNOT_INIT                       = 0x2000,
+
+    // transport can init recv but not send
+    PEP_TRANSPORT_CANNOT_INIT_SEND                  = 0x2001,
+
+    // transport can init send but not recv
+    PEP_TRANSPORT_CANNOT_INIT_RECV                  = 0x2002,
+
+    // transport init good but temporary down
+    PEP_TRANSPORT_DOWN                              = 0x2003,
+
+    // general error in transport
+    PEP_TRANSPORT_ERROR                             = 0x20ff,
+
     PEP_COMMIT_FAILED                               = 0xff01,
     PEP_MESSAGE_CONSUME                             = 0xff02,
     PEP_MESSAGE_IGNORE                              = 0xff03,

@@ -29,11 +29,19 @@ typedef enum _PEP_transports {
     PEP_trans__count
 } PEP_transports;
 
+// transports are delivering the transport status code
+// this is defined here:
+// https://dev.pep.foundation/Engine/TransportStatusCode
+
+typedef uint32_t PEP_transport_status_code;
+
 typedef struct _PEP_transport_t PEP_transport_t;
 
-typedef PEP_STATUS (*sendto_t)(PEP_SESSION session, const message *msg);
-typedef PEP_STATUS (*readnext_t)(PEP_SESSION session, message **msg,
-        PEP_transport_t **via);
+typedef PEP_STATUS (*sendto_t)(PEP_SESSION session, message *msg,
+        PEP_transport_status_code *tsc);
+
+typedef PEP_STATUS (*recvnext_t)(PEP_SESSION session, message **msg,
+        PEP_transport_status_code *tsc);
 
 /**
  *  @struct    _PEP_transport_t
@@ -42,13 +50,17 @@ typedef PEP_STATUS (*readnext_t)(PEP_SESSION session, message **msg,
  *  
  */
 struct _PEP_transport_t {
-    uint8_t id;                             // transport ID
+    PEP_transports id;                      // transport ID
+
     sendto_t sendto;                        // sendto function
-    readnext_t readnext;                    // readnext function
-    bool long_message_supported;            // flag if this transport supports
-                                            // long messages
-    bool formatted_message_supported;       // flag if this transport supports
-                                            // formatted messages
+    recvnext_t readnext;                    // readnext function
+
+    bool is_online_transport;
+
+    bool shortmsg_supported;
+    bool longmsg_supported;
+    bool longmsg_formatted_supported;
+
     PEP_text_format native_text_format;     // native format of the transport
 };
 
