@@ -122,7 +122,7 @@ TEST_F(MapAsn1Test, check_map_asn1) {
 }
 
 TEST_F(MapAsn1Test, check_map_asn1_message) {
-    output_stream << "testing PEPMessage...\n";
+    output_stream << "testing ASN1Message...\n";
 
     message *msg = new_message(PEP_dir_outgoing);
     msg->id = strdup("423");
@@ -156,18 +156,18 @@ TEST_F(MapAsn1Test, check_map_asn1_message) {
     stringpair_list_add(msg->opt_fields, new_stringpair("otherkey", "othervalue"));
     msg->_sender_fpr = strdup("2342234223422342");
 
-    PEPMessage_t *pm = PEPMessage_from_message(msg, NULL, false, 1024);
+    ASN1Message_t *pm = ASN1Message_from_message(msg, NULL, false, 1024);
 
     char *data = NULL;
     size_t data_size = 0;
-    PEP_STATUS status = encode_PEPMessage_message(pm, &data, &data_size);
+    PEP_STATUS status = encode_ASN1Message_message(pm, &data, &data_size);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
-    PEPMessage_t *pm2 = NULL;
-    status = decode_PEPMessage_message(data, data_size, &pm2);
+    ASN1Message_t *pm2 = NULL;
+    status = decode_ASN1Message_message(data, data_size, &pm2);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
-    message *msg2 = PEPMessage_to_message(pm2, NULL, false, 1024);
+    message *msg2 = ASN1Message_to_message(pm2, NULL, false, 1024);
 
     ASSERT_STREQ(msg2->id, "423");
     ASSERT_STREQ(msg2->shortmsg, "hello, world");
@@ -194,8 +194,8 @@ TEST_F(MapAsn1Test, check_map_asn1_message) {
     ASSERT_STREQ(msg2->opt_fields->next->value->value, "othervalue");
     ASSERT_STREQ(msg2->_sender_fpr, "2342234223422342");
 
-    ASN_STRUCT_FREE(asn_DEF_PEPMessage, pm);
-    ASN_STRUCT_FREE(asn_DEF_PEPMessage, pm2);
+    ASN_STRUCT_FREE(asn_DEF_ASN1Message, pm);
+    ASN_STRUCT_FREE(asn_DEF_ASN1Message, pm2);
     free_message(msg);
     free_message(msg2);
     free(data);
