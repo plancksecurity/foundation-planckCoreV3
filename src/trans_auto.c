@@ -42,7 +42,8 @@ PEP_STATUS auto_recvnext(PEP_SESSION session, message **msg,
 }
 
 PEP_STATUS auto_notify(signal_statuschange_t status_change,
-        signal_sendto_result_t sendto_result, callback_execution cbe)
+        signal_sendto_result_t sendto_result,
+        signal_incoming_message_t incoming, callback_execution cbe)
 {
 
     return PEP_STATUS_OK;

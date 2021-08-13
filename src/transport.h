@@ -71,6 +71,9 @@ typedef PEP_STATUS (*signal_statuschange_t)(PEP_transport_id id,
 typedef PEP_STATUS (*signal_sendto_result_t)(PEP_transport_id id, char *message_id,
         char *address, PEP_transport_status_code tsc);
 
+typedef PEP_STATUS (*signal_incoming_message_t)(PEP_transport_id id,
+        PEP_transport_status_code tsc);
+
 // call this to receive signals
 
 typedef enum _callback_execution {
@@ -86,7 +89,8 @@ typedef enum _callback_execution {
 // provide NULL for callbacks to avoid being called
 
 typedef PEP_STATUS (*notify_transport_t)(signal_statuschange_t status_change,
-        signal_sendto_result_t sendto_result, callback_execution cbe);
+        signal_sendto_result_t sendto_result,
+        signal_incoming_message_t incoming, callback_execution cbe);
 
 /**
  *  @struct    _PEP_transport_t
