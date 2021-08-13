@@ -75,12 +75,15 @@ typedef PEP_STATUS (*signal_sendto_result_t)(PEP_transport_id id, char *message_
 
 typedef enum _callback_execution {
     PEP_cbe_polling = 0,    // execute callbacks immediately only
-    PEP_cbe_async,          // execute callbacks later on any thread
+    PEP_cbe_async,          // execute callbacks multiple times later on any
+                            // thread; call with PEP_cbe_polling to disable
 
     // the last one is for the transport system only
     // do not implement it in transports
     PEP_cbe_blocking = 255
 } callback_execution;
+
+// provide NULL for callbacks to avoid being called
 
 typedef PEP_STATUS (*notify_transport_t)(signal_statuschange_t status_change,
         signal_sendto_result_t sendto_result, callback_execution cbe);
