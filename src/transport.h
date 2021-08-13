@@ -72,10 +72,18 @@ typedef PEP_STATUS (*signal_sendto_result_t)(PEP_transport_id id, char *message_
         char *address, PEP_transport_status_code tsc);
 
 // call this to receive signals
-// this function does not terminate until shutdown of the transport
+
+typedef enum _callback_execution {
+    PEP_cbe_polling = 0,    // execute callbacks immediately only
+    PEP_cbe_async,          // execute callbacks later on any thread
+
+    // the last one is for the transport system only
+    // do not implement it in transports
+    PEP_cbe_blocking = 255
+} callback_execution;
 
 typedef PEP_STATUS (*notify_transport_t)(signal_statuschange_t status_change,
-        signal_sendto_result_t sendto_result);
+        signal_sendto_result_t sendto_result, callback_execution cbe);
 
 /**
  *  @struct    _PEP_transport_t
