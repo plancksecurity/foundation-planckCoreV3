@@ -24,6 +24,7 @@ PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first)
         transports[PEP_trans_auto].id = PEP_trans_auto;
         transports[PEP_trans_auto].uri_scheme = "";
 
+        transports[PEP_trans_auto].configure = auto_configure;
         transports[PEP_trans_auto].startup = auto_startup;
         transports[PEP_trans_auto].shutdown = auto_shutdown;
 
