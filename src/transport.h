@@ -30,6 +30,14 @@ typedef enum _PEP_transport_id {
     PEP_trans_CC = 0xfe
 } PEP_transport_id;
 
+typedef struct _transport_config {
+    // set size field when initializing
+    size_t size;
+
+    // expand here
+    // in C++ this must be POD
+} transport_config_t;
+
 // transports are delivering the transport status code
 // this is defined here:
 // https://dev.pep.foundation/Engine/TransportStatusCode
@@ -39,6 +47,9 @@ typedef uint32_t PEP_transport_status_code;
 typedef struct _PEP_transport_t PEP_transport_t;
 
 // functions offered by transport
+
+typedef PEP_STATUS (*configure_transport_t)(PEP_transport_t *transport,
+        transport_config_t *config, PEP_transport_status_code *tsc);
 
 typedef PEP_STATUS (*startup_transport_t)(PEP_transport_t *transport,
         PEP_transport_status_code *tsc);
@@ -79,6 +90,7 @@ struct _PEP_transport_t {
 
     // functions offered by transport
 
+    configure_transport_t configure;
     startup_transport_t startup;
     shutdown_transport_t shutdown;
 

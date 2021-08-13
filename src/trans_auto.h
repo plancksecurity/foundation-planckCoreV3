@@ -9,6 +9,9 @@
 
 #include "transport.h"
 
+PEP_STATUS auto_configure(PEP_transport_t *transport,
+        transport_config_t *config, PEP_transport_status_code *tsc);
+
 PEP_STATUS auto_startup(PEP_transport_t *transport,
         PEP_transport_status_code *tsc);
 
