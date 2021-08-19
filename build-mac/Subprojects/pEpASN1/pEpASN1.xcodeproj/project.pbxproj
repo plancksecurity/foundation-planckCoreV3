@@ -3,8 +3,33 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 51;
 	objects = {
+
+/* Begin PBXAggregateTarget section */
+		151585FB26CE6E17003D8685 /* generate_code_macOS */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 151585FF26CE6E17003D8685 /* Build configuration list for PBXAggregateTarget "generate_code_macOS" */;
+			buildPhases = (
+				1515860026CE6E1D003D8685 /* Generate Code */,
+			);
+			dependencies = (
+			);
+			name = generate_code_macOS;
+			productName = generate_code;
+		};
+		1515860326CE6E79003D8685 /* generate_code_iOS */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 1515860526CE6E79003D8685 /* Build configuration list for PBXAggregateTarget "generate_code_iOS" */;
+			buildPhases = (
+				1515860426CE6E79003D8685 /* Generate Code */,
+			);
+			dependencies = (
+			);
+			name = generate_code_iOS;
+			productName = generate_code;
+		};
+/* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
 		151581D326CE4E87003D8685 /* GroupTrustThisKey.h in Headers */ = {isa = PBXBuildFile; fileRef = 1515817326CE4E81003D8685 /* GroupTrustThisKey.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -386,6 +411,23 @@
 		15A32062260E0345009D07EB /* pEpASN1_iOS.m in Sources */ = {isa = PBXBuildFile; fileRef = 15A32061260E0345009D07EB /* pEpASN1_iOS.m */; };
 		15A32063260E0345009D07EB /* pEpASN1_iOS.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 15A32060260E0345009D07EB /* pEpASN1_iOS.h */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		1515860126CE6E5B003D8685 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 15A32016260E02AA009D07EB /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 151585FB26CE6E17003D8685;
+			remoteInfo = generate_code_macOS;
+		};
+		1515860926CE6E90003D8685 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 15A32016260E02AA009D07EB /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1515860326CE6E79003D8685;
+			remoteInfo = generate_code_iOS;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		15A3205C260E0345009D07EB /* CopyFiles */ = {
@@ -1076,6 +1118,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				1515860226CE6E5B003D8685 /* PBXTargetDependency */,
 			);
 			name = pEpASN1_macOS;
 			productName = pEpASN1_macOS;
@@ -1095,6 +1138,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				1515860A26CE6E90003D8685 /* PBXTargetDependency */,
 			);
 			name = pEpASN1_iOS;
 			productName = pEpASN1_iOS;
@@ -1109,6 +1153,9 @@
 			attributes = {
 				LastUpgradeCheck = 1240;
 				TargetAttributes = {
+					151585FB26CE6E17003D8685 = {
+						CreatedOnToolsVersion = 12.5;
+					};
 					15A3204E260E0330009D07EB = {
 						CreatedOnToolsVersion = 12.4;
 					};
@@ -1132,11 +1179,51 @@
 			targets = (
 				15A3204E260E0330009D07EB /* pEpASN1_macOS */,
 				15A3205D260E0345009D07EB /* pEpASN1_iOS */,
+				151585FB26CE6E17003D8685 /* generate_code_macOS */,
+				1515860326CE6E79003D8685 /* generate_code_iOS */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		1515860026CE6E1D003D8685 /* Generate Code */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Generate Code";
+			outputFileListPaths = (
+				"$(SRCROOT)/generated-files-asn1.txt",
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = "/bin/sh -l";
+			shellScript = "export LANG=en_US.UTF-8\n\necho \"***************************************\"\necho \"*** Generate files: ACTION: $ACTION ***\"\necho \"***************************************\"\n\ncd \"${PROJECT_DIR}/../../..\"\n\nmake asn1\n";
+		};
+		1515860426CE6E79003D8685 /* Generate Code */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Generate Code";
+			outputFileListPaths = (
+				"$(SRCROOT)/generated-files-asn1.txt",
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = "/bin/sh -l";
+			shellScript = "export LANG=en_US.UTF-8\n\necho \"***************************************\"\necho \"*** Generate files: ACTION: $ACTION ***\"\necho \"***************************************\"\n\ncd \"${PROJECT_DIR}/../../..\"\n\nmake asn1\n";
+		};
 		15A32292260E0452009D07EB /* Copy Artefacts & Headers to Custom Build Dir */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -1378,7 +1465,74 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		1515860226CE6E5B003D8685 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 151585FB26CE6E17003D8685 /* generate_code_macOS */;
+			targetProxy = 1515860126CE6E5B003D8685 /* PBXContainerItemProxy */;
+		};
+		1515860A26CE6E90003D8685 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1515860326CE6E79003D8685 /* generate_code_iOS */;
+			targetProxy = 1515860926CE6E90003D8685 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		151585FC26CE6E17003D8685 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		151585FD26CE6E17003D8685 /* Debug_BUILD_ALL_SUPPORTED_ARCHS */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug_BUILD_ALL_SUPPORTED_ARCHS;
+		};
+		151585FE26CE6E17003D8685 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		1515860626CE6E79003D8685 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		1515860726CE6E79003D8685 /* Debug_BUILD_ALL_SUPPORTED_ARCHS */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug_BUILD_ALL_SUPPORTED_ARCHS;
+		};
+		1515860826CE6E79003D8685 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		1585F0A226A1DB1E00B822E1 /* Debug_BUILD_ALL_SUPPORTED_ARCHS */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1640,6 +1794,26 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		151585FF26CE6E17003D8685 /* Build configuration list for PBXAggregateTarget "generate_code_macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				151585FC26CE6E17003D8685 /* Debug */,
+				151585FD26CE6E17003D8685 /* Debug_BUILD_ALL_SUPPORTED_ARCHS */,
+				151585FE26CE6E17003D8685 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1515860526CE6E79003D8685 /* Build configuration list for PBXAggregateTarget "generate_code_iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1515860626CE6E79003D8685 /* Debug */,
+				1515860726CE6E79003D8685 /* Debug_BUILD_ALL_SUPPORTED_ARCHS */,
+				1515860826CE6E79003D8685 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		15A32019260E02AA009D07EB /* Build configuration list for PBXProject "pEpASN1" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

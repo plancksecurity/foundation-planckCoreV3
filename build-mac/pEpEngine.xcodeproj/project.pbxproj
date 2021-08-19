@@ -18,6 +18,17 @@
 			name = generate_code;
 			productName = generate_code;
 		};
+		151585F326CE6A58003D8685 /* generate_macOS */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 151585F526CE6A58003D8685 /* Build configuration list for PBXAggregateTarget "generate_macOS" */;
+			buildPhases = (
+				151585F426CE6A58003D8685 /* ShellScript */,
+			);
+			dependencies = (
+			);
+			name = generate_macOS;
+			productName = generate_code;
+		};
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
@@ -129,7 +140,6 @@
 		1515839726CE4FB8003D8685 /* KeySync_fsm.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515837926CE4FB7003D8685 /* KeySync_fsm.c */; };
 		1515839826CE4FB8003D8685 /* trans_auto.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515837A26CE4FB7003D8685 /* trans_auto.c */; };
 		1515839926CE4FB8003D8685 /* pEpEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = 1515837B26CE4FB7003D8685 /* pEpEngine.h */; };
-		1515839A26CE4FB8003D8685 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = 1515837C26CE4FB7003D8685 /* Makefile */; };
 		1515839B26CE4FB8003D8685 /* pEpEngine.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515837D26CE4FB7003D8685 /* pEpEngine.c */; };
 		1515839C26CE4FB8003D8685 /* Sync_event.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515837E26CE4FB7003D8685 /* Sync_event.c */; };
 		1515839D26CE4FB8003D8685 /* Sync_func.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515837F26CE4FB7003D8685 /* Sync_func.c */; };
@@ -264,6 +274,13 @@
 			remoteGlobalIDString = 644297BE1BE11C65002BC73B;
 			remoteInfo = pEpTrustWords;
 		};
+		151585F926CE6A78003D8685 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 64796A371B455AA5004B1C24 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 151585F326CE6A58003D8685;
+			remoteInfo = generate_macOS;
+		};
 		156AFE822670E6D800AF0039 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */;
@@ -342,13 +359,6 @@
 			remoteInfo = PEPSQLITE3_macOS;
 		};
 		15B21C3525FB8DD10097927A /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 64796A371B455AA5004B1C24 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 150845DE25F13CE700D46DA6;
-			remoteInfo = generate_code;
-		};
-		15B21C3E25FB8E160097927A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 64796A371B455AA5004B1C24 /* Project object */;
 			proxyType = 1;
@@ -507,7 +517,6 @@
 		1515837926CE4FB7003D8685 /* KeySync_fsm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = KeySync_fsm.c; path = ../src/KeySync_fsm.c; sourceTree = "<group>"; };
 		1515837A26CE4FB7003D8685 /* trans_auto.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = trans_auto.c; path = ../src/trans_auto.c; sourceTree = "<group>"; };
 		1515837B26CE4FB7003D8685 /* pEpEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pEpEngine.h; path = ../src/pEpEngine.h; sourceTree = "<group>"; };
-		1515837C26CE4FB7003D8685 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; name = Makefile; path = ../src/Makefile; sourceTree = "<group>"; };
 		1515837D26CE4FB7003D8685 /* pEpEngine.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pEpEngine.c; path = ../src/pEpEngine.c; sourceTree = "<group>"; };
 		1515837E26CE4FB7003D8685 /* Sync_event.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_event.c; path = ../src/Sync_event.c; sourceTree = "<group>"; };
 		1515837F26CE4FB7003D8685 /* Sync_func.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_func.c; path = ../src/Sync_func.c; sourceTree = "<group>"; };
@@ -689,7 +698,6 @@
 				1515837626CE4FB7003D8685 /* keyreset_command.c */,
 				1515837926CE4FB7003D8685 /* KeySync_fsm.c */,
 				1515838726CE4FB8003D8685 /* labeled_int_list.c */,
-				1515837C26CE4FB7003D8685 /* Makefile */,
 				1515837126CE4FB7003D8685 /* map_asn1.c */,
 				1515836F26CE4FB7003D8685 /* message_api.c */,
 				1515836D26CE4FB6003D8685 /* mime.c */,
@@ -952,8 +960,8 @@
 			dependencies = (
 				1585EF6D26A08B2E00B822E1 /* PBXTargetDependency */,
 				156AFE832670E6D800AF0039 /* PBXTargetDependency */,
+				151585FA26CE6A78003D8685 /* PBXTargetDependency */,
 				15A3266826120623009D07EB /* PBXTargetDependency */,
-				15B21C3F25FB8E160097927A /* PBXTargetDependency */,
 				1508460725F24D1100D46DA6 /* PBXTargetDependency */,
 				15A32305260E0C6F009D07EB /* PBXTargetDependency */,
 			);
@@ -1063,6 +1071,7 @@
 				1552DB102577D4F100A92F71 /* pEpEngine_macOS */,
 				644297BE1BE11C65002BC73B /* pEpTrustWords */,
 				150845DE25F13CE700D46DA6 /* generate_code */,
+				151585F326CE6A58003D8685 /* generate_macOS */,
 			);
 		};
 /* End PBXProject section */
@@ -1159,7 +1168,27 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "export LANG=en_US.UTF-8\n\necho \"***************************************\"\necho \"*** Generate files: ACTION: $ACTION ***\"\necho \"***************************************\"\n\ncd \"$SRCROOT/..\"\n\n#bash -l -c \"gmake -C sync\"\n#bash -l -c \"make -C asn.1 Sync.c Distribution.c\"\n\n# `make asn1` actually generates everything, while `make codegen` does *not* generate asn1.\nbash -l -c \"make asn.1\"\n";
+			shellScript = "export LANG=en_US.UTF-8\n\necho \"***************************************\"\necho \"*** Generate files: ACTION: $ACTION ***\"\necho \"***************************************\"\n\ncd \"${PROJECT_DIR}/..\"\n\nmake asn1\n";
+			showEnvVarsInLog = 0;
+		};
+		151585F426CE6A58003D8685 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+				"$(SRCROOT)/generated-files-sync.txt",
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = "/bin/sh -l";
+			shellScript = "export LANG=en_US.UTF-8\n\necho \"***************************************\"\necho \"*** Generate files: ACTION: $ACTION ***\"\necho \"***************************************\"\n\ncd \"${PROJECT_DIR}/..\"\n\nmake asn1\n";
+			showEnvVarsInLog = 0;
 		};
 		1585EC74269C3A7000B822E1 /* Copy Artefacts to Custom Build Dir */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1264,7 +1293,6 @@
 				1515839D26CE4FB8003D8685 /* Sync_func.c in Sources */,
 				1515836826CE4F82003D8685 /* internal_format.c in Sources */,
 				1515833026CE4F81003D8685 /* engine_sql.c in Sources */,
-				1515839A26CE4FB8003D8685 /* Makefile in Sources */,
 				1515831826CE4F81003D8685 /* pgp_sequoia.c in Sources */,
 				1515835226CE4F82003D8685 /* message_api.c in Sources */,
 				151583A426CE4FB8003D8685 /* timestamp.c in Sources */,
@@ -1331,6 +1359,11 @@
 			target = 644297BE1BE11C65002BC73B /* pEpTrustWords */;
 			targetProxy = 1508460625F24D1100D46DA6 /* PBXContainerItemProxy */;
 		};
+		151585FA26CE6A78003D8685 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 151585F326CE6A58003D8685 /* generate_macOS */;
+			targetProxy = 151585F926CE6A78003D8685 /* PBXContainerItemProxy */;
+		};
 		156AFE832670E6D800AF0039 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = "static libetpan";
@@ -1375,11 +1408,6 @@
 			target = 150845DE25F13CE700D46DA6 /* generate_code */;
 			targetProxy = 15B21C3525FB8DD10097927A /* PBXContainerItemProxy */;
 		};
-		15B21C3F25FB8E160097927A /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 150845DE25F13CE700D46DA6 /* generate_code */;
-			targetProxy = 15B21C3E25FB8E160097927A /* PBXContainerItemProxy */;
-		};
 		43D47AA1225CC82400E97C5B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			platformFilter = ios;
@@ -1405,6 +1433,33 @@
 			name = Debug;
 		};
 		150845E025F13CE700D46DA6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		151585F626CE6A58003D8685 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		151585F726CE6A58003D8685 /* Debug_BUILD_ALL_SUPPORTED_ARCHS */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug_BUILD_ALL_SUPPORTED_ARCHS;
+		};
+		151585F826CE6A58003D8685 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -1531,7 +1586,7 @@
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = "";
-				SDKROOT = iphoneos;
+				SDKROOT = macosx;
 				VALID_ARCHS = "arm64 x86_64";
 			};
 			name = Debug_BUILD_ALL_SUPPORTED_ARCHS;
@@ -1702,7 +1757,7 @@
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = "";
-				SDKROOT = iphoneos;
+				SDKROOT = macosx;
 				VALID_ARCHS = "arm64 x86_64";
 			};
 			name = Debug;
@@ -1765,7 +1820,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = "";
-				SDKROOT = iphoneos;
+				SDKROOT = macosx;
 				VALIDATE_PRODUCT = YES;
 				VALID_ARCHS = "arm64 x86_64";
 			};
@@ -1822,6 +1877,16 @@
 				150845DF25F13CE700D46DA6 /* Debug */,
 				1585F06E26A1D80D00B822E1 /* Debug_BUILD_ALL_SUPPORTED_ARCHS */,
 				150845E025F13CE700D46DA6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		151585F526CE6A58003D8685 /* Build configuration list for PBXAggregateTarget "generate_macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				151585F626CE6A58003D8685 /* Debug */,
+				151585F726CE6A58003D8685 /* Debug_BUILD_ALL_SUPPORTED_ARCHS */,
+				151585F826CE6A58003D8685 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
