@@ -89,7 +89,8 @@ all:
 	$(CXX) -MM $(CXXFLAGS) $(CPPFLAGS) $< | sed -e 's,\($*\)\.o[ :]*,\1.o $@: ,g' > $@
 
 $(TARGET): $(OBJS)
-	${CXX} ${CXXFLAGS} ${CPPFLAGS} ${LDFLAGS} -L${PREFIX}/lib -o $@ $^ -lpEpEngine -lgtest -lgtest_main -lsequoia_openpgp_ffi $(LDLIBS)
+	${CXX} ${CXXFLAGS} ${CPPFLAGS} ${LDFLAGS} ${SEQUOIA_LDFLAGS} -L${PREFIX}/lib -o $@ $^ \
+	    -lpEpEngine -lgtest -lgtest_main ${SEQUOIA_LIB} $(LDLIBS)
 
 
 test: all
