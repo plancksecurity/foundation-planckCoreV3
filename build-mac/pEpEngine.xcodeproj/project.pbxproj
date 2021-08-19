@@ -21,24 +21,6 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		1515829C26CE4ED8003D8685 /* Sync_impl.h in Headers */ = {isa = PBXBuildFile; fileRef = 1515829226CE4ED8003D8685 /* Sync_impl.h */; };
-		1515829D26CE4ED8003D8685 /* TrustSync_fsm.h in Headers */ = {isa = PBXBuildFile; fileRef = 1515829326CE4ED8003D8685 /* TrustSync_fsm.h */; };
-		1515829E26CE4ED8003D8685 /* Sync_event.h in Headers */ = {isa = PBXBuildFile; fileRef = 1515829426CE4ED8003D8685 /* Sync_event.h */; };
-		1515829F26CE4ED8003D8685 /* sync_codec.h in Headers */ = {isa = PBXBuildFile; fileRef = 1515829526CE4ED8003D8685 /* sync_codec.h */; };
-		151582A026CE4ED8003D8685 /* Sync_func.h in Headers */ = {isa = PBXBuildFile; fileRef = 1515829626CE4ED8003D8685 /* Sync_func.h */; };
-		151582A126CE4ED8003D8685 /* KeySync_fsm.h in Headers */ = {isa = PBXBuildFile; fileRef = 1515829726CE4ED8003D8685 /* KeySync_fsm.h */; };
-		151582A226CE4ED8003D8685 /* KeySync_fsm.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515829826CE4ED8003D8685 /* KeySync_fsm.c */; };
-		151582A326CE4ED8003D8685 /* storage_codec.h in Headers */ = {isa = PBXBuildFile; fileRef = 1515829926CE4ED8003D8685 /* storage_codec.h */; };
-		151582A426CE4ED8003D8685 /* distribution_codec.h in Headers */ = {isa = PBXBuildFile; fileRef = 1515829A26CE4ED8003D8685 /* distribution_codec.h */; };
-		151582A526CE4ED8003D8685 /* GroupSync_fsm.h in Headers */ = {isa = PBXBuildFile; fileRef = 1515829B26CE4ED8003D8685 /* GroupSync_fsm.h */; };
-		151582AE26CE4EFE003D8685 /* sync_codec.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582A626CE4EFE003D8685 /* sync_codec.c */; };
-		151582AF26CE4EFE003D8685 /* Sync_actions.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582A726CE4EFE003D8685 /* Sync_actions.c */; };
-		151582B026CE4EFE003D8685 /* Sync_event.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582A826CE4EFE003D8685 /* Sync_event.c */; };
-		151582B126CE4EFE003D8685 /* Sync_func.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582A926CE4EFE003D8685 /* Sync_func.c */; };
-		151582B226CE4EFE003D8685 /* TrustSync_fsm.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582AA26CE4EFE003D8685 /* TrustSync_fsm.c */; };
-		151582B326CE4EFE003D8685 /* storage_codec.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582AB26CE4EFE003D8685 /* storage_codec.c */; };
-		151582B426CE4EFE003D8685 /* Sync_impl.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582AC26CE4EFE003D8685 /* Sync_impl.c */; };
-		151582B526CE4EFE003D8685 /* GroupSync_fsm.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582AD26CE4EFE003D8685 /* GroupSync_fsm.c */; };
 		1515831026CE4F81003D8685 /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582B626CE4F7B003D8685 /* sqlite3.h */; };
 		1515831126CE4F81003D8685 /* message.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582B726CE4F7B003D8685 /* message.c */; };
 		1515831226CE4F81003D8685 /* message_api_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582B826CE4F7B003D8685 /* message_api_internal.h */; };
@@ -159,6 +141,106 @@
 		151583A326CE4FB8003D8685 /* keymanagement.h in Headers */ = {isa = PBXBuildFile; fileRef = 1515838526CE4FB7003D8685 /* keymanagement.h */; };
 		151583A426CE4FB8003D8685 /* timestamp.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515838626CE4FB8003D8685 /* timestamp.c */; };
 		151583A526CE4FB8003D8685 /* labeled_int_list.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515838726CE4FB8003D8685 /* labeled_int_list.c */; };
+		1515851E26CE536A003D8685 /* stringpair.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515837426CE4FB7003D8685 /* stringpair.c */; };
+		1515851F26CE536A003D8685 /* mime.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515836D26CE4FB6003D8685 /* mime.c */; };
+		1515852026CE536A003D8685 /* trans_auto.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515830626CE4F81003D8685 /* trans_auto.c */; };
+		1515852126CE536A003D8685 /* Sync_impl.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515837526CE4FB7003D8685 /* Sync_impl.c */; };
+		1515852226CE536A003D8685 /* group.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582C726CE4F7C003D8685 /* group.c */; };
+		1515852326CE536A003D8685 /* KeySync_fsm.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515837926CE4FB7003D8685 /* KeySync_fsm.c */; };
+		1515852426CE536A003D8685 /* pgp_sequoia.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582BE26CE4F7C003D8685 /* pgp_sequoia.c */; };
+		1515852526CE536A003D8685 /* keymanagement.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582D926CE4F7D003D8685 /* keymanagement.c */; };
+		1515852626CE536A003D8685 /* growing_buf.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582DC26CE4F7D003D8685 /* growing_buf.c */; };
+		1515852726CE536A003D8685 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582D326CE4F7D003D8685 /* sqlite3.c */; };
+		1515852826CE536A003D8685 /* pEp_string.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582EF26CE4F80003D8685 /* pEp_string.c */; };
+		1515852926CE536A003D8685 /* message.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582B726CE4F7B003D8685 /* message.c */; };
+		1515852A26CE536A003D8685 /* baseprotocol.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515837326CE4FB7003D8685 /* baseprotocol.c */; };
+		1515852B26CE536A003D8685 /* GroupSync_fsm.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515838326CE4FB7003D8685 /* GroupSync_fsm.c */; };
+		1515852C26CE536A003D8685 /* email.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515836B26CE4FB6003D8685 /* email.c */; };
+		1515852D26CE536A003D8685 /* pEpEngine.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515837D26CE4FB7003D8685 /* pEpEngine.c */; };
+		1515852E26CE536A003D8685 /* sync_codec.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515837826CE4FB7003D8685 /* sync_codec.c */; };
+		1515852F26CE536A003D8685 /* internal_format.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515830E26CE4F81003D8685 /* internal_format.c */; };
+		1515853026CE536A003D8685 /* key_reset.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582CD26CE4F7C003D8685 /* key_reset.c */; };
+		1515853126CE536A003D8685 /* labeled_int_list.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515838726CE4FB8003D8685 /* labeled_int_list.c */; };
+		1515853226CE536A003D8685 /* TrustSync_fsm.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515837226CE4FB7003D8685 /* TrustSync_fsm.c */; };
+		1515853326CE536A003D8685 /* Sync_event.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515837E26CE4FB7003D8685 /* Sync_event.c */; };
+		1515853426CE536A003D8685 /* bloblist.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582BA26CE4F7B003D8685 /* bloblist.c */; };
+		1515853526CE536A003D8685 /* keyreset_command.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582E726CE4F80003D8685 /* keyreset_command.c */; };
+		1515853626CE536A003D8685 /* storage_codec.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515836C26CE4FB6003D8685 /* storage_codec.c */; };
+		1515853726CE536A003D8685 /* openpgp_compat.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515836A26CE4FB6003D8685 /* openpgp_compat.c */; };
+		1515853826CE536A003D8685 /* map_asn1.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515830126CE4F81003D8685 /* map_asn1.c */; };
+		1515853926CE536A003D8685 /* Sync_func.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515837F26CE4FB7003D8685 /* Sync_func.c */; };
+		1515853A26CE536A003D8685 /* engine_sql.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582D626CE4F7D003D8685 /* engine_sql.c */; };
+		1515853B26CE536A003D8685 /* message_api.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515836F26CE4FB7003D8685 /* message_api.c */; };
+		1515853C26CE536A003D8685 /* transport.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515830326CE4F81003D8685 /* transport.c */; };
+		1515853D26CE536A003D8685 /* stringlist.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582E226CE4F7D003D8685 /* stringlist.c */; };
+		1515853E26CE536A003D8685 /* timestamp.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582FA26CE4F81003D8685 /* timestamp.c */; };
+		1515853F26CE536A003D8685 /* identity_list.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582C026CE4F7C003D8685 /* identity_list.c */; };
+		1515854026CE536A003D8685 /* cryptotech.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515838126CE4FB7003D8685 /* cryptotech.c */; };
+		1515854126CE536A003D8685 /* security_checks.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582C826CE4F7C003D8685 /* security_checks.c */; };
+		1515854226CE536A003D8685 /* message_codec.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582D726CE4F7D003D8685 /* message_codec.c */; };
+		1515854326CE536B003D8685 /* etpan_mime.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582B926CE4F7B003D8685 /* etpan_mime.c */; };
+		1515854426CE536B003D8685 /* platform_unix.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582FC26CE4F81003D8685 /* platform_unix.c */; };
+		1515854526CE536B003D8685 /* sync_api.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582D026CE4F7D003D8685 /* sync_api.c */; };
+		1515854626CE536B003D8685 /* distribution_codec.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515837026CE4FB7003D8685 /* distribution_codec.c */; };
+		1515854726CE536B003D8685 /* Sync_actions.c in Sources */ = {isa = PBXBuildFile; fileRef = 1515837726CE4FB7003D8685 /* Sync_actions.c */; };
+		1515854826CE536B003D8685 /* resource_id.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582E026CE4F7D003D8685 /* resource_id.c */; };
+		1515854926CE536B003D8685 /* base64.c in Sources */ = {isa = PBXBuildFile; fileRef = 151582CF26CE4F7D003D8685 /* base64.c */; };
+		151585B226CE5397003D8685 /* keymanagement.h in Headers */ = {isa = PBXBuildFile; fileRef = 1515830926CE4F81003D8685 /* keymanagement.h */; };
+		151585B326CE5397003D8685 /* dynamic_api.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582E526CE4F7D003D8685 /* dynamic_api.h */; };
+		151585B426CE5397003D8685 /* message_api.h in Headers */ = {isa = PBXBuildFile; fileRef = 1515830026CE4F81003D8685 /* message_api.h */; };
+		151585B526CE5397003D8685 /* message.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582EA26CE4F80003D8685 /* message.h */; };
+		151585B626CE5397003D8685 /* sync_api.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582C426CE4F7C003D8685 /* sync_api.h */; };
+		151585B726CE5397003D8685 /* sync_codec.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582C226CE4F7C003D8685 /* sync_codec.h */; };
+		151585B826CE5397003D8685 /* growing_buf.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582C126CE4F7C003D8685 /* growing_buf.h */; };
+		151585B926CE5397003D8685 /* pgp_sequoia_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582EB26CE4F80003D8685 /* pgp_sequoia_internal.h */; };
+		151585BA26CE5397003D8685 /* transport.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582D526CE4F7D003D8685 /* transport.h */; };
+		151585BB26CE5397003D8685 /* resource.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582EC26CE4F80003D8685 /* resource.h */; };
+		151585BC26CE5397003D8685 /* pEp_string.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582EE26CE4F80003D8685 /* pEp_string.h */; };
+		151585BD26CE5397003D8685 /* key_reset_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582DD26CE4F7D003D8685 /* key_reset_internal.h */; };
+		151585BE26CE5397003D8685 /* labeled_int_list.h in Headers */ = {isa = PBXBuildFile; fileRef = 1515830A26CE4F81003D8685 /* labeled_int_list.h */; };
+		151585BF26CE5397003D8685 /* internal_format.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582C326CE4F7C003D8685 /* internal_format.h */; };
+		151585C026CE5397003D8685 /* timestamp.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582FB26CE4F81003D8685 /* timestamp.h */; };
+		151585C126CE5397003D8685 /* Sync_impl.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582FD26CE4F81003D8685 /* Sync_impl.h */; };
+		151585C226CE5397003D8685 /* openpgp_compat.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582C526CE4F7C003D8685 /* openpgp_compat.h */; };
+		151585C326CE5397003D8685 /* base64.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582CE26CE4F7D003D8685 /* base64.h */; };
+		151585C426CE5397003D8685 /* message_api_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582B826CE4F7B003D8685 /* message_api_internal.h */; };
+		151585C526CE5397003D8685 /* cryptotech.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582E626CE4F7D003D8685 /* cryptotech.h */; };
+		151585C626CE5397003D8685 /* security_checks.h in Headers */ = {isa = PBXBuildFile; fileRef = 1515830F26CE4F81003D8685 /* security_checks.h */; };
+		151585C726CE5397003D8685 /* distribution_codec.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582DF26CE4F7D003D8685 /* distribution_codec.h */; };
+		151585C826CE5397003D8685 /* message_codec.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582E426CE4F7D003D8685 /* message_codec.h */; };
+		151585C926CE5397003D8685 /* pEp_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582BD26CE4F7C003D8685 /* pEp_internal.h */; };
+		151585CA26CE5397003D8685 /* pgp_sequoia.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582F426CE4F81003D8685 /* pgp_sequoia.h */; };
+		151585CB26CE5397003D8685 /* resource_id.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582E326CE4F7D003D8685 /* resource_id.h */; };
+		151585CC26CE5397003D8685 /* wrappers.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582D826CE4F7D003D8685 /* wrappers.h */; };
+		151585CD26CE5397003D8685 /* email.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582BC26CE4F7C003D8685 /* email.h */; };
+		151585CE26CE5397003D8685 /* etpan_mime.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582D226CE4F7D003D8685 /* etpan_mime.h */; };
+		151585CF26CE5397003D8685 /* keyreset_command.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582CA26CE4F7C003D8685 /* keyreset_command.h */; };
+		151585D026CE5397003D8685 /* group.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582C626CE4F7C003D8685 /* group.h */; };
+		151585D126CE5397003D8685 /* fsm_common.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582F026CE4F80003D8685 /* fsm_common.h */; };
+		151585D226CE5397003D8685 /* GroupSync_fsm.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582F726CE4F81003D8685 /* GroupSync_fsm.h */; };
+		151585D326CE5397003D8685 /* engine_sql.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582D126CE4F7D003D8685 /* engine_sql.h */; };
+		151585D426CE5397003D8685 /* baseprotocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582E826CE4F80003D8685 /* baseprotocol.h */; };
+		151585D526CE5397003D8685 /* group_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 1515830826CE4F81003D8685 /* group_internal.h */; };
+		151585D626CE5397003D8685 /* KeySync_fsm.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582BB26CE4F7C003D8685 /* KeySync_fsm.h */; };
+		151585D726CE5397003D8685 /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582B626CE4F7B003D8685 /* sqlite3.h */; };
+		151585D826CE5397003D8685 /* trans_auto.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582DB26CE4F7D003D8685 /* trans_auto.h */; };
+		151585D926CE5397003D8685 /* identity_list.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582F326CE4F81003D8685 /* identity_list.h */; };
+		151585DA26CE5397003D8685 /* pEpEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = 1515837B26CE4FB7003D8685 /* pEpEngine.h */; };
+		151585DB26CE5397003D8685 /* Sync_event.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582F526CE4F81003D8685 /* Sync_event.h */; };
+		151585DC26CE5397003D8685 /* map_asn1.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582FE26CE4F81003D8685 /* map_asn1.h */; };
+		151585DD26CE5397003D8685 /* stringpair.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582DA26CE4F7D003D8685 /* stringpair.h */; };
+		151585DE26CE5397003D8685 /* status_to_string.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582BF26CE4F7C003D8685 /* status_to_string.h */; };
+		151585DF26CE5397003D8685 /* Sync_func.h in Headers */ = {isa = PBXBuildFile; fileRef = 1515830726CE4F81003D8685 /* Sync_func.h */; };
+		151585E026CE5397003D8685 /* platform.h in Headers */ = {isa = PBXBuildFile; fileRef = 1515830D26CE4F81003D8685 /* platform.h */; };
+		151585E126CE5397003D8685 /* mime.h in Headers */ = {isa = PBXBuildFile; fileRef = 1515830526CE4F81003D8685 /* mime.h */; };
+		151585E226CE5397003D8685 /* TrustSync_fsm.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582E126CE4F7D003D8685 /* TrustSync_fsm.h */; };
+		151585E326CE5397003D8685 /* pEpEngine_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582D426CE4F7D003D8685 /* pEpEngine_internal.h */; };
+		151585E426CE5397003D8685 /* bloblist.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582DE26CE4F7D003D8685 /* bloblist.h */; };
+		151585E526CE5397003D8685 /* storage_codec.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582CB26CE4F7C003D8685 /* storage_codec.h */; };
+		151585E626CE5397003D8685 /* stringlist.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582C926CE4F7C003D8685 /* stringlist.h */; };
+		151585E726CE5397003D8685 /* platform_unix.h in Headers */ = {isa = PBXBuildFile; fileRef = 1515830C26CE4F81003D8685 /* platform_unix.h */; };
+		151585E826CE5397003D8685 /* key_reset.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582CC26CE4F7C003D8685 /* key_reset.h */; };
+		151585E926CE5397003D8685 /* keymanagement_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 151582F126CE4F80003D8685 /* keymanagement_internal.h */; };
 		1552DB142577D4F100A92F71 /* pEpEngine_macOS.h in Headers */ = {isa = PBXBuildFile; fileRef = 1552DB132577D4F100A92F71 /* pEpEngine_macOS.h */; };
 		1552DB162577D4F100A92F71 /* pEpEngine_macOS.m in Sources */ = {isa = PBXBuildFile; fileRef = 1552DB152577D4F100A92F71 /* pEpEngine_macOS.m */; };
 		156AFEB82672089100AF0039 /* libetpan.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64289E351B8B630200FC617B /* libetpan.a */; };
@@ -317,24 +399,6 @@
 
 /* Begin PBXFileReference section */
 		1508458825F101FB00D46DA6 /* libetpan.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libetpan.a; path = ../../local/lib/libetpan.a; sourceTree = "<group>"; };
-		1515829226CE4ED8003D8685 /* Sync_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Sync_impl.h; path = ../codegen/generated/Sync_impl.h; sourceTree = "<group>"; };
-		1515829326CE4ED8003D8685 /* TrustSync_fsm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TrustSync_fsm.h; path = ../codegen/generated/TrustSync_fsm.h; sourceTree = "<group>"; };
-		1515829426CE4ED8003D8685 /* Sync_event.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Sync_event.h; path = ../codegen/generated/Sync_event.h; sourceTree = "<group>"; };
-		1515829526CE4ED8003D8685 /* sync_codec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sync_codec.h; path = ../codegen/generated/sync_codec.h; sourceTree = "<group>"; };
-		1515829626CE4ED8003D8685 /* Sync_func.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Sync_func.h; path = ../codegen/generated/Sync_func.h; sourceTree = "<group>"; };
-		1515829726CE4ED8003D8685 /* KeySync_fsm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = KeySync_fsm.h; path = ../codegen/generated/KeySync_fsm.h; sourceTree = "<group>"; };
-		1515829826CE4ED8003D8685 /* KeySync_fsm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = KeySync_fsm.c; path = ../codegen/generated/KeySync_fsm.c; sourceTree = "<group>"; };
-		1515829926CE4ED8003D8685 /* storage_codec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = storage_codec.h; path = ../codegen/generated/storage_codec.h; sourceTree = "<group>"; };
-		1515829A26CE4ED8003D8685 /* distribution_codec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = distribution_codec.h; path = ../codegen/generated/distribution_codec.h; sourceTree = "<group>"; };
-		1515829B26CE4ED8003D8685 /* GroupSync_fsm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GroupSync_fsm.h; path = ../codegen/generated/GroupSync_fsm.h; sourceTree = "<group>"; };
-		151582A626CE4EFE003D8685 /* sync_codec.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sync_codec.c; path = ../codegen/generated/sync_codec.c; sourceTree = "<group>"; };
-		151582A726CE4EFE003D8685 /* Sync_actions.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_actions.c; path = ../codegen/generated/Sync_actions.c; sourceTree = "<group>"; };
-		151582A826CE4EFE003D8685 /* Sync_event.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_event.c; path = ../codegen/generated/Sync_event.c; sourceTree = "<group>"; };
-		151582A926CE4EFE003D8685 /* Sync_func.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_func.c; path = ../codegen/generated/Sync_func.c; sourceTree = "<group>"; };
-		151582AA26CE4EFE003D8685 /* TrustSync_fsm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = TrustSync_fsm.c; path = ../codegen/generated/TrustSync_fsm.c; sourceTree = "<group>"; };
-		151582AB26CE4EFE003D8685 /* storage_codec.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = storage_codec.c; path = ../codegen/generated/storage_codec.c; sourceTree = "<group>"; };
-		151582AC26CE4EFE003D8685 /* Sync_impl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_impl.c; path = ../codegen/generated/Sync_impl.c; sourceTree = "<group>"; };
-		151582AD26CE4EFE003D8685 /* GroupSync_fsm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupSync_fsm.c; path = ../codegen/generated/GroupSync_fsm.c; sourceTree = "<group>"; };
 		151582B626CE4F7B003D8685 /* sqlite3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sqlite3.h; path = ../src/sqlite3.h; sourceTree = "<group>"; };
 		151582B726CE4F7B003D8685 /* message.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = message.c; path = ../src/message.c; sourceTree = "<group>"; };
 		151582B826CE4F7B003D8685 /* message_api_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = message_api_internal.h; path = ../src/message_api_internal.h; sourceTree = "<group>"; };
@@ -569,31 +633,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		43188A5523C4A7F8008EF79C /* generated */ = {
-			isa = PBXGroup;
-			children = (
-				151582AD26CE4EFE003D8685 /* GroupSync_fsm.c */,
-				151582AB26CE4EFE003D8685 /* storage_codec.c */,
-				151582A726CE4EFE003D8685 /* Sync_actions.c */,
-				151582A626CE4EFE003D8685 /* sync_codec.c */,
-				151582A826CE4EFE003D8685 /* Sync_event.c */,
-				151582A926CE4EFE003D8685 /* Sync_func.c */,
-				151582AC26CE4EFE003D8685 /* Sync_impl.c */,
-				151582AA26CE4EFE003D8685 /* TrustSync_fsm.c */,
-				1515829A26CE4ED8003D8685 /* distribution_codec.h */,
-				1515829B26CE4ED8003D8685 /* GroupSync_fsm.h */,
-				1515829826CE4ED8003D8685 /* KeySync_fsm.c */,
-				1515829726CE4ED8003D8685 /* KeySync_fsm.h */,
-				1515829926CE4ED8003D8685 /* storage_codec.h */,
-				1515829526CE4ED8003D8685 /* sync_codec.h */,
-				1515829426CE4ED8003D8685 /* Sync_event.h */,
-				1515829626CE4ED8003D8685 /* Sync_func.h */,
-				1515829226CE4ED8003D8685 /* Sync_impl.h */,
-				1515829326CE4ED8003D8685 /* TrustSync_fsm.h */,
-			);
-			name = generated;
-			sourceTree = "<group>";
-		};
 		64289E2B1B8B630200FC617B /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -619,7 +658,6 @@
 				15A3203B260E030B009D07EB /* pEpASN1.xcodeproj */,
 				64951A1B1BE0FCD800B10E71 /* system.db */,
 				64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */,
-				43188A5523C4A7F8008EF79C /* generated */,
 				64A8264B1B455C5600EECAF0 /* src */,
 				644297C01BE11C65002BC73B /* pEpTrustWords */,
 				1552DB122577D4F100A92F71 /* pEpEngine_macOS */,
@@ -772,7 +810,63 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				151585DF26CE5397003D8685 /* Sync_func.h in Headers */,
+				151585CD26CE5397003D8685 /* email.h in Headers */,
+				151585B626CE5397003D8685 /* sync_api.h in Headers */,
+				151585B326CE5397003D8685 /* dynamic_api.h in Headers */,
+				151585DB26CE5397003D8685 /* Sync_event.h in Headers */,
+				151585D726CE5397003D8685 /* sqlite3.h in Headers */,
+				151585D126CE5397003D8685 /* fsm_common.h in Headers */,
+				151585BB26CE5397003D8685 /* resource.h in Headers */,
+				151585DD26CE5397003D8685 /* stringpair.h in Headers */,
+				151585C926CE5397003D8685 /* pEp_internal.h in Headers */,
+				151585BC26CE5397003D8685 /* pEp_string.h in Headers */,
+				151585CE26CE5397003D8685 /* etpan_mime.h in Headers */,
+				151585CF26CE5397003D8685 /* keyreset_command.h in Headers */,
+				151585C726CE5397003D8685 /* distribution_codec.h in Headers */,
+				151585D526CE5397003D8685 /* group_internal.h in Headers */,
+				151585C526CE5397003D8685 /* cryptotech.h in Headers */,
+				151585CC26CE5397003D8685 /* wrappers.h in Headers */,
+				151585C026CE5397003D8685 /* timestamp.h in Headers */,
+				151585B526CE5397003D8685 /* message.h in Headers */,
+				151585E126CE5397003D8685 /* mime.h in Headers */,
+				151585E026CE5397003D8685 /* platform.h in Headers */,
+				151585B826CE5397003D8685 /* growing_buf.h in Headers */,
+				151585E526CE5397003D8685 /* storage_codec.h in Headers */,
+				151585D926CE5397003D8685 /* identity_list.h in Headers */,
+				151585C226CE5397003D8685 /* openpgp_compat.h in Headers */,
+				151585B226CE5397003D8685 /* keymanagement.h in Headers */,
+				151585D626CE5397003D8685 /* KeySync_fsm.h in Headers */,
+				151585E926CE5397003D8685 /* keymanagement_internal.h in Headers */,
+				151585D426CE5397003D8685 /* baseprotocol.h in Headers */,
+				151585DE26CE5397003D8685 /* status_to_string.h in Headers */,
+				151585DA26CE5397003D8685 /* pEpEngine.h in Headers */,
+				151585BD26CE5397003D8685 /* key_reset_internal.h in Headers */,
+				151585C826CE5397003D8685 /* message_codec.h in Headers */,
+				151585E826CE5397003D8685 /* key_reset.h in Headers */,
+				151585C626CE5397003D8685 /* security_checks.h in Headers */,
+				151585C126CE5397003D8685 /* Sync_impl.h in Headers */,
 				1552DB142577D4F100A92F71 /* pEpEngine_macOS.h in Headers */,
+				151585D226CE5397003D8685 /* GroupSync_fsm.h in Headers */,
+				151585BE26CE5397003D8685 /* labeled_int_list.h in Headers */,
+				151585B726CE5397003D8685 /* sync_codec.h in Headers */,
+				151585E726CE5397003D8685 /* platform_unix.h in Headers */,
+				151585B926CE5397003D8685 /* pgp_sequoia_internal.h in Headers */,
+				151585BF26CE5397003D8685 /* internal_format.h in Headers */,
+				151585CA26CE5397003D8685 /* pgp_sequoia.h in Headers */,
+				151585BA26CE5397003D8685 /* transport.h in Headers */,
+				151585C426CE5397003D8685 /* message_api_internal.h in Headers */,
+				151585B426CE5397003D8685 /* message_api.h in Headers */,
+				151585D326CE5397003D8685 /* engine_sql.h in Headers */,
+				151585E626CE5397003D8685 /* stringlist.h in Headers */,
+				151585E326CE5397003D8685 /* pEpEngine_internal.h in Headers */,
+				151585C326CE5397003D8685 /* base64.h in Headers */,
+				151585D826CE5397003D8685 /* trans_auto.h in Headers */,
+				151585E226CE5397003D8685 /* TrustSync_fsm.h in Headers */,
+				151585E426CE5397003D8685 /* bloblist.h in Headers */,
+				151585DC26CE5397003D8685 /* map_asn1.h in Headers */,
+				151585D026CE5397003D8685 /* group.h in Headers */,
+				151585CB26CE5397003D8685 /* resource_id.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -786,7 +880,6 @@
 				1515832E26CE4F81003D8685 /* pEpEngine_internal.h in Headers */,
 				1515831626CE4F81003D8685 /* email.h in Headers */,
 				1515836726CE4F82003D8685 /* platform.h in Headers */,
-				1515829F26CE4ED8003D8685 /* sync_codec.h in Headers */,
 				1515833826CE4F81003D8685 /* bloblist.h in Headers */,
 				1515835826CE4F82003D8685 /* map_asn1.h in Headers */,
 				1515832F26CE4F81003D8685 /* transport.h in Headers */,
@@ -798,7 +891,6 @@
 				1515834426CE4F81003D8685 /* message.h in Headers */,
 				1515835126CE4F82003D8685 /* GroupSync_fsm.h in Headers */,
 				1515831F26CE4F81003D8685 /* openpgp_compat.h in Headers */,
-				1515829C26CE4ED8003D8685 /* Sync_impl.h in Headers */,
 				1515835726CE4F82003D8685 /* Sync_impl.h in Headers */,
 				1515835A26CE4F82003D8685 /* message_api.h in Headers */,
 				1515836226CE4F82003D8685 /* group_internal.h in Headers */,
@@ -808,14 +900,11 @@
 				1515831526CE4F81003D8685 /* KeySync_fsm.h in Headers */,
 				1515832C26CE4F81003D8685 /* etpan_mime.h in Headers */,
 				1515832026CE4F81003D8685 /* group.h in Headers */,
-				151582A126CE4ED8003D8685 /* KeySync_fsm.h in Headers */,
 				1515835526CE4F82003D8685 /* timestamp.h in Headers */,
 				1515833D26CE4F81003D8685 /* resource_id.h in Headers */,
-				1515829D26CE4ED8003D8685 /* TrustSync_fsm.h in Headers */,
 				1515831026CE4F81003D8685 /* sqlite3.h in Headers */,
 				1515834E26CE4F82003D8685 /* pgp_sequoia.h in Headers */,
 				1515831D26CE4F81003D8685 /* internal_format.h in Headers */,
-				151582A526CE4ED8003D8685 /* GroupSync_fsm.h in Headers */,
 				1515836526CE4F82003D8685 /* pEpEngine.h in Headers */,
 				1515831226CE4F81003D8685 /* message_api_internal.h in Headers */,
 				1515832326CE4F81003D8685 /* stringlist.h in Headers */,
@@ -828,17 +917,13 @@
 				1515834B26CE4F82003D8685 /* keymanagement_internal.h in Headers */,
 				1515831E26CE4F81003D8685 /* sync_api.h in Headers */,
 				1515833B26CE4F81003D8685 /* TrustSync_fsm.h in Headers */,
-				151582A026CE4ED8003D8685 /* Sync_func.h in Headers */,
 				1515833526CE4F81003D8685 /* trans_auto.h in Headers */,
-				1515829E26CE4ED8003D8685 /* Sync_event.h in Headers */,
 				1515832826CE4F81003D8685 /* base64.h in Headers */,
 				1515833F26CE4F81003D8685 /* dynamic_api.h in Headers */,
 				1515831B26CE4F81003D8685 /* growing_buf.h in Headers */,
 				1515834826CE4F81003D8685 /* pEp_string.h in Headers */,
 				1515836926CE4F82003D8685 /* security_checks.h in Headers */,
 				1515834626CE4F81003D8685 /* resource.h in Headers */,
-				151582A326CE4ED8003D8685 /* storage_codec.h in Headers */,
-				151582A426CE4ED8003D8685 /* distribution_codec.h in Headers */,
 				1515834D26CE4F82003D8685 /* identity_list.h in Headers */,
 				1515835F26CE4F82003D8685 /* mime.h in Headers */,
 				1515836626CE4F82003D8685 /* platform_unix.h in Headers */,
@@ -1074,7 +1159,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "export LANG=en_US.UTF-8\n\necho \"***************************************\"\necho \"*** Generate files: ACTION: $ACTION ***\"\necho \"***************************************\"\n\ncd \"$SRCROOT/..\"\n\nbash -l -c \"gmake -C sync\"\nbash -l -c \"make -C asn.1 Sync.c Distribution.c\"\n";
+			shellScript = "export LANG=en_US.UTF-8\n\necho \"***************************************\"\necho \"*** Generate files: ACTION: $ACTION ***\"\necho \"***************************************\"\n\ncd \"$SRCROOT/..\"\n\n#bash -l -c \"gmake -C sync\"\n#bash -l -c \"make -C asn.1 Sync.c Distribution.c\"\n\n# `make asn1` actually generates everything, while `make codegen` does *not* generate asn1.\nbash -l -c \"make asn.1\"\n";
 		};
 		1585EC74269C3A7000B822E1 /* Copy Artefacts to Custom Build Dir */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1115,6 +1200,50 @@
 			buildActionMask = 2147483647;
 			files = (
 				1552DB162577D4F100A92F71 /* pEpEngine_macOS.m in Sources */,
+				1515852026CE536A003D8685 /* trans_auto.c in Sources */,
+				1515853626CE536A003D8685 /* storage_codec.c in Sources */,
+				1515854926CE536B003D8685 /* base64.c in Sources */,
+				1515854126CE536A003D8685 /* security_checks.c in Sources */,
+				1515852D26CE536A003D8685 /* pEpEngine.c in Sources */,
+				1515852926CE536A003D8685 /* message.c in Sources */,
+				1515852B26CE536A003D8685 /* GroupSync_fsm.c in Sources */,
+				1515853026CE536A003D8685 /* key_reset.c in Sources */,
+				1515852426CE536A003D8685 /* pgp_sequoia.c in Sources */,
+				1515854826CE536B003D8685 /* resource_id.c in Sources */,
+				1515853E26CE536A003D8685 /* timestamp.c in Sources */,
+				1515853F26CE536A003D8685 /* identity_list.c in Sources */,
+				1515852126CE536A003D8685 /* Sync_impl.c in Sources */,
+				1515854726CE536B003D8685 /* Sync_actions.c in Sources */,
+				1515853A26CE536A003D8685 /* engine_sql.c in Sources */,
+				1515853526CE536A003D8685 /* keyreset_command.c in Sources */,
+				1515854426CE536B003D8685 /* platform_unix.c in Sources */,
+				1515853126CE536A003D8685 /* labeled_int_list.c in Sources */,
+				1515854626CE536B003D8685 /* distribution_codec.c in Sources */,
+				1515853726CE536A003D8685 /* openpgp_compat.c in Sources */,
+				1515852326CE536A003D8685 /* KeySync_fsm.c in Sources */,
+				1515853B26CE536A003D8685 /* message_api.c in Sources */,
+				1515852226CE536A003D8685 /* group.c in Sources */,
+				1515854226CE536A003D8685 /* message_codec.c in Sources */,
+				1515853D26CE536A003D8685 /* stringlist.c in Sources */,
+				1515852626CE536A003D8685 /* growing_buf.c in Sources */,
+				1515852E26CE536A003D8685 /* sync_codec.c in Sources */,
+				1515851F26CE536A003D8685 /* mime.c in Sources */,
+				1515852F26CE536A003D8685 /* internal_format.c in Sources */,
+				1515853826CE536A003D8685 /* map_asn1.c in Sources */,
+				1515853926CE536A003D8685 /* Sync_func.c in Sources */,
+				1515852526CE536A003D8685 /* keymanagement.c in Sources */,
+				1515852C26CE536A003D8685 /* email.c in Sources */,
+				1515852826CE536A003D8685 /* pEp_string.c in Sources */,
+				1515851E26CE536A003D8685 /* stringpair.c in Sources */,
+				1515853326CE536A003D8685 /* Sync_event.c in Sources */,
+				1515854526CE536B003D8685 /* sync_api.c in Sources */,
+				1515853226CE536A003D8685 /* TrustSync_fsm.c in Sources */,
+				1515853426CE536A003D8685 /* bloblist.c in Sources */,
+				1515852A26CE536A003D8685 /* baseprotocol.c in Sources */,
+				1515854326CE536B003D8685 /* etpan_mime.c in Sources */,
+				1515854026CE536A003D8685 /* cryptotech.c in Sources */,
+				1515852726CE536A003D8685 /* sqlite3.c in Sources */,
+				1515853C26CE536A003D8685 /* transport.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1130,9 +1259,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1515835026CE4F82003D8685 /* email.c in Sources */,
-				151582A226CE4ED8003D8685 /* KeySync_fsm.c in Sources */,
 				151583A026CE4FB8003D8685 /* pEp_string.c in Sources */,
-				151582AE26CE4EFE003D8685 /* sync_codec.c in Sources */,
 				1515838926CE4FB8003D8685 /* email.c in Sources */,
 				1515839D26CE4FB8003D8685 /* Sync_func.c in Sources */,
 				1515836826CE4F82003D8685 /* internal_format.c in Sources */,
@@ -1140,16 +1267,13 @@
 				1515839A26CE4FB8003D8685 /* Makefile in Sources */,
 				1515831826CE4F81003D8685 /* pgp_sequoia.c in Sources */,
 				1515835226CE4F82003D8685 /* message_api.c in Sources */,
-				151582B426CE4EFE003D8685 /* Sync_impl.c in Sources */,
 				151583A426CE4FB8003D8685 /* timestamp.c in Sources */,
 				1515832926CE4F81003D8685 /* base64.c in Sources */,
 				1515839F26CE4FB8003D8685 /* cryptotech.c in Sources */,
 				1515838A26CE4FB8003D8685 /* storage_codec.c in Sources */,
 				1515839526CE4FB8003D8685 /* Sync_actions.c in Sources */,
-				151582AF26CE4EFE003D8685 /* Sync_actions.c in Sources */,
 				1515835D26CE4F82003D8685 /* transport.c in Sources */,
 				1515833A26CE4F81003D8685 /* resource_id.c in Sources */,
-				151582B526CE4EFE003D8685 /* GroupSync_fsm.c in Sources */,
 				1515831126CE4F81003D8685 /* message.c in Sources */,
 				1515835626CE4F82003D8685 /* platform_unix.c in Sources */,
 				1515839B26CE4FB8003D8685 /* pEpEngine.c in Sources */,
@@ -1173,7 +1297,6 @@
 				1515833326CE4F81003D8685 /* keymanagement.c in Sources */,
 				1515839126CE4FB8003D8685 /* baseprotocol.c in Sources */,
 				1515834726CE4F81003D8685 /* mime.c in Sources */,
-				151582B326CE4EFE003D8685 /* storage_codec.c in Sources */,
 				1515838D26CE4FB8003D8685 /* message_api.c in Sources */,
 				1515839E26CE4FB8003D8685 /* platform_unix.c in Sources */,
 				1515834126CE4F81003D8685 /* keyreset_command.c in Sources */,
@@ -1183,11 +1306,9 @@
 				1515832726CE4F81003D8685 /* key_reset.c in Sources */,
 				1515838E26CE4FB8003D8685 /* distribution_codec.c in Sources */,
 				151583A126CE4FB8003D8685 /* GroupSync_fsm.c in Sources */,
-				151582B126CE4EFE003D8685 /* Sync_func.c in Sources */,
 				1515831326CE4F81003D8685 /* etpan_mime.c in Sources */,
 				1515835B26CE4F82003D8685 /* map_asn1.c in Sources */,
 				1515835926CE4F82003D8685 /* labeled_int_list.c in Sources */,
-				151582B226CE4EFE003D8685 /* TrustSync_fsm.c in Sources */,
 				1515839C26CE4FB8003D8685 /* Sync_event.c in Sources */,
 				1515839226CE4FB8003D8685 /* stringpair.c in Sources */,
 				1515833126CE4F81003D8685 /* message_codec.c in Sources */,
@@ -1195,7 +1316,6 @@
 				151583A226CE4FB8003D8685 /* transport.c in Sources */,
 				1515835326CE4F82003D8685 /* openpgp_compat.c in Sources */,
 				1515832A26CE4F81003D8685 /* sync_api.c in Sources */,
-				151582B026CE4EFE003D8685 /* Sync_event.c in Sources */,
 				1515834926CE4F82003D8685 /* pEp_string.c in Sources */,
 				1515838826CE4FB8003D8685 /* openpgp_compat.c in Sources */,
 				1515832D26CE4F81003D8685 /* sqlite3.c in Sources */,
