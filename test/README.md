@@ -80,40 +80,61 @@ Ubuntu](https://www.eriksmistad.no/getting-started-with-google-test-on-ubuntu/))
 
   1. Get the source, Fred. (Luke is tired of the source, I hear.)
   ```
-  git clone https://github.com/google/googletest.git
+  mkdir -p ~/pep-src/googletest
+  git clone https://github.com/google/googletest.git ~/pep-src/googletest
   ```
   
-  2. Switch into the source directory and find the directory 
-  containing the `src` and `include` directories. Mark this directory
-  for later. (For me, this is `./googletest/googletest`)
-  
-  3. Edit `CMakeLists.txt` here to contain the following line at the top:
+  2. Switch into the source directory and find the subdirectory of
+  `googletest` (the source distribution of googletest also contains a
+  `googlemock` library which is not useful to us here)
+  containing the `src` and `include` directories.  Remember this
+  directory's path.  For me it is `~/pep-src/googletest/googletest` .
+
+  3. Edit the file `CMakeLists.txt` in that directory, adding the
+  following line at the top:
   ```
   set (CMAKE_CXX_STANDARD 11)
   ```
   (If you don't, it won't compile, and I will shake my fist at you.)
   
-  4. Execute, in this directory:
+  4. Go to the googletest source directory (it should be the parent
+  directory of the directory containing the file you edited) and build
+  the library.
+
   ```
+  cd ~/pep-src/googletest
   cmake CMakeLists.txt
   make
   ```
   
   5. In the lib directory of your current directory are located the
-  library files you'll use (`lib/*.a`). Copy or symlink them to the library 
+  library files you'll use (`lib/*.a`).  You may leave them there without
+  installing them, if you accept running a more complex command line than
+  ```
+  make test
+  ```
+  later.  If you want to install the library, read on.
+
+  Copy or symlink them to the library 
   location  of your choice (make sure this is a directory that can be seen 
   during the test build process - i.e. one that's in one of the library paths 
   used in building. Mine are located in `$HOME/lib`.
-
-  6. See `Makefile` and `local.conf` under "Building the test suite" below -
+  See `Makefile` and `local.conf` under "Building the test suite" below -
   In this scenario, I set `GTEST_SRC_DIR` as  `<clone_path>/googletest/googletest`
   (i.e. the absolute path of where the `src` and `include` directories were 
-  above - for me, `/Users/krista/googletest/googletest`).
+  above - for example, `/Users/krista/googletest/googletest`).
   
 ### Installing `gtest-parallel`
 
 Pick a source directory and put your `gtest-parallel` source there
-(e.g. via `git clone https://github.com/google/gtest-parallel.git`).
+(e.g. via `git clone https://github.com/google/gtest-parallel.git`):
+
+```
+mkdir -p ~/pep-src/gtest-parallel
+git clone https://github.com/google/gtest-parallel.git ~/pep-src/gtest-parallel
+```
+
+This library is written in Python and does not require any actual build.
 
 We'll deal more with this when preparing to compile the test suite.
 
@@ -133,13 +154,43 @@ are:
   * `GTEST_INC_DIR`: This is where the include files for googletest are located
   (defaults to `$(GTEST_SRC_DIR)/include`)
   
-  * `GTEST_PL`: This is the full path to the *python file* for `gtest_parallel`
+  * `GTEST_PL`: This is the full path to the *python file* for `gtest_parallel.py`
   (default presumes you cloned it under `src` in your home directory, i.e. it is
   `$(HOME)/src/gtest-parallel/gtest_parallel.py`)
 
+The sample `local.conf` included in `../doc/build-debian.md` contains correct
+definitions for these variables, assuming the user installed from sources under
+`~/pep-src` as described here.
+
 ### Building
 
-Presuming the above works, then from the top test directory, simply run make.
+Presuming the above works and you installed every library, then from the top test
+directory, simply run ``make``.
+
+Libraries which have not been installed into the `lib` subdirectory of some
+standard prefix will not be found automatically.  But this problem is easy to
+circumbent by setting environment libraries (on system using the GNU
+linked-loader `LD_LIBRARY_PATH` for dynamic libraries, `LIBRARY_PATH` for static
+libraries).
+
+For example, this should be sufficient to run the test suite under a debian
+system following the instruction at `../doc/build-debian.md`:
+```
+cd ~/pep-src/pep-engine
+LIBRARY_PATH=$LIBRARY_PATH:$HOME/pep-src/googletest/lib LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/pep-src/pep-engine/src:$HOME/pep-src/sequoia/target/release:$HOME/pep-src/libetpan/build/lib make test
+```
+
+Such variable definitions may be prepended to the command lines below for running
+individual tests or the entire test suite.
+
+In case of test failures remember to build the database, on which the test suite
+depends, and to copy it into the system directory:
+```
+make dbinstall
+```
+The database does not need to be rebuilt and reinstalled for every test suite
+run: running the `dbinstall` target once suffices.
+
 
 ## Running the test suite
 
