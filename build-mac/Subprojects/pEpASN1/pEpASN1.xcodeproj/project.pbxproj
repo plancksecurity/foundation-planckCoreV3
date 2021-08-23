@@ -531,12 +531,10 @@
 		1515824126CE4EA8003D8685 /* CommitAcceptRequester.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = CommitAcceptRequester.c; path = ../../../asn.1/CommitAcceptRequester.c; sourceTree = "<group>"; };
 		1515824226CE4EA8003D8685 /* GroupTrustThisKey.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = GroupTrustThisKey.c; path = ../../../asn.1/GroupTrustThisKey.c; sourceTree = "<group>"; };
 		1515824326CE4EA8003D8685 /* KeyReset.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = KeyReset.c; path = ../../../asn.1/KeyReset.c; sourceTree = "<group>"; };
-		1515824426CE4EA8003D8685 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; name = Makefile; path = ../../../asn.1/Makefile; sourceTree = "<group>"; };
 		1515824526CE4EA9003D8685 /* NegotiationOpen.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = NegotiationOpen.c; path = ../../../asn.1/NegotiationOpen.c; sourceTree = "<group>"; };
 		1515824626CE4EA9003D8685 /* GroupInvite.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = GroupInvite.c; path = ../../../asn.1/GroupInvite.c; sourceTree = "<group>"; };
 		1515824726CE4EA9003D8685 /* CommitAcceptOfferer.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = CommitAcceptOfferer.c; path = ../../../asn.1/CommitAcceptOfferer.c; sourceTree = "<group>"; };
 		1515824826CE4EA9003D8685 /* pdu_collection.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = pdu_collection.c; path = ../../../asn.1/pdu_collection.c; sourceTree = "<group>"; };
-		1515824926CE4EA9003D8685 /* pEpEngineASN1.vcxproj.filters */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = pEpEngineASN1.vcxproj.filters; path = ../../../asn.1/pEpEngineASN1/pEpEngineASN1.vcxproj.filters; sourceTree = "<group>"; };
 		1515824A26CE4EA9003D8685 /* constr_TYPE.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = constr_TYPE.c; path = ../../../asn.1/constr_TYPE.c; sourceTree = "<group>"; };
 		1515824B26CE4EA9003D8685 /* NativeInteger.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = NativeInteger.c; path = ../../../asn.1/NativeInteger.c; sourceTree = "<group>"; };
 		1515824C26CE4EA9003D8685 /* TrustSync.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = TrustSync.c; path = ../../../asn.1/TrustSync.c; sourceTree = "<group>"; };
@@ -591,7 +589,6 @@
 		1515827F26CE4EAB003D8685 /* PString.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = PString.c; path = ../../../asn.1/PString.c; sourceTree = "<group>"; };
 		1515828026CE4EAB003D8685 /* GroupKeysAndClose.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = GroupKeysAndClose.c; path = ../../../asn.1/GroupKeysAndClose.c; sourceTree = "<group>"; };
 		1515828126CE4EAB003D8685 /* asn_SEQUENCE_OF.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = asn_SEQUENCE_OF.c; path = ../../../asn.1/asn_SEQUENCE_OF.c; sourceTree = "<group>"; };
-		1515828226CE4EAB003D8685 /* pEpEngineASN1.vcxproj */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = pEpEngineASN1.vcxproj; path = ../../../asn.1/pEpEngineASN1/pEpEngineASN1.vcxproj; sourceTree = "<group>"; };
 		1515828326CE4EAB003D8685 /* GroupSyncRequest.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = GroupSyncRequest.c; path = ../../../asn.1/GroupSyncRequest.c; sourceTree = "<group>"; };
 		1515828426CE4EAB003D8685 /* TID.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = TID.c; path = ../../../asn.1/TID.c; sourceTree = "<group>"; };
 		1515828526CE4EAB003D8685 /* ExploreRequest.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = ExploreRequest.c; path = ../../../asn.1/ExploreRequest.c; sourceTree = "<group>"; };
@@ -723,7 +720,6 @@
 				1515825226CE4EA9003D8685 /* ISO639-1.c */,
 				1515824326CE4EA8003D8685 /* KeyReset.c */,
 				1515825D26CE4EAA003D8685 /* KeySync.c */,
-				1515824426CE4EA8003D8685 /* Makefile */,
 				1515825626CE4EA9003D8685 /* ManagedGroup.c */,
 				1515826B26CE4EAA003D8685 /* MessageDirection.c */,
 				1515826226CE4EAA003D8685 /* MessageStorage.c */,
@@ -736,8 +732,6 @@
 				1515825026CE4EA9003D8685 /* OwnKeysOfferer.c */,
 				1515827D26CE4EAB003D8685 /* OwnKeysRequester.c */,
 				1515824826CE4EA9003D8685 /* pdu_collection.c */,
-				1515828226CE4EAB003D8685 /* pEpEngineASN1.vcxproj */,
-				1515824926CE4EA9003D8685 /* pEpEngineASN1.vcxproj.filters */,
 				1515828826CE4EAB003D8685 /* per_decoder.c */,
 				1515827426CE4EAB003D8685 /* per_encoder.c */,
 				1515824F26CE4EA9003D8685 /* per_opentype.c */,
