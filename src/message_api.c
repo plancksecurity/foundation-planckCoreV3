@@ -5489,6 +5489,10 @@ static PEP_STATUS _decrypt_message(
             if (!msg->recv_by)
                 goto enomem;
         }
+        
+        // Adjust the incoming message rating? I think we have a problem here with reencrypted messages,
+        // but I don't know what vb changed in this branch here...
+        status = incoming_message_rating(session, src, msg, _keylist, extra, decrypt_status, rating);
 
         decorate_message(session, msg, *rating, _keylist, false, true);
 
@@ -5806,10 +5810,6 @@ static PEP_STATUS _decrypt_message(
                 }
             }
         }
-        // Adjust the incoming message rating? I think we have a problem here with reencrypted messages,
-        // but I don't know what vb changed in this branch here...
-        if (*rating >= PEP_rating_reliable)
-            status = incoming_message_rating(session, src, msg, _keylist, extra, decrypt_status, rating);
     }
         
     if (imported_key_fprs)

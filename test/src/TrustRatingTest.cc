@@ -99,6 +99,11 @@ static void alice_and_bob(PEP_SESSION session, pEp_identity *&alice, pEp_identit
 
     alice = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::ALICE);
     bob = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::BOB, true, false);
+    PEP_STATUS status = myself(session, alice);
+    ASSERT_OK;
+    status = update_identity(session, bob);
+    ASSERT_OK;
+
     message* msg = new_message(PEP_dir_outgoing);
 
     output_stream << "\ndone\n";
@@ -176,7 +181,7 @@ TEST_F(TrustRatingTest, check_rating_of_existing_channel) {
 
     pEp_identity *alice;
     pEp_identity *bob;
-    // this is calling myself(sesion, alice) and update_identity(session, bob)
+    // this calls myself(session, alice) and update_identity(session, bob) (It didn't before, FWIW; does now. - KB)
     alice_and_bob(session, alice, bob);
  
     PEP_rating rating;
@@ -519,6 +524,7 @@ TEST_F(TrustRatingTest, check_trusted_bob_sender_not_default) {
 
 
 TEST_F(TrustRatingTest, check_incoming_message_rating) {
+    // TEST FIX: This test won't work until run though decrypt_message, Volker!
     output_stream << "\n*** " << test_suite_name << ": " << test_name << " ***\n";
     PEP_STATUS status = PEP_STATUS_OK;
 
@@ -541,18 +547,31 @@ TEST_F(TrustRatingTest, check_incoming_message_rating) {
 
     PEP_rating rating = PEP_rating_undefined;
 
+
     // 1)  Sylvia sends an unencrypted mail without key
 
-    status = incoming_message_rating(session, src, nullptr, nullptr, nullptr,
+    message* dst = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_decrypt_flags_t flags = 0;
+
+    status = decrypt_message(session, src, &dst, &keylist, &rating, &flags);
+    ASSERT_EQ(status, PEP_UNENCRYPTED);
+    ASSERT_NULL(dst);
+    ASSERT_EQ(rating, PEP_rating_unencrypted);
+
+    status = incoming_message_rating(session, src, nullptr, keylist, nullptr,
             PEP_UNENCRYPTED, &rating);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_EQ(rating, PEP_rating_unencrypted);
     ASSERT_EQ(default_key_set(session, sylvia), false);
 
-    // 2)  Sylvia sends an unencrypted mail with key attached, no claim
+    // 2)  N.B. This test case makes no sense - we don't have a "no claim" for unencrypted messages except that
+    //          there might be multiple keys. So I presume you're just testing incoming_message_rating on some
+    //          message that will never occur here.
+    //     Sylvia sends an unencrypted mail with key attached, no claim
     //     => unencrypted, no default key
     
-    std::string sylvias_key = slurp("test_keys/pub/sylvia-pub.asc");
+    std::string sylvias_key = slurp("test_keys/pub/sylvia-0x585A6780_pub.asc");
     src->attachments = new_bloblist(strdup(sylvias_key.c_str()), sylvias_key.size(),
             "application/pgp-keys", "sylvia-pub.asc");
     assert(src->attachments && src->attachments->value);
@@ -566,11 +585,23 @@ TEST_F(TrustRatingTest, check_incoming_message_rating) {
     // 3)  Sylvia sends an unencrypted mail with sender key identified
     //     => default key set, unencrypted
     
-    ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/sylvia-pub.asc"));
+    ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/sylvia-0x585A6780_pub.asc"));
 
-    stringlist_t *known_keys = new_stringlist("79CC4076D5277ED9A3123FBC7BC6B76B6BB9379B");
+    stringlist_t *known_keys = new_stringlist("0C0F053EED87058C7330A11F10B89D31585A6780");
     assert(known_keys);
 
+    // There's only a "claim" if you decrypt it first.
+    free_stringlist(keylist);
+    keylist = NULL;
+    flags = 0;
+
+    status = decrypt_message(session, src, &dst, &keylist, &rating, &flags);
+    ASSERT_EQ(status, PEP_UNENCRYPTED);
+    ASSERT_NULL(dst);
+    ASSERT_EQ(rating, PEP_rating_unencrypted);
+
+    // I don't see what "known keys" has to do with anything here. It's an unencrypted message,
+    // and the known keys will come from the DB. But OK.
     status = incoming_message_rating(session, src, nullptr, known_keys, nullptr,
             PEP_UNENCRYPTED, &rating);
     ASSERT_EQ(status, PEP_STATUS_OK);

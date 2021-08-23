@@ -162,9 +162,14 @@ static PEP_STATUS trust_between_user_and_key(
         return PEP_OUT_OF_MEMORY;
 
     PEP_STATUS status = get_trust(session, ident);
-    if (status == PEP_CANNOT_FIND_IDENTITY)
-        status = PEP_STATUS_OK;
-    else if (status)
+
+    // We need this status to interpret the rating result if it's PEP_rating_unreliable
+    // on the outside because there was no trust entry
+
+//    if (status == PEP_CANNOT_FIND_IDENTITY)
+//        status = PEP_STATUS_OK;
+
+    if (status != PEP_CANNOT_FIND_IDENTITY && status != PEP_STATUS_OK)
         goto the_end;
 
     if (ident->comm_type == PEP_ct_unknown)
@@ -212,16 +217,21 @@ DYNAMIC_API PEP_STATUS rating_of_existing_channel(
     }
     else {
         keyrating = rating_from_comm_type(keycomm_type);
-        // if this is reliable then we could have green in case there is trust
-        if (keyrating >= PEP_rating_reliable)
-            keyrating = PEP_rating_trusted_and_anonymized;
     }
 
     status = trust_between_user_and_key(session, ident->user_id, ident->fpr, &trustrating);
-    if (status)
-        goto the_end;
 
-    *rating = add_rating(keyrating, trustrating);
+    switch (status) {
+        case PEP_CANNOT_FIND_IDENTITY:
+            *rating = keyrating;
+            break;
+        case PEP_STATUS_OK:
+            // if this is reliable then we could have green in case there is trust
+            if (keyrating >= PEP_rating_reliable)
+                keyrating = PEP_rating_trusted_and_anonymized;
+            *rating = add_rating(keyrating, trustrating);
+            break;
+    }
 
 the_end:
     return status;
@@ -333,7 +343,9 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
     if (status)
         goto the_end;
 
-    if (_rating > PEP_rating_unencrypted)
+    // FIX: I'm guessing this is supposed to be <. Otherwise, it will return PEP_rating_unencrypted for all
+    //      good messages.
+    if (_rating < PEP_rating_unencrypted)
         _rating = PEP_rating_unencrypted;
 
     *rating = (_rating == PEP_rating_have_no_key) ? PEP_rating_unencrypted : _rating;
@@ -363,7 +375,7 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating_preview(
     if (status)
         goto the_end;
 
-    if (_rating > PEP_rating_unencrypted)
+    if (_rating < PEP_rating_unencrypted)
         _rating = PEP_rating_unencrypted;
 
     *rating = (_rating == PEP_rating_have_no_key) ? PEP_rating_unencrypted : _rating;
