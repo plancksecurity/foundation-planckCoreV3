@@ -423,7 +423,7 @@ static PEP_STATUS message_rating_for_identities(
 
     if (*rating == PEP_rating_have_no_key)
         *rating = PEP_rating_unreliable;
-    
+
 the_end:
     return status;
 }
