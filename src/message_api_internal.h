@@ -106,6 +106,37 @@ PEP_STATUS try_encrypt_message(
         PEP_encrypt_flags_t flags
     );
 
+/**
+ *  @internal
+ *
+ *  @param session
+ *  @param idents
+ *  @return
+ */
+PEP_STATUS update_identity_list(PEP_SESSION session, identity_list* idents);
+
+/**
+ *  @internal
+ *
+ *  @param session
+ *  @param msg
+ *  @return
+ */
+PEP_STATUS update_message_identities(PEP_SESSION session, message* msg);
+
+/**
+ *  @internal
+ *
+ *  @param field_list
+ *  @param major_ver
+ *  @param minor_ver
+ */
+void get_message_version_from_headers(
+        stringpair_list_t* field_list,
+        unsigned int* major_ver,
+        unsigned int* minor_ver
+    );
+
 #ifdef __cplusplus
 }
 #endif

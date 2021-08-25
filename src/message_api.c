@@ -4447,7 +4447,7 @@ static void get_protocol_version_from_headers(
         pEp_version_major_minor(pEp_protocol_version->value->value, major_ver, minor_ver);           
 }
 
-static void get_message_version_from_headers(
+void get_message_version_from_headers(
         stringpair_list_t* field_list,
         unsigned int* major_ver,
         unsigned int* minor_ver
@@ -5373,18 +5373,14 @@ static PEP_STATUS _decrypt_message(
                         free_message(inner_message);
                     }
                 } // end if (message_blob)
-                
-                //  else if (strcmp(wrap_info, "TRANSPORT") == 0) {
-                //      // FIXME: this gets even messier.
-                //      // (TBI in ENGINE-278)
-                //  }
-                //  else {} // shouldn't be anything to be done here
-    
             } // end if (has_inner || wrap_info)
             else {
-                
-            } // this we do if this isn't an inner message
-            
+                // this we do if this isn't an inner message
+                if (_keylist && !EMPTYSTR(_keylist->value)) {
+                    msg->_sender_fpr = strdup(_keylist->value);
+                }
+            }
+
             pEp_identity* msg_from = msg->from;
             if (msg_from && !EMPTYSTR(msg_from->address)) {
                 if (!is_me(session, msg_from)) {
@@ -5489,12 +5485,6 @@ static PEP_STATUS _decrypt_message(
             if (!msg->recv_by)
                 goto enomem;
         }
-        
-        // Adjust the incoming message rating? I think we have a problem here with reencrypted messages,
-        // but I don't know what vb changed in this branch here...
-        status = incoming_message_rating(session, src, msg, _keylist, extra, decrypt_status, rating);
-
-        decorate_message(session, msg, *rating, _keylist, false, true);
 
         // Maybe unnecessary
         // if (keys_were_imported)
@@ -5703,7 +5693,8 @@ static PEP_STATUS _decrypt_message(
     
     if (reencrypt && session->unencrypted_subject && !has_extra_keys && subjects_match) 
         reencrypt = false;
-    
+
+
     if (reencrypt) {
         if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED
             || decrypt_status == PEP_VERIFY_SIGNER_KEY_REVOKED) {
@@ -5793,25 +5784,64 @@ static PEP_STATUS _decrypt_message(
         }
     }
 
-    // 5. Set up return values
-    *dst = msg;
-    *keylist = _keylist;        
-    
+    // 5. Double-check sender key info
+
     // Double-check for message 2.1+: (note, we don't do this for already-reencrypted-messages)
-    if (!(reencrypt && reenc_signer_key_is_own_key)) { 
-        if (major_ver > 2 || (major_ver == 2 && minor_ver > 0)) {
-            if (msg_major_ver > 2 || (msg_major_ver == 2 && msg_minor_ver > 0)) {
-                if (EMPTYSTR((*dst)->_sender_fpr) || 
-                (!EMPTYSTR(_keylist->value) && (strcasecmp((*dst)->_sender_fpr, _keylist->value) != 0))) {
-                    if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
-                        decrypt_status = PEP_DECRYPTED;
-                    if (*rating > PEP_rating_unreliable)
-                        *rating = PEP_rating_unreliable;
-                }
+
+    // Rating, so far, is based on the decrypt rating. We need to adjust a little and then update
+    // the rating with the function.
+
+    if (!(reencrypt && reenc_signer_key_is_own_key) && rating > PEP_rating_unreliable) {
+        // We should now ALWAYS have sender_fpr filled in
+        if (!EMPTYSTR(msg->_sender_fpr)) {
+            // Is the sender key the signer key? They should be.
+            if (!EMPTYSTR(_keylist->value) && (strcasecmp(msg->_sender_fpr, _keylist->value) != 0)) {
+                if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
+                    decrypt_status = PEP_DECRYPTED;
+                *rating = PEP_rating_unreliable;
             }
+//            else {
+//                const pEp_identity *msg_from = msg->from;
+//                const char *sender_user_id = msg_from->user_id;
+//                if (*rating > PEP_rating_unreliable) {
+//                    if (msg_from->fpr && strcasecmp(msg_from->fpr, msg->_sender_fpr) != 0) {
+//                        // check to see if the sender OWNS this key and we have a trust entry
+//                        // for it. Otherwise... PROBLEMS.
+//                        pEp_identity *temp_from = identity_dup(msg_from);
+//                        if (!temp_from)
+//                            goto enomem;
+//                        free(temp_from->fpr);
+//                        temp_from->fpr = strdup(msg->_sender_fpr);
+//                        if (!temp_from->fpr)
+//                            goto enomem;
+//                        status = get_trust(session, temp_from);
+//                        if (status == PEP_CANNOT_FIND_IDENTITY) {
+//                            if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
+//                                decrypt_status = PEP_DECRYPTED;
+//                            *rating = PEP_rating_unreliable;
+//                        }
+//                    }
+//                }
+//            }
+// Covered by incoming message rating, I hope.
         }
     }
-        
+
+    // Adjust the incoming message rating? I think we have a problem here with reencrypted messages,
+    // but I don't know what vb changed in this branch here...
+    status = incoming_message_rating(session, src, msg, _keylist, extra, decrypt_status, rating);
+
+    if (*rating == PEP_rating_have_no_key)
+        *rating = PEP_rating_unreliable;
+
+    // 6. Put this stuff on the message
+    decorate_message(session, msg, *rating, _keylist, false, true);
+
+
+    // 7. Set up return values
+    *dst = msg;
+    *keylist = _keylist;
+
     if (imported_key_fprs)
         *imported_key_fprs = _imported_key_list;
     if (changed_public_keys)
@@ -5879,11 +5909,14 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                                          rating, flags, NULL,
                                          &imported_key_fprs, &changed_key_bitvec);
 
+    /*
     if (src->dir == PEP_dir_incoming) {
         PEP_rating rating2;
         PEP_STATUS status2 = incoming_message_rating(session, src, *dst, *keylist, NULL, status, rating);
         assert(status2 != PEP_ILLEGAL_VALUE);
     }
+    */
+    // This gets done internally anyway. Whyyyyy?
 
     message *msg = *dst ? *dst : src;
 
@@ -6782,5 +6815,40 @@ PEP_STATUS try_encrypt_message(
         }
     } while (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE);
 
+    return status;
+}
+
+PEP_STATUS update_identity_list(PEP_SESSION session, identity_list* idents) {
+    PEP_STATUS status = PEP_STATUS_OK;
+    if (idents) {
+        identity_list* il = idents;
+        for ( ; il && il->ident; il = il->next) {
+            if (is_me(session, il->ident))
+                status = myself(session, il->ident);
+            else
+                status = update_identity(session, il->ident);
+        }
+    }
+    return status;
+}
+
+PEP_STATUS update_message_identities(PEP_SESSION session, message* msg) {
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    if (msg->from) {
+        if (is_me(session, msg->from))
+            status = myself(session, msg->from);
+        else
+            status = update_identity(session, msg->from);
+    }
+    if (status == PEP_STATUS_OK) {
+        status = update_identity_list(session, msg->to);
+    }
+    if (status == PEP_STATUS_OK) {
+        status = update_identity_list(session, msg->cc);
+    }
+    if (status == PEP_STATUS_OK) {
+        status = update_identity_list(session, msg->bcc);
+    }
     return status;
 }

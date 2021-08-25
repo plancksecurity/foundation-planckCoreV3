@@ -11,6 +11,7 @@
 #include "baseprotocol.h"
 #include "KeySync_fsm.h"
 #include "sync_codec.h"
+#include "message_api_internal.h"
 
 const char * rating_to_string(PEP_rating rating)
 {
@@ -398,7 +399,7 @@ static PEP_STATUS message_rating_for_identities(
     *rating = PEP_rating_undefined;
 
     if (msg->dir == PEP_dir_incoming) {
-        if (msg->from->me)
+        if (is_me(session, msg->from))
             status = myself(session, msg->from);
         else
             status = update_identity(session, msg->from);
@@ -420,6 +421,9 @@ static PEP_STATUS message_rating_for_identities(
 
     *rating = add_rating(from_rating, _rating);
 
+    if (*rating == PEP_rating_have_no_key)
+        *rating = PEP_rating_unreliable;
+    
 the_end:
     return status;
 }
@@ -518,11 +522,16 @@ static PEP_STATUS incoming_message_crypto_rating(
 
     if (dst) {
         PEP_rating sender_rating = PEP_rating_undefined;
-        PEP_STATUS status = sender_fpr_rating(session, src->from, dst->_sender_fpr, &sender_rating);
-        if (status)
+        PEP_STATUS status = sender_fpr_rating(session, dst->from, dst->_sender_fpr, &sender_rating);
+        if (status == PEP_CANNOT_FIND_IDENTITY)
+            status = PEP_STATUS_OK; // this is legit if we don't have the key
+        if (status != PEP_STATUS_OK)
             return status;
 
-        *rating = add_rating(enc_rating, sender_rating);
+        if (sender_rating == PEP_rating_undefined)
+            *rating = enc_rating > PEP_rating_unreliable ? PEP_rating_unreliable : enc_rating;
+        else
+            *rating = add_rating(enc_rating, sender_rating);
     }
 
     return PEP_STATUS_OK;
@@ -681,41 +690,6 @@ PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rati
     return base_decorate_message(session, msg, BASE_SYNC, payload, size, msg->recv_by->fpr);
 }
 
-static PEP_STATUS _update_identity_list(PEP_SESSION session, identity_list* idents) {
-    PEP_STATUS status = PEP_STATUS_OK;
-    if (idents) {
-        identity_list* il = idents;
-        for ( ; il && il->ident; il = il->next) {
-            if (is_me(session, il->ident))
-                status = myself(session, il->ident);
-            else
-                status = update_identity(session, il->ident);
-        }
-    }
-    return status;
-}
-
-static PEP_STATUS _update_message_identities(PEP_SESSION session, message* msg) {
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    if (msg->from) {
-        if (is_me(session, msg->from))
-            status = myself(session, msg->from);
-        else
-            status = update_identity(session, msg->from);
-    }
-    if (status == PEP_STATUS_OK) {
-        status = _update_identity_list(session, msg->to);
-    }
-    if (status == PEP_STATUS_OK) {
-        status = _update_identity_list(session, msg->cc);
-    }
-    if (status == PEP_STATUS_OK) {
-        status = _update_identity_list(session, msg->bcc);
-    }
-    return status;
-}
-
 DYNAMIC_API PEP_STATUS incoming_message_rating(
         PEP_SESSION session,
         const message *src,
@@ -743,6 +717,8 @@ DYNAMIC_API PEP_STATUS incoming_message_rating(
     if (!dst && known_keys && known_keys->value && known_keys->next)
         return PEP_ILLEGAL_VALUE;
 
+    PEP_STATUS status = PEP_STATUS_OK;
+
     *rating = PEP_rating_undefined;
     PEP_rating _rating = decrypt_rating(decrypt_status);
 
@@ -762,16 +738,27 @@ DYNAMIC_API PEP_STATUS incoming_message_rating(
     }
 
     PEP_rating crypto_rating = PEP_rating_undefined;
-    PEP_STATUS status = incoming_message_crypto_rating(session, src, dst,
+    if (src->from && is_me(session, src->from))
+        status = myself(session, src->from);
+    else
+        status = update_identity(session, src->from);
+
+    if (status)
+        return status;
+
+    if (dst)
+        status = update_message_identities(session, dst);
+
+    if (status)
+        return status;
+
+    status = incoming_message_crypto_rating(session, src, dst,
             &crypto_rating);
     if (status)
         return status;
     _rating = add_rating(_rating, crypto_rating);
 
     if (dst) {
-        status = _update_message_identities(session, dst);
-        if (status)
-            return status;
         PEP_rating identities_rating = PEP_rating_undefined;
         status = message_rating_for_identities(session, dst,
                 &identities_rating);

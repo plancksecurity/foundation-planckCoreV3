@@ -719,6 +719,8 @@ TEST_F(HeaderKeyImportTest, check_header_key_import) {
     const char* alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
     slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");
     slurp_and_import_key(session, "test_keys/priv/pep-test-bob-0xC9C2EE39_priv.asc");
+    pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, "BOB", "Bob Dog");
+    PEP_STATUS status = set_own_key(session, bob, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39");
 
     string strmsg = slurp("test_mails/Header_key_import.eml");
 
@@ -731,7 +733,7 @@ TEST_F(HeaderKeyImportTest, check_header_key_import) {
 
     flags = 0;
     message* enc_msg = string_to_msg(strmsg);
-    PEP_STATUS status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(rating , PEP_rating_reliable);
     ASSERT_OK;
 
