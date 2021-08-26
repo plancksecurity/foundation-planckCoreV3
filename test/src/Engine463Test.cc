@@ -115,9 +115,13 @@ TEST_F(Engine463Test, check_engine_463_sender_expired_and_renewed) {
     ok = slurp_and_import_key(session, "test_keys/pub/inquisitor-0xA4728718_full_expired.pub.asc");
     ASSERT_TRUE(ok);
 
+    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", "ME", "Alice Cooper");
+    PEP_STATUS status = set_own_key(session, alice, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
+    ASSERT_OK;
+
     const char* inq_fpr = "8E8D2381AE066ABE1FEE509821BA977CA4728718";
     pEp_identity* inquisitor = new_identity("inquisitor@darthmama.org", NULL, NULL, "Lady Claire Trevelyan");
-    PEP_STATUS status = set_fpr_preserve_ident(session, inquisitor, inq_fpr, false);
+    status = set_fpr_preserve_ident(session, inquisitor, inq_fpr, false);
     ASSERT_OK;
 
     // Ok, so I want to make sure we make an entry, so I'll try to decrypt the message WITH
