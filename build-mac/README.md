@@ -28,11 +28,7 @@ popd
 ```
 xcode-select --install
 curl https://sh.rustup.rs -sSf | sh
-```
-add this to ~/.profile (or ~/.zprofile, depending on the shell you are using):
-```
 source $HOME/.cargo/env
-export PATH="$HOME/.cargo/bin:$PATH"
 ```
 restart your console and run:
 ```
