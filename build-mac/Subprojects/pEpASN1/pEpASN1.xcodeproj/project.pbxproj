@@ -402,6 +402,10 @@
 		15EB0D8126D7CBDE00CDFF4F /* PBlob.c in Sources */ = {isa = PBXBuildFile; fileRef = 15EB0D7626D7CBDE00CDFF4F /* PBlob.c */; };
 		15EB0D8226D7CBDE00CDFF4F /* PBlob.h in Headers */ = {isa = PBXBuildFile; fileRef = 15EB0D7726D7CBDE00CDFF4F /* PBlob.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		15EB0D8326D7CBDE00CDFF4F /* PBlob.h in Headers */ = {isa = PBXBuildFile; fileRef = 15EB0D7726D7CBDE00CDFF4F /* PBlob.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15EB0D8B26D7D1C500CDFF4F /* PStringPair.c in Sources */ = {isa = PBXBuildFile; fileRef = 15EB0D8926D7D1C500CDFF4F /* PStringPair.c */; };
+		15EB0D8C26D7D1C500CDFF4F /* PStringPair.c in Sources */ = {isa = PBXBuildFile; fileRef = 15EB0D8926D7D1C500CDFF4F /* PStringPair.c */; };
+		15EB0D8D26D7D1C500CDFF4F /* PStringPair.h in Headers */ = {isa = PBXBuildFile; fileRef = 15EB0D8A26D7D1C500CDFF4F /* PStringPair.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15EB0D8E26D7D1C500CDFF4F /* PStringPair.h in Headers */ = {isa = PBXBuildFile; fileRef = 15EB0D8A26D7D1C500CDFF4F /* PStringPair.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -625,6 +629,8 @@
 		15EB0D7526D7CBDD00CDFF4F /* PBlobList.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = PBlobList.c; path = ../../../asn.1/PBlobList.c; sourceTree = "<group>"; };
 		15EB0D7626D7CBDE00CDFF4F /* PBlob.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = PBlob.c; path = ../../../asn.1/PBlob.c; sourceTree = "<group>"; };
 		15EB0D7726D7CBDE00CDFF4F /* PBlob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PBlob.h; path = ../../../asn.1/PBlob.h; sourceTree = "<group>"; };
+		15EB0D8926D7D1C500CDFF4F /* PStringPair.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = PStringPair.c; path = ../../../asn.1/PStringPair.c; sourceTree = "<group>"; };
+		15EB0D8A26D7D1C500CDFF4F /* PStringPair.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PStringPair.h; path = ../../../asn.1/PStringPair.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -685,6 +691,8 @@
 		15A3206B260E0376009D07EB /* src */ = {
 			isa = PBXGroup;
 			children = (
+				15EB0D8926D7D1C500CDFF4F /* PStringPair.c */,
+				15EB0D8A26D7D1C500CDFF4F /* PStringPair.h */,
 				15EB0D7626D7CBDE00CDFF4F /* PBlob.c */,
 				15EB0D7726D7CBDE00CDFF4F /* PBlob.h */,
 				15EB0D7526D7CBDD00CDFF4F /* PBlobList.c */,
@@ -947,6 +955,7 @@
 				151581D426CE4E87003D8685 /* constr_CHOICE.h in Headers */,
 				151581EA26CE4E87003D8685 /* Rating.h in Headers */,
 				151581E826CE4E87003D8685 /* UTF8String.h in Headers */,
+				15EB0D8D26D7D1C500CDFF4F /* PStringPair.h in Headers */,
 				1515820326CE4E87003D8685 /* xer_support.h in Headers */,
 				1515822C26CE4E87003D8685 /* asn_codecs.h in Headers */,
 				1515820826CE4E87003D8685 /* Command.h in Headers */,
@@ -991,6 +1000,7 @@
 				1515858026CE5385003D8685 /* GroupHandshake.h in Headers */,
 				1515858A26CE5385003D8685 /* NativeEnumerated.h in Headers */,
 				1515859C26CE5385003D8685 /* asn_SEQUENCE_OF.h in Headers */,
+				15EB0D8E26D7D1C500CDFF4F /* PStringPair.h in Headers */,
 				151585A526CE5385003D8685 /* NegotiationRequest.h in Headers */,
 				1515855226CE5385003D8685 /* MessageStorage.h in Headers */,
 				1515856F26CE5385003D8685 /* ber_decoder.h in Headers */,
@@ -1322,6 +1332,7 @@
 				151584C226CE5347003D8685 /* asn_SET_OF.c in Sources */,
 				151584E526CE5347003D8685 /* ber_tlv_tag.c in Sources */,
 				151584C126CE5347003D8685 /* ExploreResponse.c in Sources */,
+				15EB0D8B26D7D1C500CDFF4F /* PStringPair.c in Sources */,
 				1515850026CE5347003D8685 /* CommitReject.c in Sources */,
 				1515850B26CE5347003D8685 /* ber_decoder.c in Sources */,
 				151584D626CE5347003D8685 /* CommitAcceptRequester.c in Sources */,
@@ -1420,6 +1431,7 @@
 				1515846626CE5345003D8685 /* asn_SET_OF.c in Sources */,
 				1515848926CE5345003D8685 /* ber_tlv_tag.c in Sources */,
 				1515846526CE5345003D8685 /* ExploreResponse.c in Sources */,
+				15EB0D8C26D7D1C500CDFF4F /* PStringPair.c in Sources */,
 				151584A426CE5345003D8685 /* CommitReject.c in Sources */,
 				151584AF26CE5345003D8685 /* ber_decoder.c in Sources */,
 				1515847A26CE5345003D8685 /* CommitAcceptRequester.c in Sources */,
