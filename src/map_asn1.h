@@ -8,7 +8,7 @@
 #define MAP_ASN1_H
 
 #include "message.h"
-#include "../asn.1/ASN1Message.h"
+#include "ASN1Message.h"
 
 #ifdef __cplusplus
 extern "C" {
