@@ -390,6 +390,18 @@
 		15A32054260E0330009D07EB /* pEpASN1_macOS.m in Sources */ = {isa = PBXBuildFile; fileRef = 15A32053260E0330009D07EB /* pEpASN1_macOS.m */; };
 		15A32062260E0345009D07EB /* pEpASN1_iOS.m in Sources */ = {isa = PBXBuildFile; fileRef = 15A32061260E0345009D07EB /* pEpASN1_iOS.m */; };
 		15A32063260E0345009D07EB /* pEpASN1_iOS.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 15A32060260E0345009D07EB /* pEpASN1_iOS.h */; };
+		15EB0D7826D7CBDE00CDFF4F /* PBlobList.h in Headers */ = {isa = PBXBuildFile; fileRef = 15EB0D7226D7CBDD00CDFF4F /* PBlobList.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15EB0D7926D7CBDE00CDFF4F /* PBlobList.h in Headers */ = {isa = PBXBuildFile; fileRef = 15EB0D7226D7CBDD00CDFF4F /* PBlobList.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15EB0D7A26D7CBDE00CDFF4F /* PStringPairList.h in Headers */ = {isa = PBXBuildFile; fileRef = 15EB0D7326D7CBDD00CDFF4F /* PStringPairList.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15EB0D7B26D7CBDE00CDFF4F /* PStringPairList.h in Headers */ = {isa = PBXBuildFile; fileRef = 15EB0D7326D7CBDD00CDFF4F /* PStringPairList.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15EB0D7C26D7CBDE00CDFF4F /* PStringPairList.c in Sources */ = {isa = PBXBuildFile; fileRef = 15EB0D7426D7CBDD00CDFF4F /* PStringPairList.c */; };
+		15EB0D7D26D7CBDE00CDFF4F /* PStringPairList.c in Sources */ = {isa = PBXBuildFile; fileRef = 15EB0D7426D7CBDD00CDFF4F /* PStringPairList.c */; };
+		15EB0D7E26D7CBDE00CDFF4F /* PBlobList.c in Sources */ = {isa = PBXBuildFile; fileRef = 15EB0D7526D7CBDD00CDFF4F /* PBlobList.c */; };
+		15EB0D7F26D7CBDE00CDFF4F /* PBlobList.c in Sources */ = {isa = PBXBuildFile; fileRef = 15EB0D7526D7CBDD00CDFF4F /* PBlobList.c */; };
+		15EB0D8026D7CBDE00CDFF4F /* PBlob.c in Sources */ = {isa = PBXBuildFile; fileRef = 15EB0D7626D7CBDE00CDFF4F /* PBlob.c */; };
+		15EB0D8126D7CBDE00CDFF4F /* PBlob.c in Sources */ = {isa = PBXBuildFile; fileRef = 15EB0D7626D7CBDE00CDFF4F /* PBlob.c */; };
+		15EB0D8226D7CBDE00CDFF4F /* PBlob.h in Headers */ = {isa = PBXBuildFile; fileRef = 15EB0D7726D7CBDE00CDFF4F /* PBlob.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15EB0D8326D7CBDE00CDFF4F /* PBlob.h in Headers */ = {isa = PBXBuildFile; fileRef = 15EB0D7726D7CBDE00CDFF4F /* PBlob.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -607,6 +619,12 @@
 		15A3205E260E0345009D07EB /* libpEpASN1_iOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpEpASN1_iOS.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		15A32060260E0345009D07EB /* pEpASN1_iOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pEpASN1_iOS.h; sourceTree = "<group>"; };
 		15A32061260E0345009D07EB /* pEpASN1_iOS.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = pEpASN1_iOS.m; sourceTree = "<group>"; };
+		15EB0D7226D7CBDD00CDFF4F /* PBlobList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PBlobList.h; path = ../../../asn.1/PBlobList.h; sourceTree = "<group>"; };
+		15EB0D7326D7CBDD00CDFF4F /* PStringPairList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PStringPairList.h; path = ../../../asn.1/PStringPairList.h; sourceTree = "<group>"; };
+		15EB0D7426D7CBDD00CDFF4F /* PStringPairList.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = PStringPairList.c; path = ../../../asn.1/PStringPairList.c; sourceTree = "<group>"; };
+		15EB0D7526D7CBDD00CDFF4F /* PBlobList.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = PBlobList.c; path = ../../../asn.1/PBlobList.c; sourceTree = "<group>"; };
+		15EB0D7626D7CBDE00CDFF4F /* PBlob.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = PBlob.c; path = ../../../asn.1/PBlob.c; sourceTree = "<group>"; };
+		15EB0D7726D7CBDE00CDFF4F /* PBlob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PBlob.h; path = ../../../asn.1/PBlob.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -667,6 +685,12 @@
 		15A3206B260E0376009D07EB /* src */ = {
 			isa = PBXGroup;
 			children = (
+				15EB0D7626D7CBDE00CDFF4F /* PBlob.c */,
+				15EB0D7726D7CBDE00CDFF4F /* PBlob.h */,
+				15EB0D7526D7CBDD00CDFF4F /* PBlobList.c */,
+				15EB0D7226D7CBDD00CDFF4F /* PBlobList.h */,
+				15EB0D7426D7CBDD00CDFF4F /* PStringPairList.c */,
+				15EB0D7326D7CBDD00CDFF4F /* PStringPairList.h */,
 				1515828626CE4EAB003D8685 /* asn_codecs_prim.c */,
 				1515828126CE4EAB003D8685 /* asn_SEQUENCE_OF.c */,
 				1515827626CE4EAB003D8685 /* asn_SET_OF.c */,
@@ -888,6 +912,7 @@
 				1515823026CE4E87003D8685 /* Hash.h in Headers */,
 				151581DF26CE4E87003D8685 /* Version.h in Headers */,
 				151581D526CE4E87003D8685 /* Storage.h in Headers */,
+				15EB0D7A26D7CBDE00CDFF4F /* PStringPairList.h in Headers */,
 				1515820A26CE4E87003D8685 /* INTEGER.h in Headers */,
 				1515820726CE4E87003D8685 /* per_opentype.h in Headers */,
 				1515820226CE4E87003D8685 /* per_support.h in Headers */,
@@ -932,12 +957,14 @@
 				151581D826CE4E87003D8685 /* CommitAccept.h in Headers */,
 				1515821E26CE4E87003D8685 /* constr_SET_OF.h in Headers */,
 				1515820E26CE4E87003D8685 /* OwnKeysOfferer.h in Headers */,
+				15EB0D7826D7CBDE00CDFF4F /* PBlobList.h in Headers */,
 				151581DB26CE4E87003D8685 /* Commands.h in Headers */,
 				151581EE26CE4E87003D8685 /* MessageDirection.h in Headers */,
 				1515821326CE4E87003D8685 /* ElectGroupKeyResetLeader.h in Headers */,
 				1515822426CE4E87003D8685 /* PStringList.h in Headers */,
 				151581DE26CE4E87003D8685 /* per_encoder.h in Headers */,
 				151581E426CE4E87003D8685 /* NegotiationRequestGrouped.h in Headers */,
+				15EB0D8226D7CBDE00CDFF4F /* PBlob.h in Headers */,
 				151581F626CE4E87003D8685 /* Distribution.h in Headers */,
 				151581ED26CE4E87003D8685 /* Hex.h in Headers */,
 				1515820126CE4E87003D8685 /* ContentDisposition.h in Headers */,
@@ -957,6 +984,7 @@
 				1515857526CE5385003D8685 /* Hex.h in Headers */,
 				151585A726CE5385003D8685 /* Sync.h in Headers */,
 				1515857726CE5385003D8685 /* ElectGroupKeyResetLeader.h in Headers */,
+				15EB0D8326D7CBDE00CDFF4F /* PBlob.h in Headers */,
 				1515859226CE5385003D8685 /* Storage.h in Headers */,
 				1515855526CE5385003D8685 /* asn_codecs_prim.h in Headers */,
 				1515856626CE5385003D8685 /* GeneralizedTime.h in Headers */,
@@ -982,6 +1010,7 @@
 				1515859726CE5385003D8685 /* OwnKeysOfferer.h in Headers */,
 				1515859526CE5385003D8685 /* GroupTrustThisKey.h in Headers */,
 				1515855126CE5385003D8685 /* asn_internal.h in Headers */,
+				15EB0D7926D7CBDE00CDFF4F /* PBlobList.h in Headers */,
 				1515856526CE5385003D8685 /* PString.h in Headers */,
 				1515854E26CE5385003D8685 /* constr_CHOICE.h in Headers */,
 				1515857126CE5385003D8685 /* constr_TYPE.h in Headers */,
@@ -1043,6 +1072,7 @@
 				151585A226CE5385003D8685 /* per_encoder.h in Headers */,
 				1515859E26CE5385003D8685 /* Identity.h in Headers */,
 				1515859A26CE5385003D8685 /* constr_SET_OF.h in Headers */,
+				15EB0D7B26D7CBDE00CDFF4F /* PStringPairList.h in Headers */,
 				1515859126CE5385003D8685 /* PrintableString.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1212,6 +1242,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				151584FA26CE5347003D8685 /* GroupDissolve.c in Sources */,
+				15EB0D8026D7CBDE00CDFF4F /* PBlob.c in Sources */,
 				151584FF26CE5347003D8685 /* PString.c in Sources */,
 				151584EF26CE5347003D8685 /* Version.c in Sources */,
 				1515851126CE5347003D8685 /* UTF8String.c in Sources */,
@@ -1243,6 +1274,7 @@
 				151584E226CE5347003D8685 /* xer_encoder.c in Sources */,
 				151584F526CE5347003D8685 /* Identity.c in Sources */,
 				151584FD26CE5347003D8685 /* GroupInvite.c in Sources */,
+				15EB0D7C26D7CBDE00CDFF4F /* PStringPairList.c in Sources */,
 				151584E426CE5347003D8685 /* INTEGER.c in Sources */,
 				151584E026CE5347003D8685 /* ExploreChallenge.c in Sources */,
 				151584EC26CE5347003D8685 /* GroupTrustThisKey.c in Sources */,
@@ -1257,6 +1289,7 @@
 				151584F826CE5347003D8685 /* NegotiationRequestGrouped.c in Sources */,
 				151584CE26CE5347003D8685 /* ExploreRequest.c in Sources */,
 				1515851326CE5347003D8685 /* xer_decoder.c in Sources */,
+				15EB0D7E26D7CBDE00CDFF4F /* PBlobList.c in Sources */,
 				151584F326CE5347003D8685 /* ContentDisposition.c in Sources */,
 				151584C826CE5347003D8685 /* Hash.c in Sources */,
 				151584C526CE5347003D8685 /* ReceiverRating.c in Sources */,
@@ -1307,6 +1340,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1515849E26CE5345003D8685 /* GroupDissolve.c in Sources */,
+				15EB0D8126D7CBDE00CDFF4F /* PBlob.c in Sources */,
 				151584A326CE5345003D8685 /* PString.c in Sources */,
 				1515849326CE5345003D8685 /* Version.c in Sources */,
 				151584B526CE5345003D8685 /* UTF8String.c in Sources */,
@@ -1338,6 +1372,7 @@
 				1515848626CE5345003D8685 /* xer_encoder.c in Sources */,
 				1515849926CE5345003D8685 /* Identity.c in Sources */,
 				151584A126CE5345003D8685 /* GroupInvite.c in Sources */,
+				15EB0D7D26D7CBDE00CDFF4F /* PStringPairList.c in Sources */,
 				1515848826CE5345003D8685 /* INTEGER.c in Sources */,
 				1515848426CE5345003D8685 /* ExploreChallenge.c in Sources */,
 				1515849026CE5345003D8685 /* GroupTrustThisKey.c in Sources */,
@@ -1352,6 +1387,7 @@
 				1515849C26CE5345003D8685 /* NegotiationRequestGrouped.c in Sources */,
 				1515847226CE5345003D8685 /* ExploreRequest.c in Sources */,
 				151584B726CE5345003D8685 /* xer_decoder.c in Sources */,
+				15EB0D7F26D7CBDE00CDFF4F /* PBlobList.c in Sources */,
 				1515849726CE5345003D8685 /* ContentDisposition.c in Sources */,
 				1515846C26CE5345003D8685 /* Hash.c in Sources */,
 				1515846926CE5345003D8685 /* ReceiverRating.c in Sources */,
