@@ -5094,6 +5094,10 @@ static PEP_STATUS _decrypt_message(
                 if (!EMPTYSTR(key_claim_fpr))
                     status = _check_and_set_default_key(session, src->from, key_claim_fpr);
 
+                if (_keylist) {
+                    if (!EMPTYSTR(_keylist->value))
+                        msg->_sender_fpr = strdup(_keylist->value); // will be checked against sender info later
+                }
                 break;
 
             default:

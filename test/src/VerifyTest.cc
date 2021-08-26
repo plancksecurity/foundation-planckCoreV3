@@ -307,7 +307,8 @@ TEST_F(VerifyTest, check_expired_signing_key) {
     msg->longmsg = strdup(ciphertext.c_str());
     msg->from = new_identity("1960@example.org", NULL, "MARY", "Mary Susan Maria Karen Lisa Linda Donna Patricia Smith");
     message* pt_msg = NULL;
-    decrypt_message(session, msg, &pt_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, msg, &pt_msg, &keylist, &rating, &flags);
+    ASSERT_OK;
     free_message(msg);
     free_message(pt_msg);
     ASSERT_EQ(rating, PEP_rating_unreliable);

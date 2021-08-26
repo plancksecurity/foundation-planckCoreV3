@@ -391,28 +391,26 @@ static PEP_STATUS message_rating_for_identities(
         PEP_rating *rating
     )
 {
-    assert(session && msg && msg->from && rating);
-    if (!(session && msg && msg->from && rating))
+    assert(session && msg && rating);
+    if (!(session && msg && rating))
         return PEP_ILLEGAL_VALUE;
 
     PEP_STATUS status = PEP_STATUS_OK;
     *rating = PEP_rating_undefined;
 
-    if (msg->dir == PEP_dir_incoming) {
-        if (is_me(session, msg->from))
+    if (msg->from) {
+        if (msg->dir == PEP_dir_incoming) {
+            if (is_me(session, msg->from))
+                status = myself(session, msg->from);
+            else
+                status = update_identity(session, msg->from);
+        } else {
             status = myself(session, msg->from);
-        else
-            status = update_identity(session, msg->from);
+        }
+        if (status)
+            return status;
     }
-    else {
-        status = myself(session, msg->from);
-    }
-    if (status)
-        return status;
-
-    PEP_rating from_rating = rating_from_comm_type(msg->from->comm_type);
-    if (!from_rating)
-        goto the_end;
+    PEP_rating from_rating = msg->from ? rating_from_comm_type(msg->from->comm_type) : PEP_rating_unreliable;
 
     PEP_rating _rating = PEP_rating_undefined;
     status = rating_sum(session, msg, rating_of_existing_channel, &_rating);
@@ -421,7 +419,7 @@ static PEP_STATUS message_rating_for_identities(
 
     *rating = add_rating(from_rating, _rating);
 
-    if (*rating == PEP_rating_have_no_key)
+    if (*rating == PEP_rating_have_no_key || *rating == PEP_rating_undefined)
         *rating = PEP_rating_unreliable;
 
 the_end:
@@ -738,10 +736,12 @@ DYNAMIC_API PEP_STATUS incoming_message_rating(
     }
 
     PEP_rating crypto_rating = PEP_rating_undefined;
-    if (src->from && is_me(session, src->from))
-        status = myself(session, src->from);
-    else
-        status = update_identity(session, src->from);
+    if (src->from) {
+        if (is_me(session, src->from))
+            status = myself(session, src->from);
+        else
+            status = update_identity(session, src->from);
+    }
 
     if (status)
         return status;

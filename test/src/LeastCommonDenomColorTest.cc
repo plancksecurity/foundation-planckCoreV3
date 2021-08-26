@@ -127,7 +127,7 @@ TEST_F(LeastCommonDenomColorTest, check_least_common_denom_color) {
     recip1->fpr = strdup("9F371BACD583EE26347899F21CCE13DE07B29090");
     status = set_identity(session, recip1);
     ASSERT_OK;
-    key_reset_trust(session, recip1);
+//    key_reset_trust(session, recip1);
 
     pEp_identity * recip2 = new_identity("banmetwice@kgrothoff.org", NULL, "TOFU_banmetwice@kgrothoff.org", "Ban Me Twice");
     recip2->me = false;
@@ -136,7 +136,7 @@ TEST_F(LeastCommonDenomColorTest, check_least_common_denom_color) {
     recip2->fpr = strdup("84A33862CC664EA1086B7E94ADF10A134080C3E7");
     status = set_identity(session, recip2);
     ASSERT_OK;
-    key_reset_trust(session, recip2);
+//    key_reset_trust(session, recip2);
 
     const string mailtext = slurp(mailfile);
 
