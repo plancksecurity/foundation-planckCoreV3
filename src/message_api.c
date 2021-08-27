@@ -3932,84 +3932,103 @@ static PEP_STATUS pEp_version_upgrade_or_ignore(
 }
 
 /**
+ *   @internal
+ *
+ *   @param msg
+ *   @param keylist
+ *   @return
+ *
+ *   @note  Presupposes you've updated the msg->from identity somewhere so it contains the ident default.
+ */
+static bool sender_fpr_is_signer_fpr(message* msg, stringlist_t* keylist) {
+    if (!msg || EMPTYSTR(msg->_sender_fpr) || !keylist || EMPTYSTR(keylist->value))
+        return false;
+
+    return (strcmp(msg->_sender_fpr, keylist->value) == 0);
+}
+
+
+/**
+ *   @internal
+ *
+ *   @param msg
+ *   @return
+ *
+ *   @note  Presupposes you've updated the msg->from identity somewhere so it contains the ident default.
+ */
+static bool sender_fpr_is_from_default(message* msg) {
+    if (!msg || !msg->from || EMPTYSTR(msg->from->fpr) || EMPTYSTR(msg->_sender_fpr))
+        return false;
+
+    return (strcmp(msg->from->fpr, msg->_sender_fpr) == 0);
+}
+
+/**
  *  @internal
  *
  *  <!--       update_sender_to_pEp_trust()       -->
  *
  *  @brief            TODO
  *
- *  @param[in]    session        session handle
- *  @param[in]    *sender        pEp_identity
- *  @param[in]    *keylist        stringlist_t
- *  @param[in]    major        unsignedint
- *  @param[in]    minor        unsignedint
+ *  @param[in]    session       session handle
+ *  @param[in]    msg           the message we're doing this from
+ *  @param[in]    keylist       keylist containing signer during decrypt/verify
+ *  @param[in]    major         unsigned int
+ *  @param[in]    minor         unsigned int
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
  *  @retval PEP_OUT_OF_MEMORY   out of memory
  *  @retval PEP_CANNOT_SET_TRUST
  *  @retval any other value on error
+ *
+ *  @note   Only use on messages that were decrypted; unencrypted messages have a different path.
  */
 static PEP_STATUS update_sender_to_pEp_trust(
         PEP_SESSION session, 
-        pEp_identity* sender, 
+        message* msg,
         stringlist_t* keylist,
         unsigned int major,
         unsigned int minor) 
 {
     assert(session);
-    assert(sender);
-    assert(keylist && !EMPTYSTR(keylist->value));
+    assert(msg);
     
-    if (!session || !sender || !keylist || EMPTYSTR(keylist->value))
+    if (!session || !msg || !keylist)
         return PEP_ILLEGAL_VALUE;
-        
-    free(sender->fpr);
-    sender->fpr = NULL;
+
+    if (!msg->from)
+        return PEP_STATUS_OK;
+
+    pEp_identity* sender = msg->from;
 
     PEP_STATUS status = is_me(session, sender) ? _myself(session, sender, false, false, false, true) : update_identity(session, sender);
 
     if (PASS_ERROR(status))
         return status;
 
-    if (EMPTYSTR(sender->fpr) || strcmp(sender->fpr, keylist->value) != 0) {
-        free(sender->fpr);
-        sender->fpr = strdup(keylist->value);
-        if (!sender->fpr)
-            return PEP_OUT_OF_MEMORY;
-        status = set_pgp_keypair(session, sender->fpr);
-        if (status != PEP_STATUS_OK)
-            return status;
-            
-        status = get_trust(session, sender);
-        
-        if (status == PEP_CANNOT_FIND_IDENTITY || sender->comm_type == PEP_ct_unknown) {
-            PEP_comm_type ct = PEP_ct_unknown;
-            status = get_key_rating(session, sender->fpr, &ct);
-            if (status != PEP_STATUS_OK)
-                return status;
-                
-            sender->comm_type = ct;    
-        }
-    }
-    
-    // Could be done elegantly, but we do this explicitly here for readability.
-    // This file's code is difficult enough to parse. But change at will.
-    switch (sender->comm_type) {            
+    // Ok, identity is updated.
+    // Now, let's find out if the sender_fpr on this message is the signer and if it is the sender default. If so, we can do this.
+    // If not? forget it.
+    if (!sender_fpr_is_signer_fpr(msg, keylist) || !sender_fpr_is_from_default(msg))
+        return PEP_STATUS_OK; // We don't return an error here because failing to satisfy the conditions isn't an error here, it's just a no-op.
+
+    switch (sender->comm_type) {
         case PEP_ct_OpenPGP_unconfirmed:
         case PEP_ct_OpenPGP:
             sender->comm_type = PEP_ct_pEp_unconfirmed | (sender->comm_type & PEP_ct_confirmed);
             status = set_trust(session, sender);
             if (status != PEP_STATUS_OK)
                 break;
+            // Fallthrough EXPLICIT here
         case PEP_ct_pEp:
         case PEP_ct_pEp_unconfirmed:
             // set version
             if (major == 0) {
                 major = 2;
-                minor = 0;
+                minor = 1;
             }
-            status = pEp_version_upgrade_or_ignore(session, sender, major, minor);    
+            status = pEp_version_upgrade_or_ignore(session, sender, major, minor);
             break;
         default:
             status = PEP_CANNOT_SET_TRUST;
@@ -5420,16 +5439,27 @@ static PEP_STATUS _decrypt_message(
         
         *rating = decrypt_rating(decrypt_status);
 
-        // Ok, so if it was signed and it's all verified, we can update
-        // eligible signer comm_types to PEP_ct_pEp_*
-        // This also sets and upgrades pEp version
-        if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED && !is_deprecated_key_reset && is_pEp_msg && calculated_src->from)
-            status = update_sender_to_pEp_trust(session, msg->from, _keylist, major_ver, minor_ver);
+        // Now, if:
+        // 1. Message was signed and verified,
+        // 2. Message was signed with from user's *default* key (which may
+        //    have been set above, and
+        // 3. This is a pEp message,
+        // We can upgrade the user to being a pEp user. But we should actually check if this is necessary to begin
+        // with.
+        // Checks on fpr viability are done in the update_sender_to_pEp_trust function now.
+        if (msg && decrypt_status == PEP_DECRYPTED_AND_VERIFIED && !is_deprecated_key_reset && !EMPTYSTR(msg->_sender_fpr)) {
+            if (is_pEp_msg && msg->from && !EMPTYSTR(msg->from->user_id)) {
+                bool pEp_peep = false;
+                status = is_pEp_user(session, msg->from, &pEp_peep);
+                if (status == PEP_STATUS_OK && !pEp_peep)
+                    status = update_sender_to_pEp_trust(session, msg, _keylist, major_ver, minor_ver);
+            }
+        }
+
 
         /* Ok, now we have a keylist used for decryption/verification.
            now we need to update the message rating with the 
            sender and recipients in mind */
-           
         if (!is_deprecated_key_reset) { // key reset messages invalidate some of the ratings in the DB by now.
             status = amend_rating_according_to_sender_and_recipients(session,
                      rating, msg->from, _keylist);

@@ -948,7 +948,7 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_bob_1_0_two_keys) {
 
 // Case 0: We already have a default key. Make sure we don't step on it.
 
-TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_reliable_bob_noclobber_no_pEp) {
+TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_reliable_channel_bob_noclobber_no_pEp) {
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
     const TestUtilsPreset::IdentityInfo& sender_info2 = TestUtilsPreset::presets[TestUtilsPreset::BOB2];
 
@@ -964,7 +964,7 @@ TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_reliable_bob_noclobber
     check_sender_default_key_status(sender_info2, PEP_ct_OpenPGP_unconfirmed);
 }
 
-TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_reliable_bob_noclobber_2_2) {
+TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_reliable_channel_bob_noclobber_2_2) {
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
     const TestUtilsPreset::IdentityInfo& sender_info2 = TestUtilsPreset::presets[TestUtilsPreset::BOB2];
 
@@ -973,62 +973,22 @@ TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_reliable_bob_noclobber
     force_sender_default_to_be_set(TestUtilsPreset::BOB2, false);
 
     // Ok, we now have a blank slate. Run the import mail fun.
-    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_2.eml",
-                                     PEP_rating_reliable, PEP_STATUS_OK);
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAliceUnencrypted.eml",
+                                     PEP_rating_unencrypted, PEP_UNENCRYPTED);
 
     // Make sure import didn't overwrite default
     check_sender_default_key_status(sender_info2, PEP_ct_pEp_unconfirmed);
 }
 
-TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_reliable_bob_noclobber_2_1) {
-    const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
-    const TestUtilsPreset::IdentityInfo& sender_info2 = TestUtilsPreset::presets[TestUtilsPreset::BOB2];
+// FOR THE ENCRYPTED NO_CLOBBER TESTS:
+// We expect this to be unreliable now as of ENGINE-847, because the imported key on decryption is NOT associated with Bob;
+// he already has a default, and this ain't it, and we have no sense of "key claim" with OpenPGP.
+// Also note that the ONLY place the key attached to this message will be present at ALL is in the keys.db - we don't
+// even put it into the pgp_keypair list. So as far as pEp itself is concerned, that key doesn't exist until the
+// user tells us it does.
 
-    set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
 
-    force_sender_default_to_be_set(TestUtilsPreset::BOB2, false);
-
-    // Ok, we now have a blank slate. Run the import mail fun.
-    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_1.eml",
-                                     PEP_rating_reliable, PEP_STATUS_OK);
-
-    // Make sure import didn't overwrite default
-    check_sender_default_key_status(sender_info2, PEP_ct_pEp_unconfirmed);
-}
-
-TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_reliable_bob_noclobber_2_0) {
-    const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
-    const TestUtilsPreset::IdentityInfo& sender_info2 = TestUtilsPreset::presets[TestUtilsPreset::BOB2];
-
-    set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
-
-    force_sender_default_to_be_set(TestUtilsPreset::BOB2, false);
-
-    // Ok, we now have a blank slate. Run the import mail fun.
-    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_0.eml",
-                                     PEP_rating_reliable, PEP_STATUS_OK);
-
-    // Make sure import didn't overwrite default
-    check_sender_default_key_status(sender_info2, PEP_ct_pEp_unconfirmed);
-}
-
-TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_reliable_bob_noclobber_1_0) {
-    const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
-    const TestUtilsPreset::IdentityInfo& sender_info2 = TestUtilsPreset::presets[TestUtilsPreset::BOB2];
-
-    set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
-
-    force_sender_default_to_be_set(TestUtilsPreset::BOB2, false);
-
-    // Ok, we now have a blank slate. Run the import mail fun.
-    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_1_0.eml",
-                                     PEP_rating_reliable, PEP_STATUS_OK);
-
-    // Make sure import didn't overwrite default
-    check_sender_default_key_status(sender_info2, PEP_ct_pEp_unconfirmed);
-}
-
-TEST_F(DefaultFromEmailTest, check_encrypted_key_import_reliable_bob_noclobber_no_pep) {
+TEST_F(DefaultFromEmailTest, check_encrypted_key_import_reliable_channel_bob_noclobber_no_pep) {
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
     const TestUtilsPreset::IdentityInfo& sender_info2 = TestUtilsPreset::presets[TestUtilsPreset::BOB2];
 
@@ -1038,14 +998,14 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_reliable_bob_noclobber_n
 
     // Ok, we now the desired state. Run the import mail fun.
     read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_1_0_wrong_key_filename_no_pEp.eml",
-                                     PEP_rating_reliable, PEP_STATUS_OK);
+                                     PEP_rating_unreliable, PEP_STATUS_OK);
 
      // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
     check_sender_default_key_status(sender_info2, PEP_ct_OpenPGP_unconfirmed);
 }
 
-TEST_F(DefaultFromEmailTest, check_encrypted_key_import_reliable_bob_noclobber_2_2) {
+TEST_F(DefaultFromEmailTest, check_encrypted_key_import_reliable_channel_bob_noclobber_2_2) {
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
     const TestUtilsPreset::IdentityInfo& sender_info2 = TestUtilsPreset::presets[TestUtilsPreset::BOB2];
 
@@ -1055,7 +1015,7 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_reliable_bob_noclobber_2
 
     // Ok, we now the desired state. Run the import mail fun.
     read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_2.eml",
-                                     PEP_rating_reliable, PEP_STATUS_OK);
+                                     PEP_rating_unreliable, PEP_STATUS_OK);
 
     // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
@@ -1063,7 +1023,7 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_reliable_bob_noclobber_2
 
 }
 
-TEST_F(DefaultFromEmailTest, check_encrypted_key_import_reliable_bob_noclobber_2_1) {
+TEST_F(DefaultFromEmailTest, check_encrypted_key_import_reliable_channel_bob_noclobber_2_1) {
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
     const TestUtilsPreset::IdentityInfo& sender_info2 = TestUtilsPreset::presets[TestUtilsPreset::BOB2];
 
@@ -1073,7 +1033,7 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_reliable_bob_noclobber_2
 
     // Ok, we now the desired state. Run the import mail fun.
     read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_1.eml",
-                                     PEP_rating_reliable, PEP_STATUS_OK);
+                                     PEP_rating_unreliable, PEP_STATUS_OK);
 
     // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
@@ -1081,7 +1041,7 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_reliable_bob_noclobber_2
 
 }
 
-TEST_F(DefaultFromEmailTest, check_encrypted_key_import_reliable_bob_noclobber_2_0) {
+TEST_F(DefaultFromEmailTest, check_encrypted_key_import_reliable_channel_bob_noclobber_2_0) {
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
     const TestUtilsPreset::IdentityInfo& sender_info2 = TestUtilsPreset::presets[TestUtilsPreset::BOB2];
 
@@ -1091,7 +1051,7 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_reliable_bob_noclobber_2
 
     // Ok, we now the desired state. Run the import mail fun.
     read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_0.eml",
-                                     PEP_rating_reliable, PEP_STATUS_OK);
+                                     PEP_rating_unreliable, PEP_STATUS_OK);
 
     // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
@@ -1100,7 +1060,7 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_reliable_bob_noclobber_2
 }
 
 // We use the "wrong" filename version on purpose to ensure we aren't relying on 2.2 changes
-TEST_F(DefaultFromEmailTest, check_encrypted_key_import_reliable_bob_noclobber_1_0) {
+TEST_F(DefaultFromEmailTest, check_encrypted_key_import_reliable_channel_bob_noclobber_1_0) {
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
     const TestUtilsPreset::IdentityInfo& sender_info2 = TestUtilsPreset::presets[TestUtilsPreset::BOB2];
 
@@ -1110,7 +1070,7 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_reliable_bob_noclobber_1
 
     // Ok, we now the desired state. Run the import mail fun.
     read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_1_0_wrong_key_filename_ModifiedVersion.eml",
-                                     PEP_rating_reliable, PEP_STATUS_OK);
+                                     PEP_rating_unreliable, PEP_STATUS_OK);
     
     // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
@@ -1118,7 +1078,9 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_reliable_bob_noclobber_1
 
 }
 
-TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_trusted_bob_noclobber_no_pEp) {
+////////////////////////////
+
+TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_trusted_channel_bob_noclobber_no_pEp) {
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
     const TestUtilsPreset::IdentityInfo& sender_info2 = TestUtilsPreset::presets[TestUtilsPreset::BOB2];
 
@@ -1135,7 +1097,7 @@ TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_trusted_bob_noclobber_
     check_sender_default_key_status(sender_info2, PEP_ct_OpenPGP);
 }
 
-TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_trusted_bob_noclobber_2_2) {
+TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_trusted_channel_bob_noclobber_2_2) {
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
     const TestUtilsPreset::IdentityInfo& sender_info2 = TestUtilsPreset::presets[TestUtilsPreset::BOB2];
 
@@ -1144,62 +1106,15 @@ TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_trusted_bob_noclobber_
     force_sender_default_to_be_set(TestUtilsPreset::BOB2, true);
 
     // Ok, we now have a blank slate. Run the import mail fun.
-    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_2.eml",
-                                     PEP_rating_reliable, PEP_STATUS_OK);
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAliceUnencrypted.eml",
+                                     PEP_rating_unencrypted, PEP_UNENCRYPTED);
 
     // Make sure import didn't overwrite default
     check_sender_default_key_status(sender_info2, PEP_ct_pEp);
 }
+//////////////////////////
 
-TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_trusted_bob_noclobber_2_1) {
-    const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
-    const TestUtilsPreset::IdentityInfo& sender_info2 = TestUtilsPreset::presets[TestUtilsPreset::BOB2];
-
-    set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
-
-    force_sender_default_to_be_set(TestUtilsPreset::BOB2, true);
-
-    // Ok, we now have a blank slate. Run the import mail fun.
-    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_1.eml",
-                                     PEP_rating_reliable, PEP_STATUS_OK);
-
-    // Make sure import didn't overwrite default
-    check_sender_default_key_status(sender_info2, PEP_ct_pEp);
-}
-
-TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_trusted_bob_noclobber_2_0) {
-    const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
-    const TestUtilsPreset::IdentityInfo& sender_info2 = TestUtilsPreset::presets[TestUtilsPreset::BOB2];
-
-    set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
-
-    force_sender_default_to_be_set(TestUtilsPreset::BOB2, true);
-
-    // Ok, we now have a blank slate. Run the import mail fun.
-    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_0.eml",
-                                     PEP_rating_reliable, PEP_STATUS_OK);
-
-    // Make sure import didn't overwrite default
-    check_sender_default_key_status(sender_info2, PEP_ct_pEp);
-}
-
-TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_trusted_bob_noclobber_1_0) {
-    const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
-    const TestUtilsPreset::IdentityInfo& sender_info2 = TestUtilsPreset::presets[TestUtilsPreset::BOB2];
-
-    set_up_and_check_initial_identities(TestUtilsPreset::BOB, sender_info);
-
-    force_sender_default_to_be_set(TestUtilsPreset::BOB2, true);
-
-    // Ok, we now have a blank slate. Run the import mail fun.
-    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_1_0.eml",
-                                     PEP_rating_reliable, PEP_STATUS_OK);
-
-    // Make sure import didn't overwrite default
-    check_sender_default_key_status(sender_info2, PEP_ct_pEp);
-}
-
-TEST_F(DefaultFromEmailTest, check_encrypted_key_import_trusted_bob_noclobber_no_pep) {
+TEST_F(DefaultFromEmailTest, check_encrypted_key_import_trusted_channel_bob_noclobber_no_pep) {
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
     const TestUtilsPreset::IdentityInfo& sender_info2 = TestUtilsPreset::presets[TestUtilsPreset::BOB2];
 
@@ -1208,15 +1123,20 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_trusted_bob_noclobber_no
     force_sender_default_to_be_set(TestUtilsPreset::BOB2, true);
 
     // Ok, we now the desired state. Run the import mail fun.
+    // N.B.: We expect this to be unreliable now as of ENGINE-847, because the imported key on decryption is NOT associated with Bob;
+    //       he already has a default, and this ain't it, and we have no sense of "key claim" with OpenPGP.
+    //       Also note that the ONLY place the key attached to this message will be present at ALL is in the keys.db - we don't
+    //       even put it into the pgp_keypair list. So as far as pEp itself is concerned, that key doesn't exist until the
+    //       user tells us it does.
     read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_1_0_wrong_key_filename_no_pEp.eml",
-                                     PEP_rating_reliable, PEP_STATUS_OK);
+                                     PEP_rating_unreliable, PEP_STATUS_OK);
 
      // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
     check_sender_default_key_status(sender_info2, PEP_ct_OpenPGP);
 }
 
-TEST_F(DefaultFromEmailTest, check_encrypted_key_import_trusted_bob_noclobber_2_2) {
+TEST_F(DefaultFromEmailTest, check_encrypted_key_import_trusted_channel_bob_noclobber_2_2) {
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
     const TestUtilsPreset::IdentityInfo& sender_info2 = TestUtilsPreset::presets[TestUtilsPreset::BOB2];
 
@@ -1225,8 +1145,11 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_trusted_bob_noclobber_2_
     force_sender_default_to_be_set(TestUtilsPreset::BOB2, true);
 
     // Ok, we now the desired state. Run the import mail fun.
+    // NOTE: This behaves differently from the "no_pep" cases for one very important reason - in setting
+    // the user as a pEp user during the setup above, we actually set the initial imported key as a default before
+    // changing it in the previous line.
     read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_2.eml",
-                                     PEP_rating_reliable, PEP_STATUS_OK);
+                                     PEP_rating_unreliable, PEP_STATUS_OK);
 
     // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
@@ -1234,7 +1157,7 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_trusted_bob_noclobber_2_
 
 }
 
-TEST_F(DefaultFromEmailTest, check_encrypted_key_import_trusted_bob_noclobber_2_1) {
+TEST_F(DefaultFromEmailTest, check_encrypted_key_import_trusted_channel_bob_noclobber_2_1) {
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
     const TestUtilsPreset::IdentityInfo& sender_info2 = TestUtilsPreset::presets[TestUtilsPreset::BOB2];
 
@@ -1244,7 +1167,7 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_trusted_bob_noclobber_2_
 
     // Ok, we now the desired state. Run the import mail fun.
     read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_1.eml",
-                                     PEP_rating_reliable, PEP_STATUS_OK);
+                                     PEP_rating_unreliable, PEP_STATUS_OK);
 
     // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
@@ -1252,7 +1175,7 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_trusted_bob_noclobber_2_
 
 }
 
-TEST_F(DefaultFromEmailTest, check_encrypted_key_import_trusted_bob_noclobber_2_0) {
+TEST_F(DefaultFromEmailTest, check_encrypted_key_import_trusted_channel_bob_noclobber_2_0) {
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
     const TestUtilsPreset::IdentityInfo& sender_info2 = TestUtilsPreset::presets[TestUtilsPreset::BOB2];
 
@@ -1262,7 +1185,7 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_trusted_bob_noclobber_2_
 
     // Ok, we now the desired state. Run the import mail fun.
     read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_0.eml",
-                                     PEP_rating_reliable, PEP_STATUS_OK);
+                                     PEP_rating_unreliable, PEP_STATUS_OK);
 
     // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
@@ -1271,7 +1194,7 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_trusted_bob_noclobber_2_
 }
 
 // We use the "wrong" filename version on purpose to ensure we aren't relying on 2.2 changes
-TEST_F(DefaultFromEmailTest, check_encrypted_key_import_trusted_bob_noclobber_1_0) {
+TEST_F(DefaultFromEmailTest, check_encrypted_key_import_trusted_channel_bob_noclobber_1_0) {
     const TestUtilsPreset::IdentityInfo& sender_info = TestUtilsPreset::presets[TestUtilsPreset::BOB];
     const TestUtilsPreset::IdentityInfo& sender_info2 = TestUtilsPreset::presets[TestUtilsPreset::BOB2];
 
@@ -1281,7 +1204,7 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_trusted_bob_noclobber_1_
 
     // Ok, we now the desired state. Run the import mail fun.
     read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_1_0_wrong_key_filename_ModifiedVersion.eml",
-                                     PEP_rating_reliable, PEP_STATUS_OK);
+                                     PEP_rating_unreliable, PEP_STATUS_OK);
     
     // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.

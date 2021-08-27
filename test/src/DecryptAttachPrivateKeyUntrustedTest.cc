@@ -152,8 +152,6 @@ TEST_F(DecryptAttachPrivateKeyUntrustedTest, check_decrypt_attach_private_key_un
 
     output_stream << "Reading in message..." << endl;
 
-    output_stream << "Reading in message..." << endl;
-
     message* encoded_text = slurp_message_file_into_struct("test_mails/priv_key_attach.eml");
 
     output_stream << "Starting test..." << endl;
