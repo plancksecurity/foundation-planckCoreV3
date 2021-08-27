@@ -226,6 +226,8 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message) {
     msg->shortmsg = strdup("Yo Bob!");
     msg->longmsg = strdup("Look at my hot new sender fpr field!");
 
+    // Volker: This is a sloppy way to test - it got processed as a real distribution message because data has meaning
+    //         and happily exposed a bug in your generation code, but... well, you know better :)
     const char *distribution = "simulation of distribution data";
     msg->attachments = new_bloblist(strdup(distribution), strlen(distribution)
             + 1, "application/pEp.distribution", "distribution.pEp");
