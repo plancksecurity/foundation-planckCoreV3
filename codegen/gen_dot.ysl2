@@ -4,7 +4,7 @@
 include yslt.yml2
 
 tstylesheet {
-    template "protocol/fsm[count(state)>0]" document "{@name}.dot", "text"
+    template "/protocol/fsm[count(state)>0]"
     ||
     digraph finite_state_machine {
         rankdir=LR;

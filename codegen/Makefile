@@ -44,5 +44,5 @@ svg: $(patsubst %.dot,%.svg,$(wildcard *.dot))
 	$(YML2_PROC) -y gen_dot.ysl2 $< -o $@
 
 %.svg: %.dot
-	dot -Tsvg -o $@ $<
+	dot -Tsvg $< -o $@ > /dev/null
 

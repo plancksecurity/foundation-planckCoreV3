@@ -131,7 +131,6 @@ IdentityList_t *IdentityList_from_identity_list(
 {
     bool allocated = !result;
 
-    assert(list && list->ident);
     if (!(list && list->ident))
         return NULL;
 
@@ -190,9 +189,9 @@ enomem:
     return NULL;
 }
 
-StringPair_t *StringPair_from_Struct(
+PStringPair_t *PStringPair_from_Struct(
         const stringpair_t *value,
-        StringPair_t *result
+        PStringPair_t *result
     )
 {
     bool allocated = !result;
@@ -202,7 +201,7 @@ StringPair_t *StringPair_from_Struct(
         return NULL;
 
     if (allocated)
-        result = (StringPair_t *) calloc(1, sizeof(StringPair_t));
+        result = (PStringPair_t *) calloc(1, sizeof(PStringPair_t));
     assert(result);
     if (!result)
         return NULL;
@@ -223,11 +222,11 @@ StringPair_t *StringPair_from_Struct(
 
 enomem:
     if (allocated)
-        ASN_STRUCT_FREE(asn_DEF_StringPair, result);
+        ASN_STRUCT_FREE(asn_DEF_PStringPair, result);
     return NULL;
 }
 
-stringpair_t *StringPair_to_Struct(StringPair_t *value)
+stringpair_t *PStringPair_to_Struct(PStringPair_t *value)
 {
     assert(value);
     if (!value)
@@ -257,19 +256,19 @@ enomem:
     return NULL;
 }
 
-StringPairList_t *StringPairList_from_stringpair_list(
+PStringPairList_t *PStringPairList_from_stringpair_list(
         const stringpair_list_t *list,
-        StringPairList_t *result
+        PStringPairList_t *result
     )
 {
     bool allocated = !result;
 
-    assert(list && list->value);
+    assert(list);
     if (!(list && list->value))
         return NULL;
 
     if (allocated) {
-        result = (StringPairList_t *) calloc(1, sizeof(StringPairList_t));
+        result = (PStringPairList_t *) calloc(1, sizeof(PStringPairList_t));
         assert(result);
         if (!result)
             return NULL;
@@ -279,9 +278,9 @@ StringPairList_t *StringPairList_from_stringpair_list(
     }
 
     for (const stringpair_list_t *l = list; l && l->value; l=l->next) {
-        StringPair_t *value = StringPair_from_Struct(l->value, NULL);
+        PStringPair_t *value = PStringPair_from_Struct(l->value, NULL);
         if (ASN_SEQUENCE_ADD(&result->list, value)) {
-            ASN_STRUCT_FREE(asn_DEF_StringPair, value);
+            ASN_STRUCT_FREE(asn_DEF_PStringPair, value);
             goto enomem;
         }
     }
@@ -290,12 +289,12 @@ StringPairList_t *StringPairList_from_stringpair_list(
 
 enomem:
     if (allocated)
-        ASN_STRUCT_FREE(asn_DEF_StringPairList, result);
+        ASN_STRUCT_FREE(asn_DEF_PStringPairList, result);
     return NULL;
 }
 
-stringpair_list_t *StringPairList_to_stringpair_list(
-        StringPairList_t *list,
+stringpair_list_t *PStringPairList_to_stringpair_list(
+        PStringPairList_t *list,
         stringpair_list_t *result
     )
 {
@@ -312,7 +311,7 @@ stringpair_list_t *StringPairList_to_stringpair_list(
 
     stringpair_list_t *r = result;
     for (int i=0; i<list->list.count; i++) {
-        stringpair_t *value = StringPair_to_Struct(list->list.array[i]);
+        stringpair_t *value = PStringPair_to_Struct(list->list.array[i]);
         r = stringpair_list_add(r, value);
         if (!r)
             goto enomem;
@@ -333,7 +332,7 @@ PStringList_t *PStringList_from_stringlist(
 {
     bool allocated = !result;
 
-    assert(list && list->value);
+    assert(list);
     if (!(list && list->value))
         return NULL;
 
@@ -406,9 +405,9 @@ enomem:
     return NULL;
 }
 
-BlobList_t *BlobList_from_bloblist(
+PBlobList_t *PBlobList_from_bloblist(
         bloblist_t *list,
-        BlobList_t *result,
+        PBlobList_t *result,
         bool copy,
         size_t max_blob_size
     )
@@ -417,12 +416,12 @@ BlobList_t *BlobList_from_bloblist(
     if (!max_blob_size)
         max_blob_size = SIZE_MAX;
 
-    assert(list && list->value);
+    assert(list);
     if (!(list && list->value))
         return NULL;
 
     if (allocated) {
-        result = (BlobList_t *) calloc(1, sizeof(BlobList_t));
+        result = (PBlobList_t *) calloc(1, sizeof(PBlobList_t));
         assert(result);
         if (!result)
             return NULL;
@@ -434,7 +433,7 @@ BlobList_t *BlobList_from_bloblist(
     size_t rest_blob_size = max_blob_size;
 
     for (bloblist_t *l = list; l && l->value; l=l->next) {
-        Blob_t *element = (Blob_t *) calloc(1, sizeof(Blob_t));
+        PBlob_t *element = (PBlob_t *) calloc(1, sizeof(PBlob_t));
         assert(element);
         if (!element)
             goto enomem;
@@ -503,7 +502,7 @@ BlobList_t *BlobList_from_bloblist(
         }
 
         if (ASN_SEQUENCE_ADD(&result->list, element)) {
-            ASN_STRUCT_FREE(asn_DEF_Blob, element);
+            ASN_STRUCT_FREE(asn_DEF_PBlob, element);
             goto enomem;
         }
     }
@@ -512,12 +511,12 @@ BlobList_t *BlobList_from_bloblist(
 
 enomem:
     if (allocated)
-        ASN_STRUCT_FREE(asn_DEF_BlobList, result);
+        ASN_STRUCT_FREE(asn_DEF_PBlobList, result);
     return NULL;
 }
 
-bloblist_t *BlobList_to_bloblist(
-        BlobList_t *list,
+bloblist_t *PBlobList_to_bloblist(
+        PBlobList_t *list,
         bloblist_t *result,
         bool copy,
         size_t max_blob_size
@@ -618,9 +617,9 @@ enomem:
     return NULL;
 }
 
-PEPMessage_t *PEPMessage_from_message(
+ASN1Message_t *ASN1Message_from_message(
         message *msg,
-        PEPMessage_t *result,
+        ASN1Message_t *result,
         bool copy,
         size_t max_blob_size
     )
@@ -634,7 +633,7 @@ PEPMessage_t *PEPMessage_from_message(
         return NULL;
 
     if (allocated) {
-        result = (PEPMessage_t *) calloc(1, sizeof(PEPMessage_t));
+        result = (ASN1Message_t *) calloc(1, sizeof(ASN1Message_t));
         assert(result);
         if (!result)
             return NULL;
@@ -659,7 +658,7 @@ PEPMessage_t *PEPMessage_from_message(
     }
 
     if (msg->sent) {
-        Timestamp_t *ts = asn_time2GT(NULL, msg->sent, 1);
+        GeneralizedTime_t *ts = asn_time2GT(NULL, msg->sent, 1);
         if (!ts)
             goto enomem;
 
@@ -667,7 +666,7 @@ PEPMessage_t *PEPMessage_from_message(
     }
 
     if (msg->recv) {
-        Timestamp_t *ts = asn_time2GT(NULL, msg->recv, 1);
+        GeneralizedTime_t *ts = asn_time2GT(NULL, msg->recv, 1);
         if (!ts)
             goto enomem;
 
@@ -756,7 +755,7 @@ PEPMessage_t *PEPMessage_from_message(
     }
 
     if (msg->opt_fields && msg->opt_fields->value) {
-        StringPairList_t *l = StringPairList_from_stringpair_list(msg->opt_fields, NULL);
+        PStringPairList_t *l = PStringPairList_from_stringpair_list(msg->opt_fields, NULL);
         if (!l)
             goto enomem;
 
@@ -844,7 +843,7 @@ PEPMessage_t *PEPMessage_from_message(
     }
 
     if (msg->attachments && msg->attachments->value) {
-        BlobList_t *bl = BlobList_from_bloblist(msg->attachments, NULL, copy,
+        PBlobList_t *bl = PBlobList_from_bloblist(msg->attachments, NULL, copy,
                 rest_blob_size);
         if (!bl)
             goto enomem;
@@ -855,12 +854,12 @@ PEPMessage_t *PEPMessage_from_message(
 
 enomem:
     if (allocated)
-        ASN_STRUCT_FREE(asn_DEF_PEPMessage, result);
+        ASN_STRUCT_FREE(asn_DEF_ASN1Message, result);
     return NULL;
 }
 
-message *PEPMessage_to_message(
-        PEPMessage_t *msg,
+message *ASN1Message_to_message(
+        ASN1Message_t *msg,
         message *result,
         bool copy,
         size_t max_blob_size
@@ -1000,7 +999,7 @@ message *PEPMessage_to_message(
 
     if (msg->opt_fields) {
         stringpair_list_t *l =
-            StringPairList_to_stringpair_list(msg->opt_fields, NULL);
+            PStringPairList_to_stringpair_list(msg->opt_fields, NULL);
         if (!l)
             goto enomem;
 
@@ -1073,7 +1072,7 @@ message *PEPMessage_to_message(
     }
 
     if (msg->attachments) {
-        bloblist_t *a = BlobList_to_bloblist(msg->attachments, NULL, copy,
+        bloblist_t *a = PBlobList_to_bloblist(msg->attachments, NULL, copy,
                 rest_blob_size);
         if (!a)
             goto enomem;
