@@ -141,7 +141,7 @@ TEST_F(DecryptAttachPrivateKeyTrustedTest, check_decrypt_attach_private_key_trus
     ASSERT_TRUE(status == PEP_STATUS_OK || status == PEP_CANNOT_FIND_IDENTITY);
     ASSERT_NE(same_addr_same_uid->comm_type & PEP_ct_confirmed, PEP_ct_confirmed);
 
-    status = key_reset_trust(session, same_addr_same_uid);
+    status = key_reset_trust(session, same_addr_same_uid); // KB: WHY were we doing this?? We remove the key's trust entry here, fine, but... it's still an own key?
 
     output_stream << "Done!" << endl << endl;
 

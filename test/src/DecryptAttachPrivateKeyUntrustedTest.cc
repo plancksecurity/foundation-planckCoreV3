@@ -179,7 +179,8 @@ TEST_F(DecryptAttachPrivateKeyUntrustedTest, check_decrypt_attach_private_key_un
                                   &keylist_used, &rating, &flags);
 
     status = get_trust(session, same_addr_same_uid);
-    ASSERT_EQ(same_addr_same_uid->comm_type, PEP_ct_pEp_unconfirmed);
+    ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
+    ASSERT_EQ(same_addr_same_uid->comm_type, PEP_ct_unknown);
 
     output_stream << "Case 1 Status: " << tl_status_string(status) << endl;
     output_stream << "Private key is not trusted for " << same_addr_same_uid->fpr << ", as desired, as the public key was not trusted." << endl;
