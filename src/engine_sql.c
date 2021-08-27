@@ -713,7 +713,7 @@ static PEP_STATUS _create_core_tables(PEP_SESSION session) {
             "   timestamp integer default (datetime('now')),\n"
             "   primary key (address, user_id)\n"
             ");\n"
-            "create index if not exists identity_userid_addr on identity(address, user_id);\n"
+            "create index if not exists identity_userid on identity (user_id);\n"
             "create table if not exists trust (\n"
             "   user_id text not null\n"
             "       references person (id)\n"
@@ -1548,6 +1548,27 @@ static PEP_STATUS _upgrade_DB_to_ver_18(PEP_SESSION session) {
     return _force_upgrade_own_latest_message_version(session);
 }
 
+static PEP_STATUS _upgrade_DB_to_ver_19(PEP_SESSION session) {
+    int int_result = sqlite3_exec(
+            session->db,
+            /* This index was useless: it was an index on the (multi-column)
+               primary key, always implemented using an index which gets also
+               used in queries. */
+            "drop index if exists identity_userid_addr;\n"
+            "\n"
+            "create index if not exists identity_userid on identity (user_id);\n"
+            NULL,
+            NULL,
+            NULL
+    );
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+    return PEP_STATUS_OK;
+}
+
 // Honestly, the upgrades should be redone in a transaction IMHO.
 static PEP_STATUS _check_and_execute_upgrades(PEP_SESSION session, int version) {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -1620,6 +1641,10 @@ static PEP_STATUS _check_and_execute_upgrades(PEP_SESSION session, int version) 
             if (status != PEP_STATUS_OK)
                 return status;
         case 18:
+            status = _upgrade_DB_to_ver_19(session);
+            if (status != PEP_STATUS_OK)
+                return status;
+        case 19:
             break;
         default:
             return PEP_ILLEGAL_VALUE;
