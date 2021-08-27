@@ -8,7 +8,7 @@
 #define MAP_ASN1_H
 
 #include "message.h"
-#include "../asn.1/PEPMessage.h"
+#include "ASN1Message.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -89,12 +89,12 @@ identity_list *IdentityList_to_identity_list(IdentityList_t *list, identity_list
 
 
 /**
- *  <!--       StringPair_from_Struct()       -->
+ *  <!--       PStringPair_from_Struct()       -->
  *  
- *  @brief Convert stringpair_t into ASN.1 StringPair_t
+ *  @brief Convert stringpair_t into ASN.1 PStringPair_t
  *  
  *  @param value[in]           stringpair_t to convert
- *  @param result[in,out]      StringPair_t to update or NULL to alloc a new one
+ *  @param result[in,out]      PStringPair_t to update or NULL to alloc a new one
  *  
  *  @retval pointer to updated or allocated result
  *  
@@ -102,18 +102,18 @@ identity_list *IdentityList_to_identity_list(IdentityList_t *list, identity_list
  *  
  */
 
-StringPair_t *StringPair_from_Struct(
+PStringPair_t *PStringPair_from_Struct(
         const stringpair_t *value,
-        StringPair_t *result
+        PStringPair_t *result
     );
 
 
 /**
- *  <!--       StringPair_to_Struct()       -->
+ *  <!--       PStringPair_to_Struct()       -->
  *  
- *  @brief Convert ASN.1 StringPair_t into stringpair_t
+ *  @brief Convert ASN.1 PStringPair_t into stringpair_t
  *  
- *  @param value[in]          StringPair_t to convert
+ *  @param value[in]          PStringPair_t to convert
  *  
  *  @retval pointer to updated or allocated result
  *  
@@ -121,16 +121,16 @@ StringPair_t *StringPair_from_Struct(
  *  
  */
 
-stringpair_t *StringPair_to_Struct(StringPair_t *value);
+stringpair_t *PStringPair_to_Struct(PStringPair_t *value);
 
 
 /**
- *  <!--       StringPairList_from_stringpair_list()       -->
+ *  <!--       PStringPairList_from_stringpair_list()       -->
  *  
- *  @brief Convert stringpair_list_t into ASN.1 StringPairList_t
+ *  @brief Convert stringpair_list_t into ASN.1 PStringPairList_t
  *  
  *  @param list[in]           stringpair_list to convert
- *  @param result[inout]      StringPairList_t to update or NULL to alloc a new one
+ *  @param result[inout]      PStringPairList_t to update or NULL to alloc a new one
  *  
  *  @retval pointer to updated or allocated result
  *  
@@ -138,17 +138,17 @@ stringpair_t *StringPair_to_Struct(StringPair_t *value);
  *  
  */
 
-StringPairList_t *StringPairList_from_stringpair_list(
+PStringPairList_t *PStringPairList_from_stringpair_list(
         const stringpair_list_t *list,
-        StringPairList_t *result
+        PStringPairList_t *result
     );
 
 /**
- *  <!--       StringPairList_to_stringpair_list()       -->
+ *  <!--       PStringPairList_to_stringpair_list()       -->
  *  
- *  @brief Convert ASN.1 StringPairList_t to stringpair_list_t
+ *  @brief Convert ASN.1 PStringPairList_t to stringpair_list_t
  *  
- *  @param list[in]           ASN.1 StringPairList_t to convert
+ *  @param list[in]           ASN.1 PStringPairList_t to convert
  *  @param result[inout]      stringpair_list_t to update or NULL to alloc a new one
  *  
  *  @retval pointer to updated or allocated result
@@ -157,8 +157,8 @@ StringPairList_t *StringPairList_from_stringpair_list(
  *  
  */
 
-stringpair_list_t *StringPairList_to_stringpair_list(
-        StringPairList_t *list,
+stringpair_list_t *PStringPairList_to_stringpair_list(
+        PStringPairList_t *list,
         stringpair_list_t *result
     );
 
@@ -199,12 +199,12 @@ stringlist_t *PStringList_to_stringlist(PStringList_t *list);
 
 
 /**
- *  <!--       BlobList_from_bloblist()       -->
+ *  <!--       PBlobList_from_bloblist()       -->
  *  
- *  @brief Convert bloblist_t into ASN.1 BlobList_t
+ *  @brief Convert bloblist_t into ASN.1 PBlobList_t
  *  
  *  @param list[in]           bloblist to convert
- *  @param result[inout]      BlobList_t to update or NULL to alloc a new one
+ *  @param result[inout]      PBlobList_t to update or NULL to alloc a new one
  *  @param copy               copy data if true, move data otherwise
  *  @param max_blob_size      reject if sum(blob.size) > max_blob_size
  *                            to disable set to 0
@@ -215,20 +215,20 @@ stringlist_t *PStringList_to_stringlist(PStringList_t *list);
  *  
  */
 
-BlobList_t *BlobList_from_bloblist(
+PBlobList_t *PBlobList_from_bloblist(
         bloblist_t *list,
-        BlobList_t *result,
+        PBlobList_t *result,
         bool copy,
         size_t max_blob_size
     );
 
 
 /**
- *  <!--       BlobList_to_bloblist()       -->
+ *  <!--       PBlobList_to_bloblist()       -->
  *  
- *  @brief Convert ASN.1 BlobList_t to bloblist_t
+ *  @brief Convert ASN.1 PBlobList_t to bloblist_t
  *  
- *  @param list[in]           ASN.1 BlobList_t to convert
+ *  @param list[in]           ASN.1 PBlobList_t to convert
  *  @param result[inout]      bloblist_t to update or NULL to alloc a new one
  *  @param copy               copy data if true, move data otherwise
  *  @param max_blob_size      reject if sum(blob.size) > max_blob_size
@@ -240,8 +240,8 @@ BlobList_t *BlobList_from_bloblist(
  *  
  */
 
-bloblist_t *BlobList_to_bloblist(
-        BlobList_t *list,
+bloblist_t *PBlobList_to_bloblist(
+        PBlobList_t *list,
         bloblist_t *result,
         bool copy,
         size_t max_blob_size
@@ -249,12 +249,12 @@ bloblist_t *BlobList_to_bloblist(
 
 
 /**
- *  <!--       PEPMessage_from_message()       -->
+ *  <!--       ASN1Message_from_message()       -->
  *  
- *  @brief Convert message into ASN.1 PEPMessage_t
+ *  @brief Convert message into ASN.1 ASN1Message_t
  *  
  *  @param msg[in]            message to convert
- *  @param result[inout]      PEPMessage_t to update or NULL to alloc a new one
+ *  @param result[inout]      ASN1Message_t to update or NULL to alloc a new one
  *  @param copy               copy data if true, move data otherwise
  *  @param max_blob_size      reject if sum(blob.size) > max_blob_size
  *                            to disable set to 0
@@ -265,20 +265,20 @@ bloblist_t *BlobList_to_bloblist(
  *  
  */
 
-PEPMessage_t *PEPMessage_from_message(
+ASN1Message_t *ASN1Message_from_message(
         message *msg,
-        PEPMessage_t *result,
+        ASN1Message_t *result,
         bool copy,
         size_t max_blob_size
     );
 
 
 /**
- *  <!--       PEPMessage_to_message()       -->
+ *  <!--       ASN1Message_to_message()       -->
  *  
- *  @brief Convert ASN.1 PEPMessage_t to message
+ *  @brief Convert ASN.1 ASN1Message_t to message
  *  
- *  @param msg[in]            ASN.1 PEPMessage_t to convert
+ *  @param msg[in]            ASN.1 ASN1Message_t to convert
  *  @param result[inout]      message to update or NULL to alloc a new one
  *  @param copy               copy data if true, move data otherwise
  *  @param max_blob_size      reject if sum(blob.size) > max_blob_size
@@ -290,8 +290,8 @@ PEPMessage_t *PEPMessage_from_message(
  *  
  */
 
-message *PEPMessage_to_message(
-        PEPMessage_t *msg,
+message *ASN1Message_to_message(
+        ASN1Message_t *msg,
         message *result,
         bool copy,
         size_t max_blob_size

@@ -14,10 +14,10 @@ DEFINITIONS
     AUTOMATIC TAGS EXTENSIBILITY IMPLIED ::=
 BEGIN
 
-EXPORTS PEPMessage;
+EXPORTS ASN1Message;
 
 IMPORTS
-  PString, PStringList, Identity, IdentityList, StringPairList, Hash
+  PString, PStringList, Identity, IdentityList, PStringPairList, Hash
   FROM PEP { iso(1) org(3) dod(6) internet(1) private(4)
              enterprise(1) pEp(47878) basic(0) };
 
@@ -33,30 +33,26 @@ ContentDisposition ::= ENUMERATED {
     other (2)
 }
 
-Blob ::= SEQUENCE {
+PBlob ::= SEQUENCE {
     value       OCTET STRING (SIZE(0..102400000)),  -- up to 100 MB
     mime-type   PString OPTIONAL,
     filename    PString OPTIONAL,
     disposition ContentDisposition
 }
-BlobList ::= SEQUENCE OF Blob
+PBlobList ::= SEQUENCE OF PBlob
 
 
 -- For the purposes of this profile, GeneralizedTime values MUST be
 -- expressed in Coordinated Universal Time (UTC) and MUST include seconds
 -- (i.e., times are YYYYMMDDHHMMSSZ), even where the number of seconds
 -- is zero.  GeneralizedTime values MUST NOT include fractional seconds.
--- To make this more explicit, the type-name "Timestamp" is used in this
--- profile.
-
-Timestamp ::= GeneralizedTime
 
 
-PEPMessage ::= SEQUENCE {
+ASN1Message ::= SEQUENCE {
     direction   MessageDirection OPTIONAL, -- used only in "inner" messages
     id          PString          OPTIONAL, -- UTF-8 string of message ID
-    sent        Timestamp        OPTIONAL,  -- when the message is sent
-    recv        Timestamp        OPTIONAL,  -- when the message is received
+    sent        GeneralizedTime        OPTIONAL,  -- when the message is sent
+    recv        GeneralizedTime        OPTIONAL,  -- when the message is received
     from        Identity,                   -- whom the message is from
     -- At least one of to, cc must not be an empty list
     -- FIXME: Can this be constrained?
@@ -74,7 +70,7 @@ PEPMessage ::= SEQUENCE {
     -- internal: refered_by _message-ref-list
     keywords    PStringList     OPTIONAL, -- list of UTF-8 strings with keywords
     comments    PString         OPTIONAL, -- UTF-8 string with comments
-    opt-fields  StringPairList  OPTIONAL, -- optional fields
+    opt-fields  PStringPairList OPTIONAL, -- optional fields
     sender-fpr  Hash            OPTIONAL,  -- fingerprint of sending signer
 
     -- At least one of shortmsg, longmsg, longmsg-formatted must be present
@@ -90,7 +86,7 @@ PEPMessage ::= SEQUENCE {
     longmsg-formatted UTF8String   OPTIONAL, -- UTF-8 string of long message
                                              -- (formatted)
 
-    attachments BlobList        OPTIONAL     -- blobs with attachments
+    attachments PBlobList        OPTIONAL     -- blobs with attachments
     -- internal: rawmsg
 }
 
