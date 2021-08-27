@@ -1556,7 +1556,7 @@ static PEP_STATUS _upgrade_DB_to_ver_19(PEP_SESSION session) {
                used in queries. */
             "drop index if exists identity_userid_addr;\n"
             "\n"
-            "create index if not exists identity_userid on identity (user_id);\n"
+            "create index if not exists identity_userid on identity (user_id);\n",
             NULL,
             NULL,
             NULL
