@@ -298,7 +298,7 @@ the_end:
     Bob: Alice frequent comm partner
     Sylvia: a new comm partner of Alice
 
-    Note: these are now marked with the status of whether or not they are covered in DefaultFromMailTest instead
+    Note: these are now *mostly* marked with the status of whether or not they are covered in DefaultFromMailTest instead
 
     A) Handshake and TOFU
 
@@ -483,14 +483,16 @@ TEST_F(TrustRatingTest, check_trusted_bob_sender_signer_match) {
     pEp_identity *alice;
     pEp_identity *bob;
     alice_and_bob(session, alice, bob);
+    PEP_STATUS status = trust_personal_key(session, bob);
+    ASSERT_OK;
 
     string filename = "test_mails/CanonicalFrom2.2BobToAlice_2_2.eml";
     message* infile = NULL;
     PEP_rating rating = PEP_rating_undefined;
-    PEP_STATUS status = vanilla_read_file_and_decrypt_with_rating(session, &infile,
+    status = vanilla_read_file_and_decrypt_with_rating(session, &infile,
                                                                   filename.c_str(), &rating);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_EQ(rating, PEP_rating_reliable);
+    ASSERT_EQ(rating, PEP_rating_trusted);
     free_message(infile);
 }
 
@@ -499,27 +501,177 @@ TEST_F(TrustRatingTest, check_reliable_bob_sender_signer_mismatch) {
     pEp_identity *bob;
     alice_and_bob(session, alice, bob);
 
+    string filename = "test_mails/CanonicalFrom3.1BobToAlice_2_2_claim_doesnt_match_signer.eml";
+    message* infile = NULL;
+    PEP_rating rating = PEP_rating_undefined;
+    PEP_STATUS status = vanilla_read_file_and_decrypt_with_rating(session, &infile,
+                                                                  filename.c_str(), &rating);
+    ASSERT_EQ(status, PEP_DECRYPTED);
+    ASSERT_EQ(rating, PEP_rating_b0rken);
+    free_message(infile);
 }
 
 TEST_F(TrustRatingTest, check_trusted_bob_sender_signer_mismatch) {
     pEp_identity *alice;
     pEp_identity *bob;
     alice_and_bob(session, alice, bob);
+    PEP_STATUS status = trust_personal_key(session, bob);
+    ASSERT_OK;
 
+    string filename = "test_mails/CanonicalFrom3.1BobToAlice_2_2_claim_doesnt_match_signer.eml";
+    message* infile = NULL;
+    PEP_rating rating = PEP_rating_undefined;
+    status = vanilla_read_file_and_decrypt_with_rating(session, &infile,
+                                                                  filename.c_str(), &rating);
+    ASSERT_EQ(status, PEP_DECRYPTED);
+    ASSERT_EQ(rating, PEP_rating_b0rken);
+    free_message(infile);
 }
 
-TEST_F(TrustRatingTest, check_reliable_bob_sender_not_default) {
+/*
+ * FIXME: I wrote these cases to deal with the following questions
+ * 15:17 <darthmama> Ah, and regarding what I just said, I guess I should clarify: there are sort of three cases for "I just received a proper message from someone with matching
+ *                   signer and sender keys, but the key used wasn't this identity's default"
+ * 15:17 <darthmama> 1) The key is still one with an entry in the trust DB and belongs to the identity's user
+ * 15:18 <darthmama> 2) The key might have a trust DB entry, which not for this user, which should behave equivalently to:
+ * 15:18 <darthmama> 3) We don't know anything about that key for Bob.
+ * 15:18 <darthmama> So I'm really asking what should happen for 1
+ *
+ * My presumption so far is that for 1), the rating should still depend on the user trust rating for the used key (so if Bob's default key is not trusted, but the trust entry present for User Bob's
+ * key IS, then all else being equal, the message signed by that key will be PEP_rating_trusted.
+ * And that if it's just a reliable key, then reliable.
+ *
+ * 2 and 3) are pretty clearly covered by the assumption that messages encrypted to unknown or unassociated-with-the-user-keys are always unreliable, even if signed correctly.
+ */
+
+// CASE 1: Key used on the message is no longer the default, but is associated with Bob's user_id in the trust DB
+
+// Give Bob a new default, but make sure the old one is in the trust DB so we know it's reliable
+TEST_F(TrustRatingTest, check_bob_sender_key_is_bobs_and_untrusted_but_is_not_default) {
     pEp_identity *alice;
     pEp_identity *bob;
     alice_and_bob(session, alice, bob);
 
+    // Set BOB2.fpr as default key
+    bob = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::BOB2, true, false);
+    PEP_STATUS status = update_identity(session, bob);
+    ASSERT_OK;
+
+    ASSERT_STREQ(bob->fpr, TestUtilsPreset::presets[TestUtilsPreset::BOB2].fpr);
+    ASSERT_EQ(bob->comm_type, PEP_ct_pEp_unconfirmed);
+
+    string filename = "test_mails/CanonicalFrom2.2BobToAlice_2_2.eml";
+    message* infile = NULL;
+    PEP_rating rating = PEP_rating_undefined;
+    status = vanilla_read_file_and_decrypt_with_rating(session, &infile,
+                                                                  filename.c_str(), &rating);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(rating, PEP_rating_reliable);
+    free_message(infile);
 }
 
-TEST_F(TrustRatingTest, check_trusted_bob_sender_not_default) {
+// Give Bob a new default, but make sure the old one is in the trust DB and trusted so we know it's reliable (and don't trust
+// the new one so we see the difference) - N.B. This one fails, Volker needs figure out/spec what is wanted (see above)
+TEST_F(TrustRatingTest, check_bob_sender_key_is_bobs_and_trusted_but_is_not_default) {
     pEp_identity *alice;
     pEp_identity *bob;
     alice_and_bob(session, alice, bob);
+    PEP_STATUS status = trust_personal_key(session, bob);
+    ASSERT_OK;
 
+    // Set BOB2.fpr as default key
+    bob = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::BOB2, true, false);
+    status = update_identity(session, bob);
+    ASSERT_STREQ(bob->fpr, TestUtilsPreset::presets[TestUtilsPreset::BOB2].fpr);
+    ASSERT_EQ(bob->comm_type, PEP_ct_pEp_unconfirmed);
+
+    string filename = "test_mails/CanonicalFrom2.2BobToAlice_2_2.eml";
+    message* infile = NULL;
+    PEP_rating rating = PEP_rating_undefined;
+    status = vanilla_read_file_and_decrypt_with_rating(session, &infile,
+                                                                  filename.c_str(), &rating);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    // The mail was sent with the trusted sender, so this should be true. If it's false, incoming message rating is broken.
+    // This is a valid, verified key for this user. However, Volker may want ratings bound much more closely to identities than before,
+    // so this is an fdik FIXME.
+    ASSERT_EQ(rating, PEP_rating_trusted);
+    free_message(infile);
+}
+
+// CASE 2: Key used for the message is in the trust DB for some user, but that user is not BOB.
+
+// Give Bob a new default, but make sure the old one is in the trust DB and trusted so we know it's reliable (and don't trust
+// the new one so we see the difference)
+TEST_F(TrustRatingTest, check_reliable_bob_sender_key_is_someone_elses_in_db) {
+    pEp_identity *alice = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::ALICE);
+    PEP_STATUS status = myself(session, alice);
+    ASSERT_OK;
+
+    // This will ONLY import the key and generate an identity which we'll toss. This WON'T record this as Bob's key in the DB.
+    pEp_identity* bob = TestUtilsPreset::generateOnlyPartnerIdentity(session, TestUtilsPreset::BOB); // Signing key imported
+    // Trash old Bob, make way for new Bob
+    free_identity(bob);
+    bob = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::BOB2, true, false);
+    // Now, make Carol pay for Bob's crimes! I mean, um, let's make Carol and give her Bob's key as her default.
+    pEp_identity* carol = TestUtilsPreset::generateOnlyPartnerIdentity(session, TestUtilsPreset::CAROL); // Doesn't matter if Carol's key was imported, not really "hers"
+    free(carol->fpr);
+    carol->fpr = strdup(TestUtilsPreset::presets[TestUtilsPreset::BOB].fpr);
+    status = set_identity(session, carol);
+    ASSERT_OK;
+    status = update_identity(session, carol);
+    ASSERT_OK;
+    ASSERT_STREQ(carol->fpr, TestUtilsPreset::presets[TestUtilsPreset::BOB].fpr);
+
+    status = update_identity(session, bob);
+    ASSERT_OK;
+    ASSERT_STREQ(bob->fpr, TestUtilsPreset::presets[TestUtilsPreset::BOB2].fpr);
+
+    ASSERT_STRNE(bob->fpr, carol->fpr);
+
+    // Ok, so now Carol own's "Bob's" key, but Alice is about to receive a message from Bob encrypted with "Carol's" key
+
+    string filename = "test_mails/CanonicalFrom2.2BobToAlice_2_2.eml";
+    message* infile = NULL;
+    PEP_rating rating = PEP_rating_undefined;
+    status = vanilla_read_file_and_decrypt_with_rating(session, &infile,
+                                                                  filename.c_str(), &rating);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    // The mail was sent with the trusted sender, so this should be true. If it's false, incoming message rating is broken.
+    // This is a valid, verified key for this user. However, Volker may want ratings bound much more closely to identities than before,
+    // so this is an fdik FIXME.
+    ASSERT_EQ(rating, PEP_rating_unreliable);
+    free_message(infile);
+}
+
+// CASE 3: We have a default key for BOB, but it's not on the message, and the sender key is in keys.db, but NOT in the trust DB.
+// Give Bob a new default, but make sure the old one is in the trust DB and trusted so we know it's reliable (and don't trust
+// the new one so we see the difference)
+TEST_F(TrustRatingTest, check_reliable_bob_sender_key_not_bobs_and_not_in_trust_db) {
+    pEp_identity *alice = TestUtilsPreset::generateAndSetPrivateIdentity(session, TestUtilsPreset::ALICE);
+    PEP_STATUS status = myself(session, alice);
+    ASSERT_OK;
+
+    // This will ONLY import the key and generate an identity which we'll toss. This WON'T record this as Bob's key in the DB.
+    pEp_identity* bob = TestUtilsPreset::generateOnlyPartnerIdentity(session, TestUtilsPreset::BOB); // Message Signing key imported
+    // Trash old Bob, make way for new Bob
+    free_identity(bob);
+    bob = TestUtilsPreset::generateAndSetpEpPartnerIdentity(session, TestUtilsPreset::BOB2, true, false);
+
+    // Now, get message from Bob with the wrong key!
+    string filename = "test_mails/CanonicalFrom2.2BobToAlice_2_2.eml";
+    message* infile = NULL;
+    PEP_rating rating = PEP_rating_undefined;
+    status = vanilla_read_file_and_decrypt_with_rating(session, &infile,
+                                                                  filename.c_str(), &rating);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    // The mail was sent with the trusted sender, so this should be true. If it's false, incoming message rating is broken.
+    // This is a valid, verified key for this user. However, Volker may want ratings bound much more closely to identities than before,
+    // so this is an fdik FIXME.
+    ASSERT_EQ(rating, PEP_rating_unreliable);
+    free_message(infile);
 }
 
 

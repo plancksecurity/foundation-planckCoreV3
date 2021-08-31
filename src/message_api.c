@@ -5829,44 +5829,23 @@ static PEP_STATUS _decrypt_message(
         // We should now ALWAYS have sender_fpr filled in
         if (!EMPTYSTR(msg->_sender_fpr)) {
             // Is the sender key the signer key? They should be.
-            if (!EMPTYSTR(_keylist->value) && (strcasecmp(msg->_sender_fpr, _keylist->value) != 0)) {
+            if (!EMPTYSTR(_keylist->value) && !sender_fpr_is_signer_fpr(msg, _keylist)) {
                 if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
                     decrypt_status = PEP_DECRYPTED;
-                *rating = PEP_rating_unreliable;
+                *rating = PEP_rating_b0rken;
             }
-//            else {
-//                const pEp_identity *msg_from = msg->from;
-//                const char *sender_user_id = msg_from->user_id;
-//                if (*rating > PEP_rating_unreliable) {
-//                    if (msg_from->fpr && strcasecmp(msg_from->fpr, msg->_sender_fpr) != 0) {
-//                        // check to see if the sender OWNS this key and we have a trust entry
-//                        // for it. Otherwise... PROBLEMS.
-//                        pEp_identity *temp_from = identity_dup(msg_from);
-//                        if (!temp_from)
-//                            goto enomem;
-//                        free(temp_from->fpr);
-//                        temp_from->fpr = strdup(msg->_sender_fpr);
-//                        if (!temp_from->fpr)
-//                            goto enomem;
-//                        status = get_trust(session, temp_from);
-//                        if (status == PEP_CANNOT_FIND_IDENTITY) {
-//                            if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
-//                                decrypt_status = PEP_DECRYPTED;
-//                            *rating = PEP_rating_unreliable;
-//                        }
-//                    }
-//                }
-//            }
-// Covered by incoming message rating, I hope.
         }
     }
 
     // Adjust the incoming message rating? I think we have a problem here with reencrypted messages,
     // but I don't know what vb changed in this branch here...
-    status = incoming_message_rating(session, src, msg, _keylist, extra, decrypt_status, rating);
+    // Also, I'm not sure broken is the only status that shouldn't exclude reevaluation here. Mistrusted, perhaps?
+    if (*rating != PEP_rating_b0rken) {
+        status = incoming_message_rating(session, src, msg, _keylist, extra, decrypt_status, rating);
 
-    if (*rating == PEP_rating_have_no_key)
-        *rating = PEP_rating_unreliable;
+        if (*rating == PEP_rating_have_no_key)
+            *rating = PEP_rating_unreliable;
+    }
 
     // 6. Put this stuff on the message
     decorate_message(session, msg, *rating, _keylist, false, true);
