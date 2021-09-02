@@ -298,8 +298,6 @@ struct _pEpSession {
     sqlite3_stmt *add_userid_alias;
 
     // callbacks
-    examine_identity_t examine_identity;
-    void *examine_management;
     notifyHandshake_t notifyHandshake;
     inject_sync_event_t inject_sync_event;
     retrieve_next_sync_event_t retrieve_next_sync_event;
