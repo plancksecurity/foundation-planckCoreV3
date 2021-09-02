@@ -161,6 +161,12 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_close_v2(session->system_db);
         }
 
+        if (!EMPTYSTR(session->curr_passphrase)) {
+            free (session->curr_passphrase);
+            /* In case the following freeing code still uses the field. */
+            session->curr_passphrase = NULL;
+        }
+
         release_transport_system(session, out_last);
         release_cryptotech(session, out_last);
         free(session);
