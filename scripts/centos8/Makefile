@@ -22,7 +22,7 @@ endif
 all: deps build
 
 deps:
-	-docker pull $(IMAGE_NAME)-deps:latest
+	-docker pull --quiet $(IMAGE_NAME)-deps:latest
 	cd ../../ && docker build --build-arg CURRENT_DISTRO=$(CURRENT_DISTRO) \
 		      --build-arg DOCKER_REGISTRY_HOST=${DOCKER_REGISTRY_HOST} \
 		      --build-arg PEPENGINE_VERSION=$(PEPENGINE_VERSION) \
@@ -33,11 +33,14 @@ deps:
 		      --tag=$(IMAGE_NAME)-deps:$(SEQUOIA_VERSION)-$(YML2_VERSION) \
 		      --tag=$(IMAGE_NAME)-deps:latest \
 		      -f scripts/${CURRENT_DISTRO}/deps.$(DOCKERFILE) .
-	docker push $(IMAGE_NAME)-deps:$(SEQUOIA_VERSION)-$(YML2_VERSION)
-	docker push $(IMAGE_NAME)-deps:latest
+	docker push --quiet $(IMAGE_NAME)-deps:$(SEQUOIA_VERSION)-$(YML2_VERSION)
+	docker push --quiet $(IMAGE_NAME)-deps:latest
 
 build:
-	-docker pull $(IMAGE_NAME):latest
+	cd ../../ && /bin/sh ./scripts/common/build_pEpEngine.sh
+
+build-docker:
+	-docker pull --quiet $(IMAGE_NAME):latest
 	cd ../../ && docker build --build-arg CURRENT_DISTRO=$(CURRENT_DISTRO) \
 		      --build-arg DOCKER_REGISTRY_HOST=${DOCKER_REGISTRY_HOST} \
 		      --build-arg PEPENGINE_VERSION=$(PEPENGINE_VERSION) \
@@ -47,12 +50,12 @@ build:
 		      --cache-from $(IMAGE_NAME):latest \
 		      --tag=$(IMAGE_NAME):$(PEPENGINE_VERSION) \
 		      --tag=$(IMAGE_NAME):latest \
-		      -f scripts/${CURRENT_DISTRO}/$(DOCKERFILE) .
-	docker push $(IMAGE_NAME):$(PEPENGINE_VERSION)
-	docker push $(IMAGE_NAME):latest
+		      -f scripts/common/build.pEpEngine.Dockerfile .
+	docker push --quiet $(IMAGE_NAME):$(PEPENGINE_VERSION)
+	docker push --quiet $(IMAGE_NAME):latest
 
 rpm:
-	-docker pull $(PKG_BUILD_IMAGE)-engine:latest
+	-docker pull --quiet $(PKG_BUILD_IMAGE)-engine:latest
 	@docker build --build-arg CURRENT_DISTRO=$(CURRENT_DISTRO) \
 		--build-arg PEPENGINE_VERSION=$(PEPENGINE_VERSION) \
 		--build-arg DOCKER_REGISTRY_HOST=${DOCKER_REGISTRY_HOST} \
@@ -62,8 +65,8 @@ rpm:
 		--tag=$(PKG_BUILD_IMAGE)-engine:$(PEPENGINE_VERSION) \
 		--tag=$(PKG_BUILD_IMAGE)-engine:latest \
 		packages/rpm
-	@docker push $(PKG_BUILD_IMAGE)-engine:$(PEPENGINE_VERSION)
-	@docker push $(PKG_BUILD_IMAGE)-engine:latest
+	@docker push --quiet $(PKG_BUILD_IMAGE)-engine:$(PEPENGINE_VERSION)
+	@docker push --quiet $(PKG_BUILD_IMAGE)-engine:latest
 	@docker run -e PEPENGINE_VERSION=$(PEPENGINE_VERSION) \
 		-e PEP_MACHINE_DIR=$(PEP_MACHINE_DIR) \
 		-e PKG_VERSION=$(PEPENGINE_VERSION) \
