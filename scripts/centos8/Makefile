@@ -19,7 +19,7 @@ ifeq ($(IS_TAGGED), true)
 else
 	PEPENGINE_VERSION=$(shell git rev-parse --short=8 HEAD)
 endif
-all: deps build
+all: deps build test
 
 deps:
 	-docker pull --quiet $(IMAGE_NAME)-deps:latest
@@ -38,6 +38,9 @@ deps:
 
 build:
 	cd ../../ && /bin/sh ./scripts/common/build_pEpEngine.sh
+
+test:
+	cd ../../ && /bin/sh ./scripts/common/test_pEpEngine.sh
 
 build-docker:
 	-docker pull --quiet $(IMAGE_NAME):latest

@@ -28,6 +28,9 @@ ARG YML2_VERSION
 ARG ENGINE_VERSION
 ARG CURRENT_DISTRO
 
+RUN  apt-get update && apt-get install -y bzip2 cmake && \
+     rm -rf /var/lib/apt/lists/*
+
 ### Build pEpEngine dependencies
 USER pep-builder
 

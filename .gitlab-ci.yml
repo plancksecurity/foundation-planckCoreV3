@@ -4,6 +4,7 @@ include:
 stages:
   - deps
   - build
+  - test
   - build-docker
   - packages
 
@@ -54,10 +55,23 @@ debian10:tagged-build:
   rules:
     - if: '$CI_COMMIT_TAG  =~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
 
+debian10:test:
+  tags:
+    - linux
+  stage: test
+  image: ${DOCKER_REGISTRY_HOST}/pep-debian10-engine-deps:latest
+  script:
+    - cd scripts/${CI_DISTRO_TARGET}
+    - make ${MAKE_TARGET}
+  variables:
+    MAKE_TARGET: "test"
+    CI_DISTRO_TARGET: "debian10"
+    DEBIAN_FRONTEND: "noninteractive"
+
 debian10:build-docker:
   extends: .make_in_docker
   stage: build-docker
-  needs: ["debian10:build"]
+  needs: ["debian10:test"]
   variables:
     MAKE_TARGET: "build-docker"
     CI_DISTRO_TARGET: "debian10"
@@ -68,7 +82,7 @@ debian10:build-docker:
 debian10:tagged-build-docker:
   extends: .make_in_docker
   stage: build-docker
-  needs: ["debian10:tagged-build"]
+  needs: ["debian10:test"]
   variables:
     MAKE_TARGET: "build-docker"
     CI_DISTRO_TARGET: "debian10"
@@ -173,7 +187,6 @@ centos8:deps:
         - scripts/centos8/deps.pEpEngine.centos8.Dockerfile
         - scripts/common/build_pEpEngine_deps.sh
 
-
 centos8:build:
   tags:
     - linux
@@ -203,10 +216,22 @@ centos8:tagged-build:
   rules:
     - if: '$CI_COMMIT_TAG  =~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
 
+centos8:test:
+  tags:
+    - linux
+  stage: test
+  image: ${DOCKER_REGISTRY_HOST}/pep-centos8-engine-deps:latest
+  script:
+    - cd scripts/${CI_DISTRO_TARGET}
+    - make ${MAKE_TARGET}
+  variables:
+    MAKE_TARGET: "test"
+    CI_DISTRO_TARGET: "centos8"
+
 centos8:build-docker:
   extends: .make_in_docker
   stage: build-docker
-  needs: ["centos8:build"]
+  needs: ["centos8:test"]
   variables:
     MAKE_TARGET: "build-docker"
     CI_DISTRO_TARGET: "centos8"
@@ -216,7 +241,7 @@ centos8:build-docker:
 centos8:tagged-build-docker:
   extends: .make_in_docker
   stage: build-docker
-  needs: ["centos8:tagged-build"]
+  needs: ["centos8:test"]
   variables:
     MAKE_TARGET: "build-docker"
     CI_DISTRO_TARGET: "centos8"

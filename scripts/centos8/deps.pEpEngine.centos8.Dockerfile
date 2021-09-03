@@ -15,7 +15,7 @@ COPY ./scripts/common/build_pEpEngine_deps.sh ${BUILDROOT}/pEpEngine
 
 USER root
 
-RUN yum install -y python3 python3-lxml binutils && yum clean all
+RUN yum install -y python3 python3-lxml binutils cmake libarchive && yum clean all
 
 ### Setup PEP_MACHINE_DIR
 RUN mkdir -p ${PEP_MACHINE_DIR}

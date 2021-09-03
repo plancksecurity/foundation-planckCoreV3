@@ -29,3 +29,14 @@ test -f configure || autoreconf -iv
 ./configure --prefix=${INSTPREFIX}/asn1c
 make -j$(nproc) && make install
 echo "${asn1c_ver}">${INSTPREFIX}/asn1c.ver
+
+## gtest
+git clone https://github.com/google/googletest $BUILDROOT/googletest
+cd $BUILDROOT/googletest
+cmake -DCMAKE_INSTALL_PREFIX=${INSTPREFIX}/googletest && make install
+cp -ar $INSTPREFIX/googletest/lib*/pkgconfig/* $INSTPREFIX/share/pkgconfig/.
+cp -ar $INSTPREFIX/googletest/lib*/*.a $INSTPREFIX/lib/.
+
+### gtest-parallel
+git clone https://github.com/google/gtest-parallel $BUILDROOT/gtest-parallel
+ls $BUILDROOT/gtest-parallel/gtest_parallel.py
