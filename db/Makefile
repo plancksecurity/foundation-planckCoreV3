@@ -18,8 +18,11 @@ system.db: create_system_db.sql $(DICOS)
 
 .PHONY: install
 install: system.db
-	mkdir -p $(DESTDIR)$(PER_MACHINE_DIRECTORY)
-	cp system.db $(DESTDIR)$(PER_MACHINE_DIRECTORY)
+	# Notice that the expansion of these make variables may still contain
+	# shell variable occurrences, to be expanded in their turn.  This
+	# serves to leave more freedom to the deployment engineer.
+	mkdir -p "$(DESTDIR)$(PER_MACHINE_DIRECTORY)"
+	cp system.db "$(DESTDIR)$(PER_MACHINE_DIRECTORY)"
 
 .PHONY: clean
 clean:

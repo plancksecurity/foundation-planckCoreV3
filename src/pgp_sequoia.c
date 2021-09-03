@@ -451,28 +451,24 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         | SQLITE_OPEN_PRIVATECACHE,
         NULL);
 #else
-    // Create the home directory.
-    char *home_env = NULL;
-#ifndef NDEBUG
-    home_env = getenv("PEP_HOME");
-#endif
 
-#define PEP_KEYS_PATH "/.pEp/keys.db"
+    // Compute a string containing the DB absolute path name.
+#define PEP_KEYS_RELATIVE_FILENAME "keys.db"
 
-    if (!home_env)
-        home_env = getenv("HOME");
-
-    if (!home_env)
-        ERROR_OUT(NULL, PEP_INIT_CRYPTO_LIB_INIT_FAILED, "HOME unset");
-
+    const char *directory = per_user_directory();
     // Create the DB and initialize it.
-    size_t path_size = strlen(home_env) + sizeof(PEP_KEYS_PATH);
+    size_t path_size
+      = (strlen(directory)
+         + 1 /* '/' */
+         + strlen(PEP_KEYS_RELATIVE_FILENAME)
+         + 1 /* '\0' */);
     char *path = (char *) calloc(path_size, 1);
     assert(path);
     if (!path)
         ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
 
-    int r = snprintf(path, path_size, "%s" PEP_KEYS_PATH, home_env);
+    int r = snprintf(path, path_size, "%s/%s",
+                     directory, PEP_KEYS_RELATIVE_FILENAME);
     assert(r >= 0 && r < path_size);
     if (r < 0) {
         free(path);

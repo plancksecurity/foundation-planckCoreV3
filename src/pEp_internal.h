@@ -77,12 +77,7 @@
 #else // UNIX
 #define _POSIX_C_SOURCE 200809L
 #include <dlfcn.h>
-#ifdef NDEBUG
 #define LOCAL_DB unix_local_db()
-#else
-#define LOCAL_DB unix_local_db(false)
-#define LOCAL_DB_RESET unix_local_db(true)
-#endif
 #ifdef ANDROID
 #define SYSTEM_DB android_system_db()
 #else
