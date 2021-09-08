@@ -1765,6 +1765,9 @@ DYNAMIC_API PEP_STATUS is_pEp_user(PEP_SESSION session,
  *
  *  @brief Returns the directory for pEp management db as a relative
  *         path from the home directory (or the pEp home directory)
+ *         The returned pointed refers memory managed by
+ *         the engine, which will remain valid until
+ *         the next call to reset_path_cache.
  *
  *  @retval char*   relative pathname
  *  @retval NULL    on failure
@@ -1776,7 +1779,10 @@ DYNAMIC_API const char *per_user_relative_directory(void);
   /**
  *  <!--       per_user_directory()       -->
  *  
- *  @brief Returns the directory for pEp management db
+ *  @brief Returns the directory for pEp management db.
+ *         The returned pointed refers memory managed by
+ *         the engine, which will remain valid until
+ *         the next call to reset_path_cache.
  *  
  *  @retval char*   path to actual per user directory
  *  @retval NULL    on failure
@@ -1791,6 +1797,9 @@ DYNAMIC_API const char *per_user_directory(void);
  *  <!--       per_machine_directory()       -->
  *  
  *  @brief Returns the directory for pEp system db
+ *         The returned pointed refers memory managed by
+ *         the engine, which will remain valid until
+ *         the next call to reset_path_cache.
  *  
  *  @retval char*   path to actual per machine directory
  *  @retval NULL    on failure
@@ -1987,7 +1996,10 @@ DYNAMIC_API PEP_STATUS reset_path_cache(void);
   /**
  *  <!--       reset_path_cache()       -->
  *
- *  @brief      Empty the path cache, releasing resources.
+ *  @brief      Empty the path cache, releasing resources.  This may invalidate
+ *              the memory used by the results of per_user_relative_directory,
+ *              per_user_directory, per_machine_directory, android_system_db,
+ *              unix_system_db, unix_local_db.
  *
  */
 DYNAMIC_API void clear_path_cache(void);

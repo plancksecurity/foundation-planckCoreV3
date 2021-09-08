@@ -350,6 +350,7 @@ static void _move(const char *o, const char *ext, const char *n)
  *                is the added functionality with respect to the standard
  *                strdup) a malloc-allocated copy of "" if the argument is
  *                NULL.
+ *                Return NULL only in case of an out-of-memory error.
  *
  *  @param[in]    *original constchar
  *  @retval       NULL      out of memory
@@ -625,6 +626,7 @@ static PEP_STATUS _expand_variables(char **out,
                      #name);                                           \
             reset_path_cache();                                        \
         }                                                              \
+        assert (_ ## name ## _cache != NULL);                          \
         return _ ## name ## _cache;                                    \
     }
 
@@ -680,7 +682,8 @@ DYNAMIC_API PEP_STATUS reset_path_cache(void)
         unexpanded_path = NULL;                                           \
     } while (false)
 
-    /* In case this is not the first invocation, start by releasing memory. */
+    /* Start by releasing memory, which is needed in case this is not the first
+       invocation. */
     clear_path_cache ();
 
     const char *unexpanded_path = NULL;

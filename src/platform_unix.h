@@ -45,6 +45,9 @@ extern "C" {
  *  <!--       unix_local_db()       -->
  *  
  *  @brief            TODO
+ *             The returned pointed refers memory managed by
+ *             the engine, which will remain valid until
+ *             the next call to reset_path_cache.
  *  
  */
 const char *unix_local_db(void);
@@ -53,6 +56,9 @@ const char *unix_local_db(void);
  *  <!--       unix_system_db()       -->
  *  
  *  @brief            TODO
+ *             The returned pointed refers memory managed by
+ *             the engine, which will remain valid until
+ *             the next call to reset_path_cache.
  *  
  */
 const char *unix_system_db(void);
@@ -69,6 +75,14 @@ char *stpcpy(char *, const char *);
 // Only the lowest 31 bits are filled randomly.
 //long int random(void);
 
+/*
+ *  <!--   android_system_db()       -->
+ *
+ *  @brief            TODO
+ *             The returned pointed refers memory managed by
+ *             the engine, which will remain valid until
+ *             the next call to reset_path_cache.
+ */
 const char *android_system_db(void);
 #define SYSTEM_DB android_system_db()
 

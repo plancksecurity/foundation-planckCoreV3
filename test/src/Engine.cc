@@ -96,15 +96,6 @@ void Engine::start() {
     status = reset_path_cache();
     assert(status == PEP_STATUS_OK);
 
-FILE *f = fopen ("/home/luca/pep-src/pep-engine/PER_USER_DIRECTORY", "w");
-  fprintf (f, "* per_user_directory ():    %s\n", per_user_directory ());
-fclose (f);
-f = fopen ("/home/luca/pep-src/pep-engine/PER_MACHINE_DIRECTORY", "w");
-  fprintf (f, "* per_machine_directory (): %s\n", per_machine_directory ());
-fclose (f);
-fprintf (stderr, "* per_user_directory ():    %s\n", per_user_directory ());
-fprintf (stderr, "* per_user_directory ():    %s\n", per_user_directory ());
-
     status = init(&session, cached_messageToSend, cached_inject_sync_event, cached_ensure_passphrase);
     assert(status == PEP_STATUS_OK);
     assert(session);
