@@ -26,6 +26,7 @@ typedef enum _PEP_transport_id {
 //    PEP_trans_Email = 0x01,
 //    PEP_trans_RCE = 0x02,
 //    PEP_trans_PDL = 0x03,
+//    PEP_trans_SCTP = 0x04,
 
     PEP_trans__count,
     PEP_trans_CC = 0xfe

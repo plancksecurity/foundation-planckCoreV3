@@ -19,6 +19,7 @@
 #include "TestUtilities.h"
 #include "Engine.h"
 #include "pEpTestStatic.h"
+#include "pEpEngine_internal.h"
 
 #include <algorithm>
 #include "TestConstants.h"
@@ -91,16 +92,25 @@ void Engine::start() {
     if (success != 0)
         throw std::runtime_error("SETUP: Cannot set engine_home for init.");
             
-    unix_local_db(true);
-            
-    PEP_STATUS status = init(&session, cached_messageToSend, cached_inject_sync_event, cached_ensure_passphrase);
+    PEP_STATUS status;
+    status = reset_path_cache();
+    assert(status == PEP_STATUS_OK);
+
+    status = init(&session, cached_messageToSend, cached_inject_sync_event, cached_ensure_passphrase);
     assert(status == PEP_STATUS_OK);
     assert(session);
 }
 
 void Engine::copy_conf_file_to_test_dir(const char* dest_path, const char* conf_orig_path, const char* conf_dest_name) {
-    string conf_dest_path = string(dest_path) + "/.pEp/";
-    
+    string conf_dest_path
+      = (string(dest_path)
+         + string("/")
+         + string(per_user_relative_directory ())
+         + string("/"));
+fprintf (stderr, "COPYING %s from %s to %s\n",
+         dest_path,
+         conf_orig_path,
+         conf_dest_path.c_str ());
     struct stat pathinfo;
 
     if(stat(conf_dest_path.c_str(), &pathinfo) != 0) {
@@ -149,5 +159,6 @@ void Engine::shut_down() {
     if (success != 0)
         throw std::runtime_error("RESTORE: Cannot reset home directory! Either set environment variable manually back to your home, or quit this session!");
 
-    unix_local_db(true);
+    PEP_STATUS status = reset_path_cache();
+    assert(status == PEP_STATUS_OK);
 }

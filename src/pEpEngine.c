@@ -28,6 +28,13 @@ DYNAMIC_API PEP_STATUS init(
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
+    // Initialise the path cache.  It is the state of the environment at this
+    // time that determines path names, unless the path cache is explicitly
+    // reset later.
+    status = reset_path_cache ();
+    if (status != PEP_STATUS_OK)
+        return status;
+
     bool in_first = false;
 
     assert(sqlite3_threadsafe());
@@ -143,6 +150,9 @@ DYNAMIC_API void release(PEP_SESSION session)
     if (session) {
         free_Sync_state(session);
 
+        // Clear the path cache, releasing a little memory.
+        clear_path_cache ();
+
         if (session->db) {
             pEp_finalize_sql_stmts(session);
             if (session->db) {
@@ -159,6 +169,12 @@ DYNAMIC_API void release(PEP_SESSION session)
             }
             if (session->system_db)
                 sqlite3_close_v2(session->system_db);
+        }
+
+        if (!EMPTYSTR(session->curr_passphrase)) {
+            free (session->curr_passphrase);
+            /* In case the following freeing code still uses the field. */
+            session->curr_passphrase = NULL;
         }
 
         release_transport_system(session, out_last);

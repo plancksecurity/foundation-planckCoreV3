@@ -611,11 +611,19 @@ static PEP_STATUS generate_message_id(message* msg) {
     size_t buf_len = 2; // NUL + @
     
     char* from_addr = msg->from->address;
-    char* domain_ptr = strstr(from_addr, "@");
-    if (!domain_ptr || *(domain_ptr + 1) == '\0')
-        domain_ptr = "localhost";
-    else
-        domain_ptr++;
+
+    /* Look for the *last* occurrence of '@' within the string beginning at
+       from_addr; if no '@' exists or if it is at the very end then keep the
+       "localhost" default as domain. */
+    char *p;
+    char *domain_ptr = "localhost";
+    for (p = from_addr + strlen (from_addr); p >= from_addr; p --)
+        if (* p == '@')
+            {
+                if (p [1] != '\0')
+                    domain_ptr = p + 1;
+                break;
+            }
 
     buf_len += strlen(domain_ptr);
     
