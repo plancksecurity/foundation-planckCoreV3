@@ -8,7 +8,7 @@ stages:
   - packages
 
 
-# Debian
+# Debian 10
 
 debian10:deps:
   extends: .make_in_docker
@@ -72,6 +72,88 @@ debian10:tagged-build-docker:
   variables:
     MAKE_TARGET: "build-docker"
     CI_DISTRO_TARGET: "debian10"
+    DEBIAN_FRONTEND: "noninteractive"
+    TAGGED_BUILD: "true"
+  rules:
+    - if: '$CI_COMMIT_TAG  =~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
+
+# Debian 11
+
+debian11:deps:
+  extends: .make_in_docker
+  stage: deps
+  variables:
+    MAKE_TARGET: "deps"
+    CI_DISTRO_TARGET: "debian11"
+    DEBIAN_FRONTEND: "noninteractive"
+  rules:
+    - changes:
+        - DEPENDENCIES
+        - scripts/debian11/deps.pEpEngine.debian11.Dockerfile
+        - scripts/common/build_pEpEngine_deps.sh
+
+debian11:build:
+  tags:
+    - linux
+  stage: build
+  image: ${DOCKER_REGISTRY_HOST}/pep-debian11-engine-deps:latest
+  script:
+    - cd scripts/${CI_DISTRO_TARGET}
+    - make ${MAKE_TARGET}
+  variables:
+    MAKE_TARGET: "build"
+    CI_DISTRO_TARGET: "debian11"
+    DEBIAN_FRONTEND: "noninteractive"
+  rules:
+    - if: '$CI_COMMIT_TAG  !~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
+
+debian11:tagged-build:
+  tags:
+    - linux
+  stage: build
+  image: ${DOCKER_REGISTRY_HOST}/pep-debian11-engine-deps:latest
+  script:
+    - cd scripts/${CI_DISTRO_TARGET}
+    - make ${MAKE_TARGET}
+  variables:
+    MAKE_TARGET: "build"
+    CI_DISTRO_TARGET: "debian11"
+    DEBIAN_FRONTEND: "noninteractive"
+    TAGGED_BUILD: "true"
+  rules:
+    - if: '$CI_COMMIT_TAG  =~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
+
+debian11:test:
+  tags:
+    - linux
+  stage: test
+  image: ${DOCKER_REGISTRY_HOST}/pep-debian11-engine-deps:latest
+  script:
+    - cd scripts/${CI_DISTRO_TARGET}
+    - make ${MAKE_TARGET}
+  variables:
+    MAKE_TARGET: "test"
+    CI_DISTRO_TARGET: "debian11"
+    DEBIAN_FRONTEND: "noninteractive"
+
+debian11:build-docker:
+  extends: .make_in_docker
+  stage: build-docker
+  needs: ["debian11:test"]
+  variables:
+    MAKE_TARGET: "build-docker"
+    CI_DISTRO_TARGET: "debian11"
+    DEBIAN_FRONTEND: "noninteractive"
+  rules:
+    - if: '$CI_COMMIT_TAG  !~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
+
+debian11:tagged-build-docker:
+  extends: .make_in_docker
+  stage: build-docker
+  needs: ["debian11:test"]
+  variables:
+    MAKE_TARGET: "build-docker"
+    CI_DISTRO_TARGET: "debian11"
     DEBIAN_FRONTEND: "noninteractive"
     TAGGED_BUILD: "true"
   rules:
