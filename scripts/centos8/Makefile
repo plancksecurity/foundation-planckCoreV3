@@ -31,9 +31,11 @@ deps:
 		      --build-arg PEP_MACHINE_DIR=$(PEP_MACHINE_DIR) \
 		      --cache-from $(IMAGE_NAME):latest \
 		      --tag=$(IMAGE_NAME)-deps:$(SEQUOIA_VERSION)-$(YML2_VERSION) \
+		      --tag=$(IMAGE_NAME)-deps:${CI_COMMIT_REF_SLUG} \
 		      --tag=$(IMAGE_NAME)-deps:latest \
 		      -f scripts/${CURRENT_DISTRO}/deps.$(DOCKERFILE) .
 	docker push --quiet $(IMAGE_NAME)-deps:$(SEQUOIA_VERSION)-$(YML2_VERSION)
+	docker push --quiet $(IMAGE_NAME)-deps:${CI_COMMIT_REF_SLUG}
 	docker push --quiet $(IMAGE_NAME)-deps:latest
 
 build:

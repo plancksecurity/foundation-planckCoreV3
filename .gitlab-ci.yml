@@ -28,7 +28,7 @@ debian10:build:
   tags:
     - linux
   stage: build
-  image: ${DOCKER_REGISTRY_HOST}/pep-debian10-engine-deps:latest
+  image: ${DOCKER_REGISTRY_HOST}/pep-debian10-engine-deps:${CI_COMMIT_REF_SLUG}
   script:
     - cd scripts/${CI_DISTRO_TARGET}
     - make ${MAKE_TARGET}
@@ -43,7 +43,7 @@ debian10:tagged-build:
   tags:
     - linux
   stage: build
-  image: ${DOCKER_REGISTRY_HOST}/pep-debian10-engine-deps:latest
+  image: ${DOCKER_REGISTRY_HOST}/pep-debian10-engine-deps:${CI_COMMIT_REF_SLUG}
   script:
     - cd scripts/${CI_DISTRO_TARGET}
     - make ${MAKE_TARGET}
@@ -59,7 +59,7 @@ debian10:test:
   tags:
     - linux
   stage: test
-  image: ${DOCKER_REGISTRY_HOST}/pep-debian10-engine-deps:latest
+  image: ${DOCKER_REGISTRY_HOST}/pep-debian10-engine-deps:${CI_COMMIT_REF_SLUG}
   script:
     - cd scripts/${CI_DISTRO_TARGET}
     - make ${MAKE_TARGET}
@@ -99,7 +99,7 @@ debian11:build:
   tags:
     - linux
   stage: build
-  image: ${DOCKER_REGISTRY_HOST}/pep-debian11-engine-deps:latest
+  image: ${DOCKER_REGISTRY_HOST}/pep-debian11-engine-deps:${CI_COMMIT_REF_SLUG}
   script:
     - cd scripts/${CI_DISTRO_TARGET}
     - make ${MAKE_TARGET}
@@ -114,7 +114,7 @@ debian11:tagged-build:
   tags:
     - linux
   stage: build
-  image: ${DOCKER_REGISTRY_HOST}/pep-debian11-engine-deps:latest
+  image: ${DOCKER_REGISTRY_HOST}/pep-debian11-engine-deps:${CI_COMMIT_REF_SLUG}
   script:
     - cd scripts/${CI_DISTRO_TARGET}
     - make ${MAKE_TARGET}
@@ -130,7 +130,7 @@ debian11:test:
   tags:
     - linux
   stage: test
-  image: ${DOCKER_REGISTRY_HOST}/pep-debian11-engine-deps:latest
+  image: ${DOCKER_REGISTRY_HOST}/pep-debian11-engine-deps:${CI_COMMIT_REF_SLUG}
   script:
     - cd scripts/${CI_DISTRO_TARGET}
     - make ${MAKE_TARGET}
@@ -169,7 +169,7 @@ centos8:build:
   tags:
     - linux
   stage: build
-  image: ${DOCKER_REGISTRY_HOST}/pep-centos8-engine-deps:latest
+  image: ${DOCKER_REGISTRY_HOST}/pep-centos8-engine-deps:${CI_COMMIT_REF_SLUG}
   script:
     - cd scripts/${CI_DISTRO_TARGET}
     - make ${MAKE_TARGET}
@@ -183,7 +183,7 @@ centos8:tagged-build:
   tags:
     - linux
   stage: build
-  image: ${DOCKER_REGISTRY_HOST}/pep-centos8-engine-deps:latest
+  image: ${DOCKER_REGISTRY_HOST}/pep-centos8-engine-deps:${CI_COMMIT_REF_SLUG}
   script:
     - cd scripts/${CI_DISTRO_TARGET}
     - make ${MAKE_TARGET}
@@ -198,7 +198,7 @@ centos8:test:
   tags:
     - linux
   stage: test
-  image: ${DOCKER_REGISTRY_HOST}/pep-centos8-engine-deps:latest
+  image: ${DOCKER_REGISTRY_HOST}/pep-centos8-engine-deps:${CI_COMMIT_REF_SLUG}
   script:
     - cd scripts/${CI_DISTRO_TARGET}
     - make ${MAKE_TARGET}
