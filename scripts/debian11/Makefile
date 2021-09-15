@@ -7,8 +7,7 @@ CURRENT_DISTRO=$(shell basename $(shell pwd))
 IMAGE_NAME=${DOCKER_REGISTRY_HOST}/pep-$(CURRENT_DISTRO)-engine
 DOCKERFILE=pEpEngine.$(CURRENT_DISTRO).Dockerfile
 PKG_INSTALL_PATH=/opt/pEp
-IS_TAGGED=${TAGGED_BUILD}
-ifeq ($(IS_TAGGED), true)
+ifneq (${CI_COMMIT_TAG},)
 # $CI_COMMIT_TAG is a predefined environment variable from Gitlab
 	PEPENGINE_VERSION=${CI_COMMIT_TAG}
 else

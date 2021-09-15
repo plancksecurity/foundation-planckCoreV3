@@ -1,6 +1,9 @@
 include:
   - '.gitlab-ci-files/common-prepare.yml'
 
+variables:
+  DEBIAN_FRONTEND: "noninteractive"
+
 stages:
   - deps
   - build
@@ -11,18 +14,20 @@ stages:
 
 # Debian 10
 
+
 debian10:deps:
   extends: .make_in_docker
   stage: deps
   variables:
     MAKE_TARGET: "deps"
     CI_DISTRO_TARGET: "debian10"
-    DEBIAN_FRONTEND: "noninteractive"
   rules:
     - changes:
         - DEPENDENCIES
         - scripts/debian10/deps.pEpEngine.debian10.Dockerfile
         - scripts/common/build_pEpEngine_deps.sh
+    - if: '$CI_COMMIT_TAG  =~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
+      when: always
 
 debian10:build:
   tags:
@@ -35,30 +40,12 @@ debian10:build:
   variables:
     MAKE_TARGET: "build"
     CI_DISTRO_TARGET: "debian10"
-    DEBIAN_FRONTEND: "noninteractive"
-  rules:
-    - if: '$CI_COMMIT_TAG  !~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
-
-debian10:tagged-build:
-  tags:
-    - linux
-  stage: build
-  image: ${DOCKER_REGISTRY_HOST}/pep-debian10-engine-deps:${CI_COMMIT_REF_SLUG}
-  script:
-    - cd scripts/${CI_DISTRO_TARGET}
-    - make ${MAKE_TARGET}
-  variables:
-    MAKE_TARGET: "build"
-    CI_DISTRO_TARGET: "debian10"
-    DEBIAN_FRONTEND: "noninteractive"
-    TAGGED_BUILD: "true"
-  rules:
-    - if: '$CI_COMMIT_TAG  =~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
 
 debian10:test:
   tags:
     - linux
   stage: test
+  needs: ["debian10:build"]
   image: ${DOCKER_REGISTRY_HOST}/pep-debian10-engine-deps:${CI_COMMIT_REF_SLUG}
   script:
     - cd scripts/${CI_DISTRO_TARGET}
@@ -66,17 +53,14 @@ debian10:test:
   variables:
     MAKE_TARGET: "test"
     CI_DISTRO_TARGET: "debian10"
-    DEBIAN_FRONTEND: "noninteractive"
 
-debian10:tagged-build-docker:
+debian10:build-docker:
   extends: .make_in_docker
   stage: build-docker
   needs: ["debian10:test"]
   variables:
     MAKE_TARGET: "build-docker"
     CI_DISTRO_TARGET: "debian10"
-    DEBIAN_FRONTEND: "noninteractive"
-    TAGGED_BUILD: "true"
   rules:
     - if: '$CI_COMMIT_TAG  =~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
 
@@ -88,12 +72,13 @@ debian11:deps:
   variables:
     MAKE_TARGET: "deps"
     CI_DISTRO_TARGET: "debian11"
-    DEBIAN_FRONTEND: "noninteractive"
   rules:
     - changes:
         - DEPENDENCIES
         - scripts/debian11/deps.pEpEngine.debian11.Dockerfile
         - scripts/common/build_pEpEngine_deps.sh
+    - if: '$CI_COMMIT_TAG  =~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
+      when: always
 
 debian11:build:
   tags:
@@ -106,30 +91,12 @@ debian11:build:
   variables:
     MAKE_TARGET: "build"
     CI_DISTRO_TARGET: "debian11"
-    DEBIAN_FRONTEND: "noninteractive"
-  rules:
-    - if: '$CI_COMMIT_TAG  !~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
-
-debian11:tagged-build:
-  tags:
-    - linux
-  stage: build
-  image: ${DOCKER_REGISTRY_HOST}/pep-debian11-engine-deps:${CI_COMMIT_REF_SLUG}
-  script:
-    - cd scripts/${CI_DISTRO_TARGET}
-    - make ${MAKE_TARGET}
-  variables:
-    MAKE_TARGET: "build"
-    CI_DISTRO_TARGET: "debian11"
-    DEBIAN_FRONTEND: "noninteractive"
-    TAGGED_BUILD: "true"
-  rules:
-    - if: '$CI_COMMIT_TAG  =~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
 
 debian11:test:
   tags:
     - linux
   stage: test
+  needs: ["debian11:build"]
   image: ${DOCKER_REGISTRY_HOST}/pep-debian11-engine-deps:${CI_COMMIT_REF_SLUG}
   script:
     - cd scripts/${CI_DISTRO_TARGET}
@@ -137,17 +104,14 @@ debian11:test:
   variables:
     MAKE_TARGET: "test"
     CI_DISTRO_TARGET: "debian11"
-    DEBIAN_FRONTEND: "noninteractive"
 
-debian11:tagged-build-docker:
+debian11:build-docker:
   extends: .make_in_docker
   stage: build-docker
   needs: ["debian11:test"]
   variables:
     MAKE_TARGET: "build-docker"
     CI_DISTRO_TARGET: "debian11"
-    DEBIAN_FRONTEND: "noninteractive"
-    TAGGED_BUILD: "true"
   rules:
     - if: '$CI_COMMIT_TAG  =~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
 
@@ -164,6 +128,8 @@ centos8:deps:
         - DEPENDENCIES
         - scripts/centos8/deps.pEpEngine.centos8.Dockerfile
         - scripts/common/build_pEpEngine_deps.sh
+    - if: '$CI_COMMIT_TAG  =~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
+      when: always
 
 centos8:build:
   tags:
@@ -176,28 +142,12 @@ centos8:build:
   variables:
     MAKE_TARGET: "build"
     CI_DISTRO_TARGET: "centos8"
-  rules:
-    - if: '$CI_COMMIT_TAG  !~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
-
-centos8:tagged-build:
-  tags:
-    - linux
-  stage: build
-  image: ${DOCKER_REGISTRY_HOST}/pep-centos8-engine-deps:${CI_COMMIT_REF_SLUG}
-  script:
-    - cd scripts/${CI_DISTRO_TARGET}
-    - make ${MAKE_TARGET}
-  variables:
-    MAKE_TARGET: "build"
-    CI_DISTRO_TARGET: "centos8"
-    TAGGED_BUILD: "true"
-  rules:
-    - if: '$CI_COMMIT_TAG  =~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
 
 centos8:test:
   tags:
     - linux
   stage: test
+  needs: ["centos8:build"]
   image: ${DOCKER_REGISTRY_HOST}/pep-centos8-engine-deps:${CI_COMMIT_REF_SLUG}
   script:
     - cd scripts/${CI_DISTRO_TARGET}
@@ -206,24 +156,22 @@ centos8:test:
     MAKE_TARGET: "test"
     CI_DISTRO_TARGET: "centos8"
 
-centos8:tagged-build-docker:
+centos8:build-docker:
   extends: .make_in_docker
   stage: build-docker
   needs: ["centos8:test"]
   variables:
     MAKE_TARGET: "build-docker"
     CI_DISTRO_TARGET: "centos8"
-    TAGGED_BUILD: "true"
   rules:
     - if: '$CI_COMMIT_TAG  =~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
 
-centos8:rpm:tagged-build:
+centos8:rpm:build:
   extends: .upload_pkg
   stage: packages
-  needs: ["centos8:tagged-build-docker"]
+  needs: ["centos8:build-docker"]
   variables:
     MAKE_TARGET: "rpm"
     CI_DISTRO_TARGET: "centos8"
-    TAGGED_BUILD: "true"
   rules:
     - if: '$CI_COMMIT_TAG  =~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'

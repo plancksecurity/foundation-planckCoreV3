@@ -12,8 +12,7 @@ PKG_NAME=pEpEngine
 PKG_DESCRIPTION="p≡p Engine Binary RPM Package"
 PKG_DEPENDS=sequoia-openpgp
 PKG_INSTALL_PATH_STRING="/ /package/lib=${PKG_INSTALL_PATH} /package/include/pEp=${PKG_INSTALL_PATH}/include /package/share=${PKG_INSTALL_PATH}"
-IS_TAGGED=${TAGGED_BUILD}
-ifeq ($(IS_TAGGED), true)
+ifneq (${CI_COMMIT_TAG},)
 # $CI_COMMIT_TAG is a predefined environment variable from Gitlab
 	PEPENGINE_VERSION=${CI_COMMIT_TAG}
 else
