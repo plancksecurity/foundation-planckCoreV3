@@ -409,8 +409,6 @@ void decorate_message(
         free(_keylist);
     }
 
-fprintf (stderr, "decorate_message: the rating is %i (%s)\n", (int) rating, rating_to_string (rating));
-
     msg->rating = rating;
 }
 
@@ -5020,7 +5018,6 @@ static PEP_STATUS _decrypt_message(
         uint64_t* changed_public_keys
     )
 {
-fprintf (stderr, "_decrypt_message: 0\n");
     assert(session);
     assert(src);
     assert(dst);
@@ -5289,7 +5286,6 @@ fprintf (stderr, "_decrypt_message: 0\n");
         // FIXME: double check for mem leaks from beginning of function in the unencrypted case!
         free(input_from_username); // in case we didn't use it (if we did, this is NULL)
 
-fprintf (stderr, "_decrypt_message: 10000 the rating (not set yet as a field) is %i (%s); by the way status is %i (%s), dst is %p\n", (int) * rating, rating_to_string (* rating), status, pEp_status_to_string (status), (void*)dst);
         // we return the status value here because it's important to know when 
         // we have a DB error here as soon as we have the info.
         return (status == PEP_STATUS_OK ? PEP_UNENCRYPTED : status);
@@ -5890,8 +5886,6 @@ fprintf (stderr, "_decrypt_message: 10000 the rating (not set yet as a field) is
         goto pEp_error;
     }
 
-fprintf (stderr, "_decrypt_message: 20000 the rating (not set yet as a field) is %i (%s); by the way status is %i (%s), dst is %p\n", (int) * rating, rating_to_string (* rating), status, pEp_status_to_string (status), (void*)dst);
-
     /* 
        Ok, at this point, we know we have a reliably decrypted message.
        Prepare the output message for return.
@@ -5940,8 +5934,6 @@ fprintf (stderr, "_decrypt_message: 20000 the rating (not set yet as a field) is
                 goto enomem;
         }
     } // End prepare output message for return
-
-fprintf (stderr, "_decrypt_message: 30000 the rating (not set yet as a field) is %i (%s); by the way status is %i (%s), dst is %p\n", (int) * rating, rating_to_string (* rating), status, pEp_status_to_string (status), (void*)dst);
 
     // 3. Check to see if the sender is a pEp user who used any of our revoked keys
     //
@@ -6121,8 +6113,6 @@ fprintf (stderr, "_decrypt_message: 30000 the rating (not set yet as a field) is
         revoke_replace_pairs = NULL;
     } // end !is_me(msg->from)    
 
-fprintf (stderr, "_decrypt_message: 50000 the rating (not set yet as a field) is %i (%s); by the way status is %i (%s), dst is %p\n", (int) * rating, rating_to_string (* rating), status, pEp_status_to_string (status), (void*)dst);
-
     // 4. Reencrypt if necessary
     bool reenc_signer_key_is_own_key = false; // only matters for reencrypted messages
 
@@ -6267,8 +6257,6 @@ fprintf (stderr, "_decrypt_message: 50000 the rating (not set yet as a field) is
     }
     free(input_from_username); // This was set to NULL in both places ownership could be legitimately grabbed.
 
-fprintf (stderr, "_decrypt_message: END the rating (not set yet as a field) is %i (%s); by the way status is %i (%s), dst is %p\n", (int) * rating, rating_to_string (* rating), status, pEp_status_to_string (status), (void*)dst);
-
     if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
         return PEP_STATUS_OK;
     else
@@ -6278,7 +6266,6 @@ enomem:
     status = PEP_OUT_OF_MEMORY;
 
 pEp_error:
-fprintf (stderr, "_decrypt_message: ERROR the rating (not set yet as a field) is %i (%s); by the way status is %i (%s), dst is %p\n", (int) * rating, rating_to_string (* rating), status, pEp_status_to_string (status), (void*) dst);
     free(ptext);
     free_message(msg);
     free_message(reset_msg);
