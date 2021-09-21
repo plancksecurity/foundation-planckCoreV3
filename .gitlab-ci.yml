@@ -4,7 +4,23 @@ include:
 variables:
   DEBIAN_FRONTEND: "noninteractive"
 
+.check_deps: &check_deps
+    - docker login -u ${DOCKER_REGISTRY_USER} -p ${DOCKER_REGISTRY_PASS} ${DOCKER_REGISTRY_HOST}
+    - echo "Checking if ${DOCKER_REGISTRY_HOST}/pep-${CI_DISTRO_TARGET}-engine-deps:${CI_COMMIT_REF_SLUG} exists..."
+    - |
+      case $(docker manifest inspect ${DOCKER_REGISTRY_HOST}/pep-${CI_DISTRO_TARGET}-engine-deps:${CI_COMMIT_REF_SLUG} > /dev/null ; echo $?) in
+      	0)
+      		echo "Image already exists"
+                exit 0
+      		;;
+      	1)
+      		echo "Image doesn't exist... will proceed to build"
+      		export MAKE_TARGET="deps"
+      		;;
+      esac
+
 stages:
+  - check
   - deps
   - build
   - test
@@ -14,6 +30,20 @@ stages:
 
 # Debian 10
 
+debian10:deps_check:
+  extends: .make_in_docker
+  stage: check
+  before_script:
+    - *check_deps
+  variables:
+    CI_DISTRO_TARGET: "debian10"
+  rules:
+    - changes:
+        - DEPENDENCIES
+        - scripts/debian10/deps.pEpEngine.debian10.Dockerfile
+        - scripts/common/build_pEpEngine_deps.sh
+      when: never
+    - when: always
 
 debian10:deps:
   extends: .make_in_docker
@@ -26,8 +56,6 @@ debian10:deps:
         - DEPENDENCIES
         - scripts/debian10/deps.pEpEngine.debian10.Dockerfile
         - scripts/common/build_pEpEngine_deps.sh
-    - if: '$CI_COMMIT_TAG  =~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
-      when: always
 
 debian10:build:
   tags:
@@ -66,6 +94,21 @@ debian10:build-docker:
 
 # Debian 11
 
+debian11:deps_check:
+  extends: .make_in_docker
+  stage: check
+  before_script:
+    - *check_deps
+  variables:
+    CI_DISTRO_TARGET: "debian11"
+  rules:
+    - changes:
+        - DEPENDENCIES
+        - scripts/debian11/deps.pEpEngine.debian11.Dockerfile
+        - scripts/common/build_pEpEngine_deps.sh
+      when: never
+    - when: always
+
 debian11:deps:
   extends: .make_in_docker
   stage: deps
@@ -77,8 +120,6 @@ debian11:deps:
         - DEPENDENCIES
         - scripts/debian11/deps.pEpEngine.debian11.Dockerfile
         - scripts/common/build_pEpEngine_deps.sh
-    - if: '$CI_COMMIT_TAG  =~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
-      when: always
 
 debian11:build:
   tags:
@@ -117,6 +158,21 @@ debian11:build-docker:
 
 # CentOS
 
+centos8:deps_check:
+  extends: .make_in_docker
+  stage: check
+  before_script:
+    - *check_deps
+  variables:
+    CI_DISTRO_TARGET: "centos8"
+  rules:
+    - changes:
+        - DEPENDENCIES
+        - scripts/centos8/deps.pEpEngine.centos8.Dockerfile
+        - scripts/common/build_pEpEngine_deps.sh
+      when: never
+    - when: always
+
 centos8:deps:
   extends: .make_in_docker
   stage: deps
@@ -128,8 +184,6 @@ centos8:deps:
         - DEPENDENCIES
         - scripts/centos8/deps.pEpEngine.centos8.Dockerfile
         - scripts/common/build_pEpEngine_deps.sh
-    - if: '$CI_COMMIT_TAG  =~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
-      when: always
 
 centos8:build:
   tags:
