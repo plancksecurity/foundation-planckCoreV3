@@ -197,6 +197,8 @@ DYNAMIC_API message * message_dup(const message *src)
     
     msg->enc_format = src->enc_format;
 
+    msg->rating = src->rating;
+
     return msg;
 
 enomem:
@@ -209,11 +211,13 @@ DYNAMIC_API void message_transfer(message* dst, message *src)
     assert(dst);
     assert(src);
 
+    /* Scalars */
     dst->dir = src->dir;
     dst->rawmsg_ref = src->rawmsg_ref;
     dst->rawmsg_size = src->rawmsg_size;
     dst->refering_msg_ref = src->refering_msg_ref;
     dst->enc_format = src->enc_format;
+    dst->rating = src->rating;
 
     /* Strings */
     free(dst->id);
