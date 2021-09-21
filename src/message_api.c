@@ -24,6 +24,8 @@
 #include "group.h"
 #include "group_internal.h"
 
+#include "status_to_string.h"
+
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
@@ -108,6 +110,8 @@ static char * keylist_to_string(const stringlist_t *keylist)
 static const char * rating_to_string(PEP_rating rating)
 {
     switch (rating) {
+    case PEP_rating_undefined:
+        return "undefined";
     case PEP_rating_cannot_decrypt:
         return "cannot_decrypt";
     case PEP_rating_have_no_key:
@@ -131,7 +135,7 @@ static const char * rating_to_string(PEP_rating rating)
     case PEP_rating_under_attack:
         return "under_attack";
     default:
-        return "undefined";
+        assert(0);
     }
 }
 
@@ -404,6 +408,10 @@ void decorate_message(
         replace_opt_field(msg, "X-KeyList", _keylist, clobber);
         free(_keylist);
     }
+
+fprintf (stderr, "decorate_message: the rating is %i (%s)\n", (int) rating, rating_to_string (rating));
+
+    msg->rating = rating;
 }
 
 /**
@@ -2682,6 +2690,13 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     if (src->dir == PEP_dir_incoming)
         return PEP_ILLEGAL_VALUE;
 
+    // Reset the message rating before doing anything...
+    src->rating = PEP_rating_undefined;
+
+    // ...We will compute a new rating here for the encrypted message.
+    PEP_rating rating = PEP_rating_undefined;
+#warning "FIXME: I should set this rating somehow.  I am waiting for feedback from Volker"
+
     determine_encryption_format(src);
     // TODO: change this for multi-encryption in message format 2.0
     if (src->enc_format != PEP_enc_none)
@@ -2868,7 +2883,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             attach_own_key(session, src);
             added_key_to_real_src = true;
         }
-        decorate_message(session, src, PEP_rating_undefined, NULL, true, true);
+        decorate_message(session, src, rating, NULL, true, true);
         return PEP_UNENCRYPTED;
     }
     else {
@@ -2944,7 +2959,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
 
     if (msg) {
-        decorate_message(session, msg, PEP_rating_undefined, NULL, true, true);
+        decorate_message(session, msg, rating, NULL, true, true);
         if (_src->id) {
             msg->id = strdup(_src->id);
             assert(msg->id);
@@ -4990,7 +5005,9 @@ static const char* process_key_claim(message* src,
 // There are times when we don't want errors during calls to be fatal. Once any action is taken on that
 // status, if we are going to continue processing and not bail from the message, the status needs to be reset
 // to PEP_STATUS_OK, or, alternately, we need to be using a temp status variable.
-
+//
+// This internal function does *not* set the rating field of the message: that
+// part of the job is within decrypt_message.
 static PEP_STATUS _decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -5003,6 +5020,7 @@ static PEP_STATUS _decrypt_message(
         uint64_t* changed_public_keys
     )
 {
+fprintf (stderr, "_decrypt_message: 0\n");
     assert(session);
     assert(src);
     assert(dst);
@@ -5012,6 +5030,9 @@ static PEP_STATUS _decrypt_message(
 
     if (!(session && src && dst && keylist && rating && flags))
         return PEP_ILLEGAL_VALUE;
+
+    // Reset the message rating before doing anything.
+    src->rating = PEP_rating_undefined;
 
     /*** Begin init ***/
     PEP_STATUS status = PEP_STATUS_OK;
@@ -5268,6 +5289,7 @@ static PEP_STATUS _decrypt_message(
         // FIXME: double check for mem leaks from beginning of function in the unencrypted case!
         free(input_from_username); // in case we didn't use it (if we did, this is NULL)
 
+fprintf (stderr, "_decrypt_message: 10000 the rating (not set yet as a field) is %i (%s); by the way status is %i (%s), dst is %p\n", (int) * rating, rating_to_string (* rating), status, pEp_status_to_string (status), (void*)dst);
         // we return the status value here because it's important to know when 
         // we have a DB error here as soon as we have the info.
         return (status == PEP_STATUS_OK ? PEP_UNENCRYPTED : status);
@@ -5868,6 +5890,8 @@ static PEP_STATUS _decrypt_message(
         goto pEp_error;
     }
 
+fprintf (stderr, "_decrypt_message: 20000 the rating (not set yet as a field) is %i (%s); by the way status is %i (%s), dst is %p\n", (int) * rating, rating_to_string (* rating), status, pEp_status_to_string (status), (void*)dst);
+
     /* 
        Ok, at this point, we know we have a reliably decrypted message.
        Prepare the output message for return.
@@ -5916,6 +5940,8 @@ static PEP_STATUS _decrypt_message(
                 goto enomem;
         }
     } // End prepare output message for return
+
+fprintf (stderr, "_decrypt_message: 30000 the rating (not set yet as a field) is %i (%s); by the way status is %i (%s), dst is %p\n", (int) * rating, rating_to_string (* rating), status, pEp_status_to_string (status), (void*)dst);
 
     // 3. Check to see if the sender is a pEp user who used any of our revoked keys
     //
@@ -6095,6 +6121,8 @@ static PEP_STATUS _decrypt_message(
         revoke_replace_pairs = NULL;
     } // end !is_me(msg->from)    
 
+fprintf (stderr, "_decrypt_message: 50000 the rating (not set yet as a field) is %i (%s); by the way status is %i (%s), dst is %p\n", (int) * rating, rating_to_string (* rating), status, pEp_status_to_string (status), (void*)dst);
+
     // 4. Reencrypt if necessary
     bool reenc_signer_key_is_own_key = false; // only matters for reencrypted messages
 
@@ -6239,6 +6267,8 @@ static PEP_STATUS _decrypt_message(
     }
     free(input_from_username); // This was set to NULL in both places ownership could be legitimately grabbed.
 
+fprintf (stderr, "_decrypt_message: END the rating (not set yet as a field) is %i (%s); by the way status is %i (%s), dst is %p\n", (int) * rating, rating_to_string (* rating), status, pEp_status_to_string (status), (void*)dst);
+
     if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
         return PEP_STATUS_OK;
     else
@@ -6248,6 +6278,7 @@ enomem:
     status = PEP_OUT_OF_MEMORY;
 
 pEp_error:
+fprintf (stderr, "_decrypt_message: ERROR the rating (not set yet as a field) is %i (%s); by the way status is %i (%s), dst is %p\n", (int) * rating, rating_to_string (* rating), status, pEp_status_to_string (status), (void*) dst);
     free(ptext);
     free_message(msg);
     free_message(reset_msg);
@@ -6289,6 +6320,15 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                                          &imported_key_fprs, &changed_key_bitvec);
 
     message *msg = *dst ? *dst : src;
+
+    /* FIXME: Volker, here I am setting the rating field of * msg, which will
+       be either * src or **dst according to what _decrypt_message decided.
+       This may or may not be what you wanted when you said
+          "[add] the computed rating to dst in case encryption could take
+           place, and to src in case not."
+       . */
+    /* Set the rating field of the message. */
+    msg->rating = * rating;
 
     // Ok, now we check to see if it was an administrative message. We do this by testing base_extract for success
     // with protocol families.

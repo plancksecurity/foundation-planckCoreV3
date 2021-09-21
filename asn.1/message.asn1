@@ -17,7 +17,7 @@ BEGIN
 EXPORTS ASN1Message;
 
 IMPORTS
-  PString, PStringList, Identity, IdentityList, PStringPairList, Hash
+  PString, PStringList, Identity, IdentityList, PStringPairList, Hash, Rating
   FROM PEP { iso(1) org(3) dod(6) internet(1) private(4)
              enterprise(1) pEp(47878) basic(0) };
 
@@ -86,8 +86,14 @@ ASN1Message ::= SEQUENCE {
     longmsg-formatted UTF8String   OPTIONAL, -- UTF-8 string of long message
                                              -- (formatted)
 
-    attachments PBlobList        OPTIONAL     -- blobs with attachments
+    attachments PBlobList        OPTIONAL,   -- blobs with attachments
     -- internal: rawmsg
+
+    -- This field is optional only for back-compatibility.  FIXME: no, not really: I should support a case for PEP_rating_undefined, which is not handled in the ASN.1 encoding.  This creates an ambiguity: the field could be omitted because there is no rating or because the other endpoint uses an older version
+    rating Rating OPTIONAL,                  -- message rating
+
+    -- Space for future extensions.
+    ...
 }
 
 END

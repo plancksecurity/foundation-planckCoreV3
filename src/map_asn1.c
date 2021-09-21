@@ -617,6 +617,122 @@ enomem:
     return NULL;
 }
 
+/**
+ *  <!--       ASN1Rating_from_rating()       -->
+ *  
+ *  @brief Convert rating from its default representation into ASN.1
+ *  
+ *  @param msg[in]            rating to convert
+ *  @param result[out]        the equivalent of in in the other encoding
+ *  
+ *  @retval PEP_STATUS_OK     conversion successful
+ *  @retval PEP_ILLEGAL_VALUE the in argument was PEP_rating_undefined
+ *  
+ *  @warning fail on PEP_rating_undefined , which has no equivalent in the
+ *           ASN.1 version
+ *  @warning The API is different from the similarly named ASN1Message_from_message
+ *           because of the incomplete mapping.  This should not be very error-prone
+ *           in practice, because this function has two arguments and using it
+ *           incorrectly will lead to compile-time errors.
+ *  
+ */
+static PEP_STATUS ASN1Rating_from_rating(
+        PEP_rating in,
+        e_Rating *out
+    )
+{
+#define CASE(pep_case, asn1_case)                             \
+    case pep_case: *out = (asn1_case); return PEP_STATUS_OK;
+
+    /* This must be kept in sync with the enum _PEP_rating definition in
+       pEpEngin.h and the machine-generated enum Rating definition in
+       asn.1/Rating.h : */
+    switch (in) {
+    case PEP_rating_undefined: return PEP_ILLEGAL_VALUE;
+    // no color
+    CASE (PEP_rating_cannot_decrypt, Rating_cannot_decrypt)
+    CASE (PEP_rating_have_no_key, Rating_have_no_key)
+    CASE (PEP_rating_unencrypted, Rating_unencrypted)
+    CASE (PEP_rating_unreliable, Rating_unreliable)
+    CASE (PEP_rating_b0rken, Rating_b0rken)
+
+    // yellow
+    CASE (PEP_rating_reliable, Rating_reliable)
+
+    // green
+    CASE (PEP_rating_trusted, Rating_trusted)
+    CASE (PEP_rating_trusted_and_anonymized, Rating_trusted_and_anonymized)
+    CASE (PEP_rating_fully_anonymous, Rating_fully_anonymous)
+
+    // red
+    CASE (PEP_rating_mistrust, Rating_mistrust)
+    CASE (PEP_rating_under_attack, Rating_under_attack)
+
+    default:
+        assert(0);
+    }
+
+#undef CASE
+}
+
+/**
+ *  <!--       ASN1Rating_to_rating()       -->
+ *  
+ *  @brief Convert rating from ASN.1 into the default pEp representation
+ *  
+ *  @param msg[in]            pointer to a rating to convert, or NULL
+ *  
+ *  @retval                   PEP_rating_undefined if the in pointer was NULL
+ *  @retval                   the equivalent of in in the other encoding
+ *  
+ *  @warning fail on PEP_rating_undefined , which has no equivalent in the
+ *           ASN.1 version
+ *  @warning The API is different from the similarly named ASN1Message_from_message
+ *           because of the mapping, which is incomplete in one direction but
+ *           not the other.
+ *  
+ */
+static PEP_rating ASN1Rating_to_rating(
+        Rating_t *in
+    )
+{
+#define CASE(pep_case, asn1_case)       \
+    case asn1_case: return (pep_case);
+
+    /* This must be kept in sync with the enum _PEP_rating definition in
+       pEpEngin.h and the machine-generated enum Rating definition in
+       asn.1/Rating.h : */
+
+    if (in == NULL)
+        return PEP_rating_undefined;
+    else
+        switch (* in) {
+        // no color
+        CASE (PEP_rating_cannot_decrypt, Rating_cannot_decrypt)
+        CASE (PEP_rating_have_no_key, Rating_have_no_key)
+        CASE (PEP_rating_unencrypted, Rating_unencrypted)
+        CASE (PEP_rating_unreliable, Rating_unreliable)
+        CASE (PEP_rating_b0rken, Rating_b0rken)
+
+        // yellow
+        CASE (PEP_rating_reliable, Rating_reliable)
+
+        // green
+        CASE (PEP_rating_trusted, Rating_trusted)
+        CASE (PEP_rating_trusted_and_anonymized, Rating_trusted_and_anonymized)
+        CASE (PEP_rating_fully_anonymous, Rating_fully_anonymous)
+
+        // red
+        CASE (PEP_rating_mistrust, Rating_mistrust)
+        CASE (PEP_rating_under_attack, Rating_under_attack)
+
+        default:
+            assert(0);
+        }
+
+#undef CASE
+}
+
 ASN1Message_t *ASN1Message_from_message(
         message *msg,
         ASN1Message_t *result,
@@ -850,6 +966,21 @@ ASN1Message_t *ASN1Message_from_message(
         result->attachments = bl;
     }
 
+    e_Rating asn1_rating;
+    PEP_STATUS rating_conversion_status
+        = ASN1Rating_from_rating(msg->rating, & asn1_rating);
+    if (rating_conversion_status == PEP_ILLEGAL_VALUE)
+        result->rating = NULL;
+    else if (rating_conversion_status == PEP_STATUS_OK) {
+        result->rating = calloc(1, sizeof (e_Rating));
+        assert(result->rating);
+        if (! result->rating)
+            goto enomem;
+        * result->rating = asn1_rating;
+    }
+    else
+        assert(0);
+
     return result;
 
 enomem:
@@ -1079,6 +1210,8 @@ message *ASN1Message_to_message(
 
         result->attachments = a;
     }
+
+    result->rating = ASN1Rating_to_rating(msg->rating);
 
     return result;
 

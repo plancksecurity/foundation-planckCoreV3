@@ -70,9 +70,11 @@ typedef enum _message_wrap_type {
  *  @brief Encrypt message in memory
  *
  *  @param[in]     session       session handle
- *  @param[in,out] src           message to encrypt - usually in-only, but can be
- *                               in-out for unencrypted messages; in that case,
- *                               we may attach the key and decorate the message
+ *  @param[in,out] src           message to encrypt - usually in-only except for
+ *                               the rating field, but can be in-out for
+ *                               unencrypted messages; in that case, we may
+ *                               attach the key and decorate the message.
+ *                               In any case, reset the rating.
  *  @param[in]     extra         extra keys for encryption
  *  @param[out]    dst           pointer to new encrypted message or NULL if no
  *                               encryption could take place
@@ -193,39 +195,6 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         PEP_encrypt_flags_t flags
     );
 
-/**
- *  @enum    PEP_rating
- *
- *  @brief    TODO
- *
- */
-typedef enum _PEP_rating {
-    PEP_rating_undefined = 0,
-
-    // no color
-
-    PEP_rating_cannot_decrypt = 1,
-    PEP_rating_have_no_key = 2,
-    PEP_rating_unencrypted = 3,
-    PEP_rating_unreliable = 5,
-
-    PEP_rating_b0rken = -2,
-
-    // yellow
-
-    PEP_rating_reliable = 6,
-
-    // green
-
-    PEP_rating_trusted = 7,
-    PEP_rating_trusted_and_anonymized = 8,
-    PEP_rating_fully_anonymous = 9, 
-
-    // red
-
-    PEP_rating_mistrust = -1,
-    PEP_rating_under_attack = -3
-} PEP_rating;
 
 /**
  *  @enum    PEP_color
@@ -279,6 +248,8 @@ typedef unsigned int PEP_decrypt_flags_t;
  *
  *  @param[in]     session    session handle
  *  @param[in,out] src        message to decrypt - see warning about identities below
+ *                            the rating field of src (instead of dst) is updated
+ *                            in case encryption fails
  *  @param[out]    dst        pointer to new decrypted message or NULL on failure
  *  @param[in,out] keylist    in: stringlist with additional keyids for reencryption if needed
  *                            (will be freed and replaced with output keylist)
@@ -286,7 +257,10 @@ typedef unsigned int PEP_decrypt_flags_t;
  *                            first key is signer, additional keys are the ones it was encrypted
  *                            to. Only signer and whichever of the user's keys was used are
  *                            reliable
- *  @param[out]    rating     rating for the message
+ *  @param[out]    rating     rating for the message.  Unless the message in question
+ *                            is NULL, this value is also written in the rating
+ *                            field of one of the two messages: dst if decryption
+ *                            takes place, src otherwise.
  *  @param[in,out] flags      flags to signal special decryption features
  *
  *  @retval <ERROR>                 any error status
