@@ -8,7 +8,7 @@
 #define TRANSPORT_H
 
 #include "pEpEngine.h"
-#include "message.h"
+#include "message_api.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -71,7 +71,7 @@ typedef PEP_STATUS (*signal_statuschange_t)(PEP_transport_id id,
         PEP_transport_status_code tsc);
 
 typedef PEP_STATUS (*signal_sendto_result_t)(PEP_transport_id id, char *message_id,
-        char *address, PEP_transport_status_code tsc);
+        char *address, PEP_rating rating, PEP_transport_status_code tsc);
 
 typedef PEP_STATUS (*signal_incoming_message_t)(PEP_transport_id id,
         PEP_transport_status_code tsc);
