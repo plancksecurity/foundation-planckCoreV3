@@ -5037,9 +5037,6 @@ static PEP_STATUS _decrypt_message(
     if (!(session && src && dst && keylist && rating && flags))
         return PEP_ILLEGAL_VALUE;
 
-    // Reset the message rating before doing anything.
-    src->rating = PEP_rating_undefined;
-
     /*** Begin init ***/
     PEP_STATUS status = PEP_STATUS_OK;
     PEP_STATUS decrypt_status = PEP_CANNOT_DECRYPT_UNKNOWN;
@@ -6291,7 +6288,6 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         message *src,
         message **dst,
         stringlist_t **keylist,
-        PEP_rating *rating,
         PEP_decrypt_flags_t *flags
     )
 {
@@ -6299,32 +6295,31 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     assert(src);
     assert(dst);
     assert(keylist);
-    assert(rating);
     assert(flags);
 
-    if (!(session && src && dst && keylist && rating && flags))
+    if (!(session && src && dst && keylist && flags))
         return PEP_ILLEGAL_VALUE;
 
     if (!(*flags & PEP_decrypt_flag_untrusted_server))
         *keylist = NULL;
         
+    // Reset the message rating before doing anything.  We will compute a new
+    // value, that _decrypt_message sets as an output parameter.
+    src->rating = PEP_rating_undefined;
+    PEP_rating rating = PEP_rating_undefined;
+
     stringlist_t* imported_key_fprs = NULL;
     uint64_t changed_key_bitvec = 0;    
         
     PEP_STATUS status = _decrypt_message(session, src, dst, keylist, 
-                                         rating, flags, NULL,
+                                         &rating, flags, NULL,
                                          &imported_key_fprs, &changed_key_bitvec);
 
     message *msg = *dst ? *dst : src;
 
-    /* FIXME: Volker, here I am setting the rating field of * msg, which will
-       be either * src or **dst according to what _decrypt_message decided.
-       This may or may not be what you wanted when you said
-          "[add] the computed rating to dst in case encryption could take
-           place, and to src in case not."
-       . */
-    /* Set the rating field of the message. */
-    msg->rating = * rating;
+    /* Set the rating field of the message.  Notice that even in case of non-ok
+       result status the value of this field may be meaningful. */
+    msg->rating = rating;
 
     // Ok, now we check to see if it was an administrative message. We do this by testing base_extract for success
     // with protocol families.
@@ -6339,10 +6334,10 @@ DYNAMIC_API PEP_STATUS decrypt_message(
             tmp_status = base_extract_message(session, msg, BASE_SYNC, &size, &data, &sender_fpr);
             if (!tmp_status && size && data) {
                 if (sender_fpr)
-                    signal_Sync_message(session, *rating, data, size, msg->from, sender_fpr);
+                    signal_Sync_message(session, rating, data, size, msg->from, sender_fpr);
                   // FIXME: this must be changed to sender_fpr
                 else if (*keylist)
-                    signal_Sync_message(session, *rating, data, size, msg->from, (*keylist)->value);
+                    signal_Sync_message(session, rating, data, size, msg->from, (*keylist)->value);
             }
         }
         if (tmp_status != PEP_STATUS_OK) {
@@ -6360,7 +6355,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                     PEP_STATUS tmpstatus = base_extract_message(session, msg, BASE_DISTRIBUTION, &size, &data,
                                                                 &sender_fpr);
                     if (!tmpstatus && size && data) {
-                        process_Distribution_message(session, msg, *rating, data, size, sender_fpr);
+                        process_Distribution_message(session, msg, rating, data, size, sender_fpr);
                     }
                 }
             }
@@ -6388,7 +6383,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     //             // if ((!event_sender_fpr) && *keylist)
     //             //     event_sender_fpr = (*keylist)->value;
     //             if (event_sender_fpr)
-    //                 signal_Sync_message(session, *rating, data, size, msg->from, event_sender_fpr);
+    //                 signal_Sync_message(session, rating, data, size, msg->from, event_sender_fpr);
     //         }
     //         free(sender_fpr);
     //     }
@@ -6993,9 +6988,8 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
         // Message is to be decrypted
         message *dst = NULL;
         stringlist_t *_keylist = keylist;
-        PEP_rating rating;
         PEP_decrypt_flags_t flags;
-        status = decrypt_message( session, msg, &dst, &_keylist, &rating, &flags);
+        status = decrypt_message( session, msg, &dst, &_keylist, &flags);
 
         if (status != PEP_STATUS_OK) {
             free_message(dst);

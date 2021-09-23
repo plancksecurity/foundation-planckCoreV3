@@ -247,9 +247,9 @@ typedef unsigned int PEP_decrypt_flags_t;
  *  @brief Decrypt message in memory
  *
  *  @param[in]     session    session handle
- *  @param[in,out] src        message to decrypt - see warning about identities below
+ *  @param[in,out] src        message to decrypt - see warning about identities below.
  *                            the rating field of src (instead of dst) is updated
- *                            in case encryption fails
+ *                            in case encryption fails.
  *  @param[out]    dst        pointer to new decrypted message or NULL on failure
  *  @param[in,out] keylist    in: stringlist with additional keyids for reencryption if needed
  *                            (will be freed and replaced with output keylist)
@@ -257,10 +257,6 @@ typedef unsigned int PEP_decrypt_flags_t;
  *                            first key is signer, additional keys are the ones it was encrypted
  *                            to. Only signer and whichever of the user's keys was used are
  *                            reliable
- *  @param[out]    rating     rating for the message.  Unless the message in question
- *                            is NULL, this value is also written in the rating
- *                            field of one of the two messages: dst if decryption
- *                            takes place, src otherwise.
  *  @param[in,out] flags      flags to signal special decryption features
  *
  *  @retval <ERROR>                 any error status
@@ -324,7 +320,6 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         message *src,
         message **dst,
         stringlist_t **keylist,
-        PEP_rating *rating,
         PEP_decrypt_flags_t *flags
 );
 
