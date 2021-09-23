@@ -170,7 +170,6 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj) {
     // In: extra keys; Out: keys that were used to encrypt this.
     stringlist_t* keys = NULL;
     PEP_decrypt_flags_t flags = PEP_decrypt_flag_untrusted_server;
-    PEP_rating rating;
 
     flags = PEP_decrypt_flag_untrusted_server;
     char* modified_src = NULL;
@@ -183,7 +182,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj) {
     decoded->recv_by = identity_dup(carol);
 
 
-    status = decrypt_message(session, decoded, &dec_msg, &keys, &rating, &flags);
+    status = decrypt_message(session, decoded, &dec_msg, &keys, &flags);
 
     ASSERT_NE(dec_msg, nullptr);
     ASSERT_NE(PEP_decrypt_flag_src_modified & flags, 0);
@@ -224,7 +223,6 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_check_effici
     // In: extra keys; Out: keys that were used to encrypt this.
     stringlist_t* keys = NULL;
     PEP_decrypt_flags_t flags = PEP_decrypt_flag_untrusted_server;
-    PEP_rating rating;
 
     flags = PEP_decrypt_flag_untrusted_server;
     char* modified_src = NULL;
@@ -236,7 +234,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_check_effici
     message* dec_msg = NULL;
     decoded->recv_by = identity_dup(carol);
 
-    status = decrypt_message(session, decoded, &dec_msg, &keys, &rating, &flags);
+    status = decrypt_message(session, decoded, &dec_msg, &keys, &flags);
 
     ASSERT_NE(status, PEP_CANNOT_REENCRYPT);
     ASSERT_NE(dec_msg, nullptr);
@@ -256,7 +254,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_check_effici
     free_stringlist(keys);
     keys = NULL; // remember, this is no extra_keys in this test
 
-    status = decrypt_message(session, checker, &dec_msg, &keys, &rating, &flags);
+    status = decrypt_message(session, checker, &dec_msg, &keys, &flags);
     ASSERT_OK;
     ASSERT_NOTNULL(dec_msg );
     ASSERT_EQ(flags & PEP_decrypt_flag_src_modified, 0);
@@ -299,7 +297,6 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys) 
 
     // In: extra keys; Out: keys that were used to encrypt this.
     PEP_decrypt_flags_t flags = PEP_decrypt_flag_untrusted_server;
-    PEP_rating rating;
 
     flags = PEP_decrypt_flag_untrusted_server;
     char* modified_src = NULL;
@@ -311,7 +308,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys) 
     message* dec_msg = NULL;
     decoded->recv_by = identity_dup(carol);
 
-    status = decrypt_message(session, decoded, &dec_msg, &keys, &rating, &flags);
+    status = decrypt_message(session, decoded, &dec_msg, &keys, &flags);
 
     ASSERT_NE(status, PEP_CANNOT_REENCRYPT);
 
@@ -329,7 +326,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys) 
     flags = 0;
     message* decryptomatic = NULL;
     stringlist_t* extra_keys = NULL;
-    status = decrypt_message(session, checker, &decryptomatic, &extra_keys, &rating, &flags);
+    status = decrypt_message(session, checker, &decryptomatic, &extra_keys, &flags);
 
     bool own_key_found, extra_key_0_found, extra_key_1_found;
     
@@ -391,7 +388,6 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys_e
 
     // In: extra keys; Out: keys that were used to encrypt this.
     PEP_decrypt_flags_t flags = PEP_decrypt_flag_untrusted_server;
-    PEP_rating rating;
 
     flags = PEP_decrypt_flag_untrusted_server;
     char* modified_src = NULL;
@@ -403,7 +399,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys_e
     message* dec_msg = NULL;
     decoded->recv_by = identity_dup(carol);
 
-    status = decrypt_message(session, decoded, &dec_msg, &keys, &rating, &flags);
+    status = decrypt_message(session, decoded, &dec_msg, &keys, &flags);
 
     ASSERT_NE(status, PEP_CANNOT_REENCRYPT);
 
@@ -423,7 +419,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys_e
     stringlist_add(keys, fpr_pub_extra_key_1);
     flags = PEP_decrypt_flag_untrusted_server;
     message* decryptomatic = NULL;
-    status = decrypt_message(session, checker, &decryptomatic, &keys, &rating, &flags);
+    status = decrypt_message(session, checker, &decryptomatic, &keys, &flags);
     ASSERT_OK;
     ASSERT_NOTNULL(decryptomatic);
     ASSERT_EQ(flags & PEP_decrypt_flag_src_modified, 0);
@@ -471,7 +467,6 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys_e
 
     // In: extra keys; Out: keys that were used to encrypt this.
     PEP_decrypt_flags_t flags = PEP_decrypt_flag_untrusted_server;
-    PEP_rating rating;
 
     flags = PEP_decrypt_flag_untrusted_server;
     char* modified_src = NULL;
@@ -483,7 +478,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys_e
     message* dec_msg = NULL;
     decoded->recv_by = identity_dup(carol);
 
-    status = decrypt_message(session, decoded, &dec_msg, &keys, &rating, &flags);
+    status = decrypt_message(session, decoded, &dec_msg, &keys, &flags);
 
     ASSERT_NE(status, PEP_CANNOT_REENCRYPT);
 
@@ -505,7 +500,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys_e
     flags = PEP_decrypt_flag_untrusted_server;
     message* decryptomatic = NULL;
     checker->recv_by = identity_dup(carol);
-    status = decrypt_message(session, checker, &decryptomatic, &keys, &rating, &flags);
+    status = decrypt_message(session, checker, &decryptomatic, &keys, &flags);
     ASSERT_OK;
     ASSERT_NOTNULL(decryptomatic);
     ASSERT_EQ(flags & PEP_decrypt_flag_src_modified, PEP_decrypt_flag_src_modified);
@@ -557,7 +552,6 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
     // In: extra keys; Out: keys that were used to encrypt this.
     stringlist_t* keys = NULL;
     PEP_decrypt_flags_t flags = 0;
-    PEP_rating rating;
 
     flags = PEP_decrypt_flag_untrusted_server;
     char* modified_src = NULL;
@@ -569,7 +563,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
     message* dec_msg = NULL;
     decoded->recv_by = identity_dup(me_recip_2);
 
-    status = decrypt_message(session, decoded, &dec_msg, &keys, &rating, &flags);
+    status = decrypt_message(session, decoded, &dec_msg, &keys, &flags);
 
     ASSERT_NE(status, PEP_CANNOT_REENCRYPT);
 
@@ -597,7 +591,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
     dec_msg = NULL;
     decoded->recv_by = identity_dup(me_recip_2);
 
-    status = decrypt_message(session, decoded, &dec_msg, &keys, &rating, &flags);
+    status = decrypt_message(session, decoded, &dec_msg, &keys, &flags);
 
     ASSERT_NE(status, PEP_CANNOT_REENCRYPT);
 
@@ -614,7 +608,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
 
     decoded->recv_by = identity_dup(me_recip_2);
     stringlist_t* tmp_keys = NULL;
-    status = decrypt_message(session, decoded, &dec_msg, &tmp_keys, &rating, &flags);
+    status = decrypt_message(session, decoded, &dec_msg, &tmp_keys, &flags);
 
     output_stream << "keys used:\n";
 
@@ -678,7 +672,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
     dec_msg = NULL;
     decoded->recv_by = identity_dup(me_recip_2);
 
-    status = decrypt_message(session, decoded, &dec_msg, &keys, &rating, &flags);
+    status = decrypt_message(session, decoded, &dec_msg, &keys, &flags);
 
     ASSERT_NE(status, PEP_CANNOT_REENCRYPT);
 
@@ -705,7 +699,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
     dec_msg = NULL;
     decoded->recv_by = identity_dup(me_recip_2);
 
-    status = decrypt_message(session, decoded, &dec_msg, &keys, &rating, &flags);
+    status = decrypt_message(session, decoded, &dec_msg, &keys, &flags);
 
     ASSERT_NE(status, PEP_CANNOT_REENCRYPT);
 
@@ -722,7 +716,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
 
     decoded->recv_by = identity_dup(me_recip_2);
     tmp_keys = NULL;
-    status = decrypt_message(session, decoded, &dec_msg, &tmp_keys, &rating, &flags);
+    status = decrypt_message(session, decoded, &dec_msg, &tmp_keys, &flags);
 
     output_stream << "keys used:\n";
 
@@ -792,7 +786,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
     dec_msg = NULL;
     decoded->recv_by = identity_dup(me_recip_1);
 
-    status = decrypt_message(session, decoded, &dec_msg, &keys, &rating, &flags);
+    status = decrypt_message(session, decoded, &dec_msg, &keys, &flags);
 
     ASSERT_NE(status, PEP_CANNOT_REENCRYPT);
 
@@ -820,7 +814,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
     dec_msg = NULL;
     decoded->recv_by = identity_dup(me_recip_1);
 
-    status = decrypt_message(session, decoded, &dec_msg, &keys, &rating, &flags);
+    status = decrypt_message(session, decoded, &dec_msg, &keys, &flags);
 
     ASSERT_NE(status, PEP_CANNOT_REENCRYPT);
 
@@ -836,7 +830,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
 
     decoded->recv_by = identity_dup(me_recip_1);
     tmp_keys = NULL;
-    status = decrypt_message(session, decoded, &dec_msg, &tmp_keys, &rating, &flags);
+    status = decrypt_message(session, decoded, &dec_msg, &tmp_keys, &flags);
 
     output_stream << "keys used:\n";
 
@@ -921,7 +915,6 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt_from_enigmail) {
     stringlist_add(keys, fpr_pub_extra_key_1);
     
     PEP_decrypt_flags_t flags = 0;
-    PEP_rating rating;
 
     flags = PEP_decrypt_flag_untrusted_server;
 
@@ -932,7 +925,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt_from_enigmail) {
     ASSERT_NOTNULL(enc_msg );
     enc_msg->recv_by = identity_dup(me_recip_2);
     // First reencryption - should give us a reencrypted message
-    status = decrypt_message(session, enc_msg, &dec_msg, &keys, &rating, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keys, &flags);
     ASSERT_OK;
     ASSERT_NOTNULL(dec_msg );
     ASSERT_NE(flags & PEP_decrypt_flag_src_modified, 0);
@@ -948,7 +941,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt_from_enigmail) {
     keys = new_stringlist(fpr_pub_extra_key_0);
     stringlist_add(keys, fpr_pub_extra_key_1);
 
-    status = decrypt_message(session, enc_msg, &dec_msg, &keys, &rating, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keys, &flags);
     ASSERT_OK;
     ASSERT_NOTNULL(dec_msg );
     ASSERT_EQ(flags & PEP_decrypt_flag_src_modified, 0);
@@ -1000,7 +993,6 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt_from_enigmail_w_own
     stringlist_add(keys, fpr_pub_extra_key_1);
     
     PEP_decrypt_flags_t flags = 0;
-    PEP_rating rating;
 
     flags = PEP_decrypt_flag_untrusted_server;
 
@@ -1012,7 +1004,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt_from_enigmail_w_own
     ASSERT_NOTNULL(enc_msg );
 
     // First reencryption - should give us a reencrypted message
-    status = decrypt_message(session, enc_msg, &dec_msg, &keys, &rating, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keys, &flags);
     ASSERT_OK;
     ASSERT_NOTNULL(dec_msg );
     ASSERT_NE(flags & PEP_decrypt_flag_src_modified, 0);
@@ -1028,7 +1020,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt_from_enigmail_w_own
     keys = new_stringlist(fpr_pub_extra_key_0);
     stringlist_add(keys, fpr_pub_extra_key_1);    
 
-    status = decrypt_message(session, enc_msg, &dec_msg, &keys, &rating, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keys, &flags);
     ASSERT_OK;
     ASSERT_NOTNULL(dec_msg );
     ASSERT_EQ(flags & PEP_decrypt_flag_src_modified, 0);
@@ -1081,7 +1073,6 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt_from_pEp_2_0) {
     stringlist_add(keys, fpr_pub_extra_key_1);
     
     PEP_decrypt_flags_t flags = 0;
-    PEP_rating rating;
 
     flags = PEP_decrypt_flag_untrusted_server;
 
@@ -1093,7 +1084,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt_from_pEp_2_0) {
     ASSERT_NOTNULL(enc_msg );
 
     // First reencryption - should give us a reencrypted message
-    status = decrypt_message(session, enc_msg, &dec_msg, &keys, &rating, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keys, &flags);
     ASSERT_NE(status, PEP_CANNOT_REENCRYPT);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(dec_msg , nullptr);
@@ -1110,7 +1101,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt_from_pEp_2_0) {
     keys = new_stringlist(fpr_pub_extra_key_0);
     stringlist_add(keys, fpr_pub_extra_key_1);    
 
-    status = decrypt_message(session, enc_msg, &dec_msg, &keys, &rating, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keys, &flags);
     ASSERT_OK;
     ASSERT_NOTNULL(dec_msg );
     ASSERT_EQ(flags & PEP_decrypt_flag_src_modified, 0);

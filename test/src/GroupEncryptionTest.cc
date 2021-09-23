@@ -1030,10 +1030,9 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_1) {
 
     message* dec_msg = NULL;
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
-    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &flags);
     ASSERT_OK;
 
     // Ok, so that worked.
@@ -1122,10 +1121,9 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_2) {
 
     message* dec_msg = NULL;
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
-    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &flags);
     ASSERT_OK;
 
     // Ok, so that worked.
@@ -1187,10 +1185,9 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_3) {
 
     message* dec_msg = NULL;
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
-    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &flags);
     ASSERT_OK;
 
     // Ok, so that worked.
@@ -1252,10 +1249,9 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_receive_member_4) {
 
     message* dec_msg = NULL;
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
-    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &flags);
     ASSERT_OK;
 
     // Ok, so that worked.
@@ -1486,10 +1482,9 @@ TEST_F(GroupEncryptionTest, check_protocol_group_join_member_1) {
 
     message* dec_msg = NULL;
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
-    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &flags);
     ASSERT_OK;
 
     pEp_identity* group_identity = new_identity(group_1_address, NULL, own_id, NULL);
@@ -1560,10 +1555,9 @@ TEST_F(GroupEncryptionTest, check_protocol_group_join_member_2) {
 
     message* dec_msg = NULL;
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
-    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &flags);
     ASSERT_OK;
 
     pEp_identity* group_identity = new_identity(group_1_address, NULL, own_id, NULL);
@@ -1620,10 +1614,9 @@ TEST_F(GroupEncryptionTest, check_protocol_group_join_member_3) {
 
     message* dec_msg = NULL;
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
-    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &flags);
     ASSERT_OK;
 
     pEp_identity* group_identity = new_identity(group_1_address, NULL, own_id, NULL);
@@ -1680,10 +1673,9 @@ TEST_F(GroupEncryptionTest, check_protocol_group_join_member_4) {
 
     message* dec_msg = NULL;
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
-    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &flags);
     ASSERT_OK;
 
     pEp_identity* group_identity = new_identity(group_1_address, NULL, own_id, NULL);
@@ -1777,10 +1769,9 @@ TEST_F(GroupEncryptionTest, check_protocol_group_join_receive) {
 
     message* dec_msg = NULL;
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
-    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &flags);
     ASSERT_OK;
 
     // Ok, so that worked.
@@ -1877,9 +1868,8 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_send) {
     mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
     message* dec_msg = NULL;
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &flags);
     ASSERT_OK;
 
     // Member 1
@@ -1891,9 +1881,8 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_send) {
     dec_msg = NULL;
     free_stringlist(keylist);
     keylist = NULL;
-    rating = PEP_rating_undefined;
     flags = 0;
-    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &flags);
     ASSERT_OK;
 
     // Member 2
@@ -1905,9 +1894,8 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_send) {
     dec_msg = NULL;
     free_stringlist(keylist);
     keylist = NULL;
-    rating = PEP_rating_undefined;
     flags = 0;
-    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &flags);
     ASSERT_OK;
     
     free_message(msg);
@@ -2070,9 +2058,8 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_receive) {
 
     message* dec_msg = NULL;
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &flags);
     ASSERT_OK;
 
 
@@ -2110,7 +2097,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_receive) {
     dec_msg = NULL;
     keylist = NULL;
     flags = 0;
-    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &flags);
     ASSERT_OK;
 
     status = retrieve_own_membership_info_for_group_and_identity(session, group, me);
@@ -2181,10 +2168,9 @@ TEST_F(GroupEncryptionTest, check_protocol_group_join_member_unknown) {
 
     message* dec_msg = NULL;
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
-    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &flags);
     ASSERT_OK;
 
     // Now make sure we didn't do anything with the message
@@ -2233,8 +2219,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_group_unknown) {
     message* dec_msg = NULL;
     stringlist_t* keylist = NULL;
     PEP_decrypt_flags_t flags = 0;
-    PEP_rating rating;
-    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &flags);
     ASSERT_OK;
 
     pEp_identity* group_identity = new_identity(group_1_address, NULL, own_id, NULL);
@@ -2616,10 +2601,9 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_not_manager) {
 
     message* dec_msg = NULL;
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
-    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &flags);
     ASSERT_OK;
 
     free_message(msg);
@@ -2635,7 +2619,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_not_manager) {
     keylist = NULL;
     flags = 0;
 
-    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &flags);
     free_message(msg);
     ASSERT_OK;
     free_message(dec_msg);
@@ -2661,7 +2645,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_not_manager) {
     keylist = NULL;
     flags = 0;
 
-    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &flags);
     free_message(msg);
     free_message(dec_msg);
     ASSERT_OK;
@@ -3099,15 +3083,14 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_two_recents) {
     ASSERT_NE(message_2, nullptr);
 
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
     message* dec_msg = NULL;
-    status = decrypt_message(session, message_1, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, message_1, &dec_msg, &keylist, &flags);
     ASSERT_OK;
     free_message(dec_msg);
     dec_msg = NULL;
-    status = decrypt_message(session, message_2, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, message_2, &dec_msg, &keylist, &flags);
     ASSERT_OK;
     free_message(dec_msg);
     dec_msg = NULL;
@@ -3199,13 +3182,12 @@ TEST_F(GroupEncryptionTest, check_group_key_reset_receive_member_2) {
     message* enc_msg = NULL;
     message* dec_msg = NULL;
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
     enc_msg = string_to_msg(invite);
     ASSERT_NE(enc_msg, nullptr);
 
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
     ASSERT_OK;
 
     pEp_identity* group_ident = new_identity(group_1_address, NULL, "MEMBER2", group_1_name);
@@ -3224,7 +3206,7 @@ TEST_F(GroupEncryptionTest, check_group_key_reset_receive_member_2) {
     enc_msg = string_to_msg(resetmsg);
     ASSERT_NE(enc_msg, nullptr);
     free_message(dec_msg);
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
     ASSERT_OK;
 
     bool is_revoked;
@@ -3261,11 +3243,10 @@ TEST_F(GroupEncryptionTest, check_group_key_reset_receive_partner_1) {
     message* enc_msg = string_to_msg(slurp(string("test_mails/group_key_reset_mixed_output_to_partner_public_") + manager_2_address + ".eml"));
     ASSERT_NE(enc_msg, nullptr);
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     message* dec_msg = NULL;
 
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
     ASSERT_OK;
 
     // FIXME: reinstate this when key election removal is in - fails due to delete_keypair
@@ -3304,11 +3285,10 @@ TEST_F(GroupEncryptionTest, check_group_key_reset_receive_partner_2) {
     message* enc_msg = string_to_msg(slurp(string("test_mails/group_key_reset_mixed_output_to_partner_public_") + me->address + ".eml"));
     ASSERT_NE(enc_msg, nullptr);
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     message* dec_msg = NULL;
 
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
     ASSERT_OK;
 
     // FIXME: reinstate this when key election removal is in - fails due to delete_keypair
@@ -3447,15 +3427,14 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_two_recents_two_missi
     ASSERT_NE(message_2, nullptr);
 
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
     message* dec_msg = NULL;
-    status = decrypt_message(session, message_1, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, message_1, &dec_msg, &keylist, &flags);
     ASSERT_OK;
     free_message(dec_msg);
     dec_msg = NULL;
-    status = decrypt_message(session, message_2, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, message_2, &dec_msg, &keylist, &flags);
     ASSERT_OK;
     free_message(dec_msg);
     dec_msg = NULL;
@@ -3617,11 +3596,10 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_one_recent_all_missin
     ASSERT_NE(message_1, nullptr);
 
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
     message* dec_msg = NULL;
-    status = decrypt_message(session, message_1, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, message_1, &dec_msg, &keylist, &flags);
     ASSERT_OK;
     free_message(dec_msg);
     free_message(message_1);
@@ -3870,15 +3848,14 @@ TEST_F(GroupEncryptionTest, check_protocol_remove_member_from_group_two_recents)
     ASSERT_NE(message_2, nullptr);
 
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
     message* dec_msg = NULL;
-    status = decrypt_message(session, message_1, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, message_1, &dec_msg, &keylist, &flags);
     ASSERT_OK;
     free_message(dec_msg);
     dec_msg = NULL;
-    status = decrypt_message(session, message_2, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, message_2, &dec_msg, &keylist, &flags);
     ASSERT_OK;
     free_message(dec_msg);
     dec_msg = NULL;
@@ -4079,15 +4056,14 @@ TEST_F(GroupEncryptionTest, check_protocol_remove_member_not_joined_from_group_t
     ASSERT_NE(message_2, nullptr);
 
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
     message* dec_msg = NULL;
-    status = decrypt_message(session, message_1, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, message_1, &dec_msg, &keylist, &flags);
     ASSERT_OK;
     free_message(dec_msg);
     dec_msg = NULL;
-    status = decrypt_message(session, message_2, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, message_2, &dec_msg, &keylist, &flags);
     ASSERT_OK;
     free_message(dec_msg);
     dec_msg = NULL;
@@ -4287,15 +4263,14 @@ TEST_F(GroupEncryptionTest, check_protocol_remove_unknown_member_from_group_two_
     ASSERT_NE(message_2, nullptr);
 
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
     message* dec_msg = NULL;
-    status = decrypt_message(session, message_1, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, message_1, &dec_msg, &keylist, &flags);
     ASSERT_OK;
     free_message(dec_msg);
     dec_msg = NULL;
-    status = decrypt_message(session, message_2, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, message_2, &dec_msg, &keylist, &flags);
     ASSERT_OK;
     free_message(dec_msg);
     dec_msg = NULL;
