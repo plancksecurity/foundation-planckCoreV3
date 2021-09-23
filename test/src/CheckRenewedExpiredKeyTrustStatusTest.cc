@@ -117,7 +117,6 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     char* decrypted_msg = NULL;
     stringlist_t* keylist = NULL;
 
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
     message* dec_msg = NULL;
@@ -125,7 +124,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
     ASSERT_OK;
 
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
     ASSERT_EQ(status, PEP_DECRYPTED); // ???
 
     ok = slurp_and_import_key(session, "test_keys/pub/inquisitor-0xA4728718_renewed_pub.asc");
@@ -140,6 +139,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     msg2->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
 
     // We don't keep OpenPGP expired keys. We'll have to receive the new one via mail.
+    PEP_rating rating;
     status = outgoing_message_rating(session, msg2, &rating);
     ASSERT_OK;
     ASSERT_EQ(rating, PEP_rating_reliable);
@@ -182,7 +182,6 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     char* decrypted_msg = NULL;
     stringlist_t* keylist = NULL;
 
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
     message* dec_msg = NULL;
@@ -190,7 +189,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
     ASSERT_OK;
 
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
     ASSERT_EQ(status, PEP_DECRYPTED); // ???
 
     ok = slurp_and_import_key(session, "test_keys/pub/inquisitor-0xA4728718_renewed_pub.asc");
@@ -205,6 +204,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     msg2->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
 
     // We don't keep OpenPGP expired keys. We'll have to receive the new one via mail.
+    PEP_rating rating;
     status = outgoing_message_rating(session, msg2, &rating);
     ASSERT_OK;
     ASSERT_EQ(rating, PEP_rating_reliable);
@@ -273,7 +273,6 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     stringlist_t* keylist = NULL;
 //    char* modified_src = NULL;
 
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
     message* dec_msg = NULL;
@@ -281,7 +280,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
     ASSERT_OK;
 
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
     ASSERT_EQ(status, PEP_DECRYPTED); // ???
 
     ok = slurp_and_import_key(session, "test_keys/pub/inquisitor-0xA4728718_renewed_pub.asc");
@@ -305,6 +304,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     msg2->longmsg = strdup("Blahblahblah!");
     msg2->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
 
+    PEP_rating rating;
     status = outgoing_message_rating(session, msg2, &rating);
     ASSERT_OK;
     ASSERT_EQ(rating, PEP_rating_trusted);
@@ -347,7 +347,6 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
 
     char* decrypted_msg = NULL;
     stringlist_t* keylist = nullptr;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
     message* dec_msg = NULL;
@@ -355,7 +354,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
     ASSERT_OK;
 
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
     ASSERT_EQ(status, PEP_DECRYPTED);
 
     ok = slurp_and_import_key(session, "test_keys/pub/inquisitor-0xA4728718_renewed_pub.asc");
@@ -370,6 +369,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     msg2->longmsg = strdup("Blahblahblah!");
     msg2->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
 
+    PEP_rating rating;
     status = outgoing_message_rating(session, msg2, &rating);
     ASSERT_OK;
     ASSERT_EQ(rating , PEP_rating_reliable);
