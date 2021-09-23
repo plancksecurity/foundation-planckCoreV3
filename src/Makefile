@@ -100,18 +100,20 @@ clean:
 	rm -Rf $(TARGET).dSYM
 	rm -f KeySync_fsm.* Sync_actions.c Sync_event.* Sync_func.* Sync_impl.* sync_codec.* distribution_codec.* storage_codec.*
 
+HEADERS_TO_INSTALL = \
+  pEpEngine.h keymanagement.h message_api.h dynamic_api.h stringlist.h \
+  timestamp.h identity_list.h bloblist.h stringpair.h message.h mime.h group.h \
+  cryptotech.h sync_api.h pEp_string.h openpgp_compat.h engine_sql.h \
+  labeled_int_list.h key_reset.h base64.h sync_codec.h distribution_codec.h \
+  storage_codec.h status_to_string.h keyreset_command.h platform.h platform_unix.h \
+  transport.h $(wildcard ../asn.1/*.h)
+
 # CAVEAT:
 # install_headers is needed for building *STANDALONE* pEp MIME - it is NOT used for built-in functionality!!!
 
 install_headers: $(TARGET)
 	mkdir -p $(DESTDIR)$(PREFIX)/include/pEp
-	cp pEpEngine.h keymanagement.h message_api.h dynamic_api.h stringlist.h \
-	   timestamp.h identity_list.h bloblist.h stringpair.h message.h mime.h group.h \
-	   cryptotech.h sync_api.h pEp_string.h openpgp_compat.h engine_sql.h \
-	   labeled_int_list.h key_reset.h base64.h sync_codec.h distribution_codec.h storage_codec.h \
-	   status_to_string.h keyreset_command.h platform.h platform_unix.h \
-	   transport.h ../asn.1/*.h \
-	   $(DESTDIR)$(PREFIX)/include/pEp/
+	cp $(HEADERS_TO_INSTALL) $(DESTDIR)$(PREFIX)/include/pEp/
 
 # FIXME: Does anyone but Roker use install_headers? Otherwise, remove the dependency.
 install: $(TARGET) install_headers
@@ -124,7 +126,8 @@ beinstall: install
 
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/lib/$(TARGET)
-	rm -rf $(DESTDIR)$(PREFIX)/include/pEp
+	rm $(addprefix $(DESTDIR)$(PREFIX)/include/pEp/,$(notdir $(HEADERS_TO_INSTALL)))
+	rmdir $(DESTDIR)$(PREFIX)/include/pEp 2> /dev/null || true
 
 tags: $(wildcard *.c) $(wildcard *.h)
 	ctags --sort=yes *.c *.h
