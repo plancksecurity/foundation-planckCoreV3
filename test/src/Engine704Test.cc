@@ -128,10 +128,9 @@ TEST_F(Engine704Test, check_engine704) {
     message* dec_msg = NULL;
     enc_msg->dir = PEP_dir_incoming;
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);    
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);    
     ASSERT_STREQ(dec_msg->from->username, alicename);
     ASSERT_STREQ(dec_msg->to->ident->username, bobname);    
 }

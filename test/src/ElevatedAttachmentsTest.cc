@@ -268,10 +268,9 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message) {
     
     message *dec_msg = NULL;
     stringlist_t *keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_STREQ(dec_msg->shortmsg, enc_msg->shortmsg);
     ASSERT_STREQ(msg->longmsg, dec_msg->longmsg);
@@ -404,10 +403,9 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message_elevated) {
     
     message *dec_msg = NULL;
     stringlist_t *keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
-    status = decrypt_message(session, art_msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, art_msg, &dec_msg, &keylist, &flags);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_TRUE(dec_msg);
     // today the engine is sucking keys in

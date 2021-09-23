@@ -135,7 +135,6 @@ TEST_F(LeastColorGroupTest, check_least_color_group) {
     message* dest_msg = nullptr;
     message* final_ptr = nullptr;
     stringlist_t* keylist = nullptr;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags;
 
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
@@ -143,8 +142,9 @@ TEST_F(LeastColorGroupTest, check_least_color_group) {
     ASSERT_NOTNULL(msg_ptr);
     final_ptr = msg_ptr;
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
+    PEP_rating rating = final_ptr->rating;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
     output_stream << "longmsg: " << final_ptr->longmsg << endl << endl;
