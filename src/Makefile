@@ -106,7 +106,7 @@ HEADERS_TO_INSTALL = \
   cryptotech.h sync_api.h pEp_string.h openpgp_compat.h engine_sql.h \
   labeled_int_list.h key_reset.h base64.h sync_codec.h distribution_codec.h \
   storage_codec.h status_to_string.h keyreset_command.h platform.h platform_unix.h \
-  transport.h $(wildcard ../asn.1/*.h)
+  transport.h growing_buf.h $(wildcard ../asn.1/*.h)
 
 # CAVEAT:
 # install_headers is needed for building *STANDALONE* pEp MIME - it is NOT used for built-in functionality!!!
