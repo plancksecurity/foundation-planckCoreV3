@@ -2695,10 +2695,6 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     // Reset the message rating before doing anything...
     src->rating = PEP_rating_undefined;
 
-    // ...We will compute a new rating here for the encrypted message.
-    PEP_rating rating = PEP_rating_undefined;
-#warning "FIXME: I should set this rating somehow.  I am waiting for feedback from Volker"
-
     determine_encryption_format(src);
     // TODO: change this for multi-encryption in message format 2.0
     if (src->enc_format != PEP_enc_none)
@@ -2885,7 +2881,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             attach_own_key(session, src);
             added_key_to_real_src = true;
         }
-        decorate_message(session, src, rating, NULL, true, true);
+        decorate_message(session, src, PEP_rating_undefined, NULL, true, true);
         return PEP_UNENCRYPTED;
     }
     else {
@@ -2961,6 +2957,15 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
 
     if (msg) {
+        /* Obtain the message rating... */
+        PEP_rating rating;
+        status = sent_message_rating(session, msg, & rating);
+        if (status == PEP_OUT_OF_MEMORY)
+            goto enomem;
+        else if (status != PEP_STATUS_OK)
+            goto pEp_error;
+
+        /* ...And store it into the message along with the other decorations. */
         decorate_message(session, msg, rating, NULL, true, true);
         if (_src->id) {
             msg->id = strdup(_src->id);
@@ -6509,6 +6514,16 @@ static void _max_comm_type_from_identity_list_preview(
                 il->ident);
         }
     }
+}
+
+DYNAMIC_API PEP_STATUS sent_message_rating(
+        PEP_SESSION session,
+        message *msg,
+        PEP_rating *rating
+    )
+{
+    // FIXME: this is a stub.  See ENGINE-847.
+    return outgoing_message_rating (session, msg, rating);
 }
 
 DYNAMIC_API PEP_STATUS outgoing_message_rating(

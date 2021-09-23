@@ -359,6 +359,32 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
 
 
 /**
+ *  <!--       sent_message_rating()       -->
+ *
+ *  @brief Get rating for a sent message
+ *
+ *  @param[in]   session    session handle
+ *  @param[in]   msg        message to get the rating for
+ *  @param[out]  rating     rating for the message
+ *
+ *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *
+ *  @warning msg->from must point to a valid pEp_identity
+ *           msg->dir must be PEP_dir_outgoing
+ *           the ownership of msg remains with the caller
+ *
+ */
+DYNAMIC_API PEP_STATUS sent_message_rating(
+        PEP_SESSION session,
+        message *msg,
+        PEP_rating *rating
+    );
+// FIXME: the current implementation is a stub, until ENGINE-847 is ready.
+
+
+/**
  *  <!--       outgoing_message_rating()       -->
  *
  *  @brief Get rating for an outgoing message
