@@ -393,6 +393,7 @@ void decorate_message(
     bool clobber
     )
 {
+fprintf (stderr, "decorate_message: called with rating %i (%s); clobber is %i\n", (int)rating, rating_to_string(rating), (int)clobber);
     assert(msg);
 
     if (add_version)
@@ -408,6 +409,9 @@ void decorate_message(
         replace_opt_field(msg, "X-KeyList", _keylist, clobber);
         free(_keylist);
     }
+
+replace_opt_field(msg, "X-positron-foo-ct", rating_to_string(rating), true);
+replace_opt_field(msg, "X-positron-foo-cf", rating_to_string(rating), false);
 
     msg->rating = rating;
 }
