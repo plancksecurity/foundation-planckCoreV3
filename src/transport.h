@@ -9,6 +9,7 @@
 
 #include "pEpEngine.h"
 #include "message_api.h"
+#include <pEp/transport_status_code.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,8 +44,6 @@ typedef struct _transport_config {
 // transports are delivering the transport status code
 // this is defined here:
 // https://dev.pep.foundation/Engine/TransportStatusCode
-
-typedef uint32_t PEP_transport_status_code;
 
 typedef struct _PEP_transport_t PEP_transport_t;
 
