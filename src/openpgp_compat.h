@@ -19,8 +19,10 @@ extern "C" {
 #include "dynamic_api.h"
 #include "stringpair.h"    
 
-#ifdef USE_SEQUOIA
+#if defined(USE_SEQUOIA)
 #include "pgp_sequoia.h"
+#elif defined(USE_NETPGP)
+#include "pgp_netpgp.h"
 #endif
     
 /**

@@ -75,7 +75,9 @@
 #define LOCAL_DB windoze_local_db()
 #define SYSTEM_DB windoze_system_db()
 #else // UNIX
+#ifndef ZOS
 #define _POSIX_C_SOURCE 200809L
+#endif
 #include <dlfcn.h>
 #define LOCAL_DB unix_local_db()
 #ifdef ANDROID
@@ -107,11 +109,6 @@
 #include "group_internal.h"
 #include "keymanagement_internal.h"
 #include "message_api_internal.h"
-
-// If not specified, build for Sequoia
-#ifndef USE_SEQUOIA
-#define USE_SEQUOIA
-#endif
 
 #if defined(USE_SEQUOIA)
 #include "pgp_sequoia_internal.h"
