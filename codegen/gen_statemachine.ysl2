@@ -1705,7 +1705,7 @@ tstylesheet {
 
             switch (event) {
                 case None:
-                    «../@name»_SERVICE_LOG("received Timeout event", "ignoring");
+                    // received Timeout event, ignoring
                     break;
      
         ||

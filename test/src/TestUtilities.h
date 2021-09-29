@@ -11,6 +11,7 @@
 #include "pEpEngine.h"
 #include "message_api.h"
 #include "mime.h"
+#include "status_to_string.h"
 
 #include <gtest/gtest.h>
 
@@ -37,7 +38,14 @@ char* get_new_uuid();
  */
 
 #ifndef ASSERT_OK
-#define ASSERT_OK ASSERT_EQ(status, PEP_STATUS_OK)
+#define ASSERT_OK                                             \
+    do {                                                      \
+        if (status != PEP_STATUS_OK)                          \
+            std::cout << "status is " << status << " ("       \
+                      << pEp_status_to_string(status) << ")"  \
+                      << std::endl;                           \
+        ASSERT_EQ(status, PEP_STATUS_OK);                     \
+    } while (false)
 #endif
 
 #ifndef ASSERT_NOTNULL

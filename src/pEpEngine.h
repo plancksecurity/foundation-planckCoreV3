@@ -29,7 +29,7 @@ extern "C" {
 #define PEP_ENGINE_VERSION_MAJOR 3
 #define PEP_ENGINE_VERSION_MINOR 2
 #define PEP_ENGINE_VERSION_PATCH 0
-#define PEP_ENGINE_VERSION_RC    1
+#define PEP_ENGINE_VERSION_RC    5
 
 
 #define PEP_OWN_USERID "pEp_own_userId"
@@ -160,12 +160,30 @@ typedef enum {
 
     PEP_DISTRIBUTION_ILLEGAL_MESSAGE                = 0x1002,
     PEP_STORAGE_ILLEGAL_MESSAGE                     = 0x1102,
+    PEP_PEPMESSAGE_ILLEGAL_MESSAGE                  = 0x1202,
+
+    // transport cannot init at all
+    PEP_TRANSPORT_CANNOT_INIT                       = 0x2000,
+
+    // transport can init recv but not send
+    PEP_TRANSPORT_CANNOT_INIT_SEND                  = 0x2001,
+
+    // transport can init send but not recv
+    PEP_TRANSPORT_CANNOT_INIT_RECV                  = 0x2002,
+
+    // transport init good but temporary down
+    PEP_TRANSPORT_DOWN                              = 0x2003,
+
+    // general error in transport
+    PEP_TRANSPORT_ERROR                             = 0x20ff,
 
     PEP_COMMIT_FAILED                               = 0xff01,
     PEP_MESSAGE_CONSUME                             = 0xff02,
     PEP_MESSAGE_IGNORE                              = 0xff03,
     PEP_CANNOT_CONFIG                               = 0xff04,
 
+    PEP_UNBOUND_ENVIRONMENT_VARIABLE                = -8,
+    PEP_PATH_SYNTAX_ERROR                           = -7,
     PEP_RECORD_NOT_FOUND                            = -6,
     PEP_CANNOT_CREATE_TEMP_FILE                     = -5,
     PEP_ILLEGAL_VALUE                               = -4,
@@ -173,7 +191,7 @@ typedef enum {
     PEP_OUT_OF_MEMORY                               = -2,
     PEP_UNKNOWN_ERROR                               = -1,
     
-    PEP_VERSION_MISMATCH                            = -7,
+    PEP_VERSION_MISMATCH                            = -9,
 } PEP_STATUS;
 
 /**
@@ -1741,10 +1759,30 @@ DYNAMIC_API PEP_STATUS is_pEp_user(PEP_SESSION session,
                                    pEp_identity *identity, 
                                    bool* is_pEp);
 
+
 /**
+ *  <!--       per_user_relative_directory()       -->
+ *
+ *  @brief Returns the directory for pEp management db as a relative
+ *         path from the home directory (or the pEp home directory)
+ *         The returned pointed refers memory managed by
+ *         the engine, which will remain valid until
+ *         the next call to reset_path_cache.
+ *
+ *  @retval char*   relative pathname
+ *  @retval NULL    on failure
+ *
+ */
+
+DYNAMIC_API const char *per_user_relative_directory(void);
+
+  /**
  *  <!--       per_user_directory()       -->
  *  
- *  @brief Returns the directory for pEp management db
+ *  @brief Returns the directory for pEp management db.
+ *         The returned pointed refers memory managed by
+ *         the engine, which will remain valid until
+ *         the next call to reset_path_cache.
  *  
  *  @retval char*   path to actual per user directory
  *  @retval NULL    on failure
@@ -1759,6 +1797,9 @@ DYNAMIC_API const char *per_user_directory(void);
  *  <!--       per_machine_directory()       -->
  *  
  *  @brief Returns the directory for pEp system db
+ *         The returned pointed refers memory managed by
+ *         the engine, which will remain valid until
+ *         the next call to reset_path_cache.
  *  
  *  @retval char*   path to actual per machine directory
  *  @retval NULL    on failure
@@ -1933,6 +1974,35 @@ DYNAMIC_API PEP_STATUS get_replacement_fpr(
  */
 DYNAMIC_API PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user);
 
+/**
+ *  <!--       reset_path_cache()       -->
+ *
+ *  @brief      Recompute pathnames according to the current value of the
+ *              environment.  This is automatically called by init on
+ *              platforms where a pathname cache exists, but it is possible
+ *              to call it again explicitly in case the paths need to be
+ *              recomputed from updated environment variables; the intended
+ *              use case is test suites, working with temporary
+ *              directories.
+ *
+ *  @retval     PEP_STATUS_OK                     success
+ *  @retval     PEP_UNBOUND_ENVIRONMENT_VARIABLE  unknown variable referenced
+ *  @retval     PEP_PATH_SYNTAX_ERROR             invalid syntax in argument
+ *  @retval     PEP_OUT_OF_MEMORY                 out of memory
+ *
+ */
+DYNAMIC_API PEP_STATUS reset_path_cache(void);
+
+  /**
+ *  <!--       reset_path_cache()       -->
+ *
+ *  @brief      Empty the path cache, releasing resources.  This may invalidate
+ *              the memory used by the results of per_user_relative_directory,
+ *              per_user_directory, per_machine_directory, android_system_db,
+ *              unix_system_db, unix_local_db.
+ *
+ */
+DYNAMIC_API void clear_path_cache(void);
 
 #ifdef __cplusplus
 }

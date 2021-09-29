@@ -27,6 +27,7 @@
 #include <fcntl.h>
 #include <regex.h>
 
+#include "pEpEngine.h" /* For PEP_STATUS */
 #include "platform_unix.h"
 #include "dynamic_api.h"
 
@@ -137,29 +138,28 @@ long int random(void)
     return nrand48(xsubi);
 } */
 
-const char *android_system_db(void)
+/* This is a non-caching function: see the comments in "Internal path caching
+   functionality" below. */
+static char *_android_system_db(void)
 {
-    static char buffer[MAX_PATH];
-    static bool done = false;
+    char *buffer = malloc (MAX_PATH);
+    if (buffer == NULL)
+        return NULL;
 
-    if (!done) {
-        char *tw_env;
-        if(tw_env = getenv("TRUSTWORDS")){
-            char *p = stpncpy(buffer, tw_env, MAX_PATH);
-            ssize_t len = MAX_PATH - (p - buffer) - 2;
+    char *tw_env;
+    if(tw_env = getenv("TRUSTWORDS")){
+        char *p = stpncpy(buffer, tw_env, MAX_PATH);
+        ssize_t len = MAX_PATH - (p - buffer) - 2;
 
-            if (len < strlen(SYSTEM_DB_FILENAME)) {
-                assert(0);
-                return NULL;
-            }
-
-            *p++ = '/';
-            strncpy(p, SYSTEM_DB_FILENAME, len);
-            done = true;
-        }else{
+        if (len < strlen(SYSTEM_DB_FILENAME)) {
+            assert(0);
             return NULL;
         }
 
+        *p++ = '/';
+        strncpy(p, SYSTEM_DB_FILENAME, len);
+    }else{
+        return NULL;
     }
     return buffer;
 }
@@ -405,7 +405,386 @@ static void _move(const char *o, const char *ext, const char *n)
     free(_new);
 }
 
-#ifndef NDEBUG
+/**
+ *  @internal
+ *
+ *  <!--       _strdup_or_NULL()       -->
+ *
+ *  @brief        Return a malloc-allocated copy of the given string, or (this
+ *                is the added functionality with respect to the standard
+ *                strdup) a malloc-allocated copy of "" if the argument is
+ *                NULL.
+ *                Return NULL only in case of an out-of-memory error.
+ *
+ *  @param[in]    *original constchar
+ *  @retval       NULL      out of memory
+ *  @retval       non-NULL  malloc-allocated buffer
+ */
+static char *_strdup_or_NULL(const char *original)
+{
+    if (original == NULL)
+        original = "";
+    return strdup (original);
+}
+
+
+/*
+ * Environment variable expansion
+ * **********************************************************************
+ */
+
+/* The state of a DFA implementing variable recognition in _expand_variables ,
+   below. */
+enum _expand_variable_state {
+    _expand_variable_state_non_variable,
+    _expand_variable_state_after_dollar,
+    _expand_variable_state_after_backslash,
+    _expand_variable_state_in_variable
+};
+
+/**
+ *  @internal
+ *
+ *  <!--       _expand_variables()       -->
+ *
+ *  @brief        Set a malloc-allocated '\0'-terminated string which is
+ *                a copy of the argument with shell variables expanded, where
+ *                variable references use Unix shell-style syntax $VARIABLE.
+ *                Notice that the alternative syntax ${VARIABLE} is not
+ *                supported.
+ *                See [FIXME: deployment-engineer documentation].
+ *
+ *  @param[in]    string_with_variables             char *
+ *  @param[out]   copy_with_variables_expanded      char **
+ *  @retval       PEP_STATUS_OK                     success
+ *  @retval       PEP_UNBOUND_ENVIRONMENT_VARIABLE  unknown variable referenced
+ *  @retval       PEP_PATH_SYNTAX_ERROR             invalid syntax in argument
+ *  @retval       PEP_OUT_OF_MEMORY                 out of memory
+ *
+ */
+static PEP_STATUS _expand_variables(char **out,
+                                    const char *string_with_variables)
+{
+    PEP_STATUS res = PEP_STATUS_OK;
+    size_t in_length = strlen(string_with_variables);
+    const char *variable_name_beginning; /* This points within the input. */
+    char *variable_name_copy = NULL /* we free on error. */;
+    size_t allocated_size
+#ifdef NDEBUG
+        = 1024;
+#else
+        = 1 /* Notice that 0 is incorrect: this grows by doubling. */;
+#endif // #ifdef NDEBUG
+    int out_index = 0; /* The out index is also the used out size */
+    const char *in = string_with_variables;
+    /* In the pEp engine we adopt the convention of "" behaving the same as
+       NULL.  Notice that we never free this, so it is not a problem if this
+       string is not malloc-allocated. */
+    if (in == NULL)
+        in = "";
+    /* We free on error. */
+    * out = NULL ;
+
+    /* Recognise a variable according to POSIX syntax which, luckily for us,
+       only allows for letters, digits and underscores -- The first character
+       may not be a digit... */
+#define VALID_FIRST_CHARACTER_FOR_VARIABLE(c)  \
+    (   ((c) >= 'a' && (c) <= 'z')             \
+     || ((c) >= 'A' && (c) <= 'Z')             \
+     || ((c) == '_'))
+    /* ...But characters after the first may be. */
+#define VALID_NON_FIRST_CHARACTER_FOR_VARIABLE(c)  \
+    (   VALID_FIRST_CHARACTER_FOR_VARIABLE(c)      \
+     || ((c) >= '0' && (c) <= '9'))
+
+    /* Append the char argument to the result string, automatically resizing it
+       if needed. */
+#define EMIT_CHAR(c)                                      \
+    do                                                    \
+        {                                                 \
+            if (out_index == allocated_size) {            \
+                allocated_size *= 2;                      \
+                /*fprintf (stderr, "ALLOCATED SIZE: %i -> %i\n", (int) allocated_size / 2, (int) allocated_size);*/\
+                * out = realloc (* out, allocated_size);  \
+                if (* out == NULL)                        \
+                    FATAL (PEP_OUT_OF_MEMORY,             \
+                           "cannot grow buffer");         \
+            }                                             \
+            (* out) [out_index] = (c);                    \
+            out_index ++;                                 \
+        }                                                 \
+    while (false)
+
+    /* Append the string argument to the output string, automatically resizing
+       it as needed. */
+#define EMIT_STRING(s)                      \
+    do {                                    \
+        const char *p;                      \
+        for (p = (s); (* p) != '\0'; p ++)  \
+            EMIT_CHAR (* p);                \
+    } while (false)
+
+    /* Emit the expansion of the environment variable whose name is delimited on
+       the left by variable_name_beginning and on the right by the character
+       coming right *before* in.  Fail fatally if the variable is unbound.
+       The expansion is emitted by appending to the result string, automatically
+       resizing it as needed. */
+#define EMIT_CURRENT_VARIABLE                                      \
+    do {                                                           \
+        const char *variable_past_end = in;                        \
+        size_t variable_name_length                                \
+            = variable_past_end - variable_name_beginning;         \
+        strcpy (variable_name_copy, variable_name_beginning);      \
+        variable_name_copy [variable_name_length] = '\0';          \
+        const char *variable_value = getenv (variable_name_copy);  \
+        if (variable_value == NULL)                                \
+            FATAL_NAME (PEP_UNBOUND_ENVIRONMENT_VARIABLE,          \
+                        "unbound variable", variable_name_copy);   \
+        EMIT_STRING (variable_value);                              \
+    } while (false)
+
+#define FATAL(code, message)                          \
+    do { res = (code); goto failure; } while (false)
+#define FATAL_NAME(code, message, name)               \
+    FATAL((code), (message))
+
+    /* We can allocate buffers, now that we have FATAL. */
+    if ((variable_name_copy
+         = malloc (in_length + 1 /* a safe upper bound for a sub-string. */))
+        == NULL)
+        FATAL (PEP_OUT_OF_MEMORY, "out of mmeory");
+    if (((* out) = malloc (allocated_size)) == NULL)
+        FATAL (PEP_OUT_OF_MEMORY, "out of memory");
+
+    /* This logic implements a DFA. */
+    enum _expand_variable_state s = _expand_variable_state_non_variable;
+    char c;
+    while (true) {
+        c = * in;
+        switch (s) {
+        case _expand_variable_state_non_variable:
+            if (c == '$') {
+                variable_name_beginning = in + 1;
+                s = _expand_variable_state_after_dollar;
+            }
+            else if (c == '\\')
+                s = _expand_variable_state_after_backslash;
+            else /* This includes c == '\0'. */
+                EMIT_CHAR (c);
+            if (c == '\0')
+                goto success;
+            break;
+
+        case _expand_variable_state_after_backslash:
+            if (c == '$' || c == '\\') {
+                EMIT_CHAR (c);
+                s = _expand_variable_state_non_variable;
+            }
+            else if (c == '\0') /* Just to give a nicer error message */
+                FATAL (PEP_PATH_SYNTAX_ERROR, "trailing unescaped '\\'");
+            else /* this would be correct even with '\0' */
+                FATAL (PEP_PATH_SYNTAX_ERROR, "invalid escape");
+            break;
+
+        case _expand_variable_state_after_dollar:
+            if (VALID_FIRST_CHARACTER_FOR_VARIABLE (c))
+                s = _expand_variable_state_in_variable;
+            else if (c == '\0') /* Just to give a nicer error message */
+                FATAL (PEP_PATH_SYNTAX_ERROR,"trailing '$' character");
+            else if (c == '\\') /* Just to give a nicer error message */
+                FATAL (PEP_PATH_SYNTAX_ERROR,
+                       "empty variable name followed by escape");
+            else if (c == '$') /* Just to give a nicer error message */
+                FATAL (PEP_PATH_SYNTAX_ERROR, "two consecutive '$' characters");
+            else
+                FATAL (PEP_PATH_SYNTAX_ERROR,
+                       "invalid variable first character after '$'");
+            break;
+
+        case _expand_variable_state_in_variable:
+            if (VALID_NON_FIRST_CHARACTER_FOR_VARIABLE (c))
+                /* Do nothing */;
+            else if (c == '\\') {
+                EMIT_CURRENT_VARIABLE;
+                s = _expand_variable_state_after_backslash;
+            }
+            else {
+                /* This includes c == '\0'. */
+                EMIT_CURRENT_VARIABLE;
+                EMIT_CHAR (c);
+                if (c == '\0')
+                    goto success;
+                else
+                    s = _expand_variable_state_non_variable;
+            }
+            break;
+
+        default:
+            FATAL (PEP_STATEMACHINE_INVALID_STATE /* Slightly questionable: this
+                                                     should be an assertion. */,
+                   "impossible DFA state");
+        } /* switch */
+
+        in ++;
+    } /* while */
+
+ success:
+    free(variable_name_copy);
+    return res;
+
+ failure:
+    free(* out);
+    * out = NULL;
+    goto success;
+#undef VALID_FIRST_CHARACTER_FOR_VARIABLE
+#undef VALID_NON_FIRST_CHARACTER_FOR_VARIABLE
+#undef EMIT_CHAR
+#undef EMIT_STRING
+#undef EMIT_CURRENT_VARIABLE
+#undef FATAL
+#undef FATAL_NAME
+}
+
+
+/*
+ * Internal path caching functionality
+ * **********************************************************************
+ */
+
+/* Several functions in this compilation unit return paths to files or
+ * directories, always returning pointers to the same internally managed memory
+ * at every call.
+ *
+ * The cache is filled at engine initialisation, using the value of environment
+ * variables at initialisation time: after that point no out-of-memory errors
+ * are possible, until reset.
+ *
+ * In debugging mode the cache can be "reset", with every path recomputed on
+ * demand according to the current environment.
+ */
+
+/* For each path we define:
+   - a static char * variable pointing to the cached value;
+   - a prototype for a static function returning a malloc-allocated copy of
+     the value, unexapanded, not using the cache (to be defined below by hand);
+   - a public API function returning a pointer to cached memory. */
+#define DEFINE_CACHED_PATH(name)                                       \
+    /* A static variable holding the cached path, or NULL. */          \
+    static char *_ ## name ## _cache = NULL;                           \
+                                                                       \
+    /* A prototype for the hand-written function returning the         \
+       computed value for the path, without using the cache and        \
+       without expanding variables. */                                 \
+    static char *_ ## name(void);                                      \
+                                                                       \
+    /* The public version of the function, using the cache. */         \
+    DYNAMIC_API const char *name(void)                                 \
+    {                                                                  \
+        if (_ ## name ## _cache == NULL) {                             \
+            /* It is unusual and slightly bizarre than a path is       \
+               accessed before initialisation; however it can happen   \
+               in the engine test suite. */                            \
+            fprintf (stderr,                                           \
+                     "WARNING: accessing %s before its cache is set:"  \
+                     " this should not happen in production.\n",       \
+                     #name);                                           \
+            reset_path_cache();                                        \
+        }                                                              \
+        assert (_ ## name ## _cache != NULL);                          \
+        return _ ## name ## _cache;                                    \
+    }
+
+/* Define cached paths using the functionality above: */
+DEFINE_CACHED_PATH (per_user_relative_directory)
+DEFINE_CACHED_PATH (per_user_directory)
+DEFINE_CACHED_PATH (per_machine_directory)
+#ifdef ANDROID
+    DEFINE_CACHED_PATH (android_system_db)
+#endif
+DEFINE_CACHED_PATH (unix_system_db)
+DEFINE_CACHED_PATH (unix_local_db)
+
+/* Free every cache variable and re-initialise it to NULL: this
+   re-initialisation is important when this function is used here,
+   internally, as part of cleanup on errors. */
+DYNAMIC_API void clear_path_cache (void)
+{
+#define UNSET(name)                          \
+    do {                                     \
+        free((void *) _ ## name ## _cache);  \
+        (_ ## name ## _cache) = NULL;        \
+    } while (false)
+
+    UNSET (per_user_relative_directory);
+    UNSET (per_user_directory);
+    UNSET (per_machine_directory);
+#ifdef ANDROID
+    UNSET (android_system_db);
+#endif
+    UNSET (unix_system_db);
+    UNSET (unix_local_db);
+
+#undef UNSET
+}
+
+DYNAMIC_API PEP_STATUS reset_path_cache(void)
+{
+    PEP_STATUS res = PEP_STATUS_OK;
+
+#define SET_OR_FAIL(name)                                                 \
+    do {                                                                  \
+        unexpanded_path = (_ ## name)();                                  \
+        if (unexpanded_path == NULL) {                                    \
+            res = PEP_OUT_OF_MEMORY;                                      \
+            goto free_everything_and_fail;                                \
+        }                                                                 \
+        res = _expand_variables(& _ ## name ## _cache, unexpanded_path);  \
+        if (res != PEP_STATUS_OK)                                         \
+            goto free_everything_and_fail;                                \
+        /* Clear unxpanded_path for the next call of SET_OR_FAIL. */      \
+        free((void *) unexpanded_path);                                   \
+        unexpanded_path = NULL;                                           \
+    } while (false)
+
+    /* Start by releasing memory, which is needed in case this is not the first
+       invocation. */
+    clear_path_cache ();
+
+    const char *unexpanded_path = NULL;
+
+    SET_OR_FAIL (per_user_relative_directory);
+    SET_OR_FAIL (per_user_directory);
+    SET_OR_FAIL (per_machine_directory);
+#ifdef ANDROID
+    SET_OR_FAIL (android_system_db);
+#endif
+    SET_OR_FAIL (unix_system_db);
+    SET_OR_FAIL (unix_local_db);
+
+    return res;
+
+ free_everything_and_fail:
+    free((void *) unexpanded_path);
+    clear_path_cache ();
+    return res;
+
+#undef SET_OR_FAIL
+}
+
+
+/**
+ *  @internal
+ *
+ *  <!--       _per_user_directory()       -->
+ *
+ *  @brief            TODO
+ *
+ */
+static char *_per_user_relative_directory(void)
+{
+    return _strdup_or_NULL(PER_USER_DIRECTORY);
+}
+
 /**
  *  @internal
  *  
@@ -413,27 +792,10 @@ static void _move(const char *o, const char *ext, const char *n)
  *  
  *  @brief            TODO
  *  
- *  @param[in]    reset        int
- *  
  */
-static const char *_per_user_directory(int reset)
-#else 
-static const char *_per_user_directory(void)
-#endif
+static char *_per_user_directory(void)
 {
-    static char *path = NULL;
-
-#ifdef NDEBUG    
-    if (path)
-        return path;
-#else        
-    if (path && !reset)
-        return path;
-    else if (path) {
-        free(path);
-        path = NULL;
-    }
-#endif    
+    char *path = NULL;
 
     const char *home = NULL;
 #ifndef NDEBUG
@@ -465,32 +827,9 @@ error:
     return NULL;
 }
 
-#ifdef NDEBUG
-const char *unix_local_db(void)
-#else
-const char *unix_local_db(int reset)
-#endif
+char *_unix_local_db(void)
 {
-    static char *path = NULL;
-#ifdef NDEBUG
-    if (path)
-#else
-    if (path && !reset)
-#endif
-        return path;
-
-    const char* pathret = NULL;
-#ifndef NDEBUG 
-    pathret = _per_user_directory(reset);
-#else 
-    pathret = _per_user_directory();
-#endif
-
-    if (!pathret)
-        return NULL;
-
-    path = strdup(pathret);
-    assert(path);
+    char* path = (char *) _per_user_directory() /* This memory is not shared. */;
     if (!path)
         return NULL;
 
@@ -602,26 +941,15 @@ the_end:
     return path;
 }
 
-DYNAMIC_API const char *per_user_directory(void) {
-#ifdef NDEBUG
-    return _per_user_directory();
-#else 
-    return _per_user_directory(false);
-#endif
+static char *_per_machine_directory(void) {
+    return _strdup_or_NULL(PER_MACHINE_DIRECTORY);
 }
 
-DYNAMIC_API const char *per_machine_directory(void)
+char *_unix_system_db(void)
 {
-    return PER_MACHINE_DIRECTORY;
-}
+    char *path = NULL;
 
-const char *unix_system_db(void)
-{
-    static char *path = NULL;
-    if (path)
-        return path;
-
-    path = strdup(per_machine_directory());
+    path = _per_machine_directory() /* Use this fresh copy. */;
     assert(path);
     if (!path)
         return NULL;

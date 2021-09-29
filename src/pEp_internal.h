@@ -79,12 +79,7 @@
 #define _POSIX_C_SOURCE 200809L
 #endif
 #include <dlfcn.h>
-#ifdef NDEBUG
 #define LOCAL_DB unix_local_db()
-#else
-#define LOCAL_DB unix_local_db(false)
-#define LOCAL_DB_RESET unix_local_db(true)
-#endif
 #ifdef ANDROID
 #define SYSTEM_DB android_system_db()
 #else
@@ -295,8 +290,6 @@ struct _pEpSession {
     sqlite3_stmt *add_userid_alias;
 
     // callbacks
-    examine_identity_t examine_identity;
-    void *examine_management;
     notifyHandshake_t notifyHandshake;
     inject_sync_event_t inject_sync_event;
     retrieve_next_sync_event_t retrieve_next_sync_event;
