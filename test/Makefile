@@ -48,7 +48,7 @@ endif
 LDLIBS+= -lasn1
 
 ifeq ($(BUILD_FOR),Linux)
-    LDLIBS+= -luuid
+    LDLIBS+= -luuid -lpthread
 endif
 
 ifeq ($(OPENPGP),SEQUOIA)
