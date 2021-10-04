@@ -682,12 +682,8 @@ static PEP_STATUS _expand_variables(char **out,
     {                                                                  \
         if (_ ## name ## _cache == NULL) {                             \
             /* It is unusual and slightly bizarre than a path is       \
-               accessed before initialisation; however it can happen   \
-               in the engine test suite. */                            \
-            fprintf (stderr,                                           \
-                     "WARNING: accessing %s before its cache is set:"  \
-                     " this should not happen in production.\n",       \
-                     #name);                                           \
+               accessed before initialisation; however it can happen,  \
+               for example in the engine test suite. */                \
             reset_path_cache();                                        \
         }                                                              \
         assert (_ ## name ## _cache != NULL);                          \
