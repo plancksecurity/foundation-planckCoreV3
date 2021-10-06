@@ -118,6 +118,13 @@ DYNAMIC_API PEP_STATUS update_identity(
  *           if you need to do this asynchronous, you need to return an identity
  *           with retrieve_next_identity() where pEp_identity.me is true
  *  
+ *  @warning If the identity has no .username but the person with the same
+ *           address has one, copy it into the identity's .username.
+ *           Applications should in general *not* rely on this feature, which
+ *           can break privacy by revealing a username to a third party.  It is
+ *           provided for compatibility in the case of email, where a header
+ *           such as "From: johndoe@example.com" is accepted even if no longer
+ *           technically standard.
  */
 
 DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity);

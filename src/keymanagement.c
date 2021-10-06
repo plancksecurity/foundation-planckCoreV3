@@ -1028,9 +1028,10 @@ PEP_STATUS _myself(PEP_SESSION session,
             return PEP_OUT_OF_MEMORY;
     }
 
-    // Cache the input username, if there is one and it's not read_only
+    // Cache the input username, if there is one and it's not read_only; NULL
+    // otherwise.  cached_input_username is never a pointer to an empty string.
     char* cached_input_username = NULL;
-    if (!read_only && identity->username) {
+    if (!read_only && ! EMPTYSTR(identity->username)) {
         cached_input_username = strdup(identity->username);
         if (!cached_input_username)
             return PEP_OUT_OF_MEMORY;
