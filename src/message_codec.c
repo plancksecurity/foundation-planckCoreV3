@@ -31,8 +31,7 @@ DYNAMIC_API PEP_STATUS decode_ASN1Message_message(
     asn_codec_ctx_t s_codec_ctx;
     memset(&s_codec_ctx, 0, sizeof(s_codec_ctx));
 #ifdef DEBUG
-    // ASAN blows up the stack a lot. Increase the maximum that asn.1 allows.
-    s_codec_ctx.max_stack_size = 3000000;
+    // ASAN blows up the stack quite a lot. Increase the maximum that is allowed.
     s_codec_ctx.max_stack_size = ASN__DEFAULT_STACK_MAX * 10;
 #else
     s_codec_ctx.max_stack_size = ASN__DEFAULT_STACK_MAX;
