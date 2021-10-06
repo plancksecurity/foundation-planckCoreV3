@@ -27,7 +27,17 @@ DYNAMIC_API PEP_STATUS decode_ASN1Message_message(
 
     *msg = NULL;
     ASN1Message_t *_msg = NULL;
-    uper_decode_complete(NULL, &asn_DEF_ASN1Message, (void **) &_msg, data, size);
+
+    asn_codec_ctx_t s_codec_ctx;
+    memset(&s_codec_ctx, 0, sizeof(s_codec_ctx));
+#ifdef DEBUG
+    // ASAN blows up the stack a lot. Increase the maximum that asn.1 allows.
+    s_codec_ctx.max_stack_size = 3000000;
+#else
+    s_codec_ctx.max_stack_size = ASN__DEFAULT_STACK_MAX;
+#endif
+
+    uper_decode_complete(&s_codec_ctx, &asn_DEF_ASN1Message, (void **) &_msg, data, size);
     if (!_msg)
         return PEP_PEPMESSAGE_ILLEGAL_MESSAGE;
 
