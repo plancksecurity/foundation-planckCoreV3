@@ -2,4 +2,4 @@
 ## Prefer git tags instead of SHA hashes when possible.
 sequoia=openpgp/v1.3.0
 yml2=2.7.0
-libpEpTransport=5ffd19d3bc627b40de9e28f213ccb92d62137522
+libpEpTransport=makefile-conf
