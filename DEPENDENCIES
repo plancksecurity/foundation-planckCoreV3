@@ -3,3 +3,4 @@
 sequoia=openpgp/v1.3.0
 yml2=2.7.0
 libpEpTransport=2c775de6
+nonexistingrepository=imaginarytag
