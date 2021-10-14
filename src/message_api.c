@@ -2749,7 +2749,9 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     // Update the identities and gather key and version information 
     // for sending 
     //
-#   define UPDATE_STATE_FOR_IDENT_LIST_AND_JUMP_ON_ERROR(ident_list_actual)  \
+#   define UPDATE_STATE_FOR_IDENT_LIST_AND_JUMP_ON_ERROR(                    \
+              ident_list_actual,                                             \
+              suppress_update_for_bcc)                                       \
     do {                                                                     \
         identity_list *ident_list = (ident_list_actual);                     \
         if (ident_list) {                                                    \
@@ -2761,7 +2763,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                         &max_version_minor,                                  \
                         &has_pEp_user,                                       \
                         &dest_keys_found,                                    \
-                        false                                                \
+                        (suppress_update_for_bcc)                            \
                      );                                                      \
             switch (status) {                                                \
                 case PEP_PASSPHRASE_REQUIRED:                                \
@@ -2776,9 +2778,9 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             }                                                                \
         }                                                                    \
     } while (false)
-    UPDATE_STATE_FOR_IDENT_LIST_AND_JUMP_ON_ERROR (src->to);
-    UPDATE_STATE_FOR_IDENT_LIST_AND_JUMP_ON_ERROR (src->cc);
-    UPDATE_STATE_FOR_IDENT_LIST_AND_JUMP_ON_ERROR (src->bcc);
+    UPDATE_STATE_FOR_IDENT_LIST_AND_JUMP_ON_ERROR (src->to, false);
+    UPDATE_STATE_FOR_IDENT_LIST_AND_JUMP_ON_ERROR (src->cc, false);
+    UPDATE_STATE_FOR_IDENT_LIST_AND_JUMP_ON_ERROR (src->bcc, true);
     
     if (max_version_major < 2)
         force_v_1 = true;
