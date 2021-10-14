@@ -2753,17 +2753,17 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     do {                                                                     \
         identity_list *ident_list = (ident_list_actual);                     \
         if (ident_list) {                                                    \
-            _status = _update_state_for_ident_list(                          \
-                         session, src->from, ident_list,                     \
-                         &_k,                                                \
-                         &max_comm_type,                                     \
-                         &max_version_major,                                 \
-                         &max_version_minor,                                 \
-                         &has_pEp_user,                                      \
-                         &dest_keys_found,                                   \
-                         false                                               \
-                      );                                                     \
-            switch (_status) {                                               \
+            status = _update_state_for_ident_list(                           \
+                        session, src->from, ident_list,                      \
+                        &_k,                                                 \
+                        &max_comm_type,                                      \
+                        &max_version_major,                                  \
+                        &max_version_minor,                                  \
+                        &has_pEp_user,                                       \
+                        &dest_keys_found,                                    \
+                        false                                                \
+                     );                                                      \
+            switch (status) {                                                \
                 case PEP_PASSPHRASE_REQUIRED:                                \
                 case PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED:                   \
                 case PEP_WRONG_PASSPHRASE:                                   \
@@ -2776,12 +2776,9 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             }                                                                \
         }                                                                    \
     } while (false)
-    {
-        PEP_STATUS _status = PEP_STATUS_OK;
-        UPDATE_STATE_FOR_IDENT_LIST_AND_JUMP_ON_ERROR (src->to);
-        UPDATE_STATE_FOR_IDENT_LIST_AND_JUMP_ON_ERROR (src->cc);
-        UPDATE_STATE_FOR_IDENT_LIST_AND_JUMP_ON_ERROR (src->bcc);
-    }
+    UPDATE_STATE_FOR_IDENT_LIST_AND_JUMP_ON_ERROR (src->to);
+    UPDATE_STATE_FOR_IDENT_LIST_AND_JUMP_ON_ERROR (src->cc);
+    UPDATE_STATE_FOR_IDENT_LIST_AND_JUMP_ON_ERROR (src->bcc);
     
     if (max_version_major < 2)
         force_v_1 = true;
