@@ -447,20 +447,20 @@ TEST_F(KeyResetMessageTest, check_reset_receive_revoked) {
                 "pep.test.fenris@thisstilldoesntwork.lu", fenris_fpr, fenris_user_id.c_str(),
                 "Fenris Leto Hawke", NULL, false
             );
-    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_OK;
     status = set_up_ident_from_scratch(session,
                 "test_keys/priv/pep.test.fenris-0x4F3D2900_priv.asc",
                 "pep.test.fenris@thisstilldoesntwork.lu", fenris_fpr, fenris_user_id.c_str(),
                 "Fenris Leto Hawke", NULL, true
             );
-    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_OK;
 
     status = set_up_ident_from_scratch(session,
                 "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc",
                 "pep.test.alice@pep-project.org", alice_fpr, "ALICE_IS_NOT_OWN_ID", "Alice in Wonderland",
                 NULL, false
             );
-    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_OK;
 
     pEp_identity* alice_ident = new_identity("pep.test.alice@pep-project.org", NULL,
                                             "ALICE_IS_NOT_OWN_ID", "Alice in Wonderland");
@@ -476,7 +476,8 @@ TEST_F(KeyResetMessageTest, check_reset_receive_revoked) {
     status = decrypt_message(session, received_mail,
                                   &decrypted_msg, &keylist, &flags);
 
-    ASSERT_OK;
+    std::cerr << "FOO: " << status << " aka " << pEp_status_to_string (status) << "\n";
+    ASSERT_OK; // FIXME: ENGINE-968: this fails.
     ASSERT_NOTNULL(keylist);
     if (keylist) // there's a test option to continue when asserts fail, so...
         ASSERT_STREQ(keylist->value, alice_receive_reset_fpr);
