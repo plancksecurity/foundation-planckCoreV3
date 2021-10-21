@@ -7,6 +7,212 @@
 #include "pEp_internal.h"
 #include "map_asn1.h"
 
+/* Expand to a statement checking that the given expression evaluates to a
+   non-NULL result, first using an assert and then an explicit check in C.  If
+   the check fails branch to the given label. */
+#define CHECK_NON_NULLITY_OR_GOTO(expr, label)  \
+    do                                          \
+        {                                       \
+            assert(expr);                       \
+            if (! (expr))                       \
+                goto label;                     \
+        }                                       \
+    while (false)
+
+/* Same as CHECK_NON_NULLITY_OR_GOTO, but in case of failure return the given
+   expression (evaluated only once after the check) instead of branching. */
+#define CHECK_NON_NULLITY_OR_RETURN(expr, result)  \
+    do                                             \
+        {                                          \
+            assert(expr);                          \
+            if (! (expr))                          \
+                return (result);                   \
+        }                                          \
+    while (false)
+
+PIdentity_t *PIdentity_from_Struct(
+        const pEp_identity *ident,
+        PIdentity_t *result
+    )
+{
+    bool allocated = !result;
+
+    assert(ident);
+    if (!ident)
+        return NULL;
+
+    if (allocated)
+        result = (PIdentity_t *) calloc(1, sizeof(PIdentity_t));
+    CHECK_NON_NULLITY_OR_RETURN (result, NULL);
+
+    if (ident->address) {
+        int r = OCTET_STRING_fromBuf(&result->address, ident->address, -1);
+        if (r)
+            goto error;
+    }
+
+    CHECK_NON_NULLITY (ident->fpr, error);
+    if (* ident->fpr) {
+        if (OCTET_STRING_fromString(&result->fpr, * ident->fpr))
+            goto error;
+    }
+
+    if (ident->user_id) {
+        int r = OCTET_STRING_fromBuf(&result->user_id, ident->user_id, -1);
+        if (r)
+            goto error;
+    }
+    ??????? FIXED UP TO THIS POINT.
+
+    CHECK_NON_NULLITY (ident->username, error);
+    if (* ident->username) {
+        int r = OCTET_STRING_fromBuf(&result->username, * ident->username, -1);
+        if (r)
+            goto error;
+    }
+
+    if (ident->comm_type != PEP_ct_unknown) {
+        result->comm_type = ident->comm_type;
+    }
+
+    if (ident->lang[0]) {
+        int r = OCTET_STRING_fromBuf(&result->lang, ident->lang, 2);
+        assert(r == 0);
+        if(r != 0)
+            goto error;
+    }
+    else {
+        int r = OCTET_STRING_fromBuf(&result->lang, "en", 2);
+        assert(r == 0);
+        if(r != 0)
+            goto error;
+    }
+
+    return result;
+
+error:
+    if (allocated)
+        ASN_STRUCT_FREE(asn_DEF_PIdentity, result);
+    return NULL;
+}
+
+pEp_identity *PIdentity_to_Struct(PIdentity_t *ident, pEp_identity *result)
+{
+    bool allocated = !result;
+
+    assert(ident);
+    if (!ident)
+        return NULL;
+    
+    if (allocated)
+        result = new_identity(NULL, NULL, NULL, NULL);
+    if (!result)
+        return NULL;
+
+    result->address = strndup((char *) ident->address.buf,
+            ident->address.size);
+    assert(result->address);
+    if (!result->address)
+        goto enomem;
+
+    result->fpr = strndup((char *) ident->fpr.buf, ident->fpr.size);
+    assert(result->fpr);
+    if (!result->fpr)
+        goto enomem;
+
+    result->user_id = strndup((char *) ident->user_id.buf,
+            ident->user_id.size);
+    assert(result->user_id);
+    if (!result->user_id)
+        goto enomem;
+
+    result->username = strndup((char *) ident->username.buf,
+            ident->username.size);
+    assert(result->username);
+    if (!result->username)
+        goto enomem;
+
+    result->comm_type = (PEP_comm_type) ident->comm_type;
+
+    if (ident->lang.size == 2) {
+        result->lang[0] = ident->lang.buf[0];
+        result->lang[1] = ident->lang.buf[1];
+        result->lang[2] = 0;
+    }
+
+    return result;
+
+enomem:
+    if (allocated)
+        free_identity(result);
+    return NULL;
+}
+
+PIdentityList_t *PIdentityList_from_identity_list(
+        const identity_list *list,
+        PIdentityList_t *result
+    )
+{
+    bool allocated = !result;
+
+    if (!(list && list->ident))
+        return NULL;
+
+    if (allocated) {
+        result = (PIdentityList_t *) calloc(1, sizeof(PIdentityList_t));
+        assert(result);
+        if (!result)
+            return NULL;
+    }
+    else {
+        asn_sequence_empty(result);
+    }
+
+    for (const identity_list *l = list; l && l->ident; l=l->next) {
+        PIdentity_t *ident = PIdentity_from_Struct(l->ident, NULL);
+        if (ASN_SEQUENCE_ADD(&result->list, ident)) {
+            ASN_STRUCT_FREE(asn_DEF_PIdentity, ident);
+            goto enomem;
+        }
+    }
+
+    return result;
+
+enomem:
+    if (allocated)
+        ASN_STRUCT_FREE(asn_DEF_PIdentityList, result);
+    return NULL;
+}
+
+identity_list *PIdentityList_to_identity_list(PIdentityList_t *list, identity_list *result)
+{
+    bool allocated = !result;
+
+    assert(list);
+    if (!list)
+        return NULL;
+
+    if (allocated)
+        result = new_identity_list(NULL);
+    if (!result)
+        return NULL;
+
+    identity_list *r = result;
+    for (int i=0; i<list->list.count; i++) {
+        pEp_identity *ident = PIdentity_to_Struct(list->list.array[i], NULL);
+        r = identity_list_add(r, ident);
+        if (!r)
+            goto enomem;
+    }
+
+    return result;
+
+enomem:
+    if (allocated)
+        free_identity_list(result);
+    return NULL;
+}
+
 Identity_t *Identity_from_Struct(
         const pEp_identity *ident,
         Identity_t *result
