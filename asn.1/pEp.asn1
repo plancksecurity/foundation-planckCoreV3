@@ -12,8 +12,7 @@ DEFINITIONS AUTOMATIC TAGS EXTENSIBILITY IMPLIED ::=
 
 BEGIN
 
-EXPORTS Identity, IdentityList, TID, Hash, Version, Rating, PString,
-        PStringList, PStringPair, PStringPairList, ISO639-1;
+EXPORTS Identity, IdentityList, TID, Hash, Version, Rating, PString, PStringList, PStringPair, PStringPairList;
 
 ISO639-1 ::= PrintableString(FROM ("a".."z")) (SIZE(2))
 Hex ::= PrintableString(FROM ("A".."F" | "0".."9"))

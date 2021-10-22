@@ -17,7 +17,7 @@ BEGIN
 EXPORTS ASN1Message;
 
 IMPORTS
-  PString, PStringList, PStringPairList, Hash, ISO639-1
+  PString, PStringList, Identity, IdentityList, PStringPairList, Hash
   FROM PEP { iso(1) org(3) dod(6) internet(1) private(4)
              enterprise(1) pEp(47878) basic(0) };
 
@@ -47,31 +47,21 @@ PBlobList ::= SEQUENCE OF PBlob
 -- (i.e., times are YYYYMMDDHHMMSSZ), even where the number of seconds
 -- is zero.  GeneralizedTime values MUST NOT include fractional seconds.
 
-PIdentity ::= SEQUENCE {
-    address     PString,
-    fpr         Hash OPTIONAL,
-    user-id     PString,
-    username    PString OPTIONAL,
-    comm-type   INTEGER (0..255),
-    lang        ISO639-1 OPTIONAL
-}
-
-PIdentityList ::= SEQUENCE OF PIdentity
 
 ASN1Message ::= SEQUENCE {
     direction   MessageDirection OPTIONAL, -- used only in "inner" messages
     id          PString          OPTIONAL, -- UTF-8 string of message ID
     sent        GeneralizedTime        OPTIONAL,  -- when the message is sent
     recv        GeneralizedTime        OPTIONAL,  -- when the message is received
-    from        PIdentity,                   -- whom the message is from
+    from        Identity,                   -- whom the message is from
     -- At least one of to, cc must not be an empty list
     -- FIXME: Can this be constrained?
-    to          PIdentityList    OPTIONAL,  -- whom the message is to
-    cc          PIdentityList    OPTIONAL,  -- whom a CC is being sent
-    bcc         PIdentityList    OPTIONAL,  -- whom a BCC is being sent
-    recv-by     PIdentity        OPTIONAL,  -- via which identity the message
+    to          IdentityList    OPTIONAL,  -- whom the message is to
+    cc          IdentityList    OPTIONAL,  -- whom a CC is being sent
+    bcc         IdentityList    OPTIONAL,  -- whom a BCC is being sent
+    recv-by     Identity        OPTIONAL,  -- via which identity the message
                                            -- is received
-    reply-to    PIdentityList    OPTIONAL,  -- where a reply should go to
+    reply-to    IdentityList    OPTIONAL,  -- where a reply should go to
     in-reply-to PStringList     OPTIONAL,  -- list of UTF-8 strings with
                                            -- MessageIDs of refering messages
     -- internal: refering_msg_ref
