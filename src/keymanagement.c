@@ -1020,7 +1020,7 @@ PEP_STATUS _myself(PEP_SESSION session,
 
     // this leads to crashes otherwise
 
-    if (EMPTYSTR(identity->user_id)) {
+    if (!(identity->user_id && identity->user_id[0])) {
         free(identity->user_id);
         identity->user_id = strdup(PEP_OWN_USERID);
         assert(identity->user_id);

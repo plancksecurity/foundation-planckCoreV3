@@ -99,9 +99,10 @@ TEST_F(Engine463Test, check_engine_463_no_own_key) {
 
     message* decrypted_msg = NULL;
     stringlist_t* keylist_used = nullptr;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
-    status = decrypt_message(session, msg, &decrypted_msg, &keylist_used, &flags);
+    status = decrypt_message(session, msg, &decrypted_msg, &keylist_used, &rating, &flags);
     ASSERT_OK;
 }
 
@@ -125,9 +126,10 @@ TEST_F(Engine463Test, check_engine_463_sender_expired_and_renewed) {
 
     message* decrypted_msg = NULL;
     stringlist_t* keylist_used = nullptr;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
-    status = decrypt_message(session, msg, &decrypted_msg, &keylist_used, &flags);
+    status = decrypt_message(session, msg, &decrypted_msg, &keylist_used, &rating, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
 
     free(decrypted_msg);
@@ -137,17 +139,15 @@ TEST_F(Engine463Test, check_engine_463_sender_expired_and_renewed) {
 
     pEp_identity* expired_inquisitor = new_identity("inquisitor@darthmama.org", NULL, NULL, "Lady Claire Trevelyan");
 
-    PEP_rating rating;
     status = identity_rating(session, expired_inquisitor, &rating);
     ASSERT_OK;
     ASSERT_EQ(rating , PEP_rating_reliable);
 
     flags = 0;
 
-    status = decrypt_message(session, msg, &decrypted_msg, &keylist_used, &flags);
+    status = decrypt_message(session, msg, &decrypted_msg, &keylist_used, &rating, &flags);
     ASSERT_NOTNULL(decrypted_msg);
     ASSERT_OK;
-    rating = decrypted_msg->rating;
     ASSERT_EQ(rating , PEP_rating_reliable);
 
     free_identity(expired_inquisitor);
@@ -180,9 +180,10 @@ TEST_F(Engine463Test, check_engine_463_sender_expired_and_renewed) {
 
     message* decrypted_msg = NULL;
     stringlist_t* keylist_used = nullptr;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
-    status = decrypt_message(session, msg, &decrypted_msg, &keylist_used, &flags);
+    status = decrypt_message(session, msg, &decrypted_msg, &keylist_used, &rating, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
 
     free(decrypted_msg);
@@ -199,7 +200,6 @@ TEST_F(Engine463Test, check_engine_463_sender_expired_and_renewed) {
     msg2->longmsg = strdup("Blahblahblah!");
     msg2->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
 
-    PEP_rating rating;
     status = outgoing_message_rating(session, msg2, &rating);
     ASSERT_OK;
     ASSERT_EQ(rating , PEP_rating_reliable);

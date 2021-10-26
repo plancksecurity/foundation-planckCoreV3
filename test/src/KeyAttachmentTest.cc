@@ -105,8 +105,9 @@ TEST_F(KeyAttachmentTest, check_key_attach_inline) {
     ASSERT_OK;
     ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
 #if KEYS_STAY_ATTACHED
     ASSERT_NOTNULL(dec_msg->attachments );
@@ -131,8 +132,9 @@ TEST_F(KeyAttachmentTest, check_key_plus_encr_att_inline) {
     ASSERT_OK;
     ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
     ASSERT_NOTNULL(dec_msg);
 #if KEYS_STAY_ATTACHED
@@ -165,8 +167,9 @@ TEST_F(KeyAttachmentTest, check_encr_att_plus_key_inline) {
     ASSERT_OK;
     ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_OK;
     ASSERT_NOTNULL(dec_msg);
  #if KEYS_STAY_ATTACHED
@@ -201,8 +204,9 @@ TEST_F(KeyAttachmentTest, check_key_plus_unencr_att_inline) {
     ASSERT_OK;
     ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
     ASSERT_NOTNULL(dec_msg);
  #if KEYS_STAY_ATTACHED
@@ -237,8 +241,9 @@ TEST_F(KeyAttachmentTest, check_unencr_att_plus_key_inline) {
     ASSERT_OK;
     ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_OK;
     ASSERT_NOTNULL(dec_msg);
     ASSERT_NOTNULL(dec_msg->attachments);
@@ -271,8 +276,9 @@ TEST_F(KeyAttachmentTest, check_many_keys_inline) {
     ASSERT_OK;
     ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
     ASSERT_NOTNULL(dec_msg);
 #if KEYS_STAY_ATTACHED
@@ -294,8 +300,9 @@ TEST_F(KeyAttachmentTest, check_many_keys_w_encr_file_inline) {
     ASSERT_OK;
     ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_OK;
     ASSERT_NOTNULL(dec_msg);
 #if KEYS_STAY_ATTACHED
@@ -327,8 +334,9 @@ TEST_F(KeyAttachmentTest, check_many_keys_w_unencr_file_inline) {
     ASSERT_OK;
     ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_OK;
     ASSERT_NOTNULL(dec_msg);
 #if KEYS_STAY_ATTACHED
@@ -360,8 +368,9 @@ TEST_F(KeyAttachmentTest, check_many_keys_with_many_files_inline) {
     ASSERT_OK;
     ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_OK;
     ASSERT_NOTNULL(dec_msg);
 
@@ -415,8 +424,9 @@ TEST_F(KeyAttachmentTest, check_key_attach_OpenPGP) {
     ASSERT_OK;
     ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_OK;
     ASSERT_NOTNULL(dec_msg);
 #if KEYS_STAY_ATTACHED
@@ -442,8 +452,9 @@ TEST_F(KeyAttachmentTest, check_key_plus_encr_att_OpenPGP) {
     ASSERT_OK;
     ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
     ASSERT_NOTNULL(dec_msg);
 #if KEYS_STAY_ATTACHED
@@ -475,8 +486,9 @@ TEST_F(KeyAttachmentTest, check_encr_att_plus_key_OpenPGP) {
     ASSERT_OK;
     ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
     ASSERT_NOTNULL(dec_msg);
  #if KEYS_STAY_ATTACHED
@@ -511,8 +523,9 @@ TEST_F(KeyAttachmentTest, check_key_plus_unencr_att_OpenPGP) {
     ASSERT_OK;
     ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_OK;
     ASSERT_NOTNULL(dec_msg);
  #if KEYS_STAY_ATTACHED
@@ -546,8 +559,9 @@ TEST_F(KeyAttachmentTest, check_unencr_att_plus_key_OpenPGP) {
     ASSERT_OK;
     ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
     ASSERT_NOTNULL(dec_msg);    
     ASSERT_NOTNULL(dec_msg->attachments);
@@ -575,8 +589,9 @@ TEST_F(KeyAttachmentTest, check_many_keys_OpenPGP) {
     ASSERT_OK;
     ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
     ASSERT_NOTNULL(dec_msg);
 #if KEYS_STAY_ATTACHED
@@ -598,8 +613,9 @@ TEST_F(KeyAttachmentTest, check_many_keys_w_encr_file_OpenPGP) {
     ASSERT_OK;
     ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
     ASSERT_NOTNULL(dec_msg);
     ASSERT_NOTNULL(dec_msg->attachments);
@@ -629,8 +645,9 @@ TEST_F(KeyAttachmentTest, check_many_keys_w_unencr_file_OpenPGP) {
     ASSERT_OK;
     ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
     ASSERT_NOTNULL(dec_msg);
     ASSERT_NOTNULL(dec_msg->attachments);
@@ -660,8 +677,9 @@ TEST_F(KeyAttachmentTest, check_many_keys_w_many_files_OpenPGP) {
     ASSERT_OK;
     ASSERT_NOTNULL(enc_msg);
     stringlist_t* keylist = NULL;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_OK;
     ASSERT_NOTNULL(dec_msg);
 

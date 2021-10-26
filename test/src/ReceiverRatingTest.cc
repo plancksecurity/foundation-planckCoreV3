@@ -116,12 +116,12 @@ TEST_F(ReceiverRatingTest, check_internal_format) {
     
     message *dec_msg = NULL;
     stringlist_t *keylist = NULL;
+    PEP_rating rating = PEP_rating_undefined;
     PEP_decrypt_flags_t flags = 0;
 
     enc_msg->recv_by = identity_dup(alice);
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    PEP_rating rating = dec_msg->rating;
     ASSERT_STREQ(msg->shortmsg, dec_msg->shortmsg);
     ASSERT_STREQ(msg->longmsg, dec_msg->longmsg);
     ASSERT_EQ(rating, PEP_rating_trusted_and_anonymized);
@@ -133,17 +133,15 @@ TEST_F(ReceiverRatingTest, check_internal_format) {
     free_stringlist(keylist);
     message *dec_msg2 = NULL;
     dec_msg->recv_by = identity_dup(alice);
-    status = decrypt_message(session, dec_msg, &dec_msg2, &keylist, &flags);
+    status = decrypt_message(session, dec_msg, &dec_msg2, &keylist, &rating, &flags);
     ASSERT_EQ(status, PEP_UNENCRYPTED);
-    rating = dec_msg->rating; // FIXME: positron: maybe it was dec_msg2.  If it fails, I am not terribly surprised.
     ASSERT_EQ(rating, PEP_rating_trusted_and_anonymized);
 
     // this must be repeatable
     free_stringlist(keylist);
     dec_msg->recv_by = identity_dup(alice);
-    status = decrypt_message(session, dec_msg, &dec_msg2, &keylist, &flags);
+    status = decrypt_message(session, dec_msg, &dec_msg2, &keylist, &rating, &flags);
     ASSERT_EQ(status, PEP_UNENCRYPTED);
-    rating = dec_msg->rating; // FIXME: positron: maybe it was dec_msg2.  If it fails, I am not terribly surprised.
     ASSERT_EQ(rating, PEP_rating_trusted_and_anonymized);
 
     free_stringlist(keylist);

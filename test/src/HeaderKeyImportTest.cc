@@ -726,14 +726,14 @@ TEST_F(HeaderKeyImportTest, check_header_key_import) {
 
     stringlist_t* keylist = NULL;
 
+    PEP_rating rating;
     PEP_decrypt_flags_t flags;
 
     flags = 0;
     message* enc_msg = string_to_msg(strmsg);
-    PEP_STATUS status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    PEP_STATUS status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_EQ(rating , PEP_rating_reliable);
     ASSERT_OK;
-    PEP_rating rating = dec_msg->rating;
-    ASSERT_EQ(rating, PEP_rating_reliable);
 
     pEp_identity* alice_check = new_identity("pep.test.alice@pep-project.org", NULL, NULL, "pEp Test Alice");
     status = update_identity(session, alice_check);
