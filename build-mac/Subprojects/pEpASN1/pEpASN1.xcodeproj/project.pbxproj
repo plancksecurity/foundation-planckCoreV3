@@ -410,6 +410,10 @@
 		43788991272831D200E80F5A /* PIdentity.c in Sources */ = {isa = PBXBuildFile; fileRef = 4378898E272831D200E80F5A /* PIdentity.c */; };
 		43788992272831D200E80F5A /* PIdentity.h in Headers */ = {isa = PBXBuildFile; fileRef = 4378898F272831D200E80F5A /* PIdentity.h */; };
 		43788993272831D200E80F5A /* PIdentity.h in Headers */ = {isa = PBXBuildFile; fileRef = 4378898F272831D200E80F5A /* PIdentity.h */; };
+		437889962728321800E80F5A /* PIdentityList.c in Sources */ = {isa = PBXBuildFile; fileRef = 437889942728321800E80F5A /* PIdentityList.c */; };
+		437889972728321800E80F5A /* PIdentityList.c in Sources */ = {isa = PBXBuildFile; fileRef = 437889942728321800E80F5A /* PIdentityList.c */; };
+		437889982728321800E80F5A /* PIdentityList.h in Headers */ = {isa = PBXBuildFile; fileRef = 437889952728321800E80F5A /* PIdentityList.h */; };
+		437889992728321800E80F5A /* PIdentityList.h in Headers */ = {isa = PBXBuildFile; fileRef = 437889952728321800E80F5A /* PIdentityList.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -637,6 +641,8 @@
 		15EB0D8A26D7D1C500CDFF4F /* PStringPair.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PStringPair.h; path = ../../../asn.1/PStringPair.h; sourceTree = "<group>"; };
 		4378898E272831D200E80F5A /* PIdentity.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = PIdentity.c; path = ../../../asn.1/PIdentity.c; sourceTree = "<group>"; };
 		4378898F272831D200E80F5A /* PIdentity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PIdentity.h; path = ../../../asn.1/PIdentity.h; sourceTree = "<group>"; };
+		437889942728321800E80F5A /* PIdentityList.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = PIdentityList.c; path = ../../../asn.1/PIdentityList.c; sourceTree = "<group>"; };
+		437889952728321800E80F5A /* PIdentityList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PIdentityList.h; path = ../../../asn.1/PIdentityList.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -697,6 +703,8 @@
 		15A3206B260E0376009D07EB /* src */ = {
 			isa = PBXGroup;
 			children = (
+				437889942728321800E80F5A /* PIdentityList.c */,
+				437889952728321800E80F5A /* PIdentityList.h */,
 				4378898E272831D200E80F5A /* PIdentity.c */,
 				4378898F272831D200E80F5A /* PIdentity.h */,
 				15EB0D8926D7D1C500CDFF4F /* PStringPair.c */,
@@ -983,6 +991,7 @@
 				151581DE26CE4E87003D8685 /* per_encoder.h in Headers */,
 				151581E426CE4E87003D8685 /* NegotiationRequestGrouped.h in Headers */,
 				15EB0D8226D7CBDE00CDFF4F /* PBlob.h in Headers */,
+				437889982728321800E80F5A /* PIdentityList.h in Headers */,
 				151581F626CE4E87003D8685 /* Distribution.h in Headers */,
 				151581ED26CE4E87003D8685 /* Hex.h in Headers */,
 				1515820126CE4E87003D8685 /* ContentDisposition.h in Headers */,
@@ -1058,6 +1067,7 @@
 				1515855C26CE5385003D8685 /* CommitAcceptForGroup.h in Headers */,
 				1515859026CE5385003D8685 /* der_encoder.h in Headers */,
 				1515856726CE5385003D8685 /* asn_application.h in Headers */,
+				437889992728321800E80F5A /* PIdentityList.h in Headers */,
 				1515855026CE5385003D8685 /* Exploration.h in Headers */,
 				1515855E26CE5385003D8685 /* ISO639-1.h in Headers */,
 				1515858526CE5385003D8685 /* per_decoder.h in Headers */,
@@ -1297,6 +1307,7 @@
 				15EB0D7C26D7CBDE00CDFF4F /* PStringPairList.c in Sources */,
 				151584E426CE5347003D8685 /* INTEGER.c in Sources */,
 				151584E026CE5347003D8685 /* ExploreChallenge.c in Sources */,
+				437889962728321800E80F5A /* PIdentityList.c in Sources */,
 				151584EC26CE5347003D8685 /* GroupTrustThisKey.c in Sources */,
 				151584CD26CE5347003D8685 /* GroupKeysUpdate.c in Sources */,
 				151584D826CE5347003D8685 /* Distribution.c in Sources */,
@@ -1397,6 +1408,7 @@
 				15EB0D7D26D7CBDE00CDFF4F /* PStringPairList.c in Sources */,
 				1515848826CE5345003D8685 /* INTEGER.c in Sources */,
 				1515848426CE5345003D8685 /* ExploreChallenge.c in Sources */,
+				437889972728321800E80F5A /* PIdentityList.c in Sources */,
 				1515849026CE5345003D8685 /* GroupTrustThisKey.c in Sources */,
 				1515847126CE5345003D8685 /* GroupKeysUpdate.c in Sources */,
 				1515847C26CE5345003D8685 /* Distribution.c in Sources */,
