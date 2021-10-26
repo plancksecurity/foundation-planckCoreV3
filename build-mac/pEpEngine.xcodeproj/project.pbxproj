@@ -1579,7 +1579,6 @@
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/Subprojects/pEpASN1/build/include",
 					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
-					"${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/include",
 					"${PROJECT_DIR}/../asn.1",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
@@ -1588,6 +1587,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = "";
 				SDKROOT = macosx;
+				SYSTEM_HEADER_SEARCH_PATHS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/include";
 				VALID_ARCHS = "arm64 x86_64";
 			};
 			name = Debug_BUILD_ALL_SUPPORTED_ARCHS;
@@ -1751,7 +1751,6 @@
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/Subprojects/pEpASN1/build/include",
 					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
-					"${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/include",
 					"${PROJECT_DIR}/../asn.1",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
@@ -1760,6 +1759,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = "";
 				SDKROOT = macosx;
+				SYSTEM_HEADER_SEARCH_PATHS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/include";
 				VALID_ARCHS = "arm64 x86_64";
 			};
 			name = Debug;
@@ -1815,7 +1815,6 @@
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/Subprojects/pEpASN1/build/include",
 					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
-					"${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/include",
 					"${PROJECT_DIR}/../asn.1",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
@@ -1824,6 +1823,7 @@
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = "";
 				SDKROOT = macosx;
+				SYSTEM_HEADER_SEARCH_PATHS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/include";
 				VALIDATE_PRODUCT = YES;
 				VALID_ARCHS = "arm64 x86_64";
 			};
