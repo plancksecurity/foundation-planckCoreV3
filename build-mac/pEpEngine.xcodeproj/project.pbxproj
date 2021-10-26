@@ -1206,7 +1206,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nmkdir -p \"${CUSTOM_BUILD_DIR}\"\n\ncp -r \"${BUILT_PRODUCTS_DIR}/libpEpEngine.a\" \"${CUSTOM_BUILD_DIR}\"\n\n# COPY HEADERS\nCUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include/pEp\"\nmkdir -p \"${CUSTOM_INCLUDE_DIR}\"\n\npushd ${PROJECT_DIR}/../sync/generated\n    cp *h \"${CUSTOM_INCLUDE_DIR}\"\npopd\n\npushd ${PROJECT_DIR}/../src\n    cp *h \"${CUSTOM_INCLUDE_DIR}\"\npopd\n\n# Copy system.db also\ncp ${PROJECT_DIR}/../db/system.db \"${CUSTOM_BUILD_DIR}\"\n";
+			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nmkdir -p \"${CUSTOM_BUILD_DIR}\"\n\ncp -r \"${BUILT_PRODUCTS_DIR}/libpEpEngine.a\" \"${CUSTOM_BUILD_DIR}\"\n\n# COPY HEADERS\nCUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include/pEp\"\nmkdir -p \"${CUSTOM_INCLUDE_DIR}\"\n\npushd ${PROJECT_DIR}/../sync/generated\n    cp *h \"${CUSTOM_INCLUDE_DIR}\"\npopd\n\npushd ${PROJECT_DIR}/../src\n    cp *h \"${CUSTOM_INCLUDE_DIR}\"\npopd\n\npushd ${PROJECT_DIR}/../../libpEpTransport/src\n    cp transport_status_code.h \"${CUSTOM_INCLUDE_DIR}\"\npopd\n\n# Copy system.db also\ncp ${PROJECT_DIR}/../db/system.db \"${CUSTOM_BUILD_DIR}\"\n";
 		};
 		644297C61BE11D00002BC73B /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
