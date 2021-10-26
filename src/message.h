@@ -87,7 +87,6 @@ typedef struct _message {
     char* _sender_fpr;                      // INTERNAL USE ONLY - fingerprint of 
                                             // sending signer.
                                             // (read_only to the outside)
-    PEP_rating rating;                      // message rating
 } message;
 
 /**

@@ -147,6 +147,7 @@ TEST_F(LeastCommonDenomColorTest, check_least_common_denom_color) {
     message* msg_ptr = nullptr;
     message* dest_msg = nullptr;
     stringlist_t* keylist = nullptr;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags;
 
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
@@ -154,10 +155,9 @@ TEST_F(LeastCommonDenomColorTest, check_least_common_denom_color) {
     ASSERT_NOTNULL(msg_ptr);
 
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &flags);
+    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     ASSERT_OK;
     ASSERT_NOTNULL(dest_msg);
-    PEP_rating rating = dest_msg->rating;
     /* message is signed and no recip is mistrusted... */
     ASSERT_EQ(color_from_rating(rating) , PEP_color_yellow);
 
@@ -203,12 +203,11 @@ TEST_F(LeastCommonDenomColorTest, check_least_common_denom_color) {
     ASSERT_OK;
     ASSERT_NOTNULL(msg_ptr);
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &flags);
+    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
 
     output_stream << "shortmsg: " << dest_msg->shortmsg << endl << endl;
     output_stream << "longmsg: " << dest_msg->longmsg << endl << endl;
     output_stream << "longmsg_formatted: " << (dest_msg->longmsg_formatted ? dest_msg->longmsg_formatted : "(empty)") << endl << endl;
-    rating = dest_msg->rating;
 
     /* message is signed and no recip is mistrusted... */
     ASSERT_EQ(color_from_rating(rating) , PEP_color_red);

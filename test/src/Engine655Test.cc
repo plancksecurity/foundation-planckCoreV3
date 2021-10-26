@@ -143,8 +143,9 @@ TEST_F(Engine655Test, check_engine655) {
         // 
         keylist = NULL;
         message* dec_msg = NULL;
+        PEP_rating rating;
         PEP_decrypt_flags_t flags = 0;
-        status = decrypt_message(session, msg, &dec_msg, &keylist, &flags);
+        status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
         EXPECT_EQ(status, PEP_DECRYPTED);  // really, expect PEP_STATUS_OK, but it doesn't verify and msg may be broken
         // EXPECT_NE(ptext, nullptr);
         // EXPECT_NE(keylist, nullptr);

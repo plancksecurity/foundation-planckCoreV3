@@ -439,10 +439,11 @@ TEST_F(Engine619Test, decrypt_message_with_private_key) {
 
     message *message_dst;
     stringlist_t* keys = NULL;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
     status = decrypt_message(session, message_src, & message_dst,
-                             & keys, & flags);
+                             & keys, & rating, & flags);
     /* It is normal and expected that decryption fails here: this message is
        unencrypted.  The point of this test is to arrive at a call to
        pgp_import_keydata , which used to corrut the heap (ENGINE-619). */

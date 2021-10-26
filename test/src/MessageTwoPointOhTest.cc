@@ -179,6 +179,7 @@ TEST_F(MessageTwoPointOhTest, check_message_two_point_oh) {
     message* decrypted_msg = nullptr;
     stringlist_t* keylist_used = nullptr;
 
+    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
     message* decoded_msg = nullptr;
@@ -200,9 +201,8 @@ TEST_F(MessageTwoPointOhTest, check_message_two_point_oh) {
     stringpair_t* autoconsume = new_stringpair("pEp-auto-consume", "yes");
     stringpair_list_add(encrypted_msg->opt_fields, autoconsume);
     flags = 0;
-    status = decrypt_message(session, encrypted_msg, &decrypted_msg, &keylist_used, &flags);
+    status = decrypt_message(session, encrypted_msg, &decrypted_msg, &keylist_used, &rating, &flags);
     ASSERT_NOTNULL(decrypted_msg);
-    PEP_rating rating = decrypted_msg->rating;
     ASSERT_NOTNULL(keylist_used);
     ASSERT_NE(rating, 0);
     //ASSERT_EQ(status == PEP_STATUS_OK && rating , PEP_rating_reliable);

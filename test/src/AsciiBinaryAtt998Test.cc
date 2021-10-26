@@ -163,9 +163,10 @@ TEST_F(AsciiBinary998Test, check_engine_895) {
     message* dec_msg = NULL;
     enc_msg->dir = PEP_dir_incoming;
     stringlist_t* keylist = NULL;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_OK;
 
     ASSERT_EQ(memcmp(data_copy, dec_msg->attachments->value, data_size), 0);

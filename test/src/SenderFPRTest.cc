@@ -125,8 +125,9 @@ TEST_F(SenderFPRTest, check_sender_f_p_r) {
     message* dec_msg = NULL;
 
     stringlist_t* keylist = NULL;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_OK;
 
     char* text = NULL;

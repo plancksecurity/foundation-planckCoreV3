@@ -575,13 +575,9 @@ PEP_STATUS vanilla_read_file_and_decrypt_with_rating(PEP_SESSION session, messag
     stringlist_t* keylist = NULL;
     PEP_decrypt_flags_t flags = 0;
 
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
-    if (dec_msg) {
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, rating, &flags);
+    if (dec_msg)
         *msg = dec_msg;
-        *rating = dec_msg->rating;
-    }
-    else
-        *rating = enc_msg->rating;
     free_stringlist(keylist); // no one cares
     free_message(enc_msg);
     return status;

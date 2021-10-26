@@ -302,13 +302,13 @@ TEST_F(VerifyTest, check_expired_signing_key) {
     free_stringlist(keylist);
     keylist = NULL;
     PEP_decrypt_flags_t flags = 0;
+    PEP_rating rating;
     message* msg = new_message(PEP_dir_incoming);
     msg->longmsg = strdup(ciphertext.c_str());
     msg->from = new_identity("1960@example.org", NULL, "MARY", "Mary Susan Maria Karen Lisa Linda Donna Patricia Smith");
     message* pt_msg = NULL;
-    decrypt_message(session, msg, &pt_msg, &keylist, &flags);
+    decrypt_message(session, msg, &pt_msg, &keylist, &rating, &flags);
     free_message(msg);
-    PEP_rating rating = pt_msg->rating;
     free_message(pt_msg);
     ASSERT_EQ(rating, PEP_rating_unreliable);
 

@@ -175,12 +175,12 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
     message* decrypted_msg = nullptr;
     stringlist_t* keylist_used = nullptr;
 
+    PEP_rating rating;
     PEP_decrypt_flags_t flags;
 
     flags = 0;
-    status = decrypt_message(session, encrypted_msg, &decrypted_msg, &keylist_used, &flags);
+    status = decrypt_message(session, encrypted_msg, &decrypted_msg, &keylist_used, &rating, &flags);
     ASSERT_NOTNULL(decrypted_msg);
-    PEP_rating rating = decrypted_msg->rating;
     ASSERT_NOTNULL(keylist_used);
     ASSERT_NE(rating, 0);
     ASSERT_TRUE(status == PEP_DECRYPTED && rating == PEP_rating_unreliable);
@@ -226,9 +226,8 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
     output_stream << "message encrypted.\n";
 
     flags = 0;
-    status = decrypt_message(session, encrypted_msg, &decrypted_msg, &keylist_used, &flags);
+    status = decrypt_message(session, encrypted_msg, &decrypted_msg, &keylist_used, &rating, &flags);
     ASSERT_NOTNULL(decrypted_msg);
-    rating = decrypted_msg->rating;
     ASSERT_NOTNULL(keylist_used);
     ASSERT_NE(rating, 0);
     ASSERT_TRUE(status == PEP_DECRYPTED && rating == PEP_rating_unreliable);
@@ -312,12 +311,12 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
     free_stringlist(keylist_used);
     keylist_used = nullptr;
     PEP_decrypt_flags_t mimeflags;
+    PEP_rating mimerating;
 
     mimeflags = 0;
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist_used, &mimeflags);
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist_used, &mimerating, &mimeflags);
 
     ASSERT_NOTNULL(dec_msg);
-    PEP_rating mimerating = dec_msg->rating;
     ASSERT_NOTNULL(keylist_used);
     ASSERT_NE(mimerating, 0);
 
@@ -435,12 +434,12 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity_with_URI) {
     message* decrypted_msg = nullptr;
     stringlist_t* keylist_used = nullptr;
 
+    PEP_rating rating;
     PEP_decrypt_flags_t flags;
 
     flags = 0;
-    status = decrypt_message(session, encrypted_msg, &decrypted_msg, &keylist_used, &flags);
+    status = decrypt_message(session, encrypted_msg, &decrypted_msg, &keylist_used, &rating, &flags);
     ASSERT_NOTNULL(decrypted_msg);
-    PEP_rating rating = decrypted_msg->rating;
     ASSERT_NOTNULL(keylist_used);
     ASSERT_NE(rating, 0);
     ASSERT_TRUE(status == PEP_DECRYPTED && rating == PEP_rating_unreliable);
@@ -486,9 +485,8 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity_with_URI) {
     output_stream << "message encrypted.\n";
 
     flags = 0;
-    status = decrypt_message(session, encrypted_msg, &decrypted_msg, &keylist_used, &flags);
+    status = decrypt_message(session, encrypted_msg, &decrypted_msg, &keylist_used, &rating, &flags);
     ASSERT_NOTNULL(decrypted_msg);
-    rating = decrypted_msg->rating;
     ASSERT_NOTNULL(keylist_used);
     ASSERT_NE(rating, 0);
     ASSERT_TRUE(status == PEP_DECRYPTED && rating == PEP_rating_unreliable);
