@@ -9,6 +9,8 @@
 
 #include "message.h"
 #include "ASN1Message.h"
+#include "Identity.h" // ENGINE-971
+#include "IdentityList.h" // ENGINE-971
 
 #ifdef __cplusplus
 extern "C" {
