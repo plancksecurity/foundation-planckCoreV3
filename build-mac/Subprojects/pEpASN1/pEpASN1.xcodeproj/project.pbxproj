@@ -408,12 +408,12 @@
 		15EB0D8E26D7D1C500CDFF4F /* PStringPair.h in Headers */ = {isa = PBXBuildFile; fileRef = 15EB0D8A26D7D1C500CDFF4F /* PStringPair.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		43788990272831D200E80F5A /* PIdentity.c in Sources */ = {isa = PBXBuildFile; fileRef = 4378898E272831D200E80F5A /* PIdentity.c */; };
 		43788991272831D200E80F5A /* PIdentity.c in Sources */ = {isa = PBXBuildFile; fileRef = 4378898E272831D200E80F5A /* PIdentity.c */; };
-		43788992272831D200E80F5A /* PIdentity.h in Headers */ = {isa = PBXBuildFile; fileRef = 4378898F272831D200E80F5A /* PIdentity.h */; };
-		43788993272831D200E80F5A /* PIdentity.h in Headers */ = {isa = PBXBuildFile; fileRef = 4378898F272831D200E80F5A /* PIdentity.h */; };
+		43788992272831D200E80F5A /* PIdentity.h in Headers */ = {isa = PBXBuildFile; fileRef = 4378898F272831D200E80F5A /* PIdentity.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		43788993272831D200E80F5A /* PIdentity.h in Headers */ = {isa = PBXBuildFile; fileRef = 4378898F272831D200E80F5A /* PIdentity.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		437889962728321800E80F5A /* PIdentityList.c in Sources */ = {isa = PBXBuildFile; fileRef = 437889942728321800E80F5A /* PIdentityList.c */; };
 		437889972728321800E80F5A /* PIdentityList.c in Sources */ = {isa = PBXBuildFile; fileRef = 437889942728321800E80F5A /* PIdentityList.c */; };
-		437889982728321800E80F5A /* PIdentityList.h in Headers */ = {isa = PBXBuildFile; fileRef = 437889952728321800E80F5A /* PIdentityList.h */; };
-		437889992728321800E80F5A /* PIdentityList.h in Headers */ = {isa = PBXBuildFile; fileRef = 437889952728321800E80F5A /* PIdentityList.h */; };
+		437889982728321800E80F5A /* PIdentityList.h in Headers */ = {isa = PBXBuildFile; fileRef = 437889952728321800E80F5A /* PIdentityList.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		437889992728321800E80F5A /* PIdentityList.h in Headers */ = {isa = PBXBuildFile; fileRef = 437889952728321800E80F5A /* PIdentityList.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
