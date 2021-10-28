@@ -20,6 +20,16 @@
 		};
 /* End PBXAggregateTarget section */
 
+/* Begin PBXContainerItemProxy section */
+		43B263B3272ABF8000EE82BC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 43B26348272AA95000EE82BC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 43B263AE272AB0BB00EE82BC;
+			remoteInfo = generate_code_macOS;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		43B26350272AA95000EE82BC /* libpEpTransport_macOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpEpTransport_macOS.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -74,6 +84,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				43B263B4272ABF8000EE82BC /* PBXTargetDependency */,
 			);
 			name = pEpTransport_macOS;
 			productName = pEpTransport;
@@ -131,7 +142,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = "/bin/sh -l";
-			shellScript = "export LANG=en_US.UTF-8\n\necho \"***************************************\"\necho \"*** Generate files: ACTION: $ACTION ***\"\necho \"***************************************\"\n\ncd \"${PROJECT_DIR}/../../..\"\n\nmake asn1\n";
+			shellScript = "export LANG=en_US.UTF-8\n\necho \"***************************************\"\necho \"*** Generate files: ACTION: $ACTION ***\"\necho \"***************************************\"\n\nPEP_ENGINE_DIR=\"${PROJECT_DIR}/../../..\"\nPEP_LIB_TRANSPORT_DIR=\"${PEP_ENGINE_DIR}/../libpEpTransport/\"\n\ncd \"${PEP_LIB_TRANSPORT_DIR}\"\nmake\n\n# satisfy the engine build\nmkdir -p ${PEP_ENGINE_DIR}/build-mac/build/include/pEp\ncp ${PEP_LIB_TRANSPORT_DIR}/src/transport_status_code.h ${PEP_ENGINE_DIR}/build-mac/build/include/pEp\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -144,6 +155,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		43B263B4272ABF8000EE82BC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 43B263AE272AB0BB00EE82BC /* generate_code_macOS */;
+			targetProxy = 43B263B3272ABF8000EE82BC /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		43B26352272AA95000EE82BC /* Debug */ = {
