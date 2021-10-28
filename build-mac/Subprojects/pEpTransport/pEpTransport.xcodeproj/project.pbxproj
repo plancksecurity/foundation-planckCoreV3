@@ -6,6 +6,20 @@
 	objectVersion = 50;
 	objects = {
 
+/* Begin PBXAggregateTarget section */
+		43B263AE272AB0BB00EE82BC /* generate_code_macOS */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 43B263B1272AB0BB00EE82BC /* Build configuration list for PBXAggregateTarget "generate_code_macOS" */;
+			buildPhases = (
+				43B263B2272AB0DD00EE82BC /* ShellScript */,
+			);
+			dependencies = (
+			);
+			name = generate_code_macOS;
+			productName = generate_code_macOS;
+		};
+/* End PBXAggregateTarget section */
+
 /* Begin PBXFileReference section */
 		43B26350272AA95000EE82BC /* libpEpTransport_macOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpEpTransport_macOS.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -77,6 +91,9 @@
 					43B2634F272AA95000EE82BC = {
 						CreatedOnToolsVersion = 12.5;
 					};
+					43B263AE272AB0BB00EE82BC = {
+						CreatedOnToolsVersion = 12.5;
+					};
 				};
 			};
 			buildConfigurationList = 43B2634B272AA95000EE82BC /* Build configuration list for PBXProject "pEpTransport" */;
@@ -93,9 +110,30 @@
 			projectRoot = "";
 			targets = (
 				43B2634F272AA95000EE82BC /* pEpTransport_macOS */,
+				43B263AE272AB0BB00EE82BC /* generate_code_macOS */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		43B263B2272AB0DD00EE82BC /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = "/bin/sh -l";
+			shellScript = "export LANG=en_US.UTF-8\n\necho \"***************************************\"\necho \"*** Generate files: ACTION: $ACTION ***\"\necho \"***************************************\"\n\ncd \"${PROJECT_DIR}/../../..\"\n\nmake asn1\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		43B2634D272AA95000EE82BC /* Sources */ = {
@@ -241,6 +279,24 @@
 			};
 			name = Release;
 		};
+		43B263AF272AB0BB00EE82BC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		43B263B0272AB0BB00EE82BC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -258,6 +314,15 @@
 			buildConfigurations = (
 				43B26355272AA95000EE82BC /* Debug */,
 				43B26356272AA95000EE82BC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		43B263B1272AB0BB00EE82BC /* Build configuration list for PBXAggregateTarget "generate_code_macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				43B263AF272AB0BB00EE82BC /* Debug */,
+				43B263B0272AB0BB00EE82BC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
