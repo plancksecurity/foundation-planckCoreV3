@@ -365,6 +365,13 @@
 			remoteGlobalIDString = 150845DE25F13CE700D46DA6;
 			remoteInfo = generate_code;
 		};
+		43B2637A272AAB2900EE82BC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 43B2635C272AAB2900EE82BC /* pEpTransport.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43B26350272AA95000EE82BC;
+			remoteInfo = pEpTransport;
+		};
 		43D47AA0225CC82400E97C5B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 64796A371B455AA5004B1C24 /* Project object */;
@@ -542,6 +549,7 @@
 		1585EF5A26A08B2000B822E1 /* CommonPEPDependencies.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = CommonPEPDependencies.xcodeproj; path = "../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/CommonPEPDependencies.xcodeproj"; sourceTree = "<group>"; };
 		15A3203B260E030B009D07EB /* pEpASN1.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = pEpASN1.xcodeproj; path = Subprojects/pEpASN1/pEpASN1.xcodeproj; sourceTree = "<group>"; };
 		15A3261C2611F6B5009D07EB /* PEPSQLITE3.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = PEPSQLITE3.xcodeproj; path = Subprojects/PEPSQLITE3/PEPSQLITE3.xcodeproj; sourceTree = "<group>"; };
+		43B2635C272AAB2900EE82BC /* pEpTransport.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = pEpTransport.xcodeproj; path = Subprojects/pEpTransport/pEpTransport.xcodeproj; sourceTree = "<group>"; };
 		644297BF1BE11C65002BC73B /* pEpTrustWords.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = pEpTrustWords.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		644297C11BE11C65002BC73B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		64796A3F1B455AA5004B1C24 /* libpEpEngine.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpEpEngine.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -642,6 +650,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		43B2635D272AAB2900EE82BC /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				43B2637B272AAB2900EE82BC /* libpEpTransport.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		64289E2B1B8B630200FC617B /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -665,6 +681,7 @@
 				1585EF5A26A08B2000B822E1 /* CommonPEPDependencies.xcodeproj */,
 				15A3261C2611F6B5009D07EB /* PEPSQLITE3.xcodeproj */,
 				15A3203B260E030B009D07EB /* pEpASN1.xcodeproj */,
+				43B2635C272AAB2900EE82BC /* pEpTransport.xcodeproj */,
 				64951A1B1BE0FCD800B10E71 /* system.db */,
 				64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */,
 				64A8264B1B455C5600EECAF0 /* src */,
@@ -1064,6 +1081,10 @@
 					ProductGroup = 15A3261D2611F6B5009D07EB /* Products */;
 					ProjectRef = 15A3261C2611F6B5009D07EB /* PEPSQLITE3.xcodeproj */;
 				},
+				{
+					ProductGroup = 43B2635D272AAB2900EE82BC /* Products */;
+					ProjectRef = 43B2635C272AAB2900EE82BC /* pEpTransport.xcodeproj */;
+				},
 			);
 			projectRoot = "";
 			targets = (
@@ -1103,6 +1124,13 @@
 			fileType = archive.ar;
 			path = libPEPSQLITE3_macOS.a;
 			remoteRef = 15A3266526120618009D07EB /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43B2637B272AAB2900EE82BC /* libpEpTransport.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libpEpTransport.a;
+			remoteRef = 43B2637A272AAB2900EE82BC /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		64289E351B8B630200FC617B /* libetpan.a */ = {
