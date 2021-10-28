@@ -1648,6 +1648,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/Subprojects/pEpASN1/build/include",
 					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
+					"$(PROJECT_DIR)/Subprojects/pEpTransport/build/include",
 					"${PROJECT_DIR}/../asn.1",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
@@ -1820,6 +1821,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/Subprojects/pEpASN1/build/include",
 					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
+					"$(PROJECT_DIR)/Subprojects/pEpTransport/build/include",
 					"${PROJECT_DIR}/../asn.1",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
@@ -1884,6 +1886,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/Subprojects/pEpASN1/build/include",
 					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
+					"$(PROJECT_DIR)/Subprojects/pEpTransport/build/include",
 					"${PROJECT_DIR}/../asn.1",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
