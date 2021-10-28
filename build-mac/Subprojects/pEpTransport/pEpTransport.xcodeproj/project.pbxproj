@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		43B26350272AA95000EE82BC /* libpEpTransport.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpEpTransport.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		43B26350272AA95000EE82BC /* libpEpTransport_macOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpEpTransport_macOS.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -31,7 +31,7 @@
 		43B26351272AA95000EE82BC /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				43B26350272AA95000EE82BC /* libpEpTransport.a */,
+				43B26350272AA95000EE82BC /* libpEpTransport_macOS.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -49,9 +49,9 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		43B2634F272AA95000EE82BC /* pEpTransport */ = {
+		43B2634F272AA95000EE82BC /* pEpTransport_macOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 43B26354272AA95000EE82BC /* Build configuration list for PBXNativeTarget "pEpTransport" */;
+			buildConfigurationList = 43B26354272AA95000EE82BC /* Build configuration list for PBXNativeTarget "pEpTransport_macOS" */;
 			buildPhases = (
 				43B2634C272AA95000EE82BC /* Headers */,
 				43B2634D272AA95000EE82BC /* Sources */,
@@ -61,9 +61,9 @@
 			);
 			dependencies = (
 			);
-			name = pEpTransport;
+			name = pEpTransport_macOS;
 			productName = pEpTransport;
-			productReference = 43B26350272AA95000EE82BC /* libpEpTransport.a */;
+			productReference = 43B26350272AA95000EE82BC /* libpEpTransport_macOS.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
@@ -92,7 +92,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				43B2634F272AA95000EE82BC /* pEpTransport */,
+				43B2634F272AA95000EE82BC /* pEpTransport_macOS */,
 			);
 		};
 /* End PBXProject section */
@@ -253,7 +253,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		43B26354272AA95000EE82BC /* Build configuration list for PBXNativeTarget "pEpTransport" */ = {
+		43B26354272AA95000EE82BC /* Build configuration list for PBXNativeTarget "pEpTransport_macOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				43B26355272AA95000EE82BC /* Debug */,
