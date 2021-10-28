@@ -18,6 +18,17 @@
 			name = generate_code_macOS;
 			productName = generate_code_macOS;
 		};
+		43B263D0272AC14700EE82BC /* generate_code_iOS */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 43B263D2272AC14700EE82BC /* Build configuration list for PBXAggregateTarget "generate_code_iOS" */;
+			buildPhases = (
+				43B263D1272AC14700EE82BC /* ShellScript */,
+			);
+			dependencies = (
+			);
+			name = generate_code_iOS;
+			productName = generate_code_macOS;
+		};
 /* End PBXAggregateTarget section */
 
 /* Begin PBXContainerItemProxy section */
@@ -28,14 +39,29 @@
 			remoteGlobalIDString = 43B263AE272AB0BB00EE82BC;
 			remoteInfo = generate_code_macOS;
 		};
+		43B263D5272AC15700EE82BC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 43B26348272AA95000EE82BC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 43B263D0272AC14700EE82BC;
+			remoteInfo = generate_code_iOS;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		43B26350272AA95000EE82BC /* libpEpTransport_macOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpEpTransport_macOS.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		43B263CF272AC13400EE82BC /* libpEpTransport_iOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpEpTransport_iOS.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		43B2634E272AA95000EE82BC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		43B263CB272AC13400EE82BC /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -56,6 +82,7 @@
 			isa = PBXGroup;
 			children = (
 				43B26350272AA95000EE82BC /* libpEpTransport_macOS.a */,
+				43B263CF272AC13400EE82BC /* libpEpTransport_iOS.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -64,6 +91,13 @@
 
 /* Begin PBXHeadersBuildPhase section */
 		43B2634C272AA95000EE82BC /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		43B263C9272AC13400EE82BC /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -89,6 +123,24 @@
 			name = pEpTransport_macOS;
 			productName = pEpTransport;
 			productReference = 43B26350272AA95000EE82BC /* libpEpTransport_macOS.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		43B263C6272AC13400EE82BC /* pEpTransport_iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 43B263CC272AC13400EE82BC /* Build configuration list for PBXNativeTarget "pEpTransport_iOS" */;
+			buildPhases = (
+				43B263C9272AC13400EE82BC /* Headers */,
+				43B263CA272AC13400EE82BC /* Sources */,
+				43B263CB272AC13400EE82BC /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				43B263D6272AC15700EE82BC /* PBXTargetDependency */,
+			);
+			name = pEpTransport_iOS;
+			productName = pEpTransport;
+			productReference = 43B263CF272AC13400EE82BC /* libpEpTransport_iOS.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
@@ -121,13 +173,32 @@
 			projectRoot = "";
 			targets = (
 				43B2634F272AA95000EE82BC /* pEpTransport_macOS */,
+				43B263C6272AC13400EE82BC /* pEpTransport_iOS */,
 				43B263AE272AB0BB00EE82BC /* generate_code_macOS */,
+				43B263D0272AC14700EE82BC /* generate_code_iOS */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXShellScriptBuildPhase section */
 		43B263B2272AB0DD00EE82BC /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = "/bin/sh -l";
+			shellScript = "export LANG=en_US.UTF-8\n\necho \"***************************************\"\necho \"*** Generate files: ACTION: $ACTION ***\"\necho \"***************************************\"\n\nPEP_ENGINE_DIR=\"${PROJECT_DIR}/../../..\"\nPEP_LIB_TRANSPORT_DIR=\"${PEP_ENGINE_DIR}/../libpEpTransport/\"\n\ncd \"${PEP_LIB_TRANSPORT_DIR}\"\nmake\n\n# satisfy the engine build\nmkdir -p ${PEP_ENGINE_DIR}/build-mac/build/include/pEp\ncp ${PEP_LIB_TRANSPORT_DIR}/src/transport_status_code.h ${PEP_ENGINE_DIR}/build-mac/build/include/pEp\n";
+		};
+		43B263D1272AC14700EE82BC /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -154,6 +225,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		43B263CA272AC13400EE82BC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -161,6 +239,11 @@
 			isa = PBXTargetDependency;
 			target = 43B263AE272AB0BB00EE82BC /* generate_code_macOS */;
 			targetProxy = 43B263B3272ABF8000EE82BC /* PBXContainerItemProxy */;
+		};
+		43B263D6272AC15700EE82BC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 43B263D0272AC14700EE82BC /* generate_code_iOS */;
+			targetProxy = 43B263D5272AC15700EE82BC /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -316,6 +399,46 @@
 			};
 			name = Release;
 		};
+		43B263CD272AC13400EE82BC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				EXECUTABLE_PREFIX = lib;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		43B263CE272AC13400EE82BC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				EXECUTABLE_PREFIX = lib;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		43B263D3272AC14700EE82BC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		43B263D4272AC14700EE82BC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -342,6 +465,24 @@
 			buildConfigurations = (
 				43B263AF272AB0BB00EE82BC /* Debug */,
 				43B263B0272AB0BB00EE82BC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		43B263CC272AC13400EE82BC /* Build configuration list for PBXNativeTarget "pEpTransport_iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				43B263CD272AC13400EE82BC /* Debug */,
+				43B263CE272AC13400EE82BC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		43B263D2272AC14700EE82BC /* Build configuration list for PBXAggregateTarget "generate_code_iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				43B263D3272AC14700EE82BC /* Debug */,
+				43B263D4272AC14700EE82BC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
