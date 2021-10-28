@@ -1650,6 +1650,7 @@
 					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
 					"$(PROJECT_DIR)/Subprojects/pEpTransport/build/include",
 					"${PROJECT_DIR}/../asn.1",
+					"${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/include",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
@@ -1657,7 +1658,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = "";
 				SDKROOT = macosx;
-				SYSTEM_HEADER_SEARCH_PATHS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/include";
+				SYSTEM_HEADER_SEARCH_PATHS = "";
 				VALID_ARCHS = "arm64 x86_64";
 			};
 			name = Debug_BUILD_ALL_SUPPORTED_ARCHS;
@@ -1823,6 +1824,7 @@
 					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
 					"$(PROJECT_DIR)/Subprojects/pEpTransport/build/include",
 					"${PROJECT_DIR}/../asn.1",
+					"${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/include",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
@@ -1830,7 +1832,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = "";
 				SDKROOT = macosx;
-				SYSTEM_HEADER_SEARCH_PATHS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/include";
+				SYSTEM_HEADER_SEARCH_PATHS = "";
 				VALID_ARCHS = "arm64 x86_64";
 			};
 			name = Debug;
@@ -1888,6 +1890,7 @@
 					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
 					"$(PROJECT_DIR)/Subprojects/pEpTransport/build/include",
 					"${PROJECT_DIR}/../asn.1",
+					"${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/include",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
@@ -1895,7 +1898,7 @@
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = "";
 				SDKROOT = macosx;
-				SYSTEM_HEADER_SEARCH_PATHS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/include";
+				SYSTEM_HEADER_SEARCH_PATHS = "";
 				VALIDATE_PRODUCT = YES;
 				VALID_ARCHS = "arm64 x86_64";
 			};
