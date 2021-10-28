@@ -196,7 +196,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = "/bin/sh -l";
-			shellScript = "export LANG=en_US.UTF-8\n\necho \"***************************************\"\necho \"*** Generate files: ACTION: $ACTION ***\"\necho \"***************************************\"\n\nPEP_LIB_TRANSPORT_DIR=\"${PROJECT_DIR}/../../../../libpEpTransport/\"\nLOCAL_INCLUDE_DIR=\"${PROJECT_DIR}/build/include/pEp\"\n\nmkdir -p ${LOCAL_INCLUDE_DIR}\n\ncd \"${PEP_LIB_TRANSPORT_DIR}\"\nmake\n\ncp ${PEP_LIB_TRANSPORT_DIR}/src/transport_status_code.h ${LOCAL_INCLUDE_DIR}\n";
+			shellScript = "export LANG=en_US.UTF-8\n\necho \"***************************************\"\necho \"*** Generate files: ACTION: $ACTION ***\"\necho \"***************************************\"\n\nPEP_LIB_TRANSPORT_DIR=\"${PROJECT_DIR}/../../../../libpEpTransport/\"\nLOCAL_INCLUDE_DIR=\"${PROJECT_DIR}/build/include/pEp\"\n\nmkdir -p ${LOCAL_INCLUDE_DIR}\n\ncd \"${PEP_LIB_TRANSPORT_DIR}\"\nmake\n\n# satisfy engine build\ncp ${PEP_LIB_TRANSPORT_DIR}/src/transport_status_code.h ${LOCAL_INCLUDE_DIR}\n";
 		};
 		43B263D1272AC14700EE82BC /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
