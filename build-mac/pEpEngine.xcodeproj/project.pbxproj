@@ -1649,7 +1649,6 @@
 					"$(PROJECT_DIR)/Subprojects/pEpASN1/build/include",
 					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
 					"$(PROJECT_DIR)/Subprojects/pEpTransport/build/include",
-					"${PROJECT_DIR}/../asn.1",
 					"${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/include",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
@@ -1822,7 +1821,6 @@
 					"$(PROJECT_DIR)/Subprojects/pEpASN1/build/include",
 					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
 					"$(PROJECT_DIR)/Subprojects/pEpTransport/build/include",
-					"${PROJECT_DIR}/../asn.1",
 					"${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/include",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
@@ -1887,7 +1885,6 @@
 					"$(PROJECT_DIR)/Subprojects/pEpASN1/build/include",
 					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
 					"$(PROJECT_DIR)/Subprojects/pEpTransport/build/include",
-					"${PROJECT_DIR}/../asn.1",
 					"${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/include",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
