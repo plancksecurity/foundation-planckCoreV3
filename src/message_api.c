@@ -2749,94 +2749,38 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     // Update the identities and gather key and version information 
     // for sending 
     //
-    if (enc_format != PEP_enc_none && (_il = src->bcc) && _il->ident)
-    // BCC limited support:
-    {
-        //     - App splits mails with BCC in multiple mails.
-        //     - Each email is encrypted separately
-        if(_il->next || (src->to && src->to->ident) || (src->cc && src->cc->ident))
-        {
-            // Only one Bcc with no other recipient allowed for now
-            return PEP_ILLEGAL_VALUE;
-        }
-
-        // If you think this call is a beast, try the cut-and-pasted code 3 x
-        PEP_STATUS _status = _update_state_for_ident_list(
-                                session, src->from, _il,
-                                &_k,
-                                &max_comm_type,
-                                &max_version_major,
-                                &max_version_minor,
-                                &has_pEp_user,
-                                &dest_keys_found,
-                                true);
-                                        
-        switch (_status) {
-            case PEP_PASSPHRASE_REQUIRED:
-            case PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED:
-            case PEP_WRONG_PASSPHRASE:
-                status = _status;
-                goto pEp_error;
-            case PEP_STATUS_OK:
-                break;
-            default:
-                status = PEP_UNENCRYPTED;
-                goto pEp_error;
-        }
-    }
-    else // Non BCC
-    {
-
-        // If you think this call is a beast, try the cut-and-pasted code 3 x
-        PEP_STATUS _status = PEP_STATUS_OK;
-        
-        if (src->to) {
-            _status = _update_state_for_ident_list(
-                            session, src->from, src->to,
-                            &_k,
-                            &max_comm_type,
-                            &max_version_major,
-                            &max_version_minor,
-                            &has_pEp_user,
-                            &dest_keys_found,
-                            false
-                        );
-            switch (_status) {
-                case PEP_PASSPHRASE_REQUIRED:
-                case PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED:
-                case PEP_WRONG_PASSPHRASE:
-                    goto pEp_error;
-                case PEP_STATUS_OK:
-                    break;
-                default:
-                    status = PEP_UNENCRYPTED;
-                    goto pEp_error;
-            }                        
-        }
-        if (src->cc) {
-            _status = _update_state_for_ident_list(
-                            session, src->from, src->cc,
-                            &_k,
-                            &max_comm_type,
-                            &max_version_major,
-                            &max_version_minor,
-                            &has_pEp_user,
-                            &dest_keys_found,
-                            false
-                        );
-            switch (_status) {
-                case PEP_PASSPHRASE_REQUIRED:
-                case PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED:
-                case PEP_WRONG_PASSPHRASE:
-                    goto pEp_error;
-                case PEP_STATUS_OK:
-                    break;
-                default:
-                    status = PEP_UNENCRYPTED;
-                    goto pEp_error;
-            }                        
-        }        
-    }
+#   define UPDATE_STATE_FOR_IDENT_LIST_AND_JUMP_ON_ERROR(                    \
+              ident_list_actual,                                             \
+              suppress_update_for_bcc)                                       \
+    do {                                                                     \
+        identity_list *ident_list = (ident_list_actual);                     \
+        if (ident_list) {                                                    \
+            status = _update_state_for_ident_list(                           \
+                        session, src->from, ident_list,                      \
+                        &_k,                                                 \
+                        &max_comm_type,                                      \
+                        &max_version_major,                                  \
+                        &max_version_minor,                                  \
+                        &has_pEp_user,                                       \
+                        &dest_keys_found,                                    \
+                        (suppress_update_for_bcc)                            \
+                     );                                                      \
+            switch (status) {                                                \
+                case PEP_PASSPHRASE_REQUIRED:                                \
+                case PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED:                   \
+                case PEP_WRONG_PASSPHRASE:                                   \
+                    goto pEp_error;                                          \
+                case PEP_STATUS_OK:                                          \
+                    break;                                                   \
+                default:                                                     \
+                    status = PEP_UNENCRYPTED;                                \
+                    goto pEp_error;                                          \
+            }                                                                \
+        }                                                                    \
+    } while (false)
+    UPDATE_STATE_FOR_IDENT_LIST_AND_JUMP_ON_ERROR (src->to, false);
+    UPDATE_STATE_FOR_IDENT_LIST_AND_JUMP_ON_ERROR (src->cc, false);
+    UPDATE_STATE_FOR_IDENT_LIST_AND_JUMP_ON_ERROR (src->bcc, true);
     
     if (max_version_major < 2)
         force_v_1 = true;
