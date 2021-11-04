@@ -75,14 +75,11 @@
 #define LOCAL_DB windoze_local_db()
 #define SYSTEM_DB windoze_system_db()
 #else // UNIX
+#ifndef ZOS
 #define _POSIX_C_SOURCE 200809L
-#include <dlfcn.h>
-#ifdef NDEBUG
-#define LOCAL_DB unix_local_db()
-#else
-#define LOCAL_DB unix_local_db(false)
-#define LOCAL_DB_RESET unix_local_db(true)
 #endif
+#include <dlfcn.h>
+#define LOCAL_DB unix_local_db()
 #ifdef ANDROID
 #define SYSTEM_DB android_system_db()
 #else
@@ -112,11 +109,6 @@
 #include "group_internal.h"
 #include "keymanagement_internal.h"
 #include "message_api_internal.h"
-
-// If not specified, build for Sequoia
-#ifndef USE_SEQUOIA
-#define USE_SEQUOIA
-#endif
 
 #if defined(USE_SEQUOIA)
 #include "pgp_sequoia_internal.h"
@@ -298,8 +290,6 @@ struct _pEpSession {
     sqlite3_stmt *add_userid_alias;
 
     // callbacks
-    examine_identity_t examine_identity;
-    void *examine_management;
     notifyHandshake_t notifyHandshake;
     inject_sync_event_t inject_sync_event;
     retrieve_next_sync_event_t retrieve_next_sync_event;

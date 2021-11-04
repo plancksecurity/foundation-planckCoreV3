@@ -118,95 +118,16 @@ DYNAMIC_API PEP_STATUS update_identity(
  *           if you need to do this asynchronous, you need to return an identity
  *           with retrieve_next_identity() where pEp_identity.me is true
  *  
+ *  @warning If the identity has no .username but the person with the same
+ *           address has one, copy it into the identity's .username.
+ *           Applications should in general *not* rely on this feature, which
+ *           can break privacy by revealing a username to a third party.  It is
+ *           provided for compatibility in the case of email, where a header
+ *           such as "From: johndoe@example.com" is accepted even if no longer
+ *           technically standard.
  */
 
 DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity);
-
-/**
- *  <!--       retrieve_next_identity()       -->
- *  
- *  @brief Callback being called by do_keymanagement()
- *  
- *  @param[in]   management    data structure to deliver (implementation defined)
- *  
- *  @retval identity to check or NULL to terminate do_keymanagement()
- *          if given identity must be created with new_identity()
- *          the identity struct is going to the ownership of this library
- *          it must not be freed by the callee
- *  
- *  @warning this callback has to block until an identity or NULL can be returned
- *           an implementation is not provided by this library; instead it has to be
- *           implemented by the user of this library
- *  
- */
-
-typedef pEp_identity *(*retrieve_next_identity_t)(void *management);
-
-
-/**
- *  <!--       examine_identity()       -->
- *  
- *  @brief Callback for appending to queue
- *  
- *  @param[in]   ident         identity to examine
- *  @param[in]   management    data structure to deliver (implementation defined)
- *  
- *  @retval 0 if identity was added successfully to queue or nonzero otherwise
- *  
- *  
- */
-
-typedef int (*examine_identity_t)(pEp_identity *ident, void *management);
-
-
-/**
- *  <!--       register_examine_function()       -->
- *  
- *  @brief Register examine_identity() callback
- *  
- *  @param[in]   session             session to use
- *  @param[in]   examine_identity    examine_identity() function to register
- *  @param[in]   management          data structure to deliver (implementation defined)
- *  
- *  @retval PEP_STATUS_OK
- *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
- *  
- */
-
-DYNAMIC_API PEP_STATUS register_examine_function(
-        PEP_SESSION session, 
-        examine_identity_t examine_identity,
-        void *management
-    );
-
-
-/**
- *  <!--       do_keymanagement()       -->
- *  
- *  @brief Function to be run on an extra thread
- *  
- *  @param[in]   retrieve_next_identity    pointer to retrieve_next_identity()
- *                                           callback which returns at least a valid
- *                                           address field in the identity struct
- *  
- *  @retval PEP_STATUS_OK if thread has to terminate successfully 
- *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
- *  @retval PEP_OUT_OF_MEMORY   out of memory
- *  @retval any other value on failure
- *  
- *  @warning to ensure proper working of this library, a thread has to be started
- *           with this function immediately after initialization
- *           do_keymanagement() calls retrieve_next_identity(management)
- *           messageToSend can only be null if no transport is application based
- *           if transport system is not used it must not be NULL
- *  
- */
-
-DYNAMIC_API PEP_STATUS do_keymanagement(
-        retrieve_next_identity_t retrieve_next_identity,
-        void *management
-    );
-
 
 /**
  *  <!--       key_mistrusted()       -->

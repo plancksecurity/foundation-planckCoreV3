@@ -7,7 +7,7 @@
 #ifndef PLATFORM_UNIX_H
 #define PLATFORM_UNIX_H
 
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(ZOS)
 #define _POSIX_C_SOURCE 200809L
 #endif
 
@@ -15,11 +15,28 @@
 #include <unistd.h>
 #include <strings.h>
 #include <sys/select.h>
+#ifndef ZOS
 #include <sys/param.h>
+#endif
 #include <regex.h>
 
-#ifndef ANDROID
+#ifdef ZOS
+char * e2as(const char * str);
+char * as2e(const char * str);
+#endif
+
+#if defined(ANDROID) || defined(ZOS)
+typedef unsigned char uuid_t[16];
+#else
 #include <uuid/uuid.h>
+#endif
+
+#ifndef MIN
+#define MIN(A, B) ((A)>(B) ? (B) : (A))
+#endif
+
+#ifndef MAX
+#define MAX(A, B) ((A)>(B) ? (A) : (B))
 #endif
 
 // pEp files and directories
@@ -36,29 +53,28 @@
 #endif
 #endif
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#ifdef NDEBUG
-const char *unix_local_db(void);
-#else
 /**
  *  <!--       unix_local_db()       -->
  *  
  *  @brief            TODO
- *  
- *  @param[in]  reset        int
+ *             The returned pointed refers memory managed by
+ *             the engine, which will remain valid until
+ *             the next call to reset_path_cache.
  *  
  */
-const char *unix_local_db(int reset);
-#endif
+const char *unix_local_db(void);
+
 /**
  *  <!--       unix_system_db()       -->
  *  
  *  @brief            TODO
- *  
+ *             The returned pointed refers memory managed by
+ *             the engine, which will remain valid until
+ *             the next call to reset_path_cache.
  *  
  */
 const char *unix_system_db(void);
@@ -75,6 +91,14 @@ char *stpcpy(char *, const char *);
 // Only the lowest 31 bits are filled randomly.
 //long int random(void);
 
+/*
+ *  <!--   android_system_db()       -->
+ *
+ *  @brief            TODO
+ *             The returned pointed refers memory managed by
+ *             the engine, which will remain valid until
+ *             the next call to reset_path_cache.
+ */
 const char *android_system_db(void);
 #define SYSTEM_DB android_system_db()
 
@@ -144,7 +168,7 @@ typedef char uuid_string_t[37];
 // on *nix, uuid_t is an array and already implements pointer semantics
 #define UUID uuid_t
 
-#ifdef ANDROID
+#if defined(ANDROID) || defined(ZOS)
 typedef char pEpUUID[16];
 void uuid_generate_random(pEpUUID out);
 void uuid_unparse_upper(pEpUUID uu, uuid_string_t out);

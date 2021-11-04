@@ -7,6 +7,8 @@
 #include "TestUtilities.h"
 #include "TestConstants.h"
 #include "Engine.h"
+#include "map_asn1.h"
+#include "message_codec.h"
 
 #include <gtest/gtest.h>
 
@@ -87,6 +89,120 @@ namespace {
 
 }  // namespace
 
+
+TEST_F(IdentEncFormatTest, check_identity_empty_fingerprint) {
+    /* For reasons of backward-compatibility we cannot support an identity with
+       no fingerprint (in the ASN.1 encoding), but we can support an identity
+       with an empty fingerprint -- In the engine C code in practice we also
+       accept NULL.
+
+       This test case is derived from check_ident_enc_format_unspecified , but
+       omits the format test at the end and, crucially, uses an empty FPR for
+       Alice. */
+    ASSERT_TRUE(slurp_and_import_key(session, carol_filename));
+    stringlist_t* found_key = NULL;
+    PEP_STATUS status = find_keys(session, carol_fpr, &found_key);
+    ASSERT_OK;
+    ASSERT_NOTNULL(found_key);
+    ASSERT_NOTNULL(found_key->value);
+    ASSERT_STREQ(found_key->value, carol_fpr);
+    ASSERT_NULL(found_key->next);
+    
+    const char* my_fpr = carol_fpr;
+    const char* my_name = "Carol Peril";
+    const char* my_address = "carol_peril@darthmama.cool";
+    pEp_identity* my_ident = new_identity(my_address, my_fpr, PEP_OWN_USERID, my_name);
+    status = set_own_key(session, my_ident, my_fpr);
+    ASSERT_OK;
+    
+    // Set up "to"
+    ASSERT_TRUE(slurp_and_import_key(session, alice_pub_filename));    
+    const char* to_fpr = NULL; /* And not alice_fpr: here I did "the move". */
+    const char* to_name = "Alice Malice";
+    const char* to_address = "alice_malice@darthmama.cool";
+    pEp_identity* to_ident = new_identity(to_address, to_fpr, "ALICE", to_name);
+    status = set_identity(session, to_ident);
+    ASSERT_OK;
+    
+    message* msg = new_message(PEP_dir_outgoing);        
+    msg->from = my_ident;
+    msg->to = new_identity_list(to_ident);
+    msg->shortmsg = strdup("This is an exciting message from Carol!");
+    msg->longmsg = strdup("Not\nVery\nExciting\n");   
+    
+    std::cout << "OK-A 50000\n";
+    /* Notice that encryption is supposed to fail here... */
+    message* enc_msg = NULL;
+    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_auto, 0);
+    ASSERT_EQ (status, PEP_UNENCRYPTED);
+    ASSERT_NULL(enc_msg); /* ...this is expected, since encryption failed. */
+    std::cout << "OK-A 70000\n";
+    
+    free_message(msg);
+    free_stringlist(found_key);    
+}
+
+/* This is a helper for testCaseAsnEncodeMessageFingerprint which is a helper
+   for check_ident_non_empty_fingerprint_encoding and
+   check_ident_empty_fingerprint_encoding . */
+static char *pString(const char *pstrIn)
+{
+    const size_t maxSize = 256;
+    size_t inputSize = strnlen(pstrIn, maxSize);
+    char *pstrResult = (char *) malloc(inputSize + 1);
+    strncpy(pstrResult, pstrIn, inputSize + 1);
+    pstrResult[inputSize] = '\0';
+    return pstrResult;
+}
+
+/* This is a helper for check_ident_non_empty_fingerprint_encoding and
+   check_ident_empty_fingerprint_encoding . */
+static bool testCaseAsnEncodeMessageFingerprint(bool useFingerprint)
+{
+    pEp_identity *from = new_identity(pString("blah1@example.com"),
+                                      useFingerprint ? pString("0E12343434343434343434EAB3484343434343434") : NULL,
+                                      pString("user_id_1"),
+                                      pString("user_name_1"));
+
+    pEp_identity *to = new_identity(pString("blah2@example.com"),
+                                    useFingerprint ? pString("123434343434343C3434343434343734349A34344") : NULL,
+                                    pString("user_id_2"),
+                                    pString("user_name_2"));
+
+    message *msg = new_message(PEP_dir_outgoing);
+    msg->from = from;
+    msg->to = new_identity_list(to);
+
+    msg->longmsg = pString("some text");
+
+    ASN1Message_t *asn1Message = ASN1Message_from_message(msg, NULL, true, 0);
+
+    if (asn1Message == NULL) {
+        free_message(msg);
+        return false;
+    }
+
+    char *msgBytes = NULL;
+    size_t msgBytesSze = 0;
+    PEP_STATUS status = encode_ASN1Message_message(asn1Message, &msgBytes, &msgBytesSze);
+
+    if (status != PEP_STATUS_OK) {
+        free_message(msg);
+        return false;
+    }
+
+    free_message(msg);
+
+    return true;
+}
+
+TEST_F(IdentEncFormatTest, check_ident_non_empty_fingerprint_encoding) {
+    ASSERT_EQ(! ! testCaseAsnEncodeMessageFingerprint(true), true);
+}
+
+TEST_F(IdentEncFormatTest, check_ident_empty_fingerprint_encoding) {
+    ASSERT_EQ(! ! testCaseAsnEncodeMessageFingerprint(false), true);
+}
 
 TEST_F(IdentEncFormatTest, check_ident_enc_format_unspecified) {
     ASSERT_TRUE(slurp_and_import_key(session, carol_filename));

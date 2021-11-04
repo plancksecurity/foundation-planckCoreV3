@@ -1922,6 +1922,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_send) {
     // First, make sure that's who's in our group, eh?
     member_list* members = NULL;
     status = retrieve_active_member_list(session, group_ident, &members);
+    ASSERT_NE (members, nullptr);
     const char* member_names[] = {member_1_name, member_2_name, member_4_name};
     const char* member_addrs[] = {member_1_address, member_2_address, member_4_address};
     const char* member_fprs[] = {member_1_fpr, member_2_fpr, member_4_fpr};
@@ -2358,7 +2359,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_different_own_identity_m
     const char* member_addrs[] = {member_1_address, member_2_address, member_3_address, member_4_address};
     const char* member_fprs[] = {member_1_fpr, member_2_fpr, member_3_fpr, member_4_fpr};
 
-    bool found[] = {false, false, false};
+    bool found[] = {false, false, false, false};
 
     int count = 0;
     for (member_list* curr_member = group1_info->members;

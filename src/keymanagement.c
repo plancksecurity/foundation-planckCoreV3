@@ -875,13 +875,6 @@ DYNAMIC_API PEP_STATUS update_identity(
         if (identity->comm_type == PEP_ct_unknown)
             identity->comm_type = PEP_ct_key_not_found;
     }
-    
-    // VB says, and I quote, "that is not implemented and no one is using it right now"
-    // about this bit. So, um, you're forewarned.
-    if (identity->comm_type != PEP_ct_compromised &&
-        identity->comm_type < PEP_ct_strong_but_unconfirmed)
-        if (session->examine_identity)
-            session->examine_identity(identity, session->examine_management);
 
     goto pEp_free;
 
@@ -1035,9 +1028,10 @@ PEP_STATUS _myself(PEP_SESSION session,
             return PEP_OUT_OF_MEMORY;
     }
 
-    // Cache the input username, if there is one and it's not read_only
+    // Cache the input username, if there is one and it's not read_only; NULL
+    // otherwise.  cached_input_username is never a pointer to an empty string.
     char* cached_input_username = NULL;
-    if (!read_only && identity->username) {
+    if (!read_only && ! EMPTYSTR(identity->username)) {
         cached_input_username = strdup(identity->username);
         if (!cached_input_username)
             return PEP_OUT_OF_MEMORY;
@@ -1254,66 +1248,6 @@ pEp_free:
 DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
 {
     return _myself(session, identity, true, true, false, false);
-}
-
-DYNAMIC_API PEP_STATUS register_examine_function(
-        PEP_SESSION session, 
-        examine_identity_t examine_identity,
-        void *management
-    )
-{
-    assert(session);
-    if (!session)
-        return PEP_ILLEGAL_VALUE;
-
-    session->examine_management = management;
-    session->examine_identity = examine_identity;
-
-    return PEP_STATUS_OK;
-}
-
-DYNAMIC_API PEP_STATUS do_keymanagement(
-        retrieve_next_identity_t retrieve_next_identity,
-        void *management
-    )
-{
-    PEP_SESSION session;
-    pEp_identity *identity;
-    // FIXME_NOW: ensure_decrypt callback???
-    PEP_STATUS status = init(&session, NULL, NULL, NULL);
-    assert(!status);
-    if (status)
-        return status;
-
-    assert(session && retrieve_next_identity);
-    if (!(session && retrieve_next_identity))
-        return PEP_ILLEGAL_VALUE;
-
-    log_event(session, "keymanagement thread started", "pEp engine", NULL, NULL);
-
-    while ((identity = retrieve_next_identity(management))) 
-    {
-        assert(identity->address);
-        if(identity->address)
-        {
-            DEBUG_LOG("do_keymanagement", "retrieve_next_identity", identity->address);
-
-            if (identity->me) {
-                status = myself(session, identity);
-            } else {
-                status = recv_key(session, identity->address);
-            }
-
-            assert(status != PEP_OUT_OF_MEMORY);
-            if(status == PEP_OUT_OF_MEMORY)
-                return PEP_OUT_OF_MEMORY;
-        }
-        free_identity(identity);
-    }
-
-    log_event(session, "keymanagement thread shutdown", "pEp engine", NULL, NULL);
-    release(session);
-    return PEP_STATUS_OK;
 }
 
 DYNAMIC_API PEP_STATUS key_mistrusted(

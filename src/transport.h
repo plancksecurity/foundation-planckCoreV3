@@ -8,7 +8,8 @@
 #define TRANSPORT_H
 
 #include "pEpEngine.h"
-#include "message.h"
+#include "message_api.h"
+#include <pEp/transport_status_code.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,6 +26,8 @@ typedef enum _PEP_transport_id {
     PEP_trans_auto = 0,
 //    PEP_trans_Email = 0x01,
 //    PEP_trans_RCE = 0x02,
+//    PEP_trans_PDL = 0x03,
+//    PEP_trans_SCTP = 0x04,
 
     PEP_trans__count,
     PEP_trans_CC = 0xfe
@@ -41,8 +44,6 @@ typedef struct _transport_config {
 // transports are delivering the transport status code
 // this is defined here:
 // https://dev.pep.foundation/Engine/TransportStatusCode
-
-typedef uint32_t PEP_transport_status_code;
 
 typedef struct _PEP_transport_t PEP_transport_t;
 
@@ -69,7 +70,7 @@ typedef PEP_STATUS (*signal_statuschange_t)(PEP_transport_id id,
         PEP_transport_status_code tsc);
 
 typedef PEP_STATUS (*signal_sendto_result_t)(PEP_transport_id id, char *message_id,
-        char *address, PEP_transport_status_code tsc);
+        char *address, PEP_rating rating, PEP_transport_status_code tsc);
 
 typedef PEP_STATUS (*signal_incoming_message_t)(PEP_transport_id id,
         PEP_transport_status_code tsc);

@@ -8,11 +8,92 @@
 #define MAP_ASN1_H
 
 #include "message.h"
-#include "../asn.1/ASN1Message.h"
+#include "ASN1Message.h"
+#include "Identity.h" // ENGINE-971
+#include "IdentityList.h" // ENGINE-971
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+
+/* For compatibility reasons we have PIdentity as a distinct struct from
+   Identity.  The difference is that PIdentity has some optional fields, notably
+   fpr.
+
+   Some functionality is replicated for each struct kind. */
+
+/**
+ *  <!--       PIdentity_from_Struct()       -->
+ *  
+ *  @brief Convert pEp_identity into ASN.1 PIdentity_t
+ *  
+ *  @param ident[in]           pEp_identity to convert
+ *  @param result[in,out]      PIdentity_t to update or NULL to alloc a new one
+ *  
+ *  @retval pointer to updated or allocated result
+ *  
+ *  @warning if a new struct is allocated, the ownership goes to the caller
+ *  
+ */
+
+PIdentity_t *PIdentity_from_Struct(
+        const pEp_identity *ident,
+        PIdentity_t *result
+    );
+
+
+/**
+ *  <!--       PIdentity_to_Struct()       -->
+ *  
+ *  @brief Convert ASN.1 PIdentity_t into pEp_identity
+ *  
+ *  @param ident[in]          PIdentity_t to convert
+ *  @param result[inout]      pEp_identity to update or NULL to alloc a new one
+ *  
+ *  @retval pointer to updated or allocated result
+ *  
+ *  @warning if a new struct is allocated, the ownership goes to the caller
+ *  
+ */
+
+pEp_identity *PIdentity_to_Struct(PIdentity_t *ident, pEp_identity *result);
+
+
+/**
+ *  <!--       PIdentityList_from_identity_list()       -->
+ *  
+ *  @brief Convert identity_list_t into ASN.1 PIdentityList_t
+ *  
+ *  @param list[in]           identity_list to convert
+ *  @param result[inout]      PIdentityList_t to update or NULL to alloc a new one
+ *  
+ *  @retval pointer to updated or allocated result
+ *  
+ *  @warning if a new struct is allocated, the ownership goes to the caller
+ *  
+ */
+
+PIdentityList_t *PIdentityList_from_identity_list(
+        const identity_list *list,
+        PIdentityList_t *result
+    );
+
+/**
+ *  <!--       PIdentityList_to_identity_list()       -->
+ *  
+ *  @brief Convert ASN.1 PIdentityList_t to identity_list_t
+ *  
+ *  @param list[in]           ASN.1 PIdentityList_t to convert
+ *  @param result[inout]      identity_list_t to update or NULL to alloc a new one
+ *  
+ *  @retval pointer to updated or allocated result
+ *  
+ *  @warning if a new struct is allocated, the ownership goes to the caller
+ *  
+ */
+
+identity_list *PIdentityList_to_identity_list(PIdentityList_t *list, identity_list *result);
 
 
 /**

@@ -5,22 +5,30 @@
 
 include ../Makefile.conf
 
+# Notice the single quotes below: since user definitions can contain dollar
+# signs it is important to prevent their expansion: shell variable references
+# here must be expanded at run time, and not at compile time.
 ifdef PER_USER_DIRECTORY
-	EXTRA_MACROS+= -DPER_USER_DIRECTORY=$(PER_USER_DIRECTORY)
+	EXTRA_MACROS+= -DPER_USER_DIRECTORY='"$(PER_USER_DIRECTORY)"'
 endif
 
 ifdef PER_MACHINE_DIRECTORY
-	EXTRA_MACROS+= -DPER_MACHINE_DIRECTORY=\"$(PER_MACHINE_DIRECTORY)\"
+	EXTRA_MACROS+= -DPER_MACHINE_DIRECTORY='"$(PER_MACHINE_DIRECTORY)"'
+endif
+
+ifneq ($(BUILD_ON),OS/390)
+LDFLAGS+= -shared
 endif
 
 NO_SOURCE=
 
 ifndef PEP_MIME
-    CFLAGS+= $(ETPAN_INC)
-    LDFLAGS+= $(ETPAN_LIB)
-    LDLIBS+= -letpan
+ifeq ($(BUILD_ON),OS/390)
+    LDLIBS+= -letpan-no-mt
 else
-    LDFLAGS+= -L../pEpMIME -shared
+    LDLIBS+= -letpan
+endif
+else
     LDLIBS+= -lpEpMIME
     NO_SOURCE+= etpan_mime.c
 endif
@@ -28,10 +36,17 @@ endif
 CFLAGS+= -I../asn.1 $(EXTRA_MACROS)
 CPPFLAGS+= -DSQLITE_THREADSAFE=1
 
-LDFLAGS+= -L../asn.1 -shared
-LDLIBS+= -lc -lasn1
+LDFLAGS+= -L../asn.1
+ifneq ($(BUILD_ON),OS/390)
+LDFLAGS+= -shared
+LDLIBS+= -lc
+endif
+LDLIBS+= -lasn1
 
-ifeq ($(BUILD_ON),Darwin)
+ifeq ($(BUILD_ON),OS/390)
+    OPENPGP=NETPGP
+    LDLIBS+= -lzz
+else ifeq ($(BUILD_ON),Darwin)
     ifeq ($(BUILD_FOR),Darwin)
         LDLIBS+= -lz -liconv -mmacosx-version-min=10.10
     else
@@ -59,6 +74,13 @@ ifeq ($(OPENPGP),SEQUOIA)
     CFLAGS+= $(SEQUOIA_CFLAGS) $(SEQUOIA_INC)
     LDFLAGS+= $(SEQUOIA_LDFLAGS)
     LDLIBS+= $(SEQUOIA_LIB)
+    NO_SOURCE+=pgp_netpgp.c
+else ifeq ($(OPENPGP),NETPGP)
+    CPPFLAGS+= -DUSE_NETPGP
+    CFLAGS+= $(NETPGP_CFLAGS) $(NETPGP_INC)
+    LDFLAGS+= $(NETPGP_LDFLAGS)
+    LDLIBS+= $(NETPGP_LIB)
+    NO_SOURCE+=pgp_sequoia.c
 else
     $(error Unknown OpenPGP library: $(OPENPGP))
 endif
@@ -66,6 +88,10 @@ endif
 ALL_SOURCE=$(filter-out $(NO_SOURCE),$(wildcard *.c))
 DEPENDS=$(subst .c,.d,$(ALL_SOURCE))
 ALL_OBJECTS=$(subst .c,.o,$(ALL_SOURCE))
+ifeq ($(BUILD_ON),OS/390)
+    ALL_OBJECTS+=/usr/lib/GSKCMS64.x
+    ALL_OBJECTS+=/usr/lib/CSNPCA64.x
+endif
 
 all: $(TARGET)
 
@@ -83,7 +109,7 @@ ifneq ($(MAKECMDGOALS),clean)
 endif
 
 $(TARGET): libpEpEngine.a
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(ALL_OBJECTS) $(LDFLAGS) $(LDLIBS) -o $@
+	$(CC) -o $@ $(CPPFLAGS) $(LDFLAGS) $(CFLAGS) $(ALL_OBJECTS) $(LDLIBS)
 
 .PHONY: objects clean install_headers install uninstall beinstall
 
@@ -97,17 +123,20 @@ clean:
 	rm -Rf $(TARGET).dSYM
 	rm -f KeySync_fsm.* Sync_actions.c Sync_event.* Sync_func.* Sync_impl.* sync_codec.* distribution_codec.* storage_codec.*
 
+HEADERS_TO_INSTALL = \
+  pEpEngine.h keymanagement.h message_api.h dynamic_api.h stringlist.h \
+  timestamp.h identity_list.h bloblist.h stringpair.h message.h mime.h group.h \
+  cryptotech.h sync_api.h pEp_string.h openpgp_compat.h engine_sql.h \
+  labeled_int_list.h key_reset.h base64.h sync_codec.h distribution_codec.h \
+  storage_codec.h status_to_string.h keyreset_command.h platform.h platform_unix.h \
+  transport.h growing_buf.h $(wildcard ../asn.1/*.h)
+
 # CAVEAT:
 # install_headers is needed for building *STANDALONE* pEp MIME - it is NOT used for built-in functionality!!!
 
 install_headers: $(TARGET)
 	mkdir -p $(DESTDIR)$(PREFIX)/include/pEp
-	cp pEpEngine.h keymanagement.h message_api.h dynamic_api.h stringlist.h \
-	   timestamp.h identity_list.h bloblist.h stringpair.h message.h mime.h group.h \
-	   cryptotech.h sync_api.h pEp_string.h openpgp_compat.h engine_sql.h \
-	   labeled_int_list.h key_reset.h base64.h sync_codec.h distribution_codec.h storage_codec.h \
-	   status_to_string.h keyreset_command.h platform.h platform_unix.h ../asn.1/*.h \
-	   $(DESTDIR)$(PREFIX)/include/pEp/
+	cp $(HEADERS_TO_INSTALL) $(DESTDIR)$(PREFIX)/include/pEp/
 
 # FIXME: Does anyone but Roker use install_headers? Otherwise, remove the dependency.
 install: $(TARGET) install_headers
@@ -120,7 +149,8 @@ beinstall: install
 
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/lib/$(TARGET)
-	rm -rf $(DESTDIR)$(PREFIX)/include/pEp
+	rm $(addprefix $(DESTDIR)$(PREFIX)/include/pEp/,$(notdir $(HEADERS_TO_INSTALL)))
+	rmdir $(DESTDIR)$(PREFIX)/include/pEp 2> /dev/null || true
 
 tags: $(wildcard *.c) $(wildcard *.h)
 	ctags --sort=yes *.c *.h
