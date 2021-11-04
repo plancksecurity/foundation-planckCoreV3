@@ -12,36 +12,50 @@
 
 #include "stringpair.h"
 
+DYNAMIC_API stringpair_t * new_stringpair_tot(char *key, char *value)
+{
+    // NULL values are not accepted here. use new_stringpair() that transforms them to ""
+    assert(key);
+    assert(value);
+    if(!key || !value)
+        return NULL;
+    
+    stringpair_t *pair = calloc(1, sizeof(stringpair_t));
+    assert(pair);
+    if (pair == NULL)
+        return NULL;
+
+    pair->key;
+    pair->value;
+    return pair;
+}
+
+
 DYNAMIC_API stringpair_t * new_stringpair(const char *key, const char *value)
 {
-    stringpair_t *pair = NULL;
-
     // key and value should not be NULL, that's bad style (while legal)
-
     assert(key);
     assert(value);
 
-    pair = calloc(1, sizeof(stringpair_t));
-    assert(pair);
-    if (pair == NULL)
+    stringpair_t *pair = NULL;
+    char* key_cpy   = (key   ? strdup(key)   : strdup(""));
+    char* value_cpy = (value ? strdup(value) : strdup(""));
+    
+    if(!key_cpy || !value_cpy)
         goto enomem;
-
-    pair->key = key ? strdup(key) : strdup("");
-    assert(pair->key);
-    if (pair->key == NULL)
+    
+    pair = new_stringpair_tot(key_cpy, value_cpy);
+    if(!pair)
         goto enomem;
-
-    pair->value = value ? strdup(value) : strdup("");
-    assert(pair->value);
-    if (pair->value == NULL)
-        goto enomem;
-
+    
     return pair;
 
 enomem:
-    free_stringpair(pair);
+    free(value_cpy);
+    free(key_cpy);
     return NULL;
 }
+
 
 DYNAMIC_API void free_stringpair(stringpair_t * pair)
 {
