@@ -120,7 +120,6 @@ TEST_F(AppleMailTest, check_apple_mail_text_signed_encrypted) {
     message* msg_ptr = nullptr;
     message* dest_msg = nullptr;
     stringlist_t* keylist = nullptr;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
     message* final_ptr = nullptr;
@@ -133,14 +132,14 @@ TEST_F(AppleMailTest, check_apple_mail_text_signed_encrypted) {
 
     final_ptr = msg_ptr;
 
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
     output_stream << "longmsg: " << final_ptr->longmsg << endl << endl;
     output_stream << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    ASSERT_EQ(color_from_rating(rating) , PEP_color_green);
+    ASSERT_EQ(color_from_rating(final_ptr->rating) , PEP_color_green);
 
     if (final_ptr == dest_msg)
     	free_message(dest_msg);
@@ -194,14 +193,14 @@ TEST_F(AppleMailTest, check_apple_mail_html_signed_encrypted) {
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(msg_ptr);
     final_ptr = msg_ptr;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
+    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
     output_stream << "longmsg: " << final_ptr->longmsg << endl << endl;
     output_stream << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    ASSERT_EQ(color_from_rating(rating) , PEP_color_green);
+    ASSERT_EQ(color_from_rating(final_ptr->rating) , PEP_color_green);
 
     if (final_ptr == dest_msg)
     	free_message(dest_msg);
