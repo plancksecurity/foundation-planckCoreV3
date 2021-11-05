@@ -13,22 +13,36 @@
 #include "stringlist.h"
 
 
-DYNAMIC_API stringlist_t *new_stringlist(const char *value)
+DYNAMIC_API stringlist_t *new_stringlist_tot(char *value)
 {
     stringlist_t *result = calloc(1, sizeof(stringlist_t));
     assert(result);
 
-    if (result && value) {
-        result->value = strdup(value);
-        assert(result->value);
-        if (!result->value) {
-            free(result);
-            return NULL;
-        }
+    if (result) {
+        result->value = value;
     }
 
     return result;
 }
+
+
+DYNAMIC_API stringlist_t *new_stringlist(const char *value)
+{
+    if(value == NULL)
+        return NULL;
+        
+    char* value_cpy = strdup(value);
+    if(value_cpy == NULL)
+        return NULL;
+    
+    stringlist_t* result = new_stringlist_tot(value_copy);
+    if(result == NULL) {
+        free(value_cpy);
+    }
+    
+    return result;
+}
+
 
 DYNAMIC_API stringlist_t *stringlist_dup(const stringlist_t *src)
 {
