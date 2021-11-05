@@ -62,12 +62,13 @@ DYNAMIC_API stringlist_t *stringlist_dup(const stringlist_t *src);
 /**
  *  <!--       stringlist_add()       -->
  *  
- *  @brief Add key to stringlist
+ *  @brief Add an element to the end of a stringlist
  *  
  *  @param[in]   stringlist    stringlist struct or NULL to create a new one
  *  @param[in]   value         value as C string
  *  
- *  @retval pointer to last element in stringlist or NULL if out of memory
+ *  @retval pointer to last element in stringlist (that's where 'value' was copied into)
+ *          or NULL if out of memory
  *  
  *  @warning the value is being copied before being added to the list
  *           the original string is still being owned by the caller

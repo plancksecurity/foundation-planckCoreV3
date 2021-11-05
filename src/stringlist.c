@@ -73,16 +73,19 @@ DYNAMIC_API stringlist_t *stringlist_dup(const stringlist_t *src)
 /**
  *  @internal
  *  
- *  <!--       _stringlist_add_first()       -->
+ *  <!--       _stringlist_add_first_node()       -->
  *  
- *  @brief            TODO
+ *  @brief  Helper function for stringlist_add(): Special operations on first node
+ *          if list is NULL or empty.
  *  
- *  @param[in]    *stringlist        stringlist_t
- *  @param[in]    **result        stringlist_t
- *  @param[in]    *value        constchar
+ *  @param[in]    *stringlist  stringlist_t
+ *  @param[out]   **result     stringlist_t
+ *  @param[in]    *value       constchar
  *  
+ *  @retval  'true' if 'value' was put successfully into 0th or 1st node
+ *
  */
-static bool _stringlist_add_first(
+static bool _stringlist_add_first_node(
         stringlist_t *stringlist,
         stringlist_t **result,
         const char *value
@@ -125,8 +128,10 @@ DYNAMIC_API stringlist_t *stringlist_add(
         return NULL;
 
     stringlist_t *result = NULL;
-    if(_stringlist_add_first(stringlist, &result, value))
+    if(_stringlist_add_first_node(stringlist, &result, value))
         return result;
+    
+    // 'value' was not put into 1st node, so put it at the end of stringlist:
     
     stringlist_t* list_curr = stringlist;
 
