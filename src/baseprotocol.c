@@ -260,6 +260,16 @@ PEP_STATUS try_base_prepare_message(
         message **result
     )
 {
+    /* Special case: if messageToSend is not defined there is no way to handle
+       passphrases: in that case just exit with PEP_SYNC_NO_CHANNEL.  This is
+       required for pEp4Thunderbird (P4TB-413) with the most recent
+       libpEpAdapter (master) and JSONServerAdapter (master) as of 2021-11-05:
+       JSONServerAdapter performs a temporary incomplete initialisation by
+       supplying some NULL callbacks, and initialises in a complete way only
+       later. */
+    if (session->messageToSend == NULL)
+        return PEP_SYNC_NO_CHANNEL;
+
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session && session->messageToSend && session->notifyHandshake);
