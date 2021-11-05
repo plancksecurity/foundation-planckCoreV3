@@ -25,8 +25,8 @@ DYNAMIC_API stringpair_t * new_stringpair_tot(char *key, char *value)
     if (pair == NULL)
         return NULL;
 
-    pair->key;
-    pair->value;
+    pair->key = key;
+    pair->value = value;
     return pair;
 }
 
