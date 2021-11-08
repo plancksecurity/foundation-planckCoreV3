@@ -72,7 +72,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PEPENGINE_EXPORTS;_CRT_SECURE_NO_WARNINGS;USE_SEQUOIA;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <EnablePREfast>false</EnablePREfast>
-      <AdditionalIncludeDirectories>$(SolutionDir)libetpan\build-windows\include;$(SolutionDir)Tools\asn1c\share\asn1c;$(SolutionDir)sequoia\openpgp-ffi\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)pEpEngine\asn.1;$(SolutionDir);$(SolutionDir)libetpan\build-windows\include;$(SolutionDir)Tools\asn1c\share\asn1c;$(SolutionDir)sequoia\openpgp-ffi\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>Default</CompileAs>
       <DisableSpecificWarnings>4703</DisableSpecificWarnings>
     </ClCompile>
@@ -103,7 +103,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PEPENGINE_EXPORTS;USE_SEQUOIA;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>false</SDLCheck>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(SolutionDir)libetpan\build-windows\include;$(SolutionDir)Tools\asn1c\share\asn1c;$(SolutionDir)sequoia\openpgp-ffi\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)libetpan\build-windows\include;$(SolutionDir)Tools\asn1c\share\asn1c;$(SolutionDir)sequoia\openpgp-ffi\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ControlFlowGuard>Guard</ControlFlowGuard>

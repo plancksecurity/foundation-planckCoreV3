@@ -41,6 +41,8 @@
 #include <time.h>
 #include "timestamp.h"
 
+#define timezone _timezone
+
 // pEp files and directories
 
 #ifndef PER_USER_DIRECTORY
