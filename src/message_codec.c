@@ -14,6 +14,7 @@
 #include "../asn.1/ASN1Message.h"
 #include "pEp_internal.h"
 #include "growing_buf.h"
+#include "message_codec.h"
 
 DYNAMIC_API PEP_STATUS decode_ASN1Message_message(
         const char *data,
