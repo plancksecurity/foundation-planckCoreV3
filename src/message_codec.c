@@ -35,7 +35,7 @@ DYNAMIC_API PEP_STATUS decode_ASN1Message_message(
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS encode_ASN1Message_message(
+DYNAMIC_API PEP_STATUS encode_ASN1Message_message(
         ASN1Message_t *msg,
         char **data,
         size_t *size
@@ -60,7 +60,7 @@ PEP_STATUS encode_ASN1Message_message(
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS PER_to_XER_ASN1Message_msg(
+DYNAMIC_API PEP_STATUS PER_to_XER_ASN1Message_msg(
         const char *data,
         size_t size,
         char **text
@@ -102,7 +102,7 @@ the_end:
     return status;
 }
 
-PEP_STATUS XER_to_PER_ASN1Message_msg(
+DYNAMIC_API PEP_STATUS XER_to_PER_ASN1Message_msg(
         const char *text,
         char **data,
         size_t *size
