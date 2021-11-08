@@ -1073,7 +1073,7 @@ ASN1Message_t *ASN1Message_from_message(
 
 enomem:
     if (allocated)
-        ASN_STRUCT_FREE(asn_DEF_ASN1Message, result);
+        free_ASN1Message(result);
     return NULL;
 }
 

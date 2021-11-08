@@ -98,7 +98,7 @@ PEP_STATUS PER_to_XER_ASN1Message_msg(
 
 the_end:
     free_growing_buf(dst);
-    ASN_STRUCT_FREE(asn_DEF_ASN1Message, msg);
+    free_ASN1Message(msg);
     return status;
 }
 
@@ -135,7 +135,13 @@ PEP_STATUS XER_to_PER_ASN1Message_msg(
     *size = (size_t) _size;
 
 the_end:
-    ASN_STRUCT_FREE(asn_DEF_ASN1Message, msg);
+    free_ASN1Message(msg);
     return status;
 }
 
+DYNAMIC_API void free_ASN1Message(
+        ASN1Message_t *msg
+    )
+{
+    ASN_STRUCT_FREE(asn_DEF_ASN1Message, msg);
+}
