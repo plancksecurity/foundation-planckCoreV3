@@ -22,29 +22,6 @@ PY -m pip install --upgrade pip
 PY -m pip install wheel
 PY -m pip install yml2
 
-:: Generate code in ...\libpEpTransport\src
-CD ..\..\libpEpTransport\src
-
-IF NOT EXIST generated MKDIR generated
-
-PY %YML2PROC% -E utf-8 -y gen_c.ysl2 transport_status_code.yml2 -o generated\transport_status_code.h
-IF %ERRORLEVEL% NEQ 0 GOTO end
-
-PY %YML2PROC% -E utf-8 -y gen_strings.ysl2 transport_status_code.yml2 -o generated\transport_status_code.c
-IF %ERRORLEVEL% NEQ 0 GOTO end
-
-PY %YML2PROC% -E utf-8 -y gen_objc.ysl2 transport_status_code.yml2 -o generated\PEPTransportStatusCode.h
-IF %ERRORLEVEL% NEQ 0 GOTO end
-
-PY %YML2PROC% -E utf-8 -y gen_kotlin.ysl2 transport_status_code.yml2 -o generated\TransportStatusCode.kt
-IF %ERRORLEVEL% NEQ 0 GOTO end
-
-PY %YML2PROC% -E utf-8 -y gen_cs.ysl2 transport_status_code.yml2 -o generated\TransportStatusCode.cs
-IF %ERRORLEVEL% NEQ 0 GOTO end
-
-XCOPY /y generated\*.c ..\..\pEpEngine\src\
-XCOPY /y generated\*.h ..\..\pEpEngine\src\
-
 :: Generate code in ...\pEpEngine\codegen
 CD ..\..\pEpEngine\codegen
 

@@ -11,10 +11,14 @@
 extern "C" {
 #endif
 
-#ifdef _WIN32
-#include "platform_windows.h"
+#if defined (_WIN32)
+# include "platform_windows.h"
+#elif defined (UNIX)
+# include "platform_unix.h"
+#elif defined (ZOS)
+# include "platform_zos.h"
 #else
-#include "platform_unix.h"
+# error "unknown platform"
 #endif
 
 #ifdef __cplusplus
