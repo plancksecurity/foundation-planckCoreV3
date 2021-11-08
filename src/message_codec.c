@@ -139,3 +139,8 @@ the_end:
     return status;
 }
 
+DYNAMIC_API void free_ASN1Message(
+        ASN1Message_t *msg
+    )
+{
+}

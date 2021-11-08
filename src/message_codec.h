@@ -96,6 +96,19 @@ DYNAMIC_API PEP_STATUS XER_to_PER_ASN1Message_msg(
     );
 
 
+/**
+ *  <!--         free_ASN1Message()       -->
+ *
+ *  @brief          De-allocate the pointed ASN1 message which must have been
+ *                  heap-allocated.
+ *
+ *  @param[in]      msg       Pointer to the message to destroy.
+ */
+DYNAMIC_API void free_ASN1Message(
+        ASN1Message_t *msg
+    );
+
+
 #ifdef __cplusplus
 }
 #endif
