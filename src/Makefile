@@ -143,7 +143,3 @@ uninstall:
 
 tags: $(wildcard *.c) $(wildcard *.h)
 	ctags --sort=yes *.c *.h
-
-# FIXME: this is a test I am using to debug the makefile itself
-CFLAGS += -Wall -Werror
-CXXFLAGS += -Wall -Werror
