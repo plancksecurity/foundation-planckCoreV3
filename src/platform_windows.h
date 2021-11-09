@@ -9,6 +9,15 @@
 
 // Windows platform specifica
 
+// The windows compiler used by default does not support GNU-style attributes;
+// let us just disable them altogether with a CPP defintition, so that
+// attributes become no-ops on windows but keep functioning on the other
+// platforms.
+// Notice that this definition is extremely conservative: supporting exactly
+// one argument would suffice.
+#define __attribute__(...) /* nothing */
+#define attribute __attribute__
+
 #ifndef _EXPORT_PEP_ENGINE_DLL
 #define _EXPORT_PEP_ENGINE_DLL
 #endif

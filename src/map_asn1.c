@@ -6,6 +6,7 @@
 
 #include "pEp_internal.h"
 #include "map_asn1.h"
+#include "message_codec.h"
 
 /* Expand to a statement checking that the given expression evaluates to a
    non-NULL result, first using an assert and then an explicit check in C.  If

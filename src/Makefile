@@ -5,17 +5,6 @@
 
 include ../Makefile.conf
 
-# Notice the single quotes below: since user definitions can contain dollar
-# signs it is important to prevent their expansion: shell variable references
-# here must be expanded at run time, and not at compile time.
-ifdef PER_USER_DIRECTORY
-	EXTRA_MACROS+= -DPER_USER_DIRECTORY='"$(PER_USER_DIRECTORY)"'
-endif
-
-ifdef PER_MACHINE_DIRECTORY
-	EXTRA_MACROS+= -DPER_MACHINE_DIRECTORY='"$(PER_MACHINE_DIRECTORY)"'
-endif
-
 ifneq ($(BUILD_ON),OS/390)
 LDFLAGS+= -shared
 endif
@@ -155,3 +144,6 @@ uninstall:
 tags: $(wildcard *.c) $(wildcard *.h)
 	ctags --sort=yes *.c *.h
 
+# FIXME: this is a test I am using to debug the makefile itself
+CFLAGS += -Wall -Werror
+CXXFLAGS += -Wall -Werror

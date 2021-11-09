@@ -772,7 +772,8 @@ DYNAMIC_API PEP_STATUS update_identity(
                     // grab some information about the stored identity
                     bool candidate_has_real_id = strstr(candidate_id, "TOFU_") != candidate_id;
                     bool candidate_has_username = !EMPTYSTR(candidate->username);
-                    bool candidate_name_is_addr = candidate_has_username ? strcmp(candidate->address, candidate->username) == 0 : false;
+                    bool candidate_name_is_addr __attribute__((unused))
+                        = candidate_has_username ? strcmp(candidate->address, candidate->username) == 0 : false;
 
                     // This is where the optimisation gets a little weird:
                     //
