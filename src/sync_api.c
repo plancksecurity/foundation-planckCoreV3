@@ -23,6 +23,7 @@ static PEP_STATUS notifyHandshake_dummy(
 {
     free_identity(me);
     free_identity(partner);
+    return PEP_STATUS_OK;
 }
 
 
