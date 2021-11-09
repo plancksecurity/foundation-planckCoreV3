@@ -149,7 +149,7 @@ beinstall: install
 
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/lib/$(TARGET)
-	rm $(addprefix $(DESTDIR)$(PREFIX)/include/pEp/,$(notdir $(HEADERS_TO_INSTALL)))
+	rm -f $(addprefix $(DESTDIR)$(PREFIX)/include/pEp/,$(notdir $(HEADERS_TO_INSTALL)))
 	rmdir $(DESTDIR)$(PREFIX)/include/pEp 2> /dev/null || true
 
 tags: $(wildcard *.c) $(wildcard *.h)
