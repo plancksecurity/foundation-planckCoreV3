@@ -32,6 +32,7 @@ static SYNC_EVENT retrieve_next_sync_event_dummy(void *management,
         unsigned threshold)
 {
     /* Do nothing. */
+    return NULL;
 }
 
 
