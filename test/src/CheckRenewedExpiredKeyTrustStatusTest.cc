@@ -124,7 +124,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
     ASSERT_OK;
 
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    status = decrypt_message_2(session, enc_msg, &dec_msg, &keylist, &flags);
     ASSERT_EQ(status, PEP_DECRYPTED); // ???
 
     ok = slurp_and_import_key(session, "test_keys/pub/inquisitor-0xA4728718_renewed_pub.asc");
@@ -189,7 +189,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
     ASSERT_OK;
 
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    status = decrypt_message_2(session, enc_msg, &dec_msg, &keylist, &flags);
     ASSERT_EQ(status, PEP_DECRYPTED); // ???
 
     ok = slurp_and_import_key(session, "test_keys/pub/inquisitor-0xA4728718_renewed_pub.asc");
@@ -280,7 +280,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
     ASSERT_OK;
 
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    status = decrypt_message_2(session, enc_msg, &dec_msg, &keylist, &flags);
     ASSERT_EQ(status, PEP_DECRYPTED); // ???
 
     ok = slurp_and_import_key(session, "test_keys/pub/inquisitor-0xA4728718_renewed_pub.asc");
@@ -354,7 +354,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
     ASSERT_OK;
 
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    status = decrypt_message_2(session, enc_msg, &dec_msg, &keylist, &flags);
     ASSERT_EQ(status, PEP_DECRYPTED);
 
     ok = slurp_and_import_key(session, "test_keys/pub/inquisitor-0xA4728718_renewed_pub.asc");

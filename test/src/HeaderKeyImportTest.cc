@@ -730,7 +730,7 @@ TEST_F(HeaderKeyImportTest, check_header_key_import) {
 
     flags = 0;
     message* enc_msg = string_to_msg(strmsg);
-    PEP_STATUS status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    PEP_STATUS status = decrypt_message_2(session, enc_msg, &dec_msg, &keylist, &flags);
     ASSERT_OK;
     PEP_rating rating = dec_msg->rating;
     ASSERT_EQ(rating, PEP_rating_reliable);

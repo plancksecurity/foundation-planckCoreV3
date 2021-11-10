@@ -242,7 +242,7 @@ typedef unsigned int PEP_decrypt_flags_t;
 
 
 /**
- *  <!--       decrypt_message()       -->
+ *  <!--       decrypt_message_2()     -->
  *
  *  @brief Decrypt message in memory
  *
@@ -315,11 +315,31 @@ typedef unsigned int PEP_decrypt_flags_t;
  *           so that they can be handled by the internal algorithm appropriately)
  */
 
+DYNAMIC_API PEP_STATUS decrypt_message_2(
+        PEP_SESSION session,
+        message *src,
+        message **dst,
+        stringlist_t **keylist,
+        PEP_decrypt_flags_t *flags
+);
+
+/**
+ *  <!--       decrypt_message()       -->
+ *
+ *  @brief Exactly like decrypt_message_2, but with the rating output parameter.
+ *         This function is kept for API compatibility: new code should use
+ *         decrypt_message_2 instead of this function.
+ *
+ *  @param[out] rating      output message rating, only valid in case
+ *                          decryption succeeded.
+ */
+
 DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_SESSION session,
         message *src,
         message **dst,
         stringlist_t **keylist,
+        PEP_rating *rating,
         PEP_decrypt_flags_t *flags
 );
 

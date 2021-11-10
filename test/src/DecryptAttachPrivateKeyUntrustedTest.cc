@@ -176,7 +176,7 @@ TEST_F(DecryptAttachPrivateKeyUntrustedTest, check_decrypt_attach_private_key_un
     ASSERT_NE(same_addr_same_uid->comm_type & PEP_ct_confirmed, PEP_ct_confirmed);
 
     flags = 0;
-    status = decrypt_message(session, encoded_text, &decrypted_text,
+    status = decrypt_message_2(session, encoded_text, &decrypted_text,
                                   &keylist_used, &flags);
 
     status = get_trust(session, same_addr_same_uid);

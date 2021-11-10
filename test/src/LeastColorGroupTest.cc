@@ -142,7 +142,7 @@ TEST_F(LeastColorGroupTest, check_least_color_group) {
     ASSERT_NOTNULL(msg_ptr);
     final_ptr = msg_ptr;
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
     PEP_rating rating = final_ptr->rating;
 

@@ -204,7 +204,7 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
 
     flags = 0;
     output_stream << "Decrypting message." << endl;
-    status = decrypt_message(session, encrypted_outgoing_msg, &outgoing_msg, &keylist, &flags);
+    status = decrypt_message_2(session, encrypted_outgoing_msg, &outgoing_msg, &keylist, &flags);
     output_stream << "Decrypted message with status " << tl_status_string(status) << endl;
     ASSERT_OK;
     PEP_rating rating = outgoing_msg->rating;
@@ -384,7 +384,7 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
 
 
     flags = 0;
-    status = decrypt_message(session, encrypted_outgoing_msg, &decrypted_msg, &keylist, &flags);
+    status = decrypt_message_2(session, encrypted_outgoing_msg, &decrypted_msg, &keylist, &flags);
     output_stream << "Decryption returns with status " << tl_status_string(status) << endl;
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(decrypted_msg);
