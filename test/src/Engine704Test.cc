@@ -130,7 +130,7 @@ TEST_F(Engine704Test, check_engine704) {
     stringlist_t* keylist = NULL;
     PEP_decrypt_flags_t flags = 0;
     
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);    
+    status = decrypt_message_2(session, enc_msg, &dec_msg, &keylist, &flags);    
     ASSERT_STREQ(dec_msg->from->username, alicename);
     ASSERT_STREQ(dec_msg->to->ident->username, bobname);    
 }

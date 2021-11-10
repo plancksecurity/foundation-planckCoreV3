@@ -101,7 +101,7 @@ TEST_F(Engine463Test, check_engine_463_no_own_key) {
     stringlist_t* keylist_used = nullptr;
     PEP_decrypt_flags_t flags = 0;
 
-    status = decrypt_message(session, msg, &decrypted_msg, &keylist_used, &flags);
+    status = decrypt_message_2(session, msg, &decrypted_msg, &keylist_used, &flags);
     ASSERT_OK;
 }
 
@@ -127,7 +127,7 @@ TEST_F(Engine463Test, check_engine_463_sender_expired_and_renewed) {
     stringlist_t* keylist_used = nullptr;
     PEP_decrypt_flags_t flags = 0;
 
-    status = decrypt_message(session, msg, &decrypted_msg, &keylist_used, &flags);
+    status = decrypt_message_2(session, msg, &decrypted_msg, &keylist_used, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
 
     free(decrypted_msg);
@@ -144,7 +144,7 @@ TEST_F(Engine463Test, check_engine_463_sender_expired_and_renewed) {
 
     flags = 0;
 
-    status = decrypt_message(session, msg, &decrypted_msg, &keylist_used, &flags);
+    status = decrypt_message_2(session, msg, &decrypted_msg, &keylist_used, &flags);
     ASSERT_NOTNULL(decrypted_msg);
     ASSERT_OK;
     rating = decrypted_msg->rating;
@@ -182,7 +182,7 @@ TEST_F(Engine463Test, check_engine_463_sender_expired_and_renewed) {
     stringlist_t* keylist_used = nullptr;
     PEP_decrypt_flags_t flags = 0;
 
-    status = decrypt_message(session, msg, &decrypted_msg, &keylist_used, &flags);
+    status = decrypt_message_2(session, msg, &decrypted_msg, &keylist_used, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
 
     free(decrypted_msg);

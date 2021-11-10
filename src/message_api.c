@@ -6279,7 +6279,7 @@ pEp_error:
     return status;
 }
 
-DYNAMIC_API PEP_STATUS decrypt_message(
+DYNAMIC_API PEP_STATUS decrypt_message_2(
         PEP_SESSION session,
         message *src,
         message **dst,
@@ -6386,6 +6386,39 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
     free(imported_key_fprs);
     return status;
+}
+
+/* The API compatibility alternative to decrypt_message_2.  This is, of course,
+   just a thin compatibility layer on top of it. */
+DYNAMIC_API PEP_STATUS decrypt_message(
+        PEP_SESSION session,
+        message *src,
+        message **dst,
+        stringlist_t **keylist,
+        PEP_rating *rating,
+        PEP_decrypt_flags_t *flags
+    )
+{
+    /* Check that the rating output parameter has been passed correctly;
+       initialise it just to ease debugging (stress the passed pointer by
+       dereferencing it), even if it would not be necessary. */
+    assert(rating);
+    if (! rating)
+        return PEP_ILLEGAL_VALUE;
+    * rating = PEP_rating_undefined;
+
+    /* Do the actual work. */
+    PEP_STATUS res = decrypt_message_2(session, src, dst, keylist, flags);
+
+    /* Set the output rating, copying it from the message field.  Notice that
+       the message field itself has been initialised correctly in
+       decrypt_message_2 , so this will be reasonable even if decryption
+       failed. */
+    message *msg = *dst ? *dst : src;
+    * rating = msg->rating;
+
+    /* We are done. */
+    return res;
 }
 
 DYNAMIC_API PEP_STATUS own_message_private_key_details(
@@ -6985,7 +7018,7 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
         message *dst = NULL;
         stringlist_t *_keylist = keylist;
         PEP_decrypt_flags_t flags;
-        status = decrypt_message( session, msg, &dst, &_keylist, &flags);
+        status = decrypt_message_2( session, msg, &dst, &_keylist, &flags);
 
         if (status != PEP_STATUS_OK) {
             free_message(dst);

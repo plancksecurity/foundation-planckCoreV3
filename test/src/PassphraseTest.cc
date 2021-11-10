@@ -641,7 +641,7 @@ TEST_F(PassphraseTest, check_bob_primary_pass_subkey_no_passphrase_nopass_decryp
     message* decrypted_msg = NULL;
     stringlist_t* keylist_used = NULL;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &decrypted_msg, &keylist_used, &flags);
+    status = decrypt_message_2(session, enc_msg, &decrypted_msg, &keylist_used, &flags);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(decrypted_msg);
 
@@ -680,7 +680,7 @@ TEST_F(PassphraseTest, check_carol_primary_unenc_subkeys_passphrase_nopass_decry
     message* decrypted_msg = NULL;
     stringlist_t* keylist_used = NULL;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &decrypted_msg, &keylist_used, &flags);
+    status = decrypt_message_2(session, enc_msg, &decrypted_msg, &keylist_used, &flags);
     ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);
     ASSERT_NULL(decrypted_msg);
 
@@ -962,7 +962,7 @@ TEST_F(PassphraseTest, check_carol_primary_unenc_subkeys_passphrase_withpass_dec
     message* decrypted_msg = NULL;
     stringlist_t* keylist_used = NULL;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &decrypted_msg, &keylist_used, &flags);
+    status = decrypt_message_2(session, enc_msg, &decrypted_msg, &keylist_used, &flags);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(decrypted_msg);
 
@@ -1005,7 +1005,7 @@ TEST_F(PassphraseTest, check_carol_primary_unenc_subkeys_passphrase_wrongpass_de
     message* decrypted_msg = NULL;
     stringlist_t* keylist_used = NULL;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &decrypted_msg, &keylist_used, &flags);
+    status = decrypt_message_2(session, enc_msg, &decrypted_msg, &keylist_used, &flags);
     ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);
     ASSERT_NULL(decrypted_msg);
 
@@ -1163,7 +1163,7 @@ TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase_decry
     msg = NULL;
     stringlist_t* keylist_used = NULL;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &msg, &keylist_used, &flags);
+    status = decrypt_message_2(session, enc_msg, &msg, &keylist_used, &flags);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(msg);
 
@@ -1211,7 +1211,7 @@ TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase_decry
     msg = NULL;
     stringlist_t* keylist_used = NULL;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, enc_msg, &msg, &keylist_used, &flags);
+    status = decrypt_message_2(session, enc_msg, &msg, &keylist_used, &flags);
     ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);
     ASSERT_NULL(msg);
 

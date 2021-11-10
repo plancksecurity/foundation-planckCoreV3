@@ -200,7 +200,7 @@ TEST_F(MessageTwoPointOhTest, check_message_two_point_oh) {
     stringpair_t* autoconsume = new_stringpair("pEp-auto-consume", "yes");
     stringpair_list_add(encrypted_msg->opt_fields, autoconsume);
     flags = 0;
-    status = decrypt_message(session, encrypted_msg, &decrypted_msg, &keylist_used, &flags);
+    status = decrypt_message_2(session, encrypted_msg, &decrypted_msg, &keylist_used, &flags);
     ASSERT_NOTNULL(decrypted_msg);
     PEP_rating rating = decrypted_msg->rating;
     ASSERT_NOTNULL(keylist_used);
