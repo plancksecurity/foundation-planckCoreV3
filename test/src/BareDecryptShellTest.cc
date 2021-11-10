@@ -104,7 +104,7 @@ TEST_F(BareDecryptShellTest, check_bare_decrypt_shell) {
     PEP_decrypt_flags_t flags = 0;
 
     mime_decode_message(inmsg_str.c_str(), inmsg_str.size(), &inmsg, NULL);
-    PEP_STATUS status = decrypt_message(session, inmsg, &outmsg, &keylist, &rating, &flags);
+    PEP_STATUS status = decrypt_message_2(session, inmsg, &outmsg, &keylist, &rating, &flags);
     ASSERT_OK;
     cout << message_to_str(outmsg);
 }

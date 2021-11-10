@@ -154,7 +154,7 @@ TEST_F(LeastCommonDenomColorTest, check_least_common_denom_color) {
     ASSERT_NOTNULL(msg_ptr);
 
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     ASSERT_OK;
     ASSERT_NOTNULL(dest_msg);
     PEP_rating rating = dest_msg->rating;
@@ -203,7 +203,7 @@ TEST_F(LeastCommonDenomColorTest, check_least_common_denom_color) {
     ASSERT_OK;
     ASSERT_NOTNULL(msg_ptr);
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
 
     output_stream << "shortmsg: " << dest_msg->shortmsg << endl << endl;
     output_stream << "longmsg: " << dest_msg->longmsg << endl << endl;

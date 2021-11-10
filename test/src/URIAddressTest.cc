@@ -388,7 +388,7 @@ TEST_F(URIAddressTest, check_uri_address_tofu_2) {
     stringlist_t* keylist = NULL;
     PEP_decrypt_flags_t flags = 0;
 
-    status = decrypt_message(session, msg, &dec_msg, &keylist, &flags); 
+    status = decrypt_message_2(session, msg, &dec_msg, &keylist, &flags); 
 
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(dec_msg);

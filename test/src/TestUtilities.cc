@@ -575,7 +575,7 @@ PEP_STATUS vanilla_read_file_and_decrypt_with_rating(PEP_SESSION session, messag
     stringlist_t* keylist = NULL;
     PEP_decrypt_flags_t flags = 0;
 
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    status = decrypt_message_2(session, enc_msg, &dec_msg, &keylist, &flags);
     if (dec_msg) {
         *msg = dec_msg;
         *rating = dec_msg->rating;
