@@ -148,6 +148,7 @@
     <ClCompile Include="..\src\map_asn1.c" />
     <ClCompile Include="..\src\message.c" />
     <ClCompile Include="..\src\message_api.c" />
+    <ClCompile Include="..\src\message_codec.c" />
     <ClCompile Include="..\src\mime.c" />
     <ClCompile Include="..\src\openpgp_compat.c" />
     <ClCompile Include="..\src\pEpEngine.c" />
@@ -175,27 +176,36 @@
     <ClInclude Include="..\src\base64.h" />
     <ClInclude Include="..\src\baseprotocol.h" />
     <ClInclude Include="..\src\bloblist.h" />
+    <ClInclude Include="..\src\commit_hash.h" />
     <ClInclude Include="..\src\cryptotech.h" />
     <ClInclude Include="..\src\distribution_codec.h" />
     <ClInclude Include="..\src\dynamic_api.h" />
     <ClInclude Include="..\src\email.h" />
+    <ClInclude Include="..\src\engine_sql.h" />
     <ClInclude Include="..\src\etpan_mime.h" />
     <ClInclude Include="..\src\fsm_common.h" />
     <ClInclude Include="..\src\group.h" />
+    <ClInclude Include="..\src\GroupSync_fsm.h" />
+    <ClInclude Include="..\src\group_internal.h" />
     <ClInclude Include="..\src\growing_buf.h" />
     <ClInclude Include="..\src\identity_list.h" />
     <ClInclude Include="..\src\internal_format.h" />
     <ClInclude Include="..\src\keymanagement.h" />
+    <ClInclude Include="..\src\keymanagement_internal.h" />
     <ClInclude Include="..\src\keyreset_command.h" />
     <ClInclude Include="..\src\KeySync_fsm.h" />
     <ClInclude Include="..\src\key_reset.h" />
+    <ClInclude Include="..\src\key_reset_internal.h" />
     <ClInclude Include="..\src\labeled_int_list.h" />
     <ClInclude Include="..\src\map_asn1.h" />
     <ClInclude Include="..\src\message.h" />
     <ClInclude Include="..\src\message_api.h" />
+    <ClInclude Include="..\src\message_api_internal.h" />
+    <ClInclude Include="..\src\message_codec.h" />
     <ClInclude Include="..\src\mime.h" />
     <ClInclude Include="..\src\openpgp_compat.h" />
     <ClInclude Include="..\src\pEpEngine.h" />
+    <ClInclude Include="..\src\pEpEngine_internal.h" />
     <ClInclude Include="..\src\pEp_internal.h" />
     <ClInclude Include="..\src\pEp_string.h" />
     <ClInclude Include="..\src\pgp_sequoia.h" />
@@ -217,6 +227,7 @@
     <ClInclude Include="..\src\timestamp.h" />
     <ClInclude Include="..\src\transport.h" />
     <ClInclude Include="..\src\trans_auto.h" />
+    <ClInclude Include="..\src\TrustSync_fsm.h" />
     <ClInclude Include="..\src\wrappers.h" />
   </ItemGroup>
   <ItemGroup>
