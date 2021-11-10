@@ -533,8 +533,8 @@ tstylesheet {
             {
                 PEP_STATUS status = PEP_STATUS_OK;
 
-                assert(session && fsm > None && message_type > None);
-                if (!(session && fsm > None && message_type > None))
+                assert(session && (int) fsm > None && message_type > None);
+                if (!(session && (int) fsm > None && message_type > None))
                     return PEP_ILLEGAL_VALUE;
 
                 time_t now = time(NULL);
@@ -1653,6 +1653,7 @@ tstylesheet {
          *  @retval         PEP_ILLEGAL_VALUE       if input error during logging
          *  @retval         PEP_STATUS_OK           otherwise
          */
+        __attribute__((__unused__))
         static PEP_STATUS _«@name»_ERR_LOG_int(PEP_SESSION session, char *t, int n, bool hex)
         {
             char *_buf = _str(n, hex);
@@ -1677,7 +1678,7 @@ tstylesheet {
             if (!session)
                 return invalid_state;
 
-            if (state == None)
+            if ((int) state == None)
                 state = «@name»_state_Init;
 
             switch (state) {

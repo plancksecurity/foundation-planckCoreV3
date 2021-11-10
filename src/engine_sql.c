@@ -929,7 +929,7 @@ PEP_STATUS get_db_user_version(PEP_SESSION session, int* version) {
 static PEP_STATUS _verify_version(PEP_SESSION session, int* version) {
     // Sometimes the user_version wasn't set correctly.
     bool version_changed = true;
-    int int_result;
+    int int_result __attribute__((__unused__));
     if (table_contains_column(session, "identity", "username")) {
         *version = 17;
     }
@@ -998,7 +998,8 @@ static PEP_STATUS _verify_version(PEP_SESSION session, int* version) {
 
 static PEP_STATUS _upgrade_DB_to_ver_2(PEP_SESSION session) {
     // N.B. addition of device_group column removed in DDL v10
-    int int_result = sqlite3_exec(
+    int int_result __attribute__((__unused__))
+      = sqlite3_exec(
             session->db,
             "alter table pgp_keypair\n"
             "   add column flags integer default 0;\n",
@@ -1653,7 +1654,7 @@ static PEP_STATUS _check_and_execute_upgrades(PEP_SESSION session, int version) 
 }
 
 PEP_STATUS pEp_sql_init(PEP_SESSION session) {
-    bool very_first = false;
+    bool very_first __attribute__((__unused__)) = false;
     PEP_STATUS status = create_tables(session);
     if (status != PEP_STATUS_OK)
         return status;

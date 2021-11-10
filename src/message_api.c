@@ -136,6 +136,7 @@ static const char * rating_to_string(PEP_rating rating)
         return "under_attack";
     default:
         assert(0);
+        return "invalid rating (this should never happen)";
     }
 }
 
@@ -2176,7 +2177,7 @@ bool import_attached_keys(
 
     int i = 0;
     
-    bloblist_t* prev = NULL;
+    bloblist_t* prev __attribute__ ((__unused__)) = NULL;
     
     bool do_not_advance = false;
     const char* pubkey_header = "-----BEGIN PGP PUBLIC KEY BLOCK-----";
@@ -2752,7 +2753,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     unsigned int max_version_minor = 0;
     pEp_version_major_minor(PEP_VERSION, &max_version_major, &max_version_minor);
     
-    identity_list * _il = NULL;
+    identity_list * _il __attribute__((__unused__)) = NULL;
 
     //
     // Update the identities and gather key and version information 
@@ -4437,6 +4438,7 @@ static PEP_STATUS reconcile_src_and_inner_messages(message* src,
  *
  *  @retval     bool
  */
+__attribute__ ((__unused__))
 static bool is_trusted_own_priv_fpr(PEP_SESSION session,
                        const char* own_id, 
                        const char* fpr
@@ -4473,6 +4475,7 @@ static bool is_trusted_own_priv_fpr(PEP_SESSION session,
  *
  *  @retval     bool
  */
+__attribute__ ((__unused__))
 static bool reject_fpr(PEP_SESSION session, const char* fpr) {
     bool reject = true;
 

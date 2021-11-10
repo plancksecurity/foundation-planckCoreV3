@@ -23,6 +23,7 @@ static PEP_STATUS notifyHandshake_dummy(
 {
     free_identity(me);
     free_identity(partner);
+    return PEP_STATUS_OK;
 }
 
 
@@ -31,6 +32,7 @@ static SYNC_EVENT retrieve_next_sync_event_dummy(void *management,
         unsigned threshold)
 {
     /* Do nothing. */
+    return NULL;
 }
 
 
