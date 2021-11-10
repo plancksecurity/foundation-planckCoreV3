@@ -31,7 +31,7 @@ extern "C" {
 #define PEP_ENGINE_VERSION_PATCH 0
 // This should be the index of the last already released RC.  In practice, if
 // the release candidate N is about to be tagged, this should be defined as N+1.
-#define PEP_ENGINE_VERSION_RC    8  // the last RC was 7
+#define PEP_ENGINE_VERSION_RC    7  // the last RC was 6
 
 
 #define PEP_OWN_USERID "pEp_own_userId"
