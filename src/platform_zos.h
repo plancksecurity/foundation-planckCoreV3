@@ -11,6 +11,10 @@
 # error "this header should only ever be included on z/OS"
 #endif
 
+// The compiler used by default on this platform does not support GNU-style
+// attributes.
+#include "platform_disable_attributes.h"
+
 /* Workaround standard header problems. */
 
 #ifdef __cplusplus

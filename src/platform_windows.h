@@ -9,19 +9,14 @@
 
 // Windows platform specifica
 
-// The windows compiler used by default does not support GNU-style attributes;
-// let us just disable them altogether with a CPP defintition, so that
-// attributes become no-ops on windows but keep functioning on the other
-// platforms.
-// Notice that this definition is extremely conservative: supporting exactly
-// one argument would suffice.
-#define __attribute__(...) /* nothing */
-#define attribute __attribute__
-
 #ifndef _EXPORT_PEP_ENGINE_DLL
 #define _EXPORT_PEP_ENGINE_DLL
 #endif
 #pragma warning(disable : 4996)
+
+// The compiler used by default on this platform does not support GNU-style
+// attributes.
+#include "platform_disable_attributes.h"
 
 // We need to make sure winsock2 is included before windows.h, or we will get redefinitions of symbols
 // as windows.h includes winsock1.h, so we will have duplicate symbols if windows.h is included first.
