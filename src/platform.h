@@ -11,12 +11,18 @@
 extern "C" {
 #endif
 
-#if defined (_WIN32)
-# include "platform_windows.h"
-#elif defined (UNIX)
-# include "platform_unix.h"
-#elif defined (ZOS)
+/* Right now z/OS is not mutually exclusive with the other platforms: the way we
+   use it, it is a flavour of Unix... */
+#if defined (ZOS)
 # include "platform_zos.h"
+#endif
+
+/* ...However the other platforms are indeed mutually exclusive. */
+#if defined (UNIX)
+# include "platform_unix.h"
+#elif defined (_WIN32)
+# include "platform_windows.h"
+/* In case of need we might add Darwin or Android here. */
 #else
 # error "unknown platform"
 #endif
