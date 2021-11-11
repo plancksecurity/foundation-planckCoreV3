@@ -98,7 +98,7 @@ endif
 
 # FIXME: this forces a path on execution which overrides system paths for
 #        libraries like iconv and causes runtime errors.
-#TEST_CMD_PFX=$(LIBPATH)=$(EXTRA_LIB_PATHS)
+TEST_CMD_PFX=$(LIBPATH)=$(EXTRA_LIB_PATHS)
 ifeq ($(TEST_CMD_PFX),)
     TEST_CMD_PFX=
 endif
