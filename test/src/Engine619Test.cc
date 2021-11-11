@@ -271,7 +271,7 @@ namespace {
 //     PEP_rating rating;
 //     PEP_decrypt_flags_t flags = 0;
 
-//     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+//     status = decrypt_message_2(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
 //     ASSERT_EQ(status, PEP_STATUS_OK);
 //     ASSERT_STREQ(dec_msg->shortmsg, enc_msg->shortmsg);
 //     ASSERT_STREQ(msg->longmsg, dec_msg->longmsg);
@@ -407,7 +407,7 @@ namespace {
 //     PEP_rating rating;
 //     PEP_decrypt_flags_t flags = 0;
 
-//     status = decrypt_message(session, art_msg, &dec_msg, &keylist, &rating, &flags);
+//     status = decrypt_message_2(session, art_msg, &dec_msg, &keylist, &rating, &flags);
 //     ASSERT_EQ(status, PEP_STATUS_OK);
 //     ASSERT_TRUE(dec_msg);
 //     // today the engine is sucking keys in
@@ -441,7 +441,7 @@ TEST_F(Engine619Test, decrypt_message_with_private_key) {
     stringlist_t* keys = NULL;
     PEP_decrypt_flags_t flags = 0;
 
-    status = decrypt_message(session, message_src, & message_dst,
+    status = decrypt_message_2(session, message_src, & message_dst,
                              & keys, & flags);
     /* It is normal and expected that decryption fails here: this message is
        unencrypted.  The point of this test is to arrive at a call to

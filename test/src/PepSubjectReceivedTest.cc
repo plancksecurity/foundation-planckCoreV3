@@ -137,7 +137,7 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
@@ -170,7 +170,7 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
@@ -202,7 +202,7 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     ASSERT_NOTNULL(msg_ptr);
     final_ptr = msg_ptr;
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
@@ -234,7 +234,7 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     ASSERT_NOTNULL(msg_ptr);
     final_ptr = msg_ptr;
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
@@ -268,7 +268,7 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
@@ -301,7 +301,7 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
@@ -335,7 +335,7 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
@@ -368,7 +368,7 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
@@ -401,7 +401,7 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
@@ -434,7 +434,7 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
@@ -468,7 +468,7 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
@@ -502,7 +502,7 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
@@ -535,7 +535,7 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;

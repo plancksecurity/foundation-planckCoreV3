@@ -110,7 +110,7 @@ TEST_F(MessageNullFromTest, check_message_null_from_no_header_key_unencrypted) {
     message* enc_msg = string_to_msg(null_from_msg);
     message* dec_msg = NULL;
     ASSERT_NOTNULL(enc_msg);
-    PEP_STATUS status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    PEP_STATUS status = decrypt_message_2(session, enc_msg, &dec_msg, &keylist, &flags);
     ASSERT_EQ(status , PEP_UNENCRYPTED);
 }
 
@@ -122,7 +122,7 @@ TEST_F(MessageNullFromTest, check_message_null_from_header_key_unencrypted) {
     message* enc_msg = string_to_msg(null_from_msg);
     message* dec_msg = NULL;
     ASSERT_NOTNULL(enc_msg);
-    PEP_STATUS status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &flags);
+    PEP_STATUS status = decrypt_message_2(session, enc_msg, &dec_msg, &keylist, &flags);
     ASSERT_EQ(status , PEP_UNENCRYPTED);
 }
 

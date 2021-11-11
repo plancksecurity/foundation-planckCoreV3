@@ -181,7 +181,7 @@ TEST_F(NoOwnIdentWritesOnDecryptTest, check_no_own_ident_writes_on_decrypt) {
     stringlist_t* keylist = NULL;
     PEP_decrypt_flags_t flags = 0;
 
-    status = decrypt_message(session, copy, &dec_msg, &keylist, &flags);
+    status = decrypt_message_2(session, copy, &dec_msg, &keylist, &flags);
     ASSERT_OK;
     ASSERT_STREQ(dec_msg->to->next->ident->username, "Hot Bob");
 
@@ -241,7 +241,7 @@ TEST_F(NoOwnIdentWritesOnDecryptTest, check_no_own_ident_writes_on_decrypt) {
     keylist = NULL;
     flags = 0;
 
-    status = decrypt_message(session, copy, &dec_msg, &keylist, &flags);
+    status = decrypt_message_2(session, copy, &dec_msg, &keylist, &flags);
     ASSERT_OK;
     ASSERT_STREQ(dec_msg->to->next->ident->username, "Hot Bob");
 
