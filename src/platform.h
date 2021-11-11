@@ -17,14 +17,15 @@ extern "C" {
 # include "platform_zos.h"
 #endif
 
-/* ...However the other platforms are indeed mutually exclusive. */
+/* ...However the other platforms are indeed mutually exclusive, for the
+   purposes of the platform_* files in the engine. */
 #if defined (UNIX)
 # include "platform_unix.h"
 #elif defined (_WIN32)
 # include "platform_windows.h"
-/* In case of need we might add Darwin or Android here. */
 #else
-# error "unknown platform"
+  /* Unix is the default: this is useful for installed headers. */
+# include "platform_unix.h"
 #endif
 
 #ifdef __cplusplus
