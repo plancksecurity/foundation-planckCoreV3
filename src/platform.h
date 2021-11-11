@@ -13,7 +13,7 @@ extern "C" {
 
 /* Right now z/OS is not mutually exclusive with the other platforms: the way we
    use it, it is a flavour of Unix... */
-#if defined (ZOS)
+#if defined (__MVS__)
 # include "platform_zos.h"
 #endif
 
