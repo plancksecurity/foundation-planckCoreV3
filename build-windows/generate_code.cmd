@@ -17,6 +17,9 @@ IF NOT EXIST "%ProgramData%\pEp" "MKDIR %ProgramData%\pEp"
 DEL "%ProgramData%\pEp\system.db"
 MOVE system.db "%ProgramData%\pEp\system.db"
 
+:: Generate code in ...\pEpEngine\codegen
+CD ..\codegen
+
 :: Make sure YML2 is installed
 PY -m pip install --upgrade pip
 PY -m pip install wheel
