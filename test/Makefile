@@ -96,6 +96,10 @@ else
     LIBPATH=LD_LIBRARY_PATH
 endif
 
+# The LIBPATH variable, whatever it is, should have the value of EXTRA_LIB_PATHS
+# *prepended* to it -- without the rest of the path being lost.  This allows the
+# user to use manually-installed version of some dependency libraries rather
+# than system libraries.
 TEST_CMD_PFX=$(LIBPATH)="$(EXTRA_LIB_PATHS):$$$(LIBPATH)"
 ifeq ($(TEST_CMD_PFX),)
     TEST_CMD_PFX=

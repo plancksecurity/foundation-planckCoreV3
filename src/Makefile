@@ -92,9 +92,11 @@ all: $(TARGET)
 	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
-# If only the goal 'clean' is given, do not generate and include the '%.d' files.
+# Do not generate and include the '%.d' files if cleaning or uninstalling.
 ifneq ($(MAKECMDGOALS),clean)
-    -include $(DEPENDS)
+    ifneq ($(MAKECMDGOALS),uninstall)
+        -include $(DEPENDS)
+    endif
 endif
 
 $(TARGET): libpEpEngine.a
@@ -129,6 +131,7 @@ install_headers: $(TARGET)
 	cp $(HEADERS_TO_INSTALL) $(DESTDIR)$(PREFIX)/include/pEp/
 
 # FIXME: Does anyone but Roker use install_headers? Otherwise, remove the dependency.
+#        I occasionally use it.  --positron
 install: $(TARGET) install_headers
 	mkdir -p "$(DESTDIR)$(PREFIX)/lib/"
 	cp -v $< $(DESTDIR)$(PREFIX)/lib/
