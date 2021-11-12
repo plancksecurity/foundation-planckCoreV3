@@ -75,7 +75,7 @@
 #define LOCAL_DB windoze_local_db()
 #define SYSTEM_DB windoze_system_db()
 #else // UNIX
-#ifndef ZOS
+#ifndef __MVS__
 #define _POSIX_C_SOURCE 200809L
 #endif
 #include <dlfcn.h>

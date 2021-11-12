@@ -22,7 +22,7 @@ DYNAMIC_API time_t timegm_with_gmtoff(const timestamp* ts)
         _ts = timestamp_dup(ts);
 
         if (_ts) {
-#if defined(ZOS)
+#if defined(__MVS__)
             const time_t raw_time = mktime(_ts);
             if (raw_time != -1) {
                 retval = raw_time;

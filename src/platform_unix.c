@@ -4,7 +4,7 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#ifndef ZOS
+#ifndef __MVS__
 #define _POSIX_C_SOURCE 200809L
 #endif
 
@@ -88,7 +88,7 @@ void *alloca(unsigned long x)
 }
 #endif
 
-#if defined(ANDROID) || defined(ZOS)
+#if defined(ANDROID) || defined(__MVS__)
 /* FIXME : timegm will miss when linking for x86_64 on android, when supported */
 #ifndef __LP64__ 
 time_t timegm(struct tm* const t) {
@@ -165,7 +165,7 @@ static char *_android_system_db(void)
 }
 #endif
 
-#ifdef ZOS
+#ifdef __MVS__
 char * e2as(const char * str)
 {
     char *ret = (char *)malloc(strlen(str));

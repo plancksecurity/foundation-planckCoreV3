@@ -7,7 +7,7 @@
 #ifndef PEP_PLATFORM_ZOS_H
 #define PEP_PLATFORM_ZOS_H
 
-#if ! defined (ZOS)
+#if ! defined (__MVS__)
 # error "this header should only ever be included on z/OS"
 #endif
 

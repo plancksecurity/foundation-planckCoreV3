@@ -7,7 +7,7 @@
 #ifndef PLATFORM_UNIX_H
 #define PLATFORM_UNIX_H
 
-#if !defined(__APPLE__) && !defined(ZOS)
+#if !defined(__APPLE__) && !defined(__MVS__)
 #define _POSIX_C_SOURCE 200809L
 #endif
 
@@ -15,17 +15,17 @@
 #include <unistd.h>
 #include <strings.h>
 #include <sys/select.h>
-#ifndef ZOS
+#ifndef __MVS__
 #include <sys/param.h>
 #endif
 #include <regex.h>
 
-#ifdef ZOS
+#ifdef __MVS__
 char * e2as(const char * str);
 char * as2e(const char * str);
 #endif
 
-#if defined(ANDROID) || defined(ZOS)
+#if defined(ANDROID) || defined(__MVS__)
 typedef unsigned char uuid_t[16];
 #else
 #include <uuid/uuid.h>
@@ -168,7 +168,7 @@ typedef char uuid_string_t[37];
 // on *nix, uuid_t is an array and already implements pointer semantics
 #define UUID uuid_t
 
-#if defined(ANDROID) || defined(ZOS)
+#if defined(ANDROID) || defined(__MVS__)
 typedef char pEpUUID[16];
 void uuid_generate_random(pEpUUID out);
 void uuid_unparse_upper(pEpUUID uu, uuid_string_t out);
