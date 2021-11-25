@@ -365,33 +365,33 @@
 			remoteGlobalIDString = 150845DE25F13CE700D46DA6;
 			remoteInfo = generate_code;
 		};
-		4309FF0A27315E560055C6C9 /* PBXContainerItemProxy */ = {
+		4399C9E32747C70700F52599 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4309FF0327315E560055C6C9 /* pEpTransport.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 43B26350272AA95000EE82BC;
 			remoteInfo = pEpTransport_macOS;
 		};
-		4309FF0C27315E560055C6C9 /* PBXContainerItemProxy */ = {
+		4399C9E52747C70700F52599 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4309FF0327315E560055C6C9 /* pEpTransport.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 43B263CF272AC13400EE82BC;
 			remoteInfo = pEpTransport_iOS;
 		};
-		4309FF87273170E50055C6C9 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 4309FF0327315E560055C6C9 /* pEpTransport.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 43B263C6272AC13400EE82BC;
-			remoteInfo = pEpTransport_iOS;
-		};
-		4309FF89273170EF0055C6C9 /* PBXContainerItemProxy */ = {
+		4399CA022747DA8200F52599 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4309FF0327315E560055C6C9 /* pEpTransport.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 43B2634F272AA95000EE82BC;
 			remoteInfo = pEpTransport_macOS;
+		};
+		4399CA222747DA8A00F52599 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4309FF0327315E560055C6C9 /* pEpTransport.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 43B263C6272AC13400EE82BC;
+			remoteInfo = pEpTransport_iOS;
 		};
 		43D47AA0225CC82400E97C5B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -570,7 +570,7 @@
 		1585EF5A26A08B2000B822E1 /* CommonPEPDependencies.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = CommonPEPDependencies.xcodeproj; path = "../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/CommonPEPDependencies.xcodeproj"; sourceTree = "<group>"; };
 		15A3203B260E030B009D07EB /* pEpASN1.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = pEpASN1.xcodeproj; path = Subprojects/pEpASN1/pEpASN1.xcodeproj; sourceTree = "<group>"; };
 		15A3261C2611F6B5009D07EB /* PEPSQLITE3.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = PEPSQLITE3.xcodeproj; path = Subprojects/PEPSQLITE3/PEPSQLITE3.xcodeproj; sourceTree = "<group>"; };
-		4309FF0327315E560055C6C9 /* pEpTransport.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = pEpTransport.xcodeproj; path = "../../libpEpTransport/build-mac/pEpTransport/pEpTransport.xcodeproj"; sourceTree = "<group>"; };
+		4309FF0327315E560055C6C9 /* pEpTransport.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = pEpTransport.xcodeproj; path = "../../libpEpTransport/build-mac/pEpTransport.xcodeproj"; sourceTree = "<group>"; };
 		644297BF1BE11C65002BC73B /* pEpTrustWords.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = pEpTrustWords.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		644297C11BE11C65002BC73B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		64796A3F1B455AA5004B1C24 /* libpEpEngine.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpEpEngine.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -671,11 +671,11 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		4309FF0427315E560055C6C9 /* Products */ = {
+		4399C9C32747C70700F52599 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				4309FF0B27315E560055C6C9 /* libpEpTransport_macOS.a */,
-				4309FF0D27315E560055C6C9 /* libpEpTransport_iOS.a */,
+				4399C9E42747C70700F52599 /* libpEpTransport_macOS.a */,
+				4399C9E62747C70700F52599 /* libpEpTransport_iOS.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -997,7 +997,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				4309FF8A273170EF0055C6C9 /* PBXTargetDependency */,
+				4399CA032747DA8200F52599 /* PBXTargetDependency */,
 				1585EF6D26A08B2E00B822E1 /* PBXTargetDependency */,
 				156AFE832670E6D800AF0039 /* PBXTargetDependency */,
 				151585FA26CE6A78003D8685 /* PBXTargetDependency */,
@@ -1041,7 +1041,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				4309FF88273170E50055C6C9 /* PBXTargetDependency */,
+				4399CA232747DA8A00F52599 /* PBXTargetDependency */,
 				1585EF6F26A08B3A00B822E1 /* PBXTargetDependency */,
 				15A3266026120618009D07EB /* PBXTargetDependency */,
 				15B21C3625FB8DD10097927A /* PBXTargetDependency */,
@@ -1106,7 +1106,7 @@
 					ProjectRef = 15A3261C2611F6B5009D07EB /* PEPSQLITE3.xcodeproj */;
 				},
 				{
-					ProductGroup = 4309FF0427315E560055C6C9 /* Products */;
+					ProductGroup = 4399C9C32747C70700F52599 /* Products */;
 					ProjectRef = 4309FF0327315E560055C6C9 /* pEpTransport.xcodeproj */;
 				},
 			);
@@ -1150,18 +1150,18 @@
 			remoteRef = 15A3266526120618009D07EB /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		4309FF0B27315E560055C6C9 /* libpEpTransport_macOS.a */ = {
+		4399C9E42747C70700F52599 /* libpEpTransport_macOS.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libpEpTransport_macOS.a;
-			remoteRef = 4309FF0A27315E560055C6C9 /* PBXContainerItemProxy */;
+			remoteRef = 4399C9E32747C70700F52599 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		4309FF0D27315E560055C6C9 /* libpEpTransport_iOS.a */ = {
+		4399C9E62747C70700F52599 /* libpEpTransport_iOS.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libpEpTransport_iOS.a;
-			remoteRef = 4309FF0C27315E560055C6C9 /* PBXContainerItemProxy */;
+			remoteRef = 4399C9E52747C70700F52599 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		64289E351B8B630200FC617B /* libetpan.a */ = {
@@ -1467,15 +1467,15 @@
 			target = 150845DE25F13CE700D46DA6 /* generate_code */;
 			targetProxy = 15B21C3525FB8DD10097927A /* PBXContainerItemProxy */;
 		};
-		4309FF88273170E50055C6C9 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = pEpTransport_iOS;
-			targetProxy = 4309FF87273170E50055C6C9 /* PBXContainerItemProxy */;
-		};
-		4309FF8A273170EF0055C6C9 /* PBXTargetDependency */ = {
+		4399CA032747DA8200F52599 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = pEpTransport_macOS;
-			targetProxy = 4309FF89273170EF0055C6C9 /* PBXContainerItemProxy */;
+			targetProxy = 4399CA022747DA8200F52599 /* PBXContainerItemProxy */;
+		};
+		4399CA232747DA8A00F52599 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = pEpTransport_iOS;
+			targetProxy = 4399CA222747DA8A00F52599 /* PBXContainerItemProxy */;
 		};
 		43D47AA1225CC82400E97C5B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;

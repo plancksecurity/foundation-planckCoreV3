@@ -1244,7 +1244,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nCUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include\"\nmkdir -p ${CUSTOM_INCLUDE_DIR}\ncp -R \"${BUILT_PRODUCTS_DIR}\"/usr/local/include/* ${CUSTOM_INCLUDE_DIR}\ncp  \"${BUILT_PRODUCTS_DIR}/libpEpASN1_macOS.a\" ${CUSTOM_BUILD_DIR}\n\n";
+			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nCUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include\"\nmkdir -p ${CUSTOM_INCLUDE_DIR}\ncp -R \"${BUILT_PRODUCTS_DIR}\"/usr/local/include/* ${CUSTOM_INCLUDE_DIR}\ncp  \"${BUILT_PRODUCTS_DIR}/libpEpASN1_macOS.a\" ${CUSTOM_BUILD_DIR}\n\nENGINE_DIR=\"${PROJECT_DIR}/../../..\"\nENGINE_BUILD_DIR=\"${ENGINE_DIR}/build-mac/build\"\nENGINE_INCLUDE_DIR=\"${ENGINE_BUILD_DIR}/include\"\nmkdir -p ${ENGINE_INCLUDE_DIR}\ncp -R ${ENGINE_DIR}/asn.1/*.h ${ENGINE_INCLUDE_DIR}\n";
 		};
 		15A322D5260E065D009D07EB /* Copy Artefacts & Headers to Custom Build Dir */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1262,7 +1262,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nCUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include\"\nmkdir -p ${CUSTOM_INCLUDE_DIR}\ncp -R \"${PROJECT_DIR}\"/../../../asn.1/*.h ${CUSTOM_INCLUDE_DIR}\ncp  \"${BUILT_PRODUCTS_DIR}/libpEpASN1_iOS.a\" ${CUSTOM_BUILD_DIR}\n\n";
+			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nCUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include\"\nmkdir -p ${CUSTOM_INCLUDE_DIR}\ncp -R \"${PROJECT_DIR}\"/../../../asn.1/*.h ${CUSTOM_INCLUDE_DIR}\ncp  \"${BUILT_PRODUCTS_DIR}/libpEpASN1_iOS.a\" ${CUSTOM_BUILD_DIR}\n\nENGINE_DIR=\"${PROJECT_DIR}/../../..\"\nENGINE_BUILD_DIR=\"${ENGINE_DIR}/build-mac/build\"\nENGINE_INCLUDE_DIR=\"${ENGINE_BUILD_DIR}/include\"\nmkdir -p ${ENGINE_INCLUDE_DIR}\ncp -R ${ENGINE_DIR}/asn.1/*.h ${ENGINE_INCLUDE_DIR}\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
