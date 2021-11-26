@@ -156,7 +156,6 @@ TEST_F(DecryptAttachPrivateKeyTrustedTest, check_decrypt_attach_private_key_trus
     output_stream << "decrypt with attached private key: Same address, same user_id, trusted" << endl;
     message* decrypted_text = NULL;
     stringlist_t* keylist_used = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
     output_stream << "Trusting own key for " << same_addr_same_uid->user_id << " and " << same_addr_same_uid->fpr << endl;
@@ -171,16 +170,16 @@ TEST_F(DecryptAttachPrivateKeyTrustedTest, check_decrypt_attach_private_key_trus
     ASSERT_EQ(same_addr_same_uid->comm_type, PEP_ct_pEp);
 
     flags = 0;
-    status = decrypt_message(session, encoded_text, &decrypted_text,
-                                  &keylist_used, &rating, &flags);
+    status = decrypt_message_2(session, encoded_text, &decrypted_text,
+                                  &keylist_used, &flags);
 
     status = get_trust(session, same_addr_same_uid);
     ASSERT_EQ(same_addr_same_uid->comm_type, PEP_ct_pEp);
     wipe_message_ptr(&decrypted_text);
 
     flags = 0;
-    status = decrypt_message(session, encoded_text, &decrypted_text,
-                                  &keylist_used, &rating, &flags);
+    status = decrypt_message_2(session, encoded_text, &decrypted_text,
+                                  &keylist_used, &flags);
 
     output_stream << "Status: " << tl_status_string(status) << endl;
     ASSERT_EQ(status, PEP_STATUS_OK);

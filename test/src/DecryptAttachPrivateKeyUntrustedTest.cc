@@ -163,7 +163,6 @@ TEST_F(DecryptAttachPrivateKeyUntrustedTest, check_decrypt_attach_private_key_un
     output_stream << "Same address, same user_id, untrusted" << endl;
     message* decrypted_text = NULL;
     stringlist_t* keylist_used = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
     status = get_trust(session, same_addr_same_uid);
@@ -177,8 +176,8 @@ TEST_F(DecryptAttachPrivateKeyUntrustedTest, check_decrypt_attach_private_key_un
     ASSERT_NE(same_addr_same_uid->comm_type & PEP_ct_confirmed, PEP_ct_confirmed);
 
     flags = 0;
-    status = decrypt_message(session, encoded_text, &decrypted_text,
-                                  &keylist_used, &rating, &flags);
+    status = decrypt_message_2(session, encoded_text, &decrypted_text,
+                                  &keylist_used, &flags);
 
     status = get_trust(session, same_addr_same_uid);
     ASSERT_EQ(same_addr_same_uid->comm_type, PEP_ct_pEp_unconfirmed);

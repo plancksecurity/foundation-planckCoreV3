@@ -11,7 +11,9 @@
  */
 
 
-#pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
+#if defined (__clang__)
+# pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
+#endif
 
 #define _GNU_SOURCE 1
 
@@ -3509,13 +3511,24 @@ static PEP_STATUS list_keys(PEP_SESSION session,
         *keyinfo_list = _keyinfo_list;
 
     if (status != PEP_STATUS_OK || (_keylist && !_keylist->value)) {
+        /* Here, when building with optimisation, some GCC versions (tested with
+           GCC Debian 10.3.0-10 on moore, as of 2021-11-09) give a spurious
+           warning about _keylist being used uninitialised.  Let us silence
+           that. */
+#if defined (__GNUC__)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
         free_stringlist(_keylist);
         _keylist = NULL;
+#if defined (__GNUC__)
+# pragma GCC diagnostic pop
+#endif
     }
     if (keylist)
         *keylist = _keylist;
 
-    int len = -1;
+    int len __attribute__ ((__unused__)) = -1;
     if (keylist)
         len = stringlist_length(*keylist);
     else if (keyinfo_list)

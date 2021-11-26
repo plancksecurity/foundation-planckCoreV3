@@ -5,17 +5,6 @@
 
 include ../Makefile.conf
 
-# Notice the single quotes below: since user definitions can contain dollar
-# signs it is important to prevent their expansion: shell variable references
-# here must be expanded at run time, and not at compile time.
-ifdef PER_USER_DIRECTORY
-	EXTRA_MACROS+= -DPER_USER_DIRECTORY='"$(PER_USER_DIRECTORY)"'
-endif
-
-ifdef PER_MACHINE_DIRECTORY
-	EXTRA_MACROS+= -DPER_MACHINE_DIRECTORY='"$(PER_MACHINE_DIRECTORY)"'
-endif
-
 ifneq ($(BUILD_ON),OS/390)
 LDFLAGS+= -shared
 endif
@@ -103,9 +92,11 @@ all: $(TARGET)
 	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
-# If only the goal 'clean' is given, do not generate and include the '%.d' files.
+# Do not generate and include the '%.d' files if cleaning or uninstalling.
 ifneq ($(MAKECMDGOALS),clean)
-    -include $(DEPENDS)
+    ifneq ($(MAKECMDGOALS),uninstall)
+        -include $(DEPENDS)
+    endif
 endif
 
 $(TARGET): libpEpEngine.a
@@ -128,7 +119,8 @@ HEADERS_TO_INSTALL = \
   timestamp.h identity_list.h bloblist.h stringpair.h message.h mime.h group.h \
   cryptotech.h sync_api.h pEp_string.h openpgp_compat.h engine_sql.h \
   labeled_int_list.h key_reset.h base64.h sync_codec.h distribution_codec.h \
-  storage_codec.h status_to_string.h keyreset_command.h platform.h platform_unix.h \
+  storage_codec.h status_to_string.h keyreset_command.h platform.h \
+  platform_unix.h platform_windows.h platform_zos.h \
   transport.h growing_buf.h $(wildcard ../asn.1/*.h)
 
 # CAVEAT:
@@ -139,6 +131,7 @@ install_headers: $(TARGET)
 	cp $(HEADERS_TO_INSTALL) $(DESTDIR)$(PREFIX)/include/pEp/
 
 # FIXME: Does anyone but Roker use install_headers? Otherwise, remove the dependency.
+#        I occasionally use it.  --positron
 install: $(TARGET) install_headers
 	mkdir -p "$(DESTDIR)$(PREFIX)/lib/"
 	cp -v $< $(DESTDIR)$(PREFIX)/lib/
@@ -149,9 +142,8 @@ beinstall: install
 
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/lib/$(TARGET)
-	rm $(addprefix $(DESTDIR)$(PREFIX)/include/pEp/,$(notdir $(HEADERS_TO_INSTALL)))
+	rm -f $(addprefix $(DESTDIR)$(PREFIX)/include/pEp/,$(notdir $(HEADERS_TO_INSTALL)))
 	rmdir $(DESTDIR)$(PREFIX)/include/pEp 2> /dev/null || true
 
 tags: $(wildcard *.c) $(wildcard *.h)
 	ctags --sort=yes *.c *.h
-

@@ -194,8 +194,8 @@ TEST_F(MapAsn1Test, check_map_asn1_message) {
     ASSERT_STREQ(msg2->opt_fields->next->value->value, "othervalue");
     ASSERT_STREQ(msg2->_sender_fpr, "2342234223422342");
 
-    ASN_STRUCT_FREE(asn_DEF_ASN1Message, pm);
-    ASN_STRUCT_FREE(asn_DEF_ASN1Message, pm2);
+    free_ASN1Message(pm);
+    free_ASN1Message(pm2);
     free_message(msg);
     free_message(msg2);
     free(data);

@@ -416,14 +416,13 @@ TEST_F(KeyResetMessageTest, check_non_reset_receive_revoked) {
     char* decrypted_msg = NULL;
     char* modified_src = NULL;
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
     message* enc_msg_obj = NULL;
     message* dec_msg_obj = NULL;
     status = mime_decode_message(received_mail.c_str(), received_mail.size(), &enc_msg_obj, NULL);
     ASSERT_OK;
-    status = decrypt_message(session, enc_msg_obj, &dec_msg_obj, &keylist, &rating, &flags);
+    status = decrypt_message_2(session, enc_msg_obj, &dec_msg_obj, &keylist, &flags);
 
     ASSERT_OK;
 
@@ -473,10 +472,9 @@ TEST_F(KeyResetMessageTest, check_reset_receive_revoked) {
     message* received_mail = slurp_message_file_into_struct("test_files/398_reset_from_alice_to_fenris.eml");
     message* decrypted_msg = NULL;
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, received_mail,
-                                  &decrypted_msg, &keylist, &rating, &flags);
+    status = decrypt_message_2(session, received_mail,
+                                  &decrypted_msg, &keylist, &flags);
 
     ASSERT_OK;
     ASSERT_NOTNULL(keylist);
@@ -514,9 +512,8 @@ TEST_F(KeyResetMessageTest, revoke_and_check_receive_message) {
     message* dec_msg = NULL;
     stringlist_t* keylist = NULL;
     PEP_decrypt_flags_t flags = 0;
-    PEP_rating rating;
     
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message_2(session, enc_msg, &dec_msg, &keylist, &flags);
     ASSERT_EQ(status, PEP_STATUS_OK);        
     ASSERT_NOTNULL(dec_msg);
     ASSERT_EQ(m_queue.size() , 0);
@@ -544,10 +541,9 @@ TEST_F(KeyResetMessageTest, check_receive_message_to_revoked_key_from_unknown) {
     message* received_mail = slurp_message_file_into_struct("test_files/398_gabrielle_to_alice.eml");
     message* decrypted_msg = NULL;
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, received_mail,
-                                  &decrypted_msg, &keylist, &rating, &flags);
+    status = decrypt_message_2(session, received_mail,
+                                  &decrypted_msg, &keylist, &flags);
     ASSERT_EQ(m_queue.size() , 0);
     free_message(decrypted_msg);
     free_message(received_mail);
@@ -611,15 +607,14 @@ TEST_F(KeyResetMessageTest, check_receive_message_to_revoked_key_from_contact) {
     message* received_mail = slurp_message_file_into_struct("test_files/398_gabrielle_to_alice.eml");
     message* decrypted_msg = NULL;
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
     // We expect the app to provide user_ids wherever it has them on incoming messages, and since it breaks things
     // here if we don't put it there, we do now.
     received_mail->to->ident->user_id = strdup(PEP_OWN_USERID);
 
-    status = decrypt_message(session, received_mail,
-                                  &decrypted_msg, &keylist, &rating, &flags);
+    status = decrypt_message_2(session, received_mail,
+                                  &decrypted_msg, &keylist, &flags);
 
     ASSERT_EQ(m_queue.size() , 1);
     vector<message*>::iterator it = m_queue.begin();
@@ -774,10 +769,9 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_recv) {
     message* received_mail = slurp_message_file_into_struct("test_mails/check_reset_grouped_own_recv.eml");
     message* decrypted_msg = NULL;
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message(session, received_mail,
-                                  &decrypted_msg, &keylist, &rating, &flags);
+    status = decrypt_message_2(session, received_mail,
+                                  &decrypted_msg, &keylist, &flags);
 
     status = myself(session, alice);
     ASSERT_OK;
@@ -956,7 +950,6 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multi_ident_one_fpr_recv) {
     // receive reset messages
     message* dec_msg = NULL;
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
     string fname = "test_mails/check_reset_grouped_own_multi_ident_one_fpr.eml";
@@ -966,7 +959,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multi_ident_one_fpr_recv) {
     ASSERT_NOTNULL(new_msg);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
-    status = decrypt_message(session, new_msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message_2(session, new_msg, &dec_msg, &keylist, &flags);
     ASSERT_EQ(status, PEP_STATUS_OK);        
 
     status = myself(session, alex_id);
@@ -1440,7 +1433,6 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_grouped_recv) {
         // receive reset messages
         message* dec_msg = NULL;
         stringlist_t* keylist = NULL;
-        PEP_rating rating;
         PEP_decrypt_flags_t flags = 0;
 
         string fname = string("test_mails/check_reset_all_own_grouped") + to_string(i) + ".eml";
@@ -1450,7 +1442,7 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_grouped_recv) {
         ASSERT_NOTNULL(new_msg);
         ASSERT_EQ(status, PEP_STATUS_OK);
 
-        status = decrypt_message(session, new_msg, &dec_msg, &keylist, &rating, &flags);
+        status = decrypt_message_2(session, new_msg, &dec_msg, &keylist, &flags);
         ASSERT_EQ(status, PEP_STATUS_OK);
     }
 
@@ -1543,7 +1535,6 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_grouped_recv_with_sticky) {
     // receive reset messages
     message* dec_msg = NULL;
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
     string fname = "test_mails/check_reset_all_own_grouped_sticky.eml";
@@ -1553,7 +1544,7 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_grouped_recv_with_sticky) {
     ASSERT_NE(new_msg, nullptr);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
-    status = decrypt_message(session, new_msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message_2(session, new_msg, &dec_msg, &keylist, &flags);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
     char* new_main_key = NULL;
@@ -1646,7 +1637,6 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
         // receive reset messages
         message* dec_msg = NULL;
         stringlist_t* keylist = NULL;
-        PEP_rating rating;
         PEP_decrypt_flags_t flags = 0;
 
         string fname = string("test_mails/check_reset_grouped_own_multiple_keys_multiple_idents_reset_all_") + to_string(i) + ".eml";
@@ -1656,7 +1646,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
         ASSERT_NOTNULL(new_msg);
         ASSERT_EQ(status, PEP_STATUS_OK);
 
-        status = decrypt_message(session, new_msg, &dec_msg, &keylist, &rating, &flags);
+        status = decrypt_message_2(session, new_msg, &dec_msg, &keylist, &flags);
         ASSERT_EQ(status, PEP_STATUS_OK);        
     }
 
@@ -1864,7 +1854,6 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
 
     message* dec_msg = NULL;
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
     string fname = "test_mails/check_reset_grouped_own_multiple_keys_multiple_idents_reset_one.eml";
@@ -1874,7 +1863,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
     ASSERT_NOTNULL(new_msg);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
-    status = decrypt_message(session, new_msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message_2(session, new_msg, &dec_msg, &keylist, &flags);
     ASSERT_EQ(status, PEP_STATUS_OK);        
 
     status = myself(session, alex_id);
@@ -2644,10 +2633,9 @@ TEST_F(KeyResetMessageTest, check_no_reset_message_to_self) {
 
     message* dec_msg = NULL;
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
 
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message_2(session, enc_msg, &dec_msg, &keylist, &flags);
     ASSERT_EQ(m_queue.size(), 0);
     ASSERT_EQ(status, PEP_VERIFY_SIGNER_KEY_REVOKED);
 }
@@ -2684,8 +2672,9 @@ TEST_F(KeyResetMessageTest, check_reset_mistrust_next_msg_have_not_mailed) {
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     //
-    // status = decrypt_message(session, bob_enc_msg, &bob_dec_msg, &keylist, &rating, &flags);
+    // status = decrypt_message_2(session, bob_enc_msg, &bob_dec_msg, &keylist, &flags);
     // ASSERT_EQ(status, PEP_STATUS_OK);
+    // rating = bob_dec_msg->rating;
     // ASSERT_EQ(rating, PEP_rating_mistrust);
     //
     // free_message(bob_enc_msg);
@@ -2711,8 +2700,9 @@ TEST_F(KeyResetMessageTest, check_reset_mistrust_next_msg_have_not_mailed) {
     keylist = NULL;
     flags = 0;
 
-    status = decrypt_message(session, bob_enc_msg, &bob_dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message_2(session, bob_enc_msg, &bob_dec_msg, &keylist, &flags);
     ASSERT_EQ(status, PEP_STATUS_OK);
+    rating = bob_dec_msg->rating;
     ASSERT_EQ(rating, PEP_rating_reliable);
 
 }

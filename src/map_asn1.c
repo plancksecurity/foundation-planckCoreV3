@@ -6,6 +6,7 @@
 
 #include "pEp_internal.h"
 #include "map_asn1.h"
+#include "message_codec.h"
 
 /* Expand to a statement checking that the given expression evaluates to a
    non-NULL result, first using an assert and then an explicit check in C.  If
@@ -1073,7 +1074,7 @@ ASN1Message_t *ASN1Message_from_message(
 
 enomem:
     if (allocated)
-        ASN_STRUCT_FREE(asn_DEF_ASN1Message, result);
+        free_ASN1Message(result);
     return NULL;
 }
 

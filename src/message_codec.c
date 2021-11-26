@@ -14,6 +14,7 @@
 #include "../asn.1/ASN1Message.h"
 #include "pEp_internal.h"
 #include "growing_buf.h"
+#include "message_codec.h"
 
 DYNAMIC_API PEP_STATUS decode_ASN1Message_message(
         const char *data,
@@ -45,7 +46,7 @@ DYNAMIC_API PEP_STATUS decode_ASN1Message_message(
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS encode_ASN1Message_message(
+DYNAMIC_API PEP_STATUS encode_ASN1Message_message(
         ASN1Message_t *msg,
         char **data,
         size_t *size
@@ -70,7 +71,7 @@ PEP_STATUS encode_ASN1Message_message(
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS PER_to_XER_ASN1Message_msg(
+DYNAMIC_API PEP_STATUS PER_to_XER_ASN1Message_msg(
         const char *data,
         size_t size,
         char **text
@@ -108,11 +109,11 @@ PEP_STATUS PER_to_XER_ASN1Message_msg(
 
 the_end:
     free_growing_buf(dst);
-    ASN_STRUCT_FREE(asn_DEF_ASN1Message, msg);
+    free_ASN1Message(msg);
     return status;
 }
 
-PEP_STATUS XER_to_PER_ASN1Message_msg(
+DYNAMIC_API PEP_STATUS XER_to_PER_ASN1Message_msg(
         const char *text,
         char **data,
         size_t *size
@@ -145,7 +146,13 @@ PEP_STATUS XER_to_PER_ASN1Message_msg(
     *size = (size_t) _size;
 
 the_end:
-    ASN_STRUCT_FREE(asn_DEF_ASN1Message, msg);
+    free_ASN1Message(msg);
     return status;
 }
 
+DYNAMIC_API void free_ASN1Message(
+        ASN1Message_t *msg
+    )
+{
+    ASN_STRUCT_FREE(asn_DEF_ASN1Message, msg);
+}

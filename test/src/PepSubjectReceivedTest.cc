@@ -129,7 +129,6 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     message* dest_msg = nullptr;
     message* final_ptr = nullptr;
     stringlist_t* keylist = nullptr;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags;
 
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
@@ -138,7 +137,7 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
@@ -164,7 +163,6 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     dest_msg = nullptr;
     final_ptr = nullptr;
     keylist = nullptr;
-    rating = PEP_rating_unreliable;
 
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
     ASSERT_OK;
@@ -172,7 +170,7 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
@@ -196,7 +194,6 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     dest_msg = nullptr;
     final_ptr = nullptr;
     keylist = nullptr;
-    rating = PEP_rating_unreliable;
 
     mailtext = slurp("test_mails/pEp_subject_normal_signed_2a.eml");
 
@@ -205,7 +202,7 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     ASSERT_NOTNULL(msg_ptr);
     final_ptr = msg_ptr;
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
@@ -229,7 +226,6 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     dest_msg = nullptr;
     final_ptr = nullptr;
     keylist = nullptr;
-    rating = PEP_rating_unreliable;
 
     mailtext = slurp("test_mails/p3p_subject_normal_signed_2b.eml");
 
@@ -238,7 +234,7 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     ASSERT_NOTNULL(msg_ptr);
     final_ptr = msg_ptr;
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
@@ -263,7 +259,6 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     dest_msg = nullptr;
     final_ptr = nullptr;
     keylist = nullptr;
-    rating = PEP_rating_unreliable;
 
     mailtext = slurp("test_mails/pEp_encrypted_subject_IS_pEp_3a.eml");
 
@@ -273,7 +268,7 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
@@ -297,7 +292,6 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     dest_msg = nullptr;
     final_ptr = nullptr;
     keylist = nullptr;
-    rating = PEP_rating_unreliable;
 
     mailtext = slurp("test_mails/p3p_encrypted_subject_IS_pEp_3b.eml");
 
@@ -307,7 +301,7 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
@@ -332,7 +326,6 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     dest_msg = nullptr;
     final_ptr = nullptr;
     keylist = nullptr;
-    rating = PEP_rating_unreliable;
 
     mailtext = slurp("test_mails/pEp_subject_pEp_replaced_w_pEp_4a.eml");
 
@@ -342,7 +335,7 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
@@ -366,7 +359,6 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     dest_msg = nullptr;
     final_ptr = nullptr;
     keylist = nullptr;
-    rating = PEP_rating_unreliable;
 
     mailtext = slurp("test_mails/pEp_subject_pEp_replaced_w_p3p_4b.eml");
 
@@ -376,7 +368,7 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
@@ -400,7 +392,6 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     dest_msg = nullptr;
     final_ptr = nullptr;
     keylist = nullptr;
-    rating = PEP_rating_unreliable;
 
     mailtext = slurp("test_mails/pEp_subject_p3p_replaced_w_pEp_4c.eml");
 
@@ -410,7 +401,7 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
@@ -434,7 +425,6 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     dest_msg = nullptr;
     final_ptr = nullptr;
     keylist = nullptr;
-    rating = PEP_rating_unreliable;
 
     mailtext = slurp("test_mails/pEp_subject_p3p_replaced_w_p3p_4d.eml");
 
@@ -444,7 +434,7 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
@@ -469,7 +459,6 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     dest_msg = nullptr;
     final_ptr = nullptr;
     keylist = nullptr;
-    rating = PEP_rating_unreliable;
 
     mailtext = slurp("test_mails/pEp_unencrypted_pEp_subject_5a.eml");
 
@@ -479,7 +468,7 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
@@ -504,7 +493,6 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     dest_msg = nullptr;
     final_ptr = nullptr;
     keylist = nullptr;
-    rating = PEP_rating_unreliable;
 
     mailtext = slurp("test_mails/pEp_unencrypted_p3p_subject_5b.eml");
 
@@ -514,7 +502,7 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
@@ -538,7 +526,6 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     dest_msg = nullptr;
     final_ptr = nullptr;
     keylist = nullptr;
-    rating = PEP_rating_unreliable;
 
     mailtext = slurp("test_mails/pEp_subject_normal_unencrypted_6.eml");
 
@@ -548,7 +535,7 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     final_ptr = msg_ptr;
     //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
+    status = decrypt_message_2(session, msg_ptr, &dest_msg, &keylist, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
     output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;

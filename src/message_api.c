@@ -24,6 +24,8 @@
 #include "group.h"
 #include "group_internal.h"
 
+#include "status_to_string.h"
+
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
@@ -108,6 +110,8 @@ static char * keylist_to_string(const stringlist_t *keylist)
 static const char * rating_to_string(PEP_rating rating)
 {
     switch (rating) {
+    case PEP_rating_undefined:
+        return "undefined";
     case PEP_rating_cannot_decrypt:
         return "cannot_decrypt";
     case PEP_rating_have_no_key:
@@ -131,7 +135,8 @@ static const char * rating_to_string(PEP_rating rating)
     case PEP_rating_under_attack:
         return "under_attack";
     default:
-        return "undefined";
+        assert(0);
+        return "invalid rating (this should never happen)";
     }
 }
 
@@ -404,6 +409,8 @@ void decorate_message(
         replace_opt_field(msg, "X-KeyList", _keylist, clobber);
         free(_keylist);
     }
+
+    msg->rating = rating;
 }
 
 /**
@@ -2170,7 +2177,7 @@ bool import_attached_keys(
 
     int i = 0;
     
-    bloblist_t* prev = NULL;
+    bloblist_t* prev __attribute__ ((__unused__)) = NULL;
     
     bool do_not_advance = false;
     const char* pubkey_header = "-----BEGIN PGP PUBLIC KEY BLOCK-----";
@@ -2682,6 +2689,9 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     if (src->dir == PEP_dir_incoming)
         return PEP_ILLEGAL_VALUE;
 
+    // Reset the message rating before doing anything...
+    src->rating = PEP_rating_undefined;
+
     determine_encryption_format(src);
     // TODO: change this for multi-encryption in message format 2.0
     if (src->enc_format != PEP_enc_none)
@@ -2743,100 +2753,44 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     unsigned int max_version_minor = 0;
     pEp_version_major_minor(PEP_VERSION, &max_version_major, &max_version_minor);
     
-    identity_list * _il = NULL;
+    identity_list * _il __attribute__((__unused__)) = NULL;
 
     //
     // Update the identities and gather key and version information 
     // for sending 
     //
-    if (enc_format != PEP_enc_none && (_il = src->bcc) && _il->ident)
-    // BCC limited support:
-    {
-        //     - App splits mails with BCC in multiple mails.
-        //     - Each email is encrypted separately
-        if(_il->next || (src->to && src->to->ident) || (src->cc && src->cc->ident))
-        {
-            // Only one Bcc with no other recipient allowed for now
-            return PEP_ILLEGAL_VALUE;
-        }
-
-        // If you think this call is a beast, try the cut-and-pasted code 3 x
-        PEP_STATUS _status = _update_state_for_ident_list(
-                                session, src->from, _il,
-                                &_k,
-                                &max_comm_type,
-                                &max_version_major,
-                                &max_version_minor,
-                                &has_pEp_user,
-                                &dest_keys_found,
-                                true);
-                                        
-        switch (_status) {
-            case PEP_PASSPHRASE_REQUIRED:
-            case PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED:
-            case PEP_WRONG_PASSPHRASE:
-                status = _status;
-                goto pEp_error;
-            case PEP_STATUS_OK:
-                break;
-            default:
-                status = PEP_UNENCRYPTED;
-                goto pEp_error;
-        }
-    }
-    else // Non BCC
-    {
-
-        // If you think this call is a beast, try the cut-and-pasted code 3 x
-        PEP_STATUS _status = PEP_STATUS_OK;
-        
-        if (src->to) {
-            _status = _update_state_for_ident_list(
-                            session, src->from, src->to,
-                            &_k,
-                            &max_comm_type,
-                            &max_version_major,
-                            &max_version_minor,
-                            &has_pEp_user,
-                            &dest_keys_found,
-                            false
-                        );
-            switch (_status) {
-                case PEP_PASSPHRASE_REQUIRED:
-                case PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED:
-                case PEP_WRONG_PASSPHRASE:
-                    goto pEp_error;
-                case PEP_STATUS_OK:
-                    break;
-                default:
-                    status = PEP_UNENCRYPTED;
-                    goto pEp_error;
-            }                        
-        }
-        if (src->cc) {
-            _status = _update_state_for_ident_list(
-                            session, src->from, src->cc,
-                            &_k,
-                            &max_comm_type,
-                            &max_version_major,
-                            &max_version_minor,
-                            &has_pEp_user,
-                            &dest_keys_found,
-                            false
-                        );
-            switch (_status) {
-                case PEP_PASSPHRASE_REQUIRED:
-                case PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED:
-                case PEP_WRONG_PASSPHRASE:
-                    goto pEp_error;
-                case PEP_STATUS_OK:
-                    break;
-                default:
-                    status = PEP_UNENCRYPTED;
-                    goto pEp_error;
-            }                        
-        }        
-    }
+#   define UPDATE_STATE_FOR_IDENT_LIST_AND_JUMP_ON_ERROR(                    \
+              ident_list_actual,                                             \
+              suppress_update_for_bcc)                                       \
+    do {                                                                     \
+        identity_list *ident_list = (ident_list_actual);                     \
+        if (ident_list) {                                                    \
+            status = _update_state_for_ident_list(                           \
+                        session, src->from, ident_list,                      \
+                        &_k,                                                 \
+                        &max_comm_type,                                      \
+                        &max_version_major,                                  \
+                        &max_version_minor,                                  \
+                        &has_pEp_user,                                       \
+                        &dest_keys_found,                                    \
+                        (suppress_update_for_bcc)                            \
+                     );                                                      \
+            switch (status) {                                                \
+                case PEP_PASSPHRASE_REQUIRED:                                \
+                case PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED:                   \
+                case PEP_WRONG_PASSPHRASE:                                   \
+                    goto pEp_error;                                          \
+                case PEP_STATUS_OK:                                          \
+                    break;                                                   \
+                default:                                                     \
+                    status = PEP_UNENCRYPTED;                                \
+                    goto pEp_error;                                          \
+            }                                                                \
+        }                                                                    \
+    } while (false)
+    UPDATE_STATE_FOR_IDENT_LIST_AND_JUMP_ON_ERROR (src->to, false);
+    UPDATE_STATE_FOR_IDENT_LIST_AND_JUMP_ON_ERROR (src->cc, false);
+    UPDATE_STATE_FOR_IDENT_LIST_AND_JUMP_ON_ERROR (src->bcc, true);
     
     if (max_version_major < 2)
         force_v_1 = true;
@@ -2944,7 +2898,16 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
 
     if (msg) {
-        decorate_message(session, msg, PEP_rating_undefined, NULL, true, true);
+        /* Obtain the message rating... */
+        PEP_rating rating;
+        status = sent_message_rating(session, msg, & rating);
+        if (status == PEP_OUT_OF_MEMORY)
+            goto enomem;
+        else if (status != PEP_STATUS_OK)
+            goto pEp_error;
+
+        /* ...And store it into the message along with the other decorations. */
+        decorate_message(session, msg, rating, NULL, true, true);
         if (_src->id) {
             msg->id = strdup(_src->id);
             assert(msg->id);
@@ -4475,6 +4438,7 @@ static PEP_STATUS reconcile_src_and_inner_messages(message* src,
  *
  *  @retval     bool
  */
+__attribute__ ((__unused__))
 static bool is_trusted_own_priv_fpr(PEP_SESSION session,
                        const char* own_id, 
                        const char* fpr
@@ -4511,6 +4475,7 @@ static bool is_trusted_own_priv_fpr(PEP_SESSION session,
  *
  *  @retval     bool
  */
+__attribute__ ((__unused__))
 static bool reject_fpr(PEP_SESSION session, const char* fpr) {
     bool reject = true;
 
@@ -4990,7 +4955,9 @@ static const char* process_key_claim(message* src,
 // There are times when we don't want errors during calls to be fatal. Once any action is taken on that
 // status, if we are going to continue processing and not bail from the message, the status needs to be reset
 // to PEP_STATUS_OK, or, alternately, we need to be using a temp status variable.
-
+//
+// This internal function does *not* set the rating field of the message: that
+// part of the job is within decrypt_message.
 static PEP_STATUS _decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -6259,12 +6226,11 @@ pEp_error:
     return status;
 }
 
-DYNAMIC_API PEP_STATUS decrypt_message(
+DYNAMIC_API PEP_STATUS decrypt_message_2(
         PEP_SESSION session,
         message *src,
         message **dst,
         stringlist_t **keylist,
-        PEP_rating *rating,
         PEP_decrypt_flags_t *flags
     )
 {
@@ -6272,23 +6238,31 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     assert(src);
     assert(dst);
     assert(keylist);
-    assert(rating);
     assert(flags);
 
-    if (!(session && src && dst && keylist && rating && flags))
+    if (!(session && src && dst && keylist && flags))
         return PEP_ILLEGAL_VALUE;
 
     if (!(*flags & PEP_decrypt_flag_untrusted_server))
         *keylist = NULL;
         
+    // Reset the message rating before doing anything.  We will compute a new
+    // value, that _decrypt_message sets as an output parameter.
+    src->rating = PEP_rating_undefined;
+    PEP_rating rating = PEP_rating_undefined;
+
     stringlist_t* imported_key_fprs = NULL;
     uint64_t changed_key_bitvec = 0;    
         
     PEP_STATUS status = _decrypt_message(session, src, dst, keylist, 
-                                         rating, flags, NULL,
+                                         &rating, flags, NULL,
                                          &imported_key_fprs, &changed_key_bitvec);
 
     message *msg = *dst ? *dst : src;
+
+    /* Set the rating field of the message.  Notice that even in case of non-ok
+       result status the value of this field may be meaningful. */
+    msg->rating = rating;
 
     // Ok, now we check to see if it was an administrative message. We do this by testing base_extract for success
     // with protocol families.
@@ -6303,10 +6277,10 @@ DYNAMIC_API PEP_STATUS decrypt_message(
             tmp_status = base_extract_message(session, msg, BASE_SYNC, &size, &data, &sender_fpr);
             if (!tmp_status && size && data) {
                 if (sender_fpr)
-                    signal_Sync_message(session, *rating, data, size, msg->from, sender_fpr);
+                    signal_Sync_message(session, rating, data, size, msg->from, sender_fpr);
                   // FIXME: this must be changed to sender_fpr
                 else if (*keylist)
-                    signal_Sync_message(session, *rating, data, size, msg->from, (*keylist)->value);
+                    signal_Sync_message(session, rating, data, size, msg->from, (*keylist)->value);
             }
         }
         if (tmp_status != PEP_STATUS_OK) {
@@ -6324,7 +6298,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                     PEP_STATUS tmpstatus = base_extract_message(session, msg, BASE_DISTRIBUTION, &size, &data,
                                                                 &sender_fpr);
                     if (!tmpstatus && size && data) {
-                        process_Distribution_message(session, msg, *rating, data, size, sender_fpr);
+                        process_Distribution_message(session, msg, rating, data, size, sender_fpr);
                     }
                 }
             }
@@ -6352,13 +6326,46 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     //             // if ((!event_sender_fpr) && *keylist)
     //             //     event_sender_fpr = (*keylist)->value;
     //             if (event_sender_fpr)
-    //                 signal_Sync_message(session, *rating, data, size, msg->from, event_sender_fpr);
+    //                 signal_Sync_message(session, rating, data, size, msg->from, event_sender_fpr);
     //         }
     //         free(sender_fpr);
     //     }
 
     free(imported_key_fprs);
     return status;
+}
+
+/* The API compatibility alternative to decrypt_message_2.  This is, of course,
+   just a thin compatibility layer on top of it. */
+DYNAMIC_API PEP_STATUS decrypt_message(
+        PEP_SESSION session,
+        message *src,
+        message **dst,
+        stringlist_t **keylist,
+        PEP_rating *rating,
+        PEP_decrypt_flags_t *flags
+    )
+{
+    /* Check that the rating output parameter has been passed correctly;
+       initialise it just to ease debugging (stress the passed pointer by
+       dereferencing it), even if it would not be necessary. */
+    assert(rating);
+    if (! rating)
+        return PEP_ILLEGAL_VALUE;
+    * rating = PEP_rating_undefined;
+
+    /* Do the actual work. */
+    PEP_STATUS res = decrypt_message_2(session, src, dst, keylist, flags);
+
+    /* Set the output rating, copying it from the message field.  Notice that
+       the message field itself has been initialised correctly in
+       decrypt_message_2 , so this will be reasonable even if decryption
+       failed. */
+    message *msg = *dst ? *dst : src;
+    * rating = msg->rating;
+
+    /* We are done. */
+    return res;
 }
 
 DYNAMIC_API PEP_STATUS own_message_private_key_details(
@@ -6478,6 +6485,16 @@ static void _max_comm_type_from_identity_list_preview(
                 il->ident);
         }
     }
+}
+
+DYNAMIC_API PEP_STATUS sent_message_rating(
+        PEP_SESSION session,
+        message *msg,
+        PEP_rating *rating
+    )
+{
+    // FIXME: this is a stub.  See ENGINE-847.
+    return outgoing_message_rating (session, msg, rating);
 }
 
 DYNAMIC_API PEP_STATUS outgoing_message_rating(
@@ -6947,9 +6964,8 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
         // Message is to be decrypted
         message *dst = NULL;
         stringlist_t *_keylist = keylist;
-        PEP_rating rating;
         PEP_decrypt_flags_t flags;
-        status = decrypt_message( session, msg, &dst, &_keylist, &rating, &flags);
+        status = decrypt_message_2( session, msg, &dst, &_keylist, &flags);
 
         if (status != PEP_STATUS_OK) {
             free_message(dst);
