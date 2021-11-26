@@ -28,14 +28,14 @@ decl use @type @name (mode=use) alias parm;
 // inout parm, ownership remains with caller
 decl supply @type @name (mode=supply) alias parm;
 
-// factory delivers this, ownership goes to caller
-decl create @type @name (mode=create) alias parm;
-
 // in parm, ownership goes to callee
 decl provide @type @name (mode=provide) alias parm;
 
-// out parm, ownership goes to callee
+// out parm, ownership goes to caller
 decl return @type @name (mode=return) alias parm;
+
+// factory delivers this, ownership goes to caller
+decl create @type @name (mode=create) alias parm;
 
 decl throws @except;
 decl caveat(mode=caveat) alias doc;
