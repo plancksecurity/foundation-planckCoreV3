@@ -10,12 +10,17 @@
 
 #include "pEpEngine.h"
 
+typedef void *(malloc_t)(size_t size);
+typedef void (free_t)(void *ptr);
+
 // To ensure that the crypto backend correctly wraps the C data
 // structures, we pass in the size of each data structure that is
 // wrapped as well as a few offsets.  The crypto backend checks that
 // these match its declarations and if not panics.
 extern PEP_STATUS pgp_init_(PEP_SESSION session, bool in_first,
                             const char *home_dir,
+                            malloc_t malloc,
+                            free_t free,
                             unsigned int session_size,
                             unsigned int session_cookie_offset,
                             unsigned int session_curr_passphrase_offset,
@@ -39,6 +44,8 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
   return pgp_init_(session, in_first,
                    per_user_directory(),
+                   malloc,
+                   free,
                    sizeof(pEpSession),
                    offsetof(pEpSession, cryptotech_cookie),
                    offsetof(pEpSession, curr_passphrase),
