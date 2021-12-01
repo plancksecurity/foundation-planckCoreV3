@@ -15,6 +15,7 @@
 // wrapped as well as a few offsets.  The crypto backend checks that
 // these match its declarations and if not panics.
 extern PEP_STATUS pgp_init_(PEP_SESSION session, bool in_first,
+                            const char *home_dir,
                             unsigned int session_size,
                             unsigned int session_cookie_offset,
                             unsigned int session_curr_passphrase_offset,
@@ -34,6 +35,7 @@ extern PEP_STATUS pgp_init_(PEP_SESSION session, bool in_first,
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
   return pgp_init_(session, in_first,
+                   per_user_directory(),
                    sizeof(pEpSession),
                    offsetof(pEpSession, cryptotech_cookie),
                    offsetof(pEpSession, curr_passphrase),
