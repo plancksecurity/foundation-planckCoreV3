@@ -120,7 +120,7 @@ ifeq ($(BUILD_ON),OS/390)
 endif
 
 ifeq ($(OPENPGP),SEQUOIA)
-    LDLIBS+=-lsequoia_openpgp_ffi 
+    LDLIBS+=${SEQUOIA_LIB}
 endif
 
 $(TARGET): $(OBJS)

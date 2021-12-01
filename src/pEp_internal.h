@@ -136,37 +136,41 @@ typedef struct _pEpSession pEpSession;
  */
 struct _pEpSession {
     const char *version;
-    messageToSend_t messageToSend;
+    // This ***must*** be the second pointer.  Do not disappoint.
+    void *cryptotech_cookie;
 
-#if defined(USE_SEQUOIA)
-    sqlite3 *key_db;
-    struct {
-        sqlite3_stmt *begin_transaction;
-        sqlite3_stmt *commit_transaction;
-        sqlite3_stmt *rollback_transaction;
-        sqlite3_stmt *cert_find;
-        sqlite3_stmt *tsk_find;
-        sqlite3_stmt *cert_find_by_keyid;
-        sqlite3_stmt *tsk_find_by_keyid;
-        sqlite3_stmt *cert_find_by_email;
-        sqlite3_stmt *tsk_find_by_email;
-        sqlite3_stmt *cert_all;
-        sqlite3_stmt *tsk_all;
-        sqlite3_stmt *cert_save_insert_primary;
-        sqlite3_stmt *cert_save_insert_subkeys;
-        sqlite3_stmt *cert_save_insert_userids;
-        sqlite3_stmt *delete_keypair;
-    } sq_sql;
-
-    pgp_policy_t policy;
-#endif
-
-    PEP_cryptotech_t *cryptotech;
-    PEP_CIPHER_SUITE cipher_suite;
-    
+    // These four fields but be next.  Do not disappoint.
     char* curr_passphrase;
     bool new_key_pass_enable;
     char* generation_passphrase;
+    PEP_CIPHER_SUITE cipher_suite;
+
+    messageToSend_t messageToSend;
+
+// #if defined(USE_SEQUOIA)
+//     sqlite3 *key_db;
+//     struct {
+//         sqlite3_stmt *begin_transaction;
+//         sqlite3_stmt *commit_transaction;
+//         sqlite3_stmt *rollback_transaction;
+//         sqlite3_stmt *cert_find;
+//         sqlite3_stmt *tsk_find;
+//         sqlite3_stmt *cert_find_by_keyid;
+//         sqlite3_stmt *tsk_find_by_keyid;
+//         sqlite3_stmt *cert_find_by_email;
+//         sqlite3_stmt *tsk_find_by_email;
+//         sqlite3_stmt *cert_all;
+//         sqlite3_stmt *tsk_all;
+//         sqlite3_stmt *cert_save_insert_primary;
+//         sqlite3_stmt *cert_save_insert_subkeys;
+//         sqlite3_stmt *cert_save_insert_userids;
+//         sqlite3_stmt *delete_keypair;
+//     } sq_sql;
+// 
+//     pgp_policy_t policy;
+// #endif
+
+    PEP_cryptotech_t *cryptotech;
     
     PEP_transport_t *transports;
 
