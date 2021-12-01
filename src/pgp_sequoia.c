@@ -32,7 +32,8 @@ extern PEP_STATUS pgp_init_(PEP_SESSION session, bool in_first,
                             unsigned int pep_identity_list_item_size,
                             unsigned int timestamp_size,
                             unsigned int stringpair_size,
-                            unsigned int stringpair_list_size);
+                            unsigned int stringpair_list_size,
+                            unsigned int magic);
 
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
@@ -54,5 +55,6 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                    sizeof(identity_list),
                    sizeof(timestamp),
                    sizeof(stringpair_t),
-                   sizeof(stringpair_list_t));
+                   sizeof(stringpair_list_t),
+                   0xDEADBEEF);
 }
