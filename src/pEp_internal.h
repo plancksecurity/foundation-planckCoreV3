@@ -110,10 +110,6 @@
 #include "keymanagement_internal.h"
 #include "message_api_internal.h"
 
-#if defined(USE_SEQUOIA)
-#include "pgp_sequoia_internal.h"
-#endif
-
 #include "../asn.1/Distribution.h"
 #include "../asn.1/Sync.h"
 
