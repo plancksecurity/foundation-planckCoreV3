@@ -73,77 +73,89 @@ protocol Distribution 2 {
     fsm TempKeyAgreement 4 {
         version 1, 0;
 
+        // By convention we do not do actual work in InitState.  This is cosmetic.
         state InitState {
             on Init {
-                go StartingAgreement;
+                go BeforeAgreement;
             }
         }
 
-        state StartingAgreement {
+        // This state serves to find the role for the following.
+        state BeforeAgreement timeout=off {
+            on InitiateTKA { // this is called by the Initiator side
+                             // InitiateTKA is an external event, not a message.  This is the default,
+                             // since the name is never used for a message.
+                // The "go" part must be the last: the statements in the action are executed sequentially,
+                // imperative-style.
+                go InitiateAgreement;
+            }
+            on StartAgreement { // here the role is Contactee
+                go BeingContacted;
+            }
+        }
+
+        // Here we are the initiator.
+        state InitiateAgreement { // there is no timeout=off: this is a transitional state
+            on Init {
+                do computeSuggestion; // actions are implemented as hand-written C function,
+                                      // with access to the I/O buffer
+                send SuggestionFromInitiator; // by convention in this system send never fails; however
+                                              // receive can fail.
+            }
+            on SuggestionFromContactee {
+                do setTemporaryKey;
+                do invokeCallback;
+                go BeforeAgreement; // the roles can change then.
+            }
+            on InitiateTKA // this is an external event: it can happen in any state
+                ; // ";" means empty body.  We do nothing: if we are in this state we already
+                  // computed and sent a suggestion
+        }
+
+        // Here we are the contactee.
+        state BeingContacted { // there is no timeout=off: this is a transitional state
             on Init {
                 do computeSuggestion;
-                send Suggestion;
+                send SuggestionFromContactee;
             }
-
-            on Suggestion { // from the other side
-                do computeTemporaryKey;
-                send TemporaryKey;
-                go SuggestionReceived;
+            on SuggestionFromInitiator {
+                do setTemporaryKey;
+                do invokeCallback;
+                go BeforeAgreement;
             }
-
-            // for robustness
-            on TemporaryKey { // from the other side
-                go StartingAgreement;
-            }
-
-            on Reset {  // event
-                go StartingAgreement;
-            }
-
-        }
-
-        state SuggestionReceived {
-            on TemporaryKey { // from the other side
-                if sameTemporaryKey {
-                    go Established;
-                }
-                // for robustness
-                else {
-                    go StartingAgreement;
-                }
-            }
-
-            on Reset {  // event
-                go StartingAgreement;
+            on InitiateTKA { // role switch: contactee -> initiator, triggered by an
+                             // external event coming from the application (not the net)
+                go InitiateAgreement;
             }
         }
 
-        state Established {
-            on Init {
-                do configureTemporaryKey;
-            }
-
-            on Suggestion {
-                do computeTemporaryKey;
-                send TemporaryKey;
-                go SuggestionReceived;
-            }
-
-            // for robustness
-            on TemporaryKey {
-                go StartingAgreement;
-            }
-
-            on Reset {  // event
-                go StartingAgreement;
-            }
+        message StartAgreement 2, security=unencrypted // obviously not the default: this must be
+                                                       // specified for the first message which we
+                                                       // want to send unecnrypted; otherwise the
+                                                       // actual sending will be prevented on a
+                                                       // non-green connection.
+                                                       // (In locked mode even this would be rejected.)
+                                                       {
+            // backward-compatibility can be dangerous (downgrade attack vector) -- Of course
+            // this is just a vector, not an actual existing flaw [modal logic can describe this]
+            // -- The argument in favour/ of the version field is maintainability in the long term.
+            auto Version version;
+            // No other fields: the layer below (struct message) contains the public key,
+            // which is the useful information being transmitted.  This is the first message
+            // being sent.
         }
 
-        message Suggestion 2 {
+        message SuggestionFromInitiator 3 {
             field Hash suggestion;
         }
-        message TemporaryKey 3 {
-            field Hash key;   // key to be ack'ed
+        message SuggestionFromContactee 4 {
+            field Hash suggestion;
         }
+        // Fields have unique names throuout each fsm file (i.e. throughtout each protocol family):
+        // when the names re-appear they are *the same* field: they are in the same memory in the I/O
+        // buffer.  The I/O buffer is a superset of all fields (however there is an I/O buffer per
+        // protcol).
+        // Rationale: challenge/response protocols are common, and this makes them more convenient to
+        // implement by just "replying", without setting a field.
     }
 }
