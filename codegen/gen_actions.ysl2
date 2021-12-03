@@ -32,7 +32,7 @@ tstylesheet {
              * @file        «@name»_actions.c
              * @brief       Implementation of «@name» conditions, actions, and timeout handlers defined in «@name»_impl.h,
              *              with supporting static (internal) functions
-             * @generated from ../sync/gen_actions.ysl2
+             * @generated from ../codegen/gen_actions.ysl2
              *
              * @license   GNU General Public License 3.0 - see LICENSE.txt
              */
