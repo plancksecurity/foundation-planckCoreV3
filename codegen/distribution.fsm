@@ -80,7 +80,9 @@ protocol Distribution 2 {
             }
         }
 
-        // This state serves to find the role for the following.
+        // This state serves to find the role for the following.  There are two roles,
+        // * "initiator";
+        // * "contactee".
         state BeforeAgreement timeout=off {
             on InitiateTKA { // this is called by the Initiator side
                              // InitiateTKA is an external event, not a message.  This is the default,
@@ -138,7 +140,7 @@ protocol Distribution 2 {
                                                        {
             // backward-compatibility can be dangerous (downgrade attack vector) -- Of course
             // this is just a vector, not an actual existing flaw [modal logic can describe this]
-            // -- The argument in favour/ of the version field is maintainability in the long term.
+            // -- The argument in favour of the version field is maintainability in the long term.
             auto Version version;
             // No other fields: the layer below (struct message) contains the public key,
             // which is the useful information being transmitted.  This is the first message
@@ -151,10 +153,9 @@ protocol Distribution 2 {
         message SuggestionFromContactee 4 {
             field Hash suggestion;
         }
-        // Fields have unique names throuout each fsm file (i.e. throughtout each protocol family):
-        // when the names re-appear they are *the same* field: they are in the same memory in the I/O
-        // buffer.  The I/O buffer is a superset of all fields (however there is an I/O buffer per
-        // protcol).
+        // Fields have unique names throughout each fsm file (i.e. throughout each protocol family):
+        // A reappearing name represents *the same* field: same memory in the I/O buffer.  The I/O
+        // buffer is a superset of all fields (however there is an I/O buffer per protcol).
         // Rationale: challenge/response protocols are common, and this makes them more convenient to
         // implement by just "replying", without setting a field.
     }
