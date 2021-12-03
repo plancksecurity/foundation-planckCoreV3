@@ -66,7 +66,7 @@ struct «@name»_state_s {
      * @struct «@name»_state_s::comm_partner_state_s
      * @brief State acquired from our communications partner
      */
-    struct comm_partner_state_s {
+    struct «@name»_comm_partner_state_s {
         // transport data we expect
         char *sender_fpr; 					//!< sender fpr for comm partner that we expect all sender messages to be signed by
         pEp_identity *identity;				//!< comm partner identity
@@ -79,7 +79,7 @@ struct «@name»_state_s {
      * @struct «@name»_state_s::transport_data_s
      * @brief Input buffer for actual transport data coming in
      */
-    struct transport_data_s {
+    struct «@name»_transport_data_s {
         // transport data we got
         pEp_identity *from;             //!< identity of the sender of incoming transport data
         char *sender_fpr;               //!< sender fpr for sender of incoming transport data

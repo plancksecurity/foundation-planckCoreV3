@@ -69,7 +69,7 @@ protocol Distribution 2 {
         }
     }
 
-    // this protocol implements a 4-way handshake
+    // This protocol is stateful.  It is asymmetric, with no handshake.
     fsm TempKeyAgreement 4 {
         version 1, 0;
 

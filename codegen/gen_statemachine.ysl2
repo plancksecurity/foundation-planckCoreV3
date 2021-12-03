@@ -109,7 +109,7 @@ tstylesheet {
         #include "pEp_internal.h"
         #include "«@name»_event.h"
         #include "«@name»_func.h"
-        `` for "fsm[count(state) >= 1]" | #include "«@name»_fsm.h"
+        `` for "fsm[count(state) >= 1 or true]" | #include "«@name»_fsm.h" // FIXME: make the condition non-stupid, after debugging
 
         DYNAMIC_API «@name»_event_t *new_«@name»_event(«yml:ucase(@name)»_PR fsm, int event, «@name»_t *msg)
         {
@@ -1432,7 +1432,10 @@ tstylesheet {
     ||
 
     template "fsm", mode=gen {
-        if "count(state)>0" document "generated/{@name}_fsm.h", "text" {
+//        if "true or count(state)>0" document "generated/{@name}_fsm.h", "text" { // FIXME: make the guard non-stupid
+        // This file is generated unconditionally.  There is no harm in having
+        // it even for stateless protocols.
+        document "generated/{@name}_fsm.h", "text" {
         ||
         /**
          * @file    «@name»_fsm.h
