@@ -41,7 +41,7 @@ tstylesheet {
             #include "map_asn1.h"
 
             #include "«@name»_impl.h"
-            `` for "fsm" | #include "«@name»_fsm.h"
+            `` for "fsm[count(state) >= 1]" | #include "«@name»_fsm.h"
 
             /**
              *  <!--         _TID_greater()       -->

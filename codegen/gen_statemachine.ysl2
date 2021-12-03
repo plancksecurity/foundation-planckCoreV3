@@ -19,7 +19,7 @@ tstylesheet {
         /**
          * @file      «@name»_event.h
          * @brief     Structures and functions for «@name» events.
-         * @generated from ../sync/gen_statemachine.ysl2
+         * @generated from ../codegen/gen_statemachine.ysl2
          *
          * @license   GNU General Public License 3.0 - see LICENSE.txt
          */
@@ -99,7 +99,7 @@ tstylesheet {
         /**
          * @file    «@name»_event.c
          * @brief   Allocation, fsm drivers, and handling for «@name» events.
-         * @generated from ../sync/gen_statemachine.ysl2
+         * @generated from ../codegen/gen_statemachine.ysl2
          *
          * @license   GNU General Public License 3.0 - see LICENSE.txt
          */
@@ -109,7 +109,7 @@ tstylesheet {
         #include "pEp_internal.h"
         #include "«@name»_event.h"
         #include "«@name»_func.h"
-        `` for "fsm" | #include "«@name»_fsm.h"
+        `` for "fsm[count(state) >= 1]" | #include "«@name»_fsm.h"
 
         DYNAMIC_API «@name»_event_t *new_«@name»_event(«yml:ucase(@name)»_PR fsm, int event, «@name»_t *msg)
         {
@@ -153,7 +153,7 @@ tstylesheet {
             /**
              * @file      «@name»_impl.h
              * @brief     «@name» protocol implementation declarations
-             * @generated from ../sync/gen_statemachine.ysl2
+             * @generated from ../codegen/gen_statemachine.ysl2
              *
              * @license   GNU General Public License 3.0 - see LICENSE.txt
              */
@@ -343,7 +343,7 @@ tstylesheet {
             /**
              * @file      «@name»_impl.c
              * @brief     «@name» protocol implementation: driver, event handling, message signalling/sending/receipt, etc.
-             * @generated from ../sync/gen_statemachine.ysl2
+             * @generated from ../codegen/gen_statemachine.ysl2
              *
              * @license   GNU General Public License 3.0 - see LICENSE.txt
              */
@@ -605,8 +605,7 @@ tstylesheet {
                     memcpy(_data, data, size);
 
                     switch (message_type) {
-                    `` for "fsm/message[@security='unencrypted' and ../@name!='KeySync']" | #error unencrypted only allowed with KeySync
-                    `` for "fsm/message[@security='unencrypted' and ../@name='KeySync']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
+                    `` for "fsm/message[@security='unencrypted']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
                             status = try_base_prepare_message(
                                     session,
                                     li->ident,
@@ -1438,7 +1437,7 @@ tstylesheet {
         /**
          * @file    «@name»_fsm.h
          * @brief   Finite state machine states, definitions, and structs for the «@name» protocol.
-         * @generated from ../sync/gen_statemachine.ysl2
+         * @generated from ../codegen/gen_statemachine.ysl2
          *
          * @license   GNU General Public License 3.0 - see LICENSE.txt
          */
@@ -1552,7 +1551,7 @@ tstylesheet {
         /**
          * @file        «@name»_fsm.c
          * @brief       Finite state machine implementation for the «@name» protocol.
-         * @generated   from ../sync/gen_statemachine.ysl2
+         * @generated   from ../codegen/gen_statemachine.ysl2
          *
          * @license   GNU General Public License 3.0 - see LICENSE.txt
          */
