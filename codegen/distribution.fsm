@@ -70,6 +70,11 @@ protocol Distribution 2 {
     }
 
     // This protocol is stateful.  It is asymmetric, with no handshake.
+    //
+    // This specification contains more comments than it would be reasonable in
+    // an ordinary protocol, but I am annotating this very heavily in order to
+    // understand better myself -- this will also presumably serve as a decent
+    // introductions to other beginners coming after me -- positron.
     fsm TempKeyAgreement 4 {
         version 1, 0;
 

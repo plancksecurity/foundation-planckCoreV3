@@ -1,0 +1,7 @@
+I have to generate TempKeyAgreement_fsm.h (state definitions),
+used in Distribution_event.c
+
+TempKeyAgreement_fsm.h has a protocol-specific name, from distribution.fsm
+
+make sure that the generated files are cleaned correctly -- the
+Makefile has tricked me before.

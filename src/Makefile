@@ -95,7 +95,7 @@ libpEpEngine.a: $(ALL_OBJECTS)
 clean:
 	rm -f *.d *.o *.a $(TARGET) *.dll *.so *.zip *.d.* *.def *~
 	rm -Rf $(TARGET).dSYM
-	rm -f KeySync_fsm.* Sync_actions.c Sync_event.* Sync_func.* Sync_impl.* sync_codec.* distribution_codec.* storage_codec.*
+	rm -f *_fsm.[ch] *_.event.[ch] Sync_actions.c Sync_event.* Sync_func.* Sync_impl.* sync_codec.* distribution_codec.* storage_codec.*
 
 # CAVEAT:
 # install_headers is needed for building *STANDALONE* pEp MIME - it is NOT used for built-in functionality!!!
