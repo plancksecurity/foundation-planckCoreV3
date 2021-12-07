@@ -475,6 +475,19 @@ static const char* sql_get_all_keys_for_user =
     "select pgp_keypair_fpr from trust"
     "   where user_id = ?1; ";
 
+static const char* sql_get_all_keys_for_identity = /* ?1: address; ?2: user_id */
+    "SELECT T.pgp_keypair_fpr "
+    "  FROM Trust T "
+    "  WHERE T.user_id = ?2 "
+    "UNION "
+    "SELECT P.main_key_id "
+    "  FROM Person P "
+    "  WHERE P.id = ?2 "
+    "UNION "
+    "SELECT I.main_key_id "
+    "  FROM Identity I "
+    "  WHERE I.address = ?1 AND I.user_id = ?2 ";
+
 static const char* sql_get_default_own_userid =
     "select id from person"
     "   join identity on id = identity.user_id"
@@ -1957,6 +1970,13 @@ DYNAMIC_API PEP_STATUS init(
 
     int_result = sqlite3_prepare_v2(_session->db, sql_get_all_keys_for_user,
             (int)strlen(sql_get_all_keys_for_user), &_session->get_all_keys_for_user, NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_all_keys_for_identity,
+            (int)strlen(sql_get_all_keys_for_identity), &_session->get_all_keys_for_identity, NULL);
     assert(int_result == SQLITE_OK);
 
     if (int_result != SQLITE_OK)

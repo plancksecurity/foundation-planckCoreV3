@@ -236,6 +236,7 @@ struct _pEpSession {
     sqlite3_stmt *key_identities_retrieve;
     sqlite3_stmt *get_user_default_key;
     sqlite3_stmt *get_all_keys_for_user;
+    sqlite3_stmt *get_all_keys_for_identity;
         
     sqlite3_stmt *get_default_own_userid;
 

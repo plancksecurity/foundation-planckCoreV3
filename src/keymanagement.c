@@ -326,6 +326,45 @@ PEP_STATUS get_all_keys_for_user(PEP_SESSION session,
     return status;
 }
 
+PEP_STATUS get_all_keys_for_identity(PEP_SESSION session,
+                                     pEp_identity* identity,
+                                     stringlist_t** keys) {
+
+    if (!session || ! identity || EMPTYSTR(identity->address)
+        || EMPTYSTR(identity->user_id) || !keys)
+        return PEP_ILLEGAL_VALUE;
+        
+    PEP_STATUS status = PEP_STATUS_OK;
+        
+    *keys = NULL;
+    stringlist_t* _kl = NULL;
+    
+    sqlite3_reset(session->get_all_keys_for_identity);
+    sqlite3_bind_text(session->get_all_keys_for_identity, 1, identity->address, -1, SQLITE_STATIC);
+    sqlite3_bind_text(session->get_all_keys_for_identity, 2, identity->user_id, -1, SQLITE_STATIC);
+
+    int result = -1;
+    
+    while ((result = sqlite3_step(session->get_all_keys_for_identity)) == SQLITE_ROW) {
+        const char* keyres = (const char *) sqlite3_column_text(session->get_all_keys_for_identity, 0);
+        if (keyres) {
+            if (_kl)
+                stringlist_add(_kl, keyres);
+            else
+                _kl = new_stringlist(keyres);
+        }
+    }
+    
+    if (!_kl)
+        return PEP_KEY_NOT_FOUND;
+        
+    *keys = _kl;
+    
+    sqlite3_reset(session->get_all_keys_for_identity);
+
+    return status;
+}
+
 PEP_STATUS get_user_default_key(PEP_SESSION session, const char* user_id,
                                 char** default_key) {
     assert(session);

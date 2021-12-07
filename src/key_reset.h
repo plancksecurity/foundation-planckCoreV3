@@ -23,7 +23,10 @@ extern "C" {
 //                        If it does not, remove the key from the keyring; the key's 
 //                        status is completely fresh on next contact from the partner.
 //
-//                        If no key is provided, reset the identity default.
+//                        If no key is provided, reset the identity default in
+//                        case of own identity, and remove *all* the identity keys
+//                        otherwise (Rationale: any surviving key might get used
+//                        in key election).
 //
 //                        Note that reset keys will be removed as defaults for all users and identities.
 //
