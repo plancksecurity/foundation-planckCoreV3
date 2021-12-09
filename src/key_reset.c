@@ -915,7 +915,6 @@ PEP_STATUS _key_reset_all_for_non_own_identity(
         return PEP_ILLEGAL_VALUE;
 
     /* Find every key for the given identity. */
-    /* FIXME: use a new function get_all_keys_for_identity instead ! */
     PEP_STATUS status = PEP_STATUS_OK;
     stringlist_t *keys = NULL;
     status = get_all_keys_for_identity(session, ident, & keys);
