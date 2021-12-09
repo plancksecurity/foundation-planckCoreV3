@@ -906,7 +906,8 @@ pEp_free:
 static
 PEP_STATUS _key_reset_all_for_non_own_identity(
         PEP_SESSION session,
-        pEp_identity* ident)
+        pEp_identity* ident
+    )
 {
     /* Consistency checks. */
     assert (session && ident && ! ident->me);
