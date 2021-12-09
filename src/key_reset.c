@@ -927,7 +927,7 @@ PEP_STATUS _key_reset_all_for_non_own_identity(
         char *key = rest->value;
         if (EMPTYSTR(key))
             goto end;
-        status = key_reset_identity (session, ident, key);
+        status = key_reset(session, key, ident, false);
         if (status != PEP_STATUS_OK)
             goto end;
     }
@@ -947,10 +947,9 @@ DYNAMIC_API PEP_STATUS key_reset_identity(
     if (!session || !ident || (ident && (EMPTYSTR(ident->user_id) || EMPTYSTR(ident->address))))
         return PEP_ILLEGAL_VALUE;
 
-    /* Special case: reset non-own identity without specifying a key: the helper
-       function called here will in its turn call this and use the general case
-       below. */
-    if (EMPTYSTR(fpr) && ! ident->me)
+    /* Special case: non-own identity.  In this case we call the helper to
+       remove every key, and we ignore the fpr. */
+    if (! ident->me)
         return _key_reset_all_for_non_own_identity(session, ident);
 
     /* General case. */
