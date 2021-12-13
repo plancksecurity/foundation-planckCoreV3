@@ -317,6 +317,8 @@ struct _pEpSession {
 
     // runtime config
 
+    //struct Distribution_state_s distribution_state; // No: this is stateless.
+
     bool passive_mode;
     bool unencrypted_subject;
     bool service_log;

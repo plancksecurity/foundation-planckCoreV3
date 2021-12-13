@@ -109,7 +109,7 @@ tstylesheet {
         #include "pEp_internal.h"
         #include "«@name»_event.h"
         #include "«@name»_func.h"
-        `` for "fsm[count(state) >= 1 or true]" | #include "«@name»_fsm.h" // FIXME: make the condition non-stupid, after debugging
+        `` for "fsm[1<2]" | #include "«@name»_fsm.h" // QQQ FIXME: make the condition non-stupid, after debugging
 
         DYNAMIC_API «@name»_event_t *new_«@name»_event(«yml:ucase(@name)»_PR fsm, int event, «@name»_t *msg)
         {
