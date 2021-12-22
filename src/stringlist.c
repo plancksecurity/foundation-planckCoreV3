@@ -128,6 +128,15 @@ stringlist_t* stringlist_search(stringlist_t* head, const char* value) {
     return retval;
 }
 
+stringlist_t* stringlist_get_tail(stringlist_t* sl) {
+    if (!sl || !sl->value) // empty string is a value, yes?
+        return NULL;
+
+    while (sl->next) {
+        sl = sl->next;
+    }
+    return sl;
+}
 
 DYNAMIC_API stringlist_t *stringlist_add_unique(
         stringlist_t *stringlist,

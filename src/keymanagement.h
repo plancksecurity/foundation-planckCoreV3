@@ -411,6 +411,11 @@ PEP_STATUS get_all_keys_for_user(PEP_SESSION session,
                                  const char* user_id,
                                  stringlist_t** keys);
 
+/* Just like get_all_keys_for_user , using an identity instead of a user. */
+PEP_STATUS get_all_keys_for_identity(PEP_SESSION session, 
+                                     pEp_identity* identity,
+                                     stringlist_t** keys);
+
 
 //PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen, bool ignore_flags);
 

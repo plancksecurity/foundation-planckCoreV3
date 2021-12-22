@@ -255,7 +255,7 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message) {
     // attached key is encrypted
     ASSERT_TRUE(is_PGP_message_text(ad->value));
     ASSERT_STREQ(ad->mime_type, "application/octet-stream");
-    ASSERT_STREQ(ad->filename, "file://pEpkey.asc.pgp");
+    ASSERT_STREQ(ad->filename, "file://sender_key.asc.pgp");
 
     // decrypt this message
     
@@ -346,7 +346,7 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message_elevated) {
     // attached key is encrypted
     ASSERT_TRUE(is_PGP_message_text(ad->value));
     ASSERT_STREQ(ad->mime_type, "application/octet-stream");
-    ASSERT_STREQ(ad->filename, "file://pEpkey.asc.pgp");
+    ASSERT_STREQ(ad->filename, "file://sender_key.asc.pgp");
 
     char *ct = strdup(ad->value);
 
@@ -415,5 +415,97 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message_elevated) {
     free_message(enc_msg);
     free_message(dec_msg);
     free_message(art_msg);
+}
+
+// Next two tests are highly-artificial and may not even be correct usage - I just want to make sure that if we get a
+// key from an unencrypted message (ENGINE-927 in Release_2.1 branch), we'll set it correctly.
+// This won't result in elevated anything, it just simulates the call sequence used anyway.
+
+#if 0 // set to 1 if you need to quote or generate again
+// Largely for generation.
+TEST_F(ElevatedAttachmentsTest, check_send_unencrypted) {
+    // a message from me, Alice, to Bob
+
+    const char* alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
+    const char* bob_fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
+    PEP_STATUS status = read_file_and_import_key(session,
+                "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");
+    ASSERT_EQ(status , PEP_KEY_IMPORTED);
+    status = set_up_ident_from_scratch(session,
+                "test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc",
+                "pep.test.alice@pep-project.org", alice_fpr,
+                PEP_OWN_USERID, "Alice in Wonderland", NULL, true
+            );
+    ASSERT_EQ(status , PEP_STATUS_OK);
+//    ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc"));
+
+    message* msg = new_message(PEP_dir_outgoing);
+    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, NULL);
+    pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, "Bob", NULL);
+    status = myself(session, alice);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    status = _update_identity(session, bob, true);
+    // Bob should have NO key.
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_EQ(bob->fpr, nullptr);
+
+    msg->to = new_identity_list(bob);
+    msg->from = alice;
+    msg->shortmsg = strdup("Yo Bob!");
+    msg->longmsg = strdup("Intentionally unencrypted message");
+
+    // encrypt this message inline
+    message* enc_msg = NULL;
+    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_inline, 0);
+
+    // Obviously this won't work - we ate Bob's key
+    ASSERT_EQ(status , PEP_UNENCRYPTED);
+
+
+    ASSERT_TRUE(msg->attachments);
+    ASSERT_TRUE(msg->attachments->value);
+
+    bloblist_t *ad = msg->attachments;
+
+    ASSERT_STREQ(ad->mime_type, "application/pgp-keys");
+    ASSERT_STREQ(ad->filename, "file://sender_key.asc");
+
+    char* unenc_str = message_to_str(msg);
+    dump_out("test_mails/unencrypted_and_elevated.msg", unenc_str);
+
+    free_message(msg);
+
+    free(unenc_str);
+}
+#endif
+
+TEST_F(ElevatedAttachmentsTest, check_receive_unencrypted) {
+
+    const char *alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
+    const char *bob_fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
+    pEp_identity *bob = NULL;
+    PEP_STATUS status = set_up_preset(session, BOB, true, true, true, true, true, &bob);
+    status = read_file_and_import_key(session,"test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");
+    ASSERT_EQ(status, PEP_KEY_IMPORTED);
+
+    string msg_string = slurp("test_mails/unencrypted_and_elevated.msg");
+    message* msg = string_to_msg(msg_string);
+    message *dec_msg = NULL;
+    stringlist_t *keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_EQ(status, PEP_UNENCRYPTED);
+
+    // 2.1 note: this will fail if the username differs. This is known and expected by vb.
+    pEp_identity *alice = new_identity("pep.test.alice@pep-project.org", NULL, "ALICE", "Alice in Wonderland");
+    status = update_identity(session, alice);
+    ASSERT_OK;
+    ASSERT_NE(alice->fpr, nullptr);
+    ASSERT_STREQ(alice->fpr, alice_fpr);
+    free_message(msg);
+    free_identity(bob);
+    free_identity(alice);
 }
 

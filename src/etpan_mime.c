@@ -2523,7 +2523,8 @@ static PEP_STATUS interpret_body(struct mailmime *part, char **longmsg, size_t *
 
     if (part->mm_content_type) {
         if (_get_content_type(part->mm_content_type, &type, &charset) == 0) {
-            if (charset && strncasecmp(charset, "utf-8", 5) != 0) {
+            // We can be more elegant about this later.
+            if (charset && strncasecmp(charset, "utf-8", 5) != 0 && strncasecmp(charset, "utf8", 4) != 0) {
                 char * _text;
                 int r = charconv("utf-8", charset, _longmsg, _size, &_text);
                 switch (r) {

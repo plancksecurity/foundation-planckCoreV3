@@ -902,16 +902,59 @@ pEp_free:
     return status;
 }
 
+/* This is a helper for key_reset_identity: see the comment inside its body. */
+static
+PEP_STATUS _key_reset_all_for_non_own_identity(
+        PEP_SESSION session,
+        pEp_identity* ident
+    )
+{
+    /* Consistency checks. */
+    assert (session && ident && ! ident->me);
+    if (! (session && ident && ! ident->me))
+        return PEP_ILLEGAL_VALUE;
+
+    /* Find every key for the given identity. */
+    PEP_STATUS status = PEP_STATUS_OK;
+    stringlist_t *keys = NULL;
+    status = get_all_keys_for_identity(session, ident, & keys);
+    if (status != PEP_STATUS_OK)
+        return PEP_ILLEGAL_VALUE;
+
+    /* For every key, reset that key. */
+    stringlist_t *rest;
+    for (rest = keys; rest != NULL; rest = rest->next) {
+        char *key = rest->value;
+        if (EMPTYSTR(key))
+            goto end;
+        status = key_reset(session, key, ident, false);
+        if (status != PEP_STATUS_OK)
+            goto end;
+    }
+
+ end:
+    free_stringlist (keys);
+    return status;
+}
+
 DYNAMIC_API PEP_STATUS key_reset_identity(
         PEP_SESSION session,
         pEp_identity* ident,
         const char* fpr        
     )
 {
+    /* Validate. */
     if (!session || !ident || (ident && (EMPTYSTR(ident->user_id) || EMPTYSTR(ident->address))))
         return PEP_ILLEGAL_VALUE;
-    
-    return key_reset(session, fpr, ident, false);
+
+    /* Special case: non-own identity.  In this case we call the helper to
+       remove every key, and we ignore the fpr. */
+    if (! ident->me)
+        return _key_reset_all_for_non_own_identity(session, ident);
+
+    /* General case. */
+    else
+        return key_reset(session, fpr, ident, false);
 }
 
 DYNAMIC_API PEP_STATUS key_reset_user(

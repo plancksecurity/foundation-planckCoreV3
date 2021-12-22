@@ -178,6 +178,8 @@ struct _pEpSession {
     sqlite3_stmt *get_main_user_fpr;
     sqlite3_stmt *refresh_userid_default_key;
     sqlite3_stmt *delete_key;
+    sqlite3_stmt *set_default_identity_fpr;
+    sqlite3_stmt *get_default_identity_fpr;
     sqlite3_stmt *remove_fpr_as_identity_default;
     sqlite3_stmt *remove_fpr_as_user_default;
     sqlite3_stmt *set_person;
@@ -234,6 +236,7 @@ struct _pEpSession {
     sqlite3_stmt *key_identities_retrieve;
     sqlite3_stmt *get_user_default_key;
     sqlite3_stmt *get_all_keys_for_user;
+    sqlite3_stmt *get_all_keys_for_identity;
         
     sqlite3_stmt *get_default_own_userid;
 

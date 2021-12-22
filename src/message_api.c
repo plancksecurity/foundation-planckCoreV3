@@ -1614,12 +1614,16 @@ static bool compare_first_n_bytes(const char* first, const char* second, size_t 
     return true;
 }
 
+// is_pEp_msg isn't available on the message yet usually when we get it here,
+// so we need it as a parameter
 bool import_attached_keys(
         PEP_SESSION session,
         message *msg,
+        bool is_pEp_msg,
         identity_list **private_idents, 
         stringlist_t** imported_key_list,
-        uint64_t* changed_keys
+        uint64_t* changed_keys,
+        char** pEp_sender_key
     )
 {
     assert(session);
@@ -1627,6 +1631,9 @@ bool import_attached_keys(
 
     if (session == NULL || msg == NULL)
         return false;
+
+    char* _sender_key_retval = NULL;
+    stringlist_t* _keylist = imported_key_list ? *imported_key_list : NULL;
 
     bool remove = false;
 
@@ -1641,6 +1648,9 @@ bool import_attached_keys(
     const size_t PUBKEY_HSIZE = 36;
     const size_t PRIVKEY_HSIZE = 37;
 
+    bool pEp_sender_key_found = false;
+    stringlist_t* last_fpr_ptr = _keylist ? stringlist_get_tail(_keylist) : NULL;
+
     for (bloblist_t *bl = msg->attachments; i < MAX_KEYS_TO_IMPORT && bl && bl->value;
          i++)
     {
@@ -1651,7 +1661,8 @@ bool import_attached_keys(
             char* blob_value = bl->value;
             size_t blob_size = bl->size;
             bool free_blobval = false;
-            
+            bool single_import = false;
+
             if (is_encrypted_attachment(bl)) {
                     
                 char* bl_ptext = NULL;
@@ -1680,12 +1691,22 @@ bool import_attached_keys(
                 }
             }
             identity_list *local_private_idents = NULL;
-            PEP_STATUS import_status = _import_key_with_fpr_return(
+            PEP_STATUS import_status = import_key_with_fpr_return(
                                                   session, blob_value, blob_size, 
                                                   &local_private_idents,
-                                                  imported_key_list,
+                                                  &_keylist,
                                                   changed_keys);
+
+            if (_keylist) {
+                stringlist_t* added_keys = last_fpr_ptr ? last_fpr_ptr->next : _keylist;
+                if (stringlist_length(added_keys) == 1)
+                    single_import = true;
+                last_fpr_ptr = stringlist_get_tail(last_fpr_ptr ? last_fpr_ptr : _keylist);
+            }
+
             bloblist_t* to_delete = NULL;
+            const char* uri = NULL;
+
             switch (import_status) {
                 case PEP_NO_KEY_IMPORTED:
                     break;
@@ -1699,6 +1720,21 @@ bool import_attached_keys(
                     // else fall through and delete    
                 case PEP_KEY_IMPORTED:
                 case PEP_STATUS_OK:
+                    uri = bl->filename;
+                    if (pEp_sender_key && is_pEp_msg && !EMPTYSTR(uri)) {
+                        if (strcmp(uri, "file://sender_key.asc") == 0) {
+                            if (!pEp_sender_key_found) {   
+                                pEp_sender_key_found = true;
+                                if (single_import && last_fpr_ptr && !EMPTYSTR(last_fpr_ptr->value))
+                                    _sender_key_retval = strdup(last_fpr_ptr->value);
+                            }    
+                            else {
+                                // BAD. Someone messed up. ONE sender_key.asc. 
+                                free(_sender_key_retval);
+                                _sender_key_retval = NULL;
+                            }    
+                        }    
+                    }
                     to_delete = bl;
                     if (prev)
                         prev->next = bl->next;
@@ -1726,11 +1762,21 @@ bool import_attached_keys(
             bl = bl->next;
         }
     }
+    if (pEp_sender_key)
+        *pEp_sender_key = _sender_key_retval;
+
+    if (imported_key_list) {
+        if (!(*imported_key_list))
+            *imported_key_list = _keylist;
+    }
+    else
+        free_stringlist(_keylist);
+
     return remove;
 }
 
 
-PEP_STATUS _attach_key(PEP_SESSION session, const char* fpr, message *msg)
+PEP_STATUS _attach_key(PEP_SESSION session, const char* fpr, message *msg, const char* filename)
 {
     char *keydata = NULL;
     size_t size = 0;
@@ -1741,8 +1787,11 @@ PEP_STATUS _attach_key(PEP_SESSION session, const char* fpr, message *msg)
         return status;
     assert(size);
 
+    if (EMPTYSTR(filename))
+        filename = "file://pEpkey.asc";
+
     bloblist_t *bl = bloblist_add(msg->attachments, keydata, size, "application/pgp-keys",
-                      "file://pEpkey.asc");
+                      filename);
 
     if (msg->attachments == NULL && bl)
         msg->attachments = bl;
@@ -1764,7 +1813,7 @@ void attach_own_key(PEP_SESSION session, message *msg)
     if (msg->from == NULL || msg->from->fpr == NULL)
         return;
 
-    if(_attach_key(session, msg->from->fpr, msg) != PEP_STATUS_OK)
+    if (_attach_key(session, msg->from->fpr, msg, "file://sender_key.asc") != PEP_STATUS_OK)
         return;
 
     char *revoked_fpr = NULL;
@@ -1778,7 +1827,7 @@ void attach_own_key(PEP_SESSION session, message *msg)
 
         if (now < (time_t)revocation_date + ONE_WEEK)
         {
-            _attach_key(session, revoked_fpr, msg);
+            _attach_key(session, revoked_fpr, msg, "file://revoked_key.asc");
         }
     }
     free(revoked_fpr);
@@ -1880,6 +1929,8 @@ DYNAMIC_API PEP_STATUS probe_encrypt(PEP_SESSION session, const char *fpr)
     size_t csize = 0;
     PEP_STATUS status = encrypt_and_sign(session, keylist, "pEp", 4, &ctext, &csize);
     free(ctext);
+    // fpr owned by caller, all fine.
+    free_stringlist(keylist);
 
     return status;
 }
@@ -2049,7 +2100,9 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     if (failed_test(status))
         return status;
 
+    // Sender fpr on the input message is ignored and replaced.
     char* send_fpr = strdup(src->from->fpr ? src->from->fpr : "");
+    free(src->_sender_fpr);
     src->_sender_fpr = send_fpr;
     
     keys = new_stringlist(send_fpr);
@@ -3289,15 +3342,16 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
     return status;
 }
 
-// This is misleading - this imports ALL the keys!
 static PEP_STATUS import_keys_from_decrypted_msg(PEP_SESSION session,
-                                                      message* msg,
-                                                      bool* keys_were_imported,
-                                                      bool* imported_private,
-                                                      identity_list** private_il,
-                                                      stringlist_t** keylist,
-                                                      uint64_t* changed_keys)
-{
+                                                       message* msg,
+                                                       bool is_pEp_msg,
+                                                       bool* keys_were_imported,
+                                                       bool* imported_private,
+                                                       identity_list** private_il,
+                                                       stringlist_t** keylist,
+                                                       uint64_t* changed_keys,
+                                                       char** pEp_sender_key) {
+
     assert(msg && keys_were_imported && imported_private);
     if (!(msg && keys_were_imported && imported_private))
         return PEP_ILLEGAL_VALUE;
@@ -3311,7 +3365,9 @@ static PEP_STATUS import_keys_from_decrypted_msg(PEP_SESSION session,
     // check for private key in decrypted message attachment while importing
     identity_list *_private_il = NULL;
 
-    bool _keys_were_imported = import_attached_keys(session, msg, &_private_il, keylist, changed_keys);
+    bool _keys_were_imported = import_attached_keys(session, msg, is_pEp_msg,
+                                                    &_private_il, keylist,
+                                                    changed_keys, pEp_sender_key);
     bool _imported_private = false;
     if (_private_il && _private_il->ident && _private_il->ident->address)
         _imported_private = true;
@@ -3387,6 +3443,7 @@ static PEP_STATUS update_sender_to_pEp_trust(
     free(sender->fpr);
     sender->fpr = NULL;
 
+    // ??? FIXME: might be a bug fix in other branch?
     PEP_STATUS status = is_me(session, sender) ? myself(session, sender) :_update_identity(session, sender, true);
 
     if (PASS_ERROR(status))
@@ -3575,39 +3632,39 @@ static bool reject_fpr(PEP_SESSION session, const char* fpr) {
     return reject;
 }
 
-static char* seek_good_trusted_private_fpr(PEP_SESSION session, char* own_id, 
+static char* seek_good_trusted_private_fpr(PEP_SESSION session, char* own_id,
                                            stringlist_t* keylist) {
     if (!own_id || !keylist)
         return NULL;
-        
+
     stringlist_t* kl_curr = keylist;
     while (kl_curr) {
         char* fpr = kl_curr->value;
-        
-        if (is_trusted_own_priv_fpr(session, own_id, fpr)) { 
+
+        if (is_trusted_own_priv_fpr(session, own_id, fpr)) {
             if (!reject_fpr(session, fpr))
                 return strdup(fpr);
         }
-            
+
         kl_curr = kl_curr->next;
     }
 
     char* target_own_fpr = NULL;
-    
+
     // Last shot...
-    PEP_STATUS status = get_user_default_key(session, own_id, 
+    PEP_STATUS status = get_user_default_key(session, own_id,
                                              &target_own_fpr);
 
     if (status == PEP_STATUS_OK && !EMPTYSTR(target_own_fpr)) {
-        if (is_trusted_own_priv_fpr(session, own_id, target_own_fpr)) { 
+        if (is_trusted_own_priv_fpr(session, own_id, target_own_fpr)) {
             if (!reject_fpr(session, target_own_fpr))
                 return target_own_fpr;
         }
     }
-    
+
     // TODO: We can also go through all of the other available fprs for the
     // own identity, but then I submit this function requires a little refactoring
-        
+
     return NULL;
 }
 
@@ -3626,7 +3683,7 @@ static bool import_header_keys(PEP_SESSION session, message* src, stringlist_t**
     bloblist_t* the_key = base64_str_to_binary_blob(start_key, length);
     if (!the_key)
         return false;
-    PEP_STATUS status = _import_key_with_fpr_return(session, 
+    PEP_STATUS status = import_key_with_fpr_return(session, 
                                                     the_key->value, 
                                                     the_key->size, 
                                                     NULL, 
@@ -3801,6 +3858,93 @@ enomem:
     
 }
 
+static void get_protocol_version_from_headers(
+        stringpair_list_t* field_list,
+        unsigned int* major_ver,
+        unsigned int* minor_ver
+    ) 
+{
+    *major_ver = 0;
+    *minor_ver = 0;
+    const stringpair_list_t* pEp_protocol_version = stringpair_list_find(field_list, "X-pEp-Version");
+                        
+    if (pEp_protocol_version && pEp_protocol_version->value)
+        pEp_version_major_minor(pEp_protocol_version->value->value, major_ver, minor_ver);           
+}
+
+// CAN return PASS errors
+static PEP_STATUS set_default_key_fpr_if_valid(
+            PEP_SESSION session,
+            pEp_identity* ident,
+            const char* new_fpr
+   ) 
+{
+    if (EMPTYSTR(new_fpr))
+        return PEP_ILLEGAL_VALUE;
+        
+    free(ident->fpr);
+    ident->fpr = strdup(new_fpr);
+    if (!ident->fpr)
+        return PEP_OUT_OF_MEMORY;
+        
+    // this will check to see that the key is usable as well as get its comm_type    
+    PEP_STATUS status = validate_fpr(session, ident, true, true, true);
+    if (status == PEP_STATUS_OK)
+        status = set_identity(session, ident);            
+    else { 
+        free(ident->fpr);
+        ident->fpr = NULL;                            
+    }
+    return status;
+}
+
+static PEP_STATUS _check_and_set_default_key(
+        PEP_SESSION session,
+        pEp_identity* src_ident,
+        const char* sender_key
+    )
+{
+    if (!session || !src_ident)
+        return PEP_ILLEGAL_VALUE;
+
+    if (EMPTYSTR(src_ident->address) || EMPTYSTR(sender_key))
+        return PEP_STATUS_OK; // DOH, we're not setting anything here
+
+    char* default_from_fpr = NULL;
+
+    PEP_STATUS status = update_identity(session, src_ident);
+
+    if (status == PEP_STATUS_OK && !is_me(session, src_ident)) {
+        // Right now, we just want to know if there's a DB default, NOT 
+        // if it matches what update_identity gives us (there are good reasons it might not)
+        status = get_default_identity_fpr(session, src_ident->address, src_ident->user_id, &default_from_fpr);
+        bool on_blacklist = false;
+        if (!EMPTYSTR(default_from_fpr)) {
+            blacklist_is_listed(session, default_from_fpr, &on_blacklist);
+        }
+        if (on_blacklist || status == PEP_KEY_NOT_FOUND || status == PEP_CANNOT_FIND_IDENTITY) {
+            if (!EMPTYSTR(sender_key))
+                status = set_default_key_fpr_if_valid(session, src_ident, sender_key);
+        }
+    }
+
+    if (status == PEP_OUT_OF_MEMORY)    
+        return status;
+
+    free(default_from_fpr);
+    return PEP_STATUS_OK;  // We don't care about other errors here.    
+}
+
+// Rule for this function, since it is one of the three most complicated functions in this whole damned
+// business:
+//
+// If you calculate a status from something and expect it NOT to be fatal, once you are done USING that status,
+// you MUST set it back to "PEP_STATUS_OK".
+//
+// There are times when we don't want errors during calls to be fatal. Once any action is taken on that
+// status, if we are going to continue processing and not bail from the message, the status needs to be reset
+// to PEP_STATUS_OK, or, alternately, we need to be using a temp status variable.
+
 static PEP_STATUS _decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -3848,7 +3992,9 @@ static PEP_STATUS _decrypt_message(
     uint64_t _changed_keys = 0;
     
     stringpair_list_t* revoke_replace_pairs = NULL;
-    
+
+    char* imported_sender_key_fpr = NULL;
+
     // Grab input flags
     bool reencrypt = ((*flags & PEP_decrypt_flag_untrusted_server) &&
             (_have_extrakeys(*keylist) || session->unencrypted_subject));
@@ -3915,29 +4061,35 @@ static PEP_STATUS _decrypt_message(
     // We really need key used in signing to do anything further on the pEp comm_type.
     // So we can't adjust the rating of the sender just yet.
 
-    /*** Begin importing any keys attached an outer, undecrypted message ***/
+    /*** Begin importing any keys attached an outer, undecrypted message - update identities accordingly ***/
     // Private key in unencrypted mail are ignored -> NULL
     //
     // This import is from the outermost message.
     // We don't do this for PGP_mime. -- KB: FIXME: I am pretty sure this was 
     // because of our overzealous import/remove process, but What does this do to enigmail messages 
     // if the keys are on the outside?? Are they ever?
+
+    // In case there are header keys, get those - these will be the FIRST keys, and right
+    // now, this will lead to the first header key imported being the default key if the from
+    // identity has no default key. This is intentional, as we're only importing one autocrypt 
+    // header key here, but if this changes, we MUST change this assumption
+    bool header_key_imported = import_header_keys(session, src, 
+                                                  &_imported_key_list, 
+                                                  &_changed_keys);    
+         
+    // Does this need to reflect the above?
     bool keys_were_imported = false;
     
     PEP_cryptotech enc_type = determine_encryption_format(src);
-    if (enc_type != PEP_crypt_OpenPGP || !(src->enc_format == PEP_enc_PGP_MIME || src->enc_format == PEP_enc_PGP_MIME_Outlook1))
-        keys_were_imported = import_attached_keys(session, 
-                                                  src, NULL, 
-                                                  (imported_key_fprs ? &_imported_key_list : NULL), 
-                                                  (changed_public_keys ? &_changed_keys : NULL));
-    
-    // In case there are header keys, also get those
-    import_header_keys(session, src, 
-                       (imported_key_fprs ? &_imported_key_list : NULL), 
-                       (changed_public_keys ? &_changed_keys : NULL));
+    if (enc_type != PEP_crypt_OpenPGP || !(src->enc_format == PEP_enc_PGP_MIME || src->enc_format == PEP_enc_PGP_MIME_Outlook1)) {
+        keys_were_imported = import_attached_keys(session,
+                                                  src, is_pEp_msg, NULL,
+                                                  &_imported_key_list, 
+                                                  &_changed_keys,
+                                                  &imported_sender_key_fpr);
+    }
+    /*** End Import any attached outer public keys and update identities accordingly ***/
 
-    /*** End Import any attached public keys ***/
-    
     /*** Begin get detached signatures that are attached to the encrypted message ***/
     // Get detached signature, if any
     bloblist_t* detached_sig = NULL;
@@ -3948,6 +4100,7 @@ static PEP_STATUS _decrypt_message(
         dsig_text = detached_sig->value;
         dsig_size = detached_sig->size;
     }
+    status = PEP_STATUS_OK; // again, reset, we don't use the status
     /*** End get detached signatures that are attached to the encrypted message ***/
 
     /*** Determine encryption format ***/
@@ -3958,6 +4111,10 @@ static PEP_STATUS _decrypt_message(
         // if there is a valid receiverRating then return this rating else
         // return unencrypted
 
+        // All this does is try to deal with unencrypted sync messages;
+        // Failure means the message wasn't one (or maybe wasn't a valid one)
+        // and nothing else, so there should NOT be a fatal failure here
+        // if the status comes back differently.
         PEP_rating _rating = PEP_rating_undefined;
         status = get_receiverRating(session, src, &_rating);
         if (status == PEP_STATUS_OK && _rating)
@@ -3965,8 +4122,7 @@ static PEP_STATUS _decrypt_message(
         else
             *rating = PEP_rating_unencrypted;
 
-        // Regardless, we are DONE with that status. And not clearing it causes
-        // ENGINE-915 in other branches.
+        // We are DONE with that status. Not clearing it causes ENGINE-915.
         status = PEP_STATUS_OK;
 
         // We remove these from the outermost source message
@@ -3974,16 +4130,56 @@ static PEP_STATUS _decrypt_message(
         //     remove_attached_keys(src);
                                     
         pull_up_attached_main_msg(src);
-        
+
+        // (N.B. is_me is calculated correctly because of the update_identity check above
+        //  if we didn't already know at input)
+        if (src->from && !is_me(session, src->from)) {
+            // Set default key if there isn't one
+            // This is the case ONLY for unencrypted messages and differs from the 1.0 and 2.x cases
+            if (src->from->address) {
+                PEP_STATUS incoming_status = status;
+                const char* sender_key = NULL;
+                if (imported_sender_key_fpr) {
+                    sender_key = imported_sender_key_fpr;
+                }
+                else if (!is_pEp_msg && header_key_imported) // autocrypt
+                    sender_key = _imported_key_list->value;
+                else {
+                    // We do this only with pEp messages 2.1 or less, or OpenPGP messages
+                    if (!is_pEp_msg || (major_ver == 2 && minor_ver < 2) || major_ver < 2) {
+                        if (_imported_key_list && !(_imported_key_list->next))
+                            sender_key = _imported_key_list->value;
+                    }
+                } // Otherwise, too bad.
+
+                status = _check_and_set_default_key(session, src->from, sender_key);
+                free(imported_sender_key_fpr);
+                imported_sender_key_fpr = NULL;
+
+                if (status == PEP_OUT_OF_MEMORY)
+                    goto enomem;
+                if (status == PEP_STATUS_OK)
+                    status = incoming_status;
+            }
+        }
+
         if (imported_key_fprs)
             *imported_key_fprs = _imported_key_list;
         if (changed_public_keys)
             *changed_public_keys = _changed_keys;
-        
-        return PEP_UNENCRYPTED;
-    }
 
-    // if there is an own identity defined via this message is coming in
+        // we return the status value here because it's important to know when 
+        // we have a DB error here as soon as we have the info.
+        return (status == PEP_STATUS_OK ? PEP_UNENCRYPTED : status);
+     }
+    /*** End check for and deal with unencrypted messages ***/
+         
+    //***************************************************************************
+    //* From this point on, we are dealing with an encrypted message of some sort.
+    //***************************************************************************
+
+    // FIXME: This comment doesn't make a lot of sense. Ask vb about what
+    //        is going on here.    // if there is an own identity defined via this message is coming in
     // retrieve the details; in case there's no usable own key make it
     // functional
     if (src->recv_by && !EMPTYSTR(src->recv_by->address)) {
@@ -4040,12 +4236,31 @@ static PEP_STATUS _decrypt_message(
                 //
                 // We are importing from the decrypted outermost message now.
                 //
-                status = import_keys_from_decrypted_msg(session, msg,
+                free(imported_sender_key_fpr);
+                imported_sender_key_fpr = NULL;
+
+                stringlist_t** start = (_imported_key_list ? &(stringlist_get_tail(_imported_key_list)->next) : &_imported_key_list);
+                // if this is a non-pEp message or a 1.0 message, we'll need to do some default-setting here.
+                // otherwise, we don't ask for a sender import fpr because for pEp 2.0+ any legit default key attachments should
+                // be INSIDE the message
+                // N.B. Changes to this are part of the port necessitated by the non-election hotfix requested from Volker
+                // while putting in key election removal in another branch. This is due to the change of method signatures
+                // and functionality between branches. However, in this branch, we are not changing the default behaviour of
+                // encrypted message key imports, which still functions as desired. The problem is that unencrypted messages
+                // ceased to cause key defaults to be set once election was removed, and Volker wants the key election removal
+                // branch key-to-file-and-filename matching for the unencrypted case, we so have to move all of the changed
+                // function complexity over regardless.
+                //
+                // Practically speaking here, then, this means we don't bother sending in the imported_sender_key_fpr above
+                // because in THIS branch, we don't use it, lest we pull ALL of key election removal into the old release
+                // branch before this is done. (The hotfix was estimated in the request to be "one simple function" - it's not.)
+                status = import_keys_from_decrypted_msg(session, msg, is_pEp_msg,
                                                         &keys_were_imported,
                                                         &imported_private_key_address,
                                                         private_il,
                                                         (imported_key_fprs ? &_imported_key_list : NULL), 
-                                                        (changed_public_keys ? &_changed_keys : NULL));
+                                                        (changed_public_keys ? &_changed_keys : NULL),
+                                                        NULL);
                                                         
                 if (status != PEP_STATUS_OK)
                     goto pEp_error;            
@@ -4096,7 +4311,7 @@ static PEP_STATUS _decrypt_message(
                     else if (strcasecmp(mime_type, "application/pEp.distribution") == 0)
                         filename = "file://distribution.pEp";
                     else if (strcasecmp(mime_type, "application/pgp-keys") == 0)
-                        filename = "file://pEpkey.asc";
+                        filename = "file://sender_key.asc";
                     else if (strcasecmp(mime_type, "application/pgp-signature") == 0)
                         filename = "file://electronic_signature.asc";
                     bloblist_t *bl = new_bloblist(value, size, mime_type, filename);
@@ -4117,12 +4332,13 @@ static PEP_STATUS _decrypt_message(
                     }
                 }
 
-                status = import_keys_from_decrypted_msg(session, msg,
+                status = import_keys_from_decrypted_msg(session, msg, is_pEp_msg,
                                                         &keys_were_imported,
                                                         &imported_private_key_address,
                                                         private_il,
                                                         (imported_key_fprs ? &_imported_key_list : NULL), 
-                                                        (changed_public_keys ? &_changed_keys : NULL));
+                                                        (changed_public_keys ? &_changed_keys : NULL),
+                                                        NULL);
                 break;
 
             default:
@@ -4333,12 +4549,13 @@ static PEP_STATUS _decrypt_message(
                             private_il = NULL;
                             
                             // import keys from decrypted INNER source
-                            status = import_keys_from_decrypted_msg(session, inner_message,
+                            status = import_keys_from_decrypted_msg(session, inner_message, is_pEp_msg,
                                                                     &keys_were_imported,
                                                                     &imported_private_key_address,
                                                                     private_il,
                                                                     (imported_key_fprs ? &_imported_key_list : NULL), 
-                                                                    (changed_public_keys ? &_changed_keys : NULL));
+                                                                    (changed_public_keys ? &_changed_keys : NULL),
+                                                                    NULL);
                                                                     
                             if (status != PEP_STATUS_OK)
                                 goto pEp_error;            

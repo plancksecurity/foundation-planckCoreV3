@@ -98,6 +98,9 @@ clean:
 	rm -f KeySync_fsm.* Sync_actions.c Sync_event.* Sync_func.* Sync_impl.* sync_codec.* distribution_codec.*
 	# Release 2.1 only
 	rm -f GroupSync_fsm.* TrustSync_fsm.* storage_codec.* 
+	# Remove generated files which may remain in a source directory which
+	# had been used for more recent versions.
+	rm -f *_{event,impl,fsm,func}.[ch]
 
 # CAVEAT:
 # install_headers is needed for building *STANDALONE* pEp MIME - it is NOT used for built-in functionality!!!

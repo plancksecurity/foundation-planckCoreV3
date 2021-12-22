@@ -154,7 +154,20 @@ static const char *sql_replace_identities_fpr =
     "update identity"
     "   set main_key_id = ?1 "
     "   where main_key_id = ?2 ;";
-    
+
+static const char* sql_set_default_identity_fpr =
+        "update identity set main_key_id = ?3 "
+        "    where user_id = ?1 and address = ?2; ";
+
+static const char *sql_get_default_identity_fpr =
+        "select main_key_id from identity"
+        "   where (case when (address = ?1) then (1)"
+        "               when (lower(address) = lower(?1)) then (1)"
+        "               when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1) "
+        "               else 0 "
+        "          end) = 1 "
+        "          and user_id = ?2 ;";
+
 static const char *sql_remove_fpr_as_identity_default =
     "update identity set main_key_id = NULL where main_key_id = ?1 ;";
 
@@ -461,6 +474,19 @@ static const char* sql_get_user_default_key =
 static const char* sql_get_all_keys_for_user =
     "select pgp_keypair_fpr from trust"
     "   where user_id = ?1; ";
+
+static const char* sql_get_all_keys_for_identity = /* ?1: address; ?2: user_id */
+    "SELECT T.pgp_keypair_fpr "
+    "  FROM Trust T "
+    "  WHERE T.user_id = ?2 "
+    "UNION "
+    "SELECT P.main_key_id "
+    "  FROM Person P "
+    "  WHERE P.id = ?2 "
+    "UNION "
+    "SELECT I.main_key_id "
+    "  FROM Identity I "
+    "  WHERE I.address = ?1 AND I.user_id = ?2 ";
 
 static const char* sql_get_default_own_userid =
     "select id from person"
@@ -1807,6 +1833,30 @@ DYNAMIC_API PEP_STATUS init(
                     return PEP_UNKNOWN_DB_ERROR;
 
             }
+            // Do this for everybody - this is Release_2.1 patch code, because this
+            // code is located elsewhere in 3.x releases
+
+            // Version should now be "latest" - we want to upgrade the default message
+            // version to 2.1 for any pEp partner.
+            int_result = sqlite3_exec(
+                    _session->db,
+                    "update identity\n"
+                    "   set pEp_version_major = 2,\n"
+                    "       pEp_version_minor = 1\n"
+                    "   where exists (select * from person\n"
+                    "                     where identity.user_id = person.id\n"
+                    "                     and identity.is_own = 0\n"
+                    "                     and identity.pEp_version_major = 2\n"
+                    "                     and identity.pEp_version_minor = 0\n"
+                    "                     and person.is_pEp_user = 1);\n",
+                    NULL,
+                    NULL,
+                    NULL
+            );
+            assert(int_result == SQLITE_OK);
+        
+            if (int_result != SQLITE_OK)
+                return PEP_UNKNOWN_DB_ERROR;            
                     
         }        
         else { 
@@ -1887,7 +1937,6 @@ DYNAMIC_API PEP_STATUS init(
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
-
     int_result = sqlite3_prepare_v2(_session->db, sql_get_identities_by_main_key_id,
             (int)strlen(sql_get_identities_by_main_key_id), 
             &_session->get_identities_by_main_key_id, NULL);
@@ -1896,7 +1945,21 @@ DYNAMIC_API PEP_STATUS init(
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_default_identity_fpr,
+                                    (int)strlen(sql_get_default_identity_fpr), &_session->get_default_identity_fpr, NULL);
+    assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_set_default_identity_fpr,
+                                    (int)strlen(sql_set_default_identity_fpr), &_session->set_default_identity_fpr, NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+    
+    
     int_result = sqlite3_prepare_v2(_session->db, sql_get_user_default_key,
             (int)strlen(sql_get_user_default_key), &_session->get_user_default_key, NULL);
     assert(int_result == SQLITE_OK);
@@ -1907,6 +1970,13 @@ DYNAMIC_API PEP_STATUS init(
 
     int_result = sqlite3_prepare_v2(_session->db, sql_get_all_keys_for_user,
             (int)strlen(sql_get_all_keys_for_user), &_session->get_all_keys_for_user, NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_all_keys_for_identity,
+            (int)strlen(sql_get_all_keys_for_identity), &_session->get_all_keys_for_identity, NULL);
     assert(int_result == SQLITE_OK);
 
     if (int_result != SQLITE_OK)
@@ -2126,17 +2196,6 @@ DYNAMIC_API PEP_STATUS init(
 
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
-
-
-    int_result = sqlite3_prepare_v2(_session->db, 
-            sql_get_own_address_binding_from_contact,
-            (int)strlen(sql_get_own_address_binding_from_contact), 
-            &_session->get_own_address_binding_from_contact, NULL);
-    assert(int_result == SQLITE_OK);
-
-    if (int_result != SQLITE_OK)
-        return PEP_UNKNOWN_DB_ERROR;
-
 
     int_result = sqlite3_prepare_v2(_session->db, sql_set_pgp_keypair,
             (int)strlen(sql_set_pgp_keypair), &_session->set_pgp_keypair,
@@ -2526,151 +2585,87 @@ DYNAMIC_API void release(PEP_SESSION session)
     if (session) {
         free_Sync_state(session);
 
+        /**
+         * ENGINE-947:
+         * from the sqlite3 documentation ([https://www.sqlite.org/c3ref/finalize.html] :
+         * "sqlite3-documentation: Invoking sqlite3_finalize() on a NULL pointer is a harmless no-op."
+         */
         if (session->db) {
-            if (session->log)
-                sqlite3_finalize(session->log);
-            if (session->trustword)
-                sqlite3_finalize(session->trustword);
-            if (session->get_identity)
-                sqlite3_finalize(session->get_identity);
-            if (session->get_identity_without_trust_check)
-                sqlite3_finalize(session->get_identity_without_trust_check);
-            if (session->get_identities_by_address)
-                sqlite3_finalize(session->get_identities_by_address);            
-            if (session->get_identities_by_userid)
-                sqlite3_finalize(session->get_identities_by_userid);                
-            if (session->get_identities_by_main_key_id)
-                sqlite3_finalize(session->get_identities_by_main_key_id);                                
-            if (session->get_user_default_key)
-                sqlite3_finalize(session->get_user_default_key);
-            if (session->get_all_keys_for_user)
-                sqlite3_finalize(session->get_all_keys_for_user);                        
-            if (session->get_default_own_userid)
-                sqlite3_finalize(session->get_default_own_userid);
-            if (session->get_userid_alias_default)
-                sqlite3_finalize(session->get_userid_alias_default);
-            if (session->add_userid_alias)
-                sqlite3_finalize(session->add_userid_alias);
-            if (session->replace_identities_fpr)
-                sqlite3_finalize(session->replace_identities_fpr);        
-            if (session->remove_fpr_as_identity_default)
-                sqlite3_finalize(session->remove_fpr_as_identity_default);            
-            if (session->remove_fpr_as_user_default)
-                sqlite3_finalize(session->remove_fpr_as_user_default);            
-            if (session->set_person)
-                sqlite3_finalize(session->set_person);
-            if (session->delete_person)
-                sqlite3_finalize(session->delete_person);                
-            if (session->set_as_pEp_user)
-                sqlite3_finalize(session->set_as_pEp_user);
-            if (session->upgrade_pEp_version_by_user_id)
-                sqlite3_finalize(session->upgrade_pEp_version_by_user_id);
-            if (session->is_pEp_user)
-                sqlite3_finalize(session->is_pEp_user);
-            if (session->exists_person)
-                sqlite3_finalize(session->exists_person);
-            if (session->add_into_social_graph)
-                sqlite3_finalize(session->add_into_social_graph);  
-            if (session->get_own_address_binding_from_contact)
-                sqlite3_finalize(session->get_own_address_binding_from_contact);  
-            if (session->set_revoke_contact_as_notified)
-                sqlite3_finalize(session->set_revoke_contact_as_notified);  
-            if (session->get_contacted_ids_from_revoke_fpr)
-                sqlite3_finalize(session->get_contacted_ids_from_revoke_fpr);  
-            if (session->was_id_for_revoke_contacted)
-                sqlite3_finalize(session->was_id_for_revoke_contacted);  
-            if (session->has_id_contacted_address)
-                sqlite3_finalize(session->has_id_contacted_address);
-            if (session->get_last_contacted)
-                sqlite3_finalize(session->get_last_contacted);                                       
-            if (session->set_pgp_keypair)
-                sqlite3_finalize(session->set_pgp_keypair);
-            if (session->exists_identity_entry)
-                sqlite3_finalize(session->exists_identity_entry);                
-            if (session->set_identity_entry)
-                sqlite3_finalize(session->set_identity_entry);
-            if (session->update_identity_entry)
-                sqlite3_finalize(session->update_identity_entry);    
-            if (session->set_identity_flags)
-                sqlite3_finalize(session->set_identity_flags);
-            if (session->unset_identity_flags)
-                sqlite3_finalize(session->unset_identity_flags);
-            if (session->set_ident_enc_format)
-                sqlite3_finalize(session->set_ident_enc_format);
-            if (session->set_pEp_version)
-                sqlite3_finalize(session->set_pEp_version);                
-            if (session->exists_trust_entry)
-                sqlite3_finalize(session->exists_trust_entry);                                
-            if (session->clear_trust_info)
-                sqlite3_finalize(session->clear_trust_info);                
-            if (session->set_trust)
-                sqlite3_finalize(session->set_trust);
-            if (session->update_trust)
-                sqlite3_finalize(session->update_trust);
-            if (session->update_trust_to_pEp)
-                sqlite3_finalize(session->update_trust_to_pEp);                                                
-            if (session->update_trust_for_fpr)
-                sqlite3_finalize(session->update_trust_for_fpr);
-            if (session->get_trust)
-                sqlite3_finalize(session->get_trust);
-            if (session->get_trust_by_userid)
-                sqlite3_finalize(session->get_trust_by_userid);                
-            if (session->least_trust)
-                sqlite3_finalize(session->least_trust);
-            if (session->mark_compromised)
-                sqlite3_finalize(session->mark_compromised);
-            if (session->crashdump)
-                sqlite3_finalize(session->crashdump);
-            if (session->languagelist)
-                sqlite3_finalize(session->languagelist);
-            if (session->i18n_token)
-                sqlite3_finalize(session->i18n_token);
-            if (session->replace_userid)
-                sqlite3_finalize(session->replace_userid);
-            if (session->delete_key)
-                sqlite3_finalize(session->delete_key);                
-            if (session->replace_main_user_fpr)
-                sqlite3_finalize(session->replace_main_user_fpr);                
-            if (session->replace_main_user_fpr_if_equal)
-                sqlite3_finalize(session->replace_main_user_fpr_if_equal);                                
-            if (session->get_main_user_fpr)
-                sqlite3_finalize(session->get_main_user_fpr);
-            if (session->refresh_userid_default_key)
-                sqlite3_finalize(session->refresh_userid_default_key);
-            if (session->blacklist_add)
-                sqlite3_finalize(session->blacklist_add);
-            if (session->blacklist_delete)
-                sqlite3_finalize(session->blacklist_delete);
-            if (session->blacklist_is_listed)
-                sqlite3_finalize(session->blacklist_is_listed);
-            if (session->blacklist_retrieve)
-                sqlite3_finalize(session->blacklist_retrieve);
-            if (session->own_key_is_listed)
-                sqlite3_finalize(session->own_key_is_listed);
-            if (session->is_own_address)
-                sqlite3_finalize(session->is_own_address);
-            if (session->own_identities_retrieve)
-                sqlite3_finalize(session->own_identities_retrieve);
-            if (session->own_keys_retrieve)
-                sqlite3_finalize(session->own_keys_retrieve);
-            // if (session->set_own_key)
+            sqlite3_finalize(session->log);
+            sqlite3_finalize(session->trustword);
+            sqlite3_finalize(session->get_identity);
+            sqlite3_finalize(session->get_identity_without_trust_check);
+            sqlite3_finalize(session->get_identities_by_address);            
+            sqlite3_finalize(session->get_identities_by_userid);                
+            sqlite3_finalize(session->get_identities_by_main_key_id);                                
+            sqlite3_finalize(session->get_default_identity_fpr);
+            sqlite3_finalize(session->set_default_identity_fpr);
+            sqlite3_finalize(session->get_user_default_key);
+            sqlite3_finalize(session->get_all_keys_for_user);                        
+            sqlite3_finalize(session->get_default_own_userid);
+            sqlite3_finalize(session->get_userid_alias_default);
+            sqlite3_finalize(session->add_userid_alias);
+            sqlite3_finalize(session->replace_identities_fpr);        
+            sqlite3_finalize(session->remove_fpr_as_identity_default);            
+            sqlite3_finalize(session->remove_fpr_as_user_default);            
+            sqlite3_finalize(session->set_person);
+            sqlite3_finalize(session->delete_person);                
+            sqlite3_finalize(session->update_person);
+            sqlite3_finalize(session->set_as_pEp_user);
+            sqlite3_finalize(session->upgrade_pEp_version_by_user_id);
+            sqlite3_finalize(session->is_pEp_user);
+            sqlite3_finalize(session->exists_person);
+            sqlite3_finalize(session->add_into_social_graph);  
+            sqlite3_finalize(session->get_own_address_binding_from_contact);  
+            sqlite3_finalize(session->set_revoke_contact_as_notified);  
+            sqlite3_finalize(session->get_contacted_ids_from_revoke_fpr);  
+            sqlite3_finalize(session->was_id_for_revoke_contacted);  
+            sqlite3_finalize(session->has_id_contacted_address);
+            sqlite3_finalize(session->get_last_contacted);                                       
+            sqlite3_finalize(session->set_pgp_keypair);
+            sqlite3_finalize(session->exists_identity_entry);                
+            sqlite3_finalize(session->set_identity_entry);
+            sqlite3_finalize(session->update_identity_entry);    
+            sqlite3_finalize(session->set_identity_flags);
+            sqlite3_finalize(session->unset_identity_flags);
+            sqlite3_finalize(session->set_ident_enc_format);
+            sqlite3_finalize(session->set_pEp_version);                
+            sqlite3_finalize(session->exists_trust_entry);                                
+            sqlite3_finalize(session->clear_trust_info);                
+            sqlite3_finalize(session->set_trust);
+            sqlite3_finalize(session->update_trust);
+            sqlite3_finalize(session->update_trust_to_pEp);                                                
+            sqlite3_finalize(session->update_trust_for_fpr);
+            sqlite3_finalize(session->get_trust);
+            sqlite3_finalize(session->get_trust_by_userid);                
+            sqlite3_finalize(session->least_trust);
+            sqlite3_finalize(session->mark_compromised);
+            sqlite3_finalize(session->crashdump);
+            sqlite3_finalize(session->languagelist);
+            sqlite3_finalize(session->i18n_token);
+            sqlite3_finalize(session->replace_userid);
+            sqlite3_finalize(session->delete_key);                
+            sqlite3_finalize(session->replace_main_user_fpr);                
+            sqlite3_finalize(session->replace_main_user_fpr_if_equal);                                
+            sqlite3_finalize(session->get_main_user_fpr);
+            sqlite3_finalize(session->refresh_userid_default_key);
+            sqlite3_finalize(session->blacklist_add);
+            sqlite3_finalize(session->blacklist_delete);
+            sqlite3_finalize(session->blacklist_is_listed);
+            sqlite3_finalize(session->blacklist_retrieve);
+            sqlite3_finalize(session->own_key_is_listed);
+            sqlite3_finalize(session->is_own_address);
+            sqlite3_finalize(session->own_identities_retrieve);
+            sqlite3_finalize(session->own_keys_retrieve);
             //     sqlite3_finalize(session->set_own_key);
-            if (session->sequence_value1)
-                sqlite3_finalize(session->sequence_value1);
-            if (session->sequence_value2)
-                sqlite3_finalize(session->sequence_value2);
-            if (session->set_revoked)
-                sqlite3_finalize(session->set_revoked);
-            if (session->get_revoked)
-                sqlite3_finalize(session->get_revoked);
-            if (session->get_replacement_fpr)
-                sqlite3_finalize(session->get_replacement_fpr);                
-            if (session->add_mistrusted_key)
-                sqlite3_finalize(session->add_mistrusted_key);
-            if (session->delete_mistrusted_key)
-                sqlite3_finalize(session->delete_mistrusted_key);
-            if (session->is_mistrusted_key)
-                sqlite3_finalize(session->is_mistrusted_key);
+            sqlite3_finalize(session->sequence_value1);
+            sqlite3_finalize(session->sequence_value2);
+            sqlite3_finalize(session->set_revoked);
+            sqlite3_finalize(session->get_revoked);
+            sqlite3_finalize(session->get_replacement_fpr);                
+            sqlite3_finalize(session->add_mistrusted_key);
+            sqlite3_finalize(session->delete_mistrusted_key);
+            sqlite3_finalize(session->is_mistrusted_key);
                 
             if (session->db) {
                 if (out_last) {
@@ -2763,6 +2758,8 @@ DYNAMIC_API PEP_STATUS log_event(
         const char *comment
     )
 {
+    if (!(session && title && entity))
+        return PEP_ILLEGAL_VALUE;
 
 #if defined(_WIN32) && !defined(NDEBUG)
     log_output_debug(title, entity, description, comment);
@@ -2786,10 +2783,7 @@ DYNAMIC_API PEP_STATUS log_event(
     session->service_log = true;
 
     int result;
-        
-    if (!(session && title && entity))
-        return PEP_ILLEGAL_VALUE;
-    
+
     sqlite3_reset(session->log);
     sqlite3_bind_text(session->log, 1, title, -1, SQLITE_STATIC);
     sqlite3_bind_text(session->log, 2, entity, -1, SQLITE_STATIC);
@@ -3642,7 +3636,7 @@ static PEP_STATUS _set_or_update_identity_entry(PEP_SESSION session,
     sqlite3_reset(set_or_update);
     sqlite3_bind_text(set_or_update, 1, identity->address, -1,
             SQLITE_STATIC);
-    sqlite3_bind_text(set_or_update, 2, identity->fpr, -1,
+    sqlite3_bind_text(set_or_update, 2, EMPTYSTR(identity->fpr) ? NULL : identity->fpr, -1,
             SQLITE_STATIC);
     sqlite3_bind_text(set_or_update, 3, identity->user_id, -1,
             SQLITE_STATIC);
@@ -3676,7 +3670,7 @@ static PEP_STATUS _set_or_update_person(PEP_SESSION session,
                 SQLITE_STATIC);
     else
         sqlite3_bind_null(set_or_update, 3);
-    sqlite3_bind_text(set_or_update, 4, identity->fpr, -1,
+    sqlite3_bind_text(set_or_update, 4, EMPTYSTR(identity->fpr) ? NULL : identity->fpr, -1,
                       SQLITE_STATIC);
     int result = sqlite3_step(set_or_update);
     sqlite3_reset(set_or_update);
@@ -3841,7 +3835,8 @@ pEp_free:
 
 PEP_STATUS update_pEp_user_trust_vals(PEP_SESSION session,
                                       pEp_identity* user) {
-    if (!user->user_id)
+    
+    if (!session || !user || EMPTYSTR(user->user_id))
         return PEP_ILLEGAL_VALUE;
     
     sqlite3_reset(session->update_trust_to_pEp);
@@ -4051,10 +4046,7 @@ PEP_STATUS is_own_address(PEP_SESSION session, const char* address, bool* is_own
         return PEP_ILLEGAL_VALUE;
     
     *is_own_addr = false;
-                
-    if (!session || EMPTYSTR(address))
-        return PEP_ILLEGAL_VALUE;
-        
+
     sqlite3_reset(session->is_own_address);
     sqlite3_bind_text(session->is_own_address, 1, address, -1,
             SQLITE_STATIC);
@@ -4812,6 +4804,99 @@ PEP_STATUS get_main_user_fpr(PEP_SESSION session,
     return status;
 }
 
+DYNAMIC_API PEP_STATUS set_comm_partner_key(PEP_SESSION session,
+                                            pEp_identity *identity,
+                                            const char* fpr) {
+    if (!session || !identity || EMPTYSTR(fpr))
+        return PEP_ILLEGAL_VALUE;
+
+    // update identity upfront - we need the identity to exist in the DB.
+    PEP_STATUS status = update_identity(session, identity);
+    if (status != PEP_OUT_OF_MEMORY) {
+        status = set_default_identity_fpr(session,
+                                          identity->user_id,
+                                          identity->address,
+                                          fpr);
+    }
+    return status;
+}
+
+
+
+PEP_STATUS set_default_identity_fpr(PEP_SESSION session,
+                                    const char* user_id,
+                                    const char* address,
+                                    const char* fpr) {
+
+    if (!session || EMPTYSTR(user_id) || EMPTYSTR(address) || EMPTYSTR(fpr))
+        return PEP_ILLEGAL_VALUE;
+
+    // Make sure fpr is in the management DB
+    PEP_STATUS status = set_pgp_keypair(session, fpr);
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    int result;
+
+    sqlite3_reset(session->set_default_identity_fpr);
+    sqlite3_bind_text(session->set_default_identity_fpr, 1, user_id, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(session->set_default_identity_fpr, 2, address, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(session->set_default_identity_fpr, 3, fpr, -1,
+            SQLITE_STATIC);
+    result = sqlite3_step(session->set_default_identity_fpr);
+    sqlite3_reset(session->set_default_identity_fpr);
+    if (result != SQLITE_DONE)
+        return PEP_CANNOT_SET_PGP_KEYPAIR;
+
+    return PEP_STATUS_OK;
+}
+
+
+
+PEP_STATUS get_default_identity_fpr(PEP_SESSION session, 
+                                    const char* address,                            
+                                    const char* user_id,
+                                    char** main_fpr)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    int result;
+        
+    if (!session || EMPTYSTR(address) || EMPTYSTR(user_id) || !main_fpr)
+        return PEP_ILLEGAL_VALUE;
+        
+    *main_fpr = NULL;
+    
+    sqlite3_reset(session->get_default_identity_fpr);
+    sqlite3_bind_text(session->get_default_identity_fpr, 1, address, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_text(session->get_default_identity_fpr, 2, user_id, -1,
+                      SQLITE_STATIC);
+    result = sqlite3_step(session->get_default_identity_fpr);
+    switch (result) {
+    case SQLITE_ROW: {
+        const char* _fpr = 
+            (const char *) sqlite3_column_text(session->get_default_identity_fpr, 0);
+        if (_fpr) {
+            *main_fpr = strdup(_fpr);
+            if (!(*main_fpr))
+                status = PEP_OUT_OF_MEMORY;
+        }
+        else {
+            status = PEP_KEY_NOT_FOUND;
+        }
+        break;
+    }
+    default:
+        status = PEP_CANNOT_FIND_IDENTITY;
+    }
+
+    sqlite3_reset(session->get_default_identity_fpr);
+    return status;
+}
+
+
 // Deprecated
 DYNAMIC_API PEP_STATUS mark_as_compromized(
         PEP_SESSION session,
@@ -5159,10 +5244,10 @@ DYNAMIC_API PEP_STATUS import_key(
         size_t size,
         identity_list **private_keys)
 {
-    return _import_key_with_fpr_return(session, key_data, size, private_keys, NULL, NULL);
+    return import_key_with_fpr_return(session, key_data, size, private_keys, NULL, NULL);
 }
 
-PEP_STATUS _import_key_with_fpr_return(
+DYNAMIC_API PEP_STATUS import_key_with_fpr_return(
         PEP_SESSION session,
         const char *key_data,
         size_t size,

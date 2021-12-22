@@ -23,7 +23,12 @@ extern "C" {
 //                        If it does not, remove the key from the keyring; the key's 
 //                        status is completely fresh on next contact from the partner.
 //
-//                        If no key is provided, reset the identity default.
+//                        Temporary dirty semantics, in order to workaround the
+//                        problems of key election:
+//                            if the identity is not our own delete every key,
+//                            even ignoring any given FPR.
+//                        (Rationale: any surviving key might end up used in key
+//                        election later).
 //
 //                        Note that reset keys will be removed as defaults for all users and identities.
 //
