@@ -119,10 +119,6 @@ ifeq ($(BUILD_ON),OS/390)
     LDLIBS+=-lzz
 endif
 
-ifeq ($(OPENPGP),SEQUOIA)
-    LDLIBS+=-lsequoia_openpgp_ffi 
-endif
-
 $(TARGET): $(OBJS)
 	${CXX} ${LDFLAGS} -L${PREFIX}/lib -o $@ $^ $(LDLIBS)
 
