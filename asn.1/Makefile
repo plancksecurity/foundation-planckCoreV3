@@ -31,8 +31,14 @@ STORAGE_FILES      = $(addsuffix .asn1, $(STORAGE))
 
 .PHONY: all clean install uninstall
 
-all: Sync.c Distribution.c Storage.c ASN1Message.c
+# Unfortunately the patching logic is non-reentrant, so the rules using asn1c
+# cannot be run in parallel.
+# However the actual building of libasn1.a from existing generated code can
+# proceed in parallel.
+all:
+	$(MAKE) -j1 generate-code-non-parallel
 	$(MAKE) libasn1.a
+generate-code-non-parallel: Sync.c Distribution.c Storage.c ASN1Message.c
 
 libasn1.a: $(ALL_OBJECTS)
 	$(AR) -rc $@ $(ALL_OBJECTS)
@@ -43,21 +49,25 @@ libasn1.a: $(ALL_OBJECTS)
 Sync.c: $(SYNC_FILES) $(DISTRIBUTION_FILES) pEp.asn1
 	$(ASN1C) -gen-PER $(ASN1C_OPTIONS) $+
 	rm -f converter-sample.c
+	./patch-generated-c-files || exit 1
 	touch Sync.c
 
 Distribution.c: $(DISTRIBUTION_FILES) pEp.asn1
 	$(ASN1C) -gen-PER $(ASN1C_OPTIONS) $+
 	rm -f converter-sample.c
+	./patch-generated-c-files || exit 1
 	touch Distribution.c
 
 Storage.c: $(STORAGE_FILES) pEp.asn1
 	$(ASN1C) -gen-PER $(ASN1C_OPTIONS) $+
 	rm -f converter-sample.c
+	./patch-generated-c-files || exit 1
 	touch Storage.c
 
 ASN1Message.c: message.asn1 pEp.asn1
 	$(ASN1C) -gen-PER $(ASN1C_OPTIONS) $+
 	rm -f converter-sample.c
+	./patch-generated-c-files || exit 1
 	touch ASN1Message.c
 
 clean:
