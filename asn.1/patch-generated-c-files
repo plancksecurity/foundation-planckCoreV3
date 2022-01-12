@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Replace #include <...> with #include "" for ASN.1-related headers.
+#
+# This is useful when an installed header is handled out of the engine:
+# ASN.1-generated headers will refer other installed headers in the same
+# directory they are, which in practice will be $SOMEPREFIX/pEp , and not
+# just $SOMEPREFIX.
+temporaryfile=$(tempfile)
+for f in *.[ch]; do
+    sed 's/#include <\(\(asn\|.er\|constr\|NativeInteger\|INTEGER\|OCTET_STRING\)[^>]*\)>/#include "\1"/' \
+        < "$f" > "$temporaryfile" \
+        && mv "$temporaryfile" "$f" \
+        && echo "Patched $f" \
+        || (echo "Failed patching $f: see $temporaryfile"; exit 1)
+done
