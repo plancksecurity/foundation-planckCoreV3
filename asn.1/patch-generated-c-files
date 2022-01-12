@@ -6,7 +6,7 @@
 # ASN.1-generated headers will refer other installed headers in the same
 # directory they are, which in practice will be $SOMEPREFIX/pEp , and not
 # just $SOMEPREFIX.
-temporaryfile=$(tempfile)
+temporaryfile=$(mktemp /tmp/patch-XXXXXXXX)
 for f in *.[ch]; do
     sed 's/#include <\(\(asn\|.er\|constr\|NativeInteger\|INTEGER\|OCTET_STRING\)[^>]*\)>/#include "\1"/' \
         < "$f" > "$temporaryfile" \
