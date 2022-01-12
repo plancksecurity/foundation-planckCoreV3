@@ -346,6 +346,7 @@ bloblist_t *PBlobList_to_bloblist(
  *  
  */
 
+DYNAMIC_API
 ASN1Message_t *ASN1Message_from_message(
         message *msg,
         ASN1Message_t *result,
@@ -371,6 +372,7 @@ ASN1Message_t *ASN1Message_from_message(
  *  
  */
 
+DYNAMIC_API
 message *ASN1Message_to_message(
         ASN1Message_t *msg,
         message *result,
