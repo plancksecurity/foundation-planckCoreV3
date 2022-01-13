@@ -119,7 +119,7 @@ HEADERS_TO_INSTALL = \
   timestamp.h identity_list.h bloblist.h stringpair.h message.h mime.h group.h \
   cryptotech.h sync_api.h pEp_string.h openpgp_compat.h engine_sql.h \
   labeled_int_list.h key_reset.h base64.h sync_codec.h distribution_codec.h \
-  storage_codec.h status_to_string.h keyreset_command.h \
+  storage_codec.h status_to_string.h keyreset_command.h tka_api.h \
   map_asn1.h \
   platform.h platform_unix.h platform_windows.h platform_zos.h \
   transport.h growing_buf.h $(wildcard ../asn.1/*.h)
