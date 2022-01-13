@@ -119,6 +119,8 @@
 #include "sync_api.h"
 #include "Sync_func.h"
 
+#include "tka_api.h"
+
 
 #define NOT_IMPLEMENTED assert(0); return PEP_UNKNOWN_ERROR;
 
@@ -294,6 +296,7 @@ struct _pEpSession {
     inject_sync_event_t inject_sync_event;
     retrieve_next_sync_event_t retrieve_next_sync_event;
     ensure_passphrase_t ensure_passphrase;
+    tka_keychange_t tka_keychange;
 
     // pEp Sync
     void *sync_management;
