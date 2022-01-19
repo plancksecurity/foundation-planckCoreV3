@@ -112,15 +112,16 @@ libpEpEngine.a: $(ALL_OBJECTS)
 clean:
 	rm -f *.d *.o *.a $(TARGET) *.dll *.so *.zip *.d.* *.def *~
 	rm -Rf $(TARGET).dSYM
-	rm -f KeySync_fsm.* Sync_actions.c Sync_event.* Sync_func.* Sync_impl.* sync_codec.* distribution_codec.* storage_codec.*
+	rm -f *_{event,impl,fsm,func}.[ch]
 
 HEADERS_TO_INSTALL = \
   pEpEngine.h keymanagement.h message_api.h dynamic_api.h stringlist.h \
   timestamp.h identity_list.h bloblist.h stringpair.h message.h mime.h group.h \
   cryptotech.h sync_api.h pEp_string.h openpgp_compat.h engine_sql.h \
   labeled_int_list.h key_reset.h base64.h sync_codec.h distribution_codec.h \
-  storage_codec.h status_to_string.h keyreset_command.h platform.h \
-  platform_unix.h platform_windows.h platform_zos.h \
+  storage_codec.h status_to_string.h keyreset_command.h \
+  map_asn1.h \
+  platform.h platform_unix.h platform_windows.h platform_zos.h \
   transport.h growing_buf.h $(wildcard ../asn.1/*.h)
 
 # CAVEAT:

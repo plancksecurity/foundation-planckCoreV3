@@ -286,13 +286,13 @@ protocol session {
     }
 
 
-    method mark_as_compromized doc="deprecated to fix misspelling. Please move to mark_as_compromised"
+    method mark_as_compromized doc="deprecated to fix misspelling. Please move to mark_as_compromised";
 
 
     method import_key_with_fpr_return 
     doc="""
         import keys from data, return optional list of fprs imported
-        """;
+        """
     {
         // parms
 
@@ -495,7 +495,7 @@ protocol session {
     {
         // exceptions
 
-        throws char* doc="path to actual per user directory";
+        throws char doc="path to actual per user directory";
         
         throws NULL doc="on failure";
     }
@@ -504,7 +504,7 @@ protocol session {
     {
         // exceptions
 
-        throws char* doc="path to actual per machine directory";
+        throws char doc="path to actual per machine directory";
         
         throws NULL doc="on failure";
     }

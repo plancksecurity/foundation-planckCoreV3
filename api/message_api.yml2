@@ -110,7 +110,7 @@ protocol session {
     {
         // parms
 
-        lend message src
+        supply message src
         doc="""
             message to encrypt - usually in-only, but can be in-out for
             unencrypted messages; in that case, we may attach the key and
@@ -267,7 +267,7 @@ protocol session {
     {
         // parms
 
-        lend message src
+        support message src
         doc="""
             message to decrypt. 
             The ownership of src remains with the caller - HOWEVER, the contents 
@@ -291,7 +291,7 @@ protocol session {
 
         create message dst doc="pointer to new decrypted message or empty on failure";
 
-        lend hash_list keylist
+        supply hash_list keylist
         doc="""
             in: stringlist with additional keyids for reencryption if needed
                 (will be freed and replaced with output keylist)
