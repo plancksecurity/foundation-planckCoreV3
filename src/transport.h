@@ -120,6 +120,7 @@ struct _PEP_transport_t {
     bool shortmsg_supported;
     bool longmsg_supported;
     bool longmsg_formatted_supported;
+    bool encrypting;
 
     PEP_text_format native_text_format;     // native format of the transport
 };
