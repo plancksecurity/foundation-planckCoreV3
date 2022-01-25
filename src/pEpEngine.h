@@ -21,12 +21,14 @@ extern "C" {
 #define PEP_VERSION "2.1" // pEp *protocol* version
 
 // RELEASE version this targets
-// (string: major.minor.patch)
-#define PEP_ENGINE_VERSION "2.1.51"
+// (string: major.minor.patch[RCrc])
+#define PEP_ENGINE_VERSION "2.1.51RC1"
 #define PEP_ENGINE_VERSION_MAJOR 2
 #define PEP_ENGINE_VERSION_MINOR 1
 #define PEP_ENGINE_VERSION_PATCH 51
-#define PEP_ENGINE_VERSION_RC    0
+// This should be the index of the last already released RC.  In practice, if
+// the release candidate N has just been tagged, this should be defined as N+1.
+#define PEP_ENGINE_VERSION_RC    1
 
 
 #define PEP_OWN_USERID "pEp_own_userId"
