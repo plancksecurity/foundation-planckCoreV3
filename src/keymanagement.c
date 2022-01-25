@@ -736,6 +736,11 @@ PEP_STATUS _update_identity(
     if (!(session && identity && !EMPTYSTR(identity->address)))
         return PEP_ILLEGAL_VALUE;
 
+    /* The fpr field is output only: in case it was set, unset it before doing
+       anything else. */
+    free(identity->fpr);
+    identity->fpr = NULL;
+
     char* default_own_id = NULL;
     status = get_default_own_userid(session, &default_own_id);    
 
@@ -1241,6 +1246,13 @@ PEP_STATUS _myself(PEP_SESSION session,
     if (!session || !identity || EMPTYSTR(identity->address))
         return PEP_ILLEGAL_VALUE;
 
+    // ignore input fpr
+
+    if (identity->fpr) {
+        free(identity->fpr);
+        identity->fpr = NULL;
+    }
+
     // this is leading to crashes otherwise
 
     if (!(identity->user_id && identity->user_id[0])) {
@@ -1329,13 +1341,6 @@ PEP_STATUS _myself(PEP_SESSION session,
                 goto pEp_free;
             }
         }
-    }
-
-    // ignore input fpr
-
-    if (identity->fpr) {
-        free(identity->fpr);
-        identity->fpr = NULL;
     }
 
     // check stored identity

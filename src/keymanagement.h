@@ -94,10 +94,8 @@ PEP_STATUS _update_identity(
 //      session (in)        session to use
 //      identity (inout)    identity of local user
 //                          both .address and .user_id must be set.
-//                          if .fpr is set, an attempt will be made to make
-//                          that the default key for this identity after key
-//                          validation
-//                          if .fpr is not set, key retrieval is performed
+//                          The .fpr field is output-only, and any value set at
+//                          input is ignored; it is set by key retrieval;
 //                          If .username is set, it will be used to set or patch
 //                          the username record for this identity.                         
 //
