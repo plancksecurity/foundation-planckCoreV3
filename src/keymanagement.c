@@ -636,6 +636,11 @@ DYNAMIC_API PEP_STATUS update_identity(
     if (!(session && identity && !EMPTYSTR(identity->address)))
         return PEP_ILLEGAL_VALUE;
 
+    /* The fpr field is output only: in case it was set, unset it before doing
+       anything else. */
+    free(identity->fpr);
+    identity->fpr = NULL;
+
     //
     // Record some information about the input identity so that we don't keep 
     // evaluating it
@@ -1019,6 +1024,13 @@ PEP_STATUS _myself(PEP_SESSION session,
     if (!session || !identity || EMPTYSTR(identity->address))
         return PEP_ILLEGAL_VALUE;
 
+    // ignore input fpr
+
+    if (identity->fpr) {
+        free(identity->fpr);
+        identity->fpr = NULL;
+    }
+
     // this leads to crashes otherwise
 
     if (EMPTYSTR(identity->user_id)) {
@@ -1116,13 +1128,6 @@ PEP_STATUS _myself(PEP_SESSION session,
                 goto pEp_free;
             }
         }
-    }
-
-    // ignore input fpr
-
-    if (identity->fpr) {
-        free(identity->fpr);
-        identity->fpr = NULL;
     }
 
     // check stored identity
