@@ -2611,7 +2611,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     // }
 
     char* target_fpr = target_id->fpr;
-    if (!target_fpr)
+    if (EMPTYSTR (target_fpr))
         return PEP_KEY_NOT_FOUND; // FIXME: Error condition
  
     // is a passphrase needed?
