@@ -2005,7 +2005,7 @@ static PEP_STATUS _update_state_for_ident_list(
                                                true,
                                                true);
                                                
-                    if (status != PEP_STATUS_OK || _il->ident->fpr == NULL) {
+                    if (status != PEP_STATUS_OK || EMPTYSTR (_il->ident->fpr)) {
                         _il->ident->comm_type = PEP_ct_key_not_found;
                         status = PEP_STATUS_OK;                        
                     }
