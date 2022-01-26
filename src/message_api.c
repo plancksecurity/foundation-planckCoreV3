@@ -1990,7 +1990,7 @@ static PEP_STATUS _update_state_for_ident_list(
             }
             
             bool is_blacklisted = false;
-            if (_il->ident->fpr && IS_PGP_CT(_il->ident->comm_type)) {
+            if (! EMPTYSTR (_il->ident->fpr) && IS_PGP_CT(_il->ident->comm_type)) {
                 status = blacklist_is_listed(session, _il->ident->fpr, &is_blacklisted);
                 if (status != PEP_STATUS_OK) {
                     // DB error
