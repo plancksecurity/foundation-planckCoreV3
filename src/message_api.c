@@ -2598,7 +2598,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         if (status != PEP_STATUS_OK)
             goto pEp_error;
     }
-    else if (!target_id->fpr) {
+    else if (EMPTYSTR (target_id->fpr)) {
         return PEP_ILLEGAL_VALUE;
     }
     
