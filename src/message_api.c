@@ -1809,8 +1809,8 @@ void attach_own_key(PEP_SESSION session, message *msg)
     if (msg->dir == PEP_dir_incoming)
         return;
 
-    assert(msg->from && msg->from->fpr);
-    if (msg->from == NULL || msg->from->fpr == NULL)
+    assert(msg->from && ! EMPTYSTR (msg->from->fpr));
+    if (msg->from == NULL || EMPTYSTR (msg->from->fpr))
         return;
 
     if (_attach_key(session, msg->from->fpr, msg, "file://sender_key.asc") != PEP_STATUS_OK)
