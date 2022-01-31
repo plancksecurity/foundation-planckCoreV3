@@ -1,6 +1,12 @@
 # 1st Party Dependencies
 ## Prefer git tags instead of SHA hashes when possible.
-sequoia=openpgp/v1.7.0
-pEpEngineSequoiaBackend=9d04816d381111cc770d92d92ba510bbe7a0b794
+
+# Temporarily re-enabled, in order to have the old-style FFI that works on
+# every platform.
+sequoia=openpgp/v1.3.1
+
+# Temporarily disabled
+# pEpEngineSequoiaBackend=9d04816d381111cc770d92d92ba510bbe7a0b794
+
 yml2=2.7.1
 libpEpTransport=5738d9f0703215d923d396fa1720631a7003f284
