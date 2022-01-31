@@ -1,5 +1,5 @@
 # 1st Party Dependencies
 ## Prefer git tags instead of SHA hashes when possible.
-
-sequoia=openpgp/v1.3.1
+# This is a sequoia version with the old-style FFI, pre-pEpEngineSequoiaBackend
+sequoia=openpgp/v1.6.0
 yml2=2.7.0
