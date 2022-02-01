@@ -15,6 +15,13 @@
 #include <sqlite3.h>
 #endif
 
+void
+reset_and_clear_bindings(sqlite3_stmt *s)
+{
+    sqlite3_reset(s);
+    sqlite3_clear_bindings(s);
+} 
+
 static volatile int init_count = -1;
 
 // sql overloaded functions - modified from sqlite3.c
@@ -930,7 +937,7 @@ static PEP_STATUS upgrade_revoc_contact_to_13(PEP_SESSION session) {
             int_result = sqlite3_step(update_revoked_w_addr_stmt);
             assert(int_result == SQLITE_DONE);
 
-            sqlite3_reset(update_revoked_w_addr_stmt);
+            reset_and_clear_bindings(update_revoked_w_addr_stmt);
 
             if (int_result != SQLITE_DONE)
                 return PEP_UNKNOWN_DB_ERROR;
@@ -2784,7 +2791,7 @@ DYNAMIC_API PEP_STATUS log_event(
 
     int result;
 
-    sqlite3_reset(session->log);
+    reset_and_clear_bindings(session->log);
     sqlite3_bind_text(session->log, 1, title, -1, SQLITE_STATIC);
     sqlite3_bind_text(session->log, 2, entity, -1, SQLITE_STATIC);
     if (description)
@@ -2796,7 +2803,7 @@ DYNAMIC_API PEP_STATUS log_event(
     else
         sqlite3_bind_null(session->log, 4);
     result = sqlite3_step(session->log);
-    sqlite3_reset(session->log);
+    reset_and_clear_bindings(session->log);
     
 #endif
     return PEP_STATUS_OK; // We ignore errors for this function.
@@ -2842,7 +2849,7 @@ DYNAMIC_API PEP_STATUS trustword(
             || (lang[1] >= 'a' && lang[1] <= 'z'));
     assert(lang[2] == 0);
 
-    sqlite3_reset(session->trustword);
+    reset_and_clear_bindings(session->trustword);
     sqlite3_bind_text(session->trustword, 1, lang, -1, SQLITE_STATIC);
     sqlite3_bind_int(session->trustword, 2, value);
 
@@ -2857,7 +2864,7 @@ DYNAMIC_API PEP_STATUS trustword(
     } else
         status = PEP_TRUSTWORD_NOT_FOUND;
 
-    sqlite3_reset(session->trustword);
+    reset_and_clear_bindings(session->trustword);
     return status;
 }
 
@@ -3034,7 +3041,7 @@ DYNAMIC_API PEP_STATUS get_default_own_userid(
     PEP_STATUS status = PEP_STATUS_OK;
     char* retval = NULL;
     
-    sqlite3_reset(session->get_default_own_userid);
+    reset_and_clear_bindings(session->get_default_own_userid);
 
     const int result = sqlite3_step(session->get_default_own_userid);
     const char* id;
@@ -3059,7 +3066,7 @@ DYNAMIC_API PEP_STATUS get_default_own_userid(
 
     *userid = retval;
 
-    sqlite3_reset(session->get_default_own_userid);
+    reset_and_clear_bindings(session->get_default_own_userid);
     
     return status;
 }
@@ -3075,7 +3082,7 @@ DYNAMIC_API PEP_STATUS get_userid_alias_default(
     PEP_STATUS status = PEP_STATUS_OK;
     char* retval = NULL;
 
-    sqlite3_reset(session->get_userid_alias_default);
+    reset_and_clear_bindings(session->get_userid_alias_default);
     sqlite3_bind_text(session->get_userid_alias_default, 1, alias_id, -1, SQLITE_STATIC);
 
     const char* tempid;
@@ -3098,7 +3105,7 @@ DYNAMIC_API PEP_STATUS get_userid_alias_default(
         *default_id = NULL;
     }
 
-    sqlite3_reset(session->get_userid_alias_default);
+    reset_and_clear_bindings(session->get_userid_alias_default);
     return status;            
 }
 
@@ -3115,7 +3122,7 @@ DYNAMIC_API PEP_STATUS set_userid_alias (
     
     sqlite3_exec(session->db, "BEGIN TRANSACTION ;", NULL, NULL, NULL);
 
-    sqlite3_reset(session->add_userid_alias);
+    reset_and_clear_bindings(session->add_userid_alias);
     sqlite3_bind_text(session->add_userid_alias, 1, default_id, -1,
             SQLITE_STATIC);
     sqlite3_bind_text(session->add_userid_alias, 2, alias_id, -1,
@@ -3123,7 +3130,7 @@ DYNAMIC_API PEP_STATUS set_userid_alias (
         
     result = sqlite3_step(session->add_userid_alias);
 
-    sqlite3_reset(session->add_userid_alias);
+    reset_and_clear_bindings(session->add_userid_alias);
     if (result != SQLITE_DONE) {
         sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);        
         return PEP_CANNOT_SET_ALIAS;
@@ -3149,7 +3156,7 @@ DYNAMIC_API PEP_STATUS get_identity(
 
     *identity = NULL;
 
-    sqlite3_reset(session->get_identity);
+    reset_and_clear_bindings(session->get_identity);
     sqlite3_bind_text(session->get_identity, 1, address, -1, SQLITE_STATIC);
     sqlite3_bind_text(session->get_identity, 2, user_id, -1, SQLITE_STATIC);
 
@@ -3164,7 +3171,7 @@ DYNAMIC_API PEP_STATUS get_identity(
                 );
         assert(_identity);
         if (_identity == NULL) {
-            sqlite3_reset(session->get_identity);
+            reset_and_clear_bindings(session->get_identity);
             return PEP_OUT_OF_MEMORY;
         }
 
@@ -3193,12 +3200,12 @@ DYNAMIC_API PEP_STATUS get_identity(
         *identity = _identity;
         break;
     default:
-        sqlite3_reset(session->get_identity);
+        reset_and_clear_bindings(session->get_identity);
         status = PEP_CANNOT_FIND_IDENTITY;
         *identity = NULL;
     }
 
-    sqlite3_reset(session->get_identity);
+    reset_and_clear_bindings(session->get_identity);
     return status;
 }
 
@@ -3217,7 +3224,7 @@ PEP_STATUS get_identities_by_userid(
 
     *identities = new_identity_list(NULL);
 
-    sqlite3_reset(session->get_identities_by_userid);
+    reset_and_clear_bindings(session->get_identities_by_userid);
     sqlite3_bind_text(session->get_identities_by_userid, 1, user_id, -1, SQLITE_STATIC);
 
     int result = -1;
@@ -3243,7 +3250,7 @@ PEP_STATUS get_identities_by_userid(
                 
         assert(ident);
         if (ident == NULL) {
-            sqlite3_reset(session->get_identities_by_userid);
+            reset_and_clear_bindings(session->get_identities_by_userid);
             return PEP_OUT_OF_MEMORY;
         }
 
@@ -3281,7 +3288,7 @@ PEP_STATUS get_identities_by_userid(
         status = PEP_CANNOT_FIND_IDENTITY;
     }
             
-    sqlite3_reset(session->get_identities_by_userid);
+    reset_and_clear_bindings(session->get_identities_by_userid);
 
     return status;
 }
@@ -3301,7 +3308,7 @@ PEP_STATUS get_identities_by_main_key_id(
 
     *identities = new_identity_list(NULL);
 
-    sqlite3_reset(session->get_identities_by_main_key_id);
+    reset_and_clear_bindings(session->get_identities_by_main_key_id);
     sqlite3_bind_text(session->get_identities_by_main_key_id, 1, fpr, -1, SQLITE_STATIC);
 
     int result = -1;
@@ -3316,7 +3323,7 @@ PEP_STATUS get_identities_by_main_key_id(
                 
         assert(ident);
         if (ident == NULL) {
-            sqlite3_reset(session->get_identities_by_main_key_id);
+            reset_and_clear_bindings(session->get_identities_by_main_key_id);
             return PEP_OUT_OF_MEMORY;
         }
 
@@ -3353,7 +3360,7 @@ PEP_STATUS get_identities_by_main_key_id(
         status = PEP_CANNOT_FIND_IDENTITY;
     }
             
-    sqlite3_reset(session->get_identities_by_main_key_id);
+    reset_and_clear_bindings(session->get_identities_by_main_key_id);
 
     return status;
 }
@@ -3373,7 +3380,7 @@ PEP_STATUS get_identity_without_trust_check(
 
     *identity = NULL;
 
-    sqlite3_reset(session->get_identity_without_trust_check);
+    reset_and_clear_bindings(session->get_identity_without_trust_check);
     sqlite3_bind_text(session->get_identity_without_trust_check, 1, address, -1, SQLITE_STATIC);
     sqlite3_bind_text(session->get_identity_without_trust_check, 2, user_id, -1, SQLITE_STATIC);
 
@@ -3388,7 +3395,7 @@ PEP_STATUS get_identity_without_trust_check(
                 );
         assert(_identity);
         if (_identity == NULL) {
-            sqlite3_reset(session->get_identity_without_trust_check);
+            reset_and_clear_bindings(session->get_identity_without_trust_check);
             return PEP_OUT_OF_MEMORY;
         }
 
@@ -3421,7 +3428,7 @@ PEP_STATUS get_identity_without_trust_check(
         *identity = NULL;
     }
 
-    sqlite3_reset(session->get_identity_without_trust_check);
+    reset_and_clear_bindings(session->get_identity_without_trust_check);
     return status;
 }
 
@@ -3439,7 +3446,7 @@ PEP_STATUS get_identities_by_address(
     *id_list = NULL;
     identity_list* ident_list = NULL;
 
-    sqlite3_reset(session->get_identities_by_address);
+    reset_and_clear_bindings(session->get_identities_by_address);
     sqlite3_bind_text(session->get_identities_by_address, 1, address, -1, SQLITE_STATIC);
     int result;
 
@@ -3454,7 +3461,7 @@ PEP_STATUS get_identities_by_address(
                 );
         assert(ident);
         if (ident == NULL) {
-            sqlite3_reset(session->get_identities_by_address);
+            reset_and_clear_bindings(session->get_identities_by_address);
             return PEP_OUT_OF_MEMORY;
         }
 
@@ -3487,7 +3494,7 @@ PEP_STATUS get_identities_by_address(
             ident_list = new_identity_list(ident);
     }
 
-    sqlite3_reset(session->get_identities_by_address);
+    reset_and_clear_bindings(session->get_identities_by_address);
     
     *id_list = ident_list;
     
@@ -3506,7 +3513,7 @@ PEP_STATUS exists_identity_entry(PEP_SESSION session, pEp_identity* identity,
     
     PEP_STATUS status = PEP_STATUS_OK;
     
-    sqlite3_reset(session->exists_identity_entry);
+    reset_and_clear_bindings(session->exists_identity_entry);
     sqlite3_bind_text(session->exists_identity_entry, 1, identity->address, -1,
                       SQLITE_STATIC);
     sqlite3_bind_text(session->exists_identity_entry, 2, identity->user_id, -1,
@@ -3524,7 +3531,7 @@ PEP_STATUS exists_identity_entry(PEP_SESSION session, pEp_identity* identity,
             status = PEP_UNKNOWN_DB_ERROR;
     }
 
-    sqlite3_reset(session->exists_identity_entry);
+    reset_and_clear_bindings(session->exists_identity_entry);
     return status;
 }
 
@@ -3537,7 +3544,7 @@ PEP_STATUS exists_trust_entry(PEP_SESSION session, pEp_identity* identity,
     
     PEP_STATUS status = PEP_STATUS_OK;
     
-    sqlite3_reset(session->exists_trust_entry);
+    reset_and_clear_bindings(session->exists_trust_entry);
     sqlite3_bind_text(session->exists_trust_entry, 1, identity->user_id, -1,
                       SQLITE_STATIC);
     sqlite3_bind_text(session->exists_trust_entry, 2, identity->fpr, -1,
@@ -3554,7 +3561,7 @@ PEP_STATUS exists_trust_entry(PEP_SESSION session, pEp_identity* identity,
             status = PEP_UNKNOWN_DB_ERROR;
     }
     
-    sqlite3_reset(session->exists_trust_entry);
+    reset_and_clear_bindings(session->exists_trust_entry);
     return status;
 }
 
@@ -3564,11 +3571,11 @@ PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr) {
         
     int result;
     
-    sqlite3_reset(session->set_pgp_keypair);
+    reset_and_clear_bindings(session->set_pgp_keypair);
     sqlite3_bind_text(session->set_pgp_keypair, 1, fpr, -1,
             SQLITE_STATIC);
     result = sqlite3_step(session->set_pgp_keypair);
-    sqlite3_reset(session->set_pgp_keypair);
+    reset_and_clear_bindings(session->set_pgp_keypair);
     if (result != SQLITE_DONE) {
         return PEP_CANNOT_SET_PGP_KEYPAIR;
     }
@@ -3584,13 +3591,13 @@ PEP_STATUS clear_trust_info(PEP_SESSION session,
         
     int result;
     
-    sqlite3_reset(session->clear_trust_info);
+    reset_and_clear_bindings(session->clear_trust_info);
     sqlite3_bind_text(session->clear_trust_info, 1, user_id, -1,
             SQLITE_STATIC);    
     sqlite3_bind_text(session->clear_trust_info, 2, fpr, -1,
             SQLITE_STATIC);
     result = sqlite3_step(session->clear_trust_info);
-    sqlite3_reset(session->clear_trust_info);
+    reset_and_clear_bindings(session->clear_trust_info);
     if (result != SQLITE_DONE) {
         return PEP_UNKNOWN_ERROR;
     }
@@ -3611,7 +3618,7 @@ static PEP_STATUS _set_or_update_trust(PEP_SESSION session,
         
     int result;
                 
-    sqlite3_reset(set_or_update);
+    reset_and_clear_bindings(set_or_update);
     sqlite3_bind_text(set_or_update, 1, identity->user_id, -1,
             SQLITE_STATIC);
     sqlite3_bind_text(set_or_update, 2, identity->fpr, -1,
@@ -3619,7 +3626,7 @@ static PEP_STATUS _set_or_update_trust(PEP_SESSION session,
     sqlite3_bind_int(set_or_update, 3, identity->comm_type);
     result = sqlite3_step(set_or_update);
     assert(result == SQLITE_DONE);
-    sqlite3_reset(set_or_update);
+    reset_and_clear_bindings(set_or_update);
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_TRUST;
 
@@ -3633,7 +3640,7 @@ static PEP_STATUS _set_or_update_identity_entry(PEP_SESSION session,
     if (!session || !identity || !identity->user_id || !identity->address)
         return PEP_ILLEGAL_VALUE;
                                               
-    sqlite3_reset(set_or_update);
+    reset_and_clear_bindings(set_or_update);
     sqlite3_bind_text(set_or_update, 1, identity->address, -1,
             SQLITE_STATIC);
     sqlite3_bind_text(set_or_update, 2, EMPTYSTR(identity->fpr) ? NULL : identity->fpr, -1,
@@ -3646,7 +3653,7 @@ static PEP_STATUS _set_or_update_identity_entry(PEP_SESSION session,
     sqlite3_bind_int(set_or_update, 7, identity->minor_ver);
         
     int result = sqlite3_step(set_or_update);
-    sqlite3_reset(set_or_update);
+    reset_and_clear_bindings(set_or_update);
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_IDENTITY;
     
@@ -3660,7 +3667,7 @@ static PEP_STATUS _set_or_update_person(PEP_SESSION session,
     if (!session || !identity || !identity->user_id || !identity->username)
         return PEP_ILLEGAL_VALUE;
         
-    sqlite3_reset(set_or_update);
+    reset_and_clear_bindings(set_or_update);
     sqlite3_bind_text(set_or_update, 1, identity->user_id, -1,
             SQLITE_STATIC);
     sqlite3_bind_text(set_or_update, 2, identity->username, -1,
@@ -3673,7 +3680,7 @@ static PEP_STATUS _set_or_update_person(PEP_SESSION session,
     sqlite3_bind_text(set_or_update, 4, EMPTYSTR(identity->fpr) ? NULL : identity->fpr, -1,
                       SQLITE_STATIC);
     int result = sqlite3_step(set_or_update);
-    sqlite3_reset(set_or_update);
+    reset_and_clear_bindings(set_or_update);
     
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_PERSON;
@@ -3779,11 +3786,11 @@ DYNAMIC_API PEP_STATUS set_identity(
     }
 
     if (has_fpr) {
-        sqlite3_reset(session->set_pgp_keypair);
+        reset_and_clear_bindings(session->set_pgp_keypair);
         sqlite3_bind_text(session->set_pgp_keypair, 1, identity->fpr, -1,
                 SQLITE_STATIC);
         result = sqlite3_step(session->set_pgp_keypair);
-        sqlite3_reset(session->set_pgp_keypair);
+        reset_and_clear_bindings(session->set_pgp_keypair);
         if (result != SQLITE_DONE) {
             sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
             return PEP_CANNOT_SET_PGP_KEYPAIR;
@@ -3839,11 +3846,11 @@ PEP_STATUS update_pEp_user_trust_vals(PEP_SESSION session,
     if (!session || !user || EMPTYSTR(user->user_id))
         return PEP_ILLEGAL_VALUE;
     
-    sqlite3_reset(session->update_trust_to_pEp);
+    reset_and_clear_bindings(session->update_trust_to_pEp);
     sqlite3_bind_text(session->update_trust_to_pEp, 1, user->user_id, -1,
             SQLITE_STATIC);
     int result = sqlite3_step(session->update_trust_to_pEp);
-    sqlite3_reset(session->update_trust_to_pEp);
+    reset_and_clear_bindings(session->update_trust_to_pEp);
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_TRUST;
 
@@ -3872,11 +3879,11 @@ DYNAMIC_API PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user) 
         status = set_person(session, user, true);
         
     // Ok, let's set it.
-    sqlite3_reset(session->set_as_pEp_user);
+    reset_and_clear_bindings(session->set_as_pEp_user);
     sqlite3_bind_text(session->set_as_pEp_user, 1, user->user_id, -1,
             SQLITE_STATIC);
     int result = sqlite3_step(session->set_as_pEp_user);
-    sqlite3_reset(session->set_as_pEp_user);
+    reset_and_clear_bindings(session->set_as_pEp_user);
     
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_PERSON;
@@ -3892,7 +3899,7 @@ PEP_STATUS set_pEp_version(PEP_SESSION session, pEp_identity* ident, unsigned in
     if (!session || !ident || EMPTYSTR(ident->user_id) || EMPTYSTR(ident->address))
         return PEP_ILLEGAL_VALUE;
 
-    sqlite3_reset(session->set_pEp_version);
+    reset_and_clear_bindings(session->set_pEp_version);
     sqlite3_bind_double(session->set_pEp_version, 1, new_ver_major);
     sqlite3_bind_double(session->set_pEp_version, 2, new_ver_minor);    
     sqlite3_bind_text(session->set_pEp_version, 3, ident->address, -1,
@@ -3901,7 +3908,7 @@ PEP_STATUS set_pEp_version(PEP_SESSION session, pEp_identity* ident, unsigned in
             SQLITE_STATIC);
     
     int result = sqlite3_step(session->set_pEp_version);
-    sqlite3_reset(session->set_pEp_version);
+    reset_and_clear_bindings(session->set_pEp_version);
         
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_PEP_VERSION;
@@ -3920,14 +3927,14 @@ PEP_STATUS upgrade_pEp_version_by_user_id(PEP_SESSION session,
     if (!session || !ident || EMPTYSTR(ident->user_id))
         return PEP_ILLEGAL_VALUE;
     
-    sqlite3_reset(session->upgrade_pEp_version_by_user_id);
+    reset_and_clear_bindings(session->upgrade_pEp_version_by_user_id);
     sqlite3_bind_int(session->upgrade_pEp_version_by_user_id, 1, new_ver_major);
     sqlite3_bind_int(session->upgrade_pEp_version_by_user_id, 2, new_ver_minor);    
     sqlite3_bind_text(session->upgrade_pEp_version_by_user_id, 3, ident->user_id, -1,
             SQLITE_STATIC);
     
     int result = sqlite3_step(session->upgrade_pEp_version_by_user_id);
-    sqlite3_reset(session->upgrade_pEp_version_by_user_id);
+    reset_and_clear_bindings(session->upgrade_pEp_version_by_user_id);
         
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_PEP_VERSION;
@@ -3949,7 +3956,7 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity,
     PEP_STATUS status = get_userid_alias_default(session, user_id, &alias_default);
     
     if (status == PEP_CANNOT_FIND_ALIAS || EMPTYSTR(alias_default)) {
-        sqlite3_reset(session->exists_person);
+        reset_and_clear_bindings(session->exists_person);
         sqlite3_bind_text(session->exists_person, 1, user_id, -1,
                 SQLITE_STATIC);
         int result = sqlite3_step(session->exists_person);
@@ -3961,10 +3968,10 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity,
                 break;
             }
             default:
-                sqlite3_reset(session->exists_person);
+                reset_and_clear_bindings(session->exists_person);
                 return PEP_UNKNOWN_DB_ERROR;
         }
-        sqlite3_reset(session->exists_person);
+        reset_and_clear_bindings(session->exists_person);
     }
     else if (status == PEP_STATUS_OK) {
         *exists = true; // thank you, delete on cascade!
@@ -3985,7 +3992,7 @@ PEP_STATUS delete_person(PEP_SESSION session, const char* user_id) {
         
     PEP_STATUS status = PEP_STATUS_OK;
     
-    sqlite3_reset(session->delete_person);
+    reset_and_clear_bindings(session->delete_person);
     sqlite3_bind_text(session->delete_person, 1, user_id, -1,
                       SQLITE_STATIC);
                       
@@ -3994,7 +4001,7 @@ PEP_STATUS delete_person(PEP_SESSION session, const char* user_id) {
     if (result != SQLITE_DONE)
         status = PEP_UNKNOWN_ERROR;
         
-    sqlite3_reset(session->delete_person);
+    reset_and_clear_bindings(session->delete_person);
     return status;
 }
 
@@ -4017,7 +4024,7 @@ DYNAMIC_API PEP_STATUS is_pEp_user(PEP_SESSION session, pEp_identity *identity, 
         alias_default = strdup(user_id);
     }
     
-    sqlite3_reset(session->is_pEp_user);
+    reset_and_clear_bindings(session->is_pEp_user);
     sqlite3_bind_text(session->is_pEp_user, 1, user_id, -1,
             SQLITE_STATIC);
     int result = sqlite3_step(session->is_pEp_user);
@@ -4028,12 +4035,12 @@ DYNAMIC_API PEP_STATUS is_pEp_user(PEP_SESSION session, pEp_identity *identity, 
             break;
         }
         default:
-            sqlite3_reset(session->is_pEp_user);
+            reset_and_clear_bindings(session->is_pEp_user);
             free(alias_default);
             return PEP_CANNOT_FIND_PERSON;
     }
 
-    sqlite3_reset(session->is_pEp_user);
+    reset_and_clear_bindings(session->is_pEp_user);
     
     free(alias_default);
     return PEP_STATUS_OK;
@@ -4047,7 +4054,7 @@ PEP_STATUS is_own_address(PEP_SESSION session, const char* address, bool* is_own
     
     *is_own_addr = false;
 
-    sqlite3_reset(session->is_own_address);
+    reset_and_clear_bindings(session->is_own_address);
     sqlite3_bind_text(session->is_own_address, 1, address, -1,
             SQLITE_STATIC);
     int result = sqlite3_step(session->is_own_address);
@@ -4058,11 +4065,11 @@ PEP_STATUS is_own_address(PEP_SESSION session, const char* address, bool* is_own
             break;
         }
         default:
-            sqlite3_reset(session->is_own_address);
+            reset_and_clear_bindings(session->is_own_address);
             return PEP_RECORD_NOT_FOUND;
     }
 
-    sqlite3_reset(session->is_own_address);
+    reset_and_clear_bindings(session->is_own_address);
     
     return PEP_STATUS_OK;
 }
@@ -4074,7 +4081,7 @@ PEP_STATUS bind_own_ident_with_contact_ident(PEP_SESSION session,
         !own_ident->address || !own_ident->user_id || !contact_ident->user_id)
         return PEP_ILLEGAL_VALUE;
         
-    sqlite3_reset(session->add_into_social_graph);
+    reset_and_clear_bindings(session->add_into_social_graph);
     sqlite3_bind_text(session->add_into_social_graph, 1, own_ident->user_id, -1,
             SQLITE_STATIC);
     sqlite3_bind_text(session->add_into_social_graph, 2, own_ident->address, -1,
@@ -4083,7 +4090,7 @@ PEP_STATUS bind_own_ident_with_contact_ident(PEP_SESSION session,
             SQLITE_STATIC);
         
     int result = sqlite3_step(session->add_into_social_graph);
-    sqlite3_reset(session->add_into_social_graph);
+    reset_and_clear_bindings(session->add_into_social_graph);
     
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_PERSON;
@@ -4103,7 +4110,7 @@ PEP_STATUS has_partner_contacted_address(PEP_SESSION session, const char* partne
 
     PEP_STATUS status = PEP_STATUS_OK;
     
-    sqlite3_reset(session->has_id_contacted_address);
+    reset_and_clear_bindings(session->has_id_contacted_address);
     sqlite3_bind_text(session->has_id_contacted_address, 1, own_address, -1,
             SQLITE_STATIC);            
     sqlite3_bind_text(session->has_id_contacted_address, 2, partner_id, -1,
@@ -4120,7 +4127,7 @@ PEP_STATUS has_partner_contacted_address(PEP_SESSION session, const char* partne
         default:
             status = PEP_UNKNOWN_DB_ERROR;
     }
-    sqlite3_reset(session->has_id_contacted_address);
+    reset_and_clear_bindings(session->has_id_contacted_address);
             
     return status;
 }
@@ -4140,7 +4147,7 @@ PEP_STATUS get_own_ident_for_contact_id(PEP_SESSION session,
     if (status != PEP_STATUS_OK)
         return status;
 
-    sqlite3_reset(session->get_own_address_binding_from_contact);
+    reset_and_clear_bindings(session->get_own_address_binding_from_contact);
     sqlite3_bind_text(session->get_own_address_binding_from_contact, 1, own_user_id, -1,
             SQLITE_STATIC);
     sqlite3_bind_text(session->get_own_address_binding_from_contact, 2, contact->user_id, -1,
@@ -4177,22 +4184,22 @@ PEP_STATUS remove_fpr_as_default(PEP_SESSION session,
     if (!session || !fpr)
         return PEP_ILLEGAL_VALUE;
             
-    sqlite3_reset(session->remove_fpr_as_identity_default);
+    reset_and_clear_bindings(session->remove_fpr_as_identity_default);
     sqlite3_bind_text(session->remove_fpr_as_identity_default, 1, fpr, -1,
                       SQLITE_STATIC);
 
     int result = sqlite3_step(session->remove_fpr_as_identity_default);
-    sqlite3_reset(session->remove_fpr_as_identity_default);
+    reset_and_clear_bindings(session->remove_fpr_as_identity_default);
     
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_IDENTITY; 
 
-    sqlite3_reset(session->remove_fpr_as_user_default);
+    reset_and_clear_bindings(session->remove_fpr_as_user_default);
     sqlite3_bind_text(session->remove_fpr_as_user_default, 1, fpr, -1,
                       SQLITE_STATIC);
 
     result = sqlite3_step(session->remove_fpr_as_user_default);
-    sqlite3_reset(session->remove_fpr_as_user_default);
+    reset_and_clear_bindings(session->remove_fpr_as_user_default);
     
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_PERSON; 
@@ -4209,14 +4216,14 @@ PEP_STATUS replace_identities_fpr(PEP_SESSION session,
     if (!old_fpr || !new_fpr)
         return PEP_ILLEGAL_VALUE;
             
-    sqlite3_reset(session->replace_identities_fpr);
+    reset_and_clear_bindings(session->replace_identities_fpr);
     sqlite3_bind_text(session->replace_identities_fpr, 1, new_fpr, -1,
                       SQLITE_STATIC);
     sqlite3_bind_text(session->replace_identities_fpr, 2, old_fpr, -1,
                       SQLITE_STATIC);
 
     int result = sqlite3_step(session->replace_identities_fpr);
-    sqlite3_reset(session->replace_identities_fpr);
+    reset_and_clear_bindings(session->replace_identities_fpr);
     
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_IDENTITY;
@@ -4231,12 +4238,12 @@ PEP_STATUS update_trust_for_fpr(PEP_SESSION session,
     if (!fpr)
         return PEP_ILLEGAL_VALUE;
         
-    sqlite3_reset(session->update_trust_for_fpr);
+    reset_and_clear_bindings(session->update_trust_for_fpr);
     sqlite3_bind_int(session->update_trust_for_fpr, 1, comm_type);
     sqlite3_bind_text(session->update_trust_for_fpr, 2, fpr, -1,
             SQLITE_STATIC);
     int result = sqlite3_step(session->update_trust_for_fpr);
-    sqlite3_reset(session->update_trust_for_fpr);
+    reset_and_clear_bindings(session->update_trust_for_fpr);
     if (result != SQLITE_DONE) {
         return PEP_CANNOT_SET_TRUST;
     }
@@ -4255,7 +4262,7 @@ DYNAMIC_API PEP_STATUS set_identity_flags(
     if (!(session && identity && identity->address && identity->user_id))
         return PEP_ILLEGAL_VALUE;
 
-    sqlite3_reset(session->set_identity_flags);
+    reset_and_clear_bindings(session->set_identity_flags);
     sqlite3_bind_int(session->set_identity_flags, 1, flags);
     sqlite3_bind_text(session->set_identity_flags, 2, identity->address, -1,
             SQLITE_STATIC);
@@ -4264,7 +4271,7 @@ DYNAMIC_API PEP_STATUS set_identity_flags(
         
     result = sqlite3_step(session->set_identity_flags);
 
-    sqlite3_reset(session->set_identity_flags);
+    reset_and_clear_bindings(session->set_identity_flags);
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_IDENTITY;
 
@@ -4283,14 +4290,14 @@ DYNAMIC_API PEP_STATUS unset_identity_flags(
     if (!(session && identity && identity->address && identity->user_id))
         return PEP_ILLEGAL_VALUE;
 
-    sqlite3_reset(session->unset_identity_flags);
+    reset_and_clear_bindings(session->unset_identity_flags);
     sqlite3_bind_int(session->unset_identity_flags, 1, flags);
     sqlite3_bind_text(session->unset_identity_flags, 2, identity->address, -1,
             SQLITE_STATIC);
     sqlite3_bind_text(session->unset_identity_flags, 3, identity->user_id, -1,
             SQLITE_STATIC);
     result = sqlite3_step(session->unset_identity_flags);
-    sqlite3_reset(session->unset_identity_flags);
+    reset_and_clear_bindings(session->unset_identity_flags);
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_IDENTITY;
 
@@ -4310,7 +4317,7 @@ DYNAMIC_API PEP_STATUS set_ident_enc_format(
     if (!(session && identity && identity->address && identity->user_id))
         return PEP_ILLEGAL_VALUE;
 
-    sqlite3_reset(session->set_ident_enc_format);
+    reset_and_clear_bindings(session->set_ident_enc_format);
     sqlite3_bind_int(session->set_ident_enc_format, 1, format);
     sqlite3_bind_text(session->set_ident_enc_format, 2, identity->address, -1,
             SQLITE_STATIC);
@@ -4319,7 +4326,7 @@ DYNAMIC_API PEP_STATUS set_ident_enc_format(
         
     result = sqlite3_step(session->set_ident_enc_format);
 
-    sqlite3_reset(session->set_ident_enc_format);
+    reset_and_clear_bindings(session->set_ident_enc_format);
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_IDENTITY;
 
@@ -4337,7 +4344,7 @@ PEP_STATUS get_trust_by_userid(PEP_SESSION session, const char* user_id,
     *trust_list = NULL;
     labeled_int_list_t* t_list = NULL;
 
-    sqlite3_reset(session->get_trust_by_userid);
+    reset_and_clear_bindings(session->get_trust_by_userid);
     sqlite3_bind_text(session->get_trust_by_userid, 1, user_id, -1, SQLITE_STATIC);
 
     while ((result = sqlite3_step(session->get_trust_by_userid)) == SQLITE_ROW) {
@@ -4349,7 +4356,7 @@ PEP_STATUS get_trust_by_userid(PEP_SESSION session, const char* user_id,
                                 (const char *) sqlite3_column_text(session->get_trust_by_userid, 0));
     }
 
-    sqlite3_reset(session->get_trust_by_userid);
+    reset_and_clear_bindings(session->get_trust_by_userid);
 
     *trust_list = t_list;
         
@@ -4663,7 +4670,7 @@ PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
 
     int result;
 
-    sqlite3_reset(session->replace_userid);
+    reset_and_clear_bindings(session->replace_userid);
     sqlite3_bind_text(session->replace_userid, 1, new_uid, -1,
             SQLITE_STATIC);
     sqlite3_bind_text(session->replace_userid, 2, old_uid, -1,
@@ -4675,7 +4682,7 @@ PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
         log_event(session, "SQLite3 error", "replace_userid", errmsg, NULL);
     }
 #endif // !NDEBUG
-    sqlite3_reset(session->replace_userid);
+    reset_and_clear_bindings(session->replace_userid);
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_PERSON; // May need clearer retval
 
@@ -4689,11 +4696,11 @@ PEP_STATUS remove_key(PEP_SESSION session, const char* fpr) {
 
     int result;
 
-    sqlite3_reset(session->delete_key);
+    reset_and_clear_bindings(session->delete_key);
     sqlite3_bind_text(session->delete_key, 1, fpr, -1,
             SQLITE_STATIC);
     result = sqlite3_step(session->delete_key);
-    sqlite3_reset(session->delete_key);
+    reset_and_clear_bindings(session->delete_key);
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_PGP_KEYPAIR;
 
@@ -4708,11 +4715,11 @@ PEP_STATUS refresh_userid_default_key(PEP_SESSION session, const char* user_id) 
 
     int result;
 
-    sqlite3_reset(session->refresh_userid_default_key);
+    reset_and_clear_bindings(session->refresh_userid_default_key);
     sqlite3_bind_text(session->refresh_userid_default_key, 1, user_id, -1,
             SQLITE_STATIC);
     result = sqlite3_step(session->refresh_userid_default_key);
-    sqlite3_reset(session->refresh_userid_default_key);
+    reset_and_clear_bindings(session->refresh_userid_default_key);
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_PERSON;
 
@@ -4727,13 +4734,13 @@ PEP_STATUS replace_main_user_fpr(PEP_SESSION session, const char* user_id,
 
     int result;
 
-    sqlite3_reset(session->replace_main_user_fpr);
+    reset_and_clear_bindings(session->replace_main_user_fpr);
     sqlite3_bind_text(session->replace_main_user_fpr, 1, new_fpr, -1,
             SQLITE_STATIC);
     sqlite3_bind_text(session->replace_main_user_fpr, 2, user_id, -1,
             SQLITE_STATIC);
     result = sqlite3_step(session->replace_main_user_fpr);
-    sqlite3_reset(session->replace_main_user_fpr);
+    reset_and_clear_bindings(session->replace_main_user_fpr);
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_PERSON;
 
@@ -4751,7 +4758,7 @@ PEP_STATUS replace_main_user_fpr_if_equal(PEP_SESSION session, const char* user_
 
     int result;
 
-    sqlite3_reset(session->replace_main_user_fpr_if_equal);
+    reset_and_clear_bindings(session->replace_main_user_fpr_if_equal);
     sqlite3_bind_text(session->replace_main_user_fpr, 1, new_fpr, -1,
             SQLITE_STATIC);
     sqlite3_bind_text(session->replace_main_user_fpr_if_equal, 2, user_id, -1,
@@ -4759,7 +4766,7 @@ PEP_STATUS replace_main_user_fpr_if_equal(PEP_SESSION session, const char* user_
     sqlite3_bind_text(session->replace_main_user_fpr_if_equal, 3, compare_fpr, -1,
             SQLITE_STATIC);            
     result = sqlite3_step(session->replace_main_user_fpr_if_equal);
-    sqlite3_reset(session->replace_main_user_fpr_if_equal);
+    reset_and_clear_bindings(session->replace_main_user_fpr_if_equal);
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_PERSON;
 
@@ -4778,7 +4785,7 @@ PEP_STATUS get_main_user_fpr(PEP_SESSION session,
         
     *main_fpr = NULL;
     
-    sqlite3_reset(session->get_main_user_fpr);
+    reset_and_clear_bindings(session->get_main_user_fpr);
     sqlite3_bind_text(session->get_main_user_fpr, 1, user_id, -1,
                       SQLITE_STATIC);
     result = sqlite3_step(session->get_main_user_fpr);
@@ -4800,7 +4807,7 @@ PEP_STATUS get_main_user_fpr(PEP_SESSION session,
         status = PEP_CANNOT_FIND_PERSON;
     }
 
-    sqlite3_reset(session->get_main_user_fpr);
+    reset_and_clear_bindings(session->get_main_user_fpr);
     return status;
 }
 
@@ -4838,7 +4845,7 @@ PEP_STATUS set_default_identity_fpr(PEP_SESSION session,
 
     int result;
 
-    sqlite3_reset(session->set_default_identity_fpr);
+    reset_and_clear_bindings(session->set_default_identity_fpr);
     sqlite3_bind_text(session->set_default_identity_fpr, 1, user_id, -1,
             SQLITE_STATIC);
     sqlite3_bind_text(session->set_default_identity_fpr, 2, address, -1,
@@ -4846,7 +4853,7 @@ PEP_STATUS set_default_identity_fpr(PEP_SESSION session,
     sqlite3_bind_text(session->set_default_identity_fpr, 3, fpr, -1,
             SQLITE_STATIC);
     result = sqlite3_step(session->set_default_identity_fpr);
-    sqlite3_reset(session->set_default_identity_fpr);
+    reset_and_clear_bindings(session->set_default_identity_fpr);
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_PGP_KEYPAIR;
 
@@ -4868,7 +4875,7 @@ PEP_STATUS get_default_identity_fpr(PEP_SESSION session,
         
     *main_fpr = NULL;
     
-    sqlite3_reset(session->get_default_identity_fpr);
+    reset_and_clear_bindings(session->get_default_identity_fpr);
     sqlite3_bind_text(session->get_default_identity_fpr, 1, address, -1,
                       SQLITE_STATIC);
     sqlite3_bind_text(session->get_default_identity_fpr, 2, user_id, -1,
@@ -4892,7 +4899,7 @@ PEP_STATUS get_default_identity_fpr(PEP_SESSION session,
         status = PEP_CANNOT_FIND_IDENTITY;
     }
 
-    sqlite3_reset(session->get_default_identity_fpr);
+    reset_and_clear_bindings(session->get_default_identity_fpr);
     return status;
 }
 
@@ -4916,11 +4923,11 @@ DYNAMIC_API PEP_STATUS mark_as_compromised(
     if (!(session && fpr && fpr[0]))
         return PEP_ILLEGAL_VALUE;
 
-    sqlite3_reset(session->mark_compromised);
+    reset_and_clear_bindings(session->mark_compromised);
     sqlite3_bind_text(session->mark_compromised, 1, fpr, -1,
             SQLITE_STATIC);
     result = sqlite3_step(session->mark_compromised);
-    sqlite3_reset(session->mark_compromised);
+    reset_and_clear_bindings(session->mark_compromised);
 
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_TRUST;
@@ -4948,7 +4955,7 @@ DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity)
         return PEP_ILLEGAL_VALUE;
 
     identity->comm_type = PEP_ct_unknown;
-    sqlite3_reset(session->get_trust);
+    reset_and_clear_bindings(session->get_trust);
 
     sqlite3_bind_text(session->get_trust, 1, identity->user_id, -1,
             SQLITE_STATIC);
@@ -4967,7 +4974,7 @@ DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity)
         status = PEP_CANNOT_FIND_IDENTITY;
     }
 
-    sqlite3_reset(session->get_trust);
+    reset_and_clear_bindings(session->get_trust);
     return status;
 }
 
@@ -4986,7 +4993,7 @@ DYNAMIC_API PEP_STATUS least_trust(
 
     *comm_type = PEP_ct_unknown;
 
-    sqlite3_reset(session->least_trust);
+    reset_and_clear_bindings(session->least_trust);
     sqlite3_bind_text(session->least_trust, 1, fpr, -1, SQLITE_STATIC);
 
     result = sqlite3_step(session->least_trust);
@@ -5001,7 +5008,7 @@ DYNAMIC_API PEP_STATUS least_trust(
             status = PEP_CANNOT_FIND_IDENTITY;
     }
 
-    sqlite3_reset(session->least_trust);
+    reset_and_clear_bindings(session->least_trust);
     return status;
 }
 
@@ -5408,7 +5415,7 @@ DYNAMIC_API PEP_STATUS get_crashdump_log(
     const char *desc = NULL;
     const char *comment = NULL;
 
-    sqlite3_reset(session->crashdump);
+    reset_and_clear_bindings(session->crashdump);
     sqlite3_bind_int(session->crashdump, 1, limit);
 
     int result;
@@ -5460,7 +5467,7 @@ DYNAMIC_API PEP_STATUS get_crashdump_log(
         }
     } while (result != SQLITE_DONE);
 
-    sqlite3_reset(session->crashdump);
+    reset_and_clear_bindings(session->crashdump);
     if (status == PEP_STATUS_OK) {
         if (_logdata) {
             *logdata = _logdata;
@@ -5498,7 +5505,7 @@ DYNAMIC_API PEP_STATUS get_languagelist(
     const char *name = NULL;
     const char *phrase = NULL;
 
-    sqlite3_reset(session->languagelist);
+    reset_and_clear_bindings(session->languagelist);
 
     int result;
 
@@ -5536,7 +5543,7 @@ DYNAMIC_API PEP_STATUS get_languagelist(
         }
     } while (result != SQLITE_DONE);
 
-    sqlite3_reset(session->languagelist);
+    reset_and_clear_bindings(session->languagelist);
     if (status == PEP_STATUS_OK)
         *languages = _languages;
 
@@ -5563,7 +5570,7 @@ DYNAMIC_API PEP_STATUS get_phrase(
 
     *phrase = NULL;
 
-    sqlite3_reset(session->i18n_token);
+    reset_and_clear_bindings(session->i18n_token);
     sqlite3_bind_text(session->i18n_token, 1, lang, -1, SQLITE_STATIC);
     sqlite3_bind_int(session->i18n_token, 2, phrase_id);
 
@@ -5590,7 +5597,7 @@ DYNAMIC_API PEP_STATUS get_phrase(
             goto enomem;
     }
 
-    sqlite3_reset(session->i18n_token);
+    reset_and_clear_bindings(session->i18n_token);
     goto the_end;
 
 enomem:
@@ -5608,7 +5615,7 @@ static PEP_STATUS _get_sequence_value(PEP_SESSION session, const char *name,
 
     PEP_STATUS status = PEP_STATUS_OK;
 
-    sqlite3_reset(session->sequence_value2);
+    reset_and_clear_bindings(session->sequence_value2);
     sqlite3_bind_text(session->sequence_value2, 1, name, -1,
             SQLITE_STATIC);
     int result = sqlite3_step(session->sequence_value2);
@@ -5625,7 +5632,7 @@ static PEP_STATUS _get_sequence_value(PEP_SESSION session, const char *name,
         default:
             status = PEP_UNKNOWN_DB_ERROR;
     }
-    sqlite3_reset(session->sequence_value2);
+    reset_and_clear_bindings(session->sequence_value2);
 
     return status;
 }
@@ -5636,11 +5643,11 @@ static PEP_STATUS _increment_sequence_value(PEP_SESSION session,
     if (!(session && name))
         return PEP_ILLEGAL_VALUE;
 
-    sqlite3_reset(session->sequence_value1);
+    reset_and_clear_bindings(session->sequence_value1);
     sqlite3_bind_text(session->sequence_value1, 1, name, -1, SQLITE_STATIC);
     int result = sqlite3_step(session->sequence_value1);
     assert(result == SQLITE_DONE);
-    sqlite3_reset(session->sequence_value1);
+    reset_and_clear_bindings(session->sequence_value1);
     if (result == SQLITE_DONE)
         return PEP_STATUS_OK;
     else
@@ -5739,7 +5746,7 @@ DYNAMIC_API PEP_STATUS set_revoked(
          ))
         return PEP_ILLEGAL_VALUE;
     
-    sqlite3_reset(session->set_revoked);
+    reset_and_clear_bindings(session->set_revoked);
     sqlite3_bind_text(session->set_revoked, 1, revoked_fpr, -1, SQLITE_STATIC);
     sqlite3_bind_text(session->set_revoked, 2, replacement_fpr, -1,
             SQLITE_STATIC);
@@ -5757,7 +5764,7 @@ DYNAMIC_API PEP_STATUS set_revoked(
             status = PEP_UNKNOWN_DB_ERROR;
     }
     
-    sqlite3_reset(session->set_revoked);
+    reset_and_clear_bindings(session->set_revoked);
     return status;
 }
 
@@ -5776,7 +5783,7 @@ DYNAMIC_API PEP_STATUS get_revoked(
     *revoked_fpr = NULL;
     *revocation_date = 0;
 
-    sqlite3_reset(session->get_revoked);
+    reset_and_clear_bindings(session->get_revoked);
     sqlite3_bind_text(session->get_revoked, 1, fpr, -1, SQLITE_STATIC);
 
     int result;
@@ -5798,7 +5805,7 @@ DYNAMIC_API PEP_STATUS get_revoked(
             status = PEP_CANNOT_FIND_IDENTITY;
     }
 
-    sqlite3_reset(session->get_revoked);
+    reset_and_clear_bindings(session->get_revoked);
 
     return status;
 }
@@ -5818,7 +5825,7 @@ DYNAMIC_API PEP_STATUS get_replacement_fpr(
     *revoked_fpr = NULL;
     *revocation_date = 0;
 
-    sqlite3_reset(session->get_replacement_fpr);
+    reset_and_clear_bindings(session->get_replacement_fpr);
     sqlite3_bind_text(session->get_replacement_fpr, 1, fpr, -1, SQLITE_STATIC);
 
     int result;
@@ -5840,7 +5847,7 @@ DYNAMIC_API PEP_STATUS get_replacement_fpr(
             status = PEP_CANNOT_FIND_IDENTITY;
     }
 
-    sqlite3_reset(session->get_replacement_fpr);
+    reset_and_clear_bindings(session->get_replacement_fpr);
 
     return status;
 }
@@ -5856,7 +5863,7 @@ PEP_STATUS get_last_contacted(
     *id_list = NULL;
     identity_list* ident_list = NULL;
 
-    sqlite3_reset(session->get_last_contacted);
+    reset_and_clear_bindings(session->get_last_contacted);
     int result;
 
     while ((result = sqlite3_step(session->get_last_contacted)) == SQLITE_ROW) {
@@ -5868,7 +5875,7 @@ PEP_STATUS get_last_contacted(
                 
         assert(ident);
         if (ident == NULL) {
-            sqlite3_reset(session->get_last_contacted);
+            reset_and_clear_bindings(session->get_last_contacted);
             return PEP_OUT_OF_MEMORY;
         }
     
@@ -5878,7 +5885,7 @@ PEP_STATUS get_last_contacted(
             ident_list = new_identity_list(ident);
     }
 
-    sqlite3_reset(session->get_last_contacted);
+    reset_and_clear_bindings(session->get_last_contacted);
     
     *id_list = ident_list;
     

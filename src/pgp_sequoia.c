@@ -752,7 +752,7 @@ static PEP_STATUS cert_find(PEP_SESSION session,
     ERROR_OUT(NULL, status, "Looking up %s", fpr_str);
 
  out:
-    sqlite3_reset(stmt);
+    reset_and_clear_bindings(stmt);
     T("(%s, %d) -> %s", fpr_str, private_only, pEp_status_to_string(status));
     free(fpr_str);
     return status;
@@ -786,7 +786,7 @@ static PEP_STATUS cert_find_by_keyid_hex(
     ERROR_OUT(NULL, status, "Looking up %s", keyid_hex);
 
  out:
-    sqlite3_reset(stmt);
+    reset_and_clear_bindings(stmt);
     T("(%s, %d) -> %s", keyid_hex, private_only, pEp_status_to_string(status));
     return status;
 }
@@ -849,7 +849,7 @@ static PEP_STATUS cert_all(PEP_SESSION session, int private_only,
     status = key_loadn(session, stmt, certsp, certs_countp);
     ERROR_OUT(NULL, status, "loading certificates");
  out:
-    sqlite3_reset(stmt);
+    reset_and_clear_bindings(stmt);
     return status;
 }
 
@@ -873,7 +873,7 @@ static PEP_STATUS cert_find_by_email(PEP_SESSION session,
     ERROR_OUT(NULL, status, "Searching for '%s'", pattern);
 
  out:
-    sqlite3_reset(stmt);
+    reset_and_clear_bindings(stmt);
     T("(%s) -> %s (%d results)", pattern, pEp_status_to_string(status), *countp);
     return status;
 }
@@ -946,7 +946,7 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
 
     sqlite3_stmt *stmt = session->sq_sql.begin_transaction;
     int sqlite_result = sqlite3_step(stmt);
-    sqlite3_reset(stmt);
+    reset_and_clear_bindings(stmt);
     if (sqlite_result != SQLITE_DONE)
         ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
                   "begin transaction failed: %s",
@@ -1007,7 +1007,7 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
     sqlite3_bind_blob(stmt, 3, tsk_buffer, tsk_buffer_len, SQLITE_STATIC);
 
     sqlite_result = sqlite3_step(stmt);
-    sqlite3_reset(stmt);
+    reset_and_clear_bindings(stmt);
     if (sqlite_result != SQLITE_DONE)
         ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
                   "Saving certificate: %s", sqlite3_errmsg(session->key_db));
@@ -1030,7 +1030,7 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
         pgp_key_amalgamation_free (ka);
 
         sqlite_result = sqlite3_step(stmt);
-        sqlite3_reset(stmt);
+        reset_and_clear_bindings(stmt);
         free(keyid_hex);
         pgp_keyid_free(keyid);
         if (sqlite_result != SQLITE_DONE) {
@@ -1078,7 +1078,7 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
             sqlite3_bind_text(stmt, 2, fpr, -1, SQLITE_STATIC);
 
             sqlite_result = sqlite3_step(stmt);
-            sqlite3_reset(stmt);
+            reset_and_clear_bindings(stmt);
 
             if (sqlite_result != SQLITE_DONE) {
                 ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
@@ -1112,7 +1112,7 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
             ? session->sq_sql.commit_transaction
             : session->sq_sql.rollback_transaction;
         int sqlite_result = sqlite3_step(stmt);
-        sqlite3_reset(stmt);
+        reset_and_clear_bindings(stmt);
         if (sqlite_result != SQLITE_DONE)
             ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
                       status == PEP_STATUS_OK
@@ -1132,7 +1132,7 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
     pgp_cert_valid_user_id_iter_free(ua_iter);
     pgp_cert_key_iter_free(key_iter);
     if (stmt)
-        sqlite3_reset(stmt);
+        reset_and_clear_bindings(stmt);
     free(tsk_buffer);
     free(curr_buffer);
     pgp_cert_free(cert);
@@ -2474,7 +2474,7 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr_raw)
     sqlite3_bind_text(stmt, 1, fpr, -1, free);
 
     int sqlite_result = sqlite3_step(stmt);
-    sqlite3_reset(stmt);
+    reset_and_clear_bindings(stmt);
     if (sqlite_result != SQLITE_DONE)
         ERROR_OUT(NULL, PEP_CANNOT_DELETE_KEY,
                   "deletion failed: %s", sqlite3_errmsg(session->key_db));

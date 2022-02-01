@@ -18,6 +18,8 @@ extern "C" {
 #include "labeled_int_list.h"    
 #include "timestamp.h"
 
+#include "sqlite3.h"
+
 #define PEP_VERSION "2.1" // pEp *protocol* version
 
 // RELEASE version this targets
@@ -34,6 +36,11 @@ extern "C" {
 
 #define PEP_OWN_USERID "pEp_own_userId"
     
+// FIXME: experimental.  both reset and clear bindings in the pointed sqlite3
+// prepared statement.
+void
+reset_and_clear_bindings(sqlite3_stmt *s);
+
 // pEp Engine API
 
 //  caveat:

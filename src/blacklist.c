@@ -15,7 +15,7 @@ DYNAMIC_API PEP_STATUS blacklist_add(PEP_SESSION session, const char *fpr)
 
     sqlite3_exec(session->db, "BEGIN ;", NULL, NULL, NULL);
 
-    sqlite3_reset(session->blacklist_add);
+    reset_and_clear_bindings(session->blacklist_add);
 	sqlite3_bind_text(session->blacklist_add, 1, fpr, -1, SQLITE_STATIC);
 
     int result;
@@ -32,7 +32,7 @@ DYNAMIC_API PEP_STATUS blacklist_add(PEP_SESSION session, const char *fpr)
         status = PEP_UNKNOWN_ERROR;
     }
 
-    sqlite3_reset(session->blacklist_add);
+    reset_and_clear_bindings(session->blacklist_add);
     return status;
 }
 
@@ -45,7 +45,7 @@ DYNAMIC_API PEP_STATUS blacklist_delete(PEP_SESSION session, const char *fpr)
     if (!(session && fpr && fpr[0]))
         return PEP_ILLEGAL_VALUE;
 
-    sqlite3_reset(session->blacklist_delete);
+    reset_and_clear_bindings(session->blacklist_delete);
 	sqlite3_bind_text(session->blacklist_delete, 1, fpr, -1, SQLITE_STATIC);
 
     int result;
@@ -60,7 +60,7 @@ DYNAMIC_API PEP_STATUS blacklist_delete(PEP_SESSION session, const char *fpr)
         status = PEP_UNKNOWN_ERROR;
     }
 
-    sqlite3_reset(session->blacklist_delete);
+    reset_and_clear_bindings(session->blacklist_delete);
     return status;
 }
 
@@ -80,7 +80,7 @@ DYNAMIC_API PEP_STATUS blacklist_is_listed(
 
     *listed = false;
 
-    sqlite3_reset(session->blacklist_is_listed);
+    reset_and_clear_bindings(session->blacklist_is_listed);
     sqlite3_bind_text(session->blacklist_is_listed, 1, fpr, -1, SQLITE_STATIC);
 
     int result;
@@ -97,7 +97,7 @@ DYNAMIC_API PEP_STATUS blacklist_is_listed(
         status = PEP_UNKNOWN_ERROR;
     }
 
-    sqlite3_reset(session->blacklist_is_listed);
+    reset_and_clear_bindings(session->blacklist_is_listed);
     return status;
 }
 
@@ -119,7 +119,7 @@ DYNAMIC_API PEP_STATUS blacklist_retrieve(
     if (_blacklist == NULL)
         goto enomem;
 
-    sqlite3_reset(session->blacklist_retrieve);
+    reset_and_clear_bindings(session->blacklist_retrieve);
 
     int result;
 
@@ -146,7 +146,7 @@ DYNAMIC_API PEP_STATUS blacklist_retrieve(
         }
     } while (result != SQLITE_DONE);
 
-    sqlite3_reset(session->blacklist_retrieve);
+    reset_and_clear_bindings(session->blacklist_retrieve);
     if (status == PEP_STATUS_OK)
         *blacklist = _blacklist;
     else

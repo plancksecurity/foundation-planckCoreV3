@@ -319,7 +319,7 @@ PEP_STATUS has_key_reset_been_sent(
         alias_default = strdup(user_id);
     }
     
-    sqlite3_reset(session->was_id_for_revoke_contacted);
+    reset_and_clear_bindings(session->was_id_for_revoke_contacted);
     sqlite3_bind_text(session->was_id_for_revoke_contacted, 1, revoked_fpr, -1,
             SQLITE_STATIC);
     sqlite3_bind_text(session->was_id_for_revoke_contacted, 2, from_addr, -1,
@@ -333,12 +333,12 @@ PEP_STATUS has_key_reset_been_sent(
             break;
         }
         default:
-            sqlite3_reset(session->was_id_for_revoke_contacted);
+            reset_and_clear_bindings(session->was_id_for_revoke_contacted);
             free(alias_default);
             return PEP_UNKNOWN_DB_ERROR;
     }
 
-    sqlite3_reset(session->was_id_for_revoke_contacted);
+    reset_and_clear_bindings(session->was_id_for_revoke_contacted);
     return PEP_STATUS_OK;
 }
 
@@ -356,7 +356,7 @@ PEP_STATUS set_reset_contact_notified(
     if (!session || EMPTYSTR(own_address) || EMPTYSTR(revoke_fpr) || EMPTYSTR(contact_id))
         return PEP_ILLEGAL_VALUE;
     
-    sqlite3_reset(session->set_revoke_contact_as_notified);
+    reset_and_clear_bindings(session->set_revoke_contact_as_notified);
     sqlite3_bind_text(session->set_revoke_contact_as_notified, 1, revoke_fpr, -1, 
             SQLITE_STATIC);
     sqlite3_bind_text(session->set_revoke_contact_as_notified, 2, own_address, -1, 
@@ -376,7 +376,7 @@ PEP_STATUS set_reset_contact_notified(
             status = PEP_UNKNOWN_DB_ERROR;
     }
     
-    sqlite3_reset(session->set_revoke_contact_as_notified);
+    reset_and_clear_bindings(session->set_revoke_contact_as_notified);
     return status;    
 }
 

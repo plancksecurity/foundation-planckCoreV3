@@ -301,7 +301,7 @@ PEP_STATUS get_all_keys_for_user(PEP_SESSION session,
     *keys = NULL;
     stringlist_t* _kl = NULL;
     
-    sqlite3_reset(session->get_all_keys_for_user);
+    reset_and_clear_bindings(session->get_all_keys_for_user);
     sqlite3_bind_text(session->get_all_keys_for_user, 1, user_id, -1, SQLITE_STATIC);
 
     int result = -1;
@@ -321,7 +321,7 @@ PEP_STATUS get_all_keys_for_user(PEP_SESSION session,
         
     *keys = _kl;
     
-    sqlite3_reset(session->get_all_keys_for_user);
+    reset_and_clear_bindings(session->get_all_keys_for_user);
 
     return status;
 }
@@ -339,7 +339,7 @@ PEP_STATUS get_all_keys_for_identity(PEP_SESSION session,
     *keys = NULL;
     stringlist_t* _kl = NULL;
     
-    sqlite3_reset(session->get_all_keys_for_identity);
+    reset_and_clear_bindings(session->get_all_keys_for_identity);
     sqlite3_bind_text(session->get_all_keys_for_identity, 1, identity->address, -1, SQLITE_STATIC);
     sqlite3_bind_text(session->get_all_keys_for_identity, 2, identity->user_id, -1, SQLITE_STATIC);
 
@@ -360,7 +360,7 @@ PEP_STATUS get_all_keys_for_identity(PEP_SESSION session,
         
     *keys = _kl;
     
-    sqlite3_reset(session->get_all_keys_for_identity);
+    reset_and_clear_bindings(session->get_all_keys_for_identity);
 
     return status;
 }
@@ -376,7 +376,7 @@ PEP_STATUS get_user_default_key(PEP_SESSION session, const char* user_id,
     PEP_STATUS status = PEP_STATUS_OK;
             
     // try to get default key for user_data
-    sqlite3_reset(session->get_user_default_key);
+    reset_and_clear_bindings(session->get_user_default_key);
     sqlite3_bind_text(session->get_user_default_key, 1, user_id, 
                       -1, SQLITE_STATIC);
     
@@ -391,7 +391,7 @@ PEP_STATUS get_user_default_key(PEP_SESSION session, const char* user_id,
     else
         status = PEP_GET_KEY_FAILED;
         
-    sqlite3_reset(session->get_user_default_key);
+    reset_and_clear_bindings(session->get_user_default_key);
     
     *default_key = user_fpr;
     return status;     
@@ -1877,7 +1877,7 @@ DYNAMIC_API PEP_STATUS own_key_is_listed(
     
     *listed = false;
     
-    sqlite3_reset(session->own_key_is_listed);
+    reset_and_clear_bindings(session->own_key_is_listed);
     sqlite3_bind_text(session->own_key_is_listed, 1, fpr, -1, SQLITE_STATIC);
     
     int result;
@@ -1894,7 +1894,7 @@ DYNAMIC_API PEP_STATUS own_key_is_listed(
             status = PEP_UNKNOWN_ERROR;
     }
     
-    sqlite3_reset(session->own_key_is_listed);
+    reset_and_clear_bindings(session->own_key_is_listed);
     return status;
 }
 
@@ -1915,7 +1915,7 @@ PEP_STATUS _own_identities_retrieve(
     if (_own_identities == NULL)
         goto enomem;
     
-    sqlite3_reset(session->own_identities_retrieve);
+    reset_and_clear_bindings(session->own_identities_retrieve);
     
     int result;
     // address, fpr, username, user_id, comm_type, lang, flags
@@ -1978,7 +1978,7 @@ PEP_STATUS _own_identities_retrieve(
         }
     } while (result != SQLITE_DONE);
     
-    sqlite3_reset(session->own_identities_retrieve);
+    reset_and_clear_bindings(session->own_identities_retrieve);
     if (status == PEP_STATUS_OK)
         *own_identities = _own_identities;
     else
@@ -2018,7 +2018,7 @@ PEP_STATUS _own_keys_retrieve(
     *keylist = NULL;
     stringlist_t *_keylist = NULL;
     
-    sqlite3_reset(session->own_keys_retrieve);
+    reset_and_clear_bindings(session->own_keys_retrieve);
     
     int result;
     
@@ -2046,7 +2046,7 @@ PEP_STATUS _own_keys_retrieve(
         }
     } while (result != SQLITE_DONE);
     
-    sqlite3_reset(session->own_keys_retrieve);
+    reset_and_clear_bindings(session->own_keys_retrieve);
     if (status == PEP_STATUS_OK) {
         dedup_stringlist(_keylist);
         if (private_only) {
@@ -2171,12 +2171,12 @@ PEP_STATUS add_mistrusted_key(PEP_SESSION session, const char* fpr)
     if (!(session) || EMPTYSTR(fpr))
         return PEP_ILLEGAL_VALUE;
 
-    sqlite3_reset(session->add_mistrusted_key);
+    reset_and_clear_bindings(session->add_mistrusted_key);
     sqlite3_bind_text(session->add_mistrusted_key, 1, fpr, -1,
             SQLITE_STATIC);
 
     result = sqlite3_step(session->add_mistrusted_key);
-    sqlite3_reset(session->add_mistrusted_key);
+    reset_and_clear_bindings(session->add_mistrusted_key);
 
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_PGP_KEYPAIR; // FIXME: Better status?
@@ -2193,12 +2193,12 @@ PEP_STATUS delete_mistrusted_key(PEP_SESSION session, const char* fpr)
     if (!(session) || EMPTYSTR(fpr))
         return PEP_ILLEGAL_VALUE;
 
-    sqlite3_reset(session->delete_mistrusted_key);
+    reset_and_clear_bindings(session->delete_mistrusted_key);
     sqlite3_bind_text(session->delete_mistrusted_key, 1, fpr, -1,
             SQLITE_STATIC);
 
     result = sqlite3_step(session->delete_mistrusted_key);
-    sqlite3_reset(session->delete_mistrusted_key);
+    reset_and_clear_bindings(session->delete_mistrusted_key);
 
     if (result != SQLITE_DONE)
         return PEP_UNKNOWN_ERROR; // FIXME: Better status?
@@ -2219,7 +2219,7 @@ PEP_STATUS is_mistrusted_key(PEP_SESSION session, const char* fpr,
 
     *mistrusted = false;
 
-    sqlite3_reset(session->is_mistrusted_key);
+    reset_and_clear_bindings(session->is_mistrusted_key);
     sqlite3_bind_text(session->is_mistrusted_key, 1, fpr, -1, SQLITE_STATIC);
 
     int result;
@@ -2235,7 +2235,7 @@ PEP_STATUS is_mistrusted_key(PEP_SESSION session, const char* fpr,
         status = PEP_UNKNOWN_ERROR;
     }
 
-    sqlite3_reset(session->is_mistrusted_key);
+    reset_and_clear_bindings(session->is_mistrusted_key);
     return status;
 }
 
