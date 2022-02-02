@@ -93,6 +93,7 @@ lldb-history
 test/EngineTests
 test/googletest
 test/tmp/*
+doc/html/*
 
 src/commit_hash.h
 .idea/
