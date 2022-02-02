@@ -1,8 +1,8 @@
-/** @file */
-/** @brief File description for doxygen missing. FIXME */
-
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/** 
+ * @file platform_unix.c
+ * @brief File description for doxygen missing. FIXME 
+ * @license This file is under GNU General Public License 3.0. - see LICENSE.txt 
+ */
 
 #ifndef __MVS__
 #define _POSIX_C_SOURCE 200809L

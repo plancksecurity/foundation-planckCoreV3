@@ -1,9 +1,12 @@
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file pgp_netpgp.c
+ * @brief Implementation of NetPGP
+ * @license This file is under GNU General Public License 3.0 see LICENSE.txt
+ */
 
 /*
-** Check to see if this machine uses EBCDIC.  (Yes, believe it or
-** not, there are still machines out there that use EBCDIC.)
+* Check to see if this machine uses EBCDIC.  (Yes, believe it or
+* not, there are still machines out there that use EBCDIC.)
 */
 #if 'A' == '\301'
 # define NETPGP_EBCDIC 1
