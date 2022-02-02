@@ -148,3 +148,6 @@ uninstall:
 
 tags: $(wildcard *.c) $(wildcard *.h)
 	ctags --sort=yes *.c *.h
+
+doc: 
+	doxygen
