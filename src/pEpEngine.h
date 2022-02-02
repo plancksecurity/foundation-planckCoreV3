@@ -753,7 +753,7 @@ PEP_STATUS replace_identities_fpr(PEP_SESSION session,
 //        PEP_COMMIT_FAILED             SQL commit failed
 //
 //    caveat:
-//        address, fpr, user_id and username must be given
+//        address, user_id and username must be given
 
 DYNAMIC_API PEP_STATUS set_identity(
         PEP_SESSION session, const pEp_identity *identity
