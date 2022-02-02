@@ -84,3 +84,6 @@ package: clean
 
 db:
 	$(MAKE) -C db db
+
+doc:
+	$(MAKE) -C src doc
