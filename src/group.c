@@ -1,5 +1,8 @@
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file group.c
+ * @brief Description for doxygen is missing (TODO)
+ * @license This file is under GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #include "group.h"
 #include "group_internal.h"
@@ -19,13 +22,20 @@
 
 /******************************************************************************************
  *
+ * @internal
+ *
+ *  <!--   * _build_managed_group_message_payload -->
+ *
+ * @brief TODO
+ *
  * @param session
  * @param group_identity
  * @param manager
  * @param data
  * @param size
  * @param managed_group_msg_type
- * @return
+ * @retval PEP_STATUS_OK
+ * @retval any other on error
  */
 static PEP_STATUS _build_managed_group_message_payload(PEP_SESSION session,
                                                        const pEp_identity* group_identity,
@@ -99,6 +109,12 @@ pEp_error:
 }
 
 /******************************************************************************************
+ *
+ * @internal
+ *
+ * <!-- _create_and_send_managed_group_message -->
+ *
+ * @brief TODO
  *
  * @param session
  * @param from

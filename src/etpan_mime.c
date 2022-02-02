@@ -2131,9 +2131,9 @@ pEp_error:
  *  
  *  @brief            TODO
  *  
- *  @param[in]    *msg        constmessage
+ *  @param[in]    *msg        const message
  *  @param[in]    omit_fields        bool
- *  @param[in]    **result        structmailmime
+ *  @param[in]    **result        struct mailmime
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_OUT_OF_MEMORY   out of memory
@@ -2318,7 +2318,7 @@ pEp_error:
  *  
  *  @brief            TODO
  *  
- *  @param[in]    *mb        conststructmailimf_mailbox
+ *  @param[in]    *mb        const struct mailimf_mailbox
  *  
  */
 static pEp_identity *mailbox_to_identity(const struct mailimf_mailbox * mb)
@@ -2375,7 +2375,7 @@ enomem:
  *  
  *  @brief            TODO
  *  
- *  @param[in]    *mbl        conststructmailimf_mailbox_list
+ *  @param[in]    *mbl        const struct mailimf_mailbox_list
  *  
  */
 static pEp_identity * mbl_to_identity(const struct mailimf_mailbox_list * mbl)
@@ -2391,7 +2391,7 @@ static pEp_identity * mbl_to_identity(const struct mailimf_mailbox_list * mbl)
  *  
  *  @brief            TODO
  *  
- *  @param[in]    *mal        conststructmailimf_address_list
+ *  @param[in]    *mal        const struct mailimf_address_list
  *  
  */
 static identity_list * mal_to_identity_list(
@@ -2462,7 +2462,7 @@ enomem:
  *  
  *  @brief            TODO
  *  
- *  @param[in]    *list        constclist
+ *  @param[in]    *list        const clist
  *  
  */
 static stringlist_t * clist_to_stringlist(const clist *list)
@@ -2730,7 +2730,7 @@ pEp_error:
  *  
  *  @brief            TODO
  *  
- *  @param[in]    *part        structmailmime
+ *  @param[in]    *part        struct mailmime
  *  @param[in]    **longmsg        char
  *  @param[in]    *size        size_t
  *  
@@ -2825,7 +2825,7 @@ static PEP_STATUS interpret_body(struct mailmime *part, char **longmsg, size_t *
  *  
  *  @brief            TODO
  *  
- *  @param[in]    *mime        structmailmime
+ *  @param[in]    *mime        struct mailmime
  *  @param[in]    *msg        message
  *  
  */
@@ -2876,7 +2876,7 @@ static PEP_STATUS interpret_protected_headers(
  *  
  *  @brief            TODO
  *  
- *  @param[in]    *mime        structmailmime
+ *  @param[in]    *mime        struct mailmime
  *  @param[in]    *msg        message
  *
  *  @retval PEP_STATUS_OK
@@ -2977,7 +2977,7 @@ static bool _is_marked_as_attachment(struct mailmime_fields *fields)
  *  
  *  @brief            TODO
  *  
- *  @param[in]    *mime        structmailmime
+ *  @param[in]    *mime        struct mailmime
  *  @param[in]    *msg        message
  *  @param[in]    *has_possible_pEp_msg        bool
  *  

@@ -852,22 +852,22 @@ typedef unsigned int identity_flags_t;
  *  
  */
 typedef struct _pEp_identity {
-    char *address;              // C string with address UTF-8 encoded
-    char *fpr;                  // C string with fingerprint UTF-8 encoded
-    char *user_id;              // C string with user ID UTF-8 encoded
-                                // user_id MIGHT be set to "pEp_own_userId"
-                                // (use PEP_OWN_USERID preprocessor define)
-                                // if this is own user's identity.
-                                // But it is not REQUIRED to be.
-    char *username;             // C string with user name UTF-8 encoded
-    PEP_comm_type comm_type;    // type of communication with this ID
-    char lang[3];               // language of conversation
-                                // ISO 639-1 ALPHA-2, last byte is 0
-    bool me;                    // if this is the local user herself/himself
-    unsigned int major_ver;     // highest version of pEp message received, if any
-    unsigned int minor_ver;     // highest version of pEp message received, if any
-    PEP_enc_format enc_format;  // Last specified format we encrypted to for this identity
-    identity_flags_t flags;     // identity_flag1 | identity_flag2 | ...
+    char *address;             ///< C string with address UTF-8 encoded
+    char *fpr;                 ///< C string with fingerprint UTF-8 encoded
+    char *user_id;             ///< C string with user ID UTF-8 encoded\n
+                               ///< user_id MIGHT be set to "pEp_own_userId"
+                               ///< (use PEP_OWN_USERID preprocessor define)
+                               ///< if this is own user's identity.
+                               ///< But it is not REQUIRED to be.
+    char *username;            ///< C string with user name UTF-8 encoded
+    PEP_comm_type comm_type;   ///< type of communication with this ID
+    char lang[3];              ///< language of conversation
+                               ///< ISO 639-1 ALPHA-2, last byte is 0
+    bool me;                   ///< if this is the local user herself/himself
+    unsigned int major_ver;    ///< highest version of pEp message received, if any
+    unsigned int minor_ver;    ///< highest version of pEp message received, if any
+    PEP_enc_format enc_format; ///< Last specified format we encrypted to for this identity
+    identity_flags_t flags;    ///< identity_flag1 | identity_flag2 | ...
 } pEp_identity;
 
 /**
@@ -877,8 +877,8 @@ typedef struct _pEp_identity {
  *  
  */
 typedef struct _identity_list {
-    pEp_identity *ident;            // This node's identity
-    struct _identity_list *next;    // The next identity node in the list, or NULL if this is the tail
+    pEp_identity *ident;            ///< This node's identity
+    struct _identity_list *next;    ///< The next identity node in the list, or NULL if this is the tail
 } identity_list;
 
 
