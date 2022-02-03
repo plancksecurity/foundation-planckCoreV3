@@ -34,7 +34,7 @@ else
     LDLIBS+= -letpan
 endif
 
-LDLIBS+= -lpEpEngine -lstdc++ -lasn1
+LDLIBS+= -lstdc++ -lasn1
 
 ifeq ($(BUILD_FOR),Linux)
     LDLIBS+= -luuid
@@ -67,16 +67,6 @@ endif
 # Remove trailing ':'
 EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS::=)
 
-ifeq ($(BUILD_FOR),Darwin)
-    LIBPATH=DYLD_LIBRARY_PATH
-else
-    LIBPATH=LD_LIBRARY_PATH
-endif
-
-# FIXME: this forces a path on execution which overrides system paths for
-#        libraries like iconv and causes runtime errors.
-TEST_CMD_PFX=$(LIBPATH)=$(EXTRA_LIB_PATHS)
-
 .PHONY: all clean test
 
 all:
@@ -86,12 +76,12 @@ all:
 	$(CXX) -MM $(CXXFLAGS) $(CPPFLAGS) $< | sed -e 's,\($*\)\.o[ :]*,\1.o $@: ,g' > $@
 
 $(TARGET): $(OBJS)
-	${CXX} ${CXXFLAGS} ${CPPFLAGS} ${LDFLAGS} -L${PREFIX}/lib -o $@ $^ -lpEpEngine -lgtest -lgtest_main -lsequoia_openpgp_ffi $(LDLIBS)
+	${CXX} ${CXXFLAGS} ${CPPFLAGS} ${LDFLAGS} -L${PREFIX}/lib -o $@ $^ ../src/libpEpEngine.a -lgtest -lgtest_main -lsequoia_openpgp_ffi $(LDLIBS)
 
 
 test: all
 	$(RM) -rf ./pEp_test_home/*
-	$(TEST_CMD_PFX) $(TEST_DEBUGGER) GTEST_COLOR=no python3 $(GTEST_PL) --gtest_color=no ./$(TARGET)
+	$(TEST_DEBUGGER) GTEST_COLOR=no python3 $(GTEST_PL) --gtest_color=no ./$(TARGET)
 clean:
 	$(RM) $(TARGET) $(TARGET).o $(TARGET).d $(OBJS) $(notdir $(basename $(OBJS))) $(DEPS)
 	$(RM) -rf ./pEp_test_home/*
