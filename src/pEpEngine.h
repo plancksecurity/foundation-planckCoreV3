@@ -739,21 +739,24 @@ PEP_STATUS replace_identities_fpr(PEP_SESSION session,
                                  const char* new_fpr); 
 
 
-// set_identity() - set identity information
+// set_identity() - store identity information (except for the trust part)
+//                  into the database.  For the trust part, see set_trust().
+//                  This function, in an ideal world, would be named
+//                  set_identity_minus_trust.
 //
 //    parameters:
 //        session (in)        session handle
 //        identity (in)       pointer to pEp_identity structure
 //
 //    return value:
-//        PEP_STATUS_OK = 0             encryption and signing succeeded
+//        PEP_STATUS_OK = 0             success
 //        PEP_CANNOT_SET_PERSON         writing to table person failed
 //        PEP_CANNOT_SET_PGP_KEYPAIR    writing to table pgp_keypair failed
 //        PEP_CANNOT_SET_IDENTITY       writing to table identity failed
 //        PEP_COMMIT_FAILED             SQL commit failed
 //
 //    caveat:
-//        address, user_id and username must be given
+//        
 
 DYNAMIC_API PEP_STATUS set_identity(
         PEP_SESSION session, const pEp_identity *identity

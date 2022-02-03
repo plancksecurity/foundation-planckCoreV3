@@ -3762,8 +3762,199 @@ PEP_STATUS set_identity_entry(PEP_SESSION session, pEp_identity* identity,
                                        guard_transaction);
 }
 
-// This will NOT call set_as_pEp_user, nor set_pEp_version; you have to do that separately.
+// FIXME: move
+void sql_begin_transaction(PEP_SESSION session)
+{
+    assert (session);
+    if (! session)
+        abort ();
+    sqlite3_exec(session->db, "BEGIN_TRANSACTION;", NULL, NULL, NULL);
+}
+
+// FIXME: move
+void sql_commit_transaction(PEP_SESSION session)
+{
+    assert (session);
+    if (! session)
+        abort ();
+    sqlite3_exec(session->db, "COMMIT;", NULL, NULL, NULL);
+}
+
+// FIXME: move
+void sql_rollback_transaction(PEP_SESSION session)
+{
+    assert (session);
+    if (! session)
+        abort ();
+    sqlite3_exec(session->db, "ROLLBACK;", NULL, NULL, NULL);
+}
+
+// FIXME: possibly move definition.  statement can be NULL.
+#define CHECK_SQL_RESULT(statement, result)                        \
+    do {                                                           \
+        int _sql_result_copy = (result);                           \
+        sqlite3_stmt *_sql_statement = (statement);                \
+        if (!(_sql_result_copy != SQLITE_OK                          \
+              && _sql_result_copy != SQLITE_DONE)) {                  \
+            fprintf (stderr, "%s:%i: (%s): SQL error: %s => %s (%i)\n",       \
+                     __FILE__, __LINE__, __FUNCTION__, /* FIXME: obviously this is brutal. */\
+                     ((_sql_statement == NULL)                     \
+                      ? "<Unknown SQL statement>" :                \
+                      sqlite3_expanded_sql (_sql_statement)),      \
+                     sqlite3_errstr (_sql_result_copy),            \
+                     _sql_result_copy);                            \
+            /*abort ();*/ /* FIXME: remove, of course */ \
+            goto end;                                            \
+        }                                                          \
+    } while (false)
+
+/* Only used as a helper for set_identity, which validates inputs.  FIXME:
+   Volker, is this acceptable or do we need to be paranoid? */
+static PEP_STATUS _set_person_sql(
+        PEP_SESSION session, const pEp_identity *identity
+    )
+{
+    int sql_result = SQLITE_OK;
+
+
+    // Testing code: make sure, a little brutally, that we can actually write
+    // the supposedly-unused field Person.main_key_id without violating a
+    // foreign key constraint.
+    sql_result = sqlite3_exec
+      (session->db,
+       "INSERT OR REPLACE INTO pgp_keypair "
+       "  (fpr) "
+       "VALUES "
+       "  ('invalid-on-purpose');",
+       NULL, NULL, NULL);
+    CHECK_SQL_RESULT (NULL, sql_result);
+        
+    sqlite3_stmt *sql_statement = NULL;
+    sql_result = sqlite3_prepare_v2
+      (session->db,
+       "INSERT OR REPLACE INTO Person "
+       "  (id, username, main_key_id, lang, is_pEp_user) "
+       "VALUES "
+       "  (?1, ?2, 'invalid-on-purpose', ?3, ?4);" // main_key_id is supposed not to be read
+       ,
+       -1,
+       & sql_statement,
+       NULL);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+
+    reset_and_clear_bindings(sql_statement);
+    sql_result = sqlite3_bind_text (sql_statement, 1, identity->user_id, -1,
+                                    SQLITE_STATIC);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_bind_text (sql_statement, 2, identity->username, -1,
+                                    SQLITE_STATIC);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    /*
+    sql_result = sqlite3_bind_text (sql_statement, 3, identity->main_key_id, -1,
+                                    SQLITE_STATIC);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    */
+    if (EMPTYSTR (identity->lang))
+        sql_result = sqlite3_bind_null (sql_statement, 3);
+    else
+        sql_result = sqlite3_bind_text (sql_statement, 3, identity->lang, -1,
+                                        SQLITE_STATIC);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_bind_int (sql_statement, 4, identity->comm_type == PEP_ct_pEp);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    
+    sql_result = sqlite3_step(sql_statement);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+
+ end:
+    sqlite3_finalize(sql_statement);
+    return (sql_result == SQLITE_OK) ? PEP_STATUS_OK : PEP_CANNOT_SET_PERSON;
+}
+
+/* Only used as a helper for set_identity, which validates inputs.  FIXME:
+   Volker, is this acceptable or do we need to be paranoid? */
+static PEP_STATUS _set_identity_sql(
+        PEP_SESSION session, const pEp_identity *identity
+    )
+{
+    int sql_result = SQLITE_OK;
+
+    sqlite3_stmt *sql_statement = NULL;
+    sql_result = sqlite3_prepare_v2
+      (session->db,
+       "INSERT OR REPLACE INTO Identity "
+       "  (address, user_id, flags, is_own, " // FIXME: *not* setting main_key_id, on purpose
+       "   pEp_version_major, pEp_version_minor, enc_format) "
+       "VALUES "
+       "  (?1, ?2, ?3, ?4, ?5, ?6, ?7);" // FIXME: notice the NULL value
+       ,
+       -1,
+       & sql_statement,
+       NULL);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+
+    reset_and_clear_bindings(sql_statement);
+    sql_result = sqlite3_bind_text (sql_statement, 1, identity->address, -1,
+                                    SQLITE_STATIC);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_bind_text (sql_statement, 2, identity->user_id, -1,
+                                    SQLITE_STATIC);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_bind_int (sql_statement, 3, identity->flags);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_bind_int (sql_statement, 4, identity->me);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_bind_int (sql_statement, 5, identity->major_ver);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_bind_int (sql_statement, 6, identity->minor_ver);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_bind_int (sql_statement, 7, identity->enc_format);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    
+    sql_result = sqlite3_step(sql_statement);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+
+ end:
+    sqlite3_finalize(sql_statement);      
+    return (sql_result == SQLITE_OK) ? PEP_STATUS_OK : PEP_CANNOT_SET_IDENTITY;
+}
+
 DYNAMIC_API PEP_STATUS set_identity(
+        PEP_SESSION session, const pEp_identity *identity
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    if (! session || ! identity || EMPTYSTR (identity->address)
+        || EMPTYSTR (identity->user_id) || EMPTYSTR (identity->username))
+        return PEP_ILLEGAL_VALUE;
+
+    sql_begin_transaction (session);
+
+    status = _set_person_sql (session, identity);
+    if (status != PEP_STATUS_OK)
+        goto end;
+
+    status = _set_identity_sql (session, identity);
+    if (status != PEP_STATUS_OK)
+        goto end;
+
+    // Notice that I am disregarding the main_key_id foreign key in Identity.
+    // Because of this I do not need to write Pgp_keypair.
+    
+    fprintf (stderr, "STILL ALIVE\n");
+    
+ end:
+
+    if (status == PEP_STATUS_OK)
+        sql_commit_transaction(session);
+    else
+        sql_rollback_transaction(session);
+    return status;
+}
+
+// This will NOT call set_as_pEp_user, nor set_pEp_version; you have to do that separately.
+DYNAMIC_API PEP_STATUS ___set_identity___(
         PEP_SESSION session, const pEp_identity *identity
     )
 {
