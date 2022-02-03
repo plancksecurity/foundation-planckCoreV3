@@ -3795,18 +3795,177 @@ void sql_rollback_transaction(PEP_SESSION session)
         int _sql_result_copy = (result);                           \
         sqlite3_stmt *_sql_statement = (statement);                \
         if (_sql_result_copy != SQLITE_OK                          \
+            && _sql_result_copy != SQLITE_ROW                      \
             && _sql_result_copy != SQLITE_DONE) {                  \
-            fprintf (stderr, "%s:%i: (%s): SQL error: %s => %s (%i)\n",       \
-                     __FILE__, __LINE__, __FUNCTION__, /* FIXME: obviously this is brutal. */\
+            fprintf (stderr,                                       \
+                     "%s:%i: (%s): SQL error: %s => %s (%i)\n",    \
+                     __FILE__, __LINE__, __FUNCTION__,             \
                      ((_sql_statement == NULL)                     \
-                      ? "<Unknown SQL statement>" :                \
-                      sqlite3_expanded_sql (_sql_statement)),      \
+                      ? "<Unknown SQL statement>"                  \
+                      : sqlite3_expanded_sql (_sql_statement)),    \
                      sqlite3_errstr (_sql_result_copy),            \
                      _sql_result_copy);                            \
             /*abort ();*/ /* FIXME: remove, of course */ \
-            goto end;                                            \
+            goto end;                                              \
         }                                                          \
     } while (false)
+
+/* This is only used internally by set_identity.  It describes in a very
+   explicit way what the present case is, when we are setting an identity from
+   volatile storage to the database.
+   We have to consider the cross-product of:
+   - a: the volatile identity has no user_id (we only consider the address);
+   - b: the volatile identity has the user_id set (we then require a match of
+     both address and user_id);
+   and:
+   - 1: there is no matching persistent identity;
+   - 2: there is a exactly one persistent temporary identity that matches
+        (more than one match: a bug);
+   - 3: there is exactly one persistent non-temporary identity that matches
+        (more than one is impossible: database constraint violation);
+   - 4: multiple non-temporary identities, none matching.
+   Notice that the cross-product above is only reasonable for the pEp engine
+   version 2.
+   In v3 things are much more subtle, because there are *two* distinct username
+   columns, one in Identity and another in Person, to support fake accounts.
+   When porting to v3 the matrix covering every case will become larger. */
+enum _set_identity_case {
+    /* These are not valid cases, but they are useful to define the value of the
+       actually possible cases. */
+    _set_identity_case_a          = 8,
+    _set_identity_case_b          = 16,
+    _set_identity_case_impossible = 32, /* Engine bug or invalid database */
+    _set_identity_case_1          = 1,
+    _set_identity_case_2          = 2,
+    _set_identity_case_3          = 3,
+    _set_identity_case_4          = 4,
+    
+    _set_identity_case_a1 = _set_identity_case_a | _set_identity_case_1,
+    _set_identity_case_a2 = _set_identity_case_a | _set_identity_case_2,
+    /* _set_identity_case_a3 is impossible. */
+    _set_identity_case_a4 = _set_identity_case_a | _set_identity_case_4,
+    _set_identity_case_b1 = _set_identity_case_b | _set_identity_case_1,
+    _set_identity_case_b2 = _set_identity_case_b | _set_identity_case_2,
+    _set_identity_case_b3 = _set_identity_case_b | _set_identity_case_3,
+    /* _set_identity_case_b4 is impossible. */
+};
+
+/* Only used as a helper for set_identity, which validates inputs.  FIXME:
+   Volker, is this acceptable or do we need to be paranoid? */
+static enum _set_identity_case get_set_identity_case(
+        PEP_SESSION session, const pEp_identity *identity
+    )
+{
+    enum _set_identity_case res = _set_identity_case_impossible;
+    bool is_a = EMPTYSTR (identity->user_id);
+    int sql_result = SQLITE_OK;
+    bool any_match;
+
+    sqlite3_stmt *sql_statement = NULL;
+    if (is_a) {
+        /* We have no user_id to check: search any entry with a matching
+           address. */
+        //fprintf (stderr, "QQQ A0\n");
+        sql_result = sqlite3_prepare_v2
+            (session->db,
+             "SELECT user_id, address "
+             "FROM Identity "
+             "WHERE address = ?1;",
+             -1,
+             & sql_statement,
+             NULL);
+        CHECK_SQL_RESULT (sql_statement, sql_result);
+        reset_and_clear_bindings(sql_statement);
+        
+        sql_result = sqlite3_bind_text(sql_statement, 1, identity->address,
+                                       -1, SQLITE_STATIC);
+        CHECK_SQL_RESULT (sql_statement, sql_result);
+
+        sql_result = sqlite3_step(sql_statement);
+        CHECK_SQL_RESULT (sql_statement, sql_result);
+        any_match = (sql_result != SQLITE_DONE);
+        fprintf (stderr, "QQQ A: %i: any match: %s\n", sql_result, (any_match ? "yes":"no"));
+    }
+    else {
+        /* Perform an exact search, looking at user_id and address. */
+        //fprintf (stderr, "QQQ B0\n");
+        sql_result = sqlite3_prepare_v2
+            (session->db,
+             "SELECT user_id, address "
+             "FROM Identity "
+             "WHERE address = ?1 AND user_id = ?2;",
+             -1,
+             & sql_statement,
+             NULL);
+        CHECK_SQL_RESULT (sql_statement, sql_result);
+        reset_and_clear_bindings(sql_statement);
+        
+        sql_result = sqlite3_bind_text(sql_statement, 1, identity->address,
+                                       -1, SQLITE_STATIC);
+        CHECK_SQL_RESULT (sql_statement, sql_result);
+        sql_result = sqlite3_bind_text(sql_statement, 2, identity->user_id,
+                                       -1, SQLITE_STATIC);
+        CHECK_SQL_RESULT (sql_statement, sql_result);
+
+        sql_result = sqlite3_step(sql_statement);
+        CHECK_SQL_RESULT (sql_statement, sql_result);
+        any_match = (sql_result != SQLITE_DONE);
+        fprintf (stderr, "QQQ B %s %s: %i: any match: %s\n",
+                 identity->user_id, identity->address,
+                 sql_result, (any_match ? "YES":"no"));
+    }
+
+    /* If no row matched we are in case 1... */
+    if (! any_match) {
+        res |= _set_identity_case_1;
+        fprintf (stderr, "QQQ 1\n");
+        goto end;
+    }
+
+    /* ...Otherwise, if we are here, we are in one of the other cases 2..4. */
+    bool found_a_temporary_user_id = false;
+    int row_no = /* We are about to unconditionally increment this.*/ 0;
+    do {
+        row_no ++;
+        const unsigned char *user_id = sqlite3_column_text (sql_statement, 0);
+        const unsigned char *address = sqlite3_column_text (sql_statement, 1);
+        bool this_is_a_temporary_user_id = ((const unsigned char *)
+                                            strstr(user_id, "TOFU_") == user_id);
+        if (this_is_a_temporary_user_id) {
+            /* If any temporary match exists it must be the only one. */
+            if (found_a_temporary_user_id) {
+                fprintf (stderr, "QQQ found two TOFU_ user ids\n");
+                res = _set_identity_case_impossible;
+                goto end;
+            }
+            
+            found_a_temporary_user_id = true;
+        }
+
+        /* Get the next row. */
+        sql_result = sqlite3_step(sql_statement);
+        CHECK_SQL_RESULT (sql_statement, sql_result);
+    } while (sql_result != SQLITE_ROW);
+
+    /* If we found one matching temporary identity (we have checked that it is
+       only one) then we know what case this is. */
+    if (found_a_temporary_user_id) {
+        fprintf (stderr, "QQQ 2\n");
+        res |= _set_identity_case_2;
+    }
+    else if (row_no == 1) {
+        fprintf (stderr, "QQQ 3\n");
+        res |= _set_identity_case_3;
+    }
+    else {
+        fprintf (stderr, "QQQ 4\n");
+        res |= _set_identity_case_4;
+    }
+
+ end:
+    sqlite3_finalize(sql_statement);
+    return res;
+}
 
 /* Only used as a helper for set_identity, which validates inputs.  FIXME:
    Volker, is this acceptable or do we need to be paranoid? */
@@ -3815,7 +3974,6 @@ static PEP_STATUS _set_person_sql(
     )
 {
     int sql_result = SQLITE_OK;
-
 
     // Testing code: make sure, a little brutally, that we can actually write
     // the supposedly-unused field Person.main_key_id without violating a
@@ -3841,8 +3999,8 @@ static PEP_STATUS _set_person_sql(
        & sql_statement,
        NULL);
     CHECK_SQL_RESULT (sql_statement, sql_result);
-
     reset_and_clear_bindings(sql_statement);
+
     sql_result = sqlite3_bind_text (sql_statement, 1, identity->user_id, -1,
                                     SQLITE_STATIC);
     CHECK_SQL_RESULT (sql_statement, sql_result);
@@ -3926,8 +4084,12 @@ DYNAMIC_API PEP_STATUS set_identity(
     PEP_STATUS status = PEP_STATUS_OK;
     
     if (! session || ! identity || EMPTYSTR (identity->address)
-        || EMPTYSTR (identity->user_id) || EMPTYSTR (identity->username))
+        // user_id may or may not be supplied.
+        || EMPTYSTR (identity->username))
         return PEP_ILLEGAL_VALUE;
+
+    enum _set_identity_case set_identity_case
+        = get_set_identity_case(session, identity);
 
     sql_begin_transaction (session);
 
