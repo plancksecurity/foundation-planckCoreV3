@@ -3794,8 +3794,8 @@ void sql_rollback_transaction(PEP_SESSION session)
     do {                                                           \
         int _sql_result_copy = (result);                           \
         sqlite3_stmt *_sql_statement = (statement);                \
-        if (!(_sql_result_copy != SQLITE_OK                          \
-              && _sql_result_copy != SQLITE_DONE)) {                  \
+        if (_sql_result_copy != SQLITE_OK                          \
+            && _sql_result_copy != SQLITE_DONE) {                  \
             fprintf (stderr, "%s:%i: (%s): SQL error: %s => %s (%i)\n",       \
                      __FILE__, __LINE__, __FUNCTION__, /* FIXME: obviously this is brutal. */\
                      ((_sql_statement == NULL)                     \
