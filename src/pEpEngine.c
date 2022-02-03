@@ -3834,7 +3834,7 @@ enum _set_identity_case {
        actually possible cases. */
     _set_identity_case_a          = 8,
     _set_identity_case_b          = 16,
-    _set_identity_case_impossible = 32, /* Engine bug or invalid database */
+    _set_identity_case_impossible = 256, /* Engine bug or invalid database */
     _set_identity_case_1          = 1,
     _set_identity_case_2          = 2,
     _set_identity_case_3          = 3,
@@ -3850,9 +3850,11 @@ enum _set_identity_case {
     /* _set_identity_case_b4 is impossible. */
 };
 
-/* Only used as a helper for set_identity, which validates inputs.  FIXME:
-   Volker, is this acceptable or do we need to be paranoid? */
-static enum _set_identity_case get_set_identity_case(
+/* Given an identity to be used in set_identity, return the appropriate
+   _set_identity_case for it.
+   This is used as a helper for set_identity, which validates inputs.
+   FIXME: Volker, is this acceptable or do we need to be paranoid? */
+static enum _set_identity_case find_set_identity_case(
         PEP_SESSION session, const pEp_identity *identity
     )
 {
@@ -3865,6 +3867,7 @@ static enum _set_identity_case get_set_identity_case(
     if (is_a) {
         /* We have no user_id to check: search any entry with a matching
            address. */
+        res = _set_identity_case_a;
         //fprintf (stderr, "QQQ A0\n");
         sql_result = sqlite3_prepare_v2
             (session->db,
@@ -3876,7 +3879,7 @@ static enum _set_identity_case get_set_identity_case(
              NULL);
         CHECK_SQL_RESULT (sql_statement, sql_result);
         reset_and_clear_bindings(sql_statement);
-        
+
         sql_result = sqlite3_bind_text(sql_statement, 1, identity->address,
                                        -1, SQLITE_STATIC);
         CHECK_SQL_RESULT (sql_statement, sql_result);
@@ -3889,6 +3892,7 @@ static enum _set_identity_case get_set_identity_case(
     else {
         /* Perform an exact search, looking at user_id and address. */
         //fprintf (stderr, "QQQ B0\n");
+        res = _set_identity_case_b;
         sql_result = sqlite3_prepare_v2
             (session->db,
              "SELECT user_id, address "
@@ -3899,7 +3903,7 @@ static enum _set_identity_case get_set_identity_case(
              NULL);
         CHECK_SQL_RESULT (sql_statement, sql_result);
         reset_and_clear_bindings(sql_statement);
-        
+
         sql_result = sqlite3_bind_text(sql_statement, 1, identity->address,
                                        -1, SQLITE_STATIC);
         CHECK_SQL_RESULT (sql_statement, sql_result);
@@ -3938,7 +3942,7 @@ static enum _set_identity_case get_set_identity_case(
                 res = _set_identity_case_impossible;
                 goto end;
             }
-            
+
             found_a_temporary_user_id = true;
         }
 
@@ -4082,17 +4086,81 @@ DYNAMIC_API PEP_STATUS set_identity(
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    
+
     if (! session || ! identity || EMPTYSTR (identity->address)
         // user_id may or may not be supplied.
         || EMPTYSTR (identity->username))
         return PEP_ILLEGAL_VALUE;
 
     enum _set_identity_case set_identity_case
-        = get_set_identity_case(session, identity);
+        = find_set_identity_case(session, identity);
 
     sql_begin_transaction (session);
 
+    int sql_result = SQLITE_OK;
+    sqlite3_stmt *sql_statement = NULL;
+
+    switch (set_identity_case) {
+    case _set_identity_case_a1: {
+        char *user_id = calloc(1, strlen(identity->address) + 6);
+
+        // FIXME: the user_idis not pointed by identity
+   
+        fprintf (stderr, "GOOD set_identity_case %i\n", (int) set_identity_case);
+        break;
+    }
+        
+    case _set_identity_case_a2:
+        fprintf (stderr, "GOOD set_identity_case %i\n", (int) set_identity_case);
+        break;
+
+    /* _set_identity_case_a3 is impossible. */
+    case _set_identity_case_a4:
+        fprintf (stderr, "GOOD set_identity_case %i\n", (int) set_identity_case);
+        break;
+
+    case _set_identity_case_b1:
+        fprintf (stderr, "GOOD set_identity_case %i\n", (int) set_identity_case);
+        break;
+
+    case _set_identity_case_b2:
+        fprintf (stderr, "GOOD set_identity_case %i\n", (int) set_identity_case);
+        break;
+
+    case _set_identity_case_b3:
+        fprintf (stderr, "GOOD set_identity_case %i\n", (int) set_identity_case);
+        break;
+
+    /* _set_identity_case_b4 is impossible. */
+
+    default:
+        fprintf (stderr, "invalid set_identity_case %i\n",
+                 (int) set_identity_case);
+        abort ();
+        //assert (false);
+    }
+    
+    sql_result = sqlite3_prepare_v2
+      (session->db,
+       "INSERT OR REPLACE INTO Identity "
+       "  (address, user_id, flags, is_own, " // FIXME: *not* setting main_key_id, on purpose
+       "   pEp_version_major, pEp_version_minor, enc_format) "
+       "VALUES "
+       "  (?1, ?2, ?3, ?4, ?5, ?6, ?7);" // FIXME: notice the NULL value
+       ,
+       -1,
+       & sql_statement,
+       NULL);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+
+    reset_and_clear_bindings(sql_statement);
+    sql_result = sqlite3_bind_text (sql_statement, 1, identity->address, -1,
+                                    SQLITE_STATIC);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+
+    sql_result = sqlite3_step(sql_statement);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    /*
     status = _set_person_sql (session, identity);
     if (status != PEP_STATUS_OK)
         goto end;
@@ -4100,7 +4168,7 @@ DYNAMIC_API PEP_STATUS set_identity(
     status = _set_identity_sql (session, identity);
     if (status != PEP_STATUS_OK)
         goto end;
-
+    */
     // Notice that I am disregarding the main_key_id foreign key in Identity.
     // Because of this I do not need to write Pgp_keypair.
     
