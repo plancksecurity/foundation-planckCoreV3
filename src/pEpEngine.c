@@ -4008,10 +4008,10 @@ static enum _set_identity_case _find_set_identity_case_b(
         res |= _set_identity_case_3;
         goto end;
     }
+    sqlite3_finalize(sql_statement); sql_statement = NULL;
 
     /* ...Otherwise we cannot tell without another query where we search for the
        address only. */
-    sqlite3_finalize(sql_statement);
     sql_result = sqlite3_prepare_v2
         (session->db,
          "SELECT user_id "
@@ -4210,13 +4210,12 @@ static PEP_STATUS _set_identity_insert_new(
     CHECK_SQL_RESULT (sql_statement, sql_result);
     sql_result = sqlite3_bind_int (sql_statement, 4, identity->major_ver > 0);
     CHECK_SQL_RESULT (sql_statement, sql_result);
-
     sql_result = sqlite3_step(sql_statement);
     CHECK_SQL_RESULT (sql_statement, sql_result);
+    sqlite3_finalize(sql_statement); sql_statement = NULL;
 
     /* Second DML statement: Insert a new Identity row, referring the new Person
        row. */
-    sqlite3_finalize(sql_statement);
     sql_result = sqlite3_prepare_v2
       (session->db,
        "INSERT INTO Identity "
@@ -4300,7 +4299,7 @@ static PEP_STATUS _set_identity_update_existing(
     CHECK_SQL_RESULT (sql_statement, sql_result);
     sql_result = sqlite3_step(sql_statement);
     CHECK_SQL_RESULT (sql_statement, sql_result);
-    sqlite3_finalize(sql_statement);
+    sqlite3_finalize(sql_statement); sql_statement = NULL;
 
     /* Second DML statement: Update the Identity table. */
     sql_result = sqlite3_prepare_v2
@@ -4402,7 +4401,7 @@ static PEP_STATUS _set_identity_a2(
         sqlite3_finalize(sql_statement);
         return PEP_OUT_OF_MEMORY;
     }
-    sqlite3_finalize(sql_statement);
+    sqlite3_finalize(sql_statement); sql_statement = NULL;
     //fprintf (stderr, "%s: temporary_user_id is %s\n", __FUNCTION__, temporary_user_id);
 
     /* Update an existing row. */
