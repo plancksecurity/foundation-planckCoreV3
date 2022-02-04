@@ -23,6 +23,17 @@ reset_and_clear_bindings(sqlite3_stmt *s)
     sqlite3_clear_bindings(s);
 } 
 
+/* Return true iff the pointed string is a temporary user-id. */
+static bool _is_temporary_user_id(const char *s)
+{
+    assert(s != NULL);
+    if (s == NULL) {
+        fprintf (stderr, "%s: NULL\n", __FUNCTION__);
+        abort();
+    }
+    return ((const char *) strstr(s, "TOFU_") == s);
+}
+
 static volatile int init_count = -1;
 
 // sql overloaded functions - modified from sqlite3.c
@@ -3848,7 +3859,7 @@ enum _set_identity_case {
     _set_identity_case_b1 = _set_identity_case_b | _set_identity_case_1,
     _set_identity_case_b2 = _set_identity_case_b | _set_identity_case_2,
     _set_identity_case_b3 = _set_identity_case_b | _set_identity_case_3,
-    /* _set_identity_case_b4 is impossible. */
+    _set_identity_case_b4 = _set_identity_case_b | _set_identity_case_4,
 };
 
 /* Return a statically-allocated string containing a printed representation
@@ -3864,81 +3875,39 @@ static const char *set_identity_case_to_string (enum _set_identity_case c)
     case _set_identity_case_b1:         return "b1";
     case _set_identity_case_b2:         return "b2";
     case _set_identity_case_b3:         return "b3";
-    case _set_identity_case_b | _set_identity_case_4:  return "b4 (IMPOSSIBLE)";
+    case _set_identity_case_b4:         return "b4";
     default:                            return "OTHER IMPOSSIBLE CASE";
     }
 }
 
-/* Given an identity to be used in set_identity, return the appropriate
-   _set_identity_case for it.
-   This is used as a helper for set_identity, which validates inputs.
-   FIXME: Volker, is this acceptable or do we need to be paranoid? */
-static enum _set_identity_case _find_set_identity_case(
+/* This is a helper for _find_set_identity_case, only supporting the a case. */ 
+static enum _set_identity_case _find_set_identity_case_a(
         PEP_SESSION session, const pEp_identity *identity
     )
 {
-    enum _set_identity_case res = _set_identity_case_impossible;
-    bool is_a = EMPTYSTR (identity->user_id);
-    // fprintf (stderr, "QQQ user_id \"%s\": are we in the A case? %s\n", identity->user_id, (is_a ? "YES" : "no"));
+    enum _set_identity_case res = _set_identity_case_a;
     int sql_result = SQLITE_OK;
     bool any_match;
 
-    sqlite3_stmt *sql_statement = NULL;
-    if (is_a) {
-        /* We have no user_id to check: search any entry with a matching
-           address. */
-        res = _set_identity_case_a;
-        sql_result = sqlite3_prepare_v2
-            (session->db,
-             "SELECT user_id, address "
-             "FROM Identity "
-             "WHERE address = ?1;",
-             -1,
-             & sql_statement,
-             NULL);
-        CHECK_SQL_RESULT (sql_statement, sql_result);
-        reset_and_clear_bindings(sql_statement);
-
-        sql_result = sqlite3_bind_text(sql_statement, 1, identity->address,
-                                       -1, SQLITE_STATIC);
-        CHECK_SQL_RESULT (sql_statement, sql_result);
-
-        sql_result = sqlite3_step(sql_statement);
-        CHECK_SQL_RESULT (sql_statement, sql_result);
-        any_match = (sql_result != SQLITE_DONE);
-        //fprintf (stderr, "QQQ A: %i: any match: %s\n", sql_result, (any_match ? "yes":"no"));
-    }
-    else {
-        /* Perform an exact search, looking at user_id and address. */
-        //fprintf (stderr, "QQQ B0\n");
-        res = _set_identity_case_b;
-        sql_result = sqlite3_prepare_v2
-            (session->db,
-             "SELECT user_id, address "
-             "FROM Identity "
-             "WHERE address = ?1 AND user_id = ?2;",
-             -1,
-             & sql_statement,
-             NULL);
-        CHECK_SQL_RESULT (sql_statement, sql_result);
-        reset_and_clear_bindings(sql_statement);
-
-        sql_result = sqlite3_bind_text(sql_statement, 1, identity->address,
-                                       -1, SQLITE_STATIC);
-        CHECK_SQL_RESULT (sql_statement, sql_result);
-        sql_result = sqlite3_bind_text(sql_statement, 2, identity->user_id,
-                                       -1, SQLITE_STATIC);
-        CHECK_SQL_RESULT (sql_statement, sql_result);
-
-        sql_result = sqlite3_step(sql_statement);
-        CHECK_SQL_RESULT (sql_statement, sql_result);
-        any_match = (sql_result != SQLITE_DONE);
-        /*
-        fprintf (stderr, "QQQ B %s %s: %i: any match: %s\n",
-                 identity->user_id, identity->address,
-                 sql_result, (any_match ? "YES":"no"));
-        */
-    }
+    /* We have no user_id to check: search any entry with a matching address. */
+    sqlite3_stmt *sql_statement;
+    sql_result = sqlite3_prepare_v2
+        (session->db,
+         "SELECT user_id "
+         "FROM Identity "
+         "WHERE address = ?1;",
+         -1,
+         & sql_statement,
+         NULL);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    reset_and_clear_bindings(sql_statement);
+    sql_result = sqlite3_bind_text(sql_statement, 1, identity->address,
+                                   -1, SQLITE_STATIC);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_step(sql_statement);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    any_match = (sql_result != SQLITE_DONE);
+    //fprintf (stderr, "QQQ A: %i: any match: %s\n", sql_result, (any_match ? "yes":"no"));
 
     /* If no row matched we are in case 1... */
     if (! any_match) {
@@ -3955,9 +3924,8 @@ static enum _set_identity_case _find_set_identity_case(
         /* Handle the last row we have found. */
         matching_row_no ++;
         const unsigned char *user_id = sqlite3_column_text (sql_statement, 0);
-        const unsigned char *address = sqlite3_column_text (sql_statement, 1);
-        fprintf (stderr, "* FROM DB: <user_id: %s, address: %s>\n", user_id, address);
-        if ((const unsigned char *) strstr(user_id, "TOFU_") == user_id)
+        fprintf (stderr, "* FROM DB: <user_id: %s, address: %s>\n", user_id, identity->address);
+        if (_is_temporary_user_id (user_id))
             found_a_temporary_user_id = true;
 
         /* Get the next row, if any. */
@@ -4001,6 +3969,97 @@ static enum _set_identity_case _find_set_identity_case(
  end:
     sqlite3_finalize(sql_statement);
     return res;
+}
+
+/* See the comment _find_set_identity_case_a. */
+static enum _set_identity_case _find_set_identity_case_b(
+        PEP_SESSION session, const pEp_identity *identity
+    )
+{
+    enum _set_identity_case res = _set_identity_case_b;
+    // fprintf (stderr, "QQQ user_id \"%s\": are we in the A case? %s\n", identity->user_id, (is_a ? "YES" : "no"));
+    int sql_result = SQLITE_OK;
+
+    /* Perform an exact search, looking at user_id and address. */
+    sqlite3_stmt *sql_statement;
+    sql_result = sqlite3_prepare_v2
+        (session->db,
+         "SELECT user_id, address "
+         "FROM Identity "
+         "WHERE address = ?1 AND user_id = ?2;",
+         -1,
+         & sql_statement,
+         NULL);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    reset_and_clear_bindings(sql_statement);
+
+    sql_result = sqlite3_bind_text(sql_statement, 1, identity->address,
+                                   -1, SQLITE_STATIC);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_bind_text(sql_statement, 2, identity->user_id,
+                                   -1, SQLITE_STATIC);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_step(sql_statement);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+
+    /* If we found an exact match then this is B3... */
+    bool any_match = (sql_result != SQLITE_DONE);
+    if (any_match) {
+        res |= _set_identity_case_3;
+        goto end;
+    }
+
+    /* ...Otherwise we cannot tell without another query where we search for the
+       address only. */
+    sqlite3_finalize(sql_statement);
+    sql_result = sqlite3_prepare_v2
+        (session->db,
+         "SELECT user_id "
+         "FROM Identity "
+         "WHERE address = ?1;",
+         -1,
+         & sql_statement,
+         NULL);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    reset_and_clear_bindings(sql_statement);
+    sql_result = sqlite3_bind_text(sql_statement, 1, identity->address,
+                                   -1, SQLITE_STATIC);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_step(sql_statement);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+
+    /* In case of no match, this is B1. */
+    any_match = (sql_result != SQLITE_DONE);
+    if (! any_match) {
+        res |= _set_identity_case_1;
+        goto end;
+    }
+
+    /* If the userid is temporary, the case is B2, otherwise it is B4 -- We have
+       already excluded B3. */
+    const unsigned char *user_id = sqlite3_column_text (sql_statement, 0);
+    if (_is_temporary_user_id (user_id))
+        res |= _set_identity_case_2;
+    else
+        res |= _set_identity_case_4;
+
+ end:
+    sqlite3_finalize(sql_statement);
+    return res;
+}
+
+/* Given an identity to be used in set_identity, return the appropriate
+   _set_identity_case for it.
+   This is used as a helper for set_identity, which validates inputs.
+   FIXME: Volker, is this acceptable or do we need to be paranoid? */
+static enum _set_identity_case _find_set_identity_case(
+        PEP_SESSION session, const pEp_identity *identity
+    )
+{
+    if (EMPTYSTR (identity->user_id))
+        return _find_set_identity_case_a(session, identity);
+    else
+        return _find_set_identity_case_b(session, identity);
 }
 
 /* /\* Only used as a helper for set_identity, which validates inputs.  FIXME: */
@@ -4395,10 +4454,16 @@ static PEP_STATUS _set_identity_b3(
         PEP_SESSION session, const pEp_identity *identity
     )
 {
-    int sql_result = SQLITE_OK;
-
-    fprintf (stderr, "%s: unimplemented\n", __FUNCTION__); abort ();
-    return (sql_result == SQLITE_DONE) ? PEP_STATUS_OK : PEP_COMMIT_FAILED;
+    /* There is an exact match, so we can simply update the non-key fields. */
+    return _set_identity_update_existing(session, identity, identity->user_id);
+}
+/* See the comment in _set_identity_a1. */
+static PEP_STATUS _set_identity_b4(
+        PEP_SESSION session, const pEp_identity *identity
+    )
+{
+    /* Insert a new record. */
+    return _set_identity_insert_new(session, identity, identity->user_id);
 }
 
 DYNAMIC_API PEP_STATUS set_identity(
@@ -4436,7 +4501,8 @@ DYNAMIC_API PEP_STATUS set_identity(
         status = _set_identity_b2 (session, identity); break;
     case _set_identity_case_b3:
         status = _set_identity_b3 (session, identity); break;
-    /* _set_identity_case_b4 is impossible. */
+    case _set_identity_case_b4:
+        status = _set_identity_b4 (session, identity); break;
 
     default:
         fprintf (stderr, "invalid set_identity_case %i\n",
