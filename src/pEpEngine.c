@@ -4290,12 +4290,12 @@ DYNAMIC_API PEP_STATUS set_identity(
  end:
     if (status == PEP_STATUS_OK)
         {
-        fprintf (stderr, "SUCCESS: %s on %s, case %i\n", __FUNCTION__, identity->address, set_identity_case_to_string (set_identity_case));
+        fprintf (stderr, "SUCCESS: %s on %s, case %s\n", __FUNCTION__, identity->address, set_identity_case_to_string (set_identity_case));
         sql_commit_transaction(session);
         }
     else
         {
-        fprintf (stderr, "set_identity failed: status %i (%s)\n", (int) status, pEp_status_to_string (status));
+            fprintf (stderr, "FAILURE: %s on %s, case %s: status %i (%s)\n", __FUNCTION__, identity->address, set_identity_case_to_string (set_identity_case), (int) status, pEp_status_to_string (status));
         sql_rollback_transaction(session);
         }
     return status;
