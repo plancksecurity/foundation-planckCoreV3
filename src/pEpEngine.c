@@ -4445,9 +4445,120 @@ static PEP_STATUS _set_identity_b2(
         PEP_SESSION session, const pEp_identity *identity
     )
 {
+    /* This is the most difficult case.  We have to conceptually change the
+       primary key in the rows of several tables; but doing that would break
+       foreign key constraints, so instead we have to delete and re-insert;
+       the exception is Trust, where we can actually afford a rename.
+       Notice that both Trust and Identity reference Person.  An appropriate
+       order which does not violate constraints is therefore:
+       - delete from Identity;
+       - insert into Person and Identity (we have a helper function);
+       - update Trust, referencing the new rows in Person;
+       - delete from Person.
+       Before doing this we need to find the current user_id in the database,
+       which is different from the one in identity. */
+    PEP_STATUS res = PEP_COMMIT_FAILED;
     int sql_result = SQLITE_OK;
-    fprintf (stderr, "%s: unimplemented\n", __FUNCTION__); abort ();
-    return (sql_result == SQLITE_DONE) ? PEP_STATUS_OK : PEP_COMMIT_FAILED;
+    sqlite3_stmt *sql_statement = NULL;
+
+    /* Query: find the user_id. */
+    fprintf (stderr, "%s: query\n", __FUNCTION__);
+    char *old_temporary_user_id = NULL;
+    sql_result = sqlite3_prepare_v2
+      (session->db,
+       "SELECT user_id "
+       "FROM Identity "
+       "WHERE address=?1;",
+       -1,
+       & sql_statement,
+       NULL);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    reset_and_clear_bindings(sql_statement);
+    sql_result = sqlite3_bind_text (sql_statement, 1, identity->address, -1,
+                                    SQLITE_STATIC);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_step(sql_statement);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    old_temporary_user_id = strdup (sqlite3_column_text (sql_statement, 0));
+    if (old_temporary_user_id == NULL) {
+        sqlite3_finalize(sql_statement);
+        return PEP_OUT_OF_MEMORY;
+    }
+    sqlite3_finalize(sql_statement); sql_statement = NULL;
+
+    /* First DML statement: delete from Identity. */
+    fprintf (stderr, "%s: DML1\n", __FUNCTION__);
+    sql_result = sqlite3_prepare_v2
+      (session->db,
+       "DELETE "
+       "FROM Identity "
+       "WHERE address=?1;",
+       -1,
+       & sql_statement,
+       NULL);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    reset_and_clear_bindings(sql_statement);
+    sql_result = sqlite3_bind_text (sql_statement, 1, identity->address, -1,
+                                    SQLITE_STATIC);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_step(sql_statement);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sqlite3_finalize(sql_statement); sql_statement = NULL;
+
+    /* Insert new rows into Person and Identity. */
+    fprintf (stderr, "%s: Insert new rows\n", __FUNCTION__);
+    if (_set_identity_insert_new(session, identity, identity->user_id)
+        != PEP_STATUS_OK)
+        goto end;
+
+    /* Update Trust, referencing the new rows. */
+    fprintf (stderr, "%s: DML2\n", __FUNCTION__);
+    sql_result = sqlite3_prepare_v2
+      (session->db,
+       "UPDATE Trust "
+       "SET user_id = ?1 "
+       "WHERE user_id = ?2;",
+       -1,
+       & sql_statement,
+       NULL);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    reset_and_clear_bindings(sql_statement);
+    sql_result = sqlite3_bind_text (sql_statement, 1, identity->user_id, -1,
+                                    SQLITE_STATIC);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_bind_text (sql_statement, 2, old_temporary_user_id, -1,
+                                    SQLITE_STATIC);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_step(sql_statement);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sqlite3_finalize(sql_statement); sql_statement = NULL;
+
+    /* Delete the old row from Person, now no longer referenced. */
+    fprintf (stderr, "%s: DML3\n", __FUNCTION__);
+    sql_result = sqlite3_prepare_v2
+      (session->db,
+       "DELETE "
+       "FROM Person "
+       "WHERE id = ?1;",
+       -1,
+       & sql_statement,
+       NULL);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    reset_and_clear_bindings(sql_statement);
+    sql_result = sqlite3_bind_text (sql_statement, 1, old_temporary_user_id, -1,
+                                    SQLITE_STATIC);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_step(sql_statement);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sqlite3_finalize(sql_statement); sql_statement = NULL;
+
+    /* If we arrived here then everything worked. */
+    res = PEP_STATUS_OK;
+
+ end:
+    sqlite3_finalize(sql_statement);
+    free(old_temporary_user_id);
+    return res;
 }
 /* See the comment in _set_identity_a1. */
 static PEP_STATUS _set_identity_b3(
