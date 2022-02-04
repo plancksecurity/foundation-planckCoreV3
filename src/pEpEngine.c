@@ -3851,7 +3851,7 @@ enum _set_identity_case {
     _set_identity_case_2          = 2,
     _set_identity_case_3          = 3,
     _set_identity_case_4          = 4,
-    
+
     _set_identity_case_a1 = _set_identity_case_a | _set_identity_case_1,
     _set_identity_case_a2 = _set_identity_case_a | _set_identity_case_2,
     _set_identity_case_a3 = _set_identity_case_a | _set_identity_case_3,
@@ -3947,7 +3947,7 @@ static enum _set_identity_case _find_set_identity_case_a(
 /*
   FIXME: this anonmaly can be fixed at startup by a migration SQL statement
   doing
-    DELETE FROM Identity WHERE EXISTS... 
+    DELETE FROM Identity WHERE EXISTS...
     DELETE FROM Trust WHERE EXISTS...
   The idea is deleting temporary addresses where a non-temporary address also
   exists.
@@ -4163,10 +4163,10 @@ static PEP_STATUS _set_identity_update_existing(
        "UPDATE Person "
        "SET "
        // *not* setting id
-       "    username = ?1, " 
+       "    username = ?1, "
        // *not* setting main_key_id
-       "    lang = ?2, " 
-       "    is_pEp_user = ?3 " 
+       "    lang = ?2, "
+       "    is_pEp_user = ?3 "
        "WHERE id = ?4;",
        -1,
        & sql_statement,
@@ -4204,7 +4204,7 @@ static PEP_STATUS _set_identity_update_existing(
        "   is_own = ?2, "
        "   pEp_version_major = ?3, "
        "   pEp_version_minor = ?4, "
-       "   enc_format = ?5 " 
+       "   enc_format = ?5 "
        "WHERE user_id = ?6;",
        -1,
        & sql_statement,
