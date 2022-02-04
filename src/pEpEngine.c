@@ -3873,7 +3873,7 @@ static const char *set_identity_case_to_string (enum _set_identity_case c)
    _set_identity_case for it.
    This is used as a helper for set_identity, which validates inputs.
    FIXME: Volker, is this acceptable or do we need to be paranoid? */
-static enum _set_identity_case find_set_identity_case(
+static enum _set_identity_case _find_set_identity_case(
         PEP_SESSION session, const pEp_identity *identity
     )
 {
@@ -4113,25 +4113,17 @@ static enum _set_identity_case find_set_identity_case(
 /*     return (sql_result == SQLITE_OK || sql_result == SQLITE_DONE) ? PEP_STATUS_OK : PEP_CANNOT_SET_IDENTITY; */
 /* } */
 
-/* A helper function for set_identity, implementing one of the cases in enum
-   _set_identity_case; see its comment.  Arguments validated in set_identity.
-   This is executed within an SQL transation, which is began and committed or
-   rolled back in the caller. */
-static PEP_STATUS set_identity_a1(
-        PEP_SESSION session, const pEp_identity *identity
+/* A helper function factoring the common code in _set_identity_a1 and
+   _set_identity_b1, which need to insert one new line each in the Person and
+   Identity tables.  This function uses the given user_id when writing into the
+   database, and ignores any user_id from the identity. */
+static PEP_STATUS _set_identity_insert_new(
+        PEP_SESSION session, const pEp_identity *identity, const char *user_id
     )
 {
     int sql_result = SQLITE_OK;
     sqlite3_stmt *sql_statement = NULL;
 
-    /* There is no user_id.  Make a new temporary one. */
-    size_t user_id_size
-        = /* "TOFU_" */ 5 + strlen(identity->address) + /* '\0' */ 1;
-    char *user_id = calloc(1, user_id_size);
-    if (user_id == NULL)
-        return PEP_OUT_OF_MEMORY;
-    snprintf(user_id, user_id_size, "TOFU_%s", identity->address);
-    
     /* First DML statement: Insert a new Person row. */
     sql_result = sqlite3_prepare_v2
       (session->db,
@@ -4201,13 +4193,35 @@ static PEP_STATUS set_identity_a1(
 
  end:
     sqlite3_finalize(sql_statement);
-    free(user_id);
     //return (sql_result == SQLITE_OK || sql_result == SQLITE_DONE) ? PEP_STATUS_OK : PEP_COMMIT_FAILED;
     return (sql_result == SQLITE_DONE) ? PEP_STATUS_OK : PEP_COMMIT_FAILED;
 }
 
-/* See the comment in set_identity_a1. */
-static PEP_STATUS set_identity_a2(
+/* A helper function for set_identity, implementing one of the cases in enum
+   _set_identity_case; see its comment.  Arguments validated in set_identity.
+   This is executed within an SQL transation, which is began and committed or
+   rolled back in the caller. */
+static PEP_STATUS _set_identity_a1(
+        PEP_SESSION session, const pEp_identity *identity
+    )
+{
+    /* There is no user_id.  Make a new temporary one. */
+    size_t user_id_size
+        = /* "TOFU_" */ 5 + strlen(identity->address) + /* '\0' */ 1;
+    char *user_id = calloc(1, user_id_size);
+    if (user_id == NULL)
+        return PEP_OUT_OF_MEMORY;
+    snprintf(user_id, user_id_size, "TOFU_%s", identity->address);
+
+    /* Use the helper _set_identity_insert_new to write a new record, and free
+       the user_id before leaving. */
+    PEP_STATUS res = _set_identity_insert_new (session, identity, user_id);
+    free(user_id);
+    return res;
+}
+
+/* See the comment in _set_identity_a1. */
+static PEP_STATUS _set_identity_a2(
         PEP_SESSION session, const pEp_identity *identity
     )
 {
@@ -4234,13 +4248,17 @@ static PEP_STATUS set_identity_a2(
                                     SQLITE_STATIC);
     CHECK_SQL_RESULT (sql_statement, sql_result);
     sql_result = sqlite3_step(sql_statement);
+    /* This will give only one result in the A2 case but I do not want to
+       verify it, since this function is also reused for the A4 case where
+       results are more than one. */
     CHECK_SQL_RESULT (sql_statement, sql_result);
     temporary_user_id = strdup (sqlite3_column_text (sql_statement, 0));
     if (temporary_user_id == NULL) {
         sqlite3_finalize(sql_statement);
         return PEP_OUT_OF_MEMORY;
     }
-    fprintf (stderr, "%s: temporary_user_id is %s\n", __FUNCTION__, temporary_user_id);
+    //fprintf (stderr, "%s: temporary_user_id is %s\n", __FUNCTION__, temporary_user_id);
+    sqlite3_finalize(sql_statement);
 
     /* First DML statement: Update the Person table. */
     sql_result = sqlite3_prepare_v2
@@ -4275,9 +4293,9 @@ static PEP_STATUS set_identity_a2(
     CHECK_SQL_RESULT (sql_statement, sql_result);
     sql_result = sqlite3_step(sql_statement);
     CHECK_SQL_RESULT (sql_statement, sql_result);
+    sqlite3_finalize(sql_statement);
 
     /* Second DML statement: Update the Identity table. */
-    sqlite3_finalize(sql_statement);
     sql_result = sqlite3_prepare_v2
       (session->db,
        "UPDATE Identity "
@@ -4318,36 +4336,42 @@ static PEP_STATUS set_identity_a2(
     //return (sql_result == SQLITE_OK || sql_result == SQLITE_DONE) ? PEP_STATUS_OK : PEP_COMMIT_FAILED;
     return (sql_result == SQLITE_DONE) ? PEP_STATUS_OK : PEP_COMMIT_FAILED;
 }
-/* See the comment in set_identity_a1. */
-static PEP_STATUS set_identity_a4(
+/* See the comment in _set_identity_a1. */
+static PEP_STATUS _set_identity_a4(
+        PEP_SESSION session, const pEp_identity *identity
+    )
+{
+    /* This is bizarre.  There are multiple non-temporary records for the same
+       address; we have to update one, but there is no way to know which one
+       is the one we want.  Choose one arbitrarily, and update that.  In fact
+       this is what we do in the a2 case, except that in a2 we have the
+       guarantee that the record will be only one. */
+    fprintf (stderr,
+             "%s: WARNING: multiple non-temporary records for the same "
+             "address.  Updating *one*, chosen arbitrarily\n", __FUNCTION__);
+    return _set_identity_a2(session, identity);
+}
+/* See the comment in _set_identity_a1. */
+static PEP_STATUS _set_identity_b1(
+        PEP_SESSION session, const pEp_identity *identity
+    )
+{
+    /* We need to create a new record.  This is very similar to the a1 case,
+       except that the userid is given in identity.  The helper
+       _set_identity_insert_new factors the common code. */
+    return _set_identity_insert_new(session, identity, identity->user_id);
+}
+/* See the comment in _set_identity_a1. */
+static PEP_STATUS _set_identity_b2(
         PEP_SESSION session, const pEp_identity *identity
     )
 {
     int sql_result = SQLITE_OK;
-
     fprintf (stderr, "%s: unimplemented\n", __FUNCTION__); abort ();
     return (sql_result == SQLITE_DONE) ? PEP_STATUS_OK : PEP_COMMIT_FAILED;
 }
-/* See the comment in set_identity_a1. */
-static PEP_STATUS set_identity_b1(
-        PEP_SESSION session, const pEp_identity *identity
-    )
-{
-    int sql_result = SQLITE_OK;
-    fprintf (stderr, "%s: unimplemented\n", __FUNCTION__); abort ();
-    return (sql_result == SQLITE_DONE) ? PEP_STATUS_OK : PEP_COMMIT_FAILED;
-}
-/* See the comment in set_identity_a1. */
-static PEP_STATUS set_identity_b2(
-        PEP_SESSION session, const pEp_identity *identity
-    )
-{
-    int sql_result = SQLITE_OK;
-    fprintf (stderr, "%s: unimplemented\n", __FUNCTION__); abort ();
-    return (sql_result == SQLITE_DONE) ? PEP_STATUS_OK : PEP_COMMIT_FAILED;
-}
-/* See the comment in set_identity_a1. */
-static PEP_STATUS set_identity_b3(
+/* See the comment in _set_identity_a1. */
+static PEP_STATUS _set_identity_b3(
         PEP_SESSION session, const pEp_identity *identity
     )
 {
@@ -4375,23 +4399,23 @@ DYNAMIC_API PEP_STATUS set_identity(
 
     /* Find which case we are in and handle it. */
     enum _set_identity_case set_identity_case
-        = find_set_identity_case(session, identity);
+        = _find_set_identity_case(session, identity);
     fprintf (stderr, "%s on %s: handling case %s\n", __FUNCTION__, identity->address, set_identity_case_to_string (set_identity_case));
 
     switch (set_identity_case) {
     case _set_identity_case_a1:
-        status = set_identity_a1 (session, identity); break;
+        status = _set_identity_a1 (session, identity); break;
     case _set_identity_case_a2:
-        status = set_identity_a2 (session, identity); break;
+        status = _set_identity_a2 (session, identity); break;
     /* _set_identity_case_a3 is impossible. */
     case _set_identity_case_a4:
-        status = set_identity_a4 (session, identity); break;
+        status = _set_identity_a4 (session, identity); break;
     case _set_identity_case_b1:
-        status = set_identity_b1 (session, identity); break;
+        status = _set_identity_b1 (session, identity); break;
     case _set_identity_case_b2:
-        status = set_identity_b2 (session, identity); break;
+        status = _set_identity_b2 (session, identity); break;
     case _set_identity_case_b3:
-        status = set_identity_b3 (session, identity); break;
+        status = _set_identity_b3 (session, identity); break;
     /* _set_identity_case_b4 is impossible. */
 
     default:
