@@ -3880,7 +3880,7 @@ static const char *set_identity_case_to_string (enum _set_identity_case c)
     }
 }
 
-/* This is a helper for _find_set_identity_case, only supporting the a case. */ 
+/* This is a helper for _find_set_identity_case, only supporting the a case. */
 static enum _set_identity_case _find_set_identity_case_a(
         PEP_SESSION session, const pEp_identity *identity
     )
