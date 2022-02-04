@@ -4031,14 +4031,15 @@ static enum _set_identity_case _find_set_identity_case_b(
     /* In case of no match, this is B1. */
     any_match = (sql_result != SQLITE_DONE);
     if (! any_match) {
+        fprintf (stderr, "*: we are in the B1 case that might be wrong: sql_result is %i when searching for %s\n", sql_result, identity->address);
         res |= _set_identity_case_1;
         goto end;
     }
 
     /* If the userid is temporary, the case is B2, otherwise it is B4 -- We have
        already excluded B3. */
-    const unsigned char *user_id = sqlite3_column_text (sql_statement, 0);
-    if (_is_temporary_user_id (user_id))
+    const unsigned char *user_id = sqlite3_column_text(sql_statement, 0);
+    if (_is_temporary_user_id(user_id))
         res |= _set_identity_case_2;
     else
         res |= _set_identity_case_4;
