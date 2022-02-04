@@ -3854,7 +3854,7 @@ enum _set_identity_case {
     
     _set_identity_case_a1 = _set_identity_case_a | _set_identity_case_1,
     _set_identity_case_a2 = _set_identity_case_a | _set_identity_case_2,
-    /* _set_identity_case_a3 is impossible. */
+    _set_identity_case_a3 = _set_identity_case_a | _set_identity_case_3,
     _set_identity_case_a4 = _set_identity_case_a | _set_identity_case_4,
     _set_identity_case_b1 = _set_identity_case_b | _set_identity_case_1,
     _set_identity_case_b2 = _set_identity_case_b | _set_identity_case_2,
@@ -3870,7 +3870,7 @@ static const char *set_identity_case_to_string (enum _set_identity_case c)
     case _set_identity_case_impossible: return "IMPOSSIBLE";
     case _set_identity_case_a1:         return "a1";
     case _set_identity_case_a2:         return "a2";
-    case _set_identity_case_a | _set_identity_case_3:  return "a3 (IMPOSSIBLE)";
+    case _set_identity_case_a3:         return "a3";
     case _set_identity_case_a4:         return "a4";
     case _set_identity_case_b1:         return "b1";
     case _set_identity_case_b2:         return "b2";
@@ -4415,6 +4415,46 @@ static PEP_STATUS _set_identity_a2(
     return PEP_COMMIT_FAILED;
 }
 /* See the comment in _set_identity_a1. */
+static PEP_STATUS _set_identity_a3(
+        PEP_SESSION session, const pEp_identity *identity
+    )
+{
+    /* Search for the existing userid for this address in the database... */
+    PEP_STATUS res = PEP_COMMIT_FAILED;
+    char *existing_user_id = NULL;
+    int sql_result = SQLITE_OK;
+    sqlite3_stmt *sql_statement = NULL;
+    sql_result = sqlite3_prepare_v2
+      (session->db,
+       "SELECT user_id "
+       "FROM Identity "
+       "WHERE address=?1;",
+       -1,
+       & sql_statement,
+       NULL);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    reset_and_clear_bindings(sql_statement);
+    sql_result = sqlite3_bind_text (sql_statement, 1, identity->address, -1,
+                                    SQLITE_STATIC);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_step(sql_statement);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    existing_user_id = strdup (sqlite3_column_text (sql_statement, 0));
+    if (existing_user_id == NULL) {
+        sqlite3_finalize(sql_statement);
+        return PEP_OUT_OF_MEMORY;
+    }
+    sqlite3_finalize(sql_statement); sql_statement = NULL;
+
+    /* ...Then update the existing rows. */
+    res = _set_identity_update_existing (session, identity, existing_user_id);
+
+ end:
+    sqlite3_finalize(sql_statement);
+    free(existing_user_id);
+    return res;
+}
+/* See the comment in _set_identity_a1. */
 static PEP_STATUS _set_identity_a4(
         PEP_SESSION session, const pEp_identity *identity
     )
@@ -4602,7 +4642,8 @@ DYNAMIC_API PEP_STATUS set_identity(
         status = _set_identity_a1 (session, identity); break;
     case _set_identity_case_a2:
         status = _set_identity_a2 (session, identity); break;
-    /* _set_identity_case_a3 is impossible. */
+    case _set_identity_case_a3:
+        status = _set_identity_a3 (session, identity); break;
     case _set_identity_case_a4:
         status = _set_identity_a4 (session, identity); break;
     case _set_identity_case_b1:
