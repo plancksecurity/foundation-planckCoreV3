@@ -4031,7 +4031,7 @@ static enum _set_identity_case _find_set_identity_case_b(
     /* In case of no match, this is B1. */
     any_match = (sql_result != SQLITE_DONE);
     if (! any_match) {
-        fprintf (stderr, "*: we are in the B1 case that might be wrong: sql_result is %i when searching for %s\n", sql_result, identity->address);
+        fprintf (stderr, "*: we are in the B1 case that might be wrong: sql_result is %i (any_match is %i) when searching for %s using %s\n", sql_result, any_match, identity->address, sqlite3_expanded_sql (sql_statement));
         res |= _set_identity_case_1;
         goto end;
     }
@@ -4062,116 +4062,6 @@ static enum _set_identity_case _find_set_identity_case(
     else
         return _find_set_identity_case_b(session, identity);
 }
-
-/* /\* Only used as a helper for set_identity, which validates inputs.  FIXME: */
-/*    Volker, is this acceptable or do we need to be paranoid? *\/ */
-/* static PEP_STATUS _set_person_sql( */
-/*         PEP_SESSION session, const pEp_identity *identity */
-/*     ) */
-/* { */
-/*     int sql_result = SQLITE_OK; */
-
-/*     // Testing code: make sure, a little brutally, that we can actually write */
-/*     // the supposedly-unused field Person.main_key_id without violating a */
-/*     // foreign key constraint. */
-/*     sql_result = sqlite3_exec */
-/*       (session->db, */
-/*        "INSERT OR REPLACE INTO pgp_keypair " */
-/*        "  (fpr) " */
-/*        "VALUES " */
-/*        "  ('invalid-on-purpose');", */
-/*        NULL, NULL, NULL); */
-/*     CHECK_SQL_RESULT (NULL, sql_result); */
-        
-/*     sqlite3_stmt *sql_statement = NULL; */
-/*     sql_result = sqlite3_prepare_v2 */
-/*       (session->db, */
-/*        "INSERT OR REPLACE INTO Person " */
-/*        "  (id, username, main_key_id, lang, is_pEp_user) " */
-/*        "VALUES " */
-/*        "  (?1, ?2, 'invalid-on-purpose', ?3, ?4);" // main_key_id is supposed not to be read */
-/*        , */
-/*        -1, */
-/*        & sql_statement, */
-/*        NULL); */
-/*     CHECK_SQL_RESULT (sql_statement, sql_result); */
-/*     reset_and_clear_bindings(sql_statement); */
-
-/*     sql_result = sqlite3_bind_text (sql_statement, 1, identity->user_id, -1, */
-/*                                     SQLITE_STATIC); */
-/*     CHECK_SQL_RESULT (sql_statement, sql_result); */
-/*     sql_result = sqlite3_bind_text (sql_statement, 2, identity->username, -1, */
-/*                                     SQLITE_STATIC); */
-/*     CHECK_SQL_RESULT (sql_statement, sql_result); */
-/*     /\* */
-/*     sql_result = sqlite3_bind_text (sql_statement, 3, identity->main_key_id, -1, */
-/*                                     SQLITE_STATIC); */
-/*     CHECK_SQL_RESULT (sql_statement, sql_result); */
-/*     *\/ */
-/*     if (EMPTYSTR (identity->lang)) */
-/*         sql_result = sqlite3_bind_null (sql_statement, 3); */
-/*     else */
-/*         sql_result = sqlite3_bind_text (sql_statement, 3, identity->lang, -1, */
-/*                                         SQLITE_STATIC); */
-/*     CHECK_SQL_RESULT (sql_statement, sql_result); */
-/*     sql_result = sqlite3_bind_int (sql_statement, 4, identity->comm_type == PEP_ct_pEp); */
-/*     CHECK_SQL_RESULT (sql_statement, sql_result); */
-    
-/*     sql_result = sqlite3_step(sql_statement); */
-/*     CHECK_SQL_RESULT (sql_statement, sql_result); */
-
-/*  end: */
-/*     sqlite3_finalize(sql_statement); */
-/*     return (sql_result == SQLITE_OK || sql_result == SQLITE_DONE) ? PEP_STATUS_OK : PEP_CANNOT_SET_PERSON; */
-/* } */
-
-/* /\* Only used as a helper for set_identity, which validates inputs.  FIXME: */
-/*    Volker, is this acceptable or do we need to be paranoid? *\/ */
-/* static PEP_STATUS _set_identity_sql( */
-/*         PEP_SESSION session, const pEp_identity *identity */
-/*     ) */
-/* { */
-/*     int sql_result = SQLITE_OK; */
-
-/*     sqlite3_stmt *sql_statement = NULL; */
-/*     sql_result = sqlite3_prepare_v2 */
-/*       (session->db, */
-/*        "INSERT OR REPLACE INTO Identity " */
-/*        "  (address, user_id, flags, is_own, " // FIXME: *not* setting main_key_id, on purpose */
-/*        "   pEp_version_major, pEp_version_minor, enc_format) " */
-/*        "VALUES " */
-/*        "  (?1, ?2, ?3, ?4, ?5, ?6, ?7);" // FIXME: notice the NULL value */
-/*        , */
-/*        -1, */
-/*        & sql_statement, */
-/*        NULL); */
-/*     CHECK_SQL_RESULT (sql_statement, sql_result); */
-
-/*     reset_and_clear_bindings(sql_statement); */
-/*     sql_result = sqlite3_bind_text (sql_statement, 1, identity->address, -1, */
-/*                                     SQLITE_STATIC); */
-/*     CHECK_SQL_RESULT (sql_statement, sql_result); */
-/*     sql_result = sqlite3_bind_text (sql_statement, 2, identity->user_id, -1, */
-/*                                     SQLITE_STATIC); */
-/*     CHECK_SQL_RESULT (sql_statement, sql_result); */
-/*     sql_result = sqlite3_bind_int (sql_statement, 3, identity->flags); */
-/*     CHECK_SQL_RESULT (sql_statement, sql_result); */
-/*     sql_result = sqlite3_bind_int (sql_statement, 4, identity->me); */
-/*     CHECK_SQL_RESULT (sql_statement, sql_result); */
-/*     sql_result = sqlite3_bind_int (sql_statement, 5, identity->major_ver); */
-/*     CHECK_SQL_RESULT (sql_statement, sql_result); */
-/*     sql_result = sqlite3_bind_int (sql_statement, 6, identity->minor_ver); */
-/*     CHECK_SQL_RESULT (sql_statement, sql_result); */
-/*     sql_result = sqlite3_bind_int (sql_statement, 7, identity->enc_format); */
-/*     CHECK_SQL_RESULT (sql_statement, sql_result); */
-    
-/*     sql_result = sqlite3_step(sql_statement); */
-/*     CHECK_SQL_RESULT (sql_statement, sql_result); */
-
-/*  end: */
-/*     sqlite3_finalize(sql_statement);       */
-/*     return (sql_result == SQLITE_OK || sql_result == SQLITE_DONE) ? PEP_STATUS_OK : PEP_CANNOT_SET_IDENTITY; */
-/* } */
 
 /* A helper function factoring the common code in _set_identity_a1 and
    _set_identity_b1, which need to insert one new line each in the Person and
@@ -4339,7 +4229,6 @@ static PEP_STATUS _set_identity_update_existing(
 
  end:
     sqlite3_finalize(sql_statement);
-    //return (sql_result == SQLITE_OK || sql_result == SQLITE_DONE) ? PEP_STATUS_OK : PEP_COMMIT_FAILED;
     return (sql_result == SQLITE_DONE) ? PEP_STATUS_OK : PEP_COMMIT_FAILED;
 }
 
@@ -4403,7 +4292,6 @@ static PEP_STATUS _set_identity_a2(
         return PEP_OUT_OF_MEMORY;
     }
     sqlite3_finalize(sql_statement); sql_statement = NULL;
-    //fprintf (stderr, "%s: temporary_user_id is %s\n", __FUNCTION__, temporary_user_id);
 
     /* Update an existing row. */
     PEP_STATUS res
@@ -4660,7 +4548,6 @@ DYNAMIC_API PEP_STATUS set_identity(
         fprintf (stderr, "invalid set_identity_case %i\n",
                  (int) set_identity_case);
         abort ();
-        //assert (false);
     }
 
  end:
