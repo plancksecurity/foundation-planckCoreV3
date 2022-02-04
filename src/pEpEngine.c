@@ -4197,68 +4197,16 @@ static PEP_STATUS _set_identity_insert_new(
     return (sql_result == SQLITE_DONE) ? PEP_STATUS_OK : PEP_COMMIT_FAILED;
 }
 
-/* A helper function for set_identity, implementing one of the cases in enum
-   _set_identity_case; see its comment.  Arguments validated in set_identity.
-   This is executed within an SQL transation, which is began and committed or
-   rolled back in the caller. */
-static PEP_STATUS _set_identity_a1(
-        PEP_SESSION session, const pEp_identity *identity
+/* Just like _set_identity_insert_new, this is a helper factoring the action of
+   multiple set_identity cases.  This updates an existing row in each of Person
+   and Identity, using the given user_id (any user_id in identity is ignored)
+   and the address in identity. */
+static PEP_STATUS _set_identity_update_existing(
+        PEP_SESSION session, const pEp_identity *identity, const char *user_id
     )
 {
-    /* There is no user_id.  Make a new temporary one. */
-    size_t user_id_size
-        = /* "TOFU_" */ 5 + strlen(identity->address) + /* '\0' */ 1;
-    char *user_id = calloc(1, user_id_size);
-    if (user_id == NULL)
-        return PEP_OUT_OF_MEMORY;
-    snprintf(user_id, user_id_size, "TOFU_%s", identity->address);
-
-    /* Use the helper _set_identity_insert_new to write a new record, and free
-       the user_id before leaving. */
-    PEP_STATUS res = _set_identity_insert_new (session, identity, user_id);
-    free(user_id);
-    return res;
-}
-
-/* See the comment in _set_identity_a1. */
-static PEP_STATUS _set_identity_a2(
-        PEP_SESSION session, const pEp_identity *identity
-    )
-{
-    /* This identity exists in the database, with a temporary userid (there is
-       no userid) in the volatile entry.  Leave the userid as it is and set the
-       other fields. */
     int sql_result = SQLITE_OK;
     sqlite3_stmt *sql_statement = NULL;
-
-    /* Query: find the userid in the database. */
-    char *temporary_user_id = NULL;
-    sql_result = sqlite3_prepare_v2
-      (session->db,
-       "SELECT user_id "
-       "FROM Identity "
-       "WHERE address=?1;",
-       -1,
-       & sql_statement,
-       NULL);
-    CHECK_SQL_RESULT (sql_statement, sql_result);
-    reset_and_clear_bindings(sql_statement);
-    
-    sql_result = sqlite3_bind_text (sql_statement, 1, identity->address, -1,
-                                    SQLITE_STATIC);
-    CHECK_SQL_RESULT (sql_statement, sql_result);
-    sql_result = sqlite3_step(sql_statement);
-    /* This will give only one result in the A2 case but I do not want to
-       verify it, since this function is also reused for the A4 case where
-       results are more than one. */
-    CHECK_SQL_RESULT (sql_statement, sql_result);
-    temporary_user_id = strdup (sqlite3_column_text (sql_statement, 0));
-    if (temporary_user_id == NULL) {
-        sqlite3_finalize(sql_statement);
-        return PEP_OUT_OF_MEMORY;
-    }
-    //fprintf (stderr, "%s: temporary_user_id is %s\n", __FUNCTION__, temporary_user_id);
-    sqlite3_finalize(sql_statement);
 
     /* First DML statement: Update the Person table. */
     sql_result = sqlite3_prepare_v2
@@ -4288,7 +4236,7 @@ static PEP_STATUS _set_identity_a2(
     CHECK_SQL_RESULT (sql_statement, sql_result);
     sql_result = sqlite3_bind_int (sql_statement, 3, identity->major_ver > 0);
     CHECK_SQL_RESULT (sql_statement, sql_result);
-    sql_result = sqlite3_bind_text (sql_statement, 4, temporary_user_id, -1,
+    sql_result = sqlite3_bind_text (sql_statement, 4, user_id, -1,
                                     SQLITE_STATIC);
     CHECK_SQL_RESULT (sql_statement, sql_result);
     sql_result = sqlite3_step(sql_statement);
@@ -4324,7 +4272,7 @@ static PEP_STATUS _set_identity_a2(
     CHECK_SQL_RESULT (sql_statement, sql_result);
     sql_result = sqlite3_bind_int (sql_statement, 5, identity->enc_format);
     CHECK_SQL_RESULT (sql_statement, sql_result);
-    sql_result = sqlite3_bind_text (sql_statement, 6, temporary_user_id, -1,
+    sql_result = sqlite3_bind_text (sql_statement, 6, user_id, -1,
                                     SQLITE_STATIC);
     CHECK_SQL_RESULT (sql_statement, sql_result);
     sql_result = sqlite3_step(sql_statement);
@@ -4332,9 +4280,81 @@ static PEP_STATUS _set_identity_a2(
 
  end:
     sqlite3_finalize(sql_statement);
-    free(temporary_user_id);
     //return (sql_result == SQLITE_OK || sql_result == SQLITE_DONE) ? PEP_STATUS_OK : PEP_COMMIT_FAILED;
     return (sql_result == SQLITE_DONE) ? PEP_STATUS_OK : PEP_COMMIT_FAILED;
+}
+
+/* A helper function for set_identity, implementing one of the cases in enum
+   _set_identity_case; see its comment.  Arguments validated in set_identity.
+   This is executed within an SQL transation, which is began and committed or
+   rolled back in the caller. */
+static PEP_STATUS _set_identity_a1(
+        PEP_SESSION session, const pEp_identity *identity
+    )
+{
+    /* There is no user_id.  Make a new temporary one. */
+    size_t user_id_size
+        = /* "TOFU_" */ 5 + strlen(identity->address) + /* '\0' */ 1;
+    char *user_id = calloc(1, user_id_size);
+    if (user_id == NULL)
+        return PEP_OUT_OF_MEMORY;
+    snprintf(user_id, user_id_size, "TOFU_%s", identity->address);
+
+    /* Use the helper _set_identity_insert_new to write a new record, and free
+       the user_id before leaving. */
+    PEP_STATUS res = _set_identity_insert_new (session, identity, user_id);
+    free(user_id);
+    return res;
+}
+
+/* See the comment in _set_identity_a1. */
+static PEP_STATUS _set_identity_a2(
+        PEP_SESSION session, const pEp_identity *identity
+    )
+{
+    /* This identity exists in the database, with a temporary userid (there is
+       no userid in the volatile entry).  Leave the database userid as it is and
+       set the other fields. */
+    int sql_result = SQLITE_OK;
+    sqlite3_stmt *sql_statement = NULL;
+
+    /* Query: find the userid in the database. */
+    char *temporary_user_id = NULL;
+    sql_result = sqlite3_prepare_v2
+      (session->db,
+       "SELECT user_id "
+       "FROM Identity "
+       "WHERE address=?1;",
+       -1,
+       & sql_statement,
+       NULL);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    reset_and_clear_bindings(sql_statement);
+    sql_result = sqlite3_bind_text (sql_statement, 1, identity->address, -1,
+                                    SQLITE_STATIC);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_step(sql_statement);
+    /* This will give only one result in the A2 case but I do not want to
+       verify it, since this function is also reused for the A4 case where
+       results are more than one. */
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    temporary_user_id = strdup (sqlite3_column_text (sql_statement, 0));
+    if (temporary_user_id == NULL) {
+        sqlite3_finalize(sql_statement);
+        return PEP_OUT_OF_MEMORY;
+    }
+    sqlite3_finalize(sql_statement);
+    //fprintf (stderr, "%s: temporary_user_id is %s\n", __FUNCTION__, temporary_user_id);
+
+    /* Update an existing row. */
+    PEP_STATUS res
+        = _set_identity_update_existing (session, identity, temporary_user_id);
+    free(temporary_user_id);
+    return res;
+
+ end:
+    sqlite3_finalize(sql_statement);
+    return PEP_COMMIT_FAILED;
 }
 /* See the comment in _set_identity_a1. */
 static PEP_STATUS _set_identity_a4(
