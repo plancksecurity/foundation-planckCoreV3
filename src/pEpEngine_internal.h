@@ -157,7 +157,11 @@ PEP_STATUS _generate_keypair(PEP_SESSION session,
 /**
  *  <!--       get_identity_without_trust_check()       -->
  *
- *  @brief            TODO
+ *  @brief      
+ *
+ * This is used internally when there is a temporary identity to be retrieved
+ * that may not yet have an FPR attached. See get_identity() for functionality,
+ * params and caveats.
  *
  *  @param[in]  session         session handle
  *  @param[in]  address         const char*
@@ -355,12 +359,13 @@ PEP_STATUS replace_main_user_fpr_if_equal(PEP_SESSION session, const char* user_
  */
 PEP_STATUS refresh_userid_default_key(PEP_SESSION session, const char* user_id);
 
-// returns true (by reference) if a person with this user_id exists;
-// Also replaces aliased user_ids by defaults in identity.
 /**
  *  <!--       exists_person()       -->
  *
  *  @brief            TODO
+ *
+ * returns true (by reference) if a person with this user_id exists;
+ * Also replaces aliased user_ids by defaults in identity.
  *
  *  @param[in]  session        session handle
  *  @param[in]  identity       pEp_identity*
@@ -421,11 +426,12 @@ PEP_STATUS clear_trust_info(PEP_SESSION session,
                             const char* user_id,
                             const char* fpr);
 
-// Generally ONLY called by set_as_pEp_user, and ONLY from < 2.0 to 2.0.
 /**
  *  <!--       upgrade_pEp_version_by_user_id()       -->
  *
  *  @brief            TODO
+ *
+ *  @note Generally ONLY called by set_as_pEp_user, and ONLY from < 2.0 to 2.0.
  *
  *  @param[in]  session        session handle
  *  @param[in]  ident          pEp_identity*
@@ -443,11 +449,12 @@ PEP_STATUS upgrade_pEp_version_by_user_id(PEP_SESSION session,
         unsigned int new_ver_minor
     );
 
-// exposed for testing
 /**
  *  <!--       set_person()       -->
  *
  *  @brief            TODO
+ *
+ * exposed for testing
  *
  *  @param[in]  session            session handle
  *  @param[in]  identity           pEp_identity*
@@ -574,12 +581,14 @@ PEP_STATUS get_identities_by_address(
     );
 
 /**
+ * <!-- get_default_identity_fpr() -->
  *
- * @param session
- * @param address
- * @param user_id
- * @param main_fpr
- * @return
+ * @param[in] session
+ * @param[in] address
+ * @param[in] user_id
+ * @param[out] main_fpr
+ * @retval     PEP_STATUS_OK   if fpr was successfully retrieved
+ * @retval     error           otherwise
  */
 PEP_STATUS get_default_identity_fpr(PEP_SESSION session,
                                     const char* address,
@@ -657,12 +666,10 @@ PEP_STATUS set_all_userids_to_own(PEP_SESSION session,
 PEP_STATUS has_partner_contacted_address(PEP_SESSION session, const char* partner_id,
                                          const char* own_address, bool* was_contacted);
 
-/**
- *
- * @param session
- * @param identity
- * @param exists
- * @return
+/*
+ * <!-- exists_identity_entry() -->
+ * documented in pEpEngine.c 
+ * 
  */
 PEP_STATUS exists_identity_entry(PEP_SESSION session, pEp_identity* identity,
                                  bool* exists);

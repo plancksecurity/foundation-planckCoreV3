@@ -398,7 +398,7 @@ void decorate_message(
 #endif
 
 /**
- *  @enum    normalize_hex_res_t
+ *  @enum    _normalize_hex_rest_t
  *  
  *  @brief    TODO
  *  
@@ -410,7 +410,9 @@ typedef enum _normalize_hex_rest_t {
 } normalize_hex_res_t;
 
 /**
- *  <!--       _normalize_hex()       -->
+ *  @internal
+ *
+ *  <!--  _normalize_hex(char *hex) -->
  *  
  *  @brief            TODO
  *  
@@ -420,6 +422,7 @@ typedef enum _normalize_hex_rest_t {
  *  @retval     irgnore_hex
  *  @retval     reject_hex
  */
+
 static inline normalize_hex_res_t _normalize_hex(char *hex) 
 {
     if (*hex >= '0' && *hex <= '9')
@@ -439,11 +442,12 @@ static inline normalize_hex_res_t _normalize_hex(char *hex)
     return reject_hex;
 }
 
-// Space tolerant and case insensitive fingerprint string compare
 /**
+ *  @internal
+ *
  *  <!--       _compare_fprs()       -->
  *  
- *  @brief            TODO
+ *  @brief      Space tolerant and case insensitive fingerprint string compare
  *  
  *  @param[in]  fpra         const char*
  *  @param[in]  fpras        size_t
@@ -533,6 +537,8 @@ static inline PEP_STATUS _compare_fprs(
 }
 
 /**
+ *  @internal 
+ *
  *  <!--       _same_fpr()       -->
  *  
  *  @brief            TODO
@@ -560,18 +566,16 @@ static inline int _same_fpr(
     return comparison == 0;
 }
 
-// size is the length of the bytestr that's coming in. This is really only intended
-// for comparing two full strings. If charstr's length is different from bytestr_size,
-// we'll return a non-zero value.
 /**
  *  @internal
  * 
  *  <!--       _unsigned_signed_strcmp()       -->
  *  
  *  @brief      Compare an unsigned sequence of bytes with the input string.
- *              This is really only intended for comparing two full strings. 
- *              If charstr's length is different from bytestr_size,
- *              we'll return a non-zero value.
+ *
+ *  This is really only intended for comparing two full strings. 
+ *  If charstr's length is different from bytestr_size,
+ *  we'll return a non-zero value.
  * 
  *  @param[in]  bytestr         byte string (unsigned char data)
  *  @param[in]  charstr         character string (NUL-terminated)
@@ -590,6 +594,8 @@ static inline int _unsigned_signed_strcmp(const unsigned char* bytestr, const ch
 
 // This is just a horrible example of C type madness. UTF-8 made me do it.
 /**
+ * @internal
+ *
  *  <!--       _pEp_subj_copy()       -->
  *  
  *  @brief            TODO
@@ -608,6 +614,8 @@ static inline char* _pEp_subj_copy() {
 }
 
 /**
+ * @internal 
+ *
  *  <!--       is_me()       -->
  *  
  *  @brief            TODO
@@ -633,6 +641,8 @@ static inline bool is_me(PEP_SESSION session, const pEp_identity* test_ident) {
 }
 
 /**
+ * @internal
+ *
  *  <!--       pEp_version_numeric()       -->
  *  
  *  @brief
@@ -652,6 +662,8 @@ static inline float pEp_version_numeric(const char* version_str) {
 }
 
 /**
+ * @internal
+ *
  *  <!--       pEp_version_major_minor()       -->
  *  
  *  @brief get major and minor numbers as integers from version string 
@@ -674,6 +686,8 @@ static inline void pEp_version_major_minor(const char* version_str, unsigned int
 }
 
 /**
+ * @internal
+ *
  *  <!--       compare_versions()       -->
  *  
  *  @brief compares two versions by major and minor version numbers 
@@ -701,6 +715,8 @@ static inline int compare_versions(unsigned int first_maj, unsigned int first_mi
 }
 
 /**
+ * @internal
+ *
  *  <!--       set_min_version()       -->
  *  
  *  @brief determine the smaler version from two versions 
@@ -728,6 +744,8 @@ static inline void set_min_version(unsigned int first_maj, unsigned int first_mi
 }
 
 /**
+ * @internal
+ *
  *  <!--       set_max_version()       -->
  *  
  *  @brief determine the greater version out of two versions 
@@ -798,6 +816,8 @@ static inline void _init_globals() {
 // spinlock implementation
 
 /**
+ * @internal
+ *
  *  <!--       Sqlite3_step()       -->
  *  
  *  @brief            TODO
