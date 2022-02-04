@@ -4132,14 +4132,13 @@ static PEP_STATUS set_identity_a1(
         return PEP_OUT_OF_MEMORY;
     snprintf(user_id, user_id_size, "TOFU_%s", identity->address);
     
-    /* First DML statement: Insert a new Person. */
+    /* First DML statement: Insert a new Person row. */
     sql_result = sqlite3_prepare_v2
       (session->db,
        "INSERT INTO Person "
        "  (id, username, lang, is_pEp_user) " // *not* setting the main_key_id, on purpose
        "VALUES "
-       "  (?1, ?2, ?3, ?4);"
-       ,
+       "  (?1, ?2, ?3, ?4);",
        -1,
        & sql_statement,
        NULL);
@@ -4148,19 +4147,24 @@ static PEP_STATUS set_identity_a1(
 
     sql_result = sqlite3_bind_text (sql_statement, 1, user_id, -1,
                                     SQLITE_STATIC);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
     sql_result = sqlite3_bind_text (sql_statement, 2, identity->username, -1,
                                     SQLITE_STATIC);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
     if (EMPTYSTR (identity->lang))
         sql_result = sqlite3_bind_null (sql_statement, 3);
     else
         sql_result = sqlite3_bind_text (sql_statement, 3, identity->lang, -1,
                                         SQLITE_STATIC);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
     sql_result = sqlite3_bind_int (sql_statement, 4, identity->major_ver > 0);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
 
     sql_result = sqlite3_step(sql_statement);
     CHECK_SQL_RESULT (sql_statement, sql_result);
 
-    /* Second DML statement: Insert a new Identity, referring the person. */
+    /* Second DML statement: Insert a new Identity row, referring the new Person
+       row. */
     sqlite3_finalize(sql_statement);
     sql_result = sqlite3_prepare_v2
       (session->db,
@@ -4168,8 +4172,7 @@ static PEP_STATUS set_identity_a1(
        "  (address, user_id, flags, is_own, " // *not* setting main_key_id, on purpose
        "   pEp_version_major, pEp_version_minor, enc_format) "
        "VALUES "
-       "  (?1, ?2, ?3, ?4, ?5, ?6, ?7);"
-       ,
+       "  (?1, ?2, ?3, ?4, ?5, ?6, ?7);",
        -1,
        & sql_statement,
        NULL);
@@ -4208,17 +4211,112 @@ static PEP_STATUS set_identity_a2(
         PEP_SESSION session, const pEp_identity *identity
     )
 {
-    /* The volatile identity has no userid, and the one in the database has a
-       temporary userid.  Leave things as they are. */
-    return PEP_STATUS_OK;
+    /* This identity exists in the database, with a temporary userid (there is
+       no userid) in the volatile entry.  Leave the userid as it is and set the
+       other fields. */
+    int sql_result = SQLITE_OK;
+    sqlite3_stmt *sql_statement = NULL;
 
-    // FIXME: unless I am misunderstanding and Volker tells me what to do here.
+    /* Query: find the userid in the database. */
+    char *temporary_user_id = NULL;
+    sql_result = sqlite3_prepare_v2
+      (session->db,
+       "SELECT user_id "
+       "FROM Identity "
+       "WHERE address=?1;",
+       -1,
+       & sql_statement,
+       NULL);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    reset_and_clear_bindings(sql_statement);
+    
+    sql_result = sqlite3_bind_text (sql_statement, 1, identity->address, -1,
+                                    SQLITE_STATIC);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_step(sql_statement);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    temporary_user_id = strdup (sqlite3_column_text (sql_statement, 0));
+    if (temporary_user_id == NULL) {
+        sqlite3_finalize(sql_statement);
+        return PEP_OUT_OF_MEMORY;
+    }
+    fprintf (stderr, "%s: temporary_user_id is %s\n", __FUNCTION__, temporary_user_id);
 
-    /* int sql_result = SQLITE_OK; */
-    /* //fprintf (stderr, "%s: unimplemented\n", __FUNCTION__); abort (); */
-    /* fprintf (stderr, "%s: do nothing (unless Volker contradicts me)\n", __FUNCTION__); */
-    /* return PEP_STATUS_OK; */
-    /* //return (sql_result == SQLITE_DONE) ? PEP_STATUS_OK : PEP_COMMIT_FAILED; */
+    /* First DML statement: Update the Person table. */
+    sql_result = sqlite3_prepare_v2
+      (session->db,
+       "UPDATE Person "
+       "SET "
+       // *not* setting id
+       "    username = ?1, " 
+       // *not* setting main_key_id
+       "    lang = ?2, " 
+       "    is_pEp_user = ?3 " 
+       "WHERE id = ?4;",
+       -1,
+       & sql_statement,
+       NULL);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    reset_and_clear_bindings(sql_statement);
+
+    sql_result = sqlite3_bind_text (sql_statement, 1, identity->username, -1,
+                                    SQLITE_STATIC);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    if (EMPTYSTR (identity->lang))
+        sql_result = sqlite3_bind_null (sql_statement, 2);
+    else
+        sql_result = sqlite3_bind_text (sql_statement, 2, identity->lang, -1,
+                                        SQLITE_STATIC);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_bind_int (sql_statement, 3, identity->major_ver > 0);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_bind_text (sql_statement, 4, temporary_user_id, -1,
+                                    SQLITE_STATIC);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_step(sql_statement);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+
+    /* Second DML statement: Update the Identity table. */
+    sqlite3_finalize(sql_statement);
+    sql_result = sqlite3_prepare_v2
+      (session->db,
+       "UPDATE Identity "
+       "SET "
+       //  *not* setting address
+       //  *not* setting user_id
+       //  *not* setting main_key_id
+       "   flags = ?1, "
+       "   is_own = ?2, "
+       "   pEp_version_major = ?3, "
+       "   pEp_version_minor = ?4, "
+       "   enc_format = ?5 " 
+       "WHERE user_id = ?6;",
+       -1,
+       & sql_statement,
+       NULL);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    reset_and_clear_bindings(sql_statement);
+    sql_result = sqlite3_bind_int (sql_statement, 1, identity->flags);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_bind_int (sql_statement, 2, identity->me);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_bind_int (sql_statement, 3, identity->major_ver);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_bind_int (sql_statement, 4, identity->minor_ver);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_bind_int (sql_statement, 5, identity->enc_format);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_bind_text (sql_statement, 6, temporary_user_id, -1,
+                                    SQLITE_STATIC);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+    sql_result = sqlite3_step(sql_statement);
+    CHECK_SQL_RESULT (sql_statement, sql_result);
+
+ end:
+    sqlite3_finalize(sql_statement);
+    free(temporary_user_id);
+    //return (sql_result == SQLITE_OK || sql_result == SQLITE_DONE) ? PEP_STATUS_OK : PEP_COMMIT_FAILED;
+    return (sql_result == SQLITE_DONE) ? PEP_STATUS_OK : PEP_COMMIT_FAILED;
 }
 /* See the comment in set_identity_a1. */
 static PEP_STATUS set_identity_a4(
@@ -4270,11 +4368,15 @@ DYNAMIC_API PEP_STATUS set_identity(
         || EMPTYSTR (identity->username))
         return PEP_ILLEGAL_VALUE;
 
+    /* Open a transaction: it is inside the transaction that we want to analyse
+       the set-identity case, so that we are not concerned with concurrent
+       updates. */
+    sql_begin_transaction (session);
+
+    /* Find which case we are in and handle it. */
     enum _set_identity_case set_identity_case
         = find_set_identity_case(session, identity);
     fprintf (stderr, "%s on %s: handling case %s\n", __FUNCTION__, identity->address, set_identity_case_to_string (set_identity_case));
-
-    sql_begin_transaction (session);
 
     switch (set_identity_case) {
     case _set_identity_case_a1:
