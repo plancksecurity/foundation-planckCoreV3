@@ -4272,7 +4272,7 @@ static PEP_STATUS _set_identity_a2(
       (session->db,
        "SELECT user_id "
        "FROM Identity "
-       "WHERE address=?1;",
+       "WHERE address = ?1;",
        -1,
        & sql_statement,
        NULL);
@@ -4317,7 +4317,7 @@ static PEP_STATUS _set_identity_a3(
       (session->db,
        "SELECT user_id "
        "FROM Identity "
-       "WHERE address=?1;",
+       "WHERE address = ?1;",
        -1,
        & sql_statement,
        NULL);
@@ -4396,7 +4396,7 @@ static PEP_STATUS _set_identity_b2(
       (session->db,
        "SELECT user_id "
        "FROM Identity "
-       "WHERE address=?1;",
+       "WHERE address = ?1;",
        -1,
        & sql_statement,
        NULL);
@@ -4420,7 +4420,7 @@ static PEP_STATUS _set_identity_b2(
       (session->db,
        "DELETE "
        "FROM Identity "
-       "WHERE address=?1;",
+       "WHERE address = ?1;",
        -1,
        & sql_statement,
        NULL);
