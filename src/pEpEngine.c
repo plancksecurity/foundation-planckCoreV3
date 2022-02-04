@@ -4588,7 +4588,7 @@ DYNAMIC_API PEP_STATUS set_identity(
 }
 
 // This will NOT call set_as_pEp_user, nor set_pEp_version; you have to do that separately.
-DYNAMIC_API PEP_STATUS ___set_identity___(
+DYNAMIC_API PEP_STATUS set_identity__ORIGINAL(
         PEP_SESSION session, const pEp_identity *identity
     )
 {
