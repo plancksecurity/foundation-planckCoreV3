@@ -3821,7 +3821,7 @@ void sql_rollback_transaction(PEP_SESSION session)
    and:
    - 1: there is no matching persistent identity;
    - 2: there is a exactly one persistent temporary identity that matches
-        (more than one match: a bug);
+        (more than one match is impossible: invalid database state);
    - 3: there is exactly one persistent non-temporary identity that matches
         (more than one is impossible: database constraint violation);
    - 4: multiple non-temporary identities, none matching.
@@ -3879,7 +3879,7 @@ static enum _set_identity_case find_set_identity_case(
 {
     enum _set_identity_case res = _set_identity_case_impossible;
     bool is_a = EMPTYSTR (identity->user_id);
-    fprintf (stderr, "QQQ user_id \"%s\": are we in the A case? %s\n", identity->user_id, (is_a ? "YES" : "no"));
+    // fprintf (stderr, "QQQ user_id \"%s\": are we in the A case? %s\n", identity->user_id, (is_a ? "YES" : "no"));
     int sql_result = SQLITE_OK;
     bool any_match;
 
@@ -3888,7 +3888,6 @@ static enum _set_identity_case find_set_identity_case(
         /* We have no user_id to check: search any entry with a matching
            address. */
         res = _set_identity_case_a;
-        //fprintf (stderr, "QQQ A0\n");
         sql_result = sqlite3_prepare_v2
             (session->db,
              "SELECT user_id, address "
@@ -3907,7 +3906,7 @@ static enum _set_identity_case find_set_identity_case(
         sql_result = sqlite3_step(sql_statement);
         CHECK_SQL_RESULT (sql_statement, sql_result);
         any_match = (sql_result != SQLITE_DONE);
-        fprintf (stderr, "QQQ A: %i: any match: %s\n", sql_result, (any_match ? "yes":"no"));
+        //fprintf (stderr, "QQQ A: %i: any match: %s\n", sql_result, (any_match ? "yes":"no"));
     }
     else {
         /* Perform an exact search, looking at user_id and address. */
@@ -3934,57 +3933,68 @@ static enum _set_identity_case find_set_identity_case(
         sql_result = sqlite3_step(sql_statement);
         CHECK_SQL_RESULT (sql_statement, sql_result);
         any_match = (sql_result != SQLITE_DONE);
+        /*
         fprintf (stderr, "QQQ B %s %s: %i: any match: %s\n",
                  identity->user_id, identity->address,
                  sql_result, (any_match ? "YES":"no"));
+        */
     }
 
     /* If no row matched we are in case 1... */
     if (! any_match) {
         res |= _set_identity_case_1;
-        fprintf (stderr, "QQQ 1\n");
+        //fprintf (stderr, "QQQ 1\n");
         goto end;
     }
 
     /* ...Otherwise, if we are here, we are in one of the other cases 2..4. */
     bool found_a_temporary_user_id = false;
-    int row_no = /* We are about to unconditionally increment this.*/ 0;
+    int matching_row_no = /* We have found a row already, but we are about to
+                             incrementally increment this */ 0;
     do {
-        row_no ++;
+        /* Handle the last row we have found. */
+        matching_row_no ++;
         const unsigned char *user_id = sqlite3_column_text (sql_statement, 0);
         const unsigned char *address = sqlite3_column_text (sql_statement, 1);
         fprintf (stderr, "* FROM DB: <user_id: %s, address: %s>\n", user_id, address);
-        bool this_is_a_temporary_user_id = ((const unsigned char *)
-                                            strstr(user_id, "TOFU_") == user_id);
-        if (this_is_a_temporary_user_id) {
-            /* If any temporary match exists it must be the only one. */
-            if (found_a_temporary_user_id) {
-                fprintf (stderr, "QQQ found two TOFU_ user ids\n");
-                res = _set_identity_case_impossible;
-                goto end;
-            }
-
+        if ((const unsigned char *) strstr(user_id, "TOFU_") == user_id)
             found_a_temporary_user_id = true;
-        }
 
-        /* Get the next row. */
+        /* Get the next row, if any. */
         sql_result = sqlite3_step(sql_statement);
         CHECK_SQL_RESULT (sql_statement, sql_result);
-        fprintf (stderr, "sql_result is %i\n", sql_result);
+        //fprintf (stderr, "sql_result is %i\n", sql_result);
     } while (sql_result == SQLITE_ROW);
 
     /* If we found one matching temporary identity (we have checked that it is
        only one) then we know what case this is. */
     if (found_a_temporary_user_id) {
-        fprintf (stderr, "QQQ 2\n");
+        //fprintf (stderr, "QQQ 2\n");
         res |= _set_identity_case_2;
+
+        /* If any temporary match exists it must be the only one. */
+        if (matching_row_no != 1) {
+            fprintf (stderr, "Database anomaly: address %s has a temporary userid, plus at least another userid\n", identity->address);
+            abort ();
+/*
+  FIXME: this anonmaly can be fixed at startup by a migration SQL statement
+  doing
+    DELETE FROM Identity WHERE EXISTS... 
+    DELETE FROM Trust WHERE EXISTS...
+  The idea is deleting temporary addresses where a non-temporary address also
+  exists.
+  Then, I would add:
+    for every temporary userid delete Identity rows with the
+    same address but different uids
+*/
+        }
     }
-    else if (row_no == 1) {
-        fprintf (stderr, "QQQ 3\n");
+    else if (matching_row_no == 1) {
+        //fprintf (stderr, "QQQ 3\n");
         res |= _set_identity_case_3;
     }
     else {
-        fprintf (stderr, "QQQ 4\n");
+        //fprintf (stderr, "QQQ 4\n");
         res |= _set_identity_case_4;
     }
 
@@ -4111,7 +4121,6 @@ static PEP_STATUS set_identity_a1(
         PEP_SESSION session, const pEp_identity *identity
     )
 {
-    PEP_STATUS status = PEP_STATUS_OK;
     int sql_result = SQLITE_OK;
     sqlite3_stmt *sql_statement = NULL;
 
@@ -4124,7 +4133,6 @@ static PEP_STATUS set_identity_a1(
     snprintf(user_id, user_id_size, "TOFU_%s", identity->address);
     
     /* First DML statement: Insert a new Person. */
-    fprintf (stderr, "OK-B 1\n");
     sql_result = sqlite3_prepare_v2
       (session->db,
        "INSERT INTO Person "
@@ -4151,7 +4159,6 @@ static PEP_STATUS set_identity_a1(
 
     sql_result = sqlite3_step(sql_statement);
     CHECK_SQL_RESULT (sql_statement, sql_result);
-    fprintf (stderr, "OK-B 2\n");
 
     /* Second DML statement: Insert a new Identity, referring the person. */
     sqlite3_finalize(sql_statement);
@@ -4201,50 +4208,55 @@ static PEP_STATUS set_identity_a2(
         PEP_SESSION session, const pEp_identity *identity
     )
 {
-    PEP_STATUS status = PEP_STATUS_OK;
+    /* The volatile identity has no userid, and the one in the database has a
+       temporary userid.  Leave things as they are. */
+    return PEP_STATUS_OK;
 
-    fprintf (stderr, "%s: unimplemented\n", __FUNCTION__); abort ();
-    return status;
+    // FIXME: unless I am misunderstanding and Volker tells me what to do here.
+
+    /* int sql_result = SQLITE_OK; */
+    /* //fprintf (stderr, "%s: unimplemented\n", __FUNCTION__); abort (); */
+    /* fprintf (stderr, "%s: do nothing (unless Volker contradicts me)\n", __FUNCTION__); */
+    /* return PEP_STATUS_OK; */
+    /* //return (sql_result == SQLITE_DONE) ? PEP_STATUS_OK : PEP_COMMIT_FAILED; */
 }
 /* See the comment in set_identity_a1. */
 static PEP_STATUS set_identity_a4(
         PEP_SESSION session, const pEp_identity *identity
     )
 {
-    PEP_STATUS status = PEP_STATUS_OK;
+    int sql_result = SQLITE_OK;
 
     fprintf (stderr, "%s: unimplemented\n", __FUNCTION__); abort ();
-    return status;
+    return (sql_result == SQLITE_DONE) ? PEP_STATUS_OK : PEP_COMMIT_FAILED;
 }
 /* See the comment in set_identity_a1. */
 static PEP_STATUS set_identity_b1(
         PEP_SESSION session, const pEp_identity *identity
     )
 {
-    PEP_STATUS status = PEP_STATUS_OK;
-
+    int sql_result = SQLITE_OK;
     fprintf (stderr, "%s: unimplemented\n", __FUNCTION__); abort ();
-    return status;
+    return (sql_result == SQLITE_DONE) ? PEP_STATUS_OK : PEP_COMMIT_FAILED;
 }
 /* See the comment in set_identity_a1. */
 static PEP_STATUS set_identity_b2(
         PEP_SESSION session, const pEp_identity *identity
     )
 {
-    PEP_STATUS status = PEP_STATUS_OK;
-
+    int sql_result = SQLITE_OK;
     fprintf (stderr, "%s: unimplemented\n", __FUNCTION__); abort ();
-    return status;
+    return (sql_result == SQLITE_DONE) ? PEP_STATUS_OK : PEP_COMMIT_FAILED;
 }
 /* See the comment in set_identity_a1. */
 static PEP_STATUS set_identity_b3(
         PEP_SESSION session, const pEp_identity *identity
     )
 {
-    PEP_STATUS status = PEP_STATUS_OK;
+    int sql_result = SQLITE_OK;
 
     fprintf (stderr, "%s: unimplemented\n", __FUNCTION__); abort ();
-    return status;
+    return (sql_result == SQLITE_DONE) ? PEP_STATUS_OK : PEP_COMMIT_FAILED;
 }
 
 DYNAMIC_API PEP_STATUS set_identity(
@@ -4260,7 +4272,7 @@ DYNAMIC_API PEP_STATUS set_identity(
 
     enum _set_identity_case set_identity_case
         = find_set_identity_case(session, identity);
-    fprintf (stderr, "%s on %s: in progress, case %s\n", __FUNCTION__, identity->address, set_identity_case_to_string (set_identity_case));
+    fprintf (stderr, "%s on %s: handling case %s\n", __FUNCTION__, identity->address, set_identity_case_to_string (set_identity_case));
 
     sql_begin_transaction (session);
 
@@ -4290,12 +4302,12 @@ DYNAMIC_API PEP_STATUS set_identity(
  end:
     if (status == PEP_STATUS_OK)
         {
-        fprintf (stderr, "SUCCESS: %s on %s, case %s\n", __FUNCTION__, identity->address, set_identity_case_to_string (set_identity_case));
+        fprintf (stderr, "SUCCESS: %s on %s, case %s\n\n", __FUNCTION__, identity->address, set_identity_case_to_string (set_identity_case));
         sql_commit_transaction(session);
         }
     else
         {
-            fprintf (stderr, "FAILURE: %s on %s, case %s: status %i (%s)\n", __FUNCTION__, identity->address, set_identity_case_to_string (set_identity_case), (int) status, pEp_status_to_string (status));
+            fprintf (stderr, "FAILURE: %s on %s, case %s: status %i (%s)\n\n", __FUNCTION__, identity->address, set_identity_case_to_string (set_identity_case), (int) status, pEp_status_to_string (status));
         sql_rollback_transaction(session);
         }
     return status;
