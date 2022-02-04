@@ -16,6 +16,75 @@
 #include <sqlite3.h>
 #endif
 
+static void normalize_address(sqlite3_context *context,
+                              int argc,
+                              sqlite3_value **argv)
+{
+#define FAIL(error_code, message)                                \
+    do                                                           \
+        {                                                        \
+            sqlite3_result_error(context, message, error_code);  \
+            return;                                              \
+        }                                                        \
+    while (false)
+    // FIXME: useful: sqlite3_result_error_nomem()
+    // FIXME: useful: sqlite3_result_error_toobig()
+    // FIXME: useful: sqlite3_result_text(context, res, -1, SQLITE_TRANSIENT);
+
+    if (sqlite3_value_type(argv[0]) != SQLITE_TEXT)
+        FAIL (SQLITE_MISMATCH, "type error");
+
+    /* Make a copy of the argument, skipping an optional «mailto:» prefix. */
+    const char *argument = sqlite3_value_text(argv[0]);
+    //printf ("argument: \"%s\"\n", argument);
+    if (strstr (argument, "mailto:") == argument)
+        argument += 7;
+    size_t length = strlen (argument);
+    char *res = calloc (length + 1, 1);
+    if (res == NULL)
+        FAIL (SQLITE_NOMEM, "out of memory");
+    int from_i, to_i;
+    char c;
+    for (from_i = 0, to_i = 0;
+         from_i < length;
+         from_i ++)
+        switch (argument [from_i]) {
+        case '.':
+            /* Do nothing. */
+            break;
+        default:
+            res [to_i ++] = tolower (argument [from_i]);
+        }
+    res [to_i] = '\0';
+    /* //strncpy (res, argument, length + 1); */
+    /* int i; */
+    /* for (i = 0; i < length; i ++) */
+    /*     res [i] = tolower (res [i]); */
+    
+    //FAIL (SQLITE_NOMEM, "out of memory");
+    //FAIL (SQLITE_MISMATCH, "type error");
+    sqlite3_result_text(context, res, -1, SQLITE_TRANSIENT);
+    free (res);
+    return;
+#undef FAIL
+}
+
+static PEP_STATUS _initialize_sql_extension (sqlite3 *db)
+{
+    int sql_result
+        = sqlite3_create_function_v2(db, "normalize_address", 1,
+                                     SQLITE_UTF8|SQLITE_INNOCUOUS|SQLITE_DETERMINISTIC,
+                                     NULL,  // pApp
+                                     normalize_address,  // xFunc
+                                     NULL,  // xStep
+                                     NULL,  // xFinal
+                                     NULL); // xDestroy
+    if (sql_result == SQLITE_OK)
+        return PEP_STATUS_OK;
+    else
+        return PEP_INIT_CANNOT_OPEN_DB; /* Not really, but not too far either. */
+}
+
 void
 reset_and_clear_bindings(sqlite3_stmt *s)
 {
@@ -107,11 +176,7 @@ static const char *sql_get_identity =
     "   left join pgp_keypair on fpr = identity.main_key_id"
     "   left join trust on id = trust.user_id"
     "       and pgp_keypair_fpr = identity.main_key_id"    
-    "   where (case when (address = ?1) then (1)"
-    "               when (lower(address) = lower(?1)) then (1)"
-    "               when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1)"
-    "               else 0"
-    "          end) = 1"
+    "   where normalize_address (?1) = normalize_address (address)"
     "   and identity.user_id = ?2" 
     "   order by is_own desc, "
     "   timestamp desc; ";
@@ -134,11 +199,7 @@ static const char *sql_get_identity_without_trust_check =
     "   identity.flags, is_own, pEp_version_major, pEp_version_minor, enc_format"
     "   from identity"
     "   join person on id = identity.user_id"
-    "   where (case when (address = ?1) then (1)"
-    "               when (lower(address) = lower(?1)) then (1)"
-    "               when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1)"
-    "               else 0"
-    "          end) = 1"
+    "   where normalize_address (?1) = normalize_address (address) "
     "   and identity.user_id = ?2 "
     "   order by is_own desc, "
     "   timestamp desc; ";
@@ -148,11 +209,7 @@ static const char *sql_get_identities_by_address =
     "   identity.flags, is_own, pEp_version_major, pEp_version_minor, enc_format"
     "   from identity"
     "   join person on id = identity.user_id"
-    "   where (case when (address = ?1) then (1)"
-    "               when (lower(address) = lower(?1)) then (1)"
-    "               when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1)"
-    "               else 0"
-    "          end) = 1 "
+    "   where normalize_address (?1) = normalize_address (address) "
     "   order by is_own desc, "
     "   timestamp desc; ";
     
@@ -180,11 +237,7 @@ static const char* sql_set_default_identity_fpr =
 
 static const char *sql_get_default_identity_fpr =
         "select main_key_id from identity"
-        "   where (case when (address = ?1) then (1)"
-        "               when (lower(address) = lower(?1)) then (1)"
-        "               when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1) "
-        "               else 0 "
-        "          end) = 1 "
+        "   where  normalize_address (?1) = normalize_address (address) "
         "          and user_id = ?2 ;";
 
 static const char *sql_remove_fpr_as_identity_default =
@@ -267,12 +320,8 @@ static const char *sql_set_pgp_keypair =
 
 static const char* sql_exists_identity_entry = 
     "select count(*) from identity "
-    "   where (case when (address = ?1) then (1)"
-    "               when (lower(address) = lower(?1)) then (1)"
-    "               when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1)"
-    "               else 0"
-    "          end) = 1"
-    "    and user_id = ?2;";
+    "   where normalize_address (?1) = normalize_address (address) "
+    "   and user_id = ?2;";
  
 static const char *sql_set_identity_entry = 
     "insert into identity ("
@@ -296,11 +345,7 @@ static const char* sql_update_identity_entry =
     "       is_own = ?5, "
     "       pEp_version_major = ?6, "
     "       pEp_version_minor = ?7 "    
-    "   where (case when (address = ?1) then (1)"
-    "               when (lower(address) = lower(?1)) then (1)"
-    "               when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1) "
-    "               else 0 "
-    "          end) = 1 "
+    "   where normalize_address (?1) = normalize_address (address) "
     "          and user_id = ?3 ;";
 
     // " (select"
@@ -315,55 +360,31 @@ static const char* sql_update_identity_entry =
 static const char *sql_set_identity_flags = 
     "update identity set flags = "
     "    ((?1 & 65535) | (select flags from identity"
-    "                    where (case when (address = ?2) then (1)"
-    "                                when (lower(address) = lower(?2)) then (1)"
-    "                                when (replace(lower(address),'.','') = replace(lower(?2),'.','')) then (1)"
-    "                                else 0 "    
-    "                           end) = 1 "
+    "                     where normalize_address (?2) = normalize_address (address) "
     "                           and user_id = ?3)) "
-    "   where (case when (address = ?2) then (1)"
-    "               when (lower(address) = lower(?2)) then (1)"
-    "               when (replace(lower(address),'.','') = replace(lower(?2),'.','')) then (1)"
-    "               else 0"
-    "          end) = 1"
-    "          and user_id = ?3 ;";
+    "   where normalize_address (?2) = normalize_address (address) "
+    "         and user_id = ?3 ;";
 
 static const char *sql_unset_identity_flags = 
     "update identity set flags = "
     "    ( ~(?1 & 65535) & (select flags from identity"
-    "                    where (case when (address = ?2) then (1)"
-    "                                when (lower(address) = lower(?2)) then (1)"
-    "                                when (replace(lower(address),'.','') = replace(lower(?2),'.','')) then (1)"
-    "                                else 0 "    
-    "                           end) = 1 "
-    "                           and user_id = ?3)) "
-    "   where (case when (address = ?2) then (1)"
-    "               when (lower(address) = lower(?2)) then (1)"
-    "               when (replace(lower(address),'.','') = replace(lower(?2),'.','')) then (1)"
-    "               else 0"
-    "          end) = 1"
-    "          and user_id = ?3 ;";
+    "                    where normalize_address (?2) = normalize_address (address) "
+    "                          and user_id = ?3)) "
+    "   where normalize_address (?2) = normalize_address (address) "
+    "         and user_id = ?3 ;";
 
 static const char *sql_set_ident_enc_format =
     "update identity "
     "   set enc_format = ?1 "
-    "   where (case when (address = ?2) then (1)"
-    "               when (lower(address) = lower(?2)) then (1)"
-    "               when (replace(lower(address),'.','') = replace(lower(?2),'.','')) then (1) "
-    "               else 0 "
-    "          end) = 1 "
-    "          and user_id = ?3 ;";
+    "   where normalize_address (?2) = normalize_address (address) "
+    "         and user_id = ?3 ;";
 
 static const char *sql_set_pEp_version =
     "update identity "
     "   set pEp_version_major = ?1, "
     "       pEp_version_minor = ?2 "
-    "   where (case when (address = ?3) then (1)"
-    "               when (lower(address) = lower(?3)) then (1)"
-    "               when (replace(lower(address),'.','') = replace(lower(?3),'.','')) then (1) "
-    "               else 0 "
-    "          end) = 1 "
-    "          and user_id = ?4 ;";
+    "   where normalize_address (?3) = normalize_address (address) "
+    "         and user_id = ?4 ;";
 
 static const char *sql_upgrade_pEp_version_by_user_id =
     "update identity "
@@ -462,11 +483,7 @@ static const char *sql_own_key_is_listed =
 static const char *sql_is_own_address =
     "select count(*) from ("
     "   select address from identity"
-    "       where (case when (address = ?1) then (1)"
-    "                   when (lower(address) = lower(?1)) then (1)"
-    "                   when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1)"
-    "                   else 0"
-    "           end) = 1 "
+    "       where normalize_address (?1) = normalize_address (address) "
     "           and identity.is_own = 1"
     ");";
 
@@ -1077,6 +1094,11 @@ DYNAMIC_API PEP_STATUS init(
         status = PEP_INIT_CANNOT_OPEN_DB;
         goto pEp_error;
     }
+
+    /* Initialise our SQL extension. */
+    status = _initialize_sql_extension (_session->db);
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
 
     int_result = sqlite3_exec(
             _session->db,
@@ -3895,7 +3917,7 @@ static enum _set_identity_case _find_set_identity_case_a(
         (session->db,
          "SELECT user_id "
          "FROM Identity "
-         "WHERE address = ?1;",
+         "WHERE normalize_address (address) = normalize_address (?1);",
          -1,
          & sql_statement,
          NULL);
@@ -3986,7 +4008,8 @@ static enum _set_identity_case _find_set_identity_case_b(
         (session->db,
          "SELECT user_id, address "
          "FROM Identity "
-         "WHERE address = ?1 AND user_id = ?2;",
+         "WHERE normalize_address (address) = normalize_address (?1) "
+         "      AND user_id = ?2;",
          -1,
          & sql_statement,
          NULL);
@@ -4016,7 +4039,7 @@ static enum _set_identity_case _find_set_identity_case_b(
         (session->db,
          "SELECT user_id "
          "FROM Identity "
-         "WHERE address = ?1;",
+         "WHERE normalize_address (?1) = normalize_address (address);",
          -1,
          & sql_statement,
          NULL);
@@ -4272,7 +4295,7 @@ static PEP_STATUS _set_identity_a2(
       (session->db,
        "SELECT user_id "
        "FROM Identity "
-       "WHERE address = ?1;",
+       "WHERE normalize_address (?1) = normalize_address (address);",
        -1,
        & sql_statement,
        NULL);
@@ -4317,7 +4340,7 @@ static PEP_STATUS _set_identity_a3(
       (session->db,
        "SELECT user_id "
        "FROM Identity "
-       "WHERE address = ?1;",
+       "WHERE normalize_address (?1) = normalize_address (address);",
        -1,
        & sql_statement,
        NULL);
@@ -4396,7 +4419,7 @@ static PEP_STATUS _set_identity_b2(
       (session->db,
        "SELECT user_id "
        "FROM Identity "
-       "WHERE address = ?1;",
+       "WHERE normalize_address (?1) = normalize_address (address);",
        -1,
        & sql_statement,
        NULL);
@@ -4420,7 +4443,7 @@ static PEP_STATUS _set_identity_b2(
       (session->db,
        "DELETE "
        "FROM Identity "
-       "WHERE address = ?1;",
+       "WHERE normalize_address (?1) = normalize_address (address);",
        -1,
        & sql_statement,
        NULL);
