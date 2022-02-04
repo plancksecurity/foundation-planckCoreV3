@@ -1,8 +1,12 @@
 #ifndef GROUP_H
 #define GROUP_H
 
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file group.h
+ * @brief TODO: Description for doxygen
+ * @license This file is under GNU General Public License 3.0 - see LICENSE.txt
+ */
+
 #include "platform.h"
 #include "dynamic_api.h"
 #include "message_api.h"
@@ -20,10 +24,15 @@ extern "C" {
  *************************************************************************************************/
 
 /**
- * @struct pEp_member
+ * @typedef pEp_member
  * @brief  memory object for holding information about an invited group member
  *         and whether they have joined the group
  *         (groups are persistent and are stored in the management database)
+ */
+/**
+ * @struct _pEp_member
+ * @brief Auxiliary struct for typedef pEp_member
+ * @see pEp_member
  */
 typedef struct _pEp_member {
     pEp_identity *ident;      //!< member identity
@@ -39,7 +48,7 @@ typedef struct _pEp_member {
  *  @param[in]      ident               the pEp_identity object representing the member
  *
  *  @retval         pEp_member          allocated member struct on success
- *                  NULL                if ident is not present or other failure occurs
+ *  @retval         NULL                if ident is not present or other failure occurs
  *
  *  @ownership      ownership of all parameters goes to the struct
  *
@@ -64,8 +73,8 @@ DYNAMIC_API pEp_member *new_member(pEp_identity *ident);
  */
 DYNAMIC_API void free_member(pEp_member *member);
 
+//  @typedef member_list
 /**
- * @struct member_list
  * @brief  list structure for pEp_member objects
  * @see    pEp_member
  */
@@ -121,7 +130,7 @@ DYNAMIC_API void free_memberlist(member_list *list);
  *  @param[in]      member              member to add to the list
  *
  *  @retval         member_list         tail of list on success (or pointer to new list if input list was NULL)
- *                  NULL                if failure occurs (typically: out of memory)
+ *  @retval         NULL                if failure occurs (typically: out of memory)
  *
  *  @ownership      ownership of all parameters goes to the callee
  *
@@ -132,7 +141,6 @@ DYNAMIC_API void free_memberlist(member_list *list);
 DYNAMIC_API member_list *memberlist_add(member_list *list, pEp_member *member);
 
 /**
- * @struct pEp group
  * @brief  memory object for holding all information about a group
  *         (groups are persistent and are stored in the management database)
  */
@@ -146,9 +154,10 @@ typedef struct _pEp_group {
 /**
  *  <!--       new_group()       -->
  *
- *  @brief      allocate pEp_group struct. This function does not create
- *              a group in the database, it only allocates the object for
- *              group representation.
+ *  @brief      allocate pEp_group struct. 
+ *  This function does not create
+ *  a group in the database, it only allocates the object for
+ *  group representation.
  *
  *  @param[in]      group_identity      the pEp_identity object representing the group
  *  @param[in]      manager             the pEp_identity object representing the group's manager
@@ -216,7 +225,7 @@ DYNAMIC_API void free_group(pEp_group *group);
  *                                      (When input is NULL, no object is created)
  *
  *  @retval         PEP_STATUS_OK       on success
- *                  error               on failure
+ *  @retval         error               on failure
  *
  *  @ownership      All input values stay with the caller
  *
@@ -251,7 +260,7 @@ DYNAMIC_API PEP_STATUS group_create(
  *                                      Must contain a user_id and address.
  *
  *  @retval         PEP_STATUS_OK       on success
- *                  error               on failure
+ *  @retval         error               on failure
  *
  *  @ownership      FIXME
  *
@@ -277,7 +286,7 @@ DYNAMIC_API PEP_STATUS group_join(
  *                                      present in the database
  *
  *  @retval         PEP_STATUS_OK       on success
- *                  error               on failure
+ *  @retval         error               on failure
  *
  *  @ownership      FIXME
  *
@@ -293,7 +302,7 @@ DYNAMIC_API PEP_STATUS group_dissolve(
 /**
  *  <!--       group_invite_member()       -->
  *
- *  @brief      Invite a member to an extant group, marking the member as invited in the database and
+ *  @brief      Invite a member to an existant group, marking the member as invited in the database and
  *              sending out an invitation to said member
  *
  *  @param[in]      session             associated session object
@@ -304,7 +313,7 @@ DYNAMIC_API PEP_STATUS group_dissolve(
  *                                      present in the database
  *
  *  @retval         PEP_STATUS_OK       on success
- *                  error               on failure
+ *  @retval         error               on failure
  *
  *  @ownership      FIXME
  *
@@ -331,7 +340,7 @@ DYNAMIC_API PEP_STATUS group_invite_member(
  *                                      a user_id and address
  *
  *  @retval         PEP_STATUS_OK       on success
- *                  error               on failure
+ *  @retval         error               on failure
  *
  *  @ownership      FIXME
  *
@@ -358,7 +367,7 @@ DYNAMIC_API PEP_STATUS group_remove_member(
  *  @param[out]     rating              the group rating
  *
  *  @retval         PEP_STATUS_OK       on success
- *                  error               on failure
+ *  @retval         error               on failure
  *
  *  @ownership      FIXME
  *
