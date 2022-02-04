@@ -96,7 +96,7 @@ typedef struct _pEpSession * PEP_SESSION;
 /**
  *  @enum    PEP_STATUS
  *  
- *  @brief    TODO
+ *  @brief   Collection of all status codes Engine API functions might return
  *  
  */
 typedef enum {
@@ -488,7 +488,7 @@ DYNAMIC_API void config_service_log(PEP_SESSION session, bool enable);
 
 
 /**
- *  @enum    PEP_CIPHER_SUITE
+ *  @typedef    PEP_CIPHER_SUITE
  *  
  *  @brief    TODO
  *  
@@ -795,9 +795,9 @@ DYNAMIC_API PEP_STATUS trustwords(
 
 // TODO: increase versions in pEp.asn1 if rating changes
 
-/**
- *  @enum    PEP_comm_type
- *  
+/*
+ *  @enum    PEP_comm_type*/
+/**  
  *  @brief    TODO
  *  
  */
@@ -889,8 +889,8 @@ typedef unsigned int identity_flags_t;
 //typedef unsigned int keypair_flags_t;
 
 /**
- *  @struct    pEp_identity
- *  
+ *  <!-- pEp_identity -->
+ *
  *  @brief    This is the engine representation of the pEp identity concept,
  *            which is at its base a user bound to an address (and is uniquely
  *            identified as such). Other information such as default keys,
@@ -918,7 +918,7 @@ typedef struct _pEp_identity {
 } pEp_identity;
 
 /**
- *  @struct    identity_list
+ *  <!--    identity_list -->
  *  
  *  @brief     List nodes for pEp_identity structs
  *  
@@ -1912,7 +1912,7 @@ DYNAMIC_API const char *per_machine_directory(void);
  *  PEP_OUT_OF_MEMORY. The behaviour of all functions which use secret keys may
  *  change after this is configured.  
  * 
- *  Error behaviour:
+ *  @par Error behaviour:
  * 
  *  For any function which may trigger the use of a secret key, if an attempt
  *  to use a secret key which requires a passphrase occurs and no passphrase
@@ -1982,7 +1982,8 @@ DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys(PEP_SESSION session,
 /**
  *  <!--       set_ident_enc_format()       -->
  *  
- *  @brief Set the default encryption format for this identity
+ *  @brief Set the default encryption format for this identity.
+ *
  *         (value only MIGHT be used, and only in the case where the
  *         message enc_format is PEP_enc_auto. It will be used 
  *         opportunistically in the case on a first-come, first-serve 
@@ -2043,12 +2044,13 @@ DYNAMIC_API PEP_STATUS get_replacement_fpr(
     );
     
 
-// This ONLY sets the *user* flag, and creates a shell identity if necessary.
 /**
  *  <!--       set_as_pEp_user()       -->
  *  
  *  @brief            TODO
  *  
+ * This ONLY sets the *user* flag, and creates a shell identity if necessary.
+ *
  *  @param[in]  session      session handle
  *  @param[in]  user         pEp_identity*
  *  
@@ -2063,7 +2065,9 @@ DYNAMIC_API PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user);
  *  <!--       reset_path_cache()       -->
  *
  *  @brief      Recompute pathnames according to the current value of the
- *              environment.  This is automatically called by init on
+ *              environment.  
+ *
+ *              This is automatically called by init on
  *              platforms where a pathname cache exists, but it is possible
  *              to call it again explicitly in case the paths need to be
  *              recomputed from updated environment variables; the intended
@@ -2081,7 +2085,9 @@ DYNAMIC_API PEP_STATUS reset_path_cache(void);
   /**
  *  <!--       reset_path_cache()       -->
  *
- *  @brief      Empty the path cache, releasing resources.  This may invalidate
+ *  @brief      Empty the path cache, releasing resources.  
+ *
+ *  This may invalidate
  *              the memory used by the results of per_user_relative_directory,
  *              per_user_directory, per_machine_directory, android_system_db,
  *              unix_system_db, unix_local_db.
