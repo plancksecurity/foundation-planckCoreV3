@@ -750,10 +750,15 @@ PEP_STATUS replace_identities_fpr(PEP_SESSION session,
 //
 //    return value:
 //        PEP_STATUS_OK = 0             success
+//                          FIXME: the specific error among the following
+//                                 ones has no importance to the caller.
+//                                 In practice right now I am only using
+//                                 PEP_COMMIT_FAILED for every case.
 //        PEP_CANNOT_SET_PERSON         writing to table person failed
 //        PEP_CANNOT_SET_PGP_KEYPAIR    writing to table pgp_keypair failed
 //        PEP_CANNOT_SET_IDENTITY       writing to table identity failed
 //        PEP_COMMIT_FAILED             SQL commit failed
+//        PEP_OUT_OF_MEMORY             could not allocate memory
 //
 //    caveat:
 //        
