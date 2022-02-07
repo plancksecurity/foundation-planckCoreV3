@@ -25,27 +25,26 @@ extern "C" {
  *
  */
 typedef enum _PEP_encrypt_flags {
-    // "default" means whatever the default behaviour for the function is.
+    /// "default" means whatever the default behaviour for the function is.
     PEP_encrypt_flag_default = 0x0,
     PEP_encrypt_flag_force_encryption = 0x1,
 
-    // This flag is for special use cases and should not be used
-    // by normal pEp clients!
+    /// This flag is for special use cases and should not be used by normal pEp clients!
     PEP_encrypt_flag_force_unsigned = 0x2,
     PEP_encrypt_flag_force_no_attached_key = 0x4,
     
-    // This is used for outer messages (used to wrap the real message)
-    // This is only used internally and (eventually) by transport functions
+    /// This is used for outer messages (used to wrap the real message)
+    /// This is only used internally and (eventually) by transport functions
     PEP_encrypt_flag_inner_message = 0x8,
     
-    // This is mainly used by pEp clients to send private keys to 
-    // their own PGP-only device
+    /// This is mainly used by pEp clients to send private keys to 
+    /// their own PGP-only device
     PEP_encrypt_flag_force_version_1 = 0x10,
         
     PEP_encrypt_flag_key_reset_only = 0x20,
     
-    // This flag is used to let internal functions know that an encryption 
-    // call is being used as part of a reencryption operation
+    /// This flag is used to let internal functions know that an encryption 
+    /// call is being used as part of a reencryption operation
     PEP_encrypt_reencrypt = 0x40
 } PEP_encrypt_flags; 
 
@@ -58,10 +57,10 @@ typedef unsigned int PEP_encrypt_flags_t;
  *
  */
 typedef enum _message_wrap_type {
-    PEP_message_unwrapped,  // 1.0 or anything we don't wrap    
-    PEP_message_default,    // typical inner/outer message 2.0
-    PEP_message_transport,  // e.g. for onion layers
-    PEP_message_key_reset   // for wrapped key reset information
+    PEP_message_unwrapped,  ///< 1.0 or anything we don't wrap    
+    PEP_message_default,    ///< typical inner/outer message 2.0
+    PEP_message_transport,  ///< e.g. for onion layers
+    PEP_message_key_reset   ///< for wrapped key reset information
 } message_wrap_type;
 
 /**
@@ -94,10 +93,9 @@ typedef enum _message_wrap_type {
  *  @warning the ownership of src remains with the caller
  *           the ownership of dst goes to the caller
  *
- *           enc_format PEP_enc_inline_EA:
+ *  @warning enc_format PEP_enc_inline_EA:
  *              internal format of the encrypted attachments is changing, see
- *              https://dev.pep.foundation/Engine/ElevatedAttachments
- *
+ *              https://dev.pep.foundation/Engine/ElevatedAttachments\n
  *               Only use this for transports without support for attachments
  *               when attached data must be sent inline
  *
@@ -139,7 +137,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
  *  @retval PEP_UNKNOWN_ERROR
  *  @retval any other value on error
  *
- *  @warning the ownershop of src remains with the caller
+ *  @warning the ownershop of src remains with the caller\n
  *           the ownership of dst goes to the caller
  *
  */
@@ -178,9 +176,9 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
  *  @retval PEP_ILLEGAL_VALUE
  *  @retval PEP_OUT_OF_MEMORY
  *
- *  @warning the ownership of src remains with the caller
- *           the ownership of target_id remains w/ caller
- *           the ownership of dst goes to the caller
+ *  @warning the ownership of src remains with the caller\n
+ *           the ownership of target_id remains w/ caller\n
+ *           the ownership of dst goes to the caller\n
  *           message is NOT encrypted for identities other than the target_id (and then,
  *           only if the target_id refers to self!)
  *
@@ -199,7 +197,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
 /**
  *  @enum    PEP_color
  *
- *  @brief    TODO
+ *  @brief    Internal encoding of colors for status bar.
  *
  */
 typedef enum _PEP_color {
@@ -298,8 +296,11 @@ typedef unsigned int PEP_decrypt_flags_t;
  *               might be modified (strings freed and allocated anew or set to NULL,
  *               etc) intentionally; when this happens, PEP_decrypt_flag_src_modified
  *               is set.
+ *
  *  @ownership dst goes to the caller
+ *
  *  @ownership contents of keylist goes to the caller
+ *
  *  @note if src is unencrypted this function returns PEP_UNENCRYPTED and sets
  *        dst to NULL
  *  @note if src->enc_format is PEP_enc_inline_EA on input then elevated attachments
@@ -361,8 +362,8 @@ DYNAMIC_API PEP_STATUS decrypt_message(
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
  *  @retval any other value on error
  *
- *  @warning the ownership of msg remains with the caller
- *           the ownership of ident goes to the caller
+ *  @warning the ownership of msg remains with the caller\n
+ *           the ownership of ident goes to the caller\n
  *           msg MUST be encrypted so that this function can check own signature
  *
  */
@@ -386,8 +387,8 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
  *
- *  @warning msg->from must point to a valid pEp_identity
- *           msg->dir must be PEP_dir_outgoing
+ *  @warning msg->from must point to a valid pEp_identity\n
+ *           msg->dir must be PEP_dir_outgoing\n
  *           the ownership of msg remains with the caller
  *
  */
@@ -412,8 +413,8 @@ DYNAMIC_API PEP_STATUS sent_message_rating(
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
  *
- *  @warning msg->from must point to a valid pEp_identity
- *           msg->dir must be PEP_dir_outgoing
+ *  @warning msg->from must point to a valid pEp_identity\n
+ *           msg->dir must be PEP_dir_outgoing\n
  *           the ownership of msg remains with the caller
  *
  */
@@ -436,8 +437,8 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
  *
- *  @warning msg->from must point to a valid pEp_identity
- *           msg->dir must be PEP_dir_outgoing
+ *  @warning msg->from must point to a valid pEp_identity\n
+ *           msg->dir must be PEP_dir_outgoing\n
  *           the ownership of msg remains with the caller
  *
  */
@@ -507,7 +508,7 @@ DYNAMIC_API PEP_STATUS get_binary_path(PEP_cryptotech tech, const char **path);
  *  @retval PEP_ILLEGAL_VALUE        illegal parameter values
  *  @retval PEP_TRUSTWORD_NOT_FOUND  at least one trustword not found
  *
- *  @warning the word pointer goes to the ownership of the caller
+ *  @warning the word pointer goes to the ownership of the caller.
  *           the caller is responsible to free() it (on Windoze use pEp_free())
  *
  */
@@ -543,7 +544,7 @@ DYNAMIC_API PEP_STATUS get_trustwords(
  *  @retval PEP_CANNOT_FIND_IDENTITY identity not found
  *  @retval error                    status of decrypt_message() if decryption fails.
  *
- *  @warning the word pointer goes to the ownership of the caller
+ *  @warning the word pointer goes to the ownership of the caller.
  *           the caller is responsible to free() it (on Windoze use pEp_free())
  *
  */
@@ -578,7 +579,7 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
  *  @retval PEP_ILLEGAL_VALUE        illegal parameter values
  *  @retval PEP_TRUSTWORD_NOT_FOUND  at least one trustword not found
  *
- *  @warning the word pointer goes to the ownership of the caller
+ *  @warning the word pointer goes to the ownership of the caller.
  *           the caller is responsible to free() it (on Windoze use pEp_free())
  *
  */
@@ -607,8 +608,8 @@ DYNAMIC_API PEP_STATUS get_trustwords_for_fprs(
  *  @retval PEP_OUT_OF_MEMORY       if not enough memory could be allocated
  *  @retval any other value on error
  *
- *  @warning msg->from must point to a valid pEp_identity
- *           the ownership of msg remains with the caller
+ *  @warning msg->from must point to a valid pEp_identity\n
+ *           the ownership of msg remains with the caller\n
  *           the ownership of x_keylist remains with to the caller
  *
  */

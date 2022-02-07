@@ -31,13 +31,12 @@ extern "C" {
  *  @retval PEP_OUT_OF_MEMORY   out of memory
  *
  *  @warning call this for the data in an attachment
- *           for unsupported MIME types this function is returning NULL for code and
+ *  @warning for unsupported MIME types this function is returning NULL for code and
  *           does not fail
- *           for supported MIME types this function is creating the internal message
+ *  @warning for supported MIME types this function is creating the internal message
  *           format by copying the data in value
- *           code goes into the ownership of the caller
- *           see also:
- *           https://dev.pep.foundation/Engine/ElevatedAttachments
+ *  @attention code goes into the ownership of the caller
+ *  @see     https://dev.pep.foundation/Engine/ElevatedAttachments
  *  
  */
 
@@ -66,9 +65,9 @@ DYNAMIC_API PEP_STATUS encode_internal(
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
  *  @retval PEP_OUT_OF_MEMORY   out of memory
  *
- *  @warning this functions copies data from the code
- *           value goes into the ownership of the caller
- *           mime_type goes into the ownership of the caller
+ *  @warning    this functions copies data from the code
+ *  @attention  value goes into the ownership of the caller
+ *  @attention  mime_type goes into the ownership of the caller
  *  
  */
 

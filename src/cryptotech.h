@@ -28,8 +28,10 @@ typedef enum _PEP_cryptotech {
 } PEP_cryptotech;
 
 /**
+ *  @brief Signature for crypto drivers to implement for decrypt_and_verify()
+ *
  *  @copydoc decrypt_and_verify()
- *  Signature for crypto drivers to implement for decrypt_and_verify()
+ *
  *  @see decrypt_and_verify()
  */
 typedef PEP_STATUS (*decrypt_and_verify_t)(
@@ -40,8 +42,8 @@ typedef PEP_STATUS (*decrypt_and_verify_t)(
     );
 
 /**
+ *  @brief Signature for crypto drivers to implement for verify_text()
  *  @copydoc verify_text()
- *  Signature for crypto drivers to implement for verify_text()
  *  @see verify_text()
  */
 typedef PEP_STATUS (*verify_text_t)(
@@ -50,8 +52,8 @@ typedef PEP_STATUS (*verify_text_t)(
     );
 
 /**
+ *  @brief Signature for crypto drivers to implement for encrypt_and_sign()
  *  @copydoc encrypt_and_sign()
- *  Signature for crypto drivers to implement for encrypt_and_sign()
  *  @see encrypt_and_sign()
  */
 typedef PEP_STATUS (*encrypt_and_sign_t)(
@@ -60,8 +62,8 @@ typedef PEP_STATUS (*encrypt_and_sign_t)(
     );
 
 /**
+ *  @brief Signature for crypto drivers to implement for encrypt_only()
  *  @copydoc encrypt_only()
- *  Signature for crypto drivers to implement for encrypt_only()
  *  @see encrypt_only()
  */
 typedef PEP_STATUS (*encrypt_only_t)(
@@ -70,8 +72,8 @@ typedef PEP_STATUS (*encrypt_only_t)(
     );
 
 /**
+ *  @brief Signature for crypto drivers to implement for sign_only()
  *  @copydoc sign_only()
- *  Signature for crypto drivers to implement for sign_only()
  *  @see sign_only
  */
 typedef PEP_STATUS (*sign_only_t)(
@@ -80,15 +82,15 @@ typedef PEP_STATUS (*sign_only_t)(
     );
 
 /**
+ *  @brief Signature for crypto drivers to implement for delete_keypair()
  *  @copydoc delete_keypair()
- *  Signature for crypto drivers to implement for delete_keypair()
  *  @see delete_keypair()
  */
 typedef PEP_STATUS (*delete_keypair_t)(PEP_SESSION session, const char *fpr);
 
 /**
+ *  @brief Signature for crypto drivers to implement for export_key()
  *  @copydoc export_key()
- *  Signature for crypto drivers to implement for export_key()
  *  @see export_key()
  */
 typedef PEP_STATUS (*export_key_t)(
@@ -97,8 +99,8 @@ typedef PEP_STATUS (*export_key_t)(
     );
 
 /**
+ *  @brief Signature for crypto drivers to implement for find_keys()
  *  @copydoc find_keys()
- *  Signature for crypto drivers to implement for find_keys()
  *  @see find_keys()
  */
 typedef PEP_STATUS (*find_keys_t)(
@@ -106,8 +108,8 @@ typedef PEP_STATUS (*find_keys_t)(
     );
 
 /**
+ *  @brief Signature for crypto drivers to implement for generate_keypair()
  *  @copydoc generate_keypair()
- *  Signature for crypto drivers to implement for generate_keypair()
  *  @see generate_keypair()
  */
 typedef PEP_STATUS (*generate_keypair_t)(
@@ -115,8 +117,8 @@ typedef PEP_STATUS (*generate_keypair_t)(
     );
 
 /**
+ *  @brief Signature for crypto drivers to implement for get_key_rating()
  *  @copydoc get_key_rating()
- *  Signature for crypto drivers to implement for get_key_rating()
  *  @see get_key_rating()
  */
 typedef PEP_STATUS (*get_key_rating_t)(
@@ -126,8 +128,8 @@ typedef PEP_STATUS (*get_key_rating_t)(
     );
 
 /**
+ *  @brief Signature for crypto drivers to implement for import_key()
  *  @copydoc import_key()
- *  Signature for crypto drivers to implement for import_key()
  *  @see import_key()
  */
 typedef PEP_STATUS (*import_key_t)(PEP_SESSION session, const char *key_data,
@@ -135,77 +137,77 @@ typedef PEP_STATUS (*import_key_t)(PEP_SESSION session, const char *key_data,
         uint64_t* changed_key_index);
 
 /**
+ *  @brief Signature for crypto drivers to implement for recv_key()
  *  @copydoc recv_key()
- *  Signature for crypto drivers to implement for recv_key()
  *  @see recv_key()
  */
 typedef PEP_STATUS (*recv_key_t)(PEP_SESSION session, const char *pattern);
 
 /**
+ *  @brief Signature for crypto drivers to implement for send_key()
  *  @copydoc send_key()
- *  Signature for crypto drivers to implement for send_key()
  *  @see send_key()
  */
 typedef PEP_STATUS (*send_key_t)(PEP_SESSION session, const char *pattern);
 
 /**
+ *  @brief Signature for crypto drivers to implement for renew_key()
  *  @copydoc renew_key()
- *  Signature for crypto drivers to implement for renew_key()
  *  @see renew_key()
  */
 typedef PEP_STATUS (*renew_key_t)(PEP_SESSION session, const char *fpr,
         const timestamp *ts);
 
 /**
+ *  @brief Signature for crypto drivers to implement for revoke_key()
  *  @copydoc revoke_key()
- *  Signature for crypto drivers to implement for revoke_key()
  *  @see revoke_key()
  */
 typedef PEP_STATUS (*revoke_key_t)(PEP_SESSION session, const char *fpr,
         const char *reason);
 
 /**
+ *  @brief Signature for crypto drivers to implement for key_expired()
  *  @copydoc key_expired()
- *  Signature for crypto drivers to implement for key_expired()
  *  @see key_expired()
  */
 typedef PEP_STATUS (*key_expired_t)(PEP_SESSION session, const char *fpr,
         const time_t when, bool *expired);
 
 /**
+ *  @brief Signature for crypto drivers to implement for key_revoked()
  *  @copydoc key_revoked()
- *  Signature for crypto drivers to implement for key_revoked()
  *  @see key_revoked()
  */
 typedef PEP_STATUS (*key_revoked_t)(PEP_SESSION session, const char *fpr,
         bool *revoked);
 
 /**
+ *  @brief Signature for crypto drivers to implement for key_created()
  *  @copydoc key_created()
- *  Signature for crypto drivers to implement for key_created()
  *  @see key_created()
  */
 typedef PEP_STATUS (*key_created_t)(PEP_SESSION session, const char *fpr,
         time_t *created);
 
 /**
+ *  @brief Signature for crypto drivers to implement for binary_path()
  *  @copydoc binary_path()
- *  Signature for crypto drivers to implement for binary_path()
  *  @see binary_path()
  */
 typedef PEP_STATUS (*binary_path_t)(const char **path);
 
 /**
+ *  @brief Signature for crypto drivers to implement for contains_priv_key()
  *  @copydoc contains_priv_key()
- *  Signature for crypto drivers to implement for contains_priv_key()
  *  @see contains_priv_key()
  */
 typedef PEP_STATUS (*contains_priv_key_t)(PEP_SESSION session, const char *fpr,
         bool *has_private);
 
 /**
+ *  @brief Signature for crypto drivers to implement for find_private_keys()
  *  @copydoc find_private_keys()
- *  Signature for crypto drivers to implement for find_private_keys()
  *  @see find_private_keys()
  */
 typedef PEP_STATUS (*find_private_keys_t)(
@@ -213,8 +215,8 @@ typedef PEP_STATUS (*find_private_keys_t)(
 );
 
 /**
+ *  @brief Signature for crypto drivers to implement for config_cipher_suite()
  *  @copydoc config_cipher_suite()
- *  Signature for crypto drivers to implement for config_cipher_suite()
  *  @see config_cipher_suite()
  */
 typedef PEP_STATUS (*config_cipher_suite_t)(PEP_SESSION session,

@@ -1,6 +1,6 @@
-//
-// Created by Krista Bennett on 14.04.21.
-//
+/// @file message_api_internal.h
+/// @author Created by Krista Bennett on 14.04.21.
+///
 
 #ifndef MESSAGE_API_INTERNAL_H
 #define MESSAGE_API_INTERNAL_H

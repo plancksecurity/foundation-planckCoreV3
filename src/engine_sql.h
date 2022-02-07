@@ -1,4 +1,8 @@
 #pragma once
+/**
+ * @file engine_sql.h
+ * @brief functions to SQL statements and strings to feed into prepared statements
+ */
 
 #include "pEp_internal.h"
 
@@ -15,7 +19,7 @@ PEP_STATUS pEp_finalize_sql_stmts(PEP_SESSION session);
    attribute declrations for every variable. */
 #define MAYBE_UNUSED __attribute__((__unused__))
 
-/**
+/**  
  * Strings to feed into prepared statements
  */
 static const char *sql_log MAYBE_UNUSED =

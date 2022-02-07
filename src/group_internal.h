@@ -1,8 +1,10 @@
+/// @file group_internal.h
+/// @brief  Internal functions for representation of groups
+/// @license This file is under GNU General Public License 3.0 - see LICENSE.txt
+
 #ifndef GROUP_INTERNAL_H
 #define GROUP_INTERNAL_H
 
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
 
 #include "message_api.h"
 #include "../asn.1/Distribution.h"
@@ -29,7 +31,7 @@ extern "C" {
  *                                      a user_id and address
  *
  *  @retval         PEP_STATUS_OK       on success
- *                  error               on failure
+ *  @retval         error               on failure
  *
  *  @ownership      all arguments belong to the callee
  *
@@ -61,9 +63,9 @@ PEP_STATUS group_add_member(
 /**
  * @internal
  *
- * @param session
- * @param group_identity
- * @param member_identity
+ * @param[in] session
+ * @param[in] group_identity
+ * @param[in] member_identity
  * @return
  */
 PEP_STATUS leave_group(

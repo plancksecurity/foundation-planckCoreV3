@@ -138,14 +138,16 @@ PEP_STATUS get_user_default_key(PEP_SESSION session, const char* user_id,
 
 
 
-// Only call on retrieval of previously stored identity!
-// Also, we presume that if the stored_identity was sent in
-// without an fpr, there wasn't one in the trust DB for this
-// identity.
 /**
  *  <!--       get_valid_pubkey()       -->
  *  
  *  @brief            TODO
+ *
+ * Only call on retrieval of previously stored identity!
+ *
+ * Also, we presume that if the stored_identity was sent in
+ * without an fpr, there wasn't one in the trust DB for this
+ * identity.
  *  
  *  @param[in]  session               session handle
  *  @param[in]  stored_identity       pEp_identity*

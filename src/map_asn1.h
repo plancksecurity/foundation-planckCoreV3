@@ -17,7 +17,9 @@ extern "C" {
 #endif
 
 
-/* For compatibility reasons we have PIdentity as a distinct struct from
+/**
+ * @file map_asn1.h
+ * For compatibility reasons we have PIdentity as a distinct struct from
    Identity.  The difference is that PIdentity has some optional fields, notably
    fpr.
 

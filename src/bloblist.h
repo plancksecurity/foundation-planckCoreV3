@@ -26,7 +26,7 @@ extern "C" {
 typedef enum {
     PEP_CONTENT_DISP_ATTACHMENT = 0,
     PEP_CONTENT_DISP_INLINE = 1,
-    PEP_CONTENT_DISP_OTHER = -1      // must be affirmatively set
+    PEP_CONTENT_DISP_OTHER = -1      ///< must be affirmatively set
 } content_disposition_type;
 
 /**
@@ -36,18 +36,18 @@ typedef enum {
  *  
  */
 typedef struct _bloblist_t {
-    char *value;                        // blob
-    size_t size;                        // size of blob
-    char *mime_type;                    // UTF-8 string of MIME type of blob or
-                                        // NULL if unknown
-    char *filename;                     // UTF-8 string of file name of blob or
-                                        // NULL if unknown
+    char *value;                        ///< blob
+    size_t size;                        ///< size of blob
+    char *mime_type;                    ///< UTF-8 string of MIME type of blob or
+                                        ///< NULL if unknown
+    char *filename;                     ///< UTF-8 string of file name of blob or
+                                        ///< NULL if unknown
     content_disposition_type disposition;
-                                        // default is attachment when allocated
-                                        // (see mime.h and RFC2183)
-    struct _bloblist_t *next;           // this is a single linked list
-    void (*release_value)(char *);      // pointer to release function;
-                                        // pEp_free() if not set
+                                        ///< default is attachment when allocated
+                                        ///< (see mime.h and RFC2183)
+    struct _bloblist_t *next;           ///< this is a single linked list
+    void (*release_value)(char *);      ///< pointer to release function;
+                                        ///< pEp_free() if not set
 } bloblist_t;
 
 
@@ -61,7 +61,8 @@ typedef struct _bloblist_t {
  *  @param[in]   mime_type    MIME type of the blob data or NULL if unknown
  *  @param[in]   filename     file name of origin of blob data or NULL if unknown
  *  
- *  @retval pointer to new bloblist_t or NULL if out of memory
+ *  @retval pointer to new bloblist_t 
+ *  @retval NULL if out of memory
  *  
  *  @ownership 
  *  -  the ownership of the blob goes to the bloblist struct

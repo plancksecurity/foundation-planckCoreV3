@@ -265,6 +265,8 @@ TAB_SIZE               = 4
 
 ALIASES                =
 ALIASES	              += license="\par License:^^"
+ALIASES	              += copyleft="\par Copyleft:^^"
+ALIASES	              += ownership="\attention Ownership:^^"
 
 # Set the OPTIMIZE_OUTPUT_FOR_C tag to YES if your project consists of C sources
 # only. Doxygen will then generate output that is more tailored for C. For
@@ -2258,6 +2260,7 @@ INCLUDE_FILE_PATTERNS  =
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
 PREDEFINED             =DYNAMIC_API=
+PREDEFINED            +=MAYBE_UNUSED=
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The

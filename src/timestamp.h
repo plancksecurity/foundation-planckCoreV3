@@ -16,7 +16,7 @@ extern "C" {
 
 
 #ifdef WIN32
-// this struct is compatible to struct tm
+/// @brief this struct is compatible to struct tm. WIN32 only.
 typedef struct _timestamp {
     int tm_sec;
     int tm_min;
@@ -40,8 +40,9 @@ typedef struct tm timestamp;
  *  
  *  @brief Convert the broken-out time into time_t, and respect tm_gmtoff
  *  
+ *  @param[in]	ts	pointer to timestamp to parse
+ *
  *  @retval time_t that holds the usual "seconds since epoch"
- *  
  *  
  */
 DYNAMIC_API time_t timegm_with_gmtoff(const timestamp* ts);

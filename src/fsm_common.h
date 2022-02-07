@@ -20,6 +20,9 @@ extern "C" {
  *  @enum    fsm_error
  *  
  *  @brief   TODO
+ *
+ *   error values -2..-7 are corresponding to
+ *   PEP_SYNC_STATEMACHINE_ERROR - value
  *  
  */
 typedef enum _fsm_error {

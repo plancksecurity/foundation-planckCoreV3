@@ -57,9 +57,9 @@ DYNAMIC_API bool is_PGP_message_text(const char *text);
  *  @retval PEP_OUT_OF_MEMORY       if not enough memory could be allocated
  *  @retval PEP_ILLEGAL_VALUE       illegal parameter values
  *
- *  @warning the resulttext will go to the ownership of the caller
- *           the message will remain in the ownership of the caller
- *           omit_fields is true for payload of PGP/MIME messages
+ *  @warning the resulttext will go to the ownership of the caller\n
+ *           the message will remain in the ownership of the caller\n
+ *           omit_fields is true for payload of PGP/MIME messages\n
  *           also: note that the encryption type will be used to determine what
  *           gets encoded from the message struct, so if using this on an 
  *           already-encrypted message, set the enc_format of the msg to PEP_enc_none.

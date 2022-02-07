@@ -3,8 +3,10 @@
 
 /**
  * @file group.h
- * @brief TODO: Description for doxygen
+ * @brief In-memory objects and functions for representation of groups
+ *
  * @license This file is under GNU General Public License 3.0 - see LICENSE.txt
+ *
  */
 
 #include "platform.h"
@@ -24,15 +26,10 @@ extern "C" {
  *************************************************************************************************/
 
 /**
- * @typedef pEp_member
+ * <!-- pEp_member -->
  * @brief  memory object for holding information about an invited group member
  *         and whether they have joined the group
  *         (groups are persistent and are stored in the management database)
- */
-/**
- * @struct _pEp_member
- * @brief Auxiliary struct for typedef pEp_member
- * @see pEp_member
  */
 typedef struct _pEp_member {
     pEp_identity *ident;      //!< member identity
@@ -141,6 +138,8 @@ DYNAMIC_API void free_memberlist(member_list *list);
 DYNAMIC_API member_list *memberlist_add(member_list *list, pEp_member *member);
 
 /**
+ * <!-- pEp_group -->
+ *
  * @brief  memory object for holding all information about a group
  *         (groups are persistent and are stored in the management database)
  */
@@ -155,7 +154,8 @@ typedef struct _pEp_group {
  *  <!--       new_group()       -->
  *
  *  @brief      allocate pEp_group struct. 
- *  This function does not create
+ *
+ *  @warning This function does not create
  *  a group in the database, it only allocates the object for
  *  group representation.
  *
@@ -182,7 +182,8 @@ DYNAMIC_API pEp_group *new_group(
  *  <!--       free_group()       -->
  *
  *  @brief      deallocate pEp_group struct and all objects it points to.
- *              This function does not dissolve groups, only deallocates the memory object
+ *
+ *  @warning    This function does not dissolve groups, only deallocates the memory object
  *              representing a group.
  *
  *  @param[in]      group      group object to be freed
@@ -302,7 +303,7 @@ DYNAMIC_API PEP_STATUS group_dissolve(
 /**
  *  <!--       group_invite_member()       -->
  *
- *  @brief      Invite a member to an existant group, marking the member as invited in the database and
+ *  @brief      Invite a member to an extant group, marking the member as invited in the database and
  *              sending out an invitation to said member
  *
  *  @param[in]      session             associated session object

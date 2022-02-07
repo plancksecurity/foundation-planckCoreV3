@@ -1,3 +1,8 @@
+/**
+ * @file engine_sql.c
+ * @brief functions to prepare SQL statements
+ */
+
 #include "pEp_internal.h"
 #include "engine_sql.h"
 
