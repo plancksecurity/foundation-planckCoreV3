@@ -22,17 +22,62 @@ extern "C" {
 
 #define PEP_VERSION "2.1" // pEp *protocol* version
 
-// RELEASE version this targets
-// (string: major.minor.patch[-RCrc][+])
-#define PEP_ENGINE_VERSION "2.1.51-RC1+"
+// RELEASE version this targets.  Each item indicates the last already-released
+// or being-released version.
+// The optional plus sign at the end means that the current version contains
+// changes which follow the release.
+// When the branch is in a non-RC or non-plus state we can just comment the
+// definition of PEP_ENGINE_VERSION_RC , the definition of
+// PEP_ENGINE_VERSION_PLUS , or both.
 #define PEP_ENGINE_VERSION_MAJOR 2
 #define PEP_ENGINE_VERSION_MINOR 1
-#define PEP_ENGINE_VERSION_PATCH 51
-#define PEP_ENGINE_VERSION_PLUS  1 /* Either defined, or undefined for tagged versions */
-// This should be the index of the last already released RC.  In practice, if
-// the release candidate N has just been tagged, this should be defined as N+1.
-#define PEP_ENGINE_VERSION_RC    2
+#define PEP_ENGINE_VERSION_PATCH 51  // the last already-released or
+                                     // being-released patchlevel,
+                                     // which must always be defined
+#define PEP_ENGINE_VERSION_RC    2   // the last already-released RC for this
+                                     // patchlevel, or not defined if not an RC
+//#define PEP_ENGINE_VERSION_PLUS  0   // Only defined for tagged versions
 
+/* The following macros serve to machine-generate a definition of
+   PEP_ENGINE_VERSION, following the correct format as a string, from the
+   definitions above.  The format is
+      major.minor.patch[-RCrc][+]
+   . */
+#define _PEP_STRINGIZE_INTERNAL(X)                                    \
+  /* This ugly CPP stringizing hack is more or less standard.  It is  \
+     explained in the GNU CPP manual at §"Stringizing". */            \
+  #X
+#define _PEP_STRINGIZE(X)                             \
+  /* See the comment in _PEP_STRINGIZE_INTERNAL . */  \
+  _PEP_STRINGIZE_INTERNAL(X)
+#if defined (PEP_ENGINE_VERSION_RC)
+# define _PEP_ENGINE_VERSION_RC_STRING  \
+    "-RC" _PEP_STRINGIZE(PEP_ENGINE_VERSION_RC)
+#else
+# define _PEP_ENGINE_VERSION_RC_STRING  \
+    ""
+#endif /* PEP_ENGINE_VERSION_RC */
+#if defined (PEP_ENGINE_VERSION_PLUS)
+# define _PEP_ENGINE_VERSION_PLUS_STRING "+"
+#else
+# define _PEP_ENGINE_VERSION_PLUS_STRING ""
+#endif /* PEP_ENGINE_VERSION_PLUS */
+/* An internal convenience macro to generate PEP_ENGINE_VERSION. */
+#define _PEP_MAKE_ENGINE_VERSION(major, minor, patch, rc_string,  \
+                                 plus_string)                     \
+  _PEP_STRINGIZE (major) "."                                      \
+  _PEP_STRINGIZE (minor) "."                                      \
+  _PEP_STRINGIZE (patch)                                          \
+  rc_string                                                       \
+  plus_string
+
+/* The actual public definition. */
+#define PEP_ENGINE_VERSION                                     \
+    _PEP_MAKE_ENGINE_VERSION(PEP_ENGINE_VERSION_MAJOR,         \
+                             PEP_ENGINE_VERSION_MINOR,         \
+                             PEP_ENGINE_VERSION_PATCH,         \
+                             _PEP_ENGINE_VERSION_RC_STRING,    \
+                             _PEP_ENGINE_VERSION_PLUS_STRING)
 
 #define PEP_OWN_USERID "pEp_own_userId"
     
