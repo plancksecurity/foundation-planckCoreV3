@@ -22,7 +22,7 @@ extern "C" {
  *  
  */
 typedef enum _PEP_transport_id {
-    // auto transport chooses transport per message automatically
+    /// auto transport chooses transport per message automatically
     PEP_trans_auto = 0,
 //    PEP_trans_Email = 0x01,
 //    PEP_trans_RCE = 0x02,
@@ -78,13 +78,13 @@ typedef PEP_STATUS (*signal_incoming_message_t)(PEP_transport_id id,
 // call this to receive signals
 
 typedef enum _callback_execution {
-    PEP_cbe_polling = 0,    // execute callbacks immediately only
-    PEP_cbe_async,          // execute callbacks multiple times later on any
-                            // thread; call with PEP_cbe_polling to disable
+    PEP_cbe_polling = 0,    ///< execute callbacks immediately only
+    PEP_cbe_async,          ///< execute callbacks multiple times later on any
+                            ///< thread; call with PEP_cbe_polling to disable
 
-    // the last one is for the transport system only
-    // do not implement it in transports
-    PEP_cbe_blocking = 255
+    /// the last one is for the transport system only;
+    /// do not implement it in transports
+    PEP_cbe_blocking = 255  
 } callback_execution;
 
 // provide NULL for callbacks to avoid being called
@@ -96,15 +96,18 @@ typedef PEP_STATUS (*notify_transport_t)(signal_statuschange_t status_change,
 /**
  *  @struct    _PEP_transport_t
  *  
- *  @brief    TODO
+ *  @brief    Struct containing the transport status code
+ *
+ *  transports are delivering the transport status code
+ *  this is defined here:
+ *  https://dev.pep.foundation/Engine/TransportStatusCode
  *  
  */
 struct _PEP_transport_t {
-    PEP_transport_id id;                    // transport ID
-    const char *uri_scheme;                 // URI scheme this transport is
-                                            // covering
+    PEP_transport_id id;                    ///< transport ID
+    const char *uri_scheme;                 ///< URI scheme this transport is covering
 
-    // functions offered by transport
+    /// functions offered by transport
 
     configure_transport_t configure;
     startup_transport_t startup;
@@ -121,7 +124,7 @@ struct _PEP_transport_t {
     bool longmsg_supported;
     bool longmsg_formatted_supported;
 
-    PEP_text_format native_text_format;     // native format of the transport
+    PEP_text_format native_text_format;     ///< native format of the transport
 };
 
 extern PEP_transport_t transports[PEP_trans__count];

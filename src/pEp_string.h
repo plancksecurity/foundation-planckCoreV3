@@ -19,14 +19,16 @@ extern "C" {
  *  <!--       new_string()       -->
  *  
  *  @brief Allocate a new string
+ *
+ * * calling with str and len is equivalent to strndup()
+ * * calling with str but len=0 is equivalent to strdup()
+ * * calling with str=NULL is equivalent to calloc()
  *  
  *  @param[in]   src    string to copy or NULL
  *  @param[in]   len    length of newly created string or 0 for default
  *  
  *  @retval pointer to string object or NULL if out of memory
- *          calling with str and len is equivalent to strndup()
- *          calling with str but len=0 is equivalent to strdup()
- *          calling with str=NULL is equivalent to calloc()
+ *
  *  
  *  
  */

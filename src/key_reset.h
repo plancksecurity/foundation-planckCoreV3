@@ -23,12 +23,15 @@ extern "C" {
  *  <!--       key_reset_identity()       -->
  *  
  *  @brief Reset the default database status for the identity / keypair
- *         provided. If this corresponds to an own identity and a private key,
+ *         provided. 
+ *
+ *  If this corresponds to an own identity and a private key,
  *         also revoke the key, generate a new one, and communicate the 
  *         reset to recently contacted pEp partners for this identity.
  *  
  *  If it does not, remove the key from the keyring; the key's 
  *  status is completely fresh on next contact from the partner.
+ *
  *  If no key is provided, reset the identity default.
  *  Note that reset keys will be removed as defaults for all users and identities.
  *  
@@ -55,7 +58,9 @@ DYNAMIC_API PEP_STATUS key_reset_identity(
  *  <!--       key_reset_user()       -->
  *  
  *  @brief Reset the default database status for the user / keypair
- *         provided. This will effectively perform key_reset_identity()
+ *         provided. 
+ *
+ *  This will effectively perform key_reset_identity()
  *         each identity associated with the key and user_id, if a key is
  *         provided, and for each key (and all of their identities) if an fpr 
  *         is not.

@@ -15,6 +15,8 @@
 #include <fcntl.h>
 
 /**
+ *  @internal
+ *
  *  <!--       Fopen()       -->
  *  
  *  @brief            TODO
@@ -35,6 +37,8 @@ static inline FILE * Fopen(const char *filename, const char *mode)
 }
 
 /**
+ *  @internal
+ *
  *  <!--       Fdopen()       -->
  *  
  *  @brief            TODO
@@ -55,6 +59,8 @@ static inline FILE * Fdopen(int fildes, const char *mode)
 }
 
 /**
+ *  @internal
+ *
  *  <!--       Fgets()       -->
  *  
  *  @brief            TODO
@@ -76,6 +82,8 @@ static inline char *Fgets(char * str, int size, FILE * stream)
 }
 
 /**
+ *  @internal
+ *
  *  <!--       Fputs()       -->
  *  
  *  @brief            TODO
@@ -96,6 +104,8 @@ static inline int Fputs(const char *str, FILE * stream)
 }
 
 /**
+ *  @internal
+ *
  *  <!--       Fclose()       -->
  *  
  *  @brief            TODO
@@ -115,6 +125,8 @@ static inline int Fclose(FILE *stream)
 }
 
 /**
+ *  @internal
+ *
  *  <!--       Freopen()       -->
  *  
  *  @brief            TODO
@@ -139,6 +151,18 @@ static inline FILE * Freopen(
     return f;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       Fprintf()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  stream      FILE*
+ *  @param[in]  format      const char*
+ *  @param[in]  ...      
+ *  
+ */
 static inline int Fprintf(FILE * stream, const char * format, ...)
 {
     int n;
@@ -156,6 +180,8 @@ static inline int Fprintf(FILE * stream, const char * format, ...)
 }
 
 /**
+ *  @internal
+ *
  *  <!--       Fwrite()       -->
  *  
  *  @brief            TODO
@@ -181,6 +207,8 @@ static inline size_t Fwrite(const void *ptr, size_t size, size_t nitems, FILE *s
 }
 
 /**
+ *  @internal
+ *
  *  <!--       Fread()       -->
  *  
  *  @brief            TODO
@@ -206,6 +234,8 @@ static inline size_t Fread(void *ptr, size_t size, size_t nitems, FILE *stream)
 }
 
 /**
+ *  @internal
+ *
  *  <!--       Fflush()       -->
  *  
  *  @brief            TODO
@@ -225,6 +255,8 @@ static inline int Fflush(FILE *stream)
 }
 
 /**
+ *  @internal
+ *
  *  <!--       Mkstemp()       -->
  *  
  *  @brief            TODO
@@ -244,6 +276,8 @@ static inline int Mkstemp(char *template)
 }
 
 /**
+ *  @internal
+ *
  *  <!--       Close()       -->
  *  
  *  @brief            TODO

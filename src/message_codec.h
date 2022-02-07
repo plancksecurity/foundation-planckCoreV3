@@ -1,5 +1,5 @@
 /**
- * @file        ASN1Message_codec.h
+ * @file        message_codec.h
  * @brief       Definitions for ASN1Message encode and decode functions which transform message payloads to
  *              and from PER-encoded data, and XER text to and from PER
  *

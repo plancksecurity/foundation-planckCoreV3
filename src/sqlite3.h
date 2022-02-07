@@ -1,5 +1,6 @@
-/** @file */
-/** @brief File description for doxygen missing. FIXME */
+/** @file 
+ * @brief sqlite3 interface 
+ */
 
 /*
 ** 2001-09-15

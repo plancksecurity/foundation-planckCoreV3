@@ -124,9 +124,9 @@ DYNAMIC_API message *new_message(
  *  @brief Free message struct
  *  
  *  @param[in]   msg    message struct to free
- *                        NOTA BENE:
- *                        raw data (msg->rawmsg_ref) and referenced other messages (msg->refering_msg_ref)
- *                        aren't freed and remain in the ownership of the caller!
+ *
+ *  @note  raw data (msg->rawmsg_ref) and referenced other messages (msg->refering_msg_ref)
+ *         aren't freed and remain in the ownership of the caller!
  *  
  *  
  */
@@ -142,9 +142,8 @@ DYNAMIC_API void free_message(message *msg);
  *  @param[in]   msg    message to duplicate
  *  
  *  @retval pointer to duplicate of message pointed by msg or NULL
- *          NOTA BENE:
- *          not owned pointees (msg->rawmsg_ref and msg->refering_msg_ref) are shared!
  *  
+ *  @note  not owned pointees (msg->rawmsg_ref and msg->refering_msg_ref) are shared!
  *  
  */
 
@@ -203,8 +202,7 @@ DYNAMIC_API void free_message_ref_list(message_ref_list *msg_list);
  *  
  *  @brief Duplicate message reference list
  *  
- *  paramters:
- *  src (in)        message_ref_list to duplicate
+ *  @param[in] src         message_ref_list to duplicate
  *  
  *  @retval pointer to new message_ref_list or NULL if out of memory
  *  

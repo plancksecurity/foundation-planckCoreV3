@@ -23,13 +23,16 @@ extern "C" {
  *  <!--       key_reset()       -->
  *
  *  @brief Reset the database status for a key, removing all trust information
- *         and default database connections. For own keys, also revoke the key
+ *         and default database connections. 
+ *
+ *  For own keys, also revoke the key
  *         and communicate the revocation and new key to partners we have sent
  *         mail to recently from the specific identity (i.e. address/user_id)
  *         that contacted them. We also in this case set up information so that
  *         if someone we mail uses the wrong key and wasn't yet contacted,
  *         we can send them the reset information from the right address.
- *         For non-own keys, also remove key from the keyring.
+ *
+ *  For non-own keys, also remove key from the keyring.
  *
  *  Can be called manually or through another protocol.
  *

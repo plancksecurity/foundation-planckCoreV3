@@ -35,7 +35,7 @@ extern "C" {
  *  @warning at least identity->address must be a non-empty UTF-8 string as input
  *           update_identity() never writes flags; use set_identity_flags() for
  *           writing
- *           this function NEVER reads the incoming fpr, only writes to it.
+ *  @warning this function NEVER reads the incoming fpr, only writes to it.
  *           this function will fail if called on an identity which, with its input
  *           values, *explicitly* indicates it is an own identity (i.e. .me is set
  *           to true on input, or a user_id is given AND it is a known own user_id).
@@ -44,7 +44,7 @@ extern "C" {
  *           matching default (i.e. it is forced to search by address only).
  *           if the identity is known to be an own identity (or the caller wishes
  *           to make it one), call myself() on the identity instead.
- *           FIXME: is this next point accurate?
+ *  @warning FIXME: is this next point accurate?
  *           if this function returns PEP_ct_unknown or PEP_ct_key_expired in
  *           identity->comm_type, the caller must insert the identity into the
  *           asynchronous management implementation, so retrieve_next_identity()
@@ -107,15 +107,15 @@ DYNAMIC_API PEP_STATUS update_identity(
  *  
  *  @warning If an fpr was entered and is not a valid key, the reason for failure
  *           is immediately returned in the status and, possibly, identity->comm_type
- *           If a default own user_id exists in the database, an alias will 
+ *  @warning If a default own user_id exists in the database, an alias will 
  *           be created for the default for the input user_id. The ENGINE'S default
  *           user_id is always returned in the .user_id field
- *           myself() NEVER elects keys from the keyring; it will only choose keys
+ *  @warning myself() NEVER elects keys from the keyring; it will only choose keys
  *           which have been set up explicitly via myself(), or which were imported
  *           during a first time DB setup from an OpenPGP keyring (compatibility only) 
  *           this function generates a keypair on demand; because it's synchronous
  *           it can need a decent amount of time to return
- *           if you need to do this asynchronous, you need to return an identity
+ *  @warning if you need to do this asynchronous, you need to return an identity
  *           with retrieve_next_identity() where pEp_identity.me is true
  *  
  *  @warning If the identity has no .username but the person with the same
@@ -139,7 +139,7 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity);
  *  
  *  @warning ident is INPUT ONLY. If you want updated trust on the identity, you'll have
  *           to call update_identity or myself respectively after this.
- *           N.B. If you are calling this on a key that is the identity or user default,
+ *  @warning N.B. If you are calling this on a key that is the identity or user default,
  *           it will be removed as the default key for ANY identity and user for which
  *           it is the default. Please keep in mind that the undo in undo_last_mistrust
  *           will only undo the current identity's / it's user's default, not any
@@ -171,8 +171,8 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
  *  @retval any other value on error
  *
  *  @warning the fields user_id, address and fpr must be supplied
- *           own identities will result in a return of PEP_ILLEGAL_VALUE.
- *           for non-own users, this will 1) set the trust bit on its comm type in the DB,
+ *  @warning own identities will result in a return of PEP_ILLEGAL_VALUE.
+ *  @warning for non-own users, this will 1) set the trust bit on its comm type in the DB,
  *           2) set this key as the identity default if the current identity default
  *           is not trusted, and 3) set this key as the user default if the current
  *           user default is not trusted.
@@ -237,7 +237,7 @@ DYNAMIC_API PEP_STATUS trust_own_key(
  *
  *  @warning ident is INPUT ONLY. If you want updated trust on the identity, you'll have
  *           to call update_identity or myself respectively after this.
- *           N.B. If you are calling this on a key that is the identity or user default,
+ *  @warning N.B. If you are calling this on a key that is the identity or user default,
  *           it will be removed as the default key for the identity and user (but is still
  *           available for key election, it is just not the cached default anymore)
  *  
@@ -407,11 +407,11 @@ DYNAMIC_API PEP_STATUS set_comm_partner_key(PEP_SESSION session,
  *  @retval any other value on error
  *
  *  @warning the key has to be in the key ring already
- *           me->address, me->user_id and me->username must be set to valid data
- *           myself() is called by set_own_key() without key generation
- *           me->flags are ignored
- *           me->address must not be an alias
- *           me->fpr will be ignored and replaced by fpr, but
+ *  @warning me->address, me->user_id and me->username must be set to valid data
+ *  @warning myself() is called by set_own_key() without key generation
+ *  @warning me->flags are ignored
+ *  @warning me->address must not be an alias
+ *  @warning me->fpr will be ignored and replaced by fpr, but
  *           caller MUST surrender ownership of the me->fpr reference, because 
  *           it may be freed and replaced within the myself call. caller owns 
  *           me->fpr memory again upon return.
@@ -430,7 +430,9 @@ DYNAMIC_API PEP_STATUS set_own_key(
  *
  *  @brief Mark a key as an own default key, test to be sure the private key is
  *         present and can be used, and set or unset the sticky bit as indicated by the boolean
- *         value. The sticky bit is intended to tell the engine to not automatically remove this
+ *         value. 
+ *
+ *  The sticky bit is intended to tell the engine to not automatically remove this
  *         key as a default through protocols like sync, for example.
  *
  *  @param[in]      session    session to use
@@ -443,15 +445,15 @@ DYNAMIC_API PEP_STATUS set_own_key(
  *                             false otherwise
  *
  *  @warning the key has to be in the key ring already
- *           me->address, me->user_id and me->username must be set to valid data
- *           myself() is called by set_own_key() from within this call without key generation
- *           me->flags are ignored
- *           me->address must not be an alias
- *           me->fpr will be ignored and replaced by fpr, but
- *           caller MUST surrender ownership of the me->fpr reference, because
+ *  @warning me->address, me->user_id and me->username must be set to valid data
+ *  @warning myself() is called by set_own_key() from within this call without key generation
+ *  @warning me->flags are ignored
+ *  @warning me->address must not be an alias
+ *  @warning me->fpr will be ignored and replaced by fpr, but
+ *  @warning caller MUST surrender ownership of the me->fpr reference, because
  *           it may be freed and replaced within the myself call. caller owns
  *           me->fpr memory again upon return.
- *           CAN GENERATE A PASSPHRASE REQUEST
+ *  @warning CAN GENERATE A PASSPHRASE REQUEST
  *
  */
 DYNAMIC_API PEP_STATUS set_own_imported_key(
@@ -461,23 +463,6 @@ DYNAMIC_API PEP_STATUS set_own_imported_key(
         bool sticky
     );
 
-//
-// clean_own_key_defaults()
-//
-// Remove any broken, unrenewable expired, or revoked 
-// own keys from identity and user defaults in the database.
-//  
-//  parameters:
-//      session (in)          session to use
-//
-//  return value:
-//      PEP_STATUS_OK if all went well
-//      PEP_PASSPHRASE_REQUIRED if a key needs to be renewed 
-//                              but cached passphrase isn't present 
-//      PEP_WRONG_PASSPHRASE if passphrase required for expired key renewal 
-//                           but passphrase is the wrong one
-//      Otherwise, database and keyring errors as appropriate 
-//
 /**
  *  <!--       clean_own_key_defaults()       -->
  *  

@@ -675,11 +675,11 @@ PEP_STATUS exists_identity_entry(PEP_SESSION session, pEp_identity* identity,
                                  bool* exists);
 
 /**
- *
- * @param session
- * @param identity
- * @param username
- * @return
+ * <!-- force_set_identity_username() -->
+ * @param[in] 		session		PEP_SESSION
+ * @param[in] 	identity 	pEp_identity*
+ * @param[in] 		username	const char*
+ * @return 		PEP_STATUS
  */
 PEP_STATUS force_set_identity_username(PEP_SESSION session, pEp_identity* identity, const char* username);
 

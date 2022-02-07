@@ -1814,7 +1814,7 @@ DYNAMIC_API PEP_STATUS is_pEp_user(PEP_SESSION session,
 
 DYNAMIC_API const char *per_user_relative_directory(void);
 
-  /**
+ /**
  *  <!--       per_user_directory()       -->
  *  
  *  @brief Returns the directory for pEp management db.
@@ -1937,7 +1937,7 @@ DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys(PEP_SESSION session,
  *  
  *  @brief Set the default encryption format for this identity.
  *
- *         (value only MIGHT be used, and only in the case where the
+ *  (value only MIGHT be used, and only in the case where the
  *         message enc_format is PEP_enc_auto. It will be used 
  *         opportunistically in the case on a first-come, first-serve 
  *         basis in the order of to_list, cc_list, and bcc_list. We take 
@@ -2002,7 +2002,7 @@ DYNAMIC_API PEP_STATUS get_replacement_fpr(
  *  
  *  @brief            TODO
  *  
- * This ONLY sets the *user* flag, and creates a shell identity if necessary.
+ *  This ONLY sets the *user* flag, and creates a shell identity if necessary.
  *
  *  @param[in]  session      session handle
  *  @param[in]  user         pEp_identity*

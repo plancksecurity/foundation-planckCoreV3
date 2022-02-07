@@ -106,7 +106,9 @@ int mkstemp(char *templ);
  *  @brief            TODO
  *  
  *  @param[in]  timeptr         timestamp*
- *  
+ *
+ *  @note It does _not_ respect timeptr->tm_gmtoff, so it behaves the same as its POSIX original.
+ *        Use timegm_with_gmtoff() from <pEp/timestamp.h> or that.
  */
 DYNAMIC_API time_t timegm(timestamp *timeptr);
 
