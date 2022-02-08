@@ -17,9 +17,7 @@ extern "C" {
 
 /**
  *  @enum    PEP_transport_id
- *  
  *  @brief    TODO
- *  
  */
 typedef enum _PEP_transport_id {
     /// auto transport chooses transport per message automatically
@@ -41,10 +39,11 @@ typedef struct _transport_config {
     // in C++ this must be POD
 } transport_config_t;
 
-// transports are delivering the transport status code
-// this is defined here:
-// https://dev.pep.foundation/Engine/TransportStatusCode
-
+/// @brief transports are delivering the transport status code
+///
+/// this is defined here:
+/// https://dev.pep.foundation/Engine/TransportStatusCode
+/// @see https://dev.pep.foundation/Engine/TransportStatusCode
 typedef struct _PEP_transport_t PEP_transport_t;
 
 // functions offered by transport

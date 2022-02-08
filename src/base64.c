@@ -14,6 +14,13 @@
 #include "platform.h"
 #include "base64.h"
 
+/**
+ * <!-- translate_char_to_bits() -->
+ * @brief convert ascii value to corresponding base64 digit value
+ * @param[in] input char to translate
+ * @retval base64 value
+ * @retval -1 if char is not a base64 encoding char.
+ */
 static char translate_char_to_bits(char input) {
     if (input >= 65 && input <= 90)
         return input - 65;
@@ -134,19 +141,11 @@ char next_char(const char** input_ptr, const char* end) {
     return this_ch;
 }
 
-/**
+/*
  *  @internal
  *  
  *  <!--       base64_str_to_binary_blob()       -->
- *  
- *  @brief      converts base64 to a binary blob, putting 4 characters into
- *              3 output bytes, returning a pointer to a bloblist containing
- *              the binary blob.
- *  
- *  @param[in]  *input    input as C string
- *  @param[in]  int       length of C string
- *  
- *  @retval     pointer to bloblist, or NULL on failure  
+ *  documented in base64.h  
  */
 bloblist_t* base64_str_to_binary_blob(const char* input, int length) {
     if (length == 0)

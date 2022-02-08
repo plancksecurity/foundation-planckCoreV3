@@ -511,7 +511,7 @@ typedef enum {
  *  @brief Cipher suite being used when encrypting
  *  
  *  @param[in]   session         session handle
- *  @param[in]   cipher_suite    cipher suite to use
+ *  @param[in]   suite    cipher suite to use
  *  
  *  @retval PEP_STATUS_OK           cipher suite configured
  *  @retval PEP_CANNOT_CONFIG       configuration failed; falling back to default
@@ -535,7 +535,7 @@ DYNAMIC_API PEP_STATUS config_cipher_suite(PEP_SESSION session,
  *  @param[in]     csize           size of cipher text
  *  @param[in]     dsigtext        if extant, *detached* signature text for this
  *                                 message (or NULL if not)
- *  @param[in]     dsize           size of *detached* signature text for this
+ *  @param[in]     dsigsize        size of *detached* signature text for this
  *                                 message (0, if no detached sig exists)
  *  @param[out]    ptext           pointer to internal buffer with plain text
  *  @param[out]    psize           size of plain text
