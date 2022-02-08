@@ -3763,19 +3763,6 @@ PEP_STATUS _set_trust_internal(PEP_SESSION session, pEp_identity* identity,
                                         guard_transaction);
 }
 
-// This is the TOP-LEVEL function. If you're calling from set_identity,
-// you can't use this one.
-PEP_STATUS set_trust(PEP_SESSION session, pEp_identity* identity) {
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    status = _set_trust_internal(session, identity, true);
-    if (status == PEP_STATUS_OK) {
-        if ((identity->comm_type | PEP_ct_confirmed) == PEP_ct_pEp)
-            status = set_as_pEp_user(session, identity);
-    }
-    return status;
-}
-
 PEP_STATUS set_person(PEP_SESSION session, pEp_identity* identity,
                       bool guard_transaction) {
     return set_or_update_with_identity(session, identity,
@@ -5636,37 +5623,23 @@ PEP_STATUS get_main_user_fpr(PEP_SESSION session,
     return status;
 }
 
-DYNAMIC_API PEP_STATUS set_comm_partner_key(PEP_SESSION session,
-                                            pEp_identity *identity,
-                                            const char* fpr) {
-    if (!session || !identity || EMPTYSTR(fpr))
-        return PEP_ILLEGAL_VALUE;
-
-    // update identity upfront - we need the identity to exist in the DB.
-    PEP_STATUS status = update_identity(session, identity);
-    if (status != PEP_OUT_OF_MEMORY) {
-        status = set_default_identity_fpr(session,
-                                          identity->user_id,
-                                          identity->address,
-                                          fpr);
-    }
-    return status;
-}
-
-
-
 PEP_STATUS set_default_identity_fpr(PEP_SESSION session,
                                     const char* user_id,
                                     const char* address,
                                     const char* fpr) {
 
-    if (!session || EMPTYSTR(user_id) || EMPTYSTR(address) || EMPTYSTR(fpr))
+    if (!session || EMPTYSTR(user_id) || EMPTYSTR(address))
+        return PEP_ILLEGAL_VALUE;
+    // we accept NULL for deleting the fpr, but we don't accept empty strings
+    if (fpr && !(*fpr))
         return PEP_ILLEGAL_VALUE;
 
-    // Make sure fpr is in the management DB
-    PEP_STATUS status = set_pgp_keypair(session, fpr);
-    if (status != PEP_STATUS_OK)
-        return status;
+    if (fpr) {
+        // Make sure fpr is in the management DB
+        PEP_STATUS status = set_pgp_keypair(session, fpr);
+        if (status != PEP_STATUS_OK)
+            return status;
+    }
 
     int result;
 
@@ -5675,8 +5648,10 @@ PEP_STATUS set_default_identity_fpr(PEP_SESSION session,
             SQLITE_STATIC);
     sqlite3_bind_text(session->set_default_identity_fpr, 2, address, -1,
             SQLITE_STATIC);
-    sqlite3_bind_text(session->set_default_identity_fpr, 3, fpr, -1,
-            SQLITE_STATIC);
+    if (fpr) {
+        sqlite3_bind_text(session->set_default_identity_fpr, 3, fpr, -1,
+                SQLITE_STATIC);
+    }
     result = sqlite3_step(session->set_default_identity_fpr);
     reset_and_clear_bindings(session->set_default_identity_fpr);
     if (result != SQLITE_DONE)
@@ -5684,8 +5659,6 @@ PEP_STATUS set_default_identity_fpr(PEP_SESSION session,
 
     return PEP_STATUS_OK;
 }
-
-
 
 PEP_STATUS get_default_identity_fpr(PEP_SESSION session, 
                                     const char* address,                            
@@ -6807,3 +6780,60 @@ PEP_STATUS set_all_userids_to_own(PEP_SESSION session, identity_list* id_list) {
     }
     return status;    
 }
+
+
+PEP_STATUS set_default_key(
+        PEP_SESSION session,
+        const pEp_identity *identity
+    )
+{
+    if (!(session && identity && !EMPTYSTR(identity->user_id) &&
+                !EMPTYSTR(identity->address) && !EMPTYSTR(identity->fpr)
+                && identity->comm_type))
+        return PEP_ILLEGAL_VALUE;
+
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    // if this is a usable key following the comm_type set it as default
+    if (identity->comm_type >= PEP_ct_security_by_obscurity) {
+        status = set_default_identity_fpr(session, identity->user_id,
+                identity->address, identity->fpr);
+    }
+    else /* identity->comm_type < PEP_ct_security_by_obscurity */ {
+        // clear the default key
+        status = set_default_identity_fpr(session, identity->user_id,
+                identity->address, NULL);
+    }
+
+    return status;
+}
+
+DYNAMIC_API PEP_STATUS set_trust(
+        PEP_SESSION session,
+        const pEp_identity *identity
+    )
+{
+    if (!(session && identity && !EMPTYSTR(identity->user_id) &&
+                !EMPTYSTR(identity->address) && !EMPTYSTR(identity->fpr) &&
+                identity->comm_type))
+        return PEP_ILLEGAL_VALUE;
+
+    sqlite3_exec(session->db, "BEGIN TRANSACTION;", NULL, NULL, NULL);
+
+    PEP_STATUS status = set_default_key(session, identity);
+    if (status)
+        goto rollback;
+
+    status = update_trust_for_fpr(session, identity->fpr, identity->comm_type);
+    if (status)
+        goto rollback;
+
+    sqlite3_exec(session->db, "COMMIT;", NULL, NULL, NULL);
+
+    return PEP_STATUS_OK;
+
+rollback:
+    sqlite3_exec(session->db, "ROLLBACK;", NULL, NULL, NULL);
+    return status;
+}
+

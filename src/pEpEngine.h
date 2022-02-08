@@ -1131,10 +1131,27 @@ DYNAMIC_API void *pEp_realloc(void *p, size_t size);
 
 DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity);
 
+// set_trust() - set the trust level a key has for a person
+//
+//  paramaters:
+//      session (in)            session handle
+//      identity (in)           user_id, address, fpr and comm_type must be set
+//                              comm_type must be at least PEP_ct_security_by_obscurity
+//                              or better to make it the default key
+//                              otherwise if comm_type is less than the default key
+//                              gets removed
+//
+//  this function sets the default key for the identity and modifies the trust
+//  table to reflect the comm_type
 
-PEP_STATUS set_trust(PEP_SESSION session, 
-                     pEp_identity* identity);
-                            
+DYNAMIC_API PEP_STATUS set_trust(
+        PEP_SESSION session,
+        const pEp_identity *identity
+    );
+
+
+// this does not influence the default key
+
 PEP_STATUS update_trust_for_fpr(PEP_SESSION session, 
                                 const char* fpr, 
                                 PEP_comm_type comm_type);
@@ -1505,18 +1522,6 @@ DYNAMIC_API PEP_STATUS set_ident_enc_format(PEP_SESSION session,
 PEP_STATUS _generate_keypair(PEP_SESSION session, 
                              pEp_identity *identity,
                              bool suppress_event);
-
-// set_comm_partner_key() - Set the default key fingerprint for the identity identitified by this address and user_id.
-//
-//  parameters:
-//      session  (in)            session handle
-//      identity (inout)         identity - cannot be NULL
-//      fpr      (in)            fingerprint for identity - cannot be NULL or empty
-//
-DYNAMIC_API PEP_STATUS set_comm_partner_key(PEP_SESSION session,
-                                            pEp_identity *identity,
-                                            const char* fpr);
-
 
 // set_default_identity_fpr() - FOR UPPER_LEVEL TESTING ONLY - NOT TO BE USED DIRECTLY BY ADAPTER OR APPS IN PRODUCTION
 //                              Set the default key fingerprint for the identity identitified by this address and user_id.
