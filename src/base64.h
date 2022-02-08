@@ -21,10 +21,15 @@ extern "C" {
  *
  *  @brief   Decode a base64 string and return binary format
  *
+ *  converts base64 to a binary blob, putting 4 characters into
+ *              3 output bytes, returning a pointer to a bloblist containing
+ *              the binary blob.
+ *
  *  @param[in]   input            base64 string
  *  @param[in]   length           string length
  *
- *  @retval     decoded binary blob of input string
+ *  @retval     pointer to decoded binary blob of input string
+ *  @retval     NULL on failure  
  *
  */
 bloblist_t* base64_str_to_binary_blob(const char* input, int length);

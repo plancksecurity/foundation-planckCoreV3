@@ -187,6 +187,14 @@ DYNAMIC_API void set_blob_disposition(bloblist_t* blob,
  */
 DYNAMIC_API bloblist_t* bloblist_join(bloblist_t* first, bloblist_t* second);
 
+/**
+ * <!-- find_blob_by_URI() -->
+ * @brief Search bloblist for member with member->filename == uri
+ * @param[in] bloblist bloblist_t*
+ * @param[in] uri char*
+ * @retval pointer to member of bloblist
+ * @retval NULL on failure
+ */
 bloblist_t* find_blob_by_URI(bloblist_t* bloblist, const char* uri);
     
 #ifdef __cplusplus

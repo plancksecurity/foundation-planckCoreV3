@@ -9,6 +9,24 @@
 #include "pEp_internal.h"
 #include "internal_format.h"
 
+/**
+ * <!-- _internal_message_type -->
+ * @brief Definition of internal message format
+ * @see https://dev.pep.foundation/Engine/ElevatedAttachments#internal-message-format
+ * 
+ * @par Key material
+ * Key material is encoded with 0 ‘K’ subtype 0 followed by the binary representation of the .value of the attachment for transports.
+ * 
+ * @par p≡p Sync
+ * A p≡p Sync message is encoded with 0 ‘S’ subtype 0 followed by the binary representation of the .value of the attachment.
+ * 
+ * @par p≡p Distribution
+ * A p≡p Distribution message is encoded with 0 ‘D’ subtype 0 followed by the binary representation of the .value of the attachment.
+ * 
+ * @par Authentication material
+ * Key material is encoded with 0 ‘A’ subtype 0 followed by the binary representation of the .value of the attachment.
+ * 
+ */
 static struct _internal_message_type {
     char type;
     char subtype;
