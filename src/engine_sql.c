@@ -217,17 +217,17 @@ static int table_contains_column(PEP_SESSION session, const char* table_name,
     return retval;
 }
 
+#define _PEP_MAX_AFFECTED 5
 /**
  *  @internal
  *
- *  <!--       repair_altered_tables()       -->
+ *  <!--       repair_altered_tables()      --> 
  *
  *  @brief        TODO
  *
  *  @param[in]    session        PEP_SESSION
  *
  */
-#define _PEP_MAX_AFFECTED 5
 PEP_STATUS repair_altered_tables(PEP_SESSION session) {
     PEP_STATUS status = PEP_STATUS_OK;
 

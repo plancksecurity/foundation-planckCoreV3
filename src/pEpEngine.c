@@ -3604,22 +3604,7 @@ DYNAMIC_API PEP_STATUS get_revoked(
     return status;
 }
 
-/**
- *  @internal
- *
- *  <!--       get_replacement_fpr()       -->
- *
- *  @brief            TODO
- *
- *  @param[in]    session                    session handle    
- *  @param[in]    *fpr                    const char
- *  @param[in]    **revoked_fpr            char
- *  @param[in]    *revocation_date        uint64_t
- *
- *  @retval     PEP_STATUS_OK
- *  @retval     PEP_ILLEGAL_VALUE           illegal parameter value
- *  @retval     PEP_CANNOT_FIND_IDENTITY
- *  @retval     PEP_OUT_OF_MEMORY           out of memory
+/* doxygen will fetch documentation from pEpEngine.h
  */
 DYNAMIC_API PEP_STATUS get_replacement_fpr(
         PEP_SESSION session,

@@ -455,7 +455,7 @@ enum _expand_variable_state {
  *                See [FIXME: deployment-engineer documentation].
  *
  *  @param[in]    string_with_variables             char *
- *  @param[out]   copy_with_variables_expanded      char **
+ *  @param[out]   out                               char** copy with variables expanded 
  *  @retval       PEP_STATUS_OK                     success
  *  @retval       PEP_UNBOUND_ENVIRONMENT_VARIABLE  unknown variable referenced
  *  @retval       PEP_PATH_SYNTAX_ERROR             invalid syntax in argument

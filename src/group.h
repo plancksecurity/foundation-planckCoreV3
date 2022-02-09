@@ -242,7 +242,7 @@ DYNAMIC_API PEP_STATUS group_create(
         PEP_SESSION session,
         pEp_identity *group_identity,
         pEp_identity *manager,
-        identity_list *memberlist,
+        identity_list *member_ident_list,
         pEp_group **group
     );
 
