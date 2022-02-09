@@ -36,7 +36,7 @@ DYNAMIC_API identity_list *new_identity_list(pEp_identity *ident);
  *  
  *  @brief Duplicate identity_list (deep copy)
  *  
- *  @param[in]   id_list    identity_list to copy
+ *  @param[in]   src    identity_list to copy
  *  
  *  @retval        new identity_list or NULL if out of memory
  *  

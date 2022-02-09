@@ -56,7 +56,7 @@ DYNAMIC_API PEP_STATUS encode_internal(
  *  
  *  @param[in]   code         blob in Internal Message Format
  *  @param[in]   code_size    size of code
- *  @param[in]   tech         crypto tech for MIME type, PEP_crypt_none for auto
+ * <!--  @param[in]   tech         crypto tech for MIME type, PEP_crypt_none for auto. Not in function declaration  --> 
  *  @param[out]  value        blob or string for longmsg
  *  @param[out]  size         size of value
  *  @param[out]  mime_type    string with MIME type or NULL for longmsg

@@ -46,7 +46,7 @@ double _pEp_log2_36;
  *
  *  @brief            TODO
  *
- *  @param[in]    *msg        constmessage
+ *  @param[in]    *msg        const message
  *  
  *  @retval     bool
  */
@@ -66,7 +66,7 @@ static bool is_a_pEpmessage(const message *msg)
  *
  *  @brief            TODO
  *
- *  @param[in]    *keylist        conststringlist_t
+ *  @param[in]    *keylist        const stringlist_t
  *
  */
 static char * keylist_to_string(const stringlist_t *keylist)
@@ -147,9 +147,9 @@ static const char * rating_to_string(PEP_rating rating)
  *
  *  @brief            TODO
  *
- *  @param[in]    *needle        constchar
+ *  @param[in]    *needle        const char
  *  @param[in]    needle_size        size_t
- *  @param[in]    *haystack        constchar
+ *  @param[in]    *haystack        const char
  *  @param[in]    haystack_size        size_t
  *
  */
@@ -219,8 +219,8 @@ void add_opt_field(message *msg, const char *name, const char *value)
  *  @brief            TODO
  *
  *  @param[in]    *msg        message
- *  @param[in]    *name        constchar
- *  @param[in]    *value        constchar
+ *  @param[in]    *name        const char
+ *  @param[in]    *value        const char
  *  @param[in]    clobber        bool
  *
  */
@@ -461,8 +461,8 @@ static bool string_equality(const char *s1, const char *s2)
  *
  *  @brief            TODO
  *
- *  @param[in]    *bl        constbloblist_t
- *  @param[in]    *mt        constchar
+ *  @param[in]    *bl        const bloblist_t
+ *  @param[in]    *mt        const char
  *
  *  @retval     bool
  */
@@ -486,10 +486,9 @@ static bool is_mime_type(const bloblist_t *bl, const char *mt)
  *
  *  @brief            TODO
  *
- *  @param[in]    *bl        constbloblist_t
- *  @param[in]    *fe        constchar
+ *  @param[in]    *bl        const bloblist_t
+ *  @param[in]    *fe        const char
  *  
- *  @retval
  */
 static bool is_fileending(const bloblist_t *bl, const char *fe)
 {
@@ -518,8 +517,8 @@ static bool is_fileending(const bloblist_t *bl, const char *fe)
  *
  *  @brief            TODO
  *
- *  @param[in]    *msg_wrap_info        constchar
- *  @param[in]    *longmsg        constchar
+ *  @param[in]    *msg_wrap_info        const char
+ *  @param[in]    *longmsg        	const char
  *
  */
 char * encapsulate_message_wrap_info(const char *msg_wrap_info, const char *longmsg)
@@ -563,8 +562,8 @@ char * encapsulate_message_wrap_info(const char *msg_wrap_info, const char *long
  *
  *  @brief            TODO
  *
- *  @param[in]    *shortmsg        constchar
- *  @param[in]    *longmsg        constchar
+ *  @param[in]    *shortmsg        const char
+ *  @param[in]    *longmsg         const char
  *
  */
 static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
@@ -873,9 +872,9 @@ enomem:
  *
  *  @brief            TODO
  *
- *  @param[in]    *plaintext        constchar
- *  @param[in]    *key        constchar
- *  @param[in]    keylen        constsize_t
+ *  @param[in]    *plaintext        const char
+ *  @param[in]    *key        const char
+ *  @param[in]    keylen        const size_t
  *  @param[in]    **data        char
  *  @param[in]    **modified_msg        char
  *
@@ -932,7 +931,7 @@ static PEP_STATUS get_data_from_encapsulated_line(const char* plaintext, const c
  *
  *  @brief            TODO
  *
- *  @param[in]    *src        constchar
+ *  @param[in]    *src        const char
  *  @param[in]    **shortmsg        char
  *  @param[in]    **msg_wrap_info        char
  *  @param[in]    **longmsg        char
@@ -1013,7 +1012,7 @@ enomem:
  *  @brief            TODO
  *
  *  @param[in]    *dst        message
- *  @param[in]    *src        constmessage
+ *  @param[in]    *src        const message
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
@@ -1143,7 +1142,7 @@ static PEP_STATUS copy_fields(message *dst, const message *src)
  *
  *  @brief            TODO
  *
- *  @param[in]    *src        constmessage
+ *  @param[in]    *src        const message
  *  @param[in]    direct        PEP_msg_direction
  *
  */
@@ -1218,7 +1217,7 @@ enomem:
  *
  *  @brief            TODO
  *
- *  @param[in]    *src        constmessage
+ *  @param[in]    *src        const message
  *
  */
 static message * clone_to_empty_message(const message * src)
@@ -1411,7 +1410,7 @@ pEp_error:
  *  @brief            TODO
  *
  *  @param[in]    session        PEP_SESSION
- *  @param[in]    *src        constmessage
+ *  @param[in]    *src        const message
  *  @param[in]    *keys        stringlist_t
  *  @param[in]    *dst        message
  *  @param[in]    flags        PEP_encrypt_flags_t
@@ -1549,7 +1548,7 @@ static PEP_STATUS encrypt_PGP_inline(
  *  @brief            TODO
  *
  *  @param[in]    session        PEP_SESSION
- *  @param[in]    *src        constmessage
+ *  @param[in]    *src        const message
  *  @param[in]    *keys        stringlist_t
  *  @param[in]    *dst        message
  *  @param[in]    flags        PEP_encrypt_flags_t
@@ -1710,7 +1709,7 @@ DYNAMIC_API PEP_rating rating_from_comm_type(PEP_comm_type ct)
  *
  *  @brief            TODO
  *
- *  @param[in]    *blob        constbloblist_t
+ *  @param[in]    *blob        const bloblist_t
  *
  *  @retval     bool
  */
@@ -1750,7 +1749,7 @@ static bool is_encrypted_attachment(const bloblist_t *blob)
  *
  *  @brief            TODO
  *
- *  @param[in]    *blob        constbloblist_t
+ *  @param[in]    *blob        const bloblist_t
  *
  *  @retval     bool
  */
@@ -1779,7 +1778,7 @@ static bool is_encrypted_html_attachment(const bloblist_t *blob)
  *
  *  @brief            TODO
  *
- *  @param[in]    *filename        constchar
+ *  @param[in]    *filename        const char
  *
  */
 static char * without_double_ending(const char *filename)
@@ -1845,7 +1844,7 @@ static PEP_rating decrypt_rating(PEP_STATUS status)
  *  @brief            TODO
  *
  *  @param[in]    session        PEP_SESSION
- *  @param[in]    *fpr        constchar
+ *  @param[in]    *fpr        const char
  *
  */
 static PEP_rating key_rating(PEP_SESSION session, const char *fpr)
@@ -2059,7 +2058,7 @@ static PEP_comm_type _get_comm_type_preview(
  *
  *  @brief            TODO
  *
- *  @param[in]    *bl        constbloblist_t
+ *  @param[in]    *bl        const bloblist_t
  *
  *  @retval     bool
  */
@@ -2113,8 +2112,8 @@ static bool is_key(const bloblist_t *bl)
  *
  *  @brief            TODO
  *
- *  @param[in]    *first        constchar
- *  @param[in]    *second        constchar
+ *  @param[in]    *first        const char
+ *  @param[in]    *second        const char
  *  @param[in]    n        size_t
  *
  */
@@ -2146,11 +2145,13 @@ static bool compare_first_n_bytes(const char* first, const char* second, size_t 
  *
  *  @brief            TODO
  *
- *  @param[in]    session        session handle    
- *  @param[in]    *msg        message
- *  @param[in]    **private_idents        identity_list
- *  @param[in]    **imported_key_list        stringlist_t
- *  @param[in]    *changed_keys        uint64_t
+ * <!-- @param[in]    session                 session handle    
+ *  @param[in]    msg                     message*
+ *  @param[in]    is_pEp_msg              bool
+ *  @param[in]    private_idents          identity_list**
+ *  @param[in]    imported_key_list       stringlist_t** 
+ *  @param[in]    changed_keys            uint64_t* -->
+ *  @param[in,out]    pEp_sender_key      char**
  *
  *  @retval     bool
  */
@@ -2325,7 +2326,7 @@ bool import_attached_keys(
  *  @brief            TODO
  *
  *  @param[in]    session        PEP_SESSION
- *  @param[in]    *fpr        constchar
+ *  @param[in]    *fpr        const char
  *  @param[in]    *msg        message
  *  
  *  @retval PEP_STATUS_OK
@@ -3369,8 +3370,8 @@ static PEP_STATUS _get_detached_signature(message* msg,
  *
  *  @brief            TODO
  *
- *  @param[in]        *ptext        constchar
- *  @param[in]        psize        constsize_t
+ *  @param[in]        *ptext        const char
+ *  @param[in]        psize        const size_t
  *  @param[out]     **stext        char
  *  @param[out]        *ssize        size_t
  *
@@ -4433,8 +4434,8 @@ static PEP_STATUS reconcile_src_and_inner_messages(message* src,
  *  @brief            TODO
  *
  *  @param[in]    session        session handle    
- *  @param[in]    *own_id        constchar
- *  @param[in]    *fpr        constchar
+ *  @param[in]    *own_id        const char
+ *  @param[in]    *fpr        const char
  *
  *  @retval     bool
  */
@@ -4471,7 +4472,7 @@ static bool is_trusted_own_priv_fpr(PEP_SESSION session,
  *  @brief            TODO
  *
  *  @param[in]    session        session handle
- *  @param[in]    *fpr        constchar
+ *  @param[in]    *fpr        const char
  *
  *  @retval     bool
  */
@@ -6717,8 +6718,8 @@ static char xor_hex_chars(char a, char b) {
  *
  *  @brief            TODO
  *
- *  @param[in]    *current        constchar
- *  @param[in]    *begin        constchar
+ *  @param[in]    *current        const char
+ *  @param[in]    *begin        const char
  *
  */
 static const char* skip_separators(const char* current, const char* begin) {
@@ -7053,13 +7054,12 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
  *
  *  @brief            TODO
  *
- *  @param[in]    *rating        constchar
+ *  @param[in]    *rating        const char
  *
  *  @retval    PEP_rating_undefined
  *  @retval    PEP_rating_cannot_decrypt
  *  @retval    PEP_rating_have_no_key
  *  @retval    PEP_rating_unencrypted
- *  @retval    PEP_rating_undefined
  *  @retval    PEP_rating_unreliable
  *  @retval    PEP_rating_reliable
  *  @retval    PEP_rating_trusted
@@ -7068,7 +7068,6 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
  *  @retval    PEP_rating_mistrust
  *  @retval    PEP_rating_b0rken
  *  @retval    PEP_rating_under_attack
- *  @retval    PEP_rating_undefined
  */
 static PEP_rating string_to_rating(const char * rating)
 {
@@ -7108,7 +7107,7 @@ static PEP_rating string_to_rating(const char * rating)
  *
  *  @brief            TODO
  *
- *  @param[in]    *skeylist        constchar
+ *  @param[in]    *skeylist        const char
  *  @param[in]    **keylist        stringlist_t
  *
  *  @retval PEP_STATUS_OK

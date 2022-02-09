@@ -20,11 +20,11 @@ extern "C" {
  *
  *  @brief            TODO
  *
- *  @param[in]  session         PEP_SESSION
- *  @param[in]  msg             message*
- *  @param[in]  private_idents  identity_list**
- *  @param[in]  imported_keys   stringlist_t**
- *  @param[in]  changed_keys    uint64_t*
+ *  @param[in]  session              PEP_SESSION handle
+ *  @param[in]  msg                  message*
+ *  @param[in]  private_idents       identity_list**
+ *  @param[in]  imported_key_list    stringlist_t**
+ *  @param[in]  changed_keys         uint64_t*
  *
  */
 bool import_attached_keys(
@@ -32,7 +32,7 @@ bool import_attached_keys(
         message *msg,
         bool is_pEp_msg,
         identity_list **private_idents,
-        stringlist_t** imported_keys,
+        stringlist_t** imported_key_list,
         uint64_t* changed_keys,
         char** imported_sender_key_fpr
 );

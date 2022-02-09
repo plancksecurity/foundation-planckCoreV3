@@ -30,8 +30,8 @@ extern "C" {
  *  
  *  @brief Convert pEp_identity into ASN.1 PIdentity_t
  *  
- *  @param ident[in]           pEp_identity to convert
- *  @param result[in,out]      PIdentity_t to update or NULL to alloc a new one
+ *  @param[in]     ident           pEp_identity to convert
+ *  @param[in,out] result          PIdentity_t to update or NULL to alloc a new one
  *  
  *  @retval pointer to updated or allocated result
  *  
@@ -50,8 +50,8 @@ PIdentity_t *PIdentity_from_Struct(
  *  
  *  @brief Convert ASN.1 PIdentity_t into pEp_identity
  *  
- *  @param ident[in]          PIdentity_t to convert
- *  @param result[inout]      pEp_identity to update or NULL to alloc a new one
+ *  @param[in]     ident          PIdentity_t to convert
+ *  @param[in,out] result         pEp_identity to update or NULL to alloc a new one
  *  
  *  @retval pointer to updated or allocated result
  *  
@@ -67,8 +67,8 @@ pEp_identity *PIdentity_to_Struct(PIdentity_t *ident, pEp_identity *result);
  *  
  *  @brief Convert identity_list_t into ASN.1 PIdentityList_t
  *  
- *  @param list[in]           identity_list to convert
- *  @param result[inout]      PIdentityList_t to update or NULL to alloc a new one
+ *  @param[in]    list           identity_list to convert
+ *  @param[inout] result         PIdentityList_t to update or NULL to alloc a new one
  *  
  *  @retval pointer to updated or allocated result
  *  
@@ -86,8 +86,8 @@ PIdentityList_t *PIdentityList_from_identity_list(
  *  
  *  @brief Convert ASN.1 PIdentityList_t to identity_list_t
  *  
- *  @param list[in]           ASN.1 PIdentityList_t to convert
- *  @param result[inout]      identity_list_t to update or NULL to alloc a new one
+ *  @param[in]     list        ASN.1 PIdentityList_t to convert
+ *  @param[in,out] result      identity_list_t to update or NULL to alloc a new one
  *  
  *  @retval pointer to updated or allocated result
  *  
@@ -103,8 +103,8 @@ identity_list *PIdentityList_to_identity_list(PIdentityList_t *list, identity_li
  *  
  *  @brief Convert pEp_identity into ASN.1 Identity_t
  *  
- *  @param ident[in]           pEp_identity to convert
- *  @param result[in,out]      Identity_t to update or NULL to alloc a new one
+ *  @param[in]     ident       pEp_identity to convert
+ *  @param[in,out] result      Identity_t to update or NULL to alloc a new one
  *  
  *  @retval pointer to updated or allocated result
  *  
@@ -123,8 +123,8 @@ Identity_t *Identity_from_Struct(
  *  
  *  @brief Convert ASN.1 Identity_t into pEp_identity
  *  
- *  @param ident[in]          Identity_t to convert
- *  @param result[inout]      pEp_identity to update or NULL to alloc a new one
+ *  @param[in]     ident       Identity_t to convert
+ *  @param[in,out] result      pEp_identity to update or NULL to alloc a new one
  *  
  *  @retval pointer to updated or allocated result
  *  
@@ -140,8 +140,8 @@ pEp_identity *Identity_to_Struct(Identity_t *ident, pEp_identity *result);
  *  
  *  @brief Convert identity_list_t into ASN.1 IdentityList_t
  *  
- *  @param list[in]           identity_list to convert
- *  @param result[inout]      IdentityList_t to update or NULL to alloc a new one
+ *  @param[in]    list        identity_list to convert
+ *  @param[in,out] result      IdentityList_t to update or NULL to alloc a new one
  *  
  *  @retval pointer to updated or allocated result
  *  
@@ -159,8 +159,8 @@ IdentityList_t *IdentityList_from_identity_list(
  *  
  *  @brief Convert ASN.1 IdentityList_t to identity_list_t
  *  
- *  @param list[in]           ASN.1 IdentityList_t to convert
- *  @param result[inout]      identity_list_t to update or NULL to alloc a new one
+ *  @param[in]     list        ASN.1 IdentityList_t to convert
+ *  @param[in,out] result      identity_list_t to update or NULL to alloc a new one
  *  
  *  @retval pointer to updated or allocated result
  *  
@@ -176,8 +176,8 @@ identity_list *IdentityList_to_identity_list(IdentityList_t *list, identity_list
  *  
  *  @brief Convert stringpair_t into ASN.1 PStringPair_t
  *  
- *  @param value[in]           stringpair_t to convert
- *  @param result[in,out]      PStringPair_t to update or NULL to alloc a new one
+ *  @param[in]     value       stringpair_t to convert
+ *  @param[in,out] result      PStringPair_t to update or NULL to alloc a new one
  *  
  *  @retval pointer to updated or allocated result
  *  
@@ -196,7 +196,7 @@ PStringPair_t *PStringPair_from_Struct(
  *  
  *  @brief Convert ASN.1 PStringPair_t into stringpair_t
  *  
- *  @param value[in]          PStringPair_t to convert
+ *  @param[in] value          PStringPair_t to convert
  *  
  *  @retval pointer to updated or allocated result
  *  
@@ -212,8 +212,8 @@ stringpair_t *PStringPair_to_Struct(PStringPair_t *value);
  *  
  *  @brief Convert stringpair_list_t into ASN.1 PStringPairList_t
  *  
- *  @param list[in]           stringpair_list to convert
- *  @param result[inout]      PStringPairList_t to update or NULL to alloc a new one
+ *  @param[in]    list        stringpair_list to convert
+ *  @param[in,out] result     PStringPairList_t to update or NULL to alloc a new one
  *  
  *  @retval pointer to updated or allocated result
  *  
@@ -231,8 +231,8 @@ PStringPairList_t *PStringPairList_from_stringpair_list(
  *  
  *  @brief Convert ASN.1 PStringPairList_t to stringpair_list_t
  *  
- *  @param list[in]           ASN.1 PStringPairList_t to convert
- *  @param result[inout]      stringpair_list_t to update or NULL to alloc a new one
+ *  @param[in]    list          ASN.1 PStringPairList_t to convert
+ *  @param[in,out] result       stringpair_list_t to update or NULL to alloc a new one
  *  
  *  @retval pointer to updated or allocated result
  *  
@@ -251,8 +251,8 @@ stringpair_list_t *PStringPairList_to_stringpair_list(
  *  
  *  @brief Convert stringlist_t into ASN.1 PStringList_t
  *  
- *  @param list[in]           stringlist to convert
- *  @param result[inout]      PStringList_t to update or NULL to alloc a new one
+ *  @param[in]     list          stringlist to convert
+ *  @param[in,out] result        PStringList_t to update or NULL to alloc a new one
  *  
  *  @retval pointer to updated or allocated result
  *  
@@ -270,7 +270,7 @@ PStringList_t *PStringList_from_stringlist(
  *  
  *  @brief Convert ASN.1 PStringList_t to stringlist_t
  *  
- *  @param list[in]           ASN.1 PStringList_t to convert
+ *  @param[in] list           ASN.1 PStringList_t to convert
  *  
  *  @retval pointer to updated or allocated result
  *  
@@ -286,11 +286,11 @@ stringlist_t *PStringList_to_stringlist(PStringList_t *list);
  *  
  *  @brief Convert bloblist_t into ASN.1 PBlobList_t
  *  
- *  @param list[in]           bloblist to convert
- *  @param result[inout]      PBlobList_t to update or NULL to alloc a new one
- *  @param copy               copy data if true, move data otherwise
- *  @param max_blob_size      reject if sum(blob.size) > max_blob_size
- *                            to disable set to 0
+ *  @param[in]    list           bloblist to convert
+ *  @param[in,out] result        PBlobList_t to update or NULL to alloc a new one
+ *  @param        copy           copy data if true, move data otherwise
+ *  @param        max_blob_size  reject if sum(blob.size) > max_blob_size
+ *                               to disable set to 0
  *  
  *  @retval pointer to updated or allocated result
  *  
@@ -311,11 +311,11 @@ PBlobList_t *PBlobList_from_bloblist(
  *  
  *  @brief Convert ASN.1 PBlobList_t to bloblist_t
  *  
- *  @param list[in]           ASN.1 PBlobList_t to convert
- *  @param result[inout]      bloblist_t to update or NULL to alloc a new one
- *  @param copy               copy data if true, move data otherwise
- *  @param max_blob_size      reject if sum(blob.size) > max_blob_size
- *                            to disable set to 0
+ *  @param[in]     list          ASN.1 PBlobList_t to convert
+ *  @param[in,out] result        bloblist_t to update or NULL to alloc a new one
+ *  @param         copy          copy data if true, move data otherwise
+ *  @param         max_blob_size reject if sum(blob.size) > max_blob_size
+ *                               to disable set to 0
  *  
  *  @retval pointer to updated or allocated result
  *  
@@ -336,8 +336,8 @@ bloblist_t *PBlobList_to_bloblist(
  *  
  *  @brief Convert message into ASN.1 ASN1Message_t
  *  
- *  @param msg[in]            message to convert
- *  @param result[inout]      ASN1Message_t to update or NULL to alloc a new one
+ *  @param[in] msg            message to convert
+ *  @param[in,out] result     ASN1Message_t to update or NULL to alloc a new one
  *  @param copy               copy data if true, move data otherwise
  *  @param max_blob_size      reject if sum(blob.size) > max_blob_size
  *                            to disable set to 0
@@ -362,11 +362,11 @@ ASN1Message_t *ASN1Message_from_message(
  *  
  *  @brief Convert ASN.1 ASN1Message_t to message
  *  
- *  @param msg[in]            ASN.1 ASN1Message_t to convert
- *  @param result[inout]      message to update or NULL to alloc a new one
- *  @param copy               copy data if true, move data otherwise
- *  @param max_blob_size      reject if sum(blob.size) > max_blob_size
- *                            to disable set to 0
+ *  @param[in] 		msg            	ASN.1 ASN1Message_t to convert
+ *  @param[in,out] 	result  	message to update or NULL to alloc a new one
+ *  @param 		copy            copy data if true, move data otherwise
+ *  @param		max_blob_size   reject if sum(blob.size) > max_blob_size
+ *                                      to disable set to 0
  *  
  *  @retval pointer to updated or allocated result
  *  
