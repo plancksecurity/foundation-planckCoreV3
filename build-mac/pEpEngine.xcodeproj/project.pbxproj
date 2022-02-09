@@ -1563,7 +1563,7 @@
 				MTL_FAST_MATH = YES;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "-Objc";
-				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libnettle.a ${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libgmp.a ${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libhogweed.a ${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libpep_engine_sequoia_backend.a";
+				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libnettle.a ${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libgmp.a ${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libhogweed.a ${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libsequoia_openpgp_ffi.a";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -1590,7 +1590,7 @@
 				MTL_FAST_MATH = YES;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "-Objc";
-				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libnettle.a ${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libgmp.a ${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libhogweed.a ${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libpep_engine_sequoia_backend.a";
+				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libnettle.a ${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libgmp.a ${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libhogweed.a ${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libsequoia_openpgp_ffi.a";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -1711,7 +1711,7 @@
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "-Objc";
-				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libnettle.a ${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libgmp.a ${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libhogweed.a ${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libpep_engine_sequoia_backend.a";
+				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libnettle.a ${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libgmp.a ${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libhogweed.a ${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libsequoia_openpgp_ffi.a";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
