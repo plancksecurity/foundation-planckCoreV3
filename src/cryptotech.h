@@ -3,6 +3,8 @@
  * @brief   cryptotech function typedefs and structures for crypto drivers 
  *          to implement and interface with engine
  * @license GNU General Public License 3.0 - see LICENSE.txt
+ * @todo Various signature mismatches between function pointers def'd here 
+ * 	and corresponding \@copydoc targets.
  */
 
 #ifndef CRYPTOTECH_H
@@ -24,7 +26,7 @@ typedef enum _PEP_cryptotech {
     //    PEP_crypt_SMIME,
     //    PEP_crypt_CMS,
 
-    PEP_crypt__count
+    PEP_crypt__count ///< Represents number of currently supported cryptotech drivers(?)
 } PEP_cryptotech;
 
 /**
@@ -91,6 +93,8 @@ typedef PEP_STATUS (*delete_keypair_t)(PEP_SESSION session, const char *fpr);
 /**
  *  @brief Signature for crypto drivers to implement for export_key()
  *  @copydoc export_key()
+ *  @todo Dunno if it's only a documentation issue, but there seems to be a parameter count mismatch 
+ *        between export_key as implemented in pEpEngine.c and export_key_t
  *  @see export_key()
  */
 typedef PEP_STATUS (*export_key_t)(
@@ -192,8 +196,9 @@ typedef PEP_STATUS (*key_created_t)(PEP_SESSION session, const char *fpr,
 
 /**
  *  @brief Signature for crypto drivers to implement for binary_path()
- *  @copydoc binary_path()
- *  @see binary_path()
+ *  @todo where is binary_path() documented?
+ *  <!--@copydoc binary_path()-->
+ *  <!--@see binary_path()-->
  */
 typedef PEP_STATUS (*binary_path_t)(const char **path);
 
@@ -258,7 +263,7 @@ typedef struct _PEP_cryptotech_t {
     config_cipher_suite_t config_cipher_suite;
 } PEP_cryptotech_t;
 
-extern PEP_cryptotech_t cryptotech[PEP_crypt__count];
+extern PEP_cryptotech_t cryptotech[PEP_crypt__count]; ///< array of all supported cryptotech drivers/interfaces (?)
 
 typedef uint64_t cryptotech_mask;
 
