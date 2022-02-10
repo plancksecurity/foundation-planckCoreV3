@@ -107,30 +107,6 @@ TEST_F(TestSetDefaultFPRTest, check_test_set_default_fpr) {
     free_identity(carol);
 }
 
-TEST_F(TestSetDefaultFPRTest, check_test_set_comm_partner_key) {
-    pEp_identity* carol = NULL;
-    PEP_STATUS status = set_up_preset(session, CAROL,
-                                       true, true, false, false, false, &carol);
-    status = set_comm_partner_key(session, carol, carol_fpr);
-    ASSERT_OK;
-    status = update_identity(session, carol);
-    ASSERT_OK;
-    ASSERT_STREQ(carol->fpr, carol_fpr);
-    status = set_comm_partner_key(session, carol, bob_fpr);
-    ASSERT_OK;
-    status = update_identity(session, carol);
-    ASSERT_OK;
-    ASSERT_STREQ(carol->fpr, bob_fpr);
-    // Now let's set one that we don't have.
-    status = set_comm_partner_key(session, carol, alice_fpr);
-    ASSERT_OK;
-    status = update_identity(session, carol);
-    ASSERT_OK;
-    ASSERT_STREQ(carol->fpr, carol_fpr); // Should be the user default, we don't have alice_fpr's key
-    ASSERT_EQ(carol->comm_type, PEP_ct_pEp_unconfirmed);
-    free_identity(carol);
-}
-
 TEST_F(TestSetDefaultFPRTest, check_test_set_default_no_identity) {
     pEp_identity* carol = NULL;
     PEP_STATUS status = set_up_preset(session, CAROL,
@@ -155,40 +131,6 @@ TEST_F(TestSetDefaultFPRTest, check_test_set_default_no_identity) {
     status = update_identity(session, carol_bob);
     ASSERT_OK;
     ASSERT_STREQ(carol_bob->fpr, carol_fpr);
-    free_identity(carol);
-    free_identity(carol_bob);
-}
-
-TEST_F(TestSetDefaultFPRTest, check_test_set_comm_partner_key_no_set_identity) {
-    pEp_identity* carol = NULL;
-    PEP_STATUS status = set_up_preset(session, CAROL,
-                                      false, false, false, false, false, &carol);
-    string user_id_cache = carol->user_id;
-    status = set_comm_partner_key(session, carol, carol_fpr);
-    ASSERT_OK;
-    status = update_identity(session, carol);
-    ASSERT_OK;
-    ASSERT_STREQ(carol->fpr, carol_fpr);
-    ASSERT_STREQ(user_id_cache.c_str(), carol->user_id);
-    status = set_comm_partner_key(session, carol, bob_fpr);
-    ASSERT_OK;
-    status = update_identity(session, carol);
-    ASSERT_OK;
-    ASSERT_STREQ(carol->fpr, bob_fpr);
-    // Now let's set one that we don't have.
-    status = set_comm_partner_key(session, carol, alice_fpr);
-    ASSERT_OK;
-    status = update_identity(session, carol);
-    ASSERT_OK;
-    ASSERT_STREQ(carol->fpr, carol_fpr); // Should be the user default, we don't have alice_fpr's key
-    ASSERT_EQ(carol->comm_type, PEP_ct_OpenPGP_unconfirmed);
-
-    pEp_identity* carol_bob = new_identity(carol->address, NULL, "BOB", "Carol is Bob, but not really");
-    status = set_comm_partner_key(session, carol_bob, carol_fpr);
-    ASSERT_OK;
-    status = update_identity(session, carol_bob);
-    ASSERT_OK;
-    ASSERT_STREQ(carol_bob->fpr, carol_fpr); // differs from above case because of internal update_identity call
     free_identity(carol);
     free_identity(carol_bob);
 }
