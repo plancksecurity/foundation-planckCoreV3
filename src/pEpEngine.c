@@ -157,6 +157,89 @@ int sql_trace_callback (unsigned trace_constant,
 }
 #endif
 
+/* This function is useful to execute once at startup as a migration procedure,
+   to remove redundant lines left by older engine versions behaving as described
+   in tickets such as QA-177 and QA-180. */
+static PEP_STATUS
+_sql_migration_remove_temporary_ids_when_non_temporary_ids_are_also_present
+   (PEP_SESSION session)
+{
+    /* Delete temporary entries (ids starting with "TOFU_") from every tables,
+       where an identity with the same address exists having a non-temporary id.
+       Such entries have been created in the past by mistake. */
+
+    /* Trust references Person; Identity references Person.  As far as I can see
+       ON DELETE CASCADE does not really do its job (Proof: execute the DELETE
+       query on Person first, then execute the main SELECT FROM Identity:
+       duplicate TOFU_ identities will still be there.), so I have to first make
+       a list of user_ids to delete, then delete.  Deleting from Identity
+       following a dependency order would make me lose information before I
+       arrive at Delete From Person.
+       Then, in order to play it safe, I am also backing up the rows I am
+       deleting.
+       The query with EXISTS and nested sub-SELECTs is very heavyweight, but it
+       is executed only once. */
+    int sql_result = SQLITE_OK;
+    /* First check if we have already executed this migration procedure.  If so
+       we can find one of our backup tables, and can just exit. */
+    sql_result
+        = sqlite3_exec
+            (session->db,
+             "SELECT * FROM migration_remove_temporary_ids_Person;",
+             NULL, NULL, NULL);
+    if (sql_result == SQLITE_OK)
+        return PEP_STATUS_OK;
+
+    /* If we arrived here then we need to perform the slow migration procedure,
+       just once. */
+    fprintf (stderr, "Performing the migration procedure.  Please wait...\n");
+    sql_result = sqlite3_exec
+        (session->db,
+         "BEGIN TRANSACTION; "
+         /* Keep a list of the ids that we are going to remove. */
+         "CREATE TABLE user_ids_to_delete AS "
+         "  SELECT O.user_id "
+         "  FROM Identity O "
+         "  WHERE EXISTS "
+         "   (SELECT * "
+         "    FROM Identity I "
+         "    WHERE normalize_address (O.address) = normalize_address (I.address)\n "
+         "    -- WHERE O.address = I.address\n "
+         "    AND substring (O.user_id, 1, 5) = 'TOFU_' "
+         "    AND substring (I.user_id, 1, 5) <> 'TOFU_'); "
+         /* Make a backup of the rows we are about to delete.  This will only
+            be used in case there is some serious bug in this migration code.
+            First create empty tables, in case they do not already exists... */
+         "CREATE TABLE IF NOT EXISTS migration_remove_temporary_ids_Person AS "
+         "  SELECT * FROM Person WHERE FALSE; "
+         "CREATE TABLE IF NOT EXISTS migration_remove_temporary_ids_Identity AS "
+         "  SELECT * FROM Identity WHERE FALSE; "
+         "CREATE TABLE IF NOT EXISTS migration_remove_temporary_ids_Trust AS "
+         "  SELECT * FROM Trust WHERE FALSE; "
+         /* ...Then fill them. */
+         "INSERT INTO migration_remove_temporary_ids_Person "
+         "  SELECT * FROM Person WHERE id IN user_ids_to_delete; "
+         "INSERT INTO migration_remove_temporary_ids_Identity "
+         "  SELECT * FROM Identity WHERE user_id IN user_ids_to_delete; "
+         "INSERT INTO migration_remove_temporary_ids_Trust "
+         "  SELECT * FROM Trust WHERE user_id IN user_ids_to_delete; "
+         /* Now we can actually delete the redundant rows. */
+         "DELETE FROM Trust WHERE user_id IN (SELECT * FROM user_ids_to_delete); "
+         "DELETE FROM Identity WHERE user_id IN (SELECT * FROM user_ids_to_delete); "
+         "DELETE FROM Person WHERE id IN (SELECT * FROM user_ids_to_delete); "
+         /* Drop the temporary table with ids. */
+         "DROP TABLE user_ids_to_delete; "
+         "COMMIT TRANSACTION;\n "
+         ,
+         NULL, NULL, NULL);
+    fprintf (stderr, "...Done.\n");
+    if (sql_result != SQLITE_OK) {
+        fprintf (stderr, "%s: %s\n", __func__, sqlite3_errstr (sql_result));
+        return PEP_INIT_CANNOT_OPEN_DB; /* Not really, but not too far either. */
+    }
+    return PEP_STATUS_OK;
+}
+
 // sql manipulation statements
 static const char *sql_log = 
     "insert into log (title, entity, description, comment)"
@@ -1138,6 +1221,13 @@ DYNAMIC_API PEP_STATUS init(
     }
 
     sqlite3_busy_timeout(_session->system_db, 1000);
+
+    // Perform bug-fix migrations.
+    status
+        = _sql_migration_remove_temporary_ids_when_non_temporary_ids_are_also_present
+             (_session);
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
 
 // increment this when patching DDL
 #define _DDL_USER_VERSION "14"
