@@ -97,7 +97,7 @@ static bool _is_temporary_user_id(const char *s)
 {
     assert(s != NULL);
     if (s == NULL) {
-        fprintf (stderr, "%s: NULL\n", __FUNCTION__);
+        fprintf (stderr, "%s: NULL\n", __func__);
         abort();
     }
     return ((const char *) strstr(s, "TOFU_") == s);
@@ -1108,8 +1108,7 @@ DYNAMIC_API PEP_STATUS init(
             NULL,
             NULL
         );
-
-
+    
     sqlite3_busy_timeout(_session->db, BUSY_WAIT_TIME);
 
 #ifdef _PEP_SQLITE_DEBUG
@@ -3820,7 +3819,7 @@ void sql_rollback_transaction(PEP_SESSION session)
             && _sql_result_copy != SQLITE_DONE) {                  \
             fprintf (stderr,                                       \
                      "%s:%i: (%s): SQL error: %s => %s (%i)\n",    \
-                     __FILE__, __LINE__, __FUNCTION__,             \
+                     __FILE__, __LINE__, __func__,             \
                      ((_sql_statement == NULL)                     \
                       ? "<Unknown SQL statement>"                  \
                       : sqlite3_expanded_sql (_sql_statement)),    \
@@ -4365,7 +4364,7 @@ static PEP_STATUS _set_identity_a4(
        guarantee that the record will be only one. */
     fprintf (stderr,
              "%s: WARNING: multiple non-temporary records for the same "
-             "address.  Updating *one*, chosen arbitrarily\n", __FUNCTION__);
+             "address.  Updating *one*, chosen arbitrarily\n", __func__);
     return _set_identity_a2(session, identity);
 }
 /* See the comment in _set_identity_a1. */
@@ -4400,7 +4399,7 @@ static PEP_STATUS _set_identity_b2(
     sqlite3_stmt *sql_statement = NULL;
 
     /* Query: find the user_id. */
-    fprintf (stderr, "%s: query\n", __FUNCTION__);
+    fprintf (stderr, "%s: query\n", __func__);
     char *old_temporary_user_id = NULL;
     sql_result = sqlite3_prepare_v2
       (session->db,
@@ -4425,7 +4424,7 @@ static PEP_STATUS _set_identity_b2(
     sqlite3_finalize(sql_statement); sql_statement = NULL;
 
     /* First DML statement: delete from Identity. */
-    fprintf (stderr, "%s: DML1\n", __FUNCTION__);
+    fprintf (stderr, "%s: DML1\n", __func__);
     sql_result = sqlite3_prepare_v2
       (session->db,
        "DELETE "
@@ -4444,13 +4443,13 @@ static PEP_STATUS _set_identity_b2(
     sqlite3_finalize(sql_statement); sql_statement = NULL;
 
     /* Insert new rows into Person and Identity. */
-    fprintf (stderr, "%s: Insert new rows\n", __FUNCTION__);
+    fprintf (stderr, "%s: Insert new rows\n", __func__);
     if (_set_identity_insert_new(session, identity, identity->user_id)
         != PEP_STATUS_OK)
         goto end;
 
     /* Update Trust, referencing the new rows. */
-    fprintf (stderr, "%s: DML2\n", __FUNCTION__);
+    fprintf (stderr, "%s: DML2\n", __func__);
     sql_result = sqlite3_prepare_v2
       (session->db,
        "UPDATE Trust "
@@ -4472,7 +4471,7 @@ static PEP_STATUS _set_identity_b2(
     sqlite3_finalize(sql_statement); sql_statement = NULL;
 
     /* Delete the old row from Person, now no longer referenced. */
-    fprintf (stderr, "%s: DML3\n", __FUNCTION__);
+    fprintf (stderr, "%s: DML3\n", __func__);
     sql_result = sqlite3_prepare_v2
       (session->db,
        "DELETE "
@@ -4534,7 +4533,7 @@ DYNAMIC_API PEP_STATUS set_identity(
     /* Find which case we are in and handle it. */
     enum _set_identity_case set_identity_case
         = _find_set_identity_case(session, identity);
-    fprintf (stderr, "%s on %s: handling case %s\n", __FUNCTION__, identity->address, set_identity_case_to_string (set_identity_case));
+    fprintf (stderr, "%s on %s: handling case %s\n", __func__, identity->address, set_identity_case_to_string (set_identity_case));
 
     switch (set_identity_case) {
     case _set_identity_case_a1:
@@ -4563,12 +4562,12 @@ DYNAMIC_API PEP_STATUS set_identity(
  end:
     if (status == PEP_STATUS_OK)
         {
-        fprintf (stderr, "SUCCESS: %s on %s, case %s\n\n", __FUNCTION__, identity->address, set_identity_case_to_string (set_identity_case));
+        fprintf (stderr, "SUCCESS: %s on %s, case %s\n\n", __func__, identity->address, set_identity_case_to_string (set_identity_case));
         sql_commit_transaction(session);
         }
     else
         {
-            fprintf (stderr, "FAILURE: %s on %s, case %s: status %i (%s)\n\n", __FUNCTION__, identity->address, set_identity_case_to_string (set_identity_case), (int) status, pEp_status_to_string (status));
+            fprintf (stderr, "FAILURE: %s on %s, case %s: status %i (%s)\n\n", __func__, identity->address, set_identity_case_to_string (set_identity_case), (int) status, pEp_status_to_string (status));
         sql_rollback_transaction(session);
         }
     return status;
