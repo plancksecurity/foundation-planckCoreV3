@@ -103,7 +103,7 @@ namespace {
 #define CHECK_STATUS_OK  \
     CHECK_STATUS (PEP_STATUS_OK)
 
-TEST_F(SetIdentityTest, foo) {
+TEST_F(SetIdentityTest, set_identity_every_case) {
     // ASSERT_TRUE(true); 
     PEP_STATUS status = PEP_STATUS_OK;
 
@@ -227,6 +227,4 @@ TEST_F(SetIdentityTest, foo) {
     CHECK_STATUS_OK;
     // It is difficult to check that the update actually worked, because with
     // a get operation we might obtain either identity.
-
 }
-
