@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "pEpEngine.h"
+#include "status_to_string.h"
 #include "message_api.h"
 #include "aux_mime_msg.h"
 #include "mime.h"
