@@ -122,6 +122,10 @@ _sql_migration_remove_temporary_ids_when_non_temporary_ids_are_also_present
          "  WHERE EXISTS "
          "   (SELECT * "
          "    FROM Identity I "
+         /* FIXME: re-enable the use of normalize_address after I import its
+            definition from the big-rewrite branch, unless Volker disagrees.
+            But I think that he will accept that this solution is the right
+            thing in the end. --positron. */
          "    -- WHERE normalize_address (O.address) = normalize_address (I.address)\n "
          "    WHERE O.address = I.address\n "
          "    AND substring (O.user_id, 1, 5) = 'TOFU_' "
