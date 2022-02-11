@@ -122,8 +122,8 @@ _sql_migration_remove_temporary_ids_when_non_temporary_ids_are_also_present
          "  WHERE EXISTS "
          "   (SELECT * "
          "    FROM Identity I "
-         "    WHERE normalize_address (O.address) = normalize_address (I.address)\n "
-         "    -- WHERE O.address = I.address\n "
+         "    -- WHERE normalize_address (O.address) = normalize_address (I.address)\n "
+         "    WHERE O.address = I.address\n "
          "    AND substring (O.user_id, 1, 5) = 'TOFU_' "
          "    AND substring (I.user_id, 1, 5) <> 'TOFU_'); "
          /* Make a backup of the rows we are about to delete.  This will only
