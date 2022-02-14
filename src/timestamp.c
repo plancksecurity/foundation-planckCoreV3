@@ -1,6 +1,6 @@
 /** 
  * @file timestamp.c
- * @brief File description for doxygen missing. FIXME 
+ * @brief  Implementation of timestamp creation, conversion, and manipulation functions
  * @license This file is under GNU General Public License 3.0 - see LICENSE.txt
  */
 

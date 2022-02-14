@@ -1,7 +1,7 @@
 /** 
  * @file trans_auto.c
  * @brief File description for doxygen missing. FIXME 
- * This file is under GNU General Public License 3.0 - see LICENSE.txt
+ * @license This file is under GNU General Public License 3.0 - see LICENSE.txt
  */
 
 #include "trans_auto.h"
