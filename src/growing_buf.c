@@ -1,4 +1,4 @@
-/*
+/**
  * @file    growing_buf.c
  * @brief   implementation of growing buffer, which is needed by the ASN.1 implementation
  *          i.e. for encoding to XER

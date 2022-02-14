@@ -1,6 +1,6 @@
 /**
  * @file group.c
- * @brief Description for doxygen is missing (TODO)
+ * @brief Implementation of in-memory objects and functions for representation of groups
  * @license This file is under GNU General Public License 3.0 - see LICENSE.txt
  */
 
