@@ -75,8 +75,9 @@ typedef PEP_STATUS (*encrypt_only_t)(
 
 /**
  *  @brief Signature for crypto drivers to implement for sign_only()
- *  @copydoc sign_only()
- *  @see sign_only
+ *  @copydoc pgp_sign_only()
+ *  @see sign_only - This wrapper function has a mismatched signature
+ *  @see pgp_sign_only() - This is one function that might be pointed to via an pointer of type sign_only_t
  */
 typedef PEP_STATUS (*sign_only_t)(
         PEP_SESSION session, const char* fpr, const char *ptext,
@@ -92,10 +93,9 @@ typedef PEP_STATUS (*delete_keypair_t)(PEP_SESSION session, const char *fpr);
 
 /**
  *  @brief Signature for crypto drivers to implement for export_key()
- *  @copydoc export_key()
- *  @todo Dunno if it's only a documentation issue, but there seems to be a parameter count mismatch 
- *        between export_key as implemented in pEpEngine.c and export_key_t
- *  @see export_key()
+ *  @copydoc pgp_export_keydata()
+ *  @see export_key() - This wrapper function has a mismatched signature
+ *  @see pgp_export_keydata() - This is one function that might be pointed to via an pointer of type export_key_t
  */
 typedef PEP_STATUS (*export_key_t)(
         PEP_SESSION session, const char *fpr, char **key_data, size_t *size,
@@ -133,11 +133,12 @@ typedef PEP_STATUS (*get_key_rating_t)(
 
 /**
  *  @brief Signature for crypto drivers to implement for import_key()
- *  @copydoc import_key()
- *  @see import_key()
+ *  @copydoc pgp_import_keydata()
+ *  @see import_key() - This wrapper function has a mismatched signature
+ *  @see pgp_import_keydata() - This is one function that might be pointed to via an pointer of type import_key_t
  */
 typedef PEP_STATUS (*import_key_t)(PEP_SESSION session, const char *key_data,
-        size_t size, identity_list **private_keys, stringlist_t** imported_keys,
+        size_t size, identity_list **private_idents, stringlist_t** imported_keys,
         uint64_t* changed_key_index);
 
 /**
