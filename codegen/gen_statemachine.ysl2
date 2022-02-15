@@ -1271,7 +1271,7 @@ tstylesheet {
      *  @param[in]      state       current state
      *
      *  @retval         true        if wait has exceeded «yml:ucase(@name)»_THRESHOLD
-     *                  false       otherwise
+     *  @retval         false       otherwise
      */
     static bool _«@name»_timeout(int state)
     {
@@ -1502,7 +1502,7 @@ tstylesheet {
          *  @param[in]      state       state to convert to string
          *
          *  @retval         string      representation of state name
-         *                  NULL        if invalid state
+         *  @retval         NULL        if invalid state
          */
         const char *«@name»_state_name(int state);
         /**
@@ -1513,7 +1513,7 @@ tstylesheet {
          *  @param[in]      event       event to convert to string
          *
          *  @retval         string      representation of event name
-         *                  NULL        if invalid event
+         *  @retval         NULL        if invalid event
          */
         const char *«@name»_event_name(int event);
         #endif
@@ -1618,7 +1618,7 @@ tstylesheet {
          *                              false for decimal
          *
          *  @retval         string      representation of input
-         *                  NULL        if out of memory or input invalid
+         *  @retval         NULL        if out of memory or input invalid
          */
         static char *_str(int n, bool hex)
         {

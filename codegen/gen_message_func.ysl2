@@ -108,10 +108,10 @@ void free_«@name»_state(PEP_SESSION session);
  *  @param[in]   fsm              current state machine type (??)
  *  @param[in]   message_type     the type of «@name» message struct to be created (with empty data)
  *
- *  @return      message          the message struct desired
- *  @return      NULL             if the message_type is unknown
+ *  @retval      message          the message struct desired
+ *  @retval      NULL             if the message_type is unknown
  *
- *  @TODO           This description comes entirely from code inspection, but is probably
+ *  @todo           This description comes entirely from code inspection, but is probably
  *                  better optimised by the author. Caveat lector - I may have gotten it wrong.
  */
 «@name»_t *new_«@name»_message(«@name»_PR fsm, int message_type);
@@ -123,7 +123,7 @@ void free_«@name»_state(PEP_SESSION session);
  *
  *  @param[in]   msg              the «@name»_t message struct to free
  *
- *  @TODO           This description comes entirely from code inspection, but is probably
+ *  @todo           This description comes entirely from code inspection, but is probably
  *                  better optimised by the author. Caveat lector - I may have gotten it wrong.
  */
 void free_«@name»_message(«@name»_t *msg);
@@ -146,7 +146,7 @@ void free_«@name»_message(«@name»_t *msg);
  *
  *  @retval         status
  *
- *  @TODO           This description comes entirely from code inspection, but is probably
+ *  @todo           This description comes entirely from code inspection, but is probably
  *                  better optimised by the author. Caveat lector - I may have gotten it wrong.
  *
  */
@@ -165,7 +165,7 @@ PEP_STATUS update_«@name»_state(PEP_SESSION session, «@name»_t *msg,
  *
  *  @retval         status
  *
- *  @TODO           This description comes entirely from code inspection, but is probably
+ *  @todo           This description comes entirely from code inspection, but is probably
  *                  better optimised by the author. Caveat lector - I may have gotten it wrong.
  */
 PEP_STATUS update_«@name»_message(PEP_SESSION session, «@name»_t *msg);
