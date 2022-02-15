@@ -55,7 +55,7 @@ tstylesheet {
              *
              *  @retval      true        if t2 is NULL and t1 is not, or the size of t1 is greater than t2, or
              *                           the first non-matching byte of t1 is greater than that of t2
-             *               false       otherwise
+             *  @retval      false       otherwise
              */
             static bool _TID_greater(TID_t *t1, TID_t *t2)
             {
@@ -85,7 +85,7 @@ tstylesheet {
              *  @param[in]   ident2          pointer to the second identity
              *
              *  @retval      true        if user_id and address match on both identities
-             *               false       otherwise
+             *  @retval      false       otherwise
              */
             static bool _same_identity(pEp_identity *ident1, pEp_identity *ident2)
             {
@@ -109,8 +109,8 @@ tstylesheet {
              *  @param[out]  found       true if an identity with matching unique identifiers is in the list, else false
              *
              *  @retval      PEP_ILLEGAL_VALUE        any of the input pointers are NULL
-             *               PEP_OUT_OF_MEMORY        if memory problems occur
-             *               PEP_STATUS_OK            otherwise
+             *  @retval      PEP_OUT_OF_MEMORY        if memory problems occur
+             *  @retval      PEP_STATUS_OK            otherwise
              */
             static PEP_STATUS _have_identity_in(identity_list *il, pEp_identity *ident, bool *found)
             {
