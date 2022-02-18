@@ -102,7 +102,7 @@ endif
 $(TARGET): libpEpEngine.a
 	$(CC) -o $@ $(CPPFLAGS) $(LDFLAGS) $(CFLAGS) $(ALL_OBJECTS) $(LDLIBS)
 
-.PHONY: objects clean install_headers install uninstall beinstall
+.PHONY: objects clean install_headers install uninstall beinstall doc
 
 objects: $(ALL_OBJECTS)
 
@@ -151,3 +151,6 @@ tags: $(wildcard *.c) $(wildcard *.h)
 
 doc: 
 	doxygen
+	sed -i 's/≡/\$$\\equiv\$$/g' ../doc/api/latex/*.tex
+	make -C ../doc/api/latex
+

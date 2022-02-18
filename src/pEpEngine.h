@@ -604,7 +604,7 @@ DYNAMIC_API PEP_STATUS verify_text(
  *  
  *  @param[in]     session    session handle
  *  @param[in]     keylist    list of key ids to encrypt with as C strings
- *  @param[in]     ptext      plain text to decrypt and/or verify
+ *  @param[in]     ptext      plain text to encrypt 
  *  @param[in]     psize      size of plain text
  *  @param[out]    ctext      pointer to internal buffer with cipher text
  *  @param[out]    csize      size of cipher text
