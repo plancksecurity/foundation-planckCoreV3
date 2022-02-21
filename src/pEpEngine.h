@@ -18,7 +18,11 @@ extern "C" {
 #include "labeled_int_list.h"    
 #include "timestamp.h"
 
+#ifdef SQLITE3_FROM_OS
+#include <sqlite3.h>
+#else
 #include "sqlite3.h"
+#endif
 
 #define PEP_VERSION "2.1" // pEp *protocol* version
 
