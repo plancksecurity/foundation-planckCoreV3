@@ -151,6 +151,6 @@ tags: $(wildcard *.c) $(wildcard *.h)
 
 doc: 
 	doxygen
-	sed -i 's/≡/\$$\\equiv\$$/g' ../doc/api/latex/*.tex
-	make -C ../doc/api/latex
+#	sed -i -e 's/≡/\$$\\equiv\$$/g' ../doc/api/latex/*.tex
+#	make -C ../doc/api/latex
 

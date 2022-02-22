@@ -85,5 +85,5 @@ package: clean
 db:
 	$(MAKE) -C db db
 
-doc:
+doc: asn1
 	$(MAKE) -C src doc
