@@ -1,13 +1,6 @@
 /**
- * @file    src/pgp_sequoia.c
- *
- * @brief   Sequoia PGP driver - implements required cryptotech
- *          functions for the engine using sequoia-pgp
- *
- * @license GNU General Public License 3.0 - see LICENSE.txt
- *
- * @see     https://sequoia-pgp.org/
- * @see     https://docs.sequoia-pgp.org/sequoia_ffi/index.html
+ * @file pgp_sequoia.c
+ * @brief Implementation of functions used to speak to Sequoia-PGP backend
  */
 
 
