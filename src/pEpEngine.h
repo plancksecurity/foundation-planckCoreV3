@@ -40,7 +40,8 @@ extern "C" {
                                      // which must always be defined
 #define PEP_ENGINE_VERSION_RC    5   // the last already-released RC for this
                                      // patchlevel, or not defined if not an RC
-#define PEP_ENGINE_VERSION_PLUS  +   // Only defined for tagged versions
+#define PEP_ENGINE_VERSION_PLUS  +   // Defined iff this is a non-released and
+                                     // non-RC version.
 
 /* The following macros serve to machine-generate a definition of
    PEP_ENGINE_VERSION, following the correct format as a string, from the
