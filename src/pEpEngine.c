@@ -35,7 +35,7 @@ static void normalize_address(sqlite3_context *context,
         FAIL (SQLITE_MISMATCH, "type error");
 
     /* Make a copy of the argument, skipping an optional «mailto:» prefix. */
-    const char *argument = sqlite3_value_text(argv[0]);
+    const char *argument = (const char *) sqlite3_value_text(argv[0]);
     //printf ("argument: \"%s\"\n", argument);
     if (strstr (argument, "mailto:") == argument)
         argument += 7;
@@ -44,7 +44,6 @@ static void normalize_address(sqlite3_context *context,
     if (res == NULL)
         FAIL (SQLITE_NOMEM, "out of memory");
     int from_i, to_i;
-    char c;
     for (from_i = 0, to_i = 0;
          from_i < length;
          from_i ++)
@@ -4023,7 +4022,7 @@ static enum _set_identity_case _find_set_identity_case_a(
         matching_row_no ++;
         const unsigned char *user_id = sqlite3_column_text (sql_statement, 0);
         fprintf (stderr, "* FROM DB: <user_id: %s, address: %s>\n", user_id, identity->address);
-        if (_is_temporary_user_id (user_id))
+        if (_is_temporary_user_id ((const char *) user_id))
             found_a_temporary_user_id = true;
 
         /* Get the next row, if any. */
@@ -4138,7 +4137,7 @@ static enum _set_identity_case _find_set_identity_case_b(
     /* If the userid is temporary, the case is B2, otherwise it is B4 -- We have
        already excluded B3. */
     const unsigned char *user_id = sqlite3_column_text(sql_statement, 0);
-    if (_is_temporary_user_id(user_id))
+    if (_is_temporary_user_id((const char *) user_id))
         res |= _set_identity_case_2;
     else
         res |= _set_identity_case_4;
@@ -4385,7 +4384,7 @@ static PEP_STATUS _set_identity_a2(
        verify it, since this function is also reused for the A4 case where
        results are more than one. */
     CHECK_SQL_RESULT (sql_statement, sql_result);
-    temporary_user_id = strdup (sqlite3_column_text (sql_statement, 0));
+    temporary_user_id = strdup ((const char *) sqlite3_column_text (sql_statement, 0));
     if (temporary_user_id == NULL) {
         sqlite3_finalize(sql_statement);
         return PEP_OUT_OF_MEMORY;
@@ -4427,7 +4426,7 @@ static PEP_STATUS _set_identity_a3(
     CHECK_SQL_RESULT (sql_statement, sql_result);
     sql_result = sqlite3_step(sql_statement);
     CHECK_SQL_RESULT (sql_statement, sql_result);
-    existing_user_id = strdup (sqlite3_column_text (sql_statement, 0));
+    existing_user_id = strdup ((const char *) sqlite3_column_text (sql_statement, 0));
     if (existing_user_id == NULL) {
         sqlite3_finalize(sql_statement);
         return PEP_OUT_OF_MEMORY;
@@ -4506,7 +4505,7 @@ static PEP_STATUS _set_identity_b2(
     CHECK_SQL_RESULT (sql_statement, sql_result);
     sql_result = sqlite3_step(sql_statement);
     CHECK_SQL_RESULT (sql_statement, sql_result);
-    old_temporary_user_id = strdup (sqlite3_column_text (sql_statement, 0));
+    old_temporary_user_id = strdup ((const char *) sqlite3_column_text (sql_statement, 0));
     if (old_temporary_user_id == NULL) {
         sqlite3_finalize(sql_statement);
         return PEP_OUT_OF_MEMORY;
@@ -4649,7 +4648,6 @@ DYNAMIC_API PEP_STATUS set_identity(
         abort ();
     }
 
- end:
     if (status == PEP_STATUS_OK)
         {
         fprintf (stderr, "SUCCESS: %s on %s, case %s\n\n", __func__, identity->address, set_identity_case_to_string (set_identity_case));
@@ -6871,7 +6869,7 @@ PEP_STATUS set_all_userids_to_own(PEP_SESSION session, identity_list* id_list) {
 }
 
 
-PEP_STATUS set_default_key(
+static PEP_STATUS _set_default_key(
         PEP_SESSION session,
         const pEp_identity *identity
     )
@@ -6907,13 +6905,26 @@ DYNAMIC_API PEP_STATUS set_trust(
                 identity->comm_type))
         return PEP_ILLEGAL_VALUE;
 
+    return update_trust_for_fpr(session, identity->fpr, identity->comm_type);
+}
+
+DYNAMIC_API PEP_STATUS set_default_key(
+        PEP_SESSION session,
+        const pEp_identity *identity
+    )
+{
+    if (!(session && identity && !EMPTYSTR(identity->user_id) &&
+                !EMPTYSTR(identity->address) && !EMPTYSTR(identity->fpr) &&
+                identity->comm_type))
+        return PEP_ILLEGAL_VALUE;
+
     sqlite3_exec(session->db, "BEGIN TRANSACTION;", NULL, NULL, NULL);
 
-    PEP_STATUS status = set_default_key(session, identity);
+    PEP_STATUS status = _set_default_key(session, identity);
     if (status)
         goto rollback;
 
-    status = update_trust_for_fpr(session, identity->fpr, identity->comm_type);
+    status = set_trust(session, identity);
     if (status)
         goto rollback;
 
@@ -6925,4 +6936,3 @@ rollback:
     sqlite3_exec(session->db, "ROLLBACK;", NULL, NULL, NULL);
     return status;
 }
-
