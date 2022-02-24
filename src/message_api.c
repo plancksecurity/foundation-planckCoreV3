@@ -4145,8 +4145,8 @@ static PEP_STATUS _decrypt_message(
                 else if (!is_pEp_msg && header_key_imported) // autocrypt
                     sender_key = _imported_key_list->value;
                 else {
-                    // We do this only with pEp messages 2.1 or less, or OpenPGP messages
-                    if (!is_pEp_msg || (major_ver == 2 && minor_ver < 2) || major_ver < 2) {
+                    // We do this only with pEp messages 2.1 or less
+                    if (is_pEp_msg && ((major_ver == 2 && minor_ver < 2) || major_ver < 2)) {
                         if (_imported_key_list && !(_imported_key_list->next))
                             sender_key = _imported_key_list->value;
                     }
