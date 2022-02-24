@@ -189,7 +189,7 @@ _sql_migration_remove_temporary_ids_when_non_temporary_ids_are_also_present
        deleting.
        The query with EXISTS and nested sub-SELECTs is very heavyweight, but it
        is executed only once. */
-    int sql_result = SQLITE_OK;
+
     /* First check if we have already executed this migration procedure.  If so
        we can find one of our backup tables, and can just exit. */
 
