@@ -38,7 +38,7 @@ LDLIBS+= -lstdc++ -lasn1
 
 ifeq ($(BUILD_FOR),Linux)
     LDLIBS+= -luuid
-    # These help at least in static-library configurations, and do no with
+    # These help at least in static-library configurations, and do no harm with
     # dynamic libs.
     LDLIBS += -lsequoia_openpgp_ffi -ldl -lhogweed -lnettle -lgmp -lz
 endif
