@@ -5322,6 +5322,19 @@ DYNAMIC_API PEP_STATUS delete_keypair(PEP_SESSION session, const char *fpr)
     if (!(session && fpr))
         return PEP_ILLEGAL_VALUE;
 
+    /* Refuse to delete key material for own keys. */
+    bool own;
+    PEP_STATUS status = is_own_key(session, fpr, & own);
+    if (status != PEP_STATUS_OK)
+        return status;
+    if (own) {
+        fprintf (stderr,
+                 "DEFENSIVE SAFEGUARD: Refusing to remove own key %s as "
+                 "default.  THIS SHOULD NEVER HAPPEN.\n",
+                 fpr);
+        return PEP_KEY_UNSUITABLE;
+    }
+    
     return session->cryptotech[PEP_crypt_OpenPGP].delete_keypair(session, fpr);
 }
 
