@@ -38,9 +38,9 @@ extern "C" {
 #define PEP_ENGINE_VERSION_PATCH 51  // the last already-released or
                                      // being-released patchlevel,
                                      // which must always be defined
-#define PEP_ENGINE_VERSION_RC    5   // the last already-released RC for this
+#define PEP_ENGINE_VERSION_RC    6   // the last already-released RC for this
                                      // patchlevel, or not defined if not an RC
-#define PEP_ENGINE_VERSION_PLUS  +   // Defined iff this is a non-released and
+//#define PEP_ENGINE_VERSION_PLUS  +   // Defined iff this is a non-released and
                                      // non-RC version.
 
 /* The following macros serve to machine-generate a definition of
