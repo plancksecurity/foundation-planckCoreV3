@@ -35,7 +35,7 @@ extern "C" {
 // PEP_ENGINE_VERSION_PLUS , or both.
 #define PEP_ENGINE_VERSION_MAJOR 2
 #define PEP_ENGINE_VERSION_MINOR 1
-#define PEP_ENGINE_VERSION_PATCH 52  // the last already-released or
+#define PEP_ENGINE_VERSION_PATCH 53  // the last already-released or
                                      // being-released patchlevel,
                                      // which must always be defined
 //#define PEP_ENGINE_VERSION_RC    1   // the last already-released RC for this
