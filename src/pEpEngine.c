@@ -145,8 +145,8 @@ _sql_migration_remove_temporary_ids_when_non_temporary_ids_are_also_present
             thing in the end. --positron. */
          "    -- WHERE normalize_address (O.address) = normalize_address (I.address)\n "
          "    WHERE O.address = I.address\n "
-         "    AND substring (O.user_id, 1, 5) = 'TOFU_' "
-         "    AND substring (I.user_id, 1, 5) <> 'TOFU_'); "
+         "    AND substr (O.user_id, 1, 5) = 'TOFU_' "
+         "    AND substr (I.user_id, 1, 5) <> 'TOFU_'); "
          /* Make a backup of the rows we are about to delete.  This will only
             be used in case there is some serious bug in this migration code.
             First create empty tables, in case they do not already exists... */
@@ -172,7 +172,8 @@ _sql_migration_remove_temporary_ids_when_non_temporary_ids_are_also_present
          "COMMIT TRANSACTION;\n "
          , NULL, NULL, NULL);
     if (sql_result != SQLITE_OK) {
-        fprintf (stderr, "%s: %s\n", __func__, sqlite3_errstr (sql_result));
+        fprintf(stderr, "%s: %s (%s)\n", __func__,
+                sqlite3_errstr(sql_result), sqlite3_errmsg(session->db));
         return PEP_INIT_CANNOT_OPEN_DB; /* Not really, but not too far either. */
     }
     fprintf (stderr, "...Done.\n");
@@ -263,7 +264,8 @@ _sql_migration_remove_own_keys_from_non_own_identities (PEP_SESSION session)
 
     /* We are done. */
     if (sql_result != SQLITE_OK) {
-        fprintf (stderr, "%s: %s\n", __func__, sqlite3_errstr (sql_result));
+        fprintf(stderr, "%s: %s (%s)\n", __func__,
+                sqlite3_errstr(sql_result), sqlite3_errmsg(session->db));
         return PEP_INIT_CANNOT_OPEN_DB; /* Not really, but not too far either. */
     }
     fprintf (stderr, "...Done.\n");
