@@ -124,13 +124,25 @@ _sql_migration_remove_temporary_ids_when_non_temporary_ids_are_also_present
              "SELECT * FROM migration_remove_temporary_ids_Person;",
              NULL, NULL, NULL);
     if (sql_result == SQLITE_OK)
+{
+  fprintf (stderr, "No need to do this.\n");
         return PEP_STATUS_OK;
+}
 
     /* If we arrived here then we need to perform the slow migration procedure,
        just once. */
     fprintf (stderr, "Performing the remove_temporary_ids_when_non_temporary_ids_are_also_present migration procedure.  Please wait...\n");
-    sql_result = sqlite3_exec
+    const char *statement;
+#define _BREAK \
+  , NULL, NULL, NULL); \
+  if (sql_result != SQLITE_OK) \
+    goto end; \
+  fprintf (stderr, "executed with success: %s\n", statement); \
+  sql_result = sqlite3_exec (session->db, statement =
+
+  sql_result = sqlite3_exec
         (session->db,
+statement =
          "BEGIN TRANSACTION; "
          /* Keep a list of the ids that we are going to remove. */
          "CREATE TABLE user_ids_to_delete AS "
@@ -147,30 +159,44 @@ _sql_migration_remove_temporary_ids_when_non_temporary_ids_are_also_present
          "    WHERE O.address = I.address\n "
          "    AND substring (O.user_id, 1, 5) = 'TOFU_' "
          "    AND substring (I.user_id, 1, 5) <> 'TOFU_'); "
+_BREAK
          /* Make a backup of the rows we are about to delete.  This will only
             be used in case there is some serious bug in this migration code.
             First create empty tables, in case they do not already exists... */
          "CREATE TABLE IF NOT EXISTS migration_remove_temporary_ids_Person AS "
          "  SELECT * FROM Person WHERE FALSE; "
+_BREAK
          "CREATE TABLE IF NOT EXISTS migration_remove_temporary_ids_Identity AS "
          "  SELECT * FROM Identity WHERE FALSE; "
+_BREAK
          "CREATE TABLE IF NOT EXISTS migration_remove_temporary_ids_Trust AS "
          "  SELECT * FROM Trust WHERE FALSE; "
+_BREAK
          /* ...Then fill them. */
          "INSERT INTO migration_remove_temporary_ids_Person "
          "  SELECT * FROM Person WHERE id IN user_ids_to_delete; "
+_BREAK
          "INSERT INTO migration_remove_temporary_ids_Identity "
          "  SELECT * FROM Identity WHERE user_id IN user_ids_to_delete; "
+_BREAK
          "INSERT INTO migration_remove_temporary_ids_Trust "
          "  SELECT * FROM Trust WHERE user_id IN user_ids_to_delete; "
+_BREAK
          /* Now we can actually delete the redundant rows. */
          "DELETE FROM Trust WHERE user_id IN (SELECT * FROM user_ids_to_delete); "
+_BREAK
          "DELETE FROM Identity WHERE user_id IN (SELECT * FROM user_ids_to_delete); "
+_BREAK
          "DELETE FROM Person WHERE id IN (SELECT * FROM user_ids_to_delete); "
+_BREAK
          /* Drop the temporary table with ids. */
          "DROP TABLE user_ids_to_delete; "
+_BREAK
          "COMMIT TRANSACTION;\n "
+_BREAK
+         ";\n "
          , NULL, NULL, NULL);
+end:
     if (sql_result != SQLITE_OK) {
         fprintf (stderr, "%s: %s\n", __func__, sqlite3_errstr (sql_result));
         return PEP_INIT_CANNOT_OPEN_DB; /* Not really, but not too far either. */
@@ -200,7 +226,10 @@ _sql_migration_remove_own_keys_from_non_own_identities (PEP_SESSION session)
              "SELECT * FROM migration_remove_own_keys_from_others_Trust;",
              NULL, NULL, NULL);
     if (sql_result == SQLITE_OK)
+{
+  fprintf (stderr, "No need to do this.\n");
         return PEP_STATUS_OK;
+}
 
     /* If we arrived here then we need to perform the migration procedure,
        just once. */
