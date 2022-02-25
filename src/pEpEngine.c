@@ -132,7 +132,7 @@ _sql_migration_remove_temporary_ids_when_non_temporary_ids_are_also_present
     /* If we arrived here then we need to perform the slow migration procedure,
        just once. */
     fprintf (stderr, "Performing the remove_temporary_ids_when_non_temporary_ids_are_also_present migration procedure.  Please wait...\n");
-    const char *statement;
+    const char *statement = NULL;
 #define _BREAK \
   , NULL, NULL, NULL); \
   if (sql_result != SQLITE_OK) \
@@ -198,6 +198,7 @@ _BREAK
          , NULL, NULL, NULL);
 end:
     if (sql_result != SQLITE_OK) {
+        fprintf (stderr, "last statement: %s\n", statement);
         fprintf (stderr, "%s: %s\n", __func__, sqlite3_errstr (sql_result));
         return PEP_INIT_CANNOT_OPEN_DB; /* Not really, but not too far either. */
     }
