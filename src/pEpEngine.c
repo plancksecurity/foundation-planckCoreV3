@@ -200,8 +200,8 @@ _BREAK
 end:
     if (sql_result != SQLITE_OK) {
         fprintf (stderr, "last statement: %s\n", statement);
-        fprintf (stderr, "%s: %s\n", __func__, sqlite3_errstr (sql_result));
-        fprintf (stderr, "%s: %s\n", __func__, sqlite3_errmsg (session->db));
+        fprintf (stderr, "%s: %s (%s)\n", __func__,
+                 sqlite3_errstr (sql_result), sqlite3_errmsg (session->db));
         return PEP_INIT_CANNOT_OPEN_DB; /* Not really, but not too far either. */
     }
     fprintf (stderr, "...Done.\n");
