@@ -144,6 +144,7 @@ _sql_migration_remove_temporary_ids_when_non_temporary_ids_are_also_present
         (session->db,
 statement =
          "BEGIN TRANSACTION; "
+_BREAK
          /* Keep a list of the ids that we are going to remove. */
          "CREATE TABLE user_ids_to_delete AS "
          "  SELECT O.user_id "
@@ -155,10 +156,10 @@ statement =
             definition from the big-rewrite branch, unless Volker disagrees.
             But I think that he will accept that this solution is the right
             thing in the end. --positron. */
-         "    -- WHERE normalize_address (O.address) = normalize_address (I.address)\n "
+         /*"    -- WHERE normalize_address (O.address) = normalize_address (I.address)\n "*/
          "    WHERE O.address = I.address\n "
-         "    AND substring (O.user_id, 1, 5) = 'TOFU_' "
-         "    AND substring (I.user_id, 1, 5) <> 'TOFU_'); "
+         "    AND substr (O.user_id, 1, 5) = 'TOFU_' "
+         "    AND substr (I.user_id, 1, 5) <> 'TOFU_'); "
 _BREAK
          /* Make a backup of the rows we are about to delete.  This will only
             be used in case there is some serious bug in this migration code.
@@ -200,6 +201,7 @@ end:
     if (sql_result != SQLITE_OK) {
         fprintf (stderr, "last statement: %s\n", statement);
         fprintf (stderr, "%s: %s\n", __func__, sqlite3_errstr (sql_result));
+        fprintf (stderr, "%s: %s\n", __func__, sqlite3_errmsg (session->db));
         return PEP_INIT_CANNOT_OPEN_DB; /* Not really, but not too far either. */
     }
     fprintf (stderr, "...Done.\n");
@@ -235,13 +237,17 @@ _sql_migration_remove_own_keys_from_non_own_identities (PEP_SESSION session)
     /* If we arrived here then we need to perform the migration procedure,
        just once. */
     fprintf (stderr, "Performing the remove_own_keys_from_non_own_identities migration procedure.  Please wait...\n");
+    const char *statement = NULL;
     sql_result = sqlite3_exec
         (session->db,
+statement =
          "BEGIN TRANSACTION; "
+_BREAK
          /* Create two temporary one-column tables, one holding our own user_ids
             and the other holding our own fprs. */
          "CREATE TABLE migration_remove_own_keys_from_others_my_user_ids AS "
          "  SELECT DISTINCT user_id FROM Identity I WHERE I.is_own; "
+_BREAK
          "CREATE TABLE migration_remove_own_keys_from_others_my_fprs AS "
          "    SELECT DISTINCT main_key_id AS fpr "
          "    FROM Identity I "
@@ -254,17 +260,20 @@ _sql_migration_remove_own_keys_from_non_own_identities (PEP_SESSION session)
          "    SELECT DISTINCT T.pgp_keypair_fpr AS fpr "
          "    FROM Trust T "
          "    WHERE T.user_id IN migration_remove_own_keys_from_others_my_user_ids; "
+_BREAK
          /* Backup: make a copy of rows I am about to delete or to alter. */
          "CREATE TABLE migration_remove_own_keys_from_others_Person AS "
          "  SELECT * "
          "  FROM Person "
          "  WHERE id NOT IN migration_remove_own_keys_from_others_my_user_ids "
          "        AND main_key_id IN migration_remove_own_keys_from_others_my_fprs; "
+_BREAK
          "CREATE TABLE migration_remove_own_keys_from_others_Identity AS "
          "  SELECT * "
          "  FROM Identity "
          "  WHERE user_id NOT IN migration_remove_own_keys_from_others_my_user_ids "
          "        AND main_key_id IN migration_remove_own_keys_from_others_my_fprs; "
+_BREAK
          "CREATE TABLE migration_remove_own_keys_from_others_Trust AS "
          "  SELECT * "
          "  FROM Trust "
@@ -273,27 +282,38 @@ _sql_migration_remove_own_keys_from_non_own_identities (PEP_SESSION session)
          /* Unset the fpr field where invalid.  In the case of the Trust table
             delete rows altogether when the fpr field is invalid, since a row
             with a NULL fpr would be meaningless in that table. */
+_BREAK
          "UPDATE Identity "
          "SET main_key_id = NULL "
          "WHERE user_id NOT IN migration_remove_own_keys_from_others_my_user_ids "
          "      AND main_key_id IN migration_remove_own_keys_from_others_my_fprs; "
+_BREAK
          "DELETE FROM Trust "
          "WHERE user_id NOT IN migration_remove_own_keys_from_others_my_user_ids "
          "      AND pgp_keypair_fpr IN migration_remove_own_keys_from_others_my_fprs; "
+_BREAK
          "UPDATE Person "
          "SET main_key_id = NULL "
          "WHERE id NOT IN migration_remove_own_keys_from_others_my_user_ids "
          "      AND main_key_id IN migration_remove_own_keys_from_others_my_fprs; "
          /* Drop our temporary tables.  Of course backup tables remain. */
+_BREAK
          "DROP TABLE migration_remove_own_keys_from_others_my_user_ids;\n "
+_BREAK
          "DROP TABLE migration_remove_own_keys_from_others_my_fprs; \n "
+_BREAK
          /* Done.  Of course this entire change set is atomic. */
          "COMMIT TRANSACTION; "
+_BREAK
+         ";"
          , NULL, NULL, NULL);
 
+ end:
     /* We are done. */
     if (sql_result != SQLITE_OK) {
+        fprintf (stderr, "last statement: %s\n", statement);
         fprintf (stderr, "%s: %s\n", __func__, sqlite3_errstr (sql_result));
+        fprintf (stderr, "%s: %s\n", __func__, sqlite3_errmsg (session->db));
         return PEP_INIT_CANNOT_OPEN_DB; /* Not really, but not too far either. */
     }
     fprintf (stderr, "...Done.\n");
@@ -1217,6 +1237,13 @@ DYNAMIC_API PEP_STATUS init(
         ensure_passphrase_t ensure_passphrase
     )
 {
+    fprintf (stderr, "Running with SQLite version " SQLITE_VERSION " (from header)\n");
+    unsigned long _v = sqlite3_libversion_number ();
+    fprintf (stderr, "                         or %lu.%lu.%lu (from function)\n",
+             _v / 1000000,
+             (_v % 1000000) / 1000,
+             _v % 1000);
+
     PEP_STATUS status = PEP_STATUS_OK;
     int int_result;
     
