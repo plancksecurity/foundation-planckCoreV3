@@ -6,4 +6,4 @@ yml2=2.7.0
 
 # sqlite3 is technically an optional dependency: the engine can also be built
 # with the copy of sqlite3 which is distributed along with its sources.
-sqlite3=3.34.0
+sqlite3=3.36.0
