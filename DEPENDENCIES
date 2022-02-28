@@ -10,3 +10,7 @@ sequoia=openpgp/v1.3.1
 
 yml2=2.7.1
 libpEpTransport=5738d9f0703215d923d396fa1720631a7003f284
+
+# sqlite3 is technically an optional dependency: the engine can also be built
+# with the copy of sqlite3 which is distributed along with its sources.
+sqlite3=3.36.0
