@@ -260,8 +260,6 @@
 		1585EF4726A08A9800B822E1 /* libsequoia_openpgp_ffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1585EF4326A08A9800B822E1 /* libsequoia_openpgp_ffi.a */; };
 		15A3233E260E0D2A009D07EB /* libpEpASN1_iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15A322F7260E0B75009D07EB /* libpEpASN1_iOS.a */; };
 		15A32429260E1873009D07EB /* libpEpASN1_macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15A322F5260E0B75009D07EB /* libpEpASN1_macOS.a */; };
-		15A326E326120AB0009D07EB /* libPEPSQLITE3_iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15A3266426120618009D07EB /* libPEPSQLITE3_iOS.a */; };
-		15A326E826120AB6009D07EB /* libPEPSQLITE3_macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15A3266626120618009D07EB /* libPEPSQLITE3_macOS.a */; };
 		6400FB8B1B8CA1CF005221E3 /* libetpan-ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64289E371B8B630200FC617B /* libetpan-ios.a */; };
 		644297C51BE11CE0002BC73B /* system.db in Resources */ = {isa = PBXBuildFile; fileRef = 64951A1B1BE0FCD800B10E71 /* system.db */; };
 /* End PBXBuildFile section */
@@ -329,34 +327,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 15A3205D260E0345009D07EB;
 			remoteInfo = pEpASN1_iOS;
-		};
-		15A3265F26120618009D07EB /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 15A3261C2611F6B5009D07EB /* PEPSQLITE3.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 15A326322612055F009D07EB;
-			remoteInfo = PEPSQLITE3_iOS;
-		};
-		15A3266326120618009D07EB /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 15A3261C2611F6B5009D07EB /* PEPSQLITE3.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 15A326332612055F009D07EB;
-			remoteInfo = PEPSQLITE3_iOS;
-		};
-		15A3266526120618009D07EB /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 15A3261C2611F6B5009D07EB /* PEPSQLITE3.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 15A32653261205E7009D07EB;
-			remoteInfo = PEPSQLITE3_macOS;
-		};
-		15A3266726120623009D07EB /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 15A3261C2611F6B5009D07EB /* PEPSQLITE3.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 15A32652261205E7009D07EB;
-			remoteInfo = PEPSQLITE3_macOS;
 		};
 		15B21C3525FB8DD10097927A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -569,7 +539,6 @@
 		1585EF4326A08A9800B822E1 /* libsequoia_openpgp_ffi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsequoia_openpgp_ffi.a; path = "../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libsequoia_openpgp_ffi.a"; sourceTree = "<group>"; };
 		1585EF5A26A08B2000B822E1 /* CommonPEPDependencies.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = CommonPEPDependencies.xcodeproj; path = "../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/CommonPEPDependencies.xcodeproj"; sourceTree = "<group>"; };
 		15A3203B260E030B009D07EB /* pEpASN1.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = pEpASN1.xcodeproj; path = Subprojects/pEpASN1/pEpASN1.xcodeproj; sourceTree = "<group>"; };
-		15A3261C2611F6B5009D07EB /* PEPSQLITE3.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = PEPSQLITE3.xcodeproj; path = Subprojects/PEPSQLITE3/PEPSQLITE3.xcodeproj; sourceTree = "<group>"; };
 		4309FF0327315E560055C6C9 /* pEpTransport.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = pEpTransport.xcodeproj; path = "../../libpEpTransport/build-mac/pEpTransport.xcodeproj"; sourceTree = "<group>"; };
 		644297BF1BE11C65002BC73B /* pEpTrustWords.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = pEpTrustWords.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		644297C11BE11C65002BC73B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -583,7 +552,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				15A326E826120AB6009D07EB /* libPEPSQLITE3_macOS.a in Frameworks */,
 				15A32429260E1873009D07EB /* libpEpASN1_macOS.a in Frameworks */,
 				156AFEB82672089100AF0039 /* libetpan.a in Frameworks */,
 			);
@@ -600,7 +568,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				15A326E326120AB0009D07EB /* libPEPSQLITE3_iOS.a in Frameworks */,
 				15A3233E260E0D2A009D07EB /* libpEpASN1_iOS.a in Frameworks */,
 				6400FB8B1B8CA1CF005221E3 /* libetpan-ios.a in Frameworks */,
 				1585EF4426A08A9800B822E1 /* libgmp.a in Frameworks */,
@@ -662,15 +629,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		15A3261D2611F6B5009D07EB /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				15A3266426120618009D07EB /* libPEPSQLITE3_iOS.a */,
-				15A3266626120618009D07EB /* libPEPSQLITE3_macOS.a */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		4399C9C32747C70700F52599 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -701,7 +659,6 @@
 			isa = PBXGroup;
 			children = (
 				1585EF5A26A08B2000B822E1 /* CommonPEPDependencies.xcodeproj */,
-				15A3261C2611F6B5009D07EB /* PEPSQLITE3.xcodeproj */,
 				15A3203B260E030B009D07EB /* pEpASN1.xcodeproj */,
 				4309FF0327315E560055C6C9 /* pEpTransport.xcodeproj */,
 				64951A1B1BE0FCD800B10E71 /* system.db */,
@@ -1001,7 +958,6 @@
 				1585EF6D26A08B2E00B822E1 /* PBXTargetDependency */,
 				156AFE832670E6D800AF0039 /* PBXTargetDependency */,
 				151585FA26CE6A78003D8685 /* PBXTargetDependency */,
-				15A3266826120623009D07EB /* PBXTargetDependency */,
 				1508460725F24D1100D46DA6 /* PBXTargetDependency */,
 				15A32305260E0C6F009D07EB /* PBXTargetDependency */,
 			);
@@ -1043,7 +999,6 @@
 			dependencies = (
 				4399CA232747DA8A00F52599 /* PBXTargetDependency */,
 				1585EF6F26A08B3A00B822E1 /* PBXTargetDependency */,
-				15A3266026120618009D07EB /* PBXTargetDependency */,
 				15B21C3625FB8DD10097927A /* PBXTargetDependency */,
 				43D47AA1225CC82400E97C5B /* PBXTargetDependency */,
 				64289E3F1B8B638800FC617B /* PBXTargetDependency */,
@@ -1102,10 +1057,6 @@
 					ProjectRef = 15A3203B260E030B009D07EB /* pEpASN1.xcodeproj */;
 				},
 				{
-					ProductGroup = 15A3261D2611F6B5009D07EB /* Products */;
-					ProjectRef = 15A3261C2611F6B5009D07EB /* PEPSQLITE3.xcodeproj */;
-				},
-				{
 					ProductGroup = 4399C9C32747C70700F52599 /* Products */;
 					ProjectRef = 4309FF0327315E560055C6C9 /* pEpTransport.xcodeproj */;
 				},
@@ -1134,20 +1085,6 @@
 			fileType = archive.ar;
 			path = libpEpASN1_iOS.a;
 			remoteRef = 15A322F6260E0B75009D07EB /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		15A3266426120618009D07EB /* libPEPSQLITE3_iOS.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libPEPSQLITE3_iOS.a;
-			remoteRef = 15A3266326120618009D07EB /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		15A3266626120618009D07EB /* libPEPSQLITE3_macOS.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libPEPSQLITE3_macOS.a;
-			remoteRef = 15A3266526120618009D07EB /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		4399C9E42747C70700F52599 /* libpEpTransport_macOS.a */ = {
@@ -1449,17 +1386,6 @@
 			name = pEpASN1_iOS;
 			platformFilter = ios;
 			targetProxy = 15A323ED260E167D009D07EB /* PBXContainerItemProxy */;
-		};
-		15A3266026120618009D07EB /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = PEPSQLITE3_iOS;
-			platformFilter = ios;
-			targetProxy = 15A3265F26120618009D07EB /* PBXContainerItemProxy */;
-		};
-		15A3266826120623009D07EB /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = PEPSQLITE3_macOS;
-			targetProxy = 15A3266726120623009D07EB /* PBXContainerItemProxy */;
 		};
 		15B21C3625FB8DD10097927A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
