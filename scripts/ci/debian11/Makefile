@@ -1,6 +1,7 @@
 include ../../../DEPENDENCIES
 export
 PEP_MACHINE_DIR= $(PKG_INSTALL_PATH)/share/pEp
+PEPTRANSPORT_VERSION=${libpEpTransport}
 YML2_VERSION=${yml2}
 SEQUOIA_VERSION=$(shell echo ${sequoia} | sed 's/\//-/')
 CURRENT_DISTRO=$(shell basename $(shell pwd))
@@ -23,6 +24,7 @@ deps:
 		      --build-arg PEPENGINE_VERSION=$(PEPENGINE_VERSION) \
 		      --build-arg SEQUOIA_VERSION=$(SEQUOIA_VERSION) \
 		      --build-arg YML2_VERSION=$(YML2_VERSION) \
+		      --build-arg PEPTRANSPORT_VERSION=$(PEPTRANSPORT_VERSION) \
 		      --build-arg PEP_MACHINE_DIR=$(PEP_MACHINE_DIR) \
 		      --cache-from $(IMAGE_NAME):latest \
 		      --tag=$(IMAGE_NAME)-deps:$(SEQUOIA_VERSION)-$(YML2_VERSION) \

@@ -29,3 +29,14 @@ test -f configure || autoreconf -iv
 ./configure --prefix=${INSTPREFIX}/asn1c
 make -j$(nproc) && make install
 echo "${asn1c_ver}">${INSTPREFIX}/asn1c.ver
+
+### libpEpTransport
+git clone https://gitea.pep.foundation/pEp.foundation/libpEpTransport.git $BUILDROOT/libpEpTransport
+cd $BUILDROOT/libpEpTransport
+git checkout "${PEPTRANSPORT_VERSION}"
+cat >local.conf <<__LOCAL__
+PREFIX=${INSTPREFIX}
+YML2_PATH=${INSTPREFIX}/yml2
+__LOCAL__
+make src
+make install
