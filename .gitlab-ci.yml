@@ -20,8 +20,8 @@ debian10:deps:
   rules:
     - changes:
         - DEPENDENCIES
-        - scripts/debian10/deps.pEpEngine.debian10.Dockerfile
-        - scripts/common/build_pEpEngine_deps.sh
+        - scripts/ci/debian10/deps.pEpEngine.debian10.Dockerfile
+        - scripts/ci/common/build_pEpEngine_deps.sh
 
 debian10:build:
   tags:
@@ -29,7 +29,7 @@ debian10:build:
   stage: build
   image: ${DOCKER_REGISTRY_HOST}/pep-debian10-engine-deps:latest
   script:
-    - cd scripts/${CI_DISTRO_TARGET}
+    - cd scripts/ci/${CI_DISTRO_TARGET}
     - make ${MAKE_TARGET}
   variables:
     MAKE_TARGET: "build"
@@ -44,7 +44,7 @@ debian10:tagged-build:
   stage: build
   image: ${DOCKER_REGISTRY_HOST}/pep-debian10-engine-deps:latest
   script:
-    - cd scripts/${CI_DISTRO_TARGET}
+    - cd scripts/ci/${CI_DISTRO_TARGET}
     - make ${MAKE_TARGET}
   variables:
     MAKE_TARGET: "build"
