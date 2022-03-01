@@ -105,8 +105,14 @@
 		159EF42922B6D3E900149C0C /* pgp_sequoia_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 159EF42622B6D3E900149C0C /* pgp_sequoia_internal.h */; platformFilter = ios; };
 		15A3233E260E0D2A009D07EB /* libpEpASN1_iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15A322F7260E0B75009D07EB /* libpEpASN1_iOS.a */; };
 		15A32429260E1873009D07EB /* libpEpASN1_macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15A322F5260E0B75009D07EB /* libpEpASN1_macOS.a */; };
-		15A326E326120AB0009D07EB /* libPEPSQLITE3_iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15A3266426120618009D07EB /* libPEPSQLITE3_iOS.a */; };
-		15A326E826120AB6009D07EB /* libPEPSQLITE3_macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15A3266626120618009D07EB /* libPEPSQLITE3_macOS.a */; };
+		15CA756227C929E500DF63FE /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 15CA755E27C928B500DF63FE /* sqlite3.c */; };
+		15CA756327C929E500DF63FE /* security_checks.c in Sources */ = {isa = PBXBuildFile; fileRef = 15CA756027C928B500DF63FE /* security_checks.c */; };
+		15CA756427C929E600DF63FE /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 15CA755E27C928B500DF63FE /* sqlite3.c */; };
+		15CA756527C929E600DF63FE /* security_checks.c in Sources */ = {isa = PBXBuildFile; fileRef = 15CA756027C928B500DF63FE /* security_checks.c */; };
+		15CA756627C929EE00DF63FE /* security_checks.h in Headers */ = {isa = PBXBuildFile; fileRef = 15CA756127C928B500DF63FE /* security_checks.h */; };
+		15CA756727C929EE00DF63FE /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 15CA755F27C928B500DF63FE /* sqlite3.h */; };
+		15CA756827C929EF00DF63FE /* security_checks.h in Headers */ = {isa = PBXBuildFile; fileRef = 15CA756127C928B500DF63FE /* security_checks.h */; };
+		15CA756927C929EF00DF63FE /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 15CA755F27C928B500DF63FE /* sqlite3.h */; };
 		430BCC482015EE800077E998 /* pEp_string.h in Headers */ = {isa = PBXBuildFile; fileRef = 430BCC462015EE800077E998 /* pEp_string.h */; platformFilter = ios; };
 		430BCC492015EE800077E998 /* pEp_string.c in Sources */ = {isa = PBXBuildFile; fileRef = 430BCC472015EE800077E998 /* pEp_string.c */; };
 		430D258B1C9ED75A00B94535 /* blacklist.c in Sources */ = {isa = PBXBuildFile; fileRef = 430D258A1C9ED75A00B94535 /* blacklist.c */; };
@@ -219,34 +225,6 @@
 			remoteGlobalIDString = 15A3205D260E0345009D07EB;
 			remoteInfo = pEpASN1_iOS;
 		};
-		15A3265F26120618009D07EB /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 15A3261C2611F6B5009D07EB /* PEPSQLITE3.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 15A326322612055F009D07EB;
-			remoteInfo = PEPSQLITE3_iOS;
-		};
-		15A3266326120618009D07EB /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 15A3261C2611F6B5009D07EB /* PEPSQLITE3.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 15A326332612055F009D07EB;
-			remoteInfo = PEPSQLITE3_iOS;
-		};
-		15A3266526120618009D07EB /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 15A3261C2611F6B5009D07EB /* PEPSQLITE3.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 15A32653261205E7009D07EB;
-			remoteInfo = PEPSQLITE3_macOS;
-		};
-		15A3266726120623009D07EB /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 15A3261C2611F6B5009D07EB /* PEPSQLITE3.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 15A32652261205E7009D07EB;
-			remoteInfo = PEPSQLITE3_macOS;
-		};
 		15B21C3525FB8DD10097927A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 64796A371B455AA5004B1C24 /* Project object */;
@@ -329,7 +307,10 @@
 		159EF42522B6D3E900149C0C /* pgp_sequoia.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pgp_sequoia.h; path = ../src/pgp_sequoia.h; sourceTree = "<group>"; };
 		159EF42622B6D3E900149C0C /* pgp_sequoia_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pgp_sequoia_internal.h; path = ../src/pgp_sequoia_internal.h; sourceTree = "<group>"; };
 		15A3203B260E030B009D07EB /* pEpASN1.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = pEpASN1.xcodeproj; path = Subprojects/pEpASN1/pEpASN1.xcodeproj; sourceTree = "<group>"; };
-		15A3261C2611F6B5009D07EB /* PEPSQLITE3.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = PEPSQLITE3.xcodeproj; path = Subprojects/PEPSQLITE3/PEPSQLITE3.xcodeproj; sourceTree = "<group>"; };
+		15CA755E27C928B500DF63FE /* sqlite3.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = sqlite3.c; path = ../src/sqlite3.c; sourceTree = "<group>"; };
+		15CA755F27C928B500DF63FE /* sqlite3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = sqlite3.h; path = ../src/sqlite3.h; sourceTree = "<group>"; };
+		15CA756027C928B500DF63FE /* security_checks.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = security_checks.c; path = ../src/security_checks.c; sourceTree = "<group>"; };
+		15CA756127C928B500DF63FE /* security_checks.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = security_checks.h; path = ../src/security_checks.h; sourceTree = "<group>"; };
 		430BCC462015EE800077E998 /* pEp_string.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pEp_string.h; path = ../src/pEp_string.h; sourceTree = "<group>"; };
 		430BCC472015EE800077E998 /* pEp_string.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pEp_string.c; path = ../src/pEp_string.c; sourceTree = "<group>"; };
 		430D258A1C9ED75A00B94535 /* blacklist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = blacklist.c; path = ../src/blacklist.c; sourceTree = "<group>"; };
@@ -414,7 +395,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				15A326E826120AB6009D07EB /* libPEPSQLITE3_macOS.a in Frameworks */,
 				15A32429260E1873009D07EB /* libpEpASN1_macOS.a in Frameworks */,
 				156AFEB82672089100AF0039 /* libetpan.a in Frameworks */,
 			);
@@ -431,7 +411,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				15A326E326120AB0009D07EB /* libPEPSQLITE3_iOS.a in Frameworks */,
 				15A3233E260E0D2A009D07EB /* libpEpASN1_iOS.a in Frameworks */,
 				6400FB8B1B8CA1CF005221E3 /* libetpan-ios.a in Frameworks */,
 				1585EF4426A08A9800B822E1 /* libgmp.a in Frameworks */,
@@ -493,15 +472,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		15A3261D2611F6B5009D07EB /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				15A3266426120618009D07EB /* libPEPSQLITE3_iOS.a */,
-				15A3266626120618009D07EB /* libPEPSQLITE3_macOS.a */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		43188A5523C4A7F8008EF79C /* sync-generated */ = {
 			isa = PBXGroup;
 			children = (
@@ -541,7 +511,6 @@
 			isa = PBXGroup;
 			children = (
 				1585EF5A26A08B2000B822E1 /* CommonPEPDependencies.xcodeproj */,
-				15A3261C2611F6B5009D07EB /* PEPSQLITE3.xcodeproj */,
 				15A3203B260E030B009D07EB /* pEpASN1.xcodeproj */,
 				64951A1B1BE0FCD800B10E71 /* system.db */,
 				64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */,
@@ -567,6 +536,10 @@
 		64A8264B1B455C5600EECAF0 /* srcref */ = {
 			isa = PBXGroup;
 			children = (
+				15CA756027C928B500DF63FE /* security_checks.c */,
+				15CA756127C928B500DF63FE /* security_checks.h */,
+				15CA755E27C928B500DF63FE /* sqlite3.c */,
+				15CA755F27C928B500DF63FE /* sqlite3.h */,
 				43C3778D246A8C0300962D22 /* internal_format.c */,
 				43C37788246A8C0300962D22 /* internal_format.h */,
 				43188ABE23C4BBDD008EF79C /* distribution_codec.c */,
@@ -654,9 +627,11 @@
 				1543DA452577F8BE0041EFB5 /* Sync_func.h in Headers */,
 				1543DA4B2577F8BE0041EFB5 /* Sync_impl.h in Headers */,
 				1552DC492577D6C900A92F71 /* map_asn1.h in Headers */,
+				15CA756827C929EF00DF63FE /* security_checks.h in Headers */,
 				1552DC762577D70400A92F71 /* labeled_int_list.h in Headers */,
 				1552DC8A2577D71800A92F71 /* distribution_codec.h in Headers */,
 				1552DC872577D71800A92F71 /* growing_buf.h in Headers */,
+				15CA756927C929EF00DF63FE /* sqlite3.h in Headers */,
 				1552DC852577D71800A92F71 /* blacklist.h in Headers */,
 				1543DA462577F8BE0041EFB5 /* sync_codec.h in Headers */,
 				1552DC552577D6D700A92F71 /* pEp_string.h in Headers */,
@@ -684,6 +659,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				438C43B52167752C00C7425B /* labeled_int_list.h in Headers */,
+				15CA756627C929EE00DF63FE /* security_checks.h in Headers */,
 				159EF42822B6D3E900149C0C /* pgp_sequoia.h in Headers */,
 				43C3778E246A8C0300962D22 /* internal_format.h in Headers */,
 				154918AB22B940200091B6D6 /* fsm_common.h in Headers */,
@@ -701,6 +677,7 @@
 				43188A9923C4B2DE008EF79C /* Sync_func.h in Headers */,
 				431F04B722733A7E00CCE960 /* key_reset.h in Headers */,
 				64A8268C1B455D9D00EECAF0 /* pEpEngine.h in Headers */,
+				15CA756727C929EE00DF63FE /* sqlite3.h in Headers */,
 				154918AC22B940200091B6D6 /* status_to_string.h in Headers */,
 				1585EC1B269C33FB00B822E1 /* stringlist.h in Headers */,
 				430BCC482015EE800077E998 /* pEp_string.h in Headers */,
@@ -728,7 +705,6 @@
 			dependencies = (
 				1585EF6D26A08B2E00B822E1 /* PBXTargetDependency */,
 				156AFE832670E6D800AF0039 /* PBXTargetDependency */,
-				15A3266826120623009D07EB /* PBXTargetDependency */,
 				15B21C3F25FB8E160097927A /* PBXTargetDependency */,
 				1508460725F24D1100D46DA6 /* PBXTargetDependency */,
 				15A32305260E0C6F009D07EB /* PBXTargetDependency */,
@@ -770,7 +746,6 @@
 			);
 			dependencies = (
 				1585EF6F26A08B3A00B822E1 /* PBXTargetDependency */,
-				15A3266026120618009D07EB /* PBXTargetDependency */,
 				15B21C3625FB8DD10097927A /* PBXTargetDependency */,
 				43D47AA1225CC82400E97C5B /* PBXTargetDependency */,
 				64289E3F1B8B638800FC617B /* PBXTargetDependency */,
@@ -828,10 +803,6 @@
 					ProductGroup = 15A3203C260E030B009D07EB /* Products */;
 					ProjectRef = 15A3203B260E030B009D07EB /* pEpASN1.xcodeproj */;
 				},
-				{
-					ProductGroup = 15A3261D2611F6B5009D07EB /* Products */;
-					ProjectRef = 15A3261C2611F6B5009D07EB /* PEPSQLITE3.xcodeproj */;
-				},
 			);
 			projectRoot = "";
 			targets = (
@@ -856,20 +827,6 @@
 			fileType = archive.ar;
 			path = libpEpASN1_iOS.a;
 			remoteRef = 15A322F6260E0B75009D07EB /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		15A3266426120618009D07EB /* libPEPSQLITE3_iOS.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libPEPSQLITE3_iOS.a;
-			remoteRef = 15A3266326120618009D07EB /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		15A3266626120618009D07EB /* libPEPSQLITE3_macOS.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libPEPSQLITE3_macOS.a;
-			remoteRef = 15A3266526120618009D07EB /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		64289E351B8B630200FC617B /* libetpan.a */ = {
@@ -1003,6 +960,7 @@
 				1552DC6A2577D6F900A92F71 /* pgp_sequoia.c in Sources */,
 				1552DB162577D4F100A92F71 /* pEpEngine_macOS.m in Sources */,
 				1552DC152577D68F00A92F71 /* platform_unix.c in Sources */,
+				15CA756327C929E500DF63FE /* security_checks.c in Sources */,
 				1552DC212577D6A000A92F71 /* mime.c in Sources */,
 				1552DC0D2577D68500A92F71 /* stringpair.c in Sources */,
 				1552DC592577D6DB00A92F71 /* pEp_string.c in Sources */,
@@ -1014,6 +972,7 @@
 				1552DC6E2577D6F900A92F71 /* base64.c in Sources */,
 				1552DC2D2577D6AE00A92F71 /* keymanagement.c in Sources */,
 				1543DA422577F8BE0041EFB5 /* Sync_actions.c in Sources */,
+				15CA756227C929E500DF63FE /* sqlite3.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1046,10 +1005,12 @@
 				64A8267C1B455D0800EECAF0 /* identity_list.c in Sources */,
 				43F73C0D2166282C00AB4524 /* key_reset.c in Sources */,
 				64A8268A1B455D0800EECAF0 /* transport.c in Sources */,
+				15CA756527C929E600DF63FE /* security_checks.c in Sources */,
 				64A826791B455D0800EECAF0 /* cryptotech.c in Sources */,
 				64A826781B455D0800EECAF0 /* bloblist.c in Sources */,
 				43188A9F23C4B2DE008EF79C /* Sync_actions.c in Sources */,
 				C46EBAED216E445F0042A6A3 /* base64.c in Sources */,
+				15CA756427C929E600DF63FE /* sqlite3.c in Sources */,
 				430BCC492015EE800077E998 /* pEp_string.c in Sources */,
 				43F73C0B2166282C00AB4524 /* openpgp_compat.c in Sources */,
 				64A826881B455D0800EECAF0 /* timestamp.c in Sources */,
@@ -1103,17 +1064,6 @@
 			name = pEpASN1_iOS;
 			platformFilter = ios;
 			targetProxy = 15A323ED260E167D009D07EB /* PBXContainerItemProxy */;
-		};
-		15A3266026120618009D07EB /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = PEPSQLITE3_iOS;
-			platformFilter = ios;
-			targetProxy = 15A3265F26120618009D07EB /* PBXContainerItemProxy */;
-		};
-		15A3266826120623009D07EB /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = PEPSQLITE3_macOS;
-			targetProxy = 15A3266726120623009D07EB /* PBXContainerItemProxy */;
 		};
 		15B21C3625FB8DD10097927A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
