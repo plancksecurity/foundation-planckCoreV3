@@ -34,14 +34,7 @@
 		1543DA4C2577F8BE0041EFB5 /* Sync_event.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A8823C4B2DD008EF79C /* Sync_event.h */; };
 		1543DAA9257801880041EFB5 /* baseprotocol.c in Sources */ = {isa = PBXBuildFile; fileRef = 646C414C1D510D8800C63EFF /* baseprotocol.c */; };
 		1543DAAD257801A90041EFB5 /* resource_id.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F6921C1F164A47009418F5 /* resource_id.c */; };
-		154918AB22B940200091B6D6 /* fsm_common.h in Headers */ = {isa = PBXBuildFile; fileRef = 1549189222B9401D0091B6D6 /* fsm_common.h */; platformFilter = ios; };
-		154918AC22B940200091B6D6 /* status_to_string.h in Headers */ = {isa = PBXBuildFile; fileRef = 1549189322B9401E0091B6D6 /* status_to_string.h */; platformFilter = ios; };
-		154918B222B940200091B6D6 /* aux_mime_msg.h in Headers */ = {isa = PBXBuildFile; fileRef = 1549189922B9401E0091B6D6 /* aux_mime_msg.h */; platformFilter = ios; };
-		154918BA22B940200091B6D6 /* resource_id.h in Headers */ = {isa = PBXBuildFile; fileRef = 154918A122B9401F0091B6D6 /* resource_id.h */; platformFilter = ios; };
 		154918BB22B940200091B6D6 /* aux_mime_msg.c in Sources */ = {isa = PBXBuildFile; fileRef = 154918A222B9401F0091B6D6 /* aux_mime_msg.c */; };
-		154918BC22B940200091B6D6 /* openpgp_compat.h in Headers */ = {isa = PBXBuildFile; fileRef = 154918A322B9401F0091B6D6 /* openpgp_compat.h */; platformFilter = ios; };
-		154918BD22B940200091B6D6 /* growing_buf.h in Headers */ = {isa = PBXBuildFile; fileRef = 154918A422B9401F0091B6D6 /* growing_buf.h */; };
-		154918C322B940200091B6D6 /* blacklist.h in Headers */ = {isa = PBXBuildFile; fileRef = 154918AA22B940200091B6D6 /* blacklist.h */; platformFilter = ios; };
 		1552DB142577D4F100A92F71 /* pEpEngine_macOS.h in Headers */ = {isa = PBXBuildFile; fileRef = 1552DB132577D4F100A92F71 /* pEpEngine_macOS.h */; };
 		1552DB162577D4F100A92F71 /* pEpEngine_macOS.m in Sources */ = {isa = PBXBuildFile; fileRef = 1552DB152577D4F100A92F71 /* pEpEngine_macOS.m */; };
 		1552DC012577D67800A92F71 /* transport.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826751B455D0800EECAF0 /* transport.c */; };
@@ -50,7 +43,6 @@
 		1552DC0D2577D68500A92F71 /* stringpair.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8266F1B455D0800EECAF0 /* stringpair.c */; };
 		1552DC112577D68900A92F71 /* stringlist.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8266D1B455D0800EECAF0 /* stringlist.c */; };
 		1552DC152577D68F00A92F71 /* platform_unix.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826651B455D0800EECAF0 /* platform_unix.c */; };
-		1552DC192577D69300A92F71 /* pEpEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = 64A826611B455D0800EECAF0 /* pEpEngine.h */; };
 		1552DC1D2577D69A00A92F71 /* pEpEngine.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826601B455D0800EECAF0 /* pEpEngine.c */; };
 		1552DC212577D6A000A92F71 /* mime.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8265D1B455D0800EECAF0 /* mime.c */; };
 		1552DC252577D6A600A92F71 /* message.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8265B1B455D0800EECAF0 /* message.c */; };
@@ -62,10 +54,7 @@
 		1552DC3D2577D6BE00A92F71 /* cryptotech.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8264E1B455D0800EECAF0 /* cryptotech.c */; };
 		1552DC412577D6C200A92F71 /* bloblist.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8264C1B455D0800EECAF0 /* bloblist.c */; };
 		1552DC452577D6C600A92F71 /* blacklist.c in Sources */ = {isa = PBXBuildFile; fileRef = 430D258A1C9ED75A00B94535 /* blacklist.c */; };
-		1552DC492577D6C900A92F71 /* map_asn1.h in Headers */ = {isa = PBXBuildFile; fileRef = 646788881CEB3D120001F54C /* map_asn1.h */; };
 		1552DC4D2577D6CD00A92F71 /* map_asn1.c in Sources */ = {isa = PBXBuildFile; fileRef = 646788871CEB3D120001F54C /* map_asn1.c */; };
-		1552DC512577D6D000A92F71 /* baseprotocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 646C414D1D510D8800C63EFF /* baseprotocol.h */; };
-		1552DC552577D6D700A92F71 /* pEp_string.h in Headers */ = {isa = PBXBuildFile; fileRef = 430BCC462015EE800077E998 /* pEp_string.h */; };
 		1552DC592577D6DB00A92F71 /* pEp_string.c in Sources */ = {isa = PBXBuildFile; fileRef = 430BCC472015EE800077E998 /* pEp_string.c */; };
 		1552DC5D2577D6DE00A92F71 /* sync_api.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73C092166282C00AB4524 /* sync_api.c */; };
 		1552DC612577D6E000A92F71 /* openpgp_compat.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73C032166282C00AB4524 /* openpgp_compat.c */; };
@@ -78,42 +67,18 @@
 		1552DC6C2577D6F900A92F71 /* key_reset.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73C052166282C00AB4524 /* key_reset.c */; };
 		1552DC6D2577D6F900A92F71 /* aux_mime_msg.c in Sources */ = {isa = PBXBuildFile; fileRef = 154918A222B9401F0091B6D6 /* aux_mime_msg.c */; };
 		1552DC6E2577D6F900A92F71 /* base64.c in Sources */ = {isa = PBXBuildFile; fileRef = C46EBAE7216E445F0042A6A3 /* base64.c */; };
-		1552DC722577D70000A92F71 /* key_reset.h in Headers */ = {isa = PBXBuildFile; fileRef = 431F04B222733A7E00CCE960 /* key_reset.h */; };
-		1552DC762577D70400A92F71 /* labeled_int_list.h in Headers */ = {isa = PBXBuildFile; fileRef = 438C43AF2167752C00C7425B /* labeled_int_list.h */; };
-		1552DC7A2577D70700A92F71 /* base64.h in Headers */ = {isa = PBXBuildFile; fileRef = C46EBAEC216E445F0042A6A3 /* base64.h */; };
-		1552DC7F2577D71800A92F71 /* pgp_sequoia_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 159EF42622B6D3E900149C0C /* pgp_sequoia_internal.h */; };
-		1552DC802577D71800A92F71 /* fsm_common.h in Headers */ = {isa = PBXBuildFile; fileRef = 1549189222B9401D0091B6D6 /* fsm_common.h */; };
-		1552DC812577D71800A92F71 /* aux_mime_msg.h in Headers */ = {isa = PBXBuildFile; fileRef = 1549189922B9401E0091B6D6 /* aux_mime_msg.h */; };
-		1552DC822577D71800A92F71 /* resource_id.h in Headers */ = {isa = PBXBuildFile; fileRef = 154918A122B9401F0091B6D6 /* resource_id.h */; };
-		1552DC832577D71800A92F71 /* openpgp_compat.h in Headers */ = {isa = PBXBuildFile; fileRef = 154918A322B9401F0091B6D6 /* openpgp_compat.h */; };
-		1552DC842577D71800A92F71 /* keyreset_command.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188AA723C4B4B3008EF79C /* keyreset_command.h */; };
-		1552DC852577D71800A92F71 /* blacklist.h in Headers */ = {isa = PBXBuildFile; fileRef = 154918AA22B940200091B6D6 /* blacklist.h */; };
-		1552DC862577D71800A92F71 /* pgp_sequoia.h in Headers */ = {isa = PBXBuildFile; fileRef = 159EF42522B6D3E900149C0C /* pgp_sequoia.h */; };
-		1552DC872577D71800A92F71 /* growing_buf.h in Headers */ = {isa = PBXBuildFile; fileRef = 154918A422B9401F0091B6D6 /* growing_buf.h */; };
-		1552DC882577D71800A92F71 /* internal_format.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C37788246A8C0300962D22 /* internal_format.h */; };
-		1552DC892577D71800A92F71 /* status_to_string.h in Headers */ = {isa = PBXBuildFile; fileRef = 1549189322B9401E0091B6D6 /* status_to_string.h */; };
-		1552DC8A2577D71800A92F71 /* distribution_codec.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188ABF23C4BBDE008EF79C /* distribution_codec.h */; };
 		156AFEB82672089100AF0039 /* libetpan.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64289E351B8B630200FC617B /* libetpan.a */; };
-		1585EC1B269C33FB00B822E1 /* stringlist.h in Headers */ = {isa = PBXBuildFile; fileRef = 64A8266E1B455D0800EECAF0 /* stringlist.h */; platformFilter = ios; settings = {ATTRIBUTES = (Public, ); }; };
-		1585EC1F269C351100B822E1 /* stringlist.h in Headers */ = {isa = PBXBuildFile; fileRef = 64A8266E1B455D0800EECAF0 /* stringlist.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1585EF4426A08A9800B822E1 /* libgmp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1585EF4026A08A9800B822E1 /* libgmp.a */; };
 		1585EF4526A08A9800B822E1 /* libnettle.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1585EF4126A08A9800B822E1 /* libnettle.a */; };
 		1585EF4626A08A9800B822E1 /* libhogweed.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1585EF4226A08A9800B822E1 /* libhogweed.a */; };
 		1585EF4726A08A9800B822E1 /* libsequoia_openpgp_ffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1585EF4326A08A9800B822E1 /* libsequoia_openpgp_ffi.a */; };
 		159EF42722B6D3E900149C0C /* pgp_sequoia.c in Sources */ = {isa = PBXBuildFile; fileRef = 159EF42422B6D3E900149C0C /* pgp_sequoia.c */; };
-		159EF42822B6D3E900149C0C /* pgp_sequoia.h in Headers */ = {isa = PBXBuildFile; fileRef = 159EF42522B6D3E900149C0C /* pgp_sequoia.h */; platformFilter = ios; };
-		159EF42922B6D3E900149C0C /* pgp_sequoia_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 159EF42622B6D3E900149C0C /* pgp_sequoia_internal.h */; platformFilter = ios; };
 		15A3233E260E0D2A009D07EB /* libpEpASN1_iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15A322F7260E0B75009D07EB /* libpEpASN1_iOS.a */; };
 		15A32429260E1873009D07EB /* libpEpASN1_macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15A322F5260E0B75009D07EB /* libpEpASN1_macOS.a */; };
 		15CA756227C929E500DF63FE /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 15CA755E27C928B500DF63FE /* sqlite3.c */; };
 		15CA756327C929E500DF63FE /* security_checks.c in Sources */ = {isa = PBXBuildFile; fileRef = 15CA756027C928B500DF63FE /* security_checks.c */; };
 		15CA756427C929E600DF63FE /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 15CA755E27C928B500DF63FE /* sqlite3.c */; };
 		15CA756527C929E600DF63FE /* security_checks.c in Sources */ = {isa = PBXBuildFile; fileRef = 15CA756027C928B500DF63FE /* security_checks.c */; };
-		15CA756627C929EE00DF63FE /* security_checks.h in Headers */ = {isa = PBXBuildFile; fileRef = 15CA756127C928B500DF63FE /* security_checks.h */; };
-		15CA756727C929EE00DF63FE /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 15CA755F27C928B500DF63FE /* sqlite3.h */; };
-		15CA756827C929EF00DF63FE /* security_checks.h in Headers */ = {isa = PBXBuildFile; fileRef = 15CA756127C928B500DF63FE /* security_checks.h */; };
-		15CA756927C929EF00DF63FE /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 15CA755F27C928B500DF63FE /* sqlite3.h */; };
-		430BCC482015EE800077E998 /* pEp_string.h in Headers */ = {isa = PBXBuildFile; fileRef = 430BCC462015EE800077E998 /* pEp_string.h */; platformFilter = ios; };
 		430BCC492015EE800077E998 /* pEp_string.c in Sources */ = {isa = PBXBuildFile; fileRef = 430BCC472015EE800077E998 /* pEp_string.c */; };
 		430D258B1C9ED75A00B94535 /* blacklist.c in Sources */ = {isa = PBXBuildFile; fileRef = 430D258A1C9ED75A00B94535 /* blacklist.c */; };
 		43188A9323C4B2DE008EF79C /* sync_codec.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A8623C4B2DD008EF79C /* sync_codec.c */; };
@@ -128,13 +93,8 @@
 		43188A9E23C4B2DE008EF79C /* sync_codec.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A9123C4B2DE008EF79C /* sync_codec.h */; platformFilter = ios; };
 		43188A9F23C4B2DE008EF79C /* Sync_actions.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A9223C4B2DE008EF79C /* Sync_actions.c */; };
 		43188AA823C4B4B3008EF79C /* keyreset_command.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188AA223C4B4B3008EF79C /* keyreset_command.c */; };
-		43188AA923C4B4B3008EF79C /* keyreset_command.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188AA723C4B4B3008EF79C /* keyreset_command.h */; platformFilter = ios; };
 		43188AC023C4BBDE008EF79C /* distribution_codec.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188ABE23C4BBDD008EF79C /* distribution_codec.c */; };
-		43188AC123C4BBDE008EF79C /* distribution_codec.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188ABF23C4BBDE008EF79C /* distribution_codec.h */; platformFilter = ios; };
-		431F04B722733A7E00CCE960 /* key_reset.h in Headers */ = {isa = PBXBuildFile; fileRef = 431F04B222733A7E00CCE960 /* key_reset.h */; platformFilter = ios; };
-		438C43B52167752C00C7425B /* labeled_int_list.h in Headers */ = {isa = PBXBuildFile; fileRef = 438C43AF2167752C00C7425B /* labeled_int_list.h */; platformFilter = ios; };
 		438C43B62167752C00C7425B /* labeled_int_list.c in Sources */ = {isa = PBXBuildFile; fileRef = 438C43B42167752C00C7425B /* labeled_int_list.c */; };
-		43C3778E246A8C0300962D22 /* internal_format.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C37788246A8C0300962D22 /* internal_format.h */; platformFilter = ios; };
 		43C3778F246A8C0300962D22 /* internal_format.c in Sources */ = {isa = PBXBuildFile; fileRef = 43C3778D246A8C0300962D22 /* internal_format.c */; };
 		43F6921D1F164A47009418F5 /* resource_id.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F6921C1F164A47009418F5 /* resource_id.c */; };
 		43F73C0B2166282C00AB4524 /* openpgp_compat.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73C032166282C00AB4524 /* openpgp_compat.c */; };
@@ -144,9 +104,7 @@
 		6400FB8B1B8CA1CF005221E3 /* libetpan-ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64289E371B8B630200FC617B /* libetpan-ios.a */; };
 		644297C51BE11CE0002BC73B /* system.db in Resources */ = {isa = PBXBuildFile; fileRef = 64951A1B1BE0FCD800B10E71 /* system.db */; };
 		6467888C1CEB3D120001F54C /* map_asn1.c in Sources */ = {isa = PBXBuildFile; fileRef = 646788871CEB3D120001F54C /* map_asn1.c */; };
-		6467888D1CEB3D120001F54C /* map_asn1.h in Headers */ = {isa = PBXBuildFile; fileRef = 646788881CEB3D120001F54C /* map_asn1.h */; platformFilter = ios; };
 		646C414E1D510D8800C63EFF /* baseprotocol.c in Sources */ = {isa = PBXBuildFile; fileRef = 646C414C1D510D8800C63EFF /* baseprotocol.c */; };
-		646C414F1D510D8800C63EFF /* baseprotocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 646C414D1D510D8800C63EFF /* baseprotocol.h */; platformFilter = ios; };
 		64A826781B455D0800EECAF0 /* bloblist.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8264C1B455D0800EECAF0 /* bloblist.c */; };
 		64A826791B455D0800EECAF0 /* cryptotech.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8264E1B455D0800EECAF0 /* cryptotech.c */; };
 		64A8267A1B455D0800EECAF0 /* email.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826511B455D0800EECAF0 /* email.c */; };
@@ -163,9 +121,7 @@
 		64A826881B455D0800EECAF0 /* timestamp.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826711B455D0800EECAF0 /* timestamp.c */; };
 		64A826891B455D0800EECAF0 /* trans_auto.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826731B455D0800EECAF0 /* trans_auto.c */; };
 		64A8268A1B455D0800EECAF0 /* transport.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826751B455D0800EECAF0 /* transport.c */; };
-		64A8268C1B455D9D00EECAF0 /* pEpEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = 64A826611B455D0800EECAF0 /* pEpEngine.h */; platformFilter = ios; };
 		C46EBAED216E445F0042A6A3 /* base64.c in Sources */ = {isa = PBXBuildFile; fileRef = C46EBAE7216E445F0042A6A3 /* base64.c */; };
-		C46EBAEE216E445F0042A6A3 /* base64.h in Headers */ = {isa = PBXBuildFile; fileRef = C46EBAEC216E445F0042A6A3 /* base64.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -623,34 +579,12 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1552DC722577D70000A92F71 /* key_reset.h in Headers */,
 				1543DA452577F8BE0041EFB5 /* Sync_func.h in Headers */,
 				1543DA4B2577F8BE0041EFB5 /* Sync_impl.h in Headers */,
-				1552DC492577D6C900A92F71 /* map_asn1.h in Headers */,
-				15CA756827C929EF00DF63FE /* security_checks.h in Headers */,
-				1552DC762577D70400A92F71 /* labeled_int_list.h in Headers */,
-				1552DC8A2577D71800A92F71 /* distribution_codec.h in Headers */,
-				1552DC872577D71800A92F71 /* growing_buf.h in Headers */,
-				15CA756927C929EF00DF63FE /* sqlite3.h in Headers */,
-				1552DC852577D71800A92F71 /* blacklist.h in Headers */,
 				1543DA462577F8BE0041EFB5 /* sync_codec.h in Headers */,
-				1552DC552577D6D700A92F71 /* pEp_string.h in Headers */,
-				1552DC192577D69300A92F71 /* pEpEngine.h in Headers */,
-				1585EC1F269C351100B822E1 /* stringlist.h in Headers */,
 				1543DA492577F8BE0041EFB5 /* KeySync_fsm.h in Headers */,
 				1552DB142577D4F100A92F71 /* pEpEngine_macOS.h in Headers */,
-				1552DC842577D71800A92F71 /* keyreset_command.h in Headers */,
-				1552DC7F2577D71800A92F71 /* pgp_sequoia_internal.h in Headers */,
 				1543DA4C2577F8BE0041EFB5 /* Sync_event.h in Headers */,
-				1552DC512577D6D000A92F71 /* baseprotocol.h in Headers */,
-				1552DC802577D71800A92F71 /* fsm_common.h in Headers */,
-				1552DC862577D71800A92F71 /* pgp_sequoia.h in Headers */,
-				1552DC832577D71800A92F71 /* openpgp_compat.h in Headers */,
-				1552DC822577D71800A92F71 /* resource_id.h in Headers */,
-				1552DC882577D71800A92F71 /* internal_format.h in Headers */,
-				1552DC892577D71800A92F71 /* status_to_string.h in Headers */,
-				1552DC7A2577D70700A92F71 /* base64.h in Headers */,
-				1552DC812577D71800A92F71 /* aux_mime_msg.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -658,33 +592,11 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				438C43B52167752C00C7425B /* labeled_int_list.h in Headers */,
-				15CA756627C929EE00DF63FE /* security_checks.h in Headers */,
-				159EF42822B6D3E900149C0C /* pgp_sequoia.h in Headers */,
-				43C3778E246A8C0300962D22 /* internal_format.h in Headers */,
-				154918AB22B940200091B6D6 /* fsm_common.h in Headers */,
 				43188A9523C4B2DE008EF79C /* Sync_event.h in Headers */,
-				43188AC123C4BBDE008EF79C /* distribution_codec.h in Headers */,
-				154918BC22B940200091B6D6 /* openpgp_compat.h in Headers */,
-				154918B222B940200091B6D6 /* aux_mime_msg.h in Headers */,
 				43188A9623C4B2DE008EF79C /* KeySync_fsm.h in Headers */,
-				646C414F1D510D8800C63EFF /* baseprotocol.h in Headers */,
 				43188A9423C4B2DE008EF79C /* Sync_impl.h in Headers */,
-				154918C322B940200091B6D6 /* blacklist.h in Headers */,
 				43188A9E23C4B2DE008EF79C /* sync_codec.h in Headers */,
-				6467888D1CEB3D120001F54C /* map_asn1.h in Headers */,
-				154918BA22B940200091B6D6 /* resource_id.h in Headers */,
 				43188A9923C4B2DE008EF79C /* Sync_func.h in Headers */,
-				431F04B722733A7E00CCE960 /* key_reset.h in Headers */,
-				64A8268C1B455D9D00EECAF0 /* pEpEngine.h in Headers */,
-				15CA756727C929EE00DF63FE /* sqlite3.h in Headers */,
-				154918AC22B940200091B6D6 /* status_to_string.h in Headers */,
-				1585EC1B269C33FB00B822E1 /* stringlist.h in Headers */,
-				430BCC482015EE800077E998 /* pEp_string.h in Headers */,
-				159EF42922B6D3E900149C0C /* pgp_sequoia_internal.h in Headers */,
-				43188AA923C4B4B3008EF79C /* keyreset_command.h in Headers */,
-				154918BD22B940200091B6D6 /* growing_buf.h in Headers */,
-				C46EBAEE216E445F0042A6A3 /* base64.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
