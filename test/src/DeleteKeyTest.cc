@@ -313,7 +313,8 @@ TEST_F(DeleteKeyTest, check_delete_all_keys) {
 
     // Great, now delete it.
     status = delete_keypair(session, alice_fpr);
-    ASSERT_EQ(status, PEP_STATUS_OK);
+    // This will fail: we never delete own key material.
+    ASSERT_EQ(status, PEP_KEY_UNSUITABLE);
 
     status = delete_keypair(session, bob_fpr);
     ASSERT_EQ(status, PEP_STATUS_OK);
@@ -330,10 +331,12 @@ TEST_F(DeleteKeyTest, check_delete_all_keys) {
     status = delete_keypair(session, fenris_fpr);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
-    // Is it gone?
+    // Is it gone?  Only Alice's own key should have survived.
     status = find_keys(session, alice_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_EQ(keylist, nullptr);
+    ASSERT_NE(keylist, nullptr);
+    ASSERT_EQ(keylist->next, nullptr);
+    ASSERT_EQ(std::string(keylist->value), alice_fpr);
     free_stringlist(keylist);
     keylist = NULL;
 
