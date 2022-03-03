@@ -180,14 +180,18 @@ TEST_F(DeleteKeyTest, check_delete_pub_priv_keypair) {
     free_stringlist(keylist);
     keylist = NULL;
 
-    // Great, now delete it.
+    // Great, now delete it.  This will fail, because the key is own.
     status = delete_keypair(session, alice_fpr);
-    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(status, PEP_KEY_UNSUITABLE);
 
-    // Is it gone?
+    // Is it gone?  Alice's key should still be there.
     status = find_keys(session, alice_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_EQ(keylist, nullptr);
+    ASSERT_NE(keylist, nullptr);
+    ASSERT_STREQ(keylist->value, alice_fpr);
+    ASSERT_EQ(keylist->next, nullptr);
+    free_stringlist(keylist);
+    keylist = NULL;
 
     // Yay.
 }
