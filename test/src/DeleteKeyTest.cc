@@ -340,7 +340,7 @@ TEST_F(DeleteKeyTest, check_delete_all_keys) {
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NE(keylist, nullptr);
     ASSERT_EQ(keylist->next, nullptr);
-    ASSERT_EQ(std::string(keylist->value), alice_fpr);
+    ASSERT_STREQ(keylist->value, alice_fpr);
     free_stringlist(keylist);
     keylist = NULL;
 
