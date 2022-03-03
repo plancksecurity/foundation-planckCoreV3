@@ -663,7 +663,8 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
          // if we got an fpr which is default for either user
          // or identity AND is valid for this address, set in DB
          // as default
-         status = set_identity(session, return_id);
+         status = set_identity(session, return_id); // positron: no!  This is supposed to ignore fpr, so this will not work
+                                                    //           and was not working before either
     } 
     else if (no_stored_default && !EMPTYSTR(return_id->fpr) 
              && return_id->comm_type != PEP_ct_key_revoked
@@ -672,14 +673,14 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
              && return_id->comm_type != PEP_ct_mistrusted 
              && return_id->comm_type != PEP_ct_key_b0rken) { 
         // We would have stored this anyway for a first-time elected key. We just have an ident w/ no default already.
-        status = set_identity(session, return_id);
+        status = set_identity(session, return_id);  // positron: same, this will not store the key.  Has it ever worked?
     }
     else { // this is a key other than the default, but there IS a default (FIXME: fdik, do we really want behaviour below?)
         // Store without default fpr/ct, but return the fpr and ct 
         // for current use
         char* save_fpr = return_id->fpr;
         PEP_comm_type save_ct = return_id->comm_type;
-        return_id->fpr = NULL;
+        return_id->fpr = NULL; // positron: again, this is based on the wrong assumption that set_identity stores the fpr
         return_id->comm_type = PEP_ct_unknown;
         PEP_STATUS save_status = status;
         status = set_identity(session, return_id);
