@@ -222,9 +222,9 @@ TEST_F(DeleteKeyTest, check_delete_multiple_keys) {
     free_stringlist(keylist);
     keylist = NULL;
 
-    // Great, now delete it.
+    // Great, now try and delete it: it will not work because it is an own key.
     status = delete_keypair(session, alice_fpr);
-    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(status, PEP_KEY_UNSUITABLE);
 
     status = delete_keypair(session, dave_fpr);
     ASSERT_EQ(status, PEP_STATUS_OK);
@@ -232,10 +232,10 @@ TEST_F(DeleteKeyTest, check_delete_multiple_keys) {
     status = delete_keypair(session, fenris_fpr);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
-    // Is it gone?
+    // Is it gone?  Alice's one should remain, while the others should not.
     status = find_keys(session, alice_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_EQ(keylist, nullptr);
+    ASSERT_NE(keylist, nullptr);
 
     status = find_keys(session, dave_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
