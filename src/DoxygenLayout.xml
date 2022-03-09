@@ -3,7 +3,6 @@
   <!-- Navigation index tabs for HTML output -->
   <navindex>
     <tab type="mainpage" visible="yes" title=""/>
-    <tab type="pages" visible="yes" title="" intro=""/>
     <tab type="modules" visible="yes" title="" intro=""/>
     <tab type="namespaces" visible="yes" title="">
       <tab type="namespacelist" visible="yes" title="" intro=""/>
@@ -15,6 +14,10 @@
       <tab type="interfacelist" visible="yes" title="" intro=""/>
       <tab type="interfaceindex" visible="$ALPHABETICAL_INDEX" title=""/>
       <tab type="interfacehierarchy" visible="yes" title="" intro=""/>
+    </tab>
+    <tab type="user" visible="yes" title="Functions" url="globals_func.html" intro="">
+      <tab type="functionlist" visible="yes" title="" intro=""/>
+      <tab type="functionindex" visible="$ALPHABETICAL_INDEX" title=""/>
     </tab>
     <tab type="classes" visible="yes" title="">
       <tab type="classlist" visible="yes" title="" intro=""/>
@@ -36,10 +39,7 @@
       <tab type="globals" visible="yes" title="" intro=""/>
     </tab>
     <tab type="examples" visible="yes" title="" intro=""/>
-    <tab type="user" visible="yes" title="Functions" url="globals_func.html" intro="">
-      <tab type="functionlist" visible="yes" title="" intro=""/>
-      <tab type="functionindex" visible="$ALPHABETICAL_INDEX" title=""/>
-    </tab>
+    <tab type="pages" visible="yes" title="" intro=""/>
   </navindex>
 
   <!-- Layout definition for a class page -->
