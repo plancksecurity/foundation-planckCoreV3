@@ -1,4 +1,5 @@
 /// @file group_internal.h
+/// @internal
 /// @brief  Internal functions for representation of groups
 /// @license This file is under GNU General Public License 3.0 - see LICENSE.txt
 
@@ -237,6 +238,7 @@ identity_list* member_list_to_identity_list(member_list* memberlist);
 
 /**
  *
+ * @internal
  * @param session
  * @param group_identity
  * @param manager
@@ -248,6 +250,7 @@ PEP_STATUS get_group_manager(PEP_SESSION session,
 
 /**
  *
+ * @internal
  * @param session
  * @param group_identity
  * @param own_manager
@@ -257,6 +260,7 @@ PEP_STATUS is_group_mine(PEP_SESSION session, pEp_identity* group_identity, bool
 
 /**
  *
+ * @internal
  * @param session
  * @param group_identity
  * @param member

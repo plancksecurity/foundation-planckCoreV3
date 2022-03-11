@@ -3,6 +3,7 @@
 
 /**
  * @file platform_disable_attributes.h
+ * @internal
  *
  * @brief Disable GNU-style attributes for functions, variables, types and label
  *  (https://gcc.gnu.org/onlinedocs/gcc/Function-Attributes.html ), turning them
@@ -15,7 +16,9 @@
  *  for the user to directly see. 
  *  */
 
-/** @brief Notice that this definition is extremely conservative: supporting exactly
+/**  
+ * @internal
+ * @brief Notice that this definition is extremely conservative: supporting exactly
    one argument would suffice. */
 #define __attribute__(...) /* nothing */
 #define attribute __attribute__

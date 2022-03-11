@@ -1,5 +1,6 @@
 /**
  * @file    pEpEngine_internal.h
+ *  @internal
  * @brief   Exposed internal functions and structures.
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
@@ -22,6 +23,7 @@ extern "C" {
 #include "timestamp.h"
 
 /**
+ *  @internal
  *  <!--       replace_identities_fpr()       -->
  *
  *  @brief            TODO
@@ -41,6 +43,7 @@ PEP_STATUS replace_identities_fpr(PEP_SESSION session,
 
 
 /**
+ *  @internal
  *  <!--       set_trust()       -->
  *
  *  @brief            TODO
@@ -55,6 +58,7 @@ PEP_STATUS set_trust(PEP_SESSION session,
                      pEp_identity* identity);
 
 /**
+ *  @internal
  *  <!--       update_trust_for_fpr()       -->
  *
  *  @brief            TODO
@@ -75,6 +79,7 @@ PEP_STATUS update_trust_for_fpr(PEP_SESSION session,
 
 
 /**
+ *  @internal
  *  <!--       get_key_userids()       -->
  *
  *  @brief            TODO
@@ -91,6 +96,7 @@ PEP_STATUS get_key_userids(
     );
 
 /**
+ *  @internal
  *  <!--       key_created()       -->
  *
  *  @brief Get creation date of a key
@@ -111,6 +117,7 @@ PEP_STATUS key_created(
     );
 
 /**
+ *  @internal
  *  <!--       find_private_keys()       -->
  *
  *  @brief Find keys in keyring
@@ -132,6 +139,7 @@ PEP_STATUS find_private_keys(PEP_SESSION session, const char* pattern,
 
 
 /**
+ *  @internal
  *  <!--       _generate_keypair()       -->
  *
  *  @brief            TODO
@@ -155,6 +163,7 @@ PEP_STATUS _generate_keypair(PEP_SESSION session,
 // that may not yet have an FPR attached. See get_identity() for functionality,
 // params and caveats.
 /**
+ *  @internal
  *  <!--       get_identity_without_trust_check()       -->
  *
  *  @brief      
@@ -182,6 +191,7 @@ PEP_STATUS get_identity_without_trust_check(
     );
 
 /**
+ *  @internal
  *  <!--       get_identities_by_address()       -->
  *
  *  @brief            TODO
@@ -203,6 +213,7 @@ PEP_STATUS get_identities_by_address(
     );
 
 /**
+ *  @internal
  *  <!--       get_identities_by_userid()       -->
  *
  *  @brief            TODO
@@ -224,6 +235,7 @@ PEP_STATUS get_identities_by_userid(
     );
 
 /**
+ *  @internal
  *  <!--       is_own_address()       -->
  *
  *  @brief            TODO
@@ -242,6 +254,7 @@ PEP_STATUS is_own_address(PEP_SESSION session,
                           bool* is_own_addr);
 
 /**
+ *  @internal
  *  <!--       replace_userid()       -->
  *
  *  @brief            TODO
@@ -258,6 +271,7 @@ PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
                               const char* new_uid);
 
 /**
+ *  @internal
  *  <!--       remove_key()       -->
  *
  *  @brief            TODO
@@ -273,6 +287,7 @@ PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
 PEP_STATUS remove_key(PEP_SESSION session, const char* fpr);
 
 /**
+ *  @internal
  *  <!--       remove_fpr_as_default()       -->
  *
  *  @brief            TODO
@@ -291,6 +306,7 @@ PEP_STATUS remove_fpr_as_default(PEP_SESSION session,
 
 
 /**
+ *  @internal
  *  <!--       get_main_user_fpr()       -->
  *
  *  @brief            TODO
@@ -310,6 +326,7 @@ PEP_STATUS get_main_user_fpr(PEP_SESSION session,
                              char** main_fpr);
 
 /**
+ *  @internal
  *  <!--       replace_main_user_fpr()       -->
  *
  *  @brief            TODO
@@ -327,6 +344,7 @@ PEP_STATUS replace_main_user_fpr(PEP_SESSION session, const char* user_id,
                               const char* new_fpr);
 
 /**
+ *  @internal
  *  <!--       replace_main_user_fpr_if_equal()       -->
  *
  *  @brief            TODO
@@ -345,6 +363,7 @@ PEP_STATUS replace_main_user_fpr_if_equal(PEP_SESSION session, const char* user_
                                           const char* new_fpr, const char* compare_fpr);
 
 /**
+ *  @internal
  *  <!--       refresh_userid_default_key()       -->
  *
  *  @brief            TODO
@@ -360,6 +379,7 @@ PEP_STATUS replace_main_user_fpr_if_equal(PEP_SESSION session, const char* user_
 PEP_STATUS refresh_userid_default_key(PEP_SESSION session, const char* user_id);
 
 /**
+ *  @internal
  *  <!--       exists_person()       -->
  *
  *  @brief            TODO
@@ -378,6 +398,7 @@ PEP_STATUS refresh_userid_default_key(PEP_SESSION session, const char* user_id);
 PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity, bool* exists);
 
 /**
+ *  @internal
  *  <!--       set_pgp_keypair()       -->
  *
  *  @brief            TODO
@@ -392,6 +413,7 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity, bool* exis
 PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr);
 
 /**
+ *  @internal
  *  <!--       set_pEp_version()       -->
  *
  *  @brief            TODO
@@ -409,6 +431,7 @@ PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr);
 PEP_STATUS set_pEp_version(PEP_SESSION session, pEp_identity* ident, unsigned int new_ver_major, unsigned int new_ver_minor);
 
 /**
+ *  @internal
  *  <!--       clear_trust_info()       -->
  *
  *  @brief            TODO
@@ -427,6 +450,7 @@ PEP_STATUS clear_trust_info(PEP_SESSION session,
                             const char* fpr);
 
 /**
+ *  @internal
  *  <!--       upgrade_pEp_version_by_user_id()       -->
  *
  *  @brief            TODO
@@ -450,6 +474,7 @@ PEP_STATUS upgrade_pEp_version_by_user_id(PEP_SESSION session,
     );
 
 /**
+ *  @internal
  *  <!--       set_person()       -->
  *
  *  @brief            TODO
@@ -466,6 +491,7 @@ PEP_STATUS upgrade_pEp_version_by_user_id(PEP_SESSION session,
 PEP_STATUS set_person(PEP_SESSION session, pEp_identity* identity,
                       bool guard_transaction);
 /**
+ *  @internal
  *  <!--       bind_own_ident_with_contact_ident()       -->
  *
  *  @brief            TODO
@@ -484,6 +510,7 @@ PEP_STATUS bind_own_ident_with_contact_ident(PEP_SESSION session,
                                              pEp_identity* contact_ident);
 
 /**
+ *  @internal
  *  <!--       get_last_contacted()       -->
  *
  *  @brief            TODO
@@ -503,6 +530,7 @@ PEP_STATUS get_last_contacted(
     );
 
 /**
+ *  @internal
  *  <!--       get_own_ident_for_contact_id()       -->
  *
  *  @brief            TODO
@@ -521,6 +549,7 @@ PEP_STATUS get_own_ident_for_contact_id(PEP_SESSION session,
                                           pEp_identity** own_ident);
 
 /**
+ *  @internal
  *  <!--       exists_trust_entry()       -->
  *
  *  @brief            TODO
@@ -538,6 +567,7 @@ PEP_STATUS exists_trust_entry(PEP_SESSION session, pEp_identity* identity,
                               bool* exists);
 
 /**
+ *  @internal
  *  <!--       is_own_key()       -->
  *
  *  @brief            TODO
@@ -554,6 +584,7 @@ PEP_STATUS exists_trust_entry(PEP_SESSION session, pEp_identity* identity,
 PEP_STATUS is_own_key(PEP_SESSION session, const char* fpr, bool* own_key);
 
 /**
+ *  @internal
  *  <!--       get_identities_by_main_key_id()       -->
  *
  *  @brief            TODO
@@ -581,6 +612,7 @@ PEP_STATUS get_identities_by_address(
     );
 
 /**
+ *  @internal
  * <!-- get_default_identity_fpr() -->
  *
  * @param[in] session
@@ -596,6 +628,7 @@ PEP_STATUS get_default_identity_fpr(PEP_SESSION session,
                                     char** main_fpr);
 
 /**
+ *  @internal
  *  <!--       set_default_identity_fpr()       -->
  *  Set the default key fingerprint for the identity identitified by this address and user_id. Will only
  *  succeed if identity is already in DB.
@@ -614,6 +647,7 @@ PEP_STATUS set_default_identity_fpr(PEP_SESSION session,
                                     const char* fpr);
 
 /**
+ *  @internal
  *  <!--       sign_only()       -->
  *
  *  @brief            TODO
@@ -637,6 +671,7 @@ PEP_STATUS sign_only(PEP_SESSION session,
                      size_t *sign_size);
 
 /**
+ *  @internal
  *  <!--       set_all_userids_to_own()       -->
  *
  *  @brief            TODO
@@ -649,6 +684,7 @@ PEP_STATUS set_all_userids_to_own(PEP_SESSION session,
                                   identity_list* id_list);
 
 /**
+ *  @internal
  *  <!--       has_partner_contacted_address()       -->
  *
  *  @brief            TODO
@@ -667,6 +703,7 @@ PEP_STATUS has_partner_contacted_address(PEP_SESSION session, const char* partne
                                          const char* own_address, bool* was_contacted);
 
 /*
+ *  @internal
  * <!-- exists_identity_entry() -->
  * documented in pEpEngine.c 
  * 
@@ -675,6 +712,7 @@ PEP_STATUS exists_identity_entry(PEP_SESSION session, pEp_identity* identity,
                                  bool* exists);
 
 /**
+ *  @internal
  * <!-- force_set_identity_username() -->
  * @param[in] 		session		PEP_SESSION
  * @param[in] 	identity 	pEp_identity*

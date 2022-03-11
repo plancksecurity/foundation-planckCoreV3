@@ -1,4 +1,5 @@
 /**
+ * @internal
  * @file    key_reset_internal.h
  * @brief   Functions for resetting partner key defaults and trust and mistrusting and revoking own keys, 
  *          as well as functions to inform partners of own revoked keys and their replacements
@@ -20,6 +21,7 @@ extern "C" {
 #endif
 
 /**
+ * @internal
  *  <!--       key_reset()       -->
  *
  *  @brief Reset the database status for a key, removing all trust information
@@ -74,6 +76,7 @@ PEP_STATUS key_reset_own_and_deliver_revocations(PEP_SESSION session,
 */
 
 /**
+ * @internal
  *  <!--       has_key_reset_been_sent()       -->
  *
  *  @brief            TODO
@@ -96,6 +99,7 @@ PEP_STATUS has_key_reset_been_sent(
         bool* contacted);
 
 /**
+ * @internal
  *  <!--       set_reset_contact_notified()       -->
  *
  *  @brief            TODO
@@ -117,6 +121,7 @@ PEP_STATUS set_reset_contact_notified(
     );
 
 /**
+ * @internal
  *  <!--       receive_key_reset()       -->
  *
  *  @brief            TODO
@@ -137,6 +142,7 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
                              message* reset_msg);
 
 /**
+ * @internal
  *  <!--       create_standalone_key_reset_message()       -->
  *
  *  @brief            TODO
@@ -162,6 +168,7 @@ PEP_STATUS create_standalone_key_reset_message(PEP_SESSION session,
 
 
 /**
+ * @internal
  *  <!--       send_key_reset_to_recents()       -->
  *
  *  @brief            TODO
@@ -182,6 +189,7 @@ PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
                                      const char* new_fpr);
 
 /**
+ * @internal
  *  <!--       key_reset_commands_to_PER()       -->
  *
  *  @brief            TODO
@@ -197,6 +205,7 @@ PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
 PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, char **cmds, size_t *size);
 
 /**
+ * @internal
  *  <!--       PER_to_key_reset_commands()       -->
  *
  *  @brief            TODO

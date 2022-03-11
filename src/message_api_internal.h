@@ -1,4 +1,5 @@
 /// @file message_api_internal.h
+/// @internal
 /// @author Created by Krista Bennett on 14.04.21.
 ///
 
@@ -16,6 +17,7 @@ extern "C" {
 #endif
 
 /**
+ *  @internal
  *  <!--       import_attached_keys()       -->
  *
  *  @brief            TODO
@@ -38,6 +40,7 @@ bool import_attached_keys(
 );
 
 /**
+ *  @internal
  *  <!--       attach_own_key()       -->
  *
  *  @brief            TODO
@@ -49,6 +52,7 @@ bool import_attached_keys(
 void attach_own_key(PEP_SESSION session, message *msg);
 
 /**
+ *  @internal
  *  <!--       determine_encryption_format()       -->
  *
  *  @brief            TODO
@@ -59,6 +63,7 @@ void attach_own_key(PEP_SESSION session, message *msg);
 PEP_cryptotech determine_encryption_format(message *msg);
 
 /**
+ *  @internal
  *  <!--       add_opt_field()       -->
  *
  *  @brief            TODO

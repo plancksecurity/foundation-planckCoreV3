@@ -1,4 +1,5 @@
 /**
+ * @internal
  * @file    etpan_mime.h
  * @brief   Driver for the libetpan MIME implementation (@see mime.h for the general API)
  * @license GNU General Public License 3.0 - see LICENSE.txt
@@ -18,6 +19,7 @@
 #include "timestamp.h"
 
 /**
+ *  @internal
  *  <!--       part_new_empty()       -->
  *  
  *  @brief        TODO
@@ -36,6 +38,7 @@ struct mailmime * part_new_empty(
     );
 
 /**
+ *  @internal
  *  <!--       get_pgp_encrypted_part()       -->
  *  
  *  @brief          TODO
@@ -45,6 +48,7 @@ struct mailmime * part_new_empty(
 struct mailmime * get_pgp_encrypted_part(void);
 
 /**
+ *  @internal
  *  <!--       get_text_part()       -->
  *  
  *  @brief          TODO
@@ -65,6 +69,7 @@ struct mailmime * get_text_part(
     );
 
 /**
+ *  @internal
  *  <!--       get_file_part()       -->
  *  
  *  @brief            TODO
@@ -85,6 +90,7 @@ struct mailmime * get_file_part(
     );
 
 /**
+ *  @internal
  *  <!--       part_multiple_new()       -->
  *  
  *  @brief            TODO
@@ -97,6 +103,7 @@ struct mailmime * part_multiple_new(const char *type);
 typedef void *(*_new_func_t)(void *);
 
 /**
+ *  @internal
  *  <!--       _new_field()       -->
  *  
  *  @brief            TODO
@@ -113,6 +120,7 @@ struct mailimf_field * _new_field(
     );
 
 /**
+ *  @internal
  *  <!--       _free_field()       -->
  *  
  *  @brief            TODO
@@ -123,6 +131,7 @@ struct mailimf_field * _new_field(
 void _free_field(struct mailimf_field *field);
 
 /**
+ *  @internal
  *  <!--       _append_field()       -->
  *  
  *  @brief            TODO
@@ -141,6 +150,7 @@ int _append_field(
     );
 
 /**
+ *  @internal
  *  <!--       timestamp_to_etpantime()       -->
  *  
  *  @brief            TODO
@@ -150,6 +160,7 @@ int _append_field(
  */
 struct mailimf_date_time * timestamp_to_etpantime(const timestamp *ts);
 /**
+ *  @internal
  *  <!--       etpantime_to_timestamp()       -->
  *  
  *  @brief            TODO
@@ -160,6 +171,7 @@ struct mailimf_date_time * timestamp_to_etpantime(const timestamp *ts);
 timestamp * etpantime_to_timestamp(const struct mailimf_date_time *et);
 
 /**
+ *  @internal
  *  <!--       mailbox_from_string()       -->
  *  
  *  @brief            TODO
@@ -174,6 +186,7 @@ struct mailimf_mailbox * mailbox_from_string(
     );
 
 /**
+ *  @internal
  *  <!--       create_optional_field()       -->
  *  
  *  @brief            TODO
@@ -188,6 +201,7 @@ struct mailimf_field * create_optional_field(
     );
 
 /**
+ *  @internal
  *  <!--       _append_optional_field()       -->
  *  
  *  @brief            TODO
@@ -204,6 +218,7 @@ int _append_optional_field(
     );
 
 /**
+ *  @internal
  *  <!--       _get_fields()       -->
  *  
  *  @brief            TODO
@@ -213,6 +228,7 @@ int _append_optional_field(
  */
 clist * _get_fields(struct mailmime * mime);
 /**
+ *  @internal
  *  <!--       _get_content()       -->
  *  
  *  @brief            TODO
@@ -222,6 +238,7 @@ clist * _get_fields(struct mailmime * mime);
  */
 struct mailmime_content * _get_content(struct mailmime * mime);
 /**
+ *  @internal
  *  <!--       _get_filename_or_cid()       -->
  *  
  *  @brief            TODO
@@ -231,6 +248,7 @@ struct mailmime_content * _get_content(struct mailmime * mime);
  */
 char * _get_filename_or_cid(struct mailmime *mime);
 /**
+ *  @internal
  *  <!--       _get_resource_id_list()       -->
  *  
  *  @brief            TODO
@@ -240,6 +258,7 @@ char * _get_filename_or_cid(struct mailmime *mime);
  */
 pEp_rid_list_t* _get_resource_id_list(struct mailmime *mime);
 /**
+ *  @internal
  *  <!--       _build_uri()       -->
  *  
  *  @brief            TODO
@@ -250,6 +269,7 @@ pEp_rid_list_t* _get_resource_id_list(struct mailmime *mime);
  */
 char* _build_uri(char* uri_prefix, char* resource);
 /**
+ *  @internal
  *  <!--       _is_multipart()       -->
  *  
  *  @brief            TODO
@@ -260,6 +280,7 @@ char* _build_uri(char* uri_prefix, char* resource);
  */
 bool _is_multipart(struct mailmime_content *content, const char *subtype);
 /**
+ *  @internal
  *  <!--       _is_PGP_MIME()       -->
  *  
  *  @brief            TODO
@@ -269,6 +290,7 @@ bool _is_multipart(struct mailmime_content *content, const char *subtype);
  */
 bool _is_PGP_MIME(struct mailmime_content *content);
 /**
+ *  @internal
  *  <!--       _is_text_part()       -->
  *  
  *  @brief            TODO
@@ -279,6 +301,7 @@ bool _is_PGP_MIME(struct mailmime_content *content);
  */
 bool _is_text_part(struct mailmime_content *content, const char *subtype);
 /**
+ *  @internal
  *  <!--       must_field_value_be_encoded()       -->
  *  
  *  @brief            TODO
@@ -288,6 +311,7 @@ bool _is_text_part(struct mailmime_content *content, const char *subtype);
  */
 bool must_field_value_be_encoded(const char* field_value);
 /**
+ *  @internal
  *  <!--       must_chunk_be_encoded()       -->
  *  
  *  @brief            TODO
@@ -301,6 +325,7 @@ bool must_chunk_be_encoded(const void* value, size_t size, bool ignore_fws);
 
 
 /**
+ *  @internal
  *  <!--       _get_content_type()       -->
  *  
  *  @brief            TODO
