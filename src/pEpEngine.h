@@ -21,15 +21,16 @@ extern "C" {
 #include "labeled_int_list.h"    
 #include "timestamp.h"
 
-#define PEP_VERSION "3.2" // pEp *protocol* version
+#define PEP_VERSION "3.2" ///< pEp *protocol* version
 
-// RELEASE version this targets.  Each item indicates the last already-released
-// or being-released version.
-// The optional plus sign at the end means that the current version contains
-// changes which follow the release.
-// When the branch is in a non-RC or non-plus state we can just comment the
-// definition of PEP_ENGINE_VERSION_RC , the definition of
-// PEP_ENGINE_VERSION_PLUS , or both.
+/// @def PEP_ENGINE_VERSION
+/// RELEASE version this targets.  Each item indicates the last already-released
+/// or being-released version.
+/// The optional plus sign at the end means that the current version contains
+/// changes which follow the release.
+/// When the branch is in a non-RC or non-plus state we can just comment the
+/// definition of PEP_ENGINE_VERSION_RC , the definition of
+/// PEP_ENGINE_VERSION_PLUS , or both.
 
 #define PEP_ENGINE_VERSION_MAJOR 3
 #define PEP_ENGINE_VERSION_MINOR 2
@@ -65,7 +66,8 @@ extern "C" {
 #else
 # define _PEP_ENGINE_VERSION_PLUS_STRING ""
 #endif /* PEP_ENGINE_VERSION_PLUS */
-/* An internal convenience macro to generate PEP_ENGINE_VERSION. */
+/** @internal
+ * An internal convenience macro to generate PEP_ENGINE_VERSION. */
 #define _PEP_MAKE_ENGINE_VERSION(major, minor, patch, rc_string,  \
                                  plus_string)                     \
   _PEP_STRINGIZE (major) "."                                      \
@@ -74,7 +76,7 @@ extern "C" {
   rc_string                                                       \
   plus_string
 
-/* The actual public definition. */
+/** The actual public definition. */
 #define PEP_ENGINE_VERSION                                     \
     _PEP_MAKE_ENGINE_VERSION(PEP_ENGINE_VERSION_MAJOR,         \
                              PEP_ENGINE_VERSION_MINOR,         \
