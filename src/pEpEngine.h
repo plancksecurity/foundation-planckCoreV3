@@ -711,6 +711,7 @@ DYNAMIC_API PEP_STATUS log_service(PEP_SESSION session, const char *title,
     log_service((session), (title), (entity), (desc), "service " __FILE__ ":" S_LINE)
 
 /**
+ *  @internal
  *  <!--       _service_error_log()       -->
  *  
  *  @brief            TODO

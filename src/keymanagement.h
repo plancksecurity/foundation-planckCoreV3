@@ -269,6 +269,7 @@ DYNAMIC_API PEP_STATUS own_key_is_listed(
 
 
 /**
+ *  @internal
  *  <!--       _own_identities_retrieve()       -->
  *  
  *  @brief Retrieve all own identities
@@ -315,6 +316,7 @@ DYNAMIC_API PEP_STATUS own_identities_retrieve(
     );
 
 /**
+ *  @internal
  *  <!--       _own_keys_retrieve()       -->
  *  
  *  @brief Retrieve all flagged keypair fingerprints 

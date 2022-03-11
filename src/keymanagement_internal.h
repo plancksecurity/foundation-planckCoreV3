@@ -1,4 +1,5 @@
 /**
+ * @internal
  * @file    keymanagement_internal.h
  * @brief   Functions to manage keys (and identities when in relation to keys)
  * @license GNU General Public License 3.0 - see LICENSE.txt
@@ -16,6 +17,7 @@ extern "C" {
 
 
 /**
+ * @internal
  *  <!--       _myself()       -->
  *  
  *  @brief            TODO
@@ -41,6 +43,7 @@ PEP_STATUS _myself(PEP_SESSION session,
 
 
 /**
+ * @internal
  *  <!--       contains_priv_key()       -->
  *  
  *  @brief            TODO
@@ -58,6 +61,7 @@ PEP_STATUS contains_priv_key(PEP_SESSION session, const char *fpr,
 
 
 /**
+ * @internal
  *  <!--       get_all_keys_for_user()       -->
  *  
  *  @brief            TODO
@@ -79,6 +83,7 @@ PEP_STATUS get_all_keys_for_user(PEP_SESSION session,
 
 
 /**
+ * @internal
  *  <!--       add_mistrusted_key()       -->
  *  
  *  @brief            TODO
@@ -93,6 +98,7 @@ PEP_STATUS get_all_keys_for_user(PEP_SESSION session,
 PEP_STATUS add_mistrusted_key(PEP_SESSION session, const char* fpr);
 
 /**
+ * @internal
  *  <!--       delete_mistrusted_key()       -->
  *  
  *  @brief            TODO
@@ -106,6 +112,7 @@ PEP_STATUS add_mistrusted_key(PEP_SESSION session, const char* fpr);
  */
 PEP_STATUS delete_mistrusted_key(PEP_SESSION session, const char* fpr);
 /**
+ * @internal
  *  <!--       is_mistrusted_key()       -->
  *  
  *  @brief            TODO
@@ -120,6 +127,7 @@ PEP_STATUS delete_mistrusted_key(PEP_SESSION session, const char* fpr);
  */
 PEP_STATUS is_mistrusted_key(PEP_SESSION session, const char* fpr, bool* mistrusted);
 /**
+ * @internal
  *  <!--       get_user_default_key()       -->
  *  
  *  @brief            TODO
@@ -139,6 +147,7 @@ PEP_STATUS get_user_default_key(PEP_SESSION session, const char* user_id,
 
 
 /**
+ * @internal
  *  <!--       get_valid_pubkey()       -->
  *  
  *  @brief            TODO
@@ -166,6 +175,7 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
                             bool* is_address_default);
 
 /**
+ * @internal
  *  <!--       get_key_sticky_bit_for_user()       -->
  *
  *  @brief     Get value of sticky bit for this user and key
