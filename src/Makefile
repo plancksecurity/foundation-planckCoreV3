@@ -113,6 +113,7 @@ clean:
 	rm -f *.d *.o *.a $(TARGET) *.dll *.so *.zip *.d.* *.def *~
 	rm -Rf $(TARGET).dSYM
 	rm -f *_{event,impl,fsm,func}.[ch]
+	rm -rf ../doc/api/
 
 HEADERS_TO_INSTALL = \
   pEpEngine.h keymanagement.h message_api.h dynamic_api.h stringlist.h \
