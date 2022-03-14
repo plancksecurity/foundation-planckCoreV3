@@ -335,6 +335,13 @@
 			remoteGlobalIDString = 150845DE25F13CE700D46DA6;
 			remoteInfo = generate_code;
 		};
+		437D471727DF9933006CB916 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4309FF0327315E560055C6C9 /* pEpTransport.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43C24DE327A15C81000E90FF;
+			remoteInfo = pEpTransportTests;
+		};
 		4399C9E32747C70700F52599 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4309FF0327315E560055C6C9 /* pEpTransport.xcodeproj */;
@@ -634,6 +641,7 @@
 			children = (
 				4399C9E42747C70700F52599 /* libpEpTransport_macOS.a */,
 				4399C9E62747C70700F52599 /* libpEpTransport_iOS.a */,
+				437D471827DF9933006CB916 /* pEpTransportTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1087,6 +1095,13 @@
 			remoteRef = 15A322F6260E0B75009D07EB /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		437D471827DF9933006CB916 /* pEpTransportTests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = pEpTransportTests.xctest;
+			remoteRef = 437D471727DF9933006CB916 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		4399C9E42747C70700F52599 /* libpEpTransport_macOS.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -1177,7 +1192,7 @@
 			inputPaths = (
 			);
 			outputFileListPaths = (
-				"$(SRCROOT)/generated-files-sync.txt",
+				"$(SRCROOT)/generated-files.txt",
 			);
 			outputPaths = (
 			);
