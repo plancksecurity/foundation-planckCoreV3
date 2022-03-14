@@ -1,3 +1,5 @@
+$(SRCROOT)/../src/GroupSync_fsm.c
+$(SRCROOT)/../src/GroupSync_fsm.h
 $(SRCROOT)/../src/KeySync_fsm.c
 $(SRCROOT)/../src/KeySync_fsm.h
 $(SRCROOT)/../src/Sync_actions.c
@@ -7,7 +9,11 @@ $(SRCROOT)/../src/Sync_func.c
 $(SRCROOT)/../src/Sync_func.h
 $(SRCROOT)/../src/Sync_impl.c
 $(SRCROOT)/../src/Sync_impl.h
+$(SRCROOT)/../src/TrustSync_fsm.c
+$(SRCROOT)/../src/TrustSync_fsm.h
 $(SRCROOT)/../src/distribution_codec.c
 $(SRCROOT)/../src/distribution_codec.h
+$(SRCROOT)/../src/storage_codec.c
+$(SRCROOT)/../src/storage_codec.h
 $(SRCROOT)/../src/sync_codec.c
 $(SRCROOT)/../src/sync_codec.h
