@@ -18,7 +18,8 @@ ENGINE_BASE_DIR = '.'
 SYNC_DIR_GENERATED = join(ENGINE_BASE_DIR, 'codegen/generated')
 ASN_DIR_GENERATED = join(ENGINE_BASE_DIR, 'asn.1')
 DES_DIR = join(ENGINE_BASE_DIR, 'build-mac')
-DEST_ASN_LIST = join(DES_DIR, 'generated-files-asn1.txt')
+DES_DIR_ASN = join(ENGINE_BASE_DIR, 'build-mac', 'Subprojects', 'pEpASN1')
+DEST_ASN_LIST = join(DES_DIR_ASN, 'generated-files-asn1.txt')
 DEST_SYNC_LIST = join(DES_DIR, 'generated-files-sync.txt')
 
 
