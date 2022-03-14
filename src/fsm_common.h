@@ -1,4 +1,5 @@
 /**
+ * @internal
  * @file     src/fsm_common.h
  * @brief    Generate state machine code
  * @license  GNU General Public License 3.0 - see LICENSE.txt
@@ -17,6 +18,7 @@ extern "C" {
 // error values
 
 /**
+ * @internal
  *  @enum    fsm_error
  *  
  *  @brief   TODO

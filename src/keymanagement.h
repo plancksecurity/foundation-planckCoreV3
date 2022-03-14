@@ -1,5 +1,5 @@
 /**
- * @file    keymanagement.h
+ * @file keymanagement.h
  * @brief   Functions to manage keys (and identities when in relation to keys)
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */

@@ -1,5 +1,6 @@
 /**
  * @file    src/pgp_netpgp.h
+ * @internal
  * 
  * @brief   NETPGP driver - implements required cryptotech 
  *          functions for the engine using netpgp with SSL 
@@ -13,9 +14,10 @@
 #include "pEpEngine.h"
 
 /**
+ *  @internal
  *  <!--       pgp_init()       -->
  *  
- *  @brief      initialise the sequoia driver for this session
+ *  @brief      initialise the netpgp driver for this session
  *  
  *  @param[in]  session     session handle
  *  @param[in]  in_first    true if this is the first pEp session running
@@ -27,9 +29,10 @@
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first);
 
 /**
+ *  @internal
  *  <!--       pgp_release()       -->
  *  
- *  @brief      release resources used by the sequoia driver in this session
+ *  @brief      release resources used by the netpgp driver in this session
  *  
  *  @param[in]  session     session handle 
  *  @param[in]  out_last    true if this is the last extant pEp session
@@ -39,6 +42,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first);
 void pgp_release(PEP_SESSION session, bool out_last);
 
 /**
+ *  @internal
  *  <!--       pgp_decrypt_and_verify()       -->
  *  
  *  @brief            TODO
@@ -64,6 +68,7 @@ PEP_STATUS pgp_decrypt_and_verify(
     );
 
 /**
+ *  @internal
  *  <!--       pgp_encrypt_and_sign()       -->
  *  
  *  @brief            TODO
@@ -84,6 +89,7 @@ PEP_STATUS pgp_encrypt_and_sign(
     );
 
 /**
+ *  @internal
  *  <!--       pgp_sign_only()       -->
  *  
  *  @brief            TODO
@@ -104,6 +110,7 @@ PEP_STATUS pgp_sign_only(
     );
 
 /**
+ *  @internal
  *  <!--       pgp_encrypt_only()       -->
  *  
  *  @brief            TODO
@@ -125,6 +132,7 @@ PEP_STATUS pgp_encrypt_only(
 
 
 /**
+ *  @internal
  *  <!--       pgp_verify_text()       -->
  *  
  *  @brief            TODO
@@ -145,6 +153,7 @@ PEP_STATUS pgp_verify_text(
     );
 
 /**
+ *  @internal
  *  <!--       pgp_delete_keypair()       -->
  *  
  *  @brief            TODO
@@ -158,6 +167,7 @@ PEP_STATUS pgp_verify_text(
 PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr);
 
 /**
+ *  @internal
  *  <!--       pgp_export_keydata()       -->
  *  
  *  @brief            TODO
@@ -177,6 +187,7 @@ PEP_STATUS pgp_export_keydata(
     );
 
 /**
+ *  @internal
  *  <!--       pgp_find_keys()       -->
  *  
  *  @brief  Find all keys (as fpr strings) which match this fpr or OpenPGP 
@@ -196,6 +207,7 @@ PEP_STATUS pgp_find_keys(
     );
 
 /**
+ *  @internal
  *  <!--       pgp_list_keyinfo()       -->
  *  
  *  @brief  Find all keys (returning <fpr, OpenPGP uid> pairs) which match this fpr
@@ -214,6 +226,7 @@ PEP_STATUS pgp_list_keyinfo(
     );
 
 /**
+ *  @internal
  *  <!--       pgp_generate_keypair()       -->
  *  
  *  @brief            TODO
@@ -227,6 +240,7 @@ PEP_STATUS pgp_generate_keypair(
     );
 
 /**
+ *  @internal
  *  <!--       pgp_get_key_rating()       -->
  *  
  *  @brief            TODO
@@ -243,6 +257,7 @@ PEP_STATUS pgp_get_key_rating(
     );
 
 /**
+ *  @internal
  *  <!--       pgp_import_keydata()       -->
  *  
  *  @brief            TODO
@@ -261,6 +276,7 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
                               uint64_t* changed_key_index);
 
 /**
+ *  @internal
  *  <!--       pgp_import_private_keydata()       -->
  *  
  *  @brief            TODO
@@ -275,6 +291,7 @@ PEP_STATUS pgp_import_private_keydata(PEP_SESSION session, const char *key_data,
                                       size_t size, identity_list **private_idents);
 
 /**
+ *  @internal
  *  <!--       pgp_recv_key()       -->
  *  
  *  @brief            TODO
@@ -285,6 +302,7 @@ PEP_STATUS pgp_import_private_keydata(PEP_SESSION session, const char *key_data,
  */
 PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern);
 /**
+ *  @internal
  *  <!--       pgp_send_key()       -->
  *  
  *  @brief            TODO
@@ -296,6 +314,7 @@ PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern);
 PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern);
 
 /**
+ *  @internal
  *  <!--       pgp_renew_key()       -->
  *  
  *  @brief            TODO
@@ -312,6 +331,7 @@ PEP_STATUS pgp_renew_key(
     );
 
 /**
+ *  @internal
  *  <!--       pgp_revoke_key()       -->
  *  
  *  @brief            TODO
@@ -328,6 +348,7 @@ PEP_STATUS pgp_revoke_key(
     );
 
 /**
+ *  @internal
  *  <!--       pgp_key_expired()       -->
  *  
  *  @brief            TODO
@@ -346,6 +367,7 @@ PEP_STATUS pgp_key_expired(
     );
 
 /**
+ *  @internal
  *  <!--       pgp_key_revoked()       -->
  *  
  *  @brief            TODO
@@ -362,6 +384,7 @@ PEP_STATUS pgp_key_revoked(
     );
 
 /**
+ *  @internal
  *  <!--       pgp_key_created()       -->
  *  
  *  @brief            TODO
@@ -378,6 +401,7 @@ PEP_STATUS pgp_key_created(
     );
 
 /**
+ *  @internal
  *  <!--       pgp_contains_priv_key()       -->
  *  
  *  @brief            TODO
@@ -393,6 +417,7 @@ PEP_STATUS pgp_contains_priv_key(
         bool *has_private);
 
 /**
+ *  @internal
  *  <!--       pgp_find_private_keys()       -->
  *  
  *  @brief  Find all keys (as fpr strings) which match this fpr or OpenPGP 
@@ -412,6 +437,7 @@ PEP_STATUS pgp_find_private_keys(
 );
 
 /**
+ *  @internal
  *  <!--       pgp_config_cipher_suite()       -->
  *  
  *  @brief            TODO

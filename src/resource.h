@@ -1,4 +1,5 @@
 /**
+ * @internal
  * @file    resource.h
  * @brief   Windows platform-specific implementation details
  * @license GNU General Public License 3.0 - see LICENSE.txt
