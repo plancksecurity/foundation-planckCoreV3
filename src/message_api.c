@@ -4947,19 +4947,20 @@ static const char* process_key_claim(message* src,
     return sender_key;
 }
 
-/// @internal
-/// Rule for this function, since it is one of the three most complicated functions in this whole damned
-/// business:
-///
-/// If you calculate a status from something and expect it NOT to be fatal, once you are done USING that status,
-/// you MUST set it back to "PEP_STATUS_OK".
-///
-/// There are times when we don't want errors during calls to be fatal. Once any action is taken on that
-/// status, if we are going to continue processing and not bail from the message, the status needs to be reset
-/// to PEP_STATUS_OK, or, alternately, we need to be using a temp status variable.
-///
-/// This internal function does *not* set the rating field of the message: that
-/// part of the job is within decrypt_message.
+/** @internal
+ *  Rule for this function, since it is one of the three most complicated functions in this whole damned
+ *  business:
+ * 
+ *  If you calculate a status from something and expect it NOT to be fatal, once you are done USING that status,
+ *  you MUST set it back to "PEP_STATUS_OK".
+ * 
+ *  There are times when we don't want errors during calls to be fatal. Once any action is taken on that
+ *  status, if we are going to continue processing and not bail from the message, the status needs to be reset
+ *  to PEP_STATUS_OK, or, alternately, we need to be using a temp status variable.
+ * 
+ *  This internal function does *not* set the rating field of the message: that
+ *  part of the job is within decrypt_message.
+ */
 static PEP_STATUS _decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -5271,7 +5272,7 @@ static PEP_STATUS _decrypt_message(
         return status;
     }
         
-    /** Ok, we should be ready to decrypt. Try decrypt and verify first! **/
+    /*** Ok, we should be ready to decrypt. Try decrypt and verify first! ***/
     status = decrypt_and_verify(session, ctext, csize, dsig_text, dsig_size,
             &ptext, &psize, &_keylist, NULL);
 

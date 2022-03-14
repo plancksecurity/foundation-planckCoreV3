@@ -16,7 +16,7 @@ tstylesheet {
         document "generated/{yml:lcase(@name)}_codec.h", "text"
         ||
         /**
-         * @file        «@name»_codec.h
+         * @file        «yml:lcase(@name)»_codec.h
          * @brief       Definitions for «@name» encode and decode functions which transform message payloads to
          *              and from PER-encoded data, and XER text to and from PER
          * @generated   from ../sync/gen_codec.ysl2
