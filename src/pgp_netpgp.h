@@ -1,6 +1,6 @@
 /**
- * @file    src/pgp_netpgp.h
  * @internal
+ * @file    src/pgp_netpgp.h
  * 
  * @brief   NETPGP driver - implements required cryptotech 
  *          functions for the engine using netpgp with SSL 

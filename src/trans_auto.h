@@ -1,6 +1,6 @@
 /**
- * @file    src/trans_auto.h
  * @internal
+ * @file    src/trans_auto.h
  * @brief   transport auto functions? (FIXME: derived from filename)
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */

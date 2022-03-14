@@ -1,5 +1,5 @@
-/// @file group_internal.h
 /// @internal
+/// @file group_internal.h
 /// @brief  Internal functions for representation of groups
 /// @license This file is under GNU General Public License 3.0 - see LICENSE.txt
 
