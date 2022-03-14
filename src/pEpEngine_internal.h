@@ -1,6 +1,6 @@
 /**
- * @file    pEpEngine_internal.h
  * @internal
+ * @file    pEpEngine_internal.h
  * @brief   Exposed internal functions and structures.
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */

@@ -1,6 +1,6 @@
 /**
- * @file    internal_format.h
  * @internal
+ * @file    internal_format.h
  * @brief   internal format (FIXME: derived from filename)
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */

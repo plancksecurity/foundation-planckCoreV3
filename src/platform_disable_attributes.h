@@ -2,8 +2,8 @@
 #define PLATFORM_DISABLE_ATTRIBUTES_H
 
 /**
- * @file platform_disable_attributes.h
  * @internal
+ * @file platform_disable_attributes.h
  *
  * @brief Disable GNU-style attributes for functions, variables, types and label
  *  (https://gcc.gnu.org/onlinedocs/gcc/Function-Attributes.html ), turning them

@@ -1,5 +1,5 @@
-/// @file message_api_internal.h
 /// @internal
+/// @file message_api_internal.h
 /// @author Created by Krista Bennett on 14.04.21.
 ///
 
