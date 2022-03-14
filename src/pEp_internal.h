@@ -1,5 +1,5 @@
 /**
- *  @internal
+ * @internal
  * @file    pEp_internal.h
  * @brief   pEp internal structs, functions, defines, and values
  * @license GNU General Public License 3.0 - see LICENSE.txt

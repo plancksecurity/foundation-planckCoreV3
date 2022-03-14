@@ -1,4 +1,5 @@
 /**
+ * @internal
  * @file    email.h
  * @brief   email (FIXME: derived from filename)
  * @license GNU General Public License 3.0 - see LICENSE.txt
@@ -11,6 +12,7 @@
 #include "transport.h"
 
 /**
+ * @internal
  *  <!--       email_sendto()       -->
  *
  *  @brief            TODO
@@ -22,6 +24,7 @@
 PEP_STATUS email_sendto(PEP_SESSION session, const message *msg);
 
 /**
+ * @internal
  *  <!--       email_readnext()       -->
  *  
  *  @brief            TODO

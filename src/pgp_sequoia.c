@@ -1,4 +1,5 @@
 /**
+ * @internal
  * @file pgp_sequoia.c
  * @brief Implementation of functions used to speak to Sequoia-PGP backend
  */

@@ -1,4 +1,5 @@
 /**
+ * @internal
  * @file    wrappers.h
  * @brief   File manipulation wrappers
  * @license GNU General Public License 3.0 - see LICENSE.txt

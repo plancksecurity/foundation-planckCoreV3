@@ -1,4 +1,5 @@
 /**
+ * @internal
  * @file    base64.h
  * @brief   Convert base64 to a binary blob - this is a convenience function
  *          used mainly to convert keys which are base64 rather than radix64
@@ -17,6 +18,7 @@ extern "C" {
 #endif
 
 /**
+ * @internal
  *  <!--       base64_str_to_binary_blob()       -->
  *
  *  @brief   Decode a base64 string and return binary format

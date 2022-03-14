@@ -1,4 +1,5 @@
 /**
+ * @internal
  * @file     baseprotocol.h
  * @brief    Basic functions for administrative pEp messages (preparation,
  *           decoration, payload, extraction, etc.). 
@@ -23,6 +24,7 @@ extern "C" {
 #define _BASE_PROTO_MIME_TYPE_DIST "application/pEp.distribution"
 
 /**
+ * @internal
  *  @enum    base_protocol_type
  *  
  *  @brief    TODO
@@ -36,6 +38,7 @@ typedef enum _base_protocol_type {
 
 
 /**
+ * @internal
  *  <!--       base_decorate_message()       -->
  *  
  *  @brief      Given the data payload for an administrative message, add the appropriate
@@ -69,6 +72,7 @@ PEP_STATUS base_decorate_message(
 
 
 /**
+ * @internal
  *  <!--       base_prepare_message()       -->
  *  
  *  @brief      Given a protocol data payload and a message type, prepare an administrative
@@ -107,6 +111,7 @@ PEP_STATUS base_prepare_message(
 
 
 /**
+ * @internal
  *  <!--       base_extract_message()       -->
  *  
  *  @brief      Extract protocol data from a pEp administrative message
@@ -144,6 +149,7 @@ PEP_STATUS base_extract_message(
 
 
 /**
+ * @internal
  *  <!--       try_base_prepare_message()       -->
  *  
  *  @brief      Prepare an administrative message with payload. 

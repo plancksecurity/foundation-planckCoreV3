@@ -1,4 +1,5 @@
 /**
+ * @internal
  * @file engine_sql.c
  * @brief functions to prepare SQL statements
  */

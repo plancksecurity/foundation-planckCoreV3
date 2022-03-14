@@ -1,4 +1,5 @@
 /**
+ * @internal
  * @file pgp_netpgp.c
  * @brief Implementation of NetPGP
  * @license This file is under GNU General Public License 3.0 see LICENSE.txt
