@@ -29,6 +29,8 @@
       <tab type="structlist" visible="yes" title="" intro=""/>
       <tab type="structindex" visible="$ALPHABETICAL_INDEX" title=""/>
     </tab>
+    <tab type="user" visible="yes" title="Index without Data Structures" url="globals.html" intro="">
+    </tab>
     <tab type="exceptions" visible="yes" title="">
       <tab type="exceptionlist" visible="yes" title="" intro=""/>
       <tab type="exceptionindex" visible="$ALPHABETICAL_INDEX" title=""/>
