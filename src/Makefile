@@ -37,7 +37,7 @@ ifeq ($(BUILD_ON),OS/390)
     LDLIBS+= -lzz
 else ifeq ($(BUILD_ON),Darwin)
     ifeq ($(BUILD_FOR),Darwin)
-        LDLIBS+= -lz -liconv -mmacosx-version-min=10.10
+        LDLIBS+= -lz -liconv
     else
         $(error I do not know how to make for $(BUILD_FOR) on $(BUILD_ON))
     endif
