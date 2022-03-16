@@ -1,5 +1,10 @@
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    message.c
+ * @brief   implementation of the pEp message structure and functions used to represent messages and pass message 
+ *          information back and forth between the engine and its customers. Includes memory management
+ *          for said structs.
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #include "pEp_internal.h"
 

@@ -1,5 +1,8 @@
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    src/trans_auto.h
+ * @brief   transport auto functions? (FIXME: derived from filename)
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #ifndef TRANS_AUTO_H
 #define TRANS_AUTO_H

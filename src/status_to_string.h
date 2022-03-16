@@ -22,7 +22,8 @@ extern "C" {
  *  
  *  @brief            TODO
  *  
- *  @param[in]  status        PEP_STATUS
+ *  @param[in]  status		PEP_STATUS
+ *  @retval	char*		string representation of status	
  *  
  */
 static inline const char *pEp_status_to_string(PEP_STATUS status) {
@@ -137,6 +138,7 @@ static inline const char *pEp_status_to_string(PEP_STATUS status) {
  *  @brief            TODO
  *  
  *  @param[in]  ct        PEP_comm_type
+ *  @retval	char*	  string representation of ct	
  *  
  */
 static inline const char *pEp_comm_type_to_string(PEP_comm_type ct) {

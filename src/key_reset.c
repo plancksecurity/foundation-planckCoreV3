@@ -1,5 +1,9 @@
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    key_reset.c
+ * @brief   Implementation of functions for resetting partner key defaults and trust and mistrusting and revoking own keys, 
+ *          as well as of functions to inform partners of own revoked keys and their replacements
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #include "pEp_internal.h"
 #include "dynamic_api.h"
@@ -24,6 +28,30 @@ static void _add_auto_consume(message* msg) {
     add_opt_field(msg, "pEp-auto-consume", "yes");
     msg->in_reply_to = stringlist_add(msg->in_reply_to, "pEp-auto-consume@pEp.foundation");
 }
+/**
+ *  @internal
+ *  
+ *  <!--       _generate_reset_structs()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]        session               session handle
+ *  @param[in]        *reset_ident          identity whose key is being reset
+ *  @param[in]        *old_fpr              key which is being reset for this identity
+ *  @param[in]        *new_fpr              replacement key for this key for this identity
+ *  @param[in,out]    **key_attachments     bloblist_t
+ *  @param[in,out]    **command_list        keyreset_command_list
+ *  @param[in]        include_secret        bool
+ *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE       illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY       out of memory
+ *  @retval any other value on error
+ *
+ *  @ownership  reset_ident, old_fpr, new_fpr remain with the caller
+ *  
+ */
+
 
 static PEP_STATUS _generate_reset_structs(PEP_SESSION session,
                                           const pEp_identity* reset_ident,
@@ -215,6 +243,26 @@ pEp_error:
     return status;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       _generate_keyreset_command_message()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]    session       session handle
+ *  @param[in]    *from_ident   pEp_identity
+ *  @param[in]    *to_ident     pEp_identity
+ *  @param[in]    *old_fpr      constchar
+ *  @param[in]    *new_fpr      constchar
+ *  @param[in]    is_private    bool
+ *  @param[in]    **dst         message
+ *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
+ */
 static PEP_STATUS _generate_keyreset_command_message(PEP_SESSION session,
                                                      const pEp_identity* from_ident,
                                                      const pEp_identity* to_ident,
@@ -982,6 +1030,20 @@ DYNAMIC_API PEP_STATUS key_reset_all_own_keys(PEP_SESSION session) {
     return key_reset(session, NULL, NULL, false);
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       _dup_grouped_only()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]    *idents           identity_list
+ *  @param[in]    **filtered        identity_list
+ *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_OUT_OF_MEMORY       out of memory
+ *  @retval any other value on error
+ */
 static PEP_STATUS _dup_grouped_only(identity_list* idents, identity_list** filtered) {
     if (!idents)
         return PEP_STATUS_OK;
@@ -1076,6 +1138,23 @@ static PEP_STATUS _check_own_reset_passphrase_readiness(PEP_SESSION session,
 // FIXME:
 // I am not sure this is safe with already-revoked keys.
 //
+/**
+ *  @internal
+ *  
+ *  <!--       _key_reset_device_group_for_shared_key()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]    session         session handle
+ *  @param[in]    *key_idents     identity_list
+ *  @param[in]    *old_key        constchar
+ *  @param[in]    grouped_only    bool
+ *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_SYNC_NO_MESSAGE_SEND_CALLBACK
+ *  @retval any other value on error
+ */
 static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session, 
                                                          identity_list* key_idents, 
                                                          const char* old_key,
@@ -1657,6 +1736,17 @@ pEp_free:
     return status;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       Distribution_from_keyreset_command_list()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]    *command_list        keyreset_command_list
+ *  @param[in]    *dist                Distribution_t
+ *  
+ */
 Distribution_t *Distribution_from_keyreset_command_list(
         const keyreset_command_list *command_list,
         Distribution_t *dist
@@ -1762,6 +1852,17 @@ the_end:
     return status;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       Distribution_to_keyreset_command_list()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]    *dist                Distribution_t
+ *  @param[in]    *command_list        keyreset_command_list
+ *  
+ */
 keyreset_command_list * Distribution_to_keyreset_command_list(
         Distribution_t *dist,
         keyreset_command_list *command_list

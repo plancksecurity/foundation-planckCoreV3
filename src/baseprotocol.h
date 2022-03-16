@@ -1,5 +1,13 @@
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file     baseprotocol.h
+ * @brief    Basic functions for administrative pEp messages (preparation,
+ *           decoration, payload, extraction, etc.). 
+ *
+ * These are used for
+ *           protocol messages in, for example, key sync and key reset.
+ *           The payloads of these messages are, in general, not human-readable.
+ * @license  GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #ifndef BASEPROTOCOL_H
 #define BASEPROTOCOL_H
@@ -14,6 +22,12 @@ extern "C" {
 #define _BASE_PROTO_MIME_TYPE_SYNC "application/pEp.sync"
 #define _BASE_PROTO_MIME_TYPE_DIST "application/pEp.distribution"
 
+/**
+ *  @enum    base_protocol_type
+ *  
+ *  @brief    TODO
+ *  
+ */
 typedef enum _base_protocol_type {
     BASE_SIGN = 0,
     BASE_SYNC = 1,
@@ -21,22 +35,30 @@ typedef enum _base_protocol_type {
 } base_protocol_type;
 
 
-// base_decorate_message() - decorate a message with payload
-//
-//  parameters:
-//      session (in)    session handle
-//      msg (inout)     message to decorate
-//      type (in)       base protocol type
-//      payload (in)    payload to send
-//      size (in)       size of payload
-//      fpr (in)        optional key to sign or NULL
-//
-//  returns:
-//      PEP_STATUS_OK and result on success or an error on failure
-//
-//  caveat:
-//      on success (and only then) payload goes to the ownership of the msg
-//      the ownership of the msg remains with the caller
+/**
+ *  <!--       base_decorate_message()       -->
+ *  
+ *  @brief      decorate a message with payload
+ *
+ * 		 Given the data payload for an administrative message, add the appropriate
+ *              information for the payload based on type and insert the payload into the
+ *              message
+ *  
+ *  @param[in]     session    session handle
+ *  @param[in,out] msg        message to decorate
+ *  @param[in]     type       base protocol type
+ *  @param[in]     payload    payload to send
+ *  @param[in]     size       size of payload
+ *  @param[in]     fpr        optional key to sign or NULL
+ *  
+ *  @retval PEP_STATUS_OK     on success 
+ *  @retval error_status      on failure
+ *  
+ *  @ownership 
+ *  - On success (and only then), ownership of the payload is assigned to the msg structure
+ *  - Ownership of the msg remains with the caller
+ *  
+ */
 
 PEP_STATUS base_decorate_message(
         PEP_SESSION session,

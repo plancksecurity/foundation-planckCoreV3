@@ -1,5 +1,9 @@
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    keymanagement.c
+ * @brief   Implementation of functions to manage keys 
+ *          (and identities when in relation to keys)
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #include "platform.h"
 
@@ -530,6 +534,17 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
     return status;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       transfer_ident_lang_and_flags()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]    *new_ident        pEp_identity
+ *  @param[in]    *stored_ident        pEp_identity
+ *  
+ */
 static void transfer_ident_lang_and_flags(pEp_identity* new_ident,
                                           pEp_identity* stored_ident) {
 
@@ -546,6 +561,17 @@ static void transfer_ident_lang_and_flags(pEp_identity* new_ident,
     new_ident->me = new_ident->me || stored_ident->me;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       adjust_pEp_trust_status()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]    session            session handle
+ *  @param[in]    *identity        pEp_identity
+ *  
+ */
 static void adjust_pEp_trust_status(PEP_SESSION session, pEp_identity* identity) {
     assert(session);
     assert(identity);
@@ -575,6 +601,22 @@ static void adjust_pEp_trust_status(PEP_SESSION session, pEp_identity* identity)
 // and friends NEVER return with a password error.
 // (get_valid_pubkey tells validate_fpr not to try renewal)
 // Will not return PASSPHRASE errors.
+/**
+ *  @internal
+ *  
+ *  <!--       prepare_updated_identity()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]    session         session handle
+ *  @param[in]    *return_id        pEp_identity
+ *  @param[in]    *stored_ident    pEp_identity
+ *  @param[in]    store            bool
+ *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval any other value on error
+ */
 static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
                                                  pEp_identity* return_id,
                                                  pEp_identity* stored_ident,
@@ -1145,6 +1187,21 @@ pEp_free:
     return status;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       elect_ownkey()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]    session     session handle
+ *  @param[in]    *identity    pEp_identity
+ *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
+ */
 PEP_STATUS elect_ownkey(
         PEP_SESSION session, pEp_identity * identity
     )
@@ -1218,6 +1275,21 @@ PEP_STATUS elect_ownkey(
     return PEP_STATUS_OK;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       _has_usable_priv_key()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]    session            session handle
+ *  @param[in]    *fpr            char
+ *  @param[in]    *is_usable        bool
+ *  
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval any other value on error
+ */
 PEP_STATUS _has_usable_priv_key(PEP_SESSION session, char* fpr,
                                 bool* is_usable) {
     

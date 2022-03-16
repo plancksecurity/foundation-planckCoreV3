@@ -1,12 +1,10 @@
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
-
-// generate state machine code
-
-// Copyleft (c) 2017-2018, pEp foundation
-
-// Written by Volker Birk
-
+/**
+ * @file     src/fsm_common.h
+ * @brief    Generate state machine code
+ * @license  GNU General Public License 3.0 - see LICENSE.txt
+ * @copyleft (c) 2017-2018, pEp foundation 
+ * @author   Volker Birk
+ */
 
 
 #ifndef FSM_COMMON_H
@@ -18,6 +16,15 @@ extern "C" {
 
 // error values
 
+/**
+ *  @enum    fsm_error
+ *  
+ *  @brief   TODO
+ *
+ *   error values -2..-7 are corresponding to
+ *   PEP_SYNC_STATEMACHINE_ERROR - value
+ *  
+ */
 typedef enum _fsm_error {
     // these error values are corresponding to
     // PEP_SYNC_STATEMACHINE_ERROR - value

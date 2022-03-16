@@ -1,5 +1,8 @@
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    platform_unix.h
+ * @brief   UNIX platform-specific implementation details
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #ifndef PLATFORM_UNIX_H
 #define PLATFORM_UNIX_H
@@ -38,11 +41,31 @@
 extern "C" {
 #endif
 
+/**
+ *  <!--       unix_local_db()       -->
+ *  
+ *  @brief            TODO
+ *
+ *  		The returned pointed refers memory managed by
+ *  		the engine, which will remain valid until
+ *  		the next call to reset_path_cache.
+ *  
+ */
 #ifdef NDEBUG
 const char *unix_local_db(void);
 #else
 const char *unix_local_db(int reset);
 #endif
+/**
+ *  <!--       unix_system_db()       -->
+ *  
+ *  @brief            TODO
+ *
+ *  		The returned pointed refers memory managed by
+ *  		the engine, which will remain valid until
+ *  		the next call to reset_path_cache.
+ *  
+ */
 const char *unix_system_db(void);
 
 
@@ -57,6 +80,15 @@ char *stpcpy(char *, const char *);
 // Only the lowest 31 bits are filled randomly.
 //long int random(void);
 
+/**
+ *  <!--   android_system_db()       -->
+ *
+ *  @brief            TODO
+ *
+ *  		The returned pointed refers memory managed by
+ *  		the engine, which will remain valid until
+ *  		the next call to reset_path_cache.
+ */
 const char *android_system_db(void);
 #define SYSTEM_DB android_system_db()
 
@@ -72,8 +104,38 @@ const char *android_system_db(void);
 #endif
 
 #if !defined(BSD) && !defined(__APPLE__)
+/**
+ *  <!--       strlcpy()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  dst         char*
+ *  @param[in]  src         const char*
+ *  @param[in]  size        size_t
+ *  
+ */
 size_t strlcpy(char* dst, const	char* src, size_t size);
+/**
+ *  <!--       strlcat()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  dst         char*
+ *  @param[in]  src         const char*
+ *  @param[in]  size        size_t
+ *  
+ */
 size_t strlcat(char* dst, const	char* src, size_t size);
+/**
+ *  <!--       strnstr()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  big        const char*
+ *  @param[in]  little     const char*
+ *  @param[in]  len        size_t
+ *  
+ */
 char *strnstr(const char *big, const char *little, size_t len);
 
 // N.B. This is ifdef'd out because NDK users sometimes have trouble finding regex functions in

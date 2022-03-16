@@ -1,5 +1,9 @@
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/** 
+ * @file  stringlist.c
+ * @brief File description for doxygen missing. FIXME 
+ * @license This file is under GNU General Public License 3.0
+ * see LICENSE.txt
+*/
 
 #include "pEp_internal.h"
 
@@ -53,6 +57,18 @@ DYNAMIC_API stringlist_t *stringlist_dup(const stringlist_t *src)
     return dst;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       _stringlist_add_first()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]    *stringlist        stringlist_t
+ *  @param[in]    **result        stringlist_t
+ *  @param[in]    *value        constchar
+ *  
+ */
 static bool _stringlist_add_first(
         stringlist_t *stringlist,
         stringlist_t **result,
@@ -268,6 +284,17 @@ DYNAMIC_API stringlist_t *stringlist_delete(
     return stringlist;
 }
 
+/**
+ *  @internal
+ *  
+ *  <!--       stringlist_multi_delete()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]    *stringlist        stringlist_t
+ *  @param[in]    *value             constchar
+ *  
+ */
 static stringlist_t* stringlist_multi_delete(stringlist_t* stringlist, const char* value) {
     if (stringlist == NULL || !stringlist->value)
         return stringlist;

@@ -1,5 +1,9 @@
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/** 
+ * @file    bloblist.c
+ * @brief   implementation of functions for list structure to hold data of unspecified 
+ *          format (hence, "blob list"); can contain additional format information in structure's mime info
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+*/
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -9,6 +13,17 @@
 #include "platform.h"
 #include "bloblist.h"
 
+/**
+ * @internal
+ * @brief TODO
+ * @param[out] bloblist
+ * @param[in] blob
+ * @param[in] size size of blob
+ * @param[in] mime_type
+ * @param[in] filename
+ * @retval true on success
+ * @retval false on failure
+ */
 static bool set_blob_data(bloblist_t* bloblist, char* blob, size_t size, const char* mime_type,
         const char* filename)
 {

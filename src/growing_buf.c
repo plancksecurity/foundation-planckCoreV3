@@ -1,5 +1,9 @@
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    growing_buf.c
+ * @brief   implementation of growing buffer, which is needed by the ASN.1 implementation
+ *          i.e. for encoding to XER
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #include "pEp_internal.h"
 #include "growing_buf.h"

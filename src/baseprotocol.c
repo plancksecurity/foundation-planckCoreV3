@@ -1,10 +1,25 @@
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/** 
+ * @file     baseprotocol.c
+ * @brief    Implementation of basic functions for administrative pEp messages (preparation,
+ *           decoration, payload, extraction, etc.). These are used for
+ *           protocol messages in, for example, key sync and key reset.
+ *           The payloads of these messages are, in general, not human-readable.
+ * @see      baseprotocol.h
+ * @license  GNU General Public License 3.0 - see LICENSE.txt
+*/
 
 #include "pEp_internal.h"
 #include "message_api.h"
 #include "baseprotocol.h"
 
+/**
+ * @internal
+ * @brief Convert base protocol type from enum to MIME type string
+ * @param[in] type	base_protocol_type
+ * @param[out] type_str	char**
+ * @retval PEP_STATUS_OK
+ * @retval PEP_ILLEGAL_VALUE on illegal value of `type`
+ */
 static PEP_STATUS _get_base_protocol_type_str(base_protocol_type type, const char** type_str) {
     *type_str = NULL;
     switch(type) {

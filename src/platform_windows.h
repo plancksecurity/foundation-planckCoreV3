@@ -1,5 +1,8 @@
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+/**
+ * @file    platform_windows.h
+ * @brief   Windows platform-specific implementation details
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
 
 #ifndef PLATFORM_WINDOWS_H
 #define PLATFORM_WINDOWS_H
@@ -50,13 +53,57 @@ extern "C" {
 #define MAX(A, B) ((A)>(B) ? (A) : (B))
 #endif
 
+/**
+ *  <!--       dlopen()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  filename    const char*
+ *  @param[in]  flag        int
+ *  
+ */
 void *dlopen(const char *filename, int flag);
+/**
+ *  <!--       dlclose()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  handle         void*
+ *  
+ */
 int dlclose(void *handle);
+/**
+ *  <!--       dlsym()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  handle         void*
+ *  @param[in]  symbol         const char*
+ *  
+ */
 void *dlsym(void *handle, const char *symbol);
+/**
+ *  <!--       mkstemp()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  templ         char*
+ *  
+ */
 int mkstemp(char *templ);
 
 // Nota bene: It does _not_ respect timeptr->tm_gmtoff, so it behaves the same as its POSIX original.
 //            Use timegm_with_gmtoff() from <pEp/timestamp.h> or that.
+/**
+ *  <!--       timegm()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  timeptr         timestamp*
+ *
+ *  @note It does _not_ respect timeptr->tm_gmtoff, so it behaves the same as its POSIX original.
+ *        Use timegm_with_gmtoff() from <pEp/timestamp.h> or that.
+ */
 DYNAMIC_API time_t timegm(timestamp *timeptr);
 
 #ifndef strdup
@@ -86,20 +133,107 @@ DYNAMIC_API time_t timegm(timestamp *timeptr);
 #define ftello(A) ((off_t) _ftelli64(A))
 #endif
 
+/**
+ *  <!--       strndup()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  s1       const char*
+ *  @param[in]  n        size_t
+ *  
+ */
 char *strndup(const char *s1, size_t n);
+/**
+ *  <!--       stpcpy()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  dst         char*
+ *  @param[in]  src         const char*
+ *  
+ */
 char *stpcpy(char *dst, const char *src);
 
+/**
+ *  <!--       strlcpy()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  dst         char*
+ *  @param[in]  src         const char*
+ *  @param[in]  size        size_t
+ *  
+ */
 size_t strlcpy(char* dst, const	char* src, size_t size);
+/**
+ *  <!--       strlcat()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  dst         char*
+ *  @param[in]  src         const char*
+ *  @param[in]  size        size_t
+ *  
+ */
 size_t strlcat(char* dst, const	char* src, size_t size);
+/**
+ *  <!--       strnstr()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  big         const char*
+ *  @param[in]  little      const char*
+ *  @param[in]  len         size_t
+ *  
+ */
 char *strnstr(const char *big, const char *little, size_t len);
 
 
+/**
+ *  <!--       windoze_keys_db()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  
+ */
 const char *windoze_keys_db(void);
+/**
+ *  <!--       windoze_local_db()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  
+ */
 const char *windoze_local_db(void);
+/**
+ *  <!--       windoze_system_db()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  
+ */
 const char *windoze_system_db(void);
 
+/**
+ *  <!--       log_output_debug()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  title          const char*
+ *  @param[in]  entity         const char*
+ *  @param[in]  description    const char*
+ *  @param[in]  comment        const char*
+ *  
+ */
 void log_output_debug(const char *title, const char *entity, const char *description, const char *comment);
 
+/**
+ *  <!--       random()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  
+ */
 long random(void);
 
 // on Windoze, uuid_t needs pointer semantics
@@ -107,8 +241,34 @@ typedef UUID pEpUUID[1];
 #define _UUID_STRING_T
 typedef char uuid_string_t[37];
 
+/**
+ *  <!--       uuid_generate_random()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  out        pEpUUID
+ *  
+ */
 void uuid_generate_random(pEpUUID out);
+/**
+ *  <!--       uuid_parse()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  in        char*
+ *  @param[in]  uu        pEpUUID
+ *  
+ */
 int uuid_parse(char *in, pEpUUID uu);
+/**
+ *  <!--       uuid_unparse_upper()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  uu        pEpUUID
+ *  @param[in]  out       uuid_string_t
+ *  
+ */
 void uuid_unparse_upper(pEpUUID uu, uuid_string_t out);
 
 #ifndef __cplusplus
