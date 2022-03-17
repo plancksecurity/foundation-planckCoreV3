@@ -123,49 +123,55 @@ DYNAMIC_API PEP_STATUS key_reset_user(
 DYNAMIC_API PEP_STATUS key_reset_all_own_keys(PEP_SESSION session);
 
 // FIXME: Doc
-// This is simply NOT SAFE for multiple passwords on the extant 
-// keys. Cannot be called with multiple passwords for that purpose.
 /**
  *  <!--       key_reset_own_grouped_keys()       -->
  *  
  *  @brief            TODO
  *  
  *  @param[in]  session     session handle 
+ *
+ *  @internal
+ *  @warning
+ * This is simply NOT SAFE for multiple passwords on the extant 
+ * keys. Cannot be called with multiple passwords for that purpose.
  *  
  */
 DYNAMIC_API PEP_STATUS key_reset_own_grouped_keys(PEP_SESSION session);
 
-// key_reset() - reset the database status for a key, removing all trust information
-//               and default database connections. For own keys, also revoke the key
-//               and communicate the revocation and new key to partners we have sent
-//               mail to recently from the specific identity (i.e. address/user_id)
-//               that contacted them. We also in this case set up information so that
-//               if someone we mail uses the wrong key and wasn't yet contacted,
-//               we can send them the reset information from the right address. 
-//               For non-own keys, also remove key from the keyring.
-//
-//               Can be called manually or through another protocol.
-//
-//  parameters:
-//      session (in)            session handle
-//      fpr (in)                fingerprint of key to reset. If NULL and ident is NULL,
-//                              we reset all keys for the own user. If NULL and ident is
-//                              an own identity, we reset the default key for that
-//                              identity. If that own identity has no default key, we
-//                              reset the user default.
-//                              if it is NULL and there is a non-own identity, we will reset 
-//                              the default key for this identity if present, and user if not.
-//      ident (in)              identity for which the key reset should occur.
-//                              if NULL and fpr is non-NULL, we'll reset the key for all
-//                              associated identities. If both ident and fpr are NULL, see 
-//                              the fpr arg documentation.
-//                              ***IF there is an ident, it must have a user_id.***
-//
-//      Note: ident->fpr is always ignored
-//
-// Caveat: this is now used in large part for internal calls.
-//         external apps should call key_reset_identity and key_reset_userdata
-//         and this function should probably be removed from the dynamic api
+/** 
+ * <!-- key_reset() -->
+ * 		 reset the database status for a key, removing all trust information
+ *               and default database connections. For own keys, also revoke the key
+ *               and communicate the revocation and new key to partners we have sent
+ *               mail to recently from the specific identity (i.e. address/user_id)
+ *               that contacted them. We also in this case set up information so that
+ *               if someone we mail uses the wrong key and wasn't yet contacted,
+ *               we can send them the reset information from the right address. 
+ *               For non-own keys, also remove key from the keyring.
+ *
+ *               Can be called manually or through another protocol.
+ *
+ *  
+ *  @param[in]    session             session handle
+ *  @param[in]    fpr                 fingerprint of key to reset. If NULL and ident is NULL,
+ *                              we reset all keys for the own user. If NULL and ident is
+ *                              an own identity, we reset the default key for that
+ *                              identity. If that own identity has no default key, we
+ *                              reset the user default.
+ *                              if it is NULL and there is a non-own identity, we will reset 
+ *                              the default key for this identity if present, and user if not.
+ *  @param[in]    ident               identity for which the key reset should occur.
+ *                              if NULL and fpr is non-NULL, we'll reset the key for all
+ *                              associated identities. If both ident and fpr are NULL, see 
+ *                              the fpr arg documentation.
+ *                              ***IF there is an ident, it must have a user_id.***
+ *
+ * @note ident->fpr is always ignored
+ *
+ * @warning this is now used in large part for internal calls.
+ *         external apps should call key_reset_identity and key_reset_userdata
+ *         and this function should probably be removed from the dynamic api
+ */
 PEP_STATUS key_reset(
         PEP_SESSION session,
         const char* fpr,

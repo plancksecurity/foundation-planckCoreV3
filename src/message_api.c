@@ -458,10 +458,6 @@ static bool is_mime_type(const bloblist_t *bl, const char *mt)
 }
 
 //
-// This function presumes the file ending is a proper substring of the
-// filename (i.e. if bl->filename is "a.pgp" and fe is ".pgp", it will
-// return true, but if bl->filename is ".pgp" and fe is ".pgp", it will
-// return false. This is desired behaviour.
 //
 /**
  *  @internal
@@ -469,6 +465,11 @@ static bool is_mime_type(const bloblist_t *bl, const char *mt)
  *  <!--       is_fileending()       -->
  *
  *  @brief            TODO
+ *
+ *  This function presumes the file ending is a proper substring of the
+ *  filename (i.e. if bl->filename is "a.pgp" and fe is ".pgp", it will
+ *  return true, but if bl->filename is ".pgp" and fe is ".pgp", it will
+ *  return false. This is desired behaviour.
  *
  *  @param[in]    *bl        const bloblist_t
  *  @param[in]    *fe        const char
@@ -833,14 +834,6 @@ enomem:
     return PEP_OUT_OF_MEMORY;
 }
 
-/* 
-   WARNING: For the moment, this only works for the first line of decrypted
-   plaintext because we don't need more. IF WE DO, THIS MUST BE EXPANDED, or
-   we need a delineated section to parse separately
-   
-   Does case-insensitive compare of keys, so sending in a lower-cased
-   string constant saves a bit of computation
- */
 /**
  *  @internal
  *
@@ -853,6 +846,14 @@ enomem:
  *  @param[in]    keylen        const size_t
  *  @param[in]    **data        char
  *  @param[in]    **modified_msg        char
+ *
+ *  @warning 
+ *  For the moment, this only works for the first line of decrypted
+ *  plaintext because we don't need more. IF WE DO, THIS MUST BE EXPANDED, or
+ *  we need a delineated section to parse separately
+ *  
+ *  Does case-insensitive compare of keys, so sending in a lower-cased
+ *  string constant saves a bit of computation
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_OUT_OF_MEMORY   out of memory
@@ -1879,13 +1880,6 @@ static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist, cha
     return rating;
 }
 
-// KB: Fixme - the first statement below is probably unnecessary now.
-// Internal function WARNING:
-// Should be called on ident that might have its FPR set from retrieval!
-// (or on one without an fpr)
-// We do not want myself() setting the fpr here.
-//
-// Cannot return passphrase statuses. No keygen or renewal allowed here.
 /**
  *  @internal
  *
@@ -1897,6 +1891,14 @@ static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist, cha
  *  @param[in]    max_comm_type        PEP_comm_type
  *  @param[in]    *ident        pEp_identity
  *
+ * <!-- KB: Fixme - the first statement below is probably unnecessary now. -->
+ * @warning
+ * Internal function WARNING:
+ * Should be called on ident that might have its FPR set from retrieval!
+ * (or on one without an fpr)
+ * We do not want myself() setting the fpr here.
+ *
+ * Cannot return passphrase statuses. No keygen or renewal allowed here.
  */
 static PEP_comm_type _get_comm_type(
     PEP_SESSION session,
@@ -4690,15 +4692,16 @@ static bool _have_extrakeys(stringlist_t *keylist)
         && keylist->value[0];
 }
 
-// practically speaking, only useful to get user_id/address intersection
-// we presume no dups in the first list if you're looking for
-// a unique result.
 /**
  *  @internal
  *
  *  <!--       ident_list_intersect()       -->
  *
  *  @brief            TODO
+ *
+ *  practically speaking, only useful to get user_id/address intersection
+ *  we presume no dups in the first list if you're looking for
+ *  a unique result.
  *
  *  @param[in]    *list_a        identity_list
  *  @param[in]    *list_b        identity_list

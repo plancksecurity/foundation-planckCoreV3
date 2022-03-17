@@ -1125,19 +1125,6 @@ static PEP_STATUS _check_own_reset_passphrase_readiness(PEP_SESSION session,
     return PEP_STATUS_OK;                                                       
 }
 
-// This is for ONE specific key, but possibly many identities
-// We could have ONE return for PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED
-// and another for  PEP_PASSPHRASE_REQUIRED/PEP_WRONG_PASSPHRASE
-// State would advance though, it just might need to be called 
-// twice with correct passwords, and more without.
-// (In other words, with multiple passwords, this is not the end of all things)
-//
-// N.B. This function presumes that ALL idents in this group have the
-//      key in question as their main key. That's what this function 
-//      was created for.
-// FIXME:
-// I am not sure this is safe with already-revoked keys.
-//
 /**
  *  @internal
  *  
@@ -1145,6 +1132,19 @@ static PEP_STATUS _check_own_reset_passphrase_readiness(PEP_SESSION session,
  *  
  *  @brief            TODO
  *  
+ * This is for ONE specific key, but possibly many identities
+ * We could have ONE return for PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED
+ * and another for  PEP_PASSPHRASE_REQUIRED/PEP_WRONG_PASSPHRASE
+ * State would advance though, it just might need to be called 
+ * twice with correct passwords, and more without.
+ * (In other words, with multiple passwords, this is not the end of all things)
+ *
+ * N.B. This function presumes that ALL idents in this group have the
+ *      key in question as their main key. That's what this function 
+ *      was created for.
+ * FIXME:
+ * I am not sure this is safe with already-revoked keys.
+ *
  *  @param[in]    session         session handle
  *  @param[in]    *key_idents     identity_list
  *  @param[in]    *old_key        constchar
