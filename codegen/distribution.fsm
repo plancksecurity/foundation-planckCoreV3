@@ -89,6 +89,12 @@ protocol Distribution 2 {
         // * "initiator";
         // * "contactee".
         state BeforeAgreement timeout=off {
+            on Init {
+                // Up to this point there is no difference between the two
+                // roles: each side has to compute one suggestion, to be
+                // joined later.
+                do computeSuggestion;
+            }
             on InitiateTKA { // this is called by the Initiator side
                              // InitiateTKA is an external event, not a message.  This is the default,
                              // since the name is never used for a message.
@@ -96,7 +102,7 @@ protocol Distribution 2 {
                 // imperative-style.
                 go InitiateAgreement;
             }
-            on StartAgreement { // here the role is Contactee
+            on SuggestionFromInitiator { // here the role is Contactee
                 go BeingContacted;
             }
         }
@@ -104,14 +110,12 @@ protocol Distribution 2 {
         // Here we are the initiator.
         state InitiateAgreement { // there is no timeout=off: this is a transitional state
             on Init {
-                do computeSuggestion; // actions are implemented as hand-written C function,
-                                      // with access to the I/O buffer
                 send SuggestionFromInitiator; // by convention in this system send never fails; however
                                               // receive can fail.
             }
             on SuggestionFromContactee {
-                do setTemporaryKey;
-                do invokeCallback;
+                do addSuggestions;  // computes the xor between the two suggestions
+                do setTemporaryKey; // this is a callback: it must return immediately
                 go BeforeAgreement; // the roles can change then.
             }
             on InitiateTKA // this is an external event: it can happen in any state
@@ -122,12 +126,11 @@ protocol Distribution 2 {
         // Here we are the contactee.
         state BeingContacted { // there is no timeout=off: this is a transitional state
             on Init {
-                do computeSuggestion;
                 send SuggestionFromContactee;
             }
             on SuggestionFromInitiator {
-                do setTemporaryKey;
-                do invokeCallback;
+                do addSuggestions;  // compute the xor
+                do setTemporaryKey; // this is a callback
                 go BeforeAgreement;
             }
             on InitiateTKA { // role switch: contactee -> initiator, triggered by an
