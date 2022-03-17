@@ -346,6 +346,7 @@ DYNAMIC_API PEP_STATUS own_key_is_listed(
 
 
 /**
+ *  @internal
  *  <!--       _own_identities_retrieve()       -->
  *  
  *  @brief Retrieve all own identities
@@ -395,6 +396,7 @@ PEP_STATUS contains_priv_key(PEP_SESSION session, const char *fpr,
                              bool *has_private);
 
 /**
+ *  @internal
  *  <!--       _own_keys_retrieve()       -->
  *  
  *  @brief Retrieve all flagged keypair fingerprints 

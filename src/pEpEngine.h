@@ -29,13 +29,14 @@ extern "C" {
 
 #define PEP_VERSION "2.1" // pEp *protocol* version
 
-// RELEASE version this targets.  Each item indicates the last already-released
-// or being-released version.
-// The optional plus sign at the end means that the current version contains
-// changes which follow the release.
-// When the branch is in a non-RC or non-plus state we can just comment the
-// definition of PEP_ENGINE_VERSION_RC , the definition of
-// PEP_ENGINE_VERSION_PLUS , or both.
+/// @def PEP_ENGINE_VERSION
+/// RELEASE version this targets.  Each item indicates the last already-released
+/// or being-released version.
+/// The optional plus sign at the end means that the current version contains
+/// changes which follow the release.
+/// When the branch is in a non-RC or non-plus state we can just comment the
+/// definition of PEP_ENGINE_VERSION_RC , the definition of
+/// PEP_ENGINE_VERSION_PLUS , or both.
 #define PEP_ENGINE_VERSION_MAJOR 2
 #define PEP_ENGINE_VERSION_MINOR 1
 #define PEP_ENGINE_VERSION_PATCH 53  // the last already-released or
@@ -70,7 +71,8 @@ extern "C" {
 #else
 # define _PEP_ENGINE_VERSION_PLUS_STRING ""
 #endif /* PEP_ENGINE_VERSION_PLUS */
-/* An internal convenience macro to generate PEP_ENGINE_VERSION. */
+/** @internal
+ * An internal convenience macro to generate PEP_ENGINE_VERSION. */
 #define _PEP_MAKE_ENGINE_VERSION(major, minor, patch, rc_string,  \
                                  plus_string)                     \
   _PEP_STRINGIZE (major) "."                                      \
@@ -79,7 +81,7 @@ extern "C" {
   rc_string                                                       \
   plus_string
 
-/* The actual public definition. */
+/** The actual public definition. */
 #define PEP_ENGINE_VERSION                                     \
     _PEP_MAKE_ENGINE_VERSION(PEP_ENGINE_VERSION_MAJOR,         \
                              PEP_ENGINE_VERSION_MINOR,         \
@@ -571,7 +573,7 @@ DYNAMIC_API PEP_STATUS encrypt_and_sign(
         size_t psize, char **ctext, size_t *csize
     );
 
-/** *
+/**
  *  <!--       set_debug_color()       -->
  *  
  *  @brief            TODO
@@ -582,20 +584,23 @@ DYNAMIC_API PEP_STATUS encrypt_and_sign(
  */
 DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color);
 
-// log_event() - log a user defined event defined by UTF-8 encoded strings into
-// management log
-//
-//    parameters:
-//        session (in)        session handle
-//        title (in)          C string with event name
-//        entity (in)         C string with name of entity which is logging
-//        description (in)    C string with long description for event or NULL if
-//                            omitted
-//        comment (in)        C string with user defined comment or NULL if
-//                            omitted
-//
-//    return value:
-//        PEP_STATUS_OK       log entry created
+/**
+ *  <!--       log_event()       -->
+ *  
+ *  @brief Log a user defined event defined by UTF-8 encoded strings into
+ *         management log
+ *  
+ *  @param[in]   session        session handle
+ *  @param[in]   title          C string with event name
+ *  @param[in]   entity         C string with name of entity which is logging
+ *  @param[in]   description    C string with long description for event or NULL if
+ *                                  omitted
+ *  @param[in]   comment        C string with user defined comment or NULL if
+ *                                  omitted
+ *  
+ *  @retval PEP_STATUS_OK       log entry created
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS log_event(
         PEP_SESSION session,
@@ -606,6 +611,21 @@ DYNAMIC_API PEP_STATUS log_event(
     );
 
 
+/**
+ *  <!--       log_service()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session        session handle
+ *  @param[in]  title          const char*
+ *  @param[in]  entity         const char*
+ *  @param[in]  description    const char*
+ *  @param[in]  comment        const char*
+
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE
+ *  
+ */
 DYNAMIC_API PEP_STATUS log_service(PEP_SESSION session, const char *title,
         const char *entity, const char *description, const char *comment);
 
@@ -616,30 +636,44 @@ DYNAMIC_API PEP_STATUS log_service(PEP_SESSION session, const char *title,
 #define SERVICE_LOG(session, title, entity, desc) \
     log_service((session), (title), (entity), (desc), "service " __FILE__ ":" S_LINE)
 
+/**
+ *  @internal
+ *  <!--       _service_error_log()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  @param[in]  session       session handle
+ *  @param[in]  entity        const char*
+ *  @param[in]  status        PEP_STATUS
+ *  @param[in]  where         const char*
+ *  
+ */
 DYNAMIC_API void _service_error_log(PEP_SESSION session, const char *entity,
         PEP_STATUS status, const char *where);
 
 #define SERVICE_ERROR_LOG(session, entity, status) \
     _service_error_log((session), (entity), (status), __FILE__ ":" S_LINE)
 
-// trustword() - get the corresponding trustword for a 16 bit value
-//
-//    parameters:
-//        session (in)            session handle
-//        value (in)              value to find a trustword for
-//        lang (in)               C string with ISO 639-1 language code
-//        word (out)              pointer to C string with trustword UTF-8 encoded
-//                                NULL if language is not supported or trustword
-//                                wordlist is damaged or unavailable
-//        wsize (out)             length of trustword
-//
-//    return value:
-//        PEP_STATUS_OK            trustword retrieved
-//        PEP_TRUSTWORD_NOT_FOUND  trustword not found
-//
-//    caveat:
-//        the word pointer goes to the ownership of the caller
-//      the caller is responsible to free() it (on Windoze use pEp_free())
+/**
+ *  <!--       trustword()       -->
+ *  
+ *  @brief Get the corresponding trustword for a 16 bit value
+ *  
+ *  @param[in]     session    session handle
+ *  @param[in]     value      value to find a trustword for
+ *  @param[in]     lang       C string with ISO 639-1 language code
+ *  @param[out]    word       pointer to C string with trustword UTF-8 encoded;
+ *                            NULL if language is not supported or trustword
+ *                            wordlist is damaged or unavailable
+ *  @param[out]    wsize      length of trustword
+ *  
+ *  @retval PEP_STATUS_OK            trustword retrieved
+ *  @retval PEP_TRUSTWORD_NOT_FOUND  trustword not found
+ *  
+ *  @warning the word pointer goes to the ownership of the caller
+ *           the caller is responsible to free() it (on Windoze use pEp_free())
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS trustword(
             PEP_SESSION session, uint16_t value, const char *lang,
@@ -647,34 +681,36 @@ DYNAMIC_API PEP_STATUS trustword(
         );
 
 
-// trustwords() - get trustwords for a string of hex values of a fingerprint
-//
-//    parameters:
-//        session (in)        session handle
-//        fingerprint (in)    C string with hex values to find trustwords for
-//        lang (in)           C string with ISO 639-1 language code
-//        words (out)         pointer to C string with trustwords UTF-8 encoded,
-//                            separated by a blank each
-//                            NULL if language is not supported or trustword
-//                            wordlist is damaged or unavailable
-//        wsize (out)         length of trustwords string
-//        max_words (in)      only generate a string with max_words;
-//                            if max_words == 0 there is no such limit
-//
-//    return value:
-//        PEP_STATUS_OK            trustwords retrieved
-//        PEP_OUT_OF_MEMORY        out of memory
-//        PEP_TRUSTWORD_NOT_FOUND  at least one trustword not found
-//
-//    caveat:
-//        the word pointer goes to the ownership of the caller
-//      the caller is responsible to free() it (on Windoze use pEp_free())
-//
-//  DON'T USE THIS FUNCTION FROM HIGH LEVEL LANGUAGES!
-//
-//  Better implement a simple one in the adapter yourself using trustword(), and
-//  return a list of trustwords.
-//  This function is provided for being used by C and C++ programs only.
+/**
+ *  <!--       trustwords()       -->
+ *  
+ *  @brief Get trustwords for a string of hex values of a fingerprint
+ *  
+ *  @param[in]     session        session handle
+ *  @param[in]     fingerprint    C string with hex values to find trustwords for
+ *  @param[in]     lang           C string with ISO 639-1 language code
+ *  @param[out]    words          pointer to C string with trustwords UTF-8 encoded,
+ *                                separated by a blank each;
+ *                                NULL if language is not supported or trustword
+ *                                wordlist is damaged or unavailable
+ *  @param[out]    wsize          length of trustwords string
+ *  @param[in]     max_words      only generate a string with max_words;
+ *                                if max_words == 0 there is no such limit
+ *  
+ *  @retval PEP_STATUS_OK            trustwords retrieved
+ *  @retval PEP_OUT_OF_MEMORY        out of memory
+ *  @retval PEP_TRUSTWORD_NOT_FOUND  at least one trustword not found
+ *  
+ *  @warning the word pointer goes to the ownership of the caller
+ *           the caller is responsible to free() it (on Windoze use pEp_free())
+ * 
+ *  @warning DON'T USE THIS FUNCTION FROM HIGH LEVEL LANGUAGES!
+ *           Better implement a simple one in the adapter yourself using trustword(), and
+ *           return a list of trustwords.
+ * 
+ *  @warning This function is provided for being used by C and C++ programs only.
+ *  
+ */
 
 DYNAMIC_API PEP_STATUS trustwords(
         PEP_SESSION session, const char *fingerprint, const char *lang,
@@ -684,6 +720,11 @@ DYNAMIC_API PEP_STATUS trustwords(
 
 // TODO: increase versions in pEp.asn1 if rating changes
 
+/**
+ *  @enum    PEP_comm_type  
+ *  @brief    TODO
+ *  
+ */
 typedef enum _PEP_comm_type {
     PEP_ct_unknown = 0,
 
@@ -935,7 +976,6 @@ DYNAMIC_API PEP_STATUS set_identity(
  *  @retval PEP_UNKNOWN_ERROR             results were returned, but no ID
  *                                        found (no reason this should ever 
  *                                        occur)
-
  *  
  *  @warning userid will be NULL if not found; otherwise, returned string
  *           belongs to the caller.
@@ -964,7 +1004,6 @@ DYNAMIC_API PEP_STATUS get_default_own_userid(
  *  @retval PEP_UNKNOWN_ERROR             results were returned, but no ID
  *                                        found (no reason this should ever 
  *                                        occur)
-
  *  
  *  @warning default_id will be NULL if not found; otherwise, returned string
  *           belongs to the caller.
@@ -1193,7 +1232,7 @@ DYNAMIC_API PEP_STATUS import_key_with_fpr_return(
 );
 
 
-/** *
+/**
  *  <!--       export_key()       -->
  *  
  *  @brief Export ascii armored key
@@ -1681,12 +1720,14 @@ DYNAMIC_API PEP_STATUS get_revoked(
         uint64_t *revocation_date
     );
 
-// key_created() - get creation date of a key
-//
-//  parameters:
-//      session (in)            session handle
-//      fpr (in)                fingerprint of key
-//      created (out)           date of creation
+/**
+ * <!-- key_created() -->
+ * @brief get creation date of a key
+ *
+ *  param[in] session             session handle
+ *  param[in]     fpr                 fingerprint of key
+ *  param[out]     created            date of creation
+ */
 
 PEP_STATUS key_created(
         PEP_SESSION session,
@@ -1695,17 +1736,19 @@ PEP_STATUS key_created(
     );
 
 
-// find_private_keys() - find keys in keyring
-//
-//  parameters:
-//      session (in)            session handle
-//      pattern (in)            key id, user id or address to search for as
-//                              UTF-8 string
-//      keylist (out)           list of fingerprints found or NULL on error
-//
-//  caveat:
-//        the ownerships of keylist isgoing to the caller
-//        the caller must use free_stringlist() to free it
+/**
+ * <!-- find_private_keys() -->
+ * @brief find keys in keyring
+ *
+ *  @param[in] session             session handle
+ *  @param[in]    pattern          key id, user id or address to search for as
+ *                                 UTF-8 string
+ *  @param[out] keylist            list of fingerprints found or NULL on error
+ *
+ *  @warning
+ *        the ownerships of keylist isgoing to the caller
+ *        the caller must use free_stringlist() to free it
+ */
 PEP_STATUS find_private_keys(PEP_SESSION session, const char* pattern,
                              stringlist_t **keylist);
 
@@ -1753,7 +1796,7 @@ DYNAMIC_API PEP_STATUS is_pEp_user(PEP_SESSION session,
                                    pEp_identity *identity, 
                                    bool* is_pEp);
 
- /** *************
+ /**
  *  <!--       per_user_directory()       -->
  *  
  *  @brief Returns the directory for pEp management db.
@@ -1901,27 +1944,29 @@ PEP_STATUS _generate_keypair(PEP_SESSION session,
                              pEp_identity *identity,
                              bool suppress_event);
 
-// set_comm_partner_key() - Set the default key fingerprint for the identity identitified by this address and user_id.
-//
-//  parameters:
-//      session  (in)            session handle
-//      identity (inout)         identity - cannot be NULL
-//      fpr      (in)            fingerprint for identity - cannot be NULL or empty
-//
+/// <!-- set_comm_partner_key() -->
+/// @brief Set the default key fingerprint for the identity identitified by this address and user_id.
+///
+///  @param[in] session              session handle
+///  @param[in,out] identity          identity - cannot be NULL
+///  @param[in]    fpr                  fingerprint for identity - cannot be NULL or empty
+///
 DYNAMIC_API PEP_STATUS set_comm_partner_key(PEP_SESSION session,
                                             pEp_identity *identity,
                                             const char* fpr);
 
 
-// set_default_identity_fpr() - FOR UPPER_LEVEL TESTING ONLY - NOT TO BE USED DIRECTLY BY ADAPTER OR APPS IN PRODUCTION
-//                              Set the default key fingerprint for the identity identitified by this address and user_id.
-//                              Only to be used for testing, since key election cannot be relied upon for tests.
-//  parameters:
-//      session (in)            session handle
-//      user_id (in)            user_id for identity - cannot be NULL
-//      address (in)            address for identity - cannot be NULL
-//      fpr     (in)            fingerprint for identity - cannot be NULL
-//
+/// @internal
+/// <!-- set_default_identity_fpr() --> 
+/// 
+/// FOR UPPER_LEVEL TESTING ONLY - NOT TO BE USED DIRECTLY BY ADAPTER OR APPS IN PRODUCTION
+///                              Set the default key fingerprint for the identity identitified by this address and user_id.
+///                              Only to be used for testing, since key election cannot be relied upon for tests.
+///  @param[in]    session             session handle
+///  @param[in]    user_id             user_id for identity - cannot be NULL
+///  @param[in]    address             address for identity - cannot be NULL
+///  @param[in]    fpr                 fingerprint for identity - cannot be NULL
+///
 PEP_STATUS set_default_identity_fpr(PEP_SESSION session,
                                                 const char* user_id,
                                                 const char* address,
@@ -1946,9 +1991,11 @@ PEP_STATUS get_default_identity_fpr(PEP_SESSION session,
  */
 DYNAMIC_API PEP_STATUS reset_pEptest_hack(PEP_SESSION session);
 
-// This is used internally when there is a temporary identity to be retrieved
-// that may not yet have an FPR attached. See get_identity() for functionality,
-// params and caveats.
+/// @internal
+/// This is used internally when there is a temporary identity to be retrieved
+/// that may not yet have an FPR attached. See get_identity() for functionality,
+/// params and caveats.
+/// @see get_identity()
 PEP_STATUS get_identity_without_trust_check(
         PEP_SESSION session,
         const char *address,

@@ -1,4 +1,5 @@
 /**
+ * @internal
  * @file    etpan_mime.c 
  * @brief   File description for doxygen missing. FIXME
  * @license GNU General Public License 3.0 - see LICENSE.txt

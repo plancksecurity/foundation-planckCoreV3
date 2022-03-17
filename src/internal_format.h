@@ -1,4 +1,5 @@
 /**
+ * @internal
  * @file    internal_format.h
  * @brief   internal format (FIXME: derived from filename)
  * @license GNU General Public License 3.0 - see LICENSE.txt
@@ -16,6 +17,7 @@ extern "C" {
 #endif
 
 /**
+ * @internal
  *  <!--       encode_internal()       -->
  *  
  *  @brief Encode to the internal message format
@@ -50,6 +52,7 @@ DYNAMIC_API PEP_STATUS encode_internal(
 
 
 /**
+ * @internal
  *  <!--       decode_internal()       -->
  *  
  *  @brief Decode from internal message format

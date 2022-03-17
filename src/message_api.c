@@ -4519,6 +4519,20 @@ static char* seek_good_trusted_private_fpr(PEP_SESSION session, char* own_id,
     return NULL;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       import_header_keys()       -->
+ *
+ *  @brief            TODO
+ *
+ *  @param[in]    session                    session handle
+ *  @param[in]    *src                    message
+ *  @param[in]    **imported_key_list        stringlist_t
+ *  @param[in]    *changed_keys            uint64_t
+ *
+ *  @retval     bool
+ */
 static bool import_header_keys(PEP_SESSION session, message* src, stringlist_t** imported_key_list, uint64_t* changed_keys) {
     stringpair_list_t* header_keys = stringpair_list_find(src->opt_fields, "Autocrypt"); 
     if (!header_keys || !header_keys->value)
@@ -4546,6 +4560,21 @@ static bool import_header_keys(PEP_SESSION session, message* src, stringlist_t**
     return false;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       check_for_own_revoked_key()       -->
+ *
+ *  @brief            TODO
+ *
+ *  @param[in]    session            session handle    
+ *  @param[in]    *keylist        stringlist_t
+ *  @param[in]    **revoked_fpr_pairs        stringpair_list_t
+ *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval any other value on error
+ */
 PEP_STATUS check_for_own_revoked_key(
         PEP_SESSION session, 
         stringlist_t* keylist,

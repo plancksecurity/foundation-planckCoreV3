@@ -1,4 +1,5 @@
 /**
+ * @internal
  * @file    base64.c 
  * @brief   Convert base64 to a binary blob - this is the implementation of 
  *          a convenience function used mainly to convert keys which are
@@ -15,6 +16,7 @@
 #include "base64.h"
 
 /**
+ *  @internal
  * <!-- translate_char_to_bits() -->
  * @brief convert ascii value to corresponding base64 digit value
  * @param[in] input char to translate

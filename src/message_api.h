@@ -225,7 +225,12 @@ typedef enum _PEP_rating {
     PEP_rating_mistrust = -1,
     PEP_rating_under_attack = -3
 } PEP_rating;
-
+/**
+ *  @enum    PEP_color
+ *
+ *  @brief    Internal encoding of colors for status bar.
+ *
+ */
 typedef enum _PEP_color {
     PEP_color_no_color = 0,
     PEP_color_yellow,
@@ -633,13 +638,15 @@ DYNAMIC_API PEP_STATUS get_key_rating_for_user(
 DYNAMIC_API PEP_rating rating_from_comm_type(PEP_comm_type ct);
 
 
-// this is the internal function to be used by asynchronous network protocol
-// implementations
-//
-// this function is calling messageToSend(NULL) in case there is a missing or wrong passphrase
-//
-// do not use it in adapters
-
+/**
+ * @internal
+ * this is the internal function to be used by asynchronous network protocol
+ * implementations
+ *
+ * this function is calling messageToSend(NULL) in case there is a missing or wrong passphrase
+ *
+ * do not use it in adapters
+ */
 PEP_STATUS try_encrypt_message(
         PEP_SESSION session,
         message *src,
@@ -649,14 +656,13 @@ PEP_STATUS try_encrypt_message(
         PEP_encrypt_flags_t flags
     );
 
-// probe_encrypt() - test if passphrase for a key is working in current session
-//
-//  parameters:
-//      session (in)            session handle
-//      fpr (in)                fingerprint of key to test
-//
-//  returns:
-//      PEP_STATUS_OK           in case passphrase works or any error if not
+/// <!--probe_encrypt() -->
+///  @brief test if passphrase for a key is working in current session
+///
+///  @param[in] session             session handle
+///  @param[in]    fpr                 fingerprint of key to test
+///
+///  @retval  PEP_STATUS_OK           in case passphrase works or any error if not
 
 DYNAMIC_API PEP_STATUS probe_encrypt(PEP_SESSION session, const char *fpr);
 

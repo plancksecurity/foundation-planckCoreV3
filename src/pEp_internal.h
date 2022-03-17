@@ -1,4 +1,5 @@
 /**
+ * @internal
  * @file    pEp_internal.h
  * @brief   pEp internal structs, functions, defines, and values
  * @license GNU General Public License 3.0 - see LICENSE.txt
@@ -119,6 +120,7 @@
 struct _pEpSession;
 typedef struct _pEpSession pEpSession;
 /**
+ *  @internal
  *  @struct    _pEpSession
  *  
  *  @brief    TODO
@@ -292,6 +294,7 @@ struct _pEpSession {
 
 
 /**
+ *  @internal
  *  <!--       init_transport_system()       -->
  *  
  *  @brief            TODO
@@ -303,6 +306,7 @@ struct _pEpSession {
 PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first);
 
 /**
+ *  @internal
  *  <!--       release_transport_system()       -->
  *  
  *  @brief            TODO
@@ -335,6 +339,7 @@ PEP_STATUS encrypt_only(
 );
 
 /**
+ *  @internal
  *  <!--       decorate_message()       -->
  *  
  *  @brief            TODO
@@ -371,7 +376,8 @@ void decorate_message(
 #endif
 
 /**
- *  @enum    normalize_hex_res_t
+ *  @internal
+ *  @enum    _normalize_hex_rest_t
  *  
  *  @brief    TODO
  *  

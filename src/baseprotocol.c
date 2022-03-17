@@ -1,4 +1,5 @@
 /** 
+ * @internal
  * @file     baseprotocol.c
  * @brief    Implementation of basic functions for administrative pEp messages (preparation,
  *           decoration, payload, extraction, etc.). These are used for

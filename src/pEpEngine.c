@@ -6309,6 +6309,8 @@ DYNAMIC_API PEP_STATUS get_revoked(
     return status;
 }
 
+/* doxygen will fetch documentation from pEpEngine.h
+ */
 DYNAMIC_API PEP_STATUS get_replacement_fpr(
         PEP_SESSION session,
         const char *fpr,
