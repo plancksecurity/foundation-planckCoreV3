@@ -13,7 +13,7 @@ import subprocess
 from os.path import isfile, join, splitext
 
 # The engine source directory
-ENGINE_BASE_DIR = '.'
+ENGINE_BASE_DIR = '../pEpEngine'
 
 SYNC_DIR_GENERATED = join(ENGINE_BASE_DIR, 'codegen/generated')
 ASN_DIR_GENERATED = join(ENGINE_BASE_DIR, 'asn.1')
