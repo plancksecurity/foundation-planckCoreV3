@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-#
-# Updates the list of (presumably) engine-generated files.
-#
+# Updates the list of engine-generated files.
+# Usage (from the top of the checked out engine):
+# python3 build-mac/scripts/python/update_engine_generated_files.py
 
 import os
 import subprocess
