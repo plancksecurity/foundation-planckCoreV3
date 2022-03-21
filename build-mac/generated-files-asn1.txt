@@ -68,6 +68,8 @@ $(SRCROOT)/../asn.1/OwnKeysRequester.c
 $(SRCROOT)/../asn.1/OwnKeysRequester.h
 $(SRCROOT)/../asn.1/PString.c
 $(SRCROOT)/../asn.1/PString.h
+$(SRCROOT)/../asn.1/Ping.c
+$(SRCROOT)/../asn.1/Ping.h
 $(SRCROOT)/../asn.1/PrintableString.c
 $(SRCROOT)/../asn.1/PrintableString.h
 $(SRCROOT)/../asn.1/Rating.c
