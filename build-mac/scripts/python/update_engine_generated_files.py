@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 
 #
-# Updates the list of engine-generated files.
-#
-# Usage (from the top of the checked out engine):
-# python3 build-mac/scripts/python/update_engine_generated_files.py
+# Updates the list of (presumably) engine-generated files.
 #
 
 import os
@@ -13,14 +10,13 @@ import subprocess
 from os.path import isfile, join, splitext
 
 # The engine source directory
-ENGINE_BASE_DIR = '../pEpEngine'
+ENGINE_BASE_DIR = '.'
 
-SYNC_DIR_GENERATED = join(ENGINE_BASE_DIR, 'codegen/generated')
+SYNC_DIR_GENERATED = join(ENGINE_BASE_DIR, 'sync/generated')
 ASN_DIR_GENERATED = join(ENGINE_BASE_DIR, 'asn.1')
 DES_DIR = join(ENGINE_BASE_DIR, 'build-mac')
-DES_DIR_ASN = join(ENGINE_BASE_DIR, 'build-mac', 'Subprojects', 'pEpASN1')
-DEST_ASN_LIST = join(DES_DIR_ASN, 'generated-files.txt')
-DEST_SYNC_LIST = join(DES_DIR, 'generated-files.txt')
+DEST_ASN_LIST = join(DES_DIR, 'generated-files-asn1.txt')
+DEST_SYNC_LIST = join(DES_DIR, 'generated-files-sync.txt')
 
 
 class Pushd:
@@ -50,12 +46,12 @@ def clean_engine():
         subprocess.run(['gmake', 'clean'], check=True)
 
 
-def generate_files():
+def generate_sync_files():
     """Generates the engine's sync files"""
     with Pushd(ENGINE_BASE_DIR):
         commands = [
-            ['gmake', 'codegen'],
-            ['gmake', '-C', 'asn.1', 'Sync.c', 'Distribution.c', 'Storage.c', 'ASN1Message.c'],
+            ['gmake', '-C', 'sync'],
+            ['gmake', '-C', 'asn.1', 'Sync.c', 'Distribution.c']
         ]
         for cmd in commands:
             subprocess.run(cmd, check=True)
