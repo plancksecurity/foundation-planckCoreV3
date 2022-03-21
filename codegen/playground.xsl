@@ -1,0 +1,2 @@
+<template match="/">
+</template>
