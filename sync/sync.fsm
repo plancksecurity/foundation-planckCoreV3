@@ -94,6 +94,8 @@ protocol Sync 1 {
                     debug > cannot approve NegotiationOpen
                 }
             }
+
+            on Ping send Beacon;
         }
 
         // handshaking without existing Device group
@@ -303,6 +305,7 @@ protocol Sync 1 {
             on CannotDecrypt {
                 debug > cry, baby
                 send SynchronizeGroupKeys;
+                send Ping;
             }
 
             on SynchronizeGroupKeys {
@@ -687,6 +690,10 @@ protocol Sync 1 {
 
         message ReceiverRating 22, security=ignore {
             field Rating rating;
+        }
+
+        message Ping 23, type=broadcast, ratelimit=10, security=unencrypted {
+            auto Version version;
         }
     }
 }
