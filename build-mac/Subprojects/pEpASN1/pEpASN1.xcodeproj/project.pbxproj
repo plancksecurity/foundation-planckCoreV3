@@ -277,6 +277,10 @@
 		15A32289260E03F3009D07EB /* INTEGER.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32086260E03BC009D07EB /* INTEGER.h */; };
 		15A3228A260E03F3009D07EB /* ISO639-1.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32074260E03BB009D07EB /* ISO639-1.h */; };
 		15A3228B260E03F3009D07EB /* Rating.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A3209D260E03BC009D07EB /* Rating.h */; };
+		43C49BC027E8CB2500821567 /* Ping.c in Sources */ = {isa = PBXBuildFile; fileRef = 43C49BBE27E8CB2500821567 /* Ping.c */; };
+		43C49BC127E8CB2500821567 /* Ping.c in Sources */ = {isa = PBXBuildFile; fileRef = 43C49BBE27E8CB2500821567 /* Ping.c */; };
+		43C49BC227E8CB2500821567 /* Ping.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C49BBF27E8CB2500821567 /* Ping.h */; };
+		43C49BC327E8CB2500821567 /* Ping.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C49BBF27E8CB2500821567 /* Ping.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -435,6 +439,8 @@
 		15A320F1260E03BE009D07EB /* Rollback.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Rollback.c; path = ../../../asn.1/Rollback.c; sourceTree = "<group>"; };
 		15A320F2260E03BE009D07EB /* per_decoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = per_decoder.h; path = ../../../asn.1/per_decoder.h; sourceTree = "<group>"; };
 		15A320F3260E03BE009D07EB /* constr_TYPE.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = constr_TYPE.c; path = ../../../asn.1/constr_TYPE.c; sourceTree = "<group>"; };
+		43C49BBE27E8CB2500821567 /* Ping.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Ping.c; path = ../../../asn.1/Ping.c; sourceTree = "<group>"; };
+		43C49BBF27E8CB2500821567 /* Ping.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Ping.h; path = ../../../asn.1/Ping.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -495,6 +501,8 @@
 		15A3206B260E0376009D07EB /* src */ = {
 			isa = PBXGroup;
 			children = (
+				43C49BBE27E8CB2500821567 /* Ping.c */,
+				43C49BBF27E8CB2500821567 /* Ping.h */,
 				15A32075260E03BB009D07EB /* asn_application.h */,
 				15A320E4260E03BE009D07EB /* asn_codecs_prim.c */,
 				15A320B2260E03BD009D07EB /* asn_codecs_prim.h */,
@@ -702,6 +710,7 @@
 				15A32225260E03F2009D07EB /* GroupKeysUpdate.h in Headers */,
 				15A3223B260E03F2009D07EB /* Beacon.h in Headers */,
 				15A32210260E03F2009D07EB /* InitUnledGroupKeyReset.h in Headers */,
+				43C49BC227E8CB2500821567 /* Ping.h in Headers */,
 				15A32221260E03F2009D07EB /* ElectGroupKeyResetLeader.h in Headers */,
 				15A3220E260E03F2009D07EB /* CommitReject.h in Headers */,
 				15A3220A260E03F1009D07EB /* GroupKeysForNewMember.h in Headers */,
@@ -729,6 +738,7 @@
 				15A3226D260E03F3009D07EB /* xer_decoder.h in Headers */,
 				15A32274260E03F3009D07EB /* KeyReset.h in Headers */,
 				15A3228A260E03F3009D07EB /* ISO639-1.h in Headers */,
+				43C49BC327E8CB2500821567 /* Ping.h in Headers */,
 				15A32265260E03F3009D07EB /* ElectGroupKeyResetLeader.h in Headers */,
 				15A3226E260E03F3009D07EB /* Version.h in Headers */,
 				15A32263260E03F3009D07EB /* per_encoder.h in Headers */,
@@ -970,6 +980,7 @@
 				15A3218F260E03E3009D07EB /* OCTET_STRING.c in Sources */,
 				15A32180260E03E3009D07EB /* asn_SET_OF.c in Sources */,
 				15A32187260E03E3009D07EB /* KeyReset.c in Sources */,
+				43C49BC027E8CB2500821567 /* Ping.c in Sources */,
 				15A3219A260E03E3009D07EB /* TID.c in Sources */,
 				15A3218C260E03E3009D07EB /* CommitAcceptForGroup.c in Sources */,
 				15A321B2260E03E3009D07EB /* INTEGER.c in Sources */,
@@ -1043,6 +1054,7 @@
 				15A321D0260E03E4009D07EB /* OCTET_STRING.c in Sources */,
 				15A321C1260E03E4009D07EB /* asn_SET_OF.c in Sources */,
 				15A321C8260E03E4009D07EB /* KeyReset.c in Sources */,
+				43C49BC127E8CB2500821567 /* Ping.c in Sources */,
 				15A321DB260E03E4009D07EB /* TID.c in Sources */,
 				15A321CD260E03E4009D07EB /* CommitAcceptForGroup.c in Sources */,
 				15A321F3260E03E4009D07EB /* INTEGER.c in Sources */,
