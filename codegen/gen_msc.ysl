@@ -1,0 +1,19 @@
+include yslt.yml2
+
+tstylesheet {
+    template "/protocol/fsm[1]"
+    ||
+    msc {
+
+      # The entities
+      ua [label="Alice\\nUser"], a [label="Alice\\nDevice"], b [label="Bob\\nDevice"], ub [label="Bob\\nUser"];
+   
+      # Small gap before the boxes
+      |||;
+   
+      # Next four on same line due to ','
+      a box a [label="sole"],
+      b box b [label="sole"],
+    }
+    ||
+}
