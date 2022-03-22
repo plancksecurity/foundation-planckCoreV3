@@ -46,20 +46,41 @@
 	  <tr>
 		  <th>state</th>
 		  <th>event</th>
-		  <th>transition</th>
+		  <th>condition</th>
 		  <th>sent message</th>
+		  <th>transition</th>
 	  </tr>
-	  <xsl:apply-templates select="state[@timeout='off']"/>
+	  <xsl:for-each select="descendant::state[@timeout='off']">
+		  <xsl:apply-templates select="."/>
+	  </xsl:for-each>
+  </table>
+    <h2>List of transitions starting from transient state</h2>
+  <table border="1">
+	  <tr>
+		  <th>state</th>
+		  <th>event</th>
+		  <th>condition</th>
+		  <th>sent message</th>
+		  <th>transition</th>
+	  </tr>
+	  <xsl:for-each select="descendant::state[@timeout='on']">
+		  <xsl:apply-templates select="."/>
+	  </xsl:for-each>
   </table>
   </body>
   </html>
 </xsl:template>
 
-<xsl:template match="state[@timeout='off']">
+<xsl:template match="state">
+	<xsl:for-each select="descendant::send">
+	<tr>
+	  <td><xsl:value-of select="ancestor::state/@name"/></td>
+	  <td><xsl:value-of select="ancestor::event/@name"/></td>
+	  <td><xsl:value-of select="ancestor::condition/@name"/></td>
 	  <td><xsl:value-of select="@name"/></td>
-	  <td><xsl:value-of select="child::event/@name"/></td>
-	  <td><xsl:value-of select="descendant::transition/@name"/></td>
-	  <!--	  <td><xsl:value-of select="descendant::send/@name"/></td>-->
+	  <td><xsl:value-of select="following-sibling::transition/@target"/></td>
+  </tr>
+  </xsl:for-each>
 </xsl:template>
 
 </xsl:stylesheet> 
