@@ -39,7 +39,8 @@ digraph SEQ_DIAGRAM {
 		<xsl:for-each select="message">
 			{ rank=same;
 			<xsl:choose>
-				<xsl:when test="
+				<xsl:when test=""/>
+			</xsl:choose>
 		</xsl:for-each>
     { rank=same; a1 -> b1 [label="activate()"]; c1 -> a1 [arrowhead=normal]; }
     { edge [style=dashed, weight=6]; a1->a2; b1->b2; } 
