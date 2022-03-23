@@ -1,22 +1,72 @@
 msc {
 
   # The entities
-  ua [label="Alice
-User"], a [label="Alice
-Device"], b [label="Bob
-Device"], ub [label="Bob
-User"];
+  ua [label="Alice\nUser"], a [label="Alice\nDevice"], b [label="Bob\nDevice"], ub [label="Bob\nUser"];
 
   # Small gap before the boxes
   |||;
 
   # Next four on same line due to ','
   a box a [label="sole"],
-  b box b [label="sole"];
-  ua -> a [label="KeyGen"];
-  a -> b  [label="Beacon"];
-  b -> a  [label="NegotiationRequest"];
-  a >> b  [label="NegotiationOpen"];
-  a box a [label="HandshakingOfferer"],
-  b box b [label="HandshakingRequester"];
+  b box b [label="sole"],
 }
+    State Sole: 
+    go HandshakingOfferer
+        State HandshakingOfferer: 
+        go Sole
+        go Sole
+        go End
+        go End
+        go HandshakingPhase1Offerer
+            State HandshakingPhase1Offerer: 
+            go Sole
+            go End
+            go FormingGroupOfferer
+                State FormingGroupOfferer: 
+                go Sole
+                go Sole
+                go Grouped
+        go HandshakingPhase2Offerer
+            State HandshakingPhase2Offerer: 
+            go Sole
+            go End
+            go FormingGroupOfferer
+                State FormingGroupOfferer: 
+                go Sole
+                go Sole
+                go Grouped
+    go HandshakingToJoin
+        State HandshakingToJoin: 
+        go Sole
+        go Sole
+        go End
+        go HandshakingToJoinPhase2
+            State HandshakingToJoinPhase2: 
+            go Sole
+            go End
+            go JoiningGroup
+                State JoiningGroup: 
+                go Grouped
+        go End
+        go HandshakingToJoinPhase1
+            State HandshakingToJoinPhase1: 
+            go Sole
+            go End
+            go JoiningGroup
+                State JoiningGroup: 
+                go Grouped
+    go HandshakingRequester
+        State HandshakingRequester: 
+        go Sole
+        go Sole
+        go End
+        go End
+        go HandshakingPhase1Requester
+            State HandshakingPhase1Requester: 
+            go Sole
+            go End
+            go FormingGroupRequester
+                State FormingGroupRequester: 
+                go Sole
+                go Sole
+                go Grouped

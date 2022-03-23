@@ -1,0 +1,27 @@
+msc {
+
+  # The entities
+  ua [label="Alice
+User"], a [label="Alice
+Device"], b [label="Bob
+Device"], ub [label="Bob
+User"];
+
+  # Small gap before the boxes
+  |||;
+
+  a box a [label="sole"],
+  b box b [label="sole"];
+  ua -> a [label="KeyGen"];
+  ---;
+  ua -> a [label="CannotDecrypt"];
+  ---;
+  ub -> b [label="CannotDecrypt"];
+  b -> a  [label="CryForBeacon"];
+  --- [label="End of initiation variants"];
+  a -> b  [label="Beacon"];
+  b -> a  [label="NegotiationRequest"];
+  a -> b  [label="NegotiationOpen"];
+  a box a [label="HandshakingOfferer"],
+  b box b [label="HandshakingRequester"];
+}

@@ -17,6 +17,7 @@ tstylesheet {
         `` apply "descendant::transition";
     }
     ||
+        //`` apply "descendant::send[not(following-sibling::transition)]";
 
     template "transition" {
         const "event", "ancestor::event/@name";
@@ -25,6 +26,15 @@ tstylesheet {
                 | «ancestor::state/@name» -> «@target» [ label="«ancestor::event/@name»", color=blue ];
             otherwise
                 | «ancestor::state/@name» -> «@target» [ label="«ancestor::event/@name»", color=red ];
+        }
+    }
+    template "send" {
+        const "event", "ancestor::event/@name";
+        choose {
+            when "ancestor::fsm/message[@name=$event]"
+                | «ancestor::state/@name» -> «ancestor::state/@name» [ label="«ancestor::event/@name»", color=blue ];
+            otherwise
+                | «ancestor::state/@name» -> «ancestor::state/@name» [ label="«ancestor::event/@name»", color=red ];
         }
     }
 }

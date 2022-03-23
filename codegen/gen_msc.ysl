@@ -1,12 +1,12 @@
 include yslt.yml2
 
 tstylesheet {
-    template "/protocol/fsm[1]"
+    template "/protocol/fsm[1]" {
     ||
     msc {
 
       # The entities
-      ua [label="Alice\\nUser"], a [label="Alice\\nDevice"], b [label="Bob\\nDevice"], ub [label="Bob\\nUser"];
+      ua [label="Alice\\\\nUser"], a [label="Alice\\\\nDevice"], b [label="Bob\\\\nDevice"], ub [label="Bob\\\\nUser"];
    
       # Small gap before the boxes
       |||;
@@ -16,4 +16,19 @@ tstylesheet {
       b box b [label="sole"],
     }
     ||
+    apply "state[@name='Sole']";
+    }
+
+    template "protocol/fsm[1]/state" {
+        | State «@name»: 
+        for("descendant::transition") {
+            const "target", "@target";
+            | go «$target»
+            if "not(/protocol/fsm[1]/state[@name=$target]/@timeout='off')" {
+              apply "/protocol/fsm[1]/state[@name=$target]";
+            }
+        }
+    }
+        
 }
+
