@@ -12,23 +12,33 @@ tstylesheet {
       |||;
    
       # Next four on same line due to ','
-      a box a [label="sole"],
-      b box b [label="sole"],
+      a box a [label="Sole"],
+      b box b [label="Sole"],
     }
     ||
-    apply "state[@name='Sole']";
+    apply "//event[@name='CannotDecrypt']";
+    apply "//state[@name='Sole']/event[@name='Beacon']";
     }
 
-    template "protocol/fsm[1]/state" {
-        | State «@name»: 
-        for("descendant::transition") {
-            const "target", "@target";
-            | go «$target»
+    template "protocol/fsm[1]/*/event" {
+        | Event «@name»: 
+        for("descendant::send") {
+            const "message", "@name";
+            const "target" 
+                       choose {
+                          when "following-sibling/transition/@name"
+                              value "following-sibling/transition/@name";
+			  otherwise
+                              value "ancestor::state/@name";
+                       };
+            | send «$message» go «$target»
             if "not(/protocol/fsm[1]/state[@name=$target]/@timeout='off')" {
-              apply "/protocol/fsm[1]/state[@name=$target]";
+              apply "/protocol/fsm[1]/state[@name=$target]/event[@name=$message]";
+            }
+            if "@timeout='on'" {
+              apply "/protocol/fsm[1]/state[@name=$target]/event[@name=$message]";
             }
         }
     }
-        
 }
 

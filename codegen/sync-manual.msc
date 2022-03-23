@@ -10,8 +10,8 @@ User"];
   # Small gap before the boxes
   |||;
 
-  a box a [label="sole"],
-  b box b [label="sole"];
+  a box a [label="Sole"],
+  b box b [label="Sole"];
   ua -> a [label="KeyGen"];
   ---;
   ua -> a [label="CannotDecrypt"];
