@@ -72,7 +72,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PEPENGINE_EXPORTS;_CRT_SECURE_NO_WARNINGS;USE_SEQUOIA;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <EnablePREfast>false</EnablePREfast>
-      <AdditionalIncludeDirectories>$(SolutionDir)libetpan\build-windows\include;$(SolutionDir)Tools\asn1c\share\asn1c;$(SolutionDir)sequoia\openpgp-ffi\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)pEpEngine\asn.1;$(SolutionDir);$(SolutionDir)libetpan\build-windows\include;$(SolutionDir)Tools\asn1c\share\asn1c;$(SolutionDir)sequoia\openpgp-ffi\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>Default</CompileAs>
       <DisableSpecificWarnings>4703</DisableSpecificWarnings>
     </ClCompile>
@@ -86,7 +86,7 @@
       <SuppressStartupBanner>false</SuppressStartupBanner>
     </Link>
     <PreBuildEvent>
-      <Command>cargo build --manifest-path="$(SolutionDir)sequoia\Cargo.toml"</Command>
+      <Command>PUSHD $(SolutionDir)sequoia &amp;&amp; cargo build &amp;&amp; POPD</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>xcopy "$(SolutionDir)sequoia\target\debug\sequoia_openpgp_ffi.dll" "$(TargetDir)" /Y</Command>
@@ -103,7 +103,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PEPENGINE_EXPORTS;USE_SEQUOIA;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>false</SDLCheck>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(SolutionDir)libetpan\build-windows\include;$(SolutionDir)Tools\asn1c\share\asn1c;$(SolutionDir)sequoia\openpgp-ffi\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)libetpan\build-windows\include;$(SolutionDir)Tools\asn1c\share\asn1c;$(SolutionDir)sequoia\openpgp-ffi\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ControlFlowGuard>Guard</ControlFlowGuard>
@@ -119,7 +119,7 @@
       <AdditionalLibraryDirectories>$(SolutionDir)sequoia\target\release;C:\msys64\mingw32\lib</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
-      <Command>cargo build --manifest-path="$(SolutionDir)sequoia\Cargo.toml" --release</Command>
+      <Command>PUSHD $(SolutionDir)sequoia &amp;&amp; cargo build --release &amp;&amp; POPD</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>xcopy "$(SolutionDir)sequoia\target\release\sequoia_openpgp_ffi.dll" "$(TargetDir)" /Y</Command>
@@ -148,6 +148,7 @@
     <ClCompile Include="..\src\map_asn1.c" />
     <ClCompile Include="..\src\message.c" />
     <ClCompile Include="..\src\message_api.c" />
+    <ClCompile Include="..\src\message_codec.c" />
     <ClCompile Include="..\src\mime.c" />
     <ClCompile Include="..\src\openpgp_compat.c" />
     <ClCompile Include="..\src\pEpEngine.c" />
@@ -175,27 +176,36 @@
     <ClInclude Include="..\src\base64.h" />
     <ClInclude Include="..\src\baseprotocol.h" />
     <ClInclude Include="..\src\bloblist.h" />
+    <ClInclude Include="..\src\commit_hash.h" />
     <ClInclude Include="..\src\cryptotech.h" />
     <ClInclude Include="..\src\distribution_codec.h" />
     <ClInclude Include="..\src\dynamic_api.h" />
     <ClInclude Include="..\src\email.h" />
+    <ClInclude Include="..\src\engine_sql.h" />
     <ClInclude Include="..\src\etpan_mime.h" />
     <ClInclude Include="..\src\fsm_common.h" />
     <ClInclude Include="..\src\group.h" />
+    <ClInclude Include="..\src\GroupSync_fsm.h" />
+    <ClInclude Include="..\src\group_internal.h" />
     <ClInclude Include="..\src\growing_buf.h" />
     <ClInclude Include="..\src\identity_list.h" />
     <ClInclude Include="..\src\internal_format.h" />
     <ClInclude Include="..\src\keymanagement.h" />
+    <ClInclude Include="..\src\keymanagement_internal.h" />
     <ClInclude Include="..\src\keyreset_command.h" />
     <ClInclude Include="..\src\KeySync_fsm.h" />
     <ClInclude Include="..\src\key_reset.h" />
+    <ClInclude Include="..\src\key_reset_internal.h" />
     <ClInclude Include="..\src\labeled_int_list.h" />
     <ClInclude Include="..\src\map_asn1.h" />
     <ClInclude Include="..\src\message.h" />
     <ClInclude Include="..\src\message_api.h" />
+    <ClInclude Include="..\src\message_api_internal.h" />
+    <ClInclude Include="..\src\message_codec.h" />
     <ClInclude Include="..\src\mime.h" />
     <ClInclude Include="..\src\openpgp_compat.h" />
     <ClInclude Include="..\src\pEpEngine.h" />
+    <ClInclude Include="..\src\pEpEngine_internal.h" />
     <ClInclude Include="..\src\pEp_internal.h" />
     <ClInclude Include="..\src\pEp_string.h" />
     <ClInclude Include="..\src\pgp_sequoia.h" />
@@ -217,6 +227,7 @@
     <ClInclude Include="..\src\timestamp.h" />
     <ClInclude Include="..\src\transport.h" />
     <ClInclude Include="..\src\trans_auto.h" />
+    <ClInclude Include="..\src\TrustSync_fsm.h" />
     <ClInclude Include="..\src\wrappers.h" />
   </ItemGroup>
   <ItemGroup>
@@ -225,6 +236,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\libetpan\build-windows\libetpan\libetpan.vcxproj">
       <Project>{ba4ded3c-e56f-4484-bfc3-9c13e461a1be}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\libpEpTransport\build-windows\libpEpTransport.vcxproj">
+      <Project>{13f8fc08-53f8-4615-8445-3d713c0374e4}</Project>
     </ProjectReference>
     <ProjectReference Include="libpEpasn1\libpEpasn1.vcxproj">
       <Project>{9a67164d-b8f8-4601-a24b-28afe774d41c}</Project>

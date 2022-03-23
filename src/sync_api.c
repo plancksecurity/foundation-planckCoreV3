@@ -12,6 +12,30 @@
 
 #include "KeySync_fsm.h"
 
+/* A dummy function performing no useful work, usable as a notifyHandshake
+   function.  Notice that this destroys its heap-allocated arguments, since the
+   callback function is supposed to take ownership of them. */
+static PEP_STATUS notifyHandshake_dummy(
+        pEp_identity *me,
+        pEp_identity *partner,
+        sync_handshake_signal signal
+    )
+{
+    free_identity(me);
+    free_identity(partner);
+    return PEP_STATUS_OK;
+}
+
+
+/* Like notifyHandshake_dummy , but for retrieve_next_sync_event_t . */
+static SYNC_EVENT retrieve_next_sync_event_dummy(void *management,
+        unsigned threshold)
+{
+    /* Do nothing. */
+    return NULL;
+}
+
+
 DYNAMIC_API PEP_STATUS register_sync_callbacks(
         PEP_SESSION session,
         void *management,
@@ -19,6 +43,14 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
         retrieve_next_sync_event_t retrieve_next_sync_event
     )
 {
+    /* In case the callbacks are null pointers, replace them with dummy
+       functions.  This makes the code more robust elsewhere and handles object
+       ownership in a reasonable way. */
+    if (notifyHandshake == NULL)
+        notifyHandshake = notifyHandshake_dummy;
+    if (retrieve_next_sync_event == NULL)
+        retrieve_next_sync_event = retrieve_next_sync_event_dummy;
+
     assert(session && notifyHandshake && retrieve_next_sync_event);
     if (!(session && notifyHandshake && retrieve_next_sync_event))
         return PEP_ILLEGAL_VALUE;
@@ -46,8 +78,8 @@ DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session) {
 
     // unregister
     session->sync_management = NULL;
-    session->notifyHandshake = NULL;
-    session->retrieve_next_sync_event = NULL;
+    session->notifyHandshake = notifyHandshake_dummy;
+    session->retrieve_next_sync_event = retrieve_next_sync_event_dummy;
 }
 
 DYNAMIC_API PEP_STATUS deliverHandshakeResult(

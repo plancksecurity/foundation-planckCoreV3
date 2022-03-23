@@ -22,6 +22,8 @@
 #include <tchar.h>
 #include <sys\stat.h>
 
+#include "pEpEngine.h" // just for PEP_STATUS
+
 #define LOCAL_DB_FILENAME "management.db"
 #define SYSTEM_DB_FILENAME "system.db"
 #define KEYS_DB "keys.db"
@@ -456,6 +458,18 @@ void log_output_debug(const char *title,
     
     snprintf(str, size, "*** %s %s %s %s\n", title, entity, description, comment);
     OutputDebugStringA(str);
+}
+
+DYNAMIC_API PEP_STATUS reset_path_cache(void)
+{
+    /* Do nothing and return success.  This only exists for API compatibility
+       with the Unix version. */
+    return PEP_STATUS_OK;
+}
+
+DYNAMIC_API void clear_path_cache (void)
+{
+    /* Like reset_path_cache, do nothing. */
 }
 
 } // "C"

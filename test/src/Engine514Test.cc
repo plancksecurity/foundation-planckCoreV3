@@ -268,9 +268,8 @@ TEST_F(Engine514Test, check_engine514_encrypted) {
     message* dec_msg = NULL;
     PEP_decrypt_flags_t flags = 0;
     stringlist_t* keylist = NULL;
-    PEP_rating rating;
     
-    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    status = decrypt_message_2(session, enc_msg, &dec_msg, &keylist, &flags);
     ASSERT_EQ(status, PEP_STATUS_OK);    
     ASSERT_STREQ(msg->attachments->mime_type, "message/rfc822");
     ASSERT_NULL(msg->attachments->next);

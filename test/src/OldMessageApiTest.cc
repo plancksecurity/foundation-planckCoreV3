@@ -167,13 +167,13 @@ TEST_F(OldMessageApiTest, check_message_api) {
 
     message *msg4 = nullptr;
     stringlist_t *keylist4 = nullptr;
-    PEP_rating rating;
     PEP_decrypt_flags_t flags;
 
     flags = 0;
-    PEP_STATUS status4 = decrypt_message(session, enc_msg2, &msg4, &keylist4, &rating, &flags);
+    PEP_STATUS status4 = decrypt_message_2(session, enc_msg2, &msg4, &keylist4, &flags);
     ASSERT_EQ(status4 , PEP_STATUS_OK);
     ASSERT_NOTNULL(msg4);
+    PEP_rating rating = msg4->rating;
     ASSERT_NOTNULL(keylist4);
     ASSERT_TRUE(rating);
     PEP_comm_type ct = enc_msg2->from->comm_type;
@@ -212,12 +212,12 @@ TEST_F(OldMessageApiTest, check_message_api) {
 
     message *msg6 = nullptr;
     stringlist_t *keylist5 = nullptr;
-    PEP_rating rating2;
     PEP_decrypt_flags_t flags2;
     flags2 = 0;
-    PEP_STATUS status6 = decrypt_message(session, msg5, &msg6, &keylist5, &rating2, &flags2);
+    PEP_STATUS status6 = decrypt_message_2(session, msg5, &msg6, &keylist5, &flags2);
     ASSERT_EQ(status6 , PEP_DECRYPT_NO_KEY);
     ASSERT_NULL(msg6 );
+    PEP_rating rating2 = msg5->rating;
     ASSERT_NULL(keylist5 );
     ASSERT_EQ(rating2 , PEP_rating_have_no_key);
     output_stream << "rating :" << rating2 << "\n";
@@ -241,7 +241,7 @@ TEST_F(OldMessageApiTest, check_message_api) {
 
     dec_flags = 0;
 
-    PEP_STATUS status8 = decrypt_message(session, enc_msg, &dec_msg, &keys_used, &rating, &dec_flags);
+    PEP_STATUS status8 = decrypt_message_2(session, enc_msg, &dec_msg, &keys_used, &dec_flags);
     ASSERT_EQ(status8 , PEP_STATUS_OK);
 
     print_mail(dec_msg);

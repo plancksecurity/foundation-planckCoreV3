@@ -10,6 +10,7 @@
 #include "pEpEngine.h"
 #include "pEp_internal.h"
 #include "map_asn1.h"
+#include "message_codec.h"
 
 #include "TestUtilities.h"
 
@@ -119,3 +120,84 @@ TEST_F(MapAsn1Test, check_map_asn1) {
     free_identity(ident1);
     free_identity(ident2);
 }
+
+TEST_F(MapAsn1Test, check_map_asn1_message) {
+    output_stream << "testing ASN1Message...\n";
+
+    message *msg = new_message(PEP_dir_outgoing);
+    msg->id = strdup("423");
+    msg->shortmsg = strdup("hello, world");
+    msg->longmsg = strdup("long message");
+    msg->longmsg_formatted = strdup("<p>long message</p>");
+    msg->attachments = new_bloblist(strdup("blob"), 5, "text/plain", "test.txt");
+    bloblist_add(msg->attachments, strdup("bla"), 4, "application/octet-stream", "data.dat");
+    msg->sent = new_timestamp(23);
+    msg->recv = new_timestamp(42);
+    msg->from = new_identity("alice@mail.com", "2342234223422342", "23", "Alice Miller");
+    msg->from->comm_type = PEP_ct_pEp;
+    msg->from->lang[0] = 'd'; msg->from->lang[1] = 'e';
+    msg->to = new_identity_list(new_identity("bob@mail.com", "4223422342234223", "42", "Bob Smith"));
+    identity_list_add(msg->to, new_identity("alice@mail.com", "2342234223422342", "23", "Alice Miller"));
+    msg->recv_by = new_identity("bob@mail.com", "4223422342234223", "42", "Bob Smith");
+    msg->cc = new_identity_list(new_identity("bob@mail.com", "4223422342234223", "42", "Bob Smith"));
+    identity_list_add(msg->cc, new_identity("alice@mail.com", "2342234223422342", "23", "Alice Miller"));
+    msg->bcc = new_identity_list(new_identity("bob@mail.com", "4223422342234223", "42", "Bob Smith"));
+    identity_list_add(msg->bcc, new_identity("alice@mail.com", "2342234223422342", "23", "Alice Miller"));
+    msg->reply_to = new_identity_list(new_identity("bob@mail.com", "4223422342234223", "42", "Bob Smith"));
+    identity_list_add(msg->reply_to, new_identity("alice@mail.com", "2342234223422342", "23", "Alice Miller"));
+    msg->in_reply_to = new_stringlist("23234242");
+    stringlist_add(msg->in_reply_to, "323234242");
+    msg->references = new_stringlist("23234242");
+    stringlist_add(msg->references , "323234242");
+    msg->keywords = new_stringlist("something");
+    stringlist_add(msg->keywords, "else");
+    msg->comments = strdup("hello there");
+    msg->opt_fields = new_stringpair_list(new_stringpair("key", "value"));
+    stringpair_list_add(msg->opt_fields, new_stringpair("otherkey", "othervalue"));
+    msg->_sender_fpr = strdup("2342234223422342");
+
+    ASN1Message_t *pm = ASN1Message_from_message(msg, NULL, false, 1024);
+
+    char *data = NULL;
+    size_t data_size = 0;
+    PEP_STATUS status = encode_ASN1Message_message(pm, &data, &data_size);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    ASN1Message_t *pm2 = NULL;
+    status = decode_ASN1Message_message(data, data_size, &pm2);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    message *msg2 = ASN1Message_to_message(pm2, NULL, false, 1024);
+
+    ASSERT_STREQ(msg2->id, "423");
+    ASSERT_STREQ(msg2->shortmsg, "hello, world");
+    ASSERT_STREQ(msg2->longmsg, "long message");
+    ASSERT_STREQ(msg2->longmsg_formatted, "<p>long message</p>");
+    ASSERT_STREQ(msg2->attachments->mime_type, "text/plain");
+    ASSERT_EQ(msg2->attachments->next->value[0], 'b');
+    ASSERT_NULL(msg2->attachments->next->next);
+    ASSERT_EQ(msg2->sent->tm_sec, 23);
+    ASSERT_EQ(msg2->recv->tm_sec, 42);
+    ASSERT_STREQ(msg2->from->user_id, "23");
+    ASSERT_STREQ(msg2->to->ident->user_id, "42");
+    ASSERT_STREQ(msg2->to->next->ident->user_id, "23");
+    ASSERT_STREQ(msg2->recv_by->user_id, "42");
+    ASSERT_STREQ(msg2->cc->next->ident->user_id, "23");
+    ASSERT_STREQ(msg2->bcc->next->ident->user_id, "23");
+    ASSERT_STREQ(msg2->reply_to->next->ident->user_id, "23");
+    ASSERT_STREQ(msg2->in_reply_to->value, "23234242");
+    ASSERT_STREQ(msg2->in_reply_to->next->value, "323234242");
+    ASSERT_STREQ(msg2->references->next->value, "323234242");
+    ASSERT_STREQ(msg2->keywords->next->value, "else");
+    ASSERT_STREQ(msg2->comments, "hello there");
+    ASSERT_STREQ(msg2->opt_fields->value->key, "key");
+    ASSERT_STREQ(msg2->opt_fields->next->value->value, "othervalue");
+    ASSERT_STREQ(msg2->_sender_fpr, "2342234223422342");
+
+    free_ASN1Message(pm);
+    free_ASN1Message(pm2);
+    free_message(msg);
+    free_message(msg2);
+    free(data);
+}
+

@@ -1,0 +1,104 @@
+-- This file is under BSD License 2.0
+--
+-- Sync protocol for p≡p
+-- Copyright (c) 2021 p≡p foundation
+--
+-- Written by Hartmut Goebel
+
+
+PEP-MESSAGE {
+    iso(1) org(3) dod(6) internet(1) private(4)
+    enterprise(1) pEp(47878) message(1)
+    }
+DEFINITIONS
+    AUTOMATIC TAGS EXTENSIBILITY IMPLIED ::=
+BEGIN
+
+EXPORTS ASN1Message;
+
+IMPORTS
+  PString, PStringList, PStringPairList, Hash, ISO639-1
+  FROM PEP { iso(1) org(3) dod(6) internet(1) private(4)
+             enterprise(1) pEp(47878) basic(0) };
+
+
+MessageDirection ::= ENUMERATED {
+    incoming (0),
+    outgoing (1)
+}
+
+ContentDisposition ::= ENUMERATED {
+    attachment (0),
+    inline (1),
+    other (2)
+}
+
+PBlob ::= SEQUENCE {
+    value       OCTET STRING (SIZE(0..102400000)),  -- up to 100 MB
+    mime-type   PString OPTIONAL,
+    filename    PString OPTIONAL,
+    disposition ContentDisposition
+}
+PBlobList ::= SEQUENCE OF PBlob
+
+
+-- For the purposes of this profile, GeneralizedTime values MUST be
+-- expressed in Coordinated Universal Time (UTC) and MUST include seconds
+-- (i.e., times are YYYYMMDDHHMMSSZ), even where the number of seconds
+-- is zero.  GeneralizedTime values MUST NOT include fractional seconds.
+
+PIdentity ::= SEQUENCE {
+    address     PString,
+    fpr         Hash OPTIONAL,
+    user-id     PString,
+    username    PString OPTIONAL,
+    comm-type   INTEGER (0..255),
+    lang        ISO639-1 OPTIONAL
+}
+
+PIdentityList ::= SEQUENCE OF PIdentity
+
+ASN1Message ::= SEQUENCE {
+    direction   MessageDirection OPTIONAL, -- used only in "inner" messages
+    id          PString          OPTIONAL, -- UTF-8 string of message ID
+    sent        GeneralizedTime        OPTIONAL,  -- when the message is sent
+    recv        GeneralizedTime        OPTIONAL,  -- when the message is received
+    from        PIdentity,                   -- whom the message is from
+    -- At least one of to, cc must not be an empty list
+    -- FIXME: Can this be constrained?
+    to          PIdentityList    OPTIONAL,  -- whom the message is to
+    cc          PIdentityList    OPTIONAL,  -- whom a CC is being sent
+    bcc         PIdentityList    OPTIONAL,  -- whom a BCC is being sent
+    recv-by     PIdentity        OPTIONAL,  -- via which identity the message
+                                           -- is received
+    reply-to    PIdentityList    OPTIONAL,  -- where a reply should go to
+    in-reply-to PStringList     OPTIONAL,  -- list of UTF-8 strings with
+                                           -- MessageIDs of refering messages
+    -- internal: refering_msg_ref
+    references  PStringList     OPTIONAL,  -- list of UTF-8 strings with
+                                           -- references
+    -- internal: refered_by _message-ref-list
+    keywords    PStringList     OPTIONAL, -- list of UTF-8 strings with keywords
+    comments    PString         OPTIONAL, -- UTF-8 string with comments
+    opt-fields  PStringPairList OPTIONAL, -- optional fields
+    sender-fpr  Hash            OPTIONAL,  -- fingerprint of sending signer
+
+    -- At least one of shortmsg, longmsg, longmsg-formatted must be present
+    -- FIXME: Can this be constrained?
+    shortmsg    PString          OPTIONAL, -- UTF-8 string of short message
+
+    -- longmsg must only be used if implementation can handle dynamic allocation
+    longmsg     UTF8String       OPTIONAL, -- UTF-8 string of long message
+                                           -- (plain)
+
+    -- longmsg-formatted must only be used if implementation can handle
+    -- dynamic allocation
+    longmsg-formatted UTF8String   OPTIONAL, -- UTF-8 string of long message
+                                             -- (formatted)
+
+    attachments PBlobList        OPTIONAL     -- blobs with attachments
+    -- internal: rawmsg
+}
+
+END
+

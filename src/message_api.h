@@ -70,9 +70,11 @@ typedef enum _message_wrap_type {
  *  @brief Encrypt message in memory
  *
  *  @param[in]     session       session handle
- *  @param[in,out] src           message to encrypt - usually in-only, but can be
- *                               in-out for unencrypted messages; in that case,
- *                               we may attach the key and decorate the message
+ *  @param[in,out] src           message to encrypt - usually in-only except for
+ *                               the rating field, but can be in-out for
+ *                               unencrypted messages; in that case, we may
+ *                               attach the key and decorate the message.
+ *                               In any case, reset the rating.
  *  @param[in]     extra         extra keys for encryption
  *  @param[out]    dst           pointer to new encrypted message or NULL if no
  *                               encryption could take place
@@ -193,39 +195,6 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         PEP_encrypt_flags_t flags
     );
 
-/**
- *  @enum    PEP_rating
- *
- *  @brief    TODO
- *
- */
-typedef enum _PEP_rating {
-    PEP_rating_undefined = 0,
-
-    // no color
-
-    PEP_rating_cannot_decrypt = 1,
-    PEP_rating_have_no_key = 2,
-    PEP_rating_unencrypted = 3,
-    PEP_rating_unreliable = 5,
-
-    PEP_rating_b0rken = -2,
-
-    // yellow
-
-    PEP_rating_reliable = 6,
-
-    // green
-
-    PEP_rating_trusted = 7,
-    PEP_rating_trusted_and_anonymized = 8,
-    PEP_rating_fully_anonymous = 9, 
-
-    // red
-
-    PEP_rating_mistrust = -1,
-    PEP_rating_under_attack = -3
-} PEP_rating;
 
 /**
  *  @enum    PEP_color
@@ -273,12 +242,14 @@ typedef unsigned int PEP_decrypt_flags_t;
 
 
 /**
- *  <!--       decrypt_message()       -->
+ *  <!--       decrypt_message_2()     -->
  *
  *  @brief Decrypt message in memory
  *
  *  @param[in]     session    session handle
- *  @param[in,out] src        message to decrypt - see warning about identities below
+ *  @param[in,out] src        message to decrypt - see warning about identities below.
+ *                            the rating field of src (instead of dst) is updated
+ *                            in case encryption fails.
  *  @param[out]    dst        pointer to new decrypted message or NULL on failure
  *  @param[in,out] keylist    in: stringlist with additional keyids for reencryption if needed
  *                            (will be freed and replaced with output keylist)
@@ -286,7 +257,6 @@ typedef unsigned int PEP_decrypt_flags_t;
  *                            first key is signer, additional keys are the ones it was encrypted
  *                            to. Only signer and whichever of the user's keys was used are
  *                            reliable
- *  @param[out]    rating     rating for the message
  *  @param[in,out] flags      flags to signal special decryption features
  *
  *  @retval <ERROR>                 any error status
@@ -345,6 +315,25 @@ typedef unsigned int PEP_decrypt_flags_t;
  *           so that they can be handled by the internal algorithm appropriately)
  */
 
+DYNAMIC_API PEP_STATUS decrypt_message_2(
+        PEP_SESSION session,
+        message *src,
+        message **dst,
+        stringlist_t **keylist,
+        PEP_decrypt_flags_t *flags
+);
+
+/**
+ *  <!--       decrypt_message()       -->
+ *
+ *  @brief Exactly like decrypt_message_2, but with the rating output parameter.
+ *         This function is kept for API compatibility: new code should use
+ *         decrypt_message_2 instead of this function.
+ *
+ *  @param[out] rating      output message rating, only valid in case
+ *                          decryption succeeded.
+ */
+
 DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -382,6 +371,32 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
         message *msg,
         pEp_identity **ident 
 );
+
+
+/**
+ *  <!--       sent_message_rating()       -->
+ *
+ *  @brief Get rating for a sent message
+ *
+ *  @param[in]   session    session handle
+ *  @param[in]   msg        message to get the rating for
+ *  @param[out]  rating     rating for the message
+ *
+ *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *
+ *  @warning msg->from must point to a valid pEp_identity
+ *           msg->dir must be PEP_dir_outgoing
+ *           the ownership of msg remains with the caller
+ *
+ */
+DYNAMIC_API PEP_STATUS sent_message_rating(
+        PEP_SESSION session,
+        message *msg,
+        PEP_rating *rating
+    );
+// FIXME: the current implementation is a stub, until ENGINE-847 is ready.
 
 
 /**

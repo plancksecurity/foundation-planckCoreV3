@@ -75,14 +75,11 @@
 #define LOCAL_DB windoze_local_db()
 #define SYSTEM_DB windoze_system_db()
 #else // UNIX
+#ifndef __MVS__
 #define _POSIX_C_SOURCE 200809L
-#include <dlfcn.h>
-#ifdef NDEBUG
-#define LOCAL_DB unix_local_db()
-#else
-#define LOCAL_DB unix_local_db(false)
-#define LOCAL_DB_RESET unix_local_db(true)
 #endif
+#include <dlfcn.h>
+#define LOCAL_DB unix_local_db()
 #ifdef ANDROID
 #define SYSTEM_DB android_system_db()
 #else
@@ -113,15 +110,6 @@
 #include "keymanagement_internal.h"
 #include "message_api_internal.h"
 
-// If not specified, build for Sequoia
-#ifndef USE_SEQUOIA
-#define USE_SEQUOIA
-#endif
-
-#if defined(USE_SEQUOIA)
-#include "pgp_sequoia_internal.h"
-#endif
-
 #include "../asn.1/Distribution.h"
 #include "../asn.1/Sync.h"
 
@@ -130,6 +118,8 @@
 #include "transport.h"
 #include "sync_api.h"
 #include "Sync_func.h"
+
+#include "tka_api.h"
 
 
 #define NOT_IMPLEMENTED assert(0); return PEP_UNKNOWN_ERROR;
@@ -144,37 +134,41 @@ typedef struct _pEpSession pEpSession;
  */
 struct _pEpSession {
     const char *version;
-    messageToSend_t messageToSend;
+    // This ***must*** be the second pointer.  Do not disappoint.
+    void *cryptotech_cookie;
 
-#if defined(USE_SEQUOIA)
-    sqlite3 *key_db;
-    struct {
-        sqlite3_stmt *begin_transaction;
-        sqlite3_stmt *commit_transaction;
-        sqlite3_stmt *rollback_transaction;
-        sqlite3_stmt *cert_find;
-        sqlite3_stmt *tsk_find;
-        sqlite3_stmt *cert_find_by_keyid;
-        sqlite3_stmt *tsk_find_by_keyid;
-        sqlite3_stmt *cert_find_by_email;
-        sqlite3_stmt *tsk_find_by_email;
-        sqlite3_stmt *cert_all;
-        sqlite3_stmt *tsk_all;
-        sqlite3_stmt *cert_save_insert_primary;
-        sqlite3_stmt *cert_save_insert_subkeys;
-        sqlite3_stmt *cert_save_insert_userids;
-        sqlite3_stmt *delete_keypair;
-    } sq_sql;
-
-    pgp_policy_t policy;
-#endif
-
-    PEP_cryptotech_t *cryptotech;
-    PEP_CIPHER_SUITE cipher_suite;
-    
+    // These four fields but be next.  Do not disappoint.
     char* curr_passphrase;
     bool new_key_pass_enable;
     char* generation_passphrase;
+    PEP_CIPHER_SUITE cipher_suite;
+
+    messageToSend_t messageToSend;
+
+// #if defined(USE_SEQUOIA)
+//     sqlite3 *key_db;
+//     struct {
+//         sqlite3_stmt *begin_transaction;
+//         sqlite3_stmt *commit_transaction;
+//         sqlite3_stmt *rollback_transaction;
+//         sqlite3_stmt *cert_find;
+//         sqlite3_stmt *tsk_find;
+//         sqlite3_stmt *cert_find_by_keyid;
+//         sqlite3_stmt *tsk_find_by_keyid;
+//         sqlite3_stmt *cert_find_by_email;
+//         sqlite3_stmt *tsk_find_by_email;
+//         sqlite3_stmt *cert_all;
+//         sqlite3_stmt *tsk_all;
+//         sqlite3_stmt *cert_save_insert_primary;
+//         sqlite3_stmt *cert_save_insert_subkeys;
+//         sqlite3_stmt *cert_save_insert_userids;
+//         sqlite3_stmt *delete_keypair;
+//     } sq_sql;
+// 
+//     pgp_policy_t policy;
+// #endif
+
+    PEP_cryptotech_t *cryptotech;
     
     PEP_transport_t *transports;
 
@@ -298,12 +292,11 @@ struct _pEpSession {
     sqlite3_stmt *add_userid_alias;
 
     // callbacks
-    examine_identity_t examine_identity;
-    void *examine_management;
     notifyHandshake_t notifyHandshake;
     inject_sync_event_t inject_sync_event;
     retrieve_next_sync_event_t retrieve_next_sync_event;
     ensure_passphrase_t ensure_passphrase;
+    tka_keychange_t tka_keychange;
 
     // pEp Sync
     void *sync_management;

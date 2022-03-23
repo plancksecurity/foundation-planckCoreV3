@@ -17,6 +17,9 @@ USER root
 
 RUN yum install -y python3 python3-lxml binutils && yum clean all
 
+### Setup PEP_MACHINE_DIR
+RUN mkdir -p ${PEP_MACHINE_DIR}
+
 RUN chown -R pep-builder:pep-builder ${BUILDROOT}/pEpEngine
 WORKDIR ${BUILDROOT}/pEpEngine
 

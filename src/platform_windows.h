@@ -14,6 +14,10 @@
 #endif
 #pragma warning(disable : 4996)
 
+// The compiler used by default on this platform does not support GNU-style
+// attributes.
+#include "platform_disable_attributes.h"
+
 // We need to make sure winsock2 is included before windows.h, or we will get redefinitions of symbols
 // as windows.h includes winsock1.h, so we will have duplicate symbols if windows.h is included first.
 // It seems some of our code includes sync.h before including winsock.h, leading to the failure.

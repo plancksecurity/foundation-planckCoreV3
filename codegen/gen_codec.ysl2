@@ -152,8 +152,13 @@ tstylesheet {
 
             *msg = NULL;
             «@name»_t *_msg = NULL;
-            uper_decode_complete(NULL, &asn_DEF_«@name», (void **) &_msg, data, size);
-            if (!_msg)
+            asn_dec_rval_t rval = uper_decode_complete(NULL, &asn_DEF_«@name», (void **) &_msg, data, size);
+
+            // N.B: If you plan on having messages were the full message isn't consumed by decoding here,
+            // then please look into uper_decode_complete; we still may get a message, even if to contains
+            // nothing. RC_FAIL is an obvious case, but we also need to fail if RC_WMORE is the code, especially
+            // if rval.consumed == 0. Volker, please look into this and decide what you want.
+            if (!_msg || rval.code != RC_OK)
                 return PEP_«yml:ucase(@name)»_ILLEGAL_MESSAGE;
 
             *msg = _msg;
