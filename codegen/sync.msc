@@ -1,89 +1,9 @@
-msc {
-
-  # The entities
-  ua [label="Alice\nUser"], a [label="Alice\nDevice"], b [label="Bob\nDevice"], ub [label="Bob\nUser"];
-
-  # Small gap before the boxes
-  |||;
-
-  # Next four on same line due to ','
-  a box a [label="Sole"],
-  b box b [label="Sole"];
-}
-Event Beacon: 
-send Beacon go Sole
-depth 0
-on
-same
-    Event Beacon: 
-    send Beacon go Sole
-    depth 4
-    on
-    same
-        Event Beacon: 
-        send Beacon go Sole
-        depth 8
-        on
-        same
-            Event Beacon: 
-            send Beacon go Sole
-            depth 12
-            on
-            same
-                Event Beacon: 
-                send Beacon go Sole
-                depth 16
-                on
-                same
-                    Event Beacon: 
-                    send Beacon go Sole
-                    depth 20
-                    send NegotiationRequest go Sole
-                    depth 20
-                send NegotiationRequest go Sole
-                depth 16
-                on
-                same
-                    Event NegotiationRequest: 
-                    send NegotiationOpen go Sole
-                    depth 20
-            send NegotiationRequest go Sole
-            depth 12
-            on
-            same
-                Event NegotiationRequest: 
-                send NegotiationOpen go Sole
-                depth 16
-                on
-                same
-                    Event NegotiationOpen: 
-        send NegotiationRequest go Sole
-        depth 8
-        on
-        same
-            Event NegotiationRequest: 
-            send NegotiationOpen go Sole
-            depth 12
-            on
-            same
-                Event NegotiationOpen: 
-    send NegotiationRequest go Sole
-    depth 4
-    on
-    same
-        Event NegotiationRequest: 
-        send NegotiationOpen go Sole
-        depth 8
-        on
-        same
-            Event NegotiationOpen: 
-send NegotiationRequest go Sole
-depth 0
-on
-same
-    Event NegotiationRequest: 
-    send NegotiationOpen go Sole
-    depth 4
-    on
-    same
-        Event NegotiationOpen: 
+    Message NegotiationOpen
+    condition sameChallenge
+    target Sole
+    commPartnerState Sole
+    whoami a
+    commPartner b
+    ownState Sole
+    stop false
+    indent 4
