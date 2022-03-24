@@ -1,0 +1,30 @@
+include "yslt.yml2"
+tstylesheet {
+function "concat" {
+    param "text";
+    param "more";
+
+//    value "$_indent";
+    choose {
+        when "$_indent < 2" {
+	   <xsl:variable name="newtext">
+            value "$more";
+            value "$text";
+	    value "$_indent";
+            value "$more";
+           </xsl:variable>
+            call "concat" with "text", "$newtext", with "more", "$more", with "_indent", "$_indent+1";
+            call "concat" with "text", "$newtext", with "more", "'e'", with "_indent", "$_indent+1";
+        }
+        otherwise {
+           > [«$text»]
+        }
+    }
+}
+
+   template "/protocol/fsm[1]/state" {
+   const "name", "@name";
+   call "concat" with "_indent", "0", with "text", "'Test'", with "more", "'a'" ;
+   //value "@name";
+   }
+}

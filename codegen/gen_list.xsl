@@ -4,7 +4,18 @@
 <xsl:template match="/">
   <html>
   <body>
-	  <!--<h2>Complete List of Sync</h2>
+	  <h2>Complete Message List</h2>
+	  <table border="1">
+	  <tr>
+		  <th>state</th>
+		  <th>event</th>
+		  <th>condition</th>
+		  <th>sent message</th>
+		  <th>transition</th>
+	  </tr>
+		  <xsl:apply-templates select="descendant::send"/>
+	  </table>
+	  <h2>Complete List of Sync</h2>
   <table border="1">
 	  <tr>
 		  <th>Protocol</th>
@@ -40,7 +51,7 @@
 	  <td><xsl:value-of select="@name"/></td><td>(<xsl:value-of select="name()"/>)</td>
 	  </tr>
     </xsl:for-each>
-    </table>-->
+    </table>
     <h2>List of transitions starting from persistent state</h2>
   <table border="1">
 	  <tr>
@@ -72,7 +83,10 @@
 </xsl:template>
 
 <xsl:template match="state">
-	<xsl:for-each select="descendant::send">
+	<xsl:apply-templates select="descendant::send"/>
+</xsl:template>
+
+<xsl:template match="send">
 	<tr>
 	  <td><xsl:value-of select="ancestor::state/@name"/></td>
 	  <td><xsl:value-of select="ancestor::event/@name"/></td>
@@ -80,7 +94,6 @@
 	  <td><xsl:value-of select="@name"/></td>
 	  <td><xsl:value-of select="following-sibling::transition/@target"/></td>
   </tr>
-  </xsl:for-each>
 </xsl:template>
 
 </xsl:stylesheet> 

@@ -8,12 +8,82 @@ msc {
 
   # Next four on same line due to ','
   a box a [label="Sole"],
-  b box b [label="Sole"],
+  b box b [label="Sole"];
 }
-    Event CannotDecrypt: 
-    send Beacon go Sole
-    Event CannotDecrypt: 
-    send SynchronizeGroupKeys go Grouped
+Event Beacon: 
+send Beacon go Sole
+depth 0
+on
+same
     Event Beacon: 
     send Beacon go Sole
+    depth 4
+    on
+    same
+        Event Beacon: 
+        send Beacon go Sole
+        depth 8
+        on
+        same
+            Event Beacon: 
+            send Beacon go Sole
+            depth 12
+            on
+            same
+                Event Beacon: 
+                send Beacon go Sole
+                depth 16
+                on
+                same
+                    Event Beacon: 
+                    send Beacon go Sole
+                    depth 20
+                    send NegotiationRequest go Sole
+                    depth 20
+                send NegotiationRequest go Sole
+                depth 16
+                on
+                same
+                    Event NegotiationRequest: 
+                    send NegotiationOpen go Sole
+                    depth 20
+            send NegotiationRequest go Sole
+            depth 12
+            on
+            same
+                Event NegotiationRequest: 
+                send NegotiationOpen go Sole
+                depth 16
+                on
+                same
+                    Event NegotiationOpen: 
+        send NegotiationRequest go Sole
+        depth 8
+        on
+        same
+            Event NegotiationRequest: 
+            send NegotiationOpen go Sole
+            depth 12
+            on
+            same
+                Event NegotiationOpen: 
     send NegotiationRequest go Sole
+    depth 4
+    on
+    same
+        Event NegotiationRequest: 
+        send NegotiationOpen go Sole
+        depth 8
+        on
+        same
+            Event NegotiationOpen: 
+send NegotiationRequest go Sole
+depth 0
+on
+same
+    Event NegotiationRequest: 
+    send NegotiationOpen go Sole
+    depth 4
+    on
+    same
+        Event NegotiationOpen: 

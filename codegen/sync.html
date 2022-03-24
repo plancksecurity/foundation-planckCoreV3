@@ -1,4 +1,1339 @@
 <html><body>
+<h2>Complete Message List</h2>
+<table border="1">
+<tr>
+<th>state</th>
+<th>event</th>
+<th>condition</th>
+<th>sent message</th>
+<th>transition</th>
+</tr>
+<tr>
+<td>InitState</td>
+<td>Init</td>
+<td>deviceGrouped</td>
+<td>SynchronizeGroupKeys</td>
+<td>Grouped</td>
+</tr>
+<tr>
+<td>InitState</td>
+<td>Init</td>
+<td></td>
+<td>Beacon</td>
+<td>Sole</td>
+</tr>
+<tr>
+<td>Sole</td>
+<td>KeyGen</td>
+<td></td>
+<td>Beacon</td>
+<td></td>
+</tr>
+<tr>
+<td>Sole</td>
+<td>CannotDecrypt</td>
+<td></td>
+<td>Beacon</td>
+<td></td>
+</tr>
+<tr>
+<td>Sole</td>
+<td>Beacon</td>
+<td>weAreOfferer</td>
+<td>Beacon</td>
+<td></td>
+</tr>
+<tr>
+<td>Sole</td>
+<td>Beacon</td>
+<td></td>
+<td>NegotiationRequest</td>
+<td></td>
+</tr>
+<tr>
+<td>Sole</td>
+<td>NegotiationRequest</td>
+<td>sameChallenge</td>
+<td>NegotiationOpen</td>
+<td>HandshakingOfferer</td>
+</tr>
+<tr>
+<td>Sole</td>
+<td>NegotiationRequestGrouped</td>
+<td>sameChallenge</td>
+<td>NegotiationOpen</td>
+<td>HandshakingToJoin</td>
+</tr>
+<tr>
+<td>HandshakingOfferer</td>
+<td>Cancel</td>
+<td></td>
+<td>Rollback</td>
+<td>Sole</td>
+</tr>
+<tr>
+<td>HandshakingOfferer</td>
+<td>Reject</td>
+<td></td>
+<td>CommitReject</td>
+<td>End</td>
+</tr>
+<tr>
+<td>HandshakingRequester</td>
+<td>Cancel</td>
+<td></td>
+<td>Rollback</td>
+<td>Sole</td>
+</tr>
+<tr>
+<td>HandshakingRequester</td>
+<td>Reject</td>
+<td></td>
+<td>CommitReject</td>
+<td>End</td>
+</tr>
+<tr>
+<td>HandshakingRequester</td>
+<td>Accept</td>
+<td></td>
+<td>CommitAcceptRequester</td>
+<td>HandshakingPhase1Requester</td>
+</tr>
+<tr>
+<td>HandshakingPhase1Offerer</td>
+<td>CommitAcceptRequester</td>
+<td>sameNegotiation</td>
+<td>CommitAcceptOfferer</td>
+<td>FormingGroupOfferer</td>
+</tr>
+<tr>
+<td>HandshakingPhase1Requester</td>
+<td>CommitAcceptOfferer</td>
+<td>sameNegotiation</td>
+<td>OwnKeysRequester</td>
+<td>FormingGroupRequester</td>
+</tr>
+<tr>
+<td>HandshakingPhase2Offerer</td>
+<td>Cancel</td>
+<td></td>
+<td>Rollback</td>
+<td>Sole</td>
+</tr>
+<tr>
+<td>HandshakingPhase2Offerer</td>
+<td>Reject</td>
+<td></td>
+<td>CommitReject</td>
+<td>End</td>
+</tr>
+<tr>
+<td>HandshakingPhase2Offerer</td>
+<td>Accept</td>
+<td></td>
+<td>CommitAcceptOfferer</td>
+<td>FormingGroupOfferer</td>
+</tr>
+<tr>
+<td>FormingGroupOfferer</td>
+<td>Cancel</td>
+<td></td>
+<td>Rollback</td>
+<td>Sole</td>
+</tr>
+<tr>
+<td>FormingGroupOfferer</td>
+<td>OwnKeysRequester</td>
+<td>sameNegotiationAndPartner</td>
+<td>OwnKeysOfferer</td>
+<td>Grouped</td>
+</tr>
+<tr>
+<td>FormingGroupRequester</td>
+<td>Cancel</td>
+<td></td>
+<td>Rollback</td>
+<td>Sole</td>
+</tr>
+<tr>
+<td>Grouped</td>
+<td>CannotDecrypt</td>
+<td></td>
+<td>SynchronizeGroupKeys</td>
+<td></td>
+</tr>
+<tr>
+<td>Grouped</td>
+<td>SynchronizeGroupKeys</td>
+<td></td>
+<td>GroupKeysUpdate</td>
+<td></td>
+</tr>
+<tr>
+<td>Grouped</td>
+<td>KeyGen</td>
+<td></td>
+<td>GroupKeysUpdate</td>
+<td></td>
+</tr>
+<tr>
+<td>Grouped</td>
+<td>Beacon</td>
+<td></td>
+<td>NegotiationRequestGrouped</td>
+<td></td>
+</tr>
+<tr>
+<td>Grouped</td>
+<td>NegotiationOpen</td>
+<td>sameResponse</td>
+<td>GroupHandshake</td>
+<td>HandshakingGrouped</td>
+</tr>
+<tr>
+<td>Grouped</td>
+<td>LeaveDeviceGroup</td>
+<td></td>
+<td>InitUnledGroupKeyReset</td>
+<td></td>
+</tr>
+<tr>
+<td>Grouped</td>
+<td>InitUnledGroupKeyReset</td>
+<td></td>
+<td>ElectGroupKeyResetLeader</td>
+<td>GroupKeyResetElection</td>
+</tr>
+<tr>
+<td>HandshakingToJoin</td>
+<td>Cancel</td>
+<td></td>
+<td>Rollback</td>
+<td>Sole</td>
+</tr>
+<tr>
+<td>HandshakingToJoin</td>
+<td>Reject</td>
+<td></td>
+<td>CommitReject</td>
+<td>End</td>
+</tr>
+<tr>
+<td>HandshakingToJoinPhase1</td>
+<td>CommitAcceptForGroup</td>
+<td>sameNegotiation</td>
+<td>CommitAccept</td>
+<td>JoiningGroup</td>
+</tr>
+<tr>
+<td>HandshakingToJoinPhase2</td>
+<td>Cancel</td>
+<td></td>
+<td>Rollback</td>
+<td>Sole</td>
+</tr>
+<tr>
+<td>HandshakingToJoinPhase2</td>
+<td>Reject</td>
+<td></td>
+<td>CommitReject</td>
+<td>End</td>
+</tr>
+<tr>
+<td>HandshakingToJoinPhase2</td>
+<td>Accept</td>
+<td></td>
+<td>CommitAccept</td>
+<td>JoiningGroup</td>
+</tr>
+<tr>
+<td>JoiningGroup</td>
+<td>GroupKeysForNewMember</td>
+<td>sameNegotiationAndPartner</td>
+<td>GroupKeysAndClose</td>
+<td>Grouped</td>
+</tr>
+<tr>
+<td>HandshakingGrouped</td>
+<td>Cancel</td>
+<td></td>
+<td>Rollback</td>
+<td>Grouped</td>
+</tr>
+<tr>
+<td>HandshakingGrouped</td>
+<td>Reject</td>
+<td></td>
+<td>CommitReject</td>
+<td>Grouped</td>
+</tr>
+<tr>
+<td>HandshakingGroupedPhase1</td>
+<td>Init</td>
+<td></td>
+<td>GroupTrustThisKey</td>
+<td></td>
+</tr>
+<tr>
+<td>HandshakingGroupedPhase1</td>
+<td>Init</td>
+<td></td>
+<td>CommitAcceptForGroup</td>
+<td></td>
+</tr>
+<tr>
+<td>HandshakingGroupedPhase1</td>
+<td>CommitAccept</td>
+<td>sameNegotiation</td>
+<td>GroupKeysForNewMember</td>
+<td>Grouped</td>
+</tr>
+</table>
+<h2>Complete List of Sync</h2>
+<table border="1">
+<tr>
+<th>Protocol</th>
+<th>FSM</th>
+<th>state</th>
+<th>message</th>
+<th>event</th>
+<th>transition</th>
+<th>name of member</th>
+<th>type</th>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td>InitState</td>
+<td></td>
+<td>Init</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td>InitState</td>
+<td></td>
+<td>Init</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>Sole</td>
+<td>NegotiationRequest</td>
+<td>NegotiationRequest</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>Sole</td>
+<td>NegotiationRequestGrouped</td>
+<td>NegotiationRequestGrouped</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>Sole</td>
+<td>NegotiationOpen</td>
+<td>NegotiationOpen</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingOfferer</td>
+<td></td>
+<td>Cancel</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingOfferer</td>
+<td>Rollback</td>
+<td>Rollback</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingOfferer</td>
+<td></td>
+<td>Reject</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingOfferer</td>
+<td>CommitReject</td>
+<td>CommitReject</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingOfferer</td>
+<td></td>
+<td>Accept</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingOfferer</td>
+<td>CommitAcceptRequester</td>
+<td>CommitAcceptRequester</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingRequester</td>
+<td></td>
+<td>Cancel</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingRequester</td>
+<td>Rollback</td>
+<td>Rollback</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingRequester</td>
+<td></td>
+<td>Reject</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingRequester</td>
+<td>CommitReject</td>
+<td>CommitReject</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingRequester</td>
+<td></td>
+<td>Accept</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingPhase1Offerer</td>
+<td>Rollback</td>
+<td>Rollback</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingPhase1Offerer</td>
+<td>CommitReject</td>
+<td>CommitReject</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingPhase1Offerer</td>
+<td>CommitAcceptRequester</td>
+<td>CommitAcceptRequester</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingPhase1Requester</td>
+<td>Rollback</td>
+<td>Rollback</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingPhase1Requester</td>
+<td>CommitReject</td>
+<td>CommitReject</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingPhase1Requester</td>
+<td>CommitAcceptOfferer</td>
+<td>CommitAcceptOfferer</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingPhase2Offerer</td>
+<td></td>
+<td>Cancel</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingPhase2Offerer</td>
+<td></td>
+<td>Reject</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingPhase2Offerer</td>
+<td></td>
+<td>Accept</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td>FormingGroupOfferer</td>
+<td></td>
+<td>Cancel</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>FormingGroupOfferer</td>
+<td>Rollback</td>
+<td>Rollback</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>FormingGroupOfferer</td>
+<td>OwnKeysRequester</td>
+<td>OwnKeysRequester</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td>FormingGroupRequester</td>
+<td></td>
+<td>Cancel</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>FormingGroupRequester</td>
+<td>Rollback</td>
+<td>Rollback</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>FormingGroupRequester</td>
+<td>OwnKeysOfferer</td>
+<td>OwnKeysOfferer</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>Grouped</td>
+<td>NegotiationOpen</td>
+<td>NegotiationOpen</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>Grouped</td>
+<td>GroupHandshake</td>
+<td>GroupHandshake</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>Grouped</td>
+<td>InitUnledGroupKeyReset</td>
+<td>InitUnledGroupKeyReset</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>GroupKeyResetElection</td>
+<td>ElectGroupKeyResetLeader</td>
+<td>ElectGroupKeyResetLeader</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>GroupKeyResetElection</td>
+<td>ElectGroupKeyResetLeader</td>
+<td>ElectGroupKeyResetLeader</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingToJoin</td>
+<td></td>
+<td>Cancel</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingToJoin</td>
+<td>Rollback</td>
+<td>Rollback</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingToJoin</td>
+<td></td>
+<td>Reject</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingToJoin</td>
+<td>CommitAcceptForGroup</td>
+<td>CommitAcceptForGroup</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingToJoin</td>
+<td>CommitReject</td>
+<td>CommitReject</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingToJoin</td>
+<td></td>
+<td>Accept</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingToJoinPhase1</td>
+<td>Rollback</td>
+<td>Rollback</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingToJoinPhase1</td>
+<td>CommitReject</td>
+<td>CommitReject</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingToJoinPhase1</td>
+<td>CommitAcceptForGroup</td>
+<td>CommitAcceptForGroup</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingToJoinPhase2</td>
+<td></td>
+<td>Cancel</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingToJoinPhase2</td>
+<td></td>
+<td>Reject</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingToJoinPhase2</td>
+<td></td>
+<td>Accept</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>JoiningGroup</td>
+<td>GroupKeysForNewMember</td>
+<td>GroupKeysForNewMember</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingGrouped</td>
+<td></td>
+<td>Cancel</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingGrouped</td>
+<td>Rollback</td>
+<td>Rollback</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingGrouped</td>
+<td></td>
+<td>Reject</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingGrouped</td>
+<td>CommitReject</td>
+<td>CommitReject</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingGrouped</td>
+<td></td>
+<td>Accept</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingGrouped</td>
+<td>GroupTrustThisKey</td>
+<td>GroupTrustThisKey</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingGroupedPhase1</td>
+<td>Rollback</td>
+<td>Rollback</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingGroupedPhase1</td>
+<td>CommitReject</td>
+<td>CommitReject</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingGroupedPhase1</td>
+<td>CommitAccept</td>
+<td>CommitAccept</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor='
+			  "orange"
+		  '>
+<td>Sync</td>
+<td>KeySync</td>
+<td>HandshakingGroupedPhase1</td>
+<td>GroupKeysAndClose</td>
+<td>GroupKeysAndClose</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Beacon</td>
+<td>(message)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>NegotiationRequest</td>
+<td>(message)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>NegotiationOpen</td>
+<td>(message)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Rollback</td>
+<td>(message)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>CommitReject</td>
+<td>(message)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>CommitAcceptOfferer</td>
+<td>(message)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>CommitAcceptRequester</td>
+<td>(message)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>CommitAccept</td>
+<td>(message)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>CommitAcceptForGroup</td>
+<td>(message)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>GroupTrustThisKey</td>
+<td>(message)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>GroupKeysForNewMember</td>
+<td>(message)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>GroupKeysAndClose</td>
+<td>(message)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>OwnKeysOfferer</td>
+<td>(message)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>OwnKeysRequester</td>
+<td>(message)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>NegotiationRequestGrouped</td>
+<td>(message)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>GroupHandshake</td>
+<td>(message)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>GroupKeysUpdate</td>
+<td>(message)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>InitUnledGroupKeyReset</td>
+<td>(message)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>ElectGroupKeyResetLeader</td>
+<td>(message)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>SynchronizeGroupKeys</td>
+<td>(message)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>KeySync</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>ReceiverRating</td>
+<td>(message)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>TrustSync</td>
+<td>InitState</td>
+<td></td>
+<td>Init</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>TrustSync</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>TrustUpdate</td>
+<td>(message)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>TrustSync</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>TrustRequest</td>
+<td>(message)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>GroupSync</td>
+<td>InitState</td>
+<td></td>
+<td>Init</td>
+<td></td>
+<td></td>
+<td>(transition)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>GroupSync</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>GroupSyncUpdate</td>
+<td>(message)</td>
+</tr>
+<tr bgcolor="
+			  orange
+		  ">
+<td>Sync</td>
+<td>GroupSync</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>GroupSyncRequest</td>
+<td>(message)</td>
+</tr>
+</table>
 <h2>List of transitions starting from persistent state</h2>
 <table border="1">
 <tr>

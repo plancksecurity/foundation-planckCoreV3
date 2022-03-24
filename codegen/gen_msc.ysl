@@ -13,11 +13,19 @@ tstylesheet {
    
       # Next four on same line due to ','
       a box a [label="Sole"],
-      b box b [label="Sole"],
+      b box b [label="Sole"];
     }
     ||
-    apply "//event[@name='CannotDecrypt']";
-    apply "//state[@name='Sole']/event[@name='Beacon']";
+/*** Pseudo area ***
+    || 
+    ua -> a [label="CannotDecrypt"]
+    a -> b [label= «state[@name=$acurrentstate]/event[@name=$acurrentevent]//send/@name» ]
+    b -> a [label= «state[@name=$bcurrentstate]/event[@name=$bcurrentevent//send/@name»]
+
+
+    ||
+***  End Pseudo Area ***/
+    apply "//state[@name='Sole']/event[@name='Beacon']", 0;
     }
 
     template "protocol/fsm[1]/*/event" {
@@ -32,12 +40,20 @@ tstylesheet {
                               value "ancestor::state/@name";
                        };
             | send «$message» go «$target»
+            | depth «$_indent»
+//		value "/protocol/fsm[1]/state[@name=$target]/@timeout"
+ //               value "ancestor::state/@timeout"
             if "not(/protocol/fsm[1]/state[@name=$target]/@timeout='off')" {
-              apply "/protocol/fsm[1]/state[@name=$target]/event[@name=$message]";
+              | off
+ //             apply "/protocol/fsm[1]/state[@name=$target]/event[@name=$message]";
             }
-            if "@timeout='on'" {
+            if "ancestor::state/@timeout='off'" {
+            if "$_indent div 4<5" {
+              | on
+//            if "/protocol/fsm[1]/state[@name=$target]/event[@name=$message]/send/@name=@name" {
+              | same
               apply "/protocol/fsm[1]/state[@name=$target]/event[@name=$message]";
-            }
+            }}
         }
     }
 }
