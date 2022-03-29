@@ -3,18 +3,20 @@ tstylesheet {
 function "concat" {
     param "text";
     param "more";
+    const "ourTest", "$_indent < 2";
 
 //    value "$_indent";
     choose {
-        when "$_indent < 2" {
+        when "$ourTest" {
 	   <xsl:variable name="newtext">
             value "$more";
             value "$text";
 	    value "$_indent";
             value "$more";
            </xsl:variable>
-            call "concat" with "text", "$newtext", with "more", "$more", with "_indent", "$_indent+1";
-            call "concat" with "text", "$newtext", with "more", "'e'", with "_indent", "$_indent+1";
+           | «$newtext»
+//            call "concat" with "text", "$newtext", with "more", "$more", with "_indent", "$_indent+1";
+//            call "concat" with "text", "$newtext", with "more", "'e'", with "_indent", "$_indent+1";
         }
         otherwise {
            > [«$text»]
