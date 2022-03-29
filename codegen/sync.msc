@@ -1,9 +1,9 @@
-    Message NegotiationOpen
-    condition sameChallenge
-    target Sole
-    commPartnerState Sole
+    Message 
+    condition 
+    target , 
+  transition    commPartnerState HandshakingGrouped
     whoami a
     commPartner b
-    ownState Sole
-    stop false
-    indent 4
+    ownState HandshakingToJoin
+    event Accept
+    d
