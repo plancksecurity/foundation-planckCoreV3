@@ -1,10 +1,48 @@
 include yslt.yml2
 
 tstylesheet {
-    const "maxdepth", "10";
+    const "maxdepth", "15";
     const "mindepth", "4";
 
+    template "/protocol" {
+    const "whoAmI", "'a'";
+    const "commPartner", "'b'";
+
+//    apply "/protocol/fsm[1]"
+//        with "whoAmI", "$whoAmI",
+//        with "commPartner", "$commPartner",
+//        with "ownState", "'Grouped'",
+//        with "commPartnerState", "'Sole'",
+//        with "message", "'CannotDecrypt'";
+//
+    apply "/protocol/fsm[1]"
+        with "whoAmI", "$whoAmI",
+        with "commPartner", "$commPartner",
+        with "ownState", "'Sole'",
+        with "commPartnerState", "'Sole'",
+        with "message", "'CannotDecrypt'";
+
+//    apply "/protocol/fsm[1]"
+//        with "whoAmI", "$whoAmI",
+//        with "commPartner", "$commPartner",
+//        with "ownState", "'Sole'",
+//        with "commPartnerState", "'Grouped'",
+//        with "message", "'CannotDecrypt'";
+//
+//    apply "/protocol/fsm[1]"
+//        with "whoAmI", "$whoAmI",
+//        with "commPartner", "$commPartner",
+//        with "ownState", "'Grouped'",
+//        with "commPartnerState", "'Grouped'",
+//        with "message", "'CannotDecrypt'";
+    }
+
     template "/protocol/fsm[1]" {
+        param "ownState";
+        param "commPartnerState";
+        param "whoAmI";
+        param "commPartner";
+        param "message";
         const "msc"
             ||
               # The entities
@@ -14,20 +52,16 @@ tstylesheet {
               |||;
            
               # Next two on same line due to ','
-              a box a [label="Sole"],
-              b box b [label="Sole"];
+              «$whoAmI» box «$whoAmI» [label="«$ownState»"],
+              «$commPartner» box «$commPartner» [label="«$commPartnerState»"];
+              u«$whoAmI» -> «$whoAmI» [label="«$message»"];
             ||
-            apply "//state[@name='Sole']/event[@name='CannotDecrypt']", 1
-                    with "commPartnerState", "'Sole'",
-                    with "whoAmI", "'a'",
-                    with "commPartner", "'b'",
+            apply "//state[@name=$ownState]/event[@name=$message]", 1
+                    with "commPartnerState", "$commPartnerState",
+                    with "whoAmI", "$whoAmI",
+                    with "commPartner", "$commPartner",
                     with "depth", "0",
                     with "msc", "$msc";
-//            apply "/protocol/fsm[1]/state[@name='Sole']/event[@name='NegotiationOpen']", 1
-//                    with "commPartnerState", "'Sole'",
-//                    with "whoAmI", "'a'",
-//                    with "commPartner", "'b'",
-//                    with "msc", "$msc";
     } //template
 
     template "protocol/fsm[1]/*/event" {
@@ -87,10 +121,6 @@ const "newlog" {
             choose {
                 when "$stopCondition" {
                     const "secid", "math:random()";
-value "$secid";
-|
-value "substring($secid,3,6)";
-|
                     const "id", "concat(generate-id(),substring($secid,3,6))";
                     | doc «$depth», «$id»:
                     value "$newlog";
