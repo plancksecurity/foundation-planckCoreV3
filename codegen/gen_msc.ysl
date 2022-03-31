@@ -105,7 +105,7 @@ tstylesheet {
         const "message", "child::send[1]/@name";
         const "condition", "ancestor-or-self::condition/@name";
         const "target", "child::transition[1]/@target";   
-        const "stopCondition", "(//state[@name=$target]/@timeout='off' and //state[@name=$commPartnerState]/@timeout='off' and $depth>$mindepth) or $depth>$maxdepth or ($commPartnerState='End' and $target='End')";
+        const "stopCondition", "(ancestor::state/@timeout='off'  and $depth>$mindepth) or (//state[@name=$target]/@timeout='off' and //state[@name=$commPartnerState]/@timeout='off' and $depth>$mindepth) or $depth>$maxdepth or ($commPartnerState='End' and $target='End')";
 //and //state[@name=$commPartnerState]/@timeout='off'
 
 const "newlog" {
