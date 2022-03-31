@@ -1,8 +1,8 @@
 include yslt.yml2
 
 tstylesheet {
-    const "maxdepth", "7";
-    const "mindepth", "3";
+    const "maxdepth", "10";
+    const "mindepth", "2";
 
     template "/protocol/fsm[1]" {
         const "msc"
@@ -68,34 +68,35 @@ tstylesheet {
         const "ownState", "ancestor::state/@name";
         const "eventString" if "/protocol/fsm[1]/external[@name=$event]" {
            | u«$whoAmI» -> «$whoAmI» [label="«$event»"];
-                }
-
+                };
         const "message", "child::send[1]/@name";
         const "condition", "ancestor-or-self::condition/@name";
         const "target", "child::transition[1]/@target";   
-        const "stopCondition", "(parent::state/@timeout='off' and //state[@name=$commPartnerState]/@timeout='off' and $depth>$mindepth) or $depth>$maxdepth";
+        const "stopCondition", "(ancestor::state/@timeout='off'  and $depth>$mindepth) or $depth>$maxdepth";
+//and //state[@name=$commPartnerState]/@timeout='off'
 
 const "newlog" {
  value "$log";
- | Message «$message»
- | ownState «$ownState»
- | event «$event»
- | condition «$condition»
- | target «$target» 
- | commPartnerState «$commPartnerState»
- | whoami «$whoAmI»
- | commPartner «$commPartner»
+ | «$whoAmI»: at «$ownState» on «$event» if «$condition» send «$message» go «$target» 
+ | «$commPartner»: «$commPartnerState»
+ | stop «//state[@name=$ownState]/@timeout» and  «//state[@name=$commPartnerState]/@timeout» and «$depth»>«$mindepth»
  | stop «$stopCondition»
+ value "$msc";
+ | ----------------------------------------------------------------------------------
 };
 
             choose {
                 when "$stopCondition" {
 const "id", "generate-id()";
  | doc «$depth», «$id»:
- value "$log";
+ value "$newlog";
+ | STOP
+ value "$msc";
 document "msc/{$id}.msc" method="text" {
                     | msc {
                     |    «$msc»
+                    |    «$whoAmI» box «$whoAmI» [label="«$ownState»"],
+                    |    «$commPartner» box «$commPartner» [label="«$commPartnerState»"];
                     | }
 }
                 }
@@ -106,7 +107,7 @@ document "msc/{$id}.msc" method="text" {
                         |   «$whoAmI» -> «$commPartner» [label="«$message»"];
                     };
                     const "nextlog" {
-                        |  «$newlog»
+                        value "$newlog";
                         |  b «$depth» 
                     };
                     apply "/protocol/fsm[1]/state[@name=$commPartnerState]/event[@name=$message]"
@@ -119,7 +120,7 @@ document "msc/{$id}.msc" method="text" {
                 }
                 when "$message and $target and not($target=$ownState)" {
                     const "nextlog" {
-                        |  «$newlog»
+                        value "$newlog";
                         |  c «$depth» 
                     };
                    const "newmsc" {
@@ -144,7 +145,7 @@ document "msc/{$id}.msc" method="text" {
                 }
                 when "not($message) and $target and not($target=$ownState)" {
                     const "nextlog" {
-                        |  «$newlog»
+                        value "$newlog";
                         |  d «$depth» 
                     };
                     const "newmsc" {
@@ -162,6 +163,7 @@ document "msc/{$id}.msc" method="text" {
                         with "msc", "$newmsc";
                 }
                 otherwise {
+value "$newlog"
  | o «$depth»
               //      | msc {
               //      |    «$msc»
