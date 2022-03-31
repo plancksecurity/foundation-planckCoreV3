@@ -1,7 +1,9 @@
 include yslt.yml2
 
 tstylesheet {
-    const "maxdepth", "20";
+    const "maxdepth", "7";
+    const "mindepth", "3";
+
     template "/protocol/fsm[1]" {
         const "msc"
             ||
@@ -15,133 +17,138 @@ tstylesheet {
               a box a [label="Sole"],
               b box b [label="Sole"];
             ||
-            //apply "/protocol/fsm[1]/state[@name='Sole']/event[@name='NegotiationRequest']", 1
-            apply "//state[@name='HandshakingToJoin']/event[@name='Accept']", 1
-                    with "commPartnerState", "'HandshakingGrouped'",
+            apply "//state[@name='Sole']/event[@name='NegotiationRequest']", 1
+            //apply "//state[@name='HandshakingToJoin']/event[@name='Accept']", 1
+                    with "commPartnerState", "'Sole'",
                     with "whoAmI", "'a'",
                     with "commPartner", "'b'",
+                    with "depth", "0",
                     with "msc", "$msc";
 //            apply "/protocol/fsm[1]/state[@name='Sole']/event[@name='NegotiationOpen']", 1
 //                    with "commPartnerState", "'Sole'",
 //                    with "whoAmI", "'a'",
 //                    with "commPartner", "'b'",
 //                    with "msc", "$msc";
-    }
+    } //template
 
     template "protocol/fsm[1]/*/event" {
         param "commPartnerState";
         param "whoAmI";
         param "commPartner";
         param "msc";
-        const "ownState", "parent::state/@name";
-        const "stopTheRecursion", "parent::state/@timeout='on' or $_indent>$maxdepth";
-        const "event", "@name";
-        //const "eventString", if "/protocol/fsm[1]/extern[@name=./@name]" "u«$whoAmI» -> «$whoAmI» [label=]"
-        const "eventString" if "/protocol/fsm[1]" {
-           | u«$whoAmI» -> «$whoAmI» [label="«$event»]";
+        param "depth";
+
+        for ("descendant::condition|descendant::else") {
+            call "nextStep"
+                with "commPartnerState", "$commPartnerState",
+                with "whoAmI", "$whoAmI",
+                with "commPartner", "$commPartner",
+                with "msc", "$msc",
+                with "depth", "$depth";
+        }
+        call "nextStep"
+            with "commPartnerState", "$commPartnerState",
+            with "whoAmI", "$whoAmI",
+            with "commPartner", "$commPartner",
+            with "msc", "$msc",
+            with "depth", "$depth";
+    } //template event
+
+    function "nextStep" {
+        param "commPartnerState";
+        param "whoAmI";
+        param "commPartner";
+        param "msc";
+        param "depth";
+        const "event", "ancestor-or-self::event/@name";
+        const "ownState", "ancestor::state/@name";
+        const "eventString" if "/protocol/fsm[1]/external[@name=$event]" {
+           | u«$whoAmI» -> «$whoAmI» [label="«$event»"];
                 }
 
-        for("descendant::send[last()]|descendant::transition[last()]") { //FIXME: This is wrong
-            const "message", "@name";//this is wrong, FIXME
-            const "condition", "ancestor::condition/@name";
-            const "target"  //this is wrong, FIXME
-                        choose {
-                            when "following-sibling::transition/@name"
-                                value "following-sibling::transition/@name";
-                            when "name() = 'transition'"
-                                value "self::transition/@name";
-                            otherwise
-                                value "ancestor::state/@name";
-                        }; //choose, defining $target
- | Message «$message»
- | condition «$condition»
- | target «$target» 
- | commPartnerState «$commPartnerState»
- | whoami «$whoAmI»
- | commPartner «$commPartner»
- | ownState «$ownState»
- | event «$event»
-// | stop «$stopTheRecursion»
-// | indent «$_indent»
+        const "message", "child::send[1]/@name";
+        const "condition", "ancestor-or-self::condition/@name";
+        const "target", "child::transition[1]/@target";   
+        const "stopCondition", "(parent::state/@timeout='off' and //state[@name=$commPartnerState]/@timeout='off' and $depth>$mindepth) or $depth>$maxdepth";
 
 
             choose {
-                when "stopTheRecursion" {
- | a
+                when "$stopCondition" {
+ | a «$depth»
+const "id", "generate-id()";
+document "msc/{$id}.msc" method="text" {
                     | msc {
                     |    «$msc»
                     | }
+}
                 }
-                when "$message and $target=$ownState and $_indent<$maxdepth" {
- | b «$_indent»
+                when "$message and ($target=$ownState or not($target))" {
+ | b «$depth»
                     const "newmsc" {
                         value "$msc";
-                        | «$eventString»
-                        | «$whoAmI» -> «$commPartner» [label="«$message»"];
+                        |   «$eventString»
+                        |   «$whoAmI» -> «$commPartner» [label="«$message»"];
                     };
                     apply "/protocol/fsm[1]/state[@name=$commPartnerState]/event[@name=$message]"
                         with "commPartnerState", "$ownState",
                         with "whoAmI", "$commPartner",
                         with "commPartner", "$whoAmI",
+                        with "depth", "$depth+1",
                         with "msc", "$newmsc";
                 }
-                when "$message and not($target=$ownState)" {
- | c
-                    const "newmsc" {
+                when "$message and $target and not($target=$ownState)" {
+ | c «$depth»
+                   const "newmsc" {
                         value "$msc";
-                        | «$eventString»
-                        | «$whoAmI» -> «$commPartner» [label="«$message»"];
-                        | «$whoAmI» box «$whoAmI»     [label="«$target»"];
+                        |   «$eventString»
+                        |   «$whoAmI» -> «$commPartner» [label="«$message»"];
+                        |   «$whoAmI» box «$whoAmI»     [label="«$target»"];
                     };
+          //    |      apply "/protocol/fsm[1]/state[@name=«$commPartnerState»]/event[@name=«$message»]"
+          //    |          with "commPartnerState", "«$target»",
+          //    |          with "whoAmI", "«$commPartner»",
+          //    |          with "commPartner", "«$whoAmI»",
+          //    |          with "depth", "«$depth+1»",
+          //    |          with "msc", "$newmsc";
                     apply "/protocol/fsm[1]/state[@name=$commPartnerState]/event[@name=$message]"
                         with "commPartnerState", "$target",
                         with "whoAmI", "$commPartner",
                         with "commPartner", "$whoAmI",
+                        with "depth", "$depth+1",
                         with "msc", "$newmsc";
                 }
-                when "not($message or $target=$ownState)" {
- | d
+                when "not($message) and $target and not($target=$ownState)" {
+ | d «$depth»
                     const "newmsc" {
                         value "$msc";
-                        | «$eventString»
-                        | «$whoAmI» box «$whoAmI»     [label="«$target»"];
+                        |   «$eventString»
+                        |   «$whoAmI» box «$whoAmI» [label="«$target»"];
                     };
-                    apply "/protocol/fsm[1]/state[@name=$target]/event[@name='Init']"
+                    //apply "/protocol/fsm[1]/state[@name=$target]/event[@name='Init']"
+                    apply "/protocol/fsm[1]/state[@name=$target]/event"
                         with "commPartnerState", "$commPartnerState",
                         with "whoAmI", "$whoAmI",
                         with "commPartner", "$commPartner",
+                        with "depth", "$depth+1",
                         with "msc", "$newmsc";
-
                 }
                 otherwise {
- | o
-                    | msc {
-                    |    «$msc»
-                    | }
+ | o «$depth»
+// | Message «$message»
+ | ownState «$ownState»
+ | event «$event»
+ | condition «$condition»
+// | target «$target» 
+// | commPartnerState «$commPartnerState»
+// | whoami «$whoAmI»
+// | commPartner «$commPartner»
+// | stop «$stopCondition»
+// | indent «$depth»
+              //      | msc {
+              //      |    «$msc»
+              //      | }
                 }
             } //choose
-            
-                        
-                        
-                        
-                        
-                        
-//        value "/protocol/fsm[1]/state[@name=$target]/@timeout"
-//                value "ancestor::state/@timeout"
-//            if "not(/protocol/fsm[1]/state[@name=$target]/@timeout='off')" {
-//              | off
-//              apply "/protocol/fsm[1]/state[@name=$target]/event[@name=$message]";
-//            }
-//            if "ancestor::state/@timeout='off'" {
-//            if "$_indent div 4<5" {
-//              | on
-//            if "/protocol/fsm[1]/state[@name=$target]/event[@name=$message]/send/@name=@name" {
-//              | same
-//              apply "/protocol/fsm[1]/state[@name=$target]/event[@name=$message]";
-//            }}//if if
-                        
-                        
-        } //for
-    } //template
+    } //function nextStep
 } //tstylesheet
 

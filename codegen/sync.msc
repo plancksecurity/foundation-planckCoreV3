@@ -1,9 +1,1028 @@
-    Message 
-    condition 
-    target , 
-  transition    commPartnerState HandshakingGrouped
-    whoami a
-    commPartner b
-    ownState HandshakingToJoin
-    event Accept
-    d
+c 0
+d 1
+o 2
+ownState HandshakingRequester
+event Init
+condition 
+c 2
+d 3
+a 4
+a 4
+a 4
+o 4
+ownState Sole
+event Beacon
+condition sameChallenge
+o 4
+ownState Sole
+event Beacon
+condition 
+b 4
+o 5
+ownState Sole
+event Beacon
+condition sameChallenge
+o 5
+ownState Sole
+event Beacon
+condition 
+b 5
+o 6
+ownState Sole
+event Beacon
+condition sameChallenge
+o 6
+ownState Sole
+event Beacon
+condition 
+b 6
+o 7
+ownState Sole
+event Beacon
+condition sameChallenge
+o 7
+ownState Sole
+event Beacon
+condition 
+b 7
+a 8
+a 8
+a 8
+a 8
+a 8
+b 7
+a 8
+a 8
+a 7
+b 6
+c 7
+a 8
+a 8
+a 8
+a 7
+a 6
+b 5
+c 6
+d 7
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+o 7
+ownState Sole
+event NegotiationOpen
+condition 
+o 7
+ownState Sole
+event NegotiationOpen
+condition 
+a 6
+a 5
+b 4
+c 5
+d 6
+o 7
+ownState HandshakingRequester
+event Init
+condition 
+c 7
+a 8
+a 8
+d 7
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+o 7
+ownState HandshakingRequester
+event Rollback
+condition 
+c 7
+a 8
+a 8
+d 7
+o 7
+ownState HandshakingRequester
+event CommitReject
+condition 
+c 7
+a 8
+a 8
+o 6
+ownState Sole
+event NegotiationOpen
+condition 
+o 6
+ownState Sole
+event NegotiationOpen
+condition 
+a 5
+a 4
+c 4
+d 5
+o 6
+ownState HandshakingRequester
+event Init
+condition 
+c 6
+d 7
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+o 7
+ownState HandshakingOfferer
+event Rollback
+condition 
+d 6
+o 7
+ownState Sole
+event Init
+condition 
+b 7
+b 7
+o 7
+ownState Sole
+event Beacon
+condition sameChallenge
+o 7
+ownState Sole
+event Beacon
+condition 
+b 7
+b 7
+o 7
+ownState Sole
+event Beacon
+condition 
+c 7
+o 7
+ownState Sole
+event NegotiationRequest
+condition 
+c 7
+o 7
+ownState Sole
+event NegotiationRequestGrouped
+condition 
+d 7
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+o 7
+ownState Sole
+event NegotiationOpen
+condition 
+o 7
+ownState Sole
+event NegotiationOpen
+condition 
+o 6
+ownState HandshakingRequester
+event Rollback
+condition 
+c 6
+d 7
+o 7
+ownState HandshakingOfferer
+event CommitReject
+condition 
+d 6
+o 6
+ownState HandshakingRequester
+event CommitReject
+condition 
+c 6
+d 7
+a 8
+a 8
+a 8
+o 7
+ownState HandshakingOfferer
+event CommitAcceptRequester
+condition 
+o 5
+ownState Sole
+event NegotiationOpen
+condition 
+o 5
+ownState Sole
+event NegotiationOpen
+condition 
+a 4
+c 4
+d 5
+o 6
+ownState HandshakingRequester
+event Init
+condition 
+c 6
+d 7
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+o 7
+ownState HandshakingToJoin
+event Rollback
+condition 
+d 6
+o 7
+ownState Sole
+event Init
+condition 
+b 7
+b 7
+o 7
+ownState Sole
+event Beacon
+condition sameChallenge
+o 7
+ownState Sole
+event Beacon
+condition 
+b 7
+b 7
+o 7
+ownState Sole
+event Beacon
+condition 
+c 7
+o 7
+ownState Sole
+event NegotiationRequest
+condition 
+c 7
+o 7
+ownState Sole
+event NegotiationRequestGrouped
+condition 
+d 7
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+o 7
+ownState Sole
+event NegotiationOpen
+condition 
+o 7
+ownState Sole
+event NegotiationOpen
+condition 
+o 6
+ownState HandshakingRequester
+event Rollback
+condition 
+c 6
+d 7
+o 7
+ownState HandshakingToJoin
+event CommitReject
+condition 
+d 6
+o 6
+ownState HandshakingRequester
+event CommitReject
+condition 
+c 6
+o 5
+ownState Sole
+event NegotiationOpen
+condition 
+o 5
+ownState Sole
+event NegotiationOpen
+condition 
+a 4
+d 4
+o 5
+ownState HandshakingRequester
+event Init
+condition 
+c 5
+d 5
+a 6
+a 6
+a 6
+o 6
+ownState Sole
+event Beacon
+condition sameChallenge
+o 6
+ownState Sole
+event Beacon
+condition 
+b 6
+o 7
+ownState Sole
+event Beacon
+condition sameChallenge
+o 7
+ownState Sole
+event Beacon
+condition 
+b 7
+a 8
+a 8
+a 8
+a 8
+a 8
+b 7
+a 8
+a 8
+a 7
+b 6
+c 7
+a 8
+a 8
+a 8
+a 7
+a 6
+c 6
+d 7
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+o 7
+ownState Sole
+event NegotiationOpen
+condition 
+o 7
+ownState Sole
+event NegotiationOpen
+condition 
+a 6
+c 6
+d 7
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+o 7
+ownState Sole
+event NegotiationOpen
+condition 
+o 7
+ownState Sole
+event NegotiationOpen
+condition 
+a 6
+d 6
+o 7
+ownState HandshakingRequester
+event Init
+condition 
+c 7
+d 7
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+o 7
+ownState HandshakingRequester
+event Rollback
+condition 
+c 7
+d 7
+o 7
+ownState HandshakingRequester
+event CommitReject
+condition 
+c 7
+o 6
+ownState Sole
+event NegotiationOpen
+condition 
+a 6
+o 5
+ownState HandshakingRequester
+event Rollback
+condition 
+c 5
+d 5
+o 5
+ownState HandshakingRequester
+event CommitReject
+condition 
+c 5
+o 4
+ownState Sole
+event NegotiationOpen
+condition 
+a 4
+o 3
+ownState HandshakingOfferer
+event Rollback
+condition 
+d 2
+o 3
+ownState Sole
+event Init
+condition 
+b 3
+b 3
+o 3
+ownState Sole
+event Beacon
+condition sameChallenge
+o 3
+ownState Sole
+event Beacon
+condition 
+b 3
+b 3
+o 3
+ownState Sole
+event Beacon
+condition 
+c 3
+o 3
+ownState Sole
+event NegotiationRequest
+condition 
+c 3
+o 3
+ownState Sole
+event NegotiationRequestGrouped
+condition 
+d 3
+o 4
+ownState HandshakingRequester
+event Init
+condition 
+c 4
+d 5
+a 6
+a 6
+a 6
+o 6
+ownState Sole
+event Beacon
+condition sameChallenge
+o 6
+ownState Sole
+event Beacon
+condition 
+b 6
+o 7
+ownState Sole
+event Beacon
+condition sameChallenge
+o 7
+ownState Sole
+event Beacon
+condition 
+b 7
+a 8
+a 8
+a 8
+a 8
+a 8
+b 7
+a 8
+a 8
+a 7
+b 6
+c 7
+a 8
+a 8
+a 8
+a 7
+a 6
+c 6
+d 7
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+o 7
+ownState Sole
+event NegotiationOpen
+condition 
+o 7
+ownState Sole
+event NegotiationOpen
+condition 
+a 6
+c 6
+d 7
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+o 7
+ownState Sole
+event NegotiationOpen
+condition 
+o 7
+ownState Sole
+event NegotiationOpen
+condition 
+a 6
+d 6
+o 7
+ownState HandshakingRequester
+event Init
+condition 
+c 7
+d 7
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+o 7
+ownState HandshakingRequester
+event Rollback
+condition 
+c 7
+d 7
+o 7
+ownState HandshakingRequester
+event CommitReject
+condition 
+c 7
+o 6
+ownState Sole
+event NegotiationOpen
+condition 
+a 6
+o 5
+ownState HandshakingOfferer
+event Rollback
+condition 
+d 4
+o 5
+ownState Sole
+event Init
+condition 
+b 5
+b 5
+o 5
+ownState Sole
+event Beacon
+condition sameChallenge
+o 5
+ownState Sole
+event Beacon
+condition 
+b 5
+b 5
+o 5
+ownState Sole
+event Beacon
+condition 
+c 5
+o 5
+ownState Sole
+event NegotiationRequest
+condition 
+c 5
+o 5
+ownState Sole
+event NegotiationRequestGrouped
+condition 
+d 5
+o 6
+ownState HandshakingRequester
+event Init
+condition 
+c 6
+d 7
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+o 7
+ownState HandshakingOfferer
+event Rollback
+condition 
+d 6
+o 7
+ownState Sole
+event Init
+condition 
+b 7
+b 7
+o 7
+ownState Sole
+event Beacon
+condition sameChallenge
+o 7
+ownState Sole
+event Beacon
+condition 
+b 7
+b 7
+o 7
+ownState Sole
+event Beacon
+condition 
+c 7
+o 7
+ownState Sole
+event NegotiationRequest
+condition 
+c 7
+o 7
+ownState Sole
+event NegotiationRequestGrouped
+condition 
+d 7
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+o 7
+ownState Sole
+event NegotiationOpen
+condition 
+o 7
+ownState Sole
+event NegotiationOpen
+condition 
+o 6
+ownState HandshakingRequester
+event Rollback
+condition 
+c 6
+d 7
+o 7
+ownState HandshakingOfferer
+event CommitReject
+condition 
+d 6
+o 6
+ownState HandshakingRequester
+event CommitReject
+condition 
+c 6
+d 7
+a 8
+a 8
+a 8
+o 7
+ownState HandshakingOfferer
+event CommitAcceptRequester
+condition 
+o 5
+ownState Sole
+event NegotiationOpen
+condition 
+o 5
+ownState Sole
+event NegotiationOpen
+condition 
+o 4
+ownState HandshakingRequester
+event Rollback
+condition 
+c 4
+d 5
+o 5
+ownState HandshakingOfferer
+event CommitReject
+condition 
+d 4
+o 4
+ownState HandshakingRequester
+event CommitReject
+condition 
+c 4
+d 5
+c 6
+d 7
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+o 7
+ownState HandshakingPhase1Requester
+event Rollback
+condition 
+c 6
+d 7
+o 7
+ownState HandshakingPhase1Requester
+event CommitReject
+condition 
+c 6
+c 7
+a 8
+a 8
+o 7
+ownState HandshakingPhase1Requester
+event CommitAcceptOfferer
+condition 
+o 5
+ownState HandshakingOfferer
+event CommitAcceptRequester
+condition 
+o 3
+ownState Sole
+event NegotiationOpen
+condition 
+o 3
+ownState Sole
+event NegotiationOpen
+condition 
+o 2
+ownState HandshakingRequester
+event Rollback
+condition 
+c 2
+d 3
+o 3
+ownState HandshakingOfferer
+event CommitReject
+condition 
+d 2
+o 2
+ownState HandshakingRequester
+event CommitReject
+condition 
+c 2
+d 3
+c 4
+d 5
+a 6
+a 6
+a 6
+o 6
+ownState Sole
+event Beacon
+condition sameChallenge
+o 6
+ownState Sole
+event Beacon
+condition 
+b 6
+o 7
+ownState Sole
+event Beacon
+condition sameChallenge
+o 7
+ownState Sole
+event Beacon
+condition 
+b 7
+a 8
+a 8
+a 8
+a 8
+a 8
+b 7
+a 8
+a 8
+a 7
+b 6
+c 7
+a 8
+a 8
+a 8
+a 7
+a 6
+c 6
+d 7
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+o 7
+ownState Sole
+event NegotiationOpen
+condition 
+o 7
+ownState Sole
+event NegotiationOpen
+condition 
+a 6
+c 6
+d 7
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+o 7
+ownState Sole
+event NegotiationOpen
+condition 
+o 7
+ownState Sole
+event NegotiationOpen
+condition 
+a 6
+d 6
+o 7
+ownState HandshakingRequester
+event Init
+condition 
+c 7
+d 7
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+o 7
+ownState HandshakingRequester
+event Rollback
+condition 
+c 7
+d 7
+o 7
+ownState HandshakingRequester
+event CommitReject
+condition 
+c 7
+o 6
+ownState Sole
+event NegotiationOpen
+condition 
+a 6
+o 5
+ownState HandshakingPhase1Requester
+event Rollback
+condition 
+c 4
+d 5
+o 5
+ownState HandshakingPhase1Requester
+event CommitReject
+condition 
+c 4
+c 5
+c 6
+d 7
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+a 8
+o 7
+ownState FormingGroupRequester
+event OwnKeysOfferer
+condition 
+o 6
+ownState FormingGroupOfferer
+event OwnKeysRequester
+condition 
+o 5
+ownState HandshakingPhase1Requester
+event CommitAcceptOfferer
+condition 
+o 3
+ownState HandshakingOfferer
+event CommitAcceptRequester
+condition 
+o 1
+ownState Sole
+event NegotiationOpen
+condition 
+o 1
+ownState Sole
+event NegotiationOpen
+condition 
+o 0
+ownState Sole
+event NegotiationRequest
+condition 
