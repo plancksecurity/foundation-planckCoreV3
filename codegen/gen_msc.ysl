@@ -36,6 +36,7 @@ tstylesheet {
         param "whoAmI";
         param "commPartner";
         param "msc";
+	param "log";
         param "depth";
 
         for ("descendant::condition|descendant::else") {
@@ -44,6 +45,7 @@ tstylesheet {
                 with "whoAmI", "$whoAmI",
                 with "commPartner", "$commPartner",
                 with "msc", "$msc",
+		with "log", "$log",
                 with "depth", "$depth";
         }
         call "nextStep"
@@ -51,6 +53,7 @@ tstylesheet {
             with "whoAmI", "$whoAmI",
             with "commPartner", "$commPartner",
             with "msc", "$msc",
+            with "log", "$log",
             with "depth", "$depth";
     } //template event
 
@@ -60,6 +63,7 @@ tstylesheet {
         param "commPartner";
         param "msc";
         param "depth";
+	param "log";
         const "event", "ancestor-or-self::event/@name";
         const "ownState", "ancestor::state/@name";
         const "eventString" if "/protocol/fsm[1]/external[@name=$event]" {
@@ -71,11 +75,24 @@ tstylesheet {
         const "target", "child::transition[1]/@target";   
         const "stopCondition", "(parent::state/@timeout='off' and //state[@name=$commPartnerState]/@timeout='off' and $depth>$mindepth) or $depth>$maxdepth";
 
+const "newlog" {
+ value "$log";
+ | Message «$message»
+ | ownState «$ownState»
+ | event «$event»
+ | condition «$condition»
+ | target «$target» 
+ | commPartnerState «$commPartnerState»
+ | whoami «$whoAmI»
+ | commPartner «$commPartner»
+ | stop «$stopCondition»
+};
 
             choose {
                 when "$stopCondition" {
- | a «$depth»
 const "id", "generate-id()";
+ | doc «$depth», «$id»:
+ value "$log";
 document "msc/{$id}.msc" method="text" {
                     | msc {
                     |    «$msc»
@@ -83,21 +100,28 @@ document "msc/{$id}.msc" method="text" {
 }
                 }
                 when "$message and ($target=$ownState or not($target))" {
- | b «$depth»
                     const "newmsc" {
                         value "$msc";
                         |   «$eventString»
                         |   «$whoAmI» -> «$commPartner» [label="«$message»"];
+                    };
+                    const "nextlog" {
+                        |  «$newlog»
+                        |  b «$depth» 
                     };
                     apply "/protocol/fsm[1]/state[@name=$commPartnerState]/event[@name=$message]"
                         with "commPartnerState", "$ownState",
                         with "whoAmI", "$commPartner",
                         with "commPartner", "$whoAmI",
                         with "depth", "$depth+1",
+			with "log", "$nextlog",
                         with "msc", "$newmsc";
                 }
                 when "$message and $target and not($target=$ownState)" {
- | c «$depth»
+                    const "nextlog" {
+                        |  «$newlog»
+                        |  c «$depth» 
+                    };
                    const "newmsc" {
                         value "$msc";
                         |   «$eventString»
@@ -115,10 +139,14 @@ document "msc/{$id}.msc" method="text" {
                         with "whoAmI", "$commPartner",
                         with "commPartner", "$whoAmI",
                         with "depth", "$depth+1",
+			with "log", "$nextlog",
                         with "msc", "$newmsc";
                 }
                 when "not($message) and $target and not($target=$ownState)" {
- | d «$depth»
+                    const "nextlog" {
+                        |  «$newlog»
+                        |  d «$depth» 
+                    };
                     const "newmsc" {
                         value "$msc";
                         |   «$eventString»
@@ -130,20 +158,11 @@ document "msc/{$id}.msc" method="text" {
                         with "whoAmI", "$whoAmI",
                         with "commPartner", "$commPartner",
                         with "depth", "$depth+1",
+			with "log", "$nextlog",
                         with "msc", "$newmsc";
                 }
                 otherwise {
  | o «$depth»
-// | Message «$message»
- | ownState «$ownState»
- | event «$event»
- | condition «$condition»
-// | target «$target» 
-// | commPartnerState «$commPartnerState»
-// | whoami «$whoAmI»
-// | commPartner «$commPartner»
-// | stop «$stopCondition»
-// | indent «$depth»
               //      | msc {
               //      |    «$msc»
               //      | }
