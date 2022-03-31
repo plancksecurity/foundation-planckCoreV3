@@ -2,7 +2,7 @@ include yslt.yml2
 
 tstylesheet {
     const "maxdepth", "10";
-    const "mindepth", "2";
+    const "mindepth", "4";
 
     template "/protocol/fsm[1]" {
         const "msc"
@@ -17,8 +17,7 @@ tstylesheet {
               a box a [label="Sole"],
               b box b [label="Sole"];
             ||
-            apply "//state[@name='Sole']/event[@name='NegotiationRequest']", 1
-            //apply "//state[@name='HandshakingToJoin']/event[@name='Accept']", 1
+            apply "//state[@name='Sole']/event[@name='CannotDecrypt']", 1
                     with "commPartnerState", "'Sole'",
                     with "whoAmI", "'a'",
                     with "commPartner", "'b'",
@@ -87,18 +86,23 @@ const "newlog" {
 
             choose {
                 when "$stopCondition" {
-const "id", "generate-id()";
- | doc «$depth», «$id»:
- value "$newlog";
- | STOP
- value "$msc";
-document "msc/{$id}.msc" method="text" {
-                    | msc {
-                    |    «$msc»
-                    |    «$whoAmI» box «$whoAmI» [label="«$ownState»"],
-                    |    «$commPartner» box «$commPartner» [label="«$commPartnerState»"];
-                    | }
-}
+                    const "secid", "math:random()";
+value "$secid";
+|
+value "substring($secid,3,6)";
+|
+                    const "id", "concat(generate-id(),substring($secid,3,6))";
+                    | doc «$depth», «$id»:
+                    value "$newlog";
+                    | STOP
+                    value "$msc";
+                    document "msc/{$id}.msc" method="text" {
+                        | msc {
+                        |    «$msc»
+                        |    «$whoAmI» box «$whoAmI» [label="«$ownState»"],
+                        |    «$commPartner» box «$commPartner» [label="«$commPartnerState»"];
+                        | }
+                    }
                 }
                 when "$message and ($target=$ownState or not($target))" {
                     const "newmsc" {
