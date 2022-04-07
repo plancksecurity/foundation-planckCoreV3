@@ -426,3 +426,13 @@ DYNAMIC_API PEP_STATUS disable_all_sync_channels(PEP_SESSION session)
     return status;
 }
 
+DYNAMIC_API PEP_STATUS sync_reinit(PEP_SESSION session)
+{
+    /* Check that the session is valid. */
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    /* Go to the appropriate state. */
+    return signal_Sync_event(session, Sync_PR_keysync, CannotDecrypt, NULL);
+}
