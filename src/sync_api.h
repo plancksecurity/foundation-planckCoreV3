@@ -270,6 +270,17 @@ DYNAMIC_API PEP_STATUS disable_identity_for_sync(PEP_SESSION session,
 
 DYNAMIC_API PEP_STATUS disable_all_sync_channels(PEP_SESSION session);
 
+/**
+ *  <!--       enter_device_group()       -->
+ *  
+ *  @brief Explicitly reinitialize Sync.  This is meant to be explicitly called
+ *         from the application upon user request (of course through the
+ *         adaptor).
+ *  
+ *  @param[in]   session               pEp session
+ *  
+ */
+DYNAMIC_API PEP_STATUS sync_reinit(PEP_SESSION session);
 
 #ifdef __cplusplus
 }
