@@ -123,6 +123,10 @@ ifeq ($(OPENPGP),SEQUOIA)
     LDLIBS+=-lsequoia_openpgp_ffi 
 endif
 
+# Link with libz at the end.  This is needed on some configurations,
+# particularly on static-only configurations, and harmless where not needed.
+LDLIBS+=-lz
+
 $(TARGET): $(OBJS)
 	${CXX} ${LDFLAGS} -L${PREFIX}/lib -o $@ $^ $(LDLIBS)
 
