@@ -46,6 +46,7 @@ protocol Sync 1 {
                     debug > this is our own Beacon; ignore
                 }
                 else {
+                    do showDeviceDetected;
                     if weAreOfferer {
                         do useOwnChallenge;
                         debug > we are Offerer
@@ -64,6 +65,7 @@ protocol Sync 1 {
 
             // we get this from another sole device
             on NegotiationRequest {
+                do showDeviceDetected;
                 if sameChallenge { // challenge accepted
                     do storeNegotiation;
                     // offerer is accepting by confirming NegotiationOpen
@@ -75,6 +77,7 @@ protocol Sync 1 {
 
             // we get this from an existing device group
             on NegotiationRequestGrouped {
+                do showDeviceDetected;
                 if sameChallenge { // challenge accepted
                     do storeNegotiation;
                     // offerer is accepting by confirming NegotiationOpen
@@ -85,6 +88,7 @@ protocol Sync 1 {
             }
 
             on NegotiationOpen {
+                do showDeviceDetected;
                 if sameResponse {
                     debug > Requester is receiving NegotiationOpen
                     do storeNegotiation;

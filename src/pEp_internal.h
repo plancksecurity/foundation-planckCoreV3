@@ -295,6 +295,7 @@ struct _pEpSession {
     notifyHandshake_t notifyHandshake;
     inject_sync_event_t inject_sync_event;
     retrieve_next_sync_event_t retrieve_next_sync_event;
+    sync_device_detected_t sync_device_detected;
     ensure_passphrase_t ensure_passphrase;
 
     // pEp Sync

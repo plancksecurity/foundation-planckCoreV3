@@ -350,6 +350,27 @@ DYNAMIC_API void free_Sync_event(SYNC_EVENT ev);
 
 typedef int (*inject_sync_event_t)(SYNC_EVENT ev, void *management);
 
+
+/**
+ *  <!--       sync_device_detected_t()       -->
+ *
+ *  @brief A new device has been detected during sync.
+ *         A function of this type is called by the engine when a device
+ *         is detected, so that an interactive application may show
+ *         progress in the user interface.
+ *
+ *  @param[in]   session        the session
+ *
+ *  @retval PEP_STATUS_OK     success
+ *                            I do not think other cases are possible --positron
+ *                            The return value is currently ignored by the
+ *                            Engine.
+ *
+ */
+
+typedef PEP_STATUS (*sync_device_detected_t)(PEP_SESSION session);
+
+
 /**
  *  <!--       ensure_passphrase()       -->
  *  

@@ -45,6 +45,10 @@ typedef enum _sync_handshake_signal {
     // forming group
     // SYNC_NOTIFY_FORMING_GROUP = 10,
 
+    // notify user interface about sync protocol progress, when a device is
+    // detected
+    SYNC_NOTIFY_DEVICE_DETECTED = 11,
+
     // these two notifications must be evaluated by applications, which are
     // using a Desktop Adapter
     SYNC_NOTIFY_START = 126,
