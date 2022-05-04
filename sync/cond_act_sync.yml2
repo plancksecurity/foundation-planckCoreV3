@@ -273,6 +273,13 @@ function "show_handshake" {
 
     ||
     choose {
+    when "$type = 'SYNC_NOTIFY_DEVICE_DETECTED'"
+    ||
+        if (session->sync_device_detected)
+            session->sync_device_detected(session);
+        else
+           fprintf(stderr, "DEBUG: sync_device_detected: the callback would be called now, if one were set\\\\n");
+    ||
     when "$type = 'SYNC_NOTIFY_INIT_ADD_OUR_DEVICE' or $type = 'SYNC_NOTIFY_INIT_ADD_OTHER_DEVICE' or $type = 'SYNC_NOTIFY_INIT_FORM_GROUP'"
     ||
         assert(session->sync_state.transport.from);
@@ -358,6 +365,9 @@ action showDeviceAccepted
 
 action showGroupCreated
     call "show_handshake" with "type" > SYNC_NOTIFY_ACCEPTED_GROUP_CREATED
+
+action showDeviceDetected
+    call "show_handshake" with "type" > SYNC_NOTIFY_DEVICE_DETECTED
 
 action showBeingSole
     call "show_handshake" with "type" > SYNC_NOTIFY_SOLE
