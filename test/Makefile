@@ -120,7 +120,7 @@ ifeq ($(BUILD_ON),OS/390)
 endif
 
 ifeq ($(OPENPGP),SEQUOIA)
-    LDLIBS+=-lsequoia_openpgp_ffi 
+    LDLIBS+=-lsequoia_openpgp_ffi -lgmp -lnettle -lhogweed -ldl
 endif
 
 # Link with libz at the end.  This is needed on some configurations,
