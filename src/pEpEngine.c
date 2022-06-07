@@ -7,6 +7,7 @@
 #include "transport.h"
 #include "blacklist.h"
 #include "KeySync_fsm.h"
+#include "echo_api.h"
 
 #include <time.h>
 #include <stdlib.h>
@@ -1236,6 +1237,8 @@ DYNAMIC_API PEP_STATUS init(
     _session->messageToSend = messageToSend;
     _session->inject_sync_event = inject_sync_event;
     _session->ensure_passphrase = ensure_passphrase;
+    _session->enable_echo_protocol = true;
+    _session->enable_echo_in_outgoing_message_rating_preview = true;
     
     assert(LOCAL_DB);
     if (LOCAL_DB == NULL) {
@@ -2752,6 +2755,10 @@ DYNAMIC_API PEP_STATUS init(
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
+    status = echo_initialize(_session);
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
+
     status = log_event(_session, "init", "pEp " PEP_ENGINE_VERSION, NULL, NULL);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
@@ -2765,7 +2772,7 @@ DYNAMIC_API PEP_STATUS init(
     //     goto pEp_error;
 
     *session = _session;
-    
+
     // Note: Following statement is NOT for any cryptographic/secure functionality; it is
     //       ONLY used for some randomness in generated outer message ID, which are
     //       required by the RFC to be globally unique!
@@ -2896,10 +2903,26 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_close_v2(session->system_db);
         }
 
+        echo_finalize(session);
+
         release_transport_system(session, out_last);
         release_cryptotech(session, out_last);
         free(session);
     }
+}
+
+DYNAMIC_API void config_enable_echo_protocol(PEP_SESSION session, bool enable)
+{
+    assert(session);
+    if (session)
+        session->enable_echo_protocol = enable;
+}
+
+DYNAMIC_API void config_enable_echo_in_outgoing_message_rating_preview(PEP_SESSION session, bool enable)
+{
+    assert(session);
+    if (session)
+        session->enable_echo_in_outgoing_message_rating_preview = enable;
 }
 
 DYNAMIC_API void config_passive_mode(PEP_SESSION session, bool enable)

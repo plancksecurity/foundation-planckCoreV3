@@ -36,6 +36,12 @@ typedef enum _sync_handshake_signal {
     // forming group
     // SYNC_NOTIFY_FORMING_GROUP = 10,
 
+    // The rating of an outgoing message being composed may have changed because
+    // of a received Distribugion.Echo message: an application in which a
+    // message is being compose should recompute its rating and display a new
+    // colour.
+    SYNC_NOTIFY_OUTGOING_RATING_CHANGE = 64,
+    
     // these two notifications must be evaluated by applications, which are
     // using a Desktop Adapter
     SYNC_NOTIFY_START = 126,

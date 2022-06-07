@@ -347,6 +347,25 @@ DYNAMIC_API PEP_STATUS init(
 
 DYNAMIC_API void release(PEP_SESSION session);
 
+// config_enable_echo_protocol() - enable or disable the Distribution.Echo
+// protocol (enabled by default)
+//
+//  parameters:
+//      session (in)    session handle
+//      enable (in)     true iff enabled
+
+DYNAMIC_API void config_enable_echo_protocol(PEP_SESSION session, bool enable);
+
+// config_enable_echo_in_outgoing_message_rating_preview() - enable or disable Distribution.Echo.Ping
+// messages from outgoing_message_rating_preview (enabled by default)
+//
+//  parameters:
+//      session (in)    session handle
+//      enable (in)     true iff enabled
+
+DYNAMIC_API void config_enable_echo_in_outgoing_message_rating_preview(
+   PEP_SESSION session, bool enable);
+
 // config_passive_mode() - enable passive mode
 //
 //  parameters:

@@ -4,7 +4,19 @@
 #include "pEp_internal.h"
 #include "message_api.h"
 #include "baseprotocol.h"
+#include "Distribution.h" // for Distribution_t
+#include "distribution_codec.h" // for decode_Distribution_message
 
+#include "status_to_string.h" // for decode_Distribution_message
+
+/**
+ * @internal
+ * @brief Convert base protocol type from enum to MIME type string
+ * @param[in] type	base_protocol_type
+ * @param[out] type_str	char**
+ * @retval PEP_STATUS_OK
+ * @retval PEP_ILLEGAL_VALUE on illegal value of `type`
+ */
 static PEP_STATUS _get_base_protocol_type_str(base_protocol_type type, const char** type_str) {
     *type_str = NULL;
     switch(type) {
@@ -14,7 +26,7 @@ static PEP_STATUS _get_base_protocol_type_str(base_protocol_type type, const cha
         case BASE_SYNC:
             *type_str = _BASE_PROTO_MIME_TYPE_SYNC;
             break;
-        case BASE_KEYRESET:
+        case BASE_DISTRIBUTION:
             *type_str = _BASE_PROTO_MIME_TYPE_DIST;
             break;
         default:
@@ -37,7 +49,7 @@ PEP_STATUS base_decorate_message(
     assert(msg);
     assert(payload);
     assert(size);
-    assert(type == BASE_SYNC || type == BASE_KEYRESET);
+    assert(type == BASE_SYNC || type == BASE_DISTRIBUTION);
 
     if (!(msg && payload && size && type))
         return PEP_ILLEGAL_VALUE;
@@ -51,7 +63,7 @@ PEP_STATUS base_decorate_message(
             bl = bloblist_add(msg->attachments, payload, size,
                               _BASE_PROTO_MIME_TYPE_SYNC, "sync.pEp");
             break;
-        case BASE_KEYRESET:
+        case BASE_DISTRIBUTION:
             bl = bloblist_add(msg->attachments, payload, size,
                               _BASE_PROTO_MIME_TYPE_DIST, "distribution.pEp");
             break;
@@ -114,7 +126,7 @@ PEP_STATUS base_prepare_message(
     assert(payload);
     assert(size);
     assert(result);
-    assert(type == BASE_SYNC || type == BASE_KEYRESET);
+    assert(type == BASE_SYNC || type == BASE_DISTRIBUTION);
 
     if (!(me && partner && payload && size && result && type))
         return PEP_ILLEGAL_VALUE;
@@ -136,7 +148,10 @@ PEP_STATUS base_prepare_message(
     if (!msg->to)
         goto enomem;
 
-    msg->shortmsg = strdup("p≡p key management message - please ignore");
+    if (type == BASE_SYNC)
+        msg->shortmsg = strdup("p≡p key management message (Sync) - please ignore");
+    else
+        msg->shortmsg = strdup("p≡p key management message (Distribution) - please ignore");
     assert(msg->shortmsg);
     if (!msg->shortmsg)
         goto enomem;
@@ -169,7 +184,7 @@ PEP_STATUS base_extract_message(
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session && msg && size && payload && fpr);
-    assert(type == BASE_SYNC || type == BASE_KEYRESET);
+    assert(type == BASE_SYNC || type == BASE_DISTRIBUTION);
     if (!(session && msg && size && payload && fpr && type))
         return PEP_ILLEGAL_VALUE;
 
@@ -215,10 +230,48 @@ PEP_STATUS base_extract_message(
     if (!(_payload && _payload_size))
         goto the_end;
 
+    /* We need to check the signature and drop a message with an invalid or
+       missing signature if the protocol is one of:
+       - Sync.Sync;
+       - Distribution.Key_reset
+       but *not* if the protocol is
+       - Distribytion.Echo.
+       Here we know the family (Sync vs Distribution) but not the actual
+       protcol.  Unfortunately we need to decode the payload here just to
+       check, in case the family is Distribution.  A little wasteful, but
+       not terribly important: this engine branch will not live long, and
+       v3 does not need this same hack. */
     char *_fpr = NULL;
-    if (_sign) {
+    bool _require_signature;
+    switch (type) {
+    case BASE_SYNC:
+        _require_signature = true;
+        break;
+    case BASE_DISTRIBUTION: {
+        Distribution_t *_dist = NULL;
+        status = decode_Distribution_message(_payload, _payload_size, &_dist);
+        if (status != PEP_STATUS_OK) {
+fprintf(stderr, "B base_extract_message: about the message %s: this should not happen: status is %i %s\n", msg->shortmsg, status, pEp_status_to_string(status));
+            goto the_end;
+        }
+        switch (_dist->present) {
+        case Distribution_PR_keyreset:
+            _require_signature = true; break;
+        case Distribution_PR_echo:
+            _require_signature = false; break;
+        default:
+            assert(false);
+        }
+        ASN_STRUCT_FREE(asn_DEF_Distribution, _dist);
+        break;
+    }
+    default:
+        assert(false);
+    }
+    if (_require_signature && _sign) {
         status = verify_text(session, _payload, _payload_size, _sign, _sign_size, &keylist);
         if (!(status == PEP_VERIFIED || status == PEP_VERIFIED_AND_TRUSTED) || !keylist || !keylist->value) {
+fprintf(stderr,"Q %s: SIGNATURE MISMATCH: THIS IS NOT NORMAL.\n", (msg->shortmsg ? msg->shortmsg : "<NO SUBJECT>"));
             // signature invalid or does not match; ignore message
             status = PEP_STATUS_OK;
             goto the_end;
@@ -261,7 +314,7 @@ PEP_STATUS try_base_prepare_message(
     assert(payload);
     assert(size);
     assert(result);
-    assert(type == BASE_SYNC || type == BASE_KEYRESET);
+    assert(type == BASE_SYNC || type == BASE_DISTRIBUTION);
 
     if (!(session && session->messageToSend && session->notifyHandshake))
         return PEP_ILLEGAL_VALUE;
