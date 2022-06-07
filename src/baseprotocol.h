@@ -17,7 +17,7 @@ extern "C" {
 typedef enum _base_protocol_type {
     BASE_SIGN = 0,
     BASE_SYNC = 1,
-    BASE_KEYRESET = 2
+    BASE_DISTRIBUTION = 2
 } base_protocol_type;
 
 
@@ -48,7 +48,7 @@ PEP_STATUS base_decorate_message(
     );
 
 
-// base_prepare_message() - prepare a sync message with payload
+// base_prepare_message() - prepare an administrative message with payload
 //
 //  parameters:
 //      session (in)    session handle
@@ -57,7 +57,8 @@ PEP_STATUS base_decorate_message(
 //      type (in)       base protocol type
 //      payload (in)    payload to send
 //      size (in)       size of payload
-//      fpr (in)        optional key to sign or NULL
+//      fpr (in)        optional key to sign or NULL;
+//                      the message will not be signed if NULL
 //      result (out)    message with payload
 //
 //  returns:
@@ -79,26 +80,33 @@ PEP_STATUS base_prepare_message(
     );
 
 
-// base_extract_message() - extract a sync message from a pEp message
-//
-//  parameters:
-//      session (in)    session handle
-//      msg (in)        message to analyze
-//      type (in)       base protocol type to extract
-//      size (out)      size of extracted payload or 0 if not found
-//      payload (out)   extraced payload
-//      fpr (out)       if message was correctly signed then fpr of signature's
-//                      key, otherwise NULL
-//
-//  returns:
-//      PEP_STATUS_OK and payload == NULL if no sync message
-//      PEP_STATUS_OK and payload, size if sync message found
-//      any other value on error
-//
-//  caveat:
-//      payload may point to msg attachment, the ownership does not change
-//      the ownership of fpr goes to the caller
-
+/**
+ * @internal
+ *  <!--       base_extract_message()       -->
+ *
+ *  @brief      Extract protocol data from a pEp administrative message
+ *
+ *  @param[in]   session    session handle
+ *  @param[in]   msg        message to analyze
+ *  @param[in]   type       base protocol type to extract
+ *  @param[out]  size       size of extracted payload, or 0 if not found
+ *  @param[out]  payload    extracted payload, if sync message is found.
+ *                          otherwise, NULL
+ *  @param[out]  fpr        if message was correctly signed then fpr of signature's
+ *                          key, otherwise NULL
+ *
+ *  @retval PEP_STATUS_OK       if no error occurred, whether or not pEp message was found
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval error_status        any other value on error
+ *
+ *  @ownership
+ *  - Payload may point to msg attachment, but the ownership does not change
+ *  - If fpr != NULL the ownership goes to the caller
+ *
+ *  @todo Volker, expand this definition from sync message. What do we call these? Administrative messages? - K
+ *
+ */
 PEP_STATUS base_extract_message(
         PEP_SESSION session,
         message *msg,

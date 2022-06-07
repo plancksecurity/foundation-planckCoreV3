@@ -112,7 +112,8 @@ install_headers: $(TARGET)
 	   cryptotech.h sync_api.h blacklist.h pEp_string.h openpgp_compat.h \
 	   labeled_int_list.h key_reset.h base64.h sync_codec.h distribution_codec.h \
 	   status_to_string.h aux_mime_msg.h keyreset_command.h platform.h platform_unix.h ../asn.1/*.h \
- 	   $(PREFIX)/include/pEp/
+	   echo_api.h distribution_api.h \
+	   $(PREFIX)/include/pEp/
 
 # FIXME: Does anyone but Roker use install_headers? Otherwise, remove the dependency.
 install: $(TARGET) install_headers

@@ -261,6 +261,10 @@ struct _pEpSession {
     sqlite3_stmt *get_userid_alias_default;
     sqlite3_stmt *add_userid_alias;
 
+    // Distribution.Echo
+    sqlite3_stmt *echo_get_challenge;
+    sqlite3_stmt *echo_set_challenge;
+
     // callbacks
     examine_identity_t examine_identity;
     void *examine_management;
@@ -280,6 +284,8 @@ struct _pEpSession {
 //     time_t LastUpdateRequest;
 
     // runtime config
+    bool enable_echo_protocol;
+    bool enable_echo_in_outgoing_message_rating_preview;
 
     bool passive_mode;
     bool unencrypted_subject;
