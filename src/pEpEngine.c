@@ -7,6 +7,7 @@
 #include "transport.h"
 #include "blacklist.h"
 #include "KeySync_fsm.h"
+#include "echo_api.h"
 
 #include <time.h>
 #include <stdlib.h>
@@ -1236,6 +1237,7 @@ DYNAMIC_API PEP_STATUS init(
     _session->messageToSend = messageToSend;
     _session->inject_sync_event = inject_sync_event;
     _session->ensure_passphrase = ensure_passphrase;
+    _session->enable_echo_protocol = true;
     
     assert(LOCAL_DB);
     if (LOCAL_DB == NULL) {
@@ -2100,6 +2102,13 @@ DYNAMIC_API PEP_STATUS init(
         _init_globals();
     }
 
+    /* Upgrade the Identity table if needed, adding the echo_challenge field.
+       This returns success if the column already exists.  No need for
+       versioning. */
+    status = upgrade_add_echo_challange_field(_session);
+    if (status != PEP_STATUS_OK)
+        return status;
+
     int_result = sqlite3_prepare_v2(_session->db, sql_log,
             (int)strlen(sql_log), &_session->log, NULL);
     assert(int_result == SQLITE_OK);
@@ -2900,6 +2909,13 @@ DYNAMIC_API void release(PEP_SESSION session)
         release_cryptotech(session, out_last);
         free(session);
     }
+}
+
+DYNAMIC_API void config_enable_echo_protocol(PEP_SESSION session, bool enable)
+{
+    assert(session);
+    if (session)
+        session->enable_echo_protocol = enable;
 }
 
 DYNAMIC_API void config_passive_mode(PEP_SESSION session, bool enable)

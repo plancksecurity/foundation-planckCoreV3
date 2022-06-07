@@ -177,7 +177,7 @@ static PEP_STATUS _generate_own_commandlist_msg(PEP_SESSION session,
     pEp_identity* from = identity_dup(from_idents->ident);
     pEp_identity* to = identity_dup(from);    
     status = base_prepare_message(session, from, to,
-                                  BASE_KEYRESET, payload, size, NULL,
+                                  BASE_DISTRIBUTION, payload, size, NULL,
                                   &msg);
 
     if (status != PEP_STATUS_OK)
@@ -271,7 +271,7 @@ static PEP_STATUS _generate_keyreset_command_message(PEP_SESSION session,
         return status;
         
     status = base_prepare_message(session, outgoing_ident, to_ident,
-                                  BASE_KEYRESET, payload, size, NULL,
+                                  BASE_DISTRIBUTION, payload, size, NULL,
                                   &msg);
                                   
     if (status != PEP_STATUS_OK) {
@@ -478,7 +478,7 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
     char* not_used_fpr = NULL;
     status = base_extract_message(session,
                                   reset_msg,
-                                  BASE_KEYRESET,
+                                  BASE_DISTRIBUTION,
                                   &size,
                                   &payload,
                                   &not_used_fpr);
