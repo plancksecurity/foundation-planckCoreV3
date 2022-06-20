@@ -34,7 +34,7 @@ else
     LDLIBS+= -letpan
 endif
 
-LDLIBS+= -lstdc++ -lasn1
+LDLIBS+= -lpEpEngine -lstdc++ -lasn1
 
 ifeq ($(BUILD_FOR),Linux)
     LDLIBS+= -luuid
@@ -92,7 +92,7 @@ all:
 	$(CXX) -MM $(CXXFLAGS) $(CPPFLAGS) $< | sed -e 's,\($*\)\.o[ :]*,\1.o $@: ,g' > $@
 
 $(TARGET): $(OBJS)
-	${CXX} ${CXXFLAGS} ${CPPFLAGS} ${LDFLAGS} -L${PREFIX}/lib -o $@ $^ ../src/libpEpEngine.a -lgtest -lgtest_main -lsequoia_openpgp_ffi $(LDLIBS)
+	${CXX} ${CXXFLAGS} ${CPPFLAGS} ${LDFLAGS} -L${PREFIX}/lib -o $@ $^ -lpEpEngine -lgtest -lgtest_main -lsequoia_openpgp_ffi $(LDLIBS)
 
 
 test: all
