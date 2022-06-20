@@ -68,7 +68,7 @@ namespace {
                 string keystr = slurp("test_keys/priv/bcc_test_dude_0-0x1CCCFC41_priv.asc");
                 PEP_STATUS status = import_key(session, keystr.c_str(), keystr.size(), NULL);
                 ASSERT_TRUE(status == PEP_TEST_KEY_IMPORT_SUCCESS);    
-                pEp_identity * me = new_identity("bcc_test_dude_0@darthmama.cool", "0AE9AA3E320595CF93296BDFA155AC491CCCFC41", PEP_OWN_USERID, "BCC Test Sender");    
+                pEp_identity * me = new_identity("bcc_test_dude_0@pep.foundation", "0AE9AA3E320595CF93296BDFA155AC491CCCFC41", PEP_OWN_USERID, "BCC Test Sender");
                 status = set_own_key(session, me, "0AE9AA3E320595CF93296BDFA155AC491CCCFC41");
                 keystr = slurp("test_keys/pub/bcc_test_dude_0-0x1CCCFC41_pub.asc");
                 status = import_key(session, keystr.c_str(), keystr.size(), NULL);
@@ -102,16 +102,17 @@ namespace {
 }  // namespace
 
 TEST_F(EchoTest, check_single_BCC) {
+    ASSERT_EQ(1,2);
     PEP_STATUS status = PEP_UNKNOWN_ERROR;
 
     // 0AE9AA3E320595CF93296BDFA155AC491CCCFC41
     // D0AF2F9695E186A8DC058B935FE2793DDAC746BE
     // B36E468E7A381946FCDBDDFA84B1F3E853CECCF7
-    pEp_identity* sender = new_identity("bcc_test_dude_0@darthmama.cool", NULL, PEP_OWN_USERID, "BCC Test Sender");
+    pEp_identity* sender = new_identity("bcc_test_dude_0@pep.foundation", NULL, PEP_OWN_USERID, "BCC Test Sender");
 
     // Now require explicit sets in the new world order... Key election removal FTW!
-    pEp_identity* open_recip = new_identity("bcc_test_dude_1@darthmama.cool", "B36E468E7A381946FCDBDDFA84B1F3E853CECCF7", "TOFU_bcc_test_dude_1@darthmama.cool", "BCC Test Recip");
-    pEp_identity* bcc_recip = new_identity("bcc_test_dude_2@darthmama.cool", "B36E468E7A381946FCDBDDFA84B1F3E853CECCF7", "TOFU_bcc_test_dude_2@darthmama.cool", "BCC Super Sekrit Test Recip");
+    pEp_identity* open_recip = new_identity("bcc_test_dude_1@pep.foundation", "B36E468E7A381946FCDBDDFA84B1F3E853CECCF7", "TOFU_bcc_test_dude_1@pep.foundation", "BCC Test Recip");
+    pEp_identity* bcc_recip = new_identity("bcc_test_dude_2@pep.foundation", "B36E468E7A381946FCDBDDFA84B1F3E853CECCF7", "TOFU_bcc_test_dude_2@pep.foundation", "BCC Super Sekrit Test Recip");
 
     status = set_identity(session, open_recip);
     ASSERT_OK;
