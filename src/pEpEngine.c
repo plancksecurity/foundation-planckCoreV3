@@ -184,6 +184,13 @@ DYNAMIC_API void release(PEP_SESSION session)
     }
 }
 
+DYNAMIC_API void config_enable_echo_protocol(PEP_SESSION session, bool enable)
+{
+    assert(session);
+    if (session)
+        session->enable_echo_protocol = enable;
+}
+
 DYNAMIC_API void config_passive_mode(PEP_SESSION session, bool enable)
 {
     assert(session);

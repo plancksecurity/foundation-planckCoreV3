@@ -308,6 +308,7 @@ struct _pEpSession {
 //     time_t LastUpdateRequest;
 
     // runtime config
+    bool enable_echo_protocol;
 
     bool passive_mode;
     bool unencrypted_subject;

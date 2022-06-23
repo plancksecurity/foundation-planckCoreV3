@@ -9,6 +9,7 @@
 #include "pEpEngine.h"
 #include "pEp_internal.h"
 #include "message_api.h"
+#include "echo_api.h"
 #include "TestConstants.h"
 
 #include "TestUtilities.h"
@@ -101,37 +102,85 @@ namespace {
 
 }  // namespace
 
-TEST_F(EchoTest, check_single_BCC) {
-    ASSERT_EQ(1,2);
+static PEP_STATUS dummyMessageToSend(message* msg) {
+    PEP_STATUS status = PEP_STATUS_OK;
+    if (msg == nullptr)
+        return PEP_UNKNOWN_ERROR;
+
+    fprintf(stderr, "pretending to send the message at %p\n", msg);
+    free_message(msg);
+    return PEP_STATUS_OK;
+}
+
+static message* stored_message = NULL;
+
+static PEP_STATUS storingMessageToSend(message* msg) {
+    fprintf(stderr, "storing (and pretending to send) the message at %p\n", msg);
+    stored_message = msg;
+    return PEP_STATUS_OK;
+}
+
+TEST_F(EchoTest, check_ping) {
+    session->messageToSend = dummyMessageToSend;
     PEP_STATUS status = PEP_UNKNOWN_ERROR;
 
     // 0AE9AA3E320595CF93296BDFA155AC491CCCFC41
     // D0AF2F9695E186A8DC058B935FE2793DDAC746BE
-    // B36E468E7A381946FCDBDDFA84B1F3E853CECCF7
     pEp_identity* sender = new_identity("bcc_test_dude_0@pep.foundation", NULL, PEP_OWN_USERID, "BCC Test Sender");
 
-    // Now require explicit sets in the new world order... Key election removal FTW!
-    pEp_identity* open_recip = new_identity("bcc_test_dude_1@pep.foundation", "B36E468E7A381946FCDBDDFA84B1F3E853CECCF7", "TOFU_bcc_test_dude_1@pep.foundation", "BCC Test Recip");
-    pEp_identity* bcc_recip = new_identity("bcc_test_dude_2@pep.foundation", "B36E468E7A381946FCDBDDFA84B1F3E853CECCF7", "TOFU_bcc_test_dude_2@pep.foundation", "BCC Super Sekrit Test Recip");
+    pEp_identity* recip = new_identity("bcc_test_dude_1@pep.foundation", "B36E468E7A381946FCDBDDFA84B1F3E853CECCF7", "TOFU_bcc_test_dude_1@pep.foundation", "BCC Test Recip");
 
-    status = set_identity(session, open_recip);
+    
+    // is this needed?
+    status = myself(session, sender);
     ASSERT_OK;
-    status = set_identity(session, bcc_recip);
+    
+    // Because of KER we need to explicitly set, according to the comments in the original BCC test.  I would like to understand why --positron
+    status = set_identity(session, recip);
     ASSERT_OK;
 
-    message *msg = new_message(PEP_dir_outgoing);
-    ASSERT_NOTNULL(msg);
-    msg->from = sender;
-//    msg->to = new_identity_list(open_recip); FYI, this is supposed to fail for now. Unfortunately.
-    msg->bcc = new_identity_list(bcc_recip);
-    msg->shortmsg = strdup("Hello, world");
-    msg->longmsg = strdup("Your mother was a hamster and your father smelt of elderberries.");
-    msg->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
+    // Do the move.
+    status = send_ping(session, sender, recip);
+    ASSERT_OK;
 
-    message *enc_msg = nullptr;
-    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+    free_identity(sender);
+    free_identity(recip);
+}
 
-    ASSERT_EQ(status, PEP_STATUS_OK);
-    free_message(msg);
-    free_message(enc_msg);
+TEST_F(EchoTest, check_ping_and_pong) {
+    session->messageToSend = storingMessageToSend;
+    PEP_STATUS status = PEP_UNKNOWN_ERROR;
+
+    // 0AE9AA3E320595CF93296BDFA155AC491CCCFC41
+    // D0AF2F9695E186A8DC058B935FE2793DDAC746BE
+    pEp_identity* sender = new_identity("bcc_test_dude_0@pep.foundation", NULL, PEP_OWN_USERID, "BCC Test Sender");
+
+    pEp_identity* recip = new_identity("bcc_test_dude_1@pep.foundation", "B36E468E7A381946FCDBDDFA84B1F3E853CECCF7", "TOFU_bcc_test_dude_1@pep.foundation", "BCC Test Recip");
+
+    
+    // is this needed?
+    status = myself(session, sender);
+    ASSERT_OK;
+    
+    // Because of KER we need to explicitly set, according to the comments in the original BCC test.  I would like to understand why --positron
+    status = set_identity(session, recip);
+    ASSERT_OK;
+
+    // Ping.
+    status = send_ping(session, sender, recip);
+    ASSERT_OK;
+
+    // Now take the message we pretended to send, and update so that it looks
+    // as if it were directed to us.
+    message* ping_message = stored_message;
+    ping_message->dir = PEP_dir_incoming;
+    ping_message->from = identity_dup(recip);
+    ping_message->to->ident = identity_dup(sender);
+
+    // Pong.
+    status = send_pong(session, ping_message);
+    ASSERT_OK;
+
+    free_identity(sender);
+    free_identity(recip);
 }
