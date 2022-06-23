@@ -123,7 +123,9 @@ HEADERS_TO_INSTALL = \
   storage_codec.h status_to_string.h keyreset_command.h \
   map_asn1.h \
   platform.h platform_unix.h platform_windows.h platform_zos.h \
-  transport.h growing_buf.h $(wildcard ../asn.1/*.h)
+  transport.h growing_buf.h \
+  echo_api.h distribution_api.h \
+  $(wildcard ../asn.1/*.h)
 
 # CAVEAT:
 # install_headers is needed for building *STANDALONE* pEp MIME - it is NOT used for built-in functionality!!!
