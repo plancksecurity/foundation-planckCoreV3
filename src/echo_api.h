@@ -37,8 +37,8 @@ extern "C" {
  *  
  */
 DYNAMIC_API PEP_STATUS send_ping(PEP_SESSION session,
-                                 pEp_identity *from,
-                                 pEp_identity *to);
+                                 const pEp_identity *from,
+                                 const pEp_identity *to);
 
 /**
  *  <!--       send_pong()       -->
