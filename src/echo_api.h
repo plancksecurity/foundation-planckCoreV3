@@ -30,10 +30,12 @@ extern "C" {
  *  @retval PEP_ILLEGAL_VALUE        session, from, to or messageToSend not
  *                                   defined
  *  @retval PEP_OUT_OF_MEMORY        out of memory
- *  @retval any other error status returned by messageToSend
+ *  @retval any other error status
+ *          returned by messageToSend
  *
  *  @note  This automatically builds a message and sends it by calling
- *         messageToSend on it
+ *         messageToSend on it; if messageToSend fails then its return
+ *         status is returned to the caller.
  *  
  */
 DYNAMIC_API PEP_STATUS send_ping(PEP_SESSION session,
@@ -44,9 +46,17 @@ DYNAMIC_API PEP_STATUS send_ping(PEP_SESSION session,
  *  <!--       send_pong()       -->
  *  
  *  @param[in]   ping_message     the message we are replying to: this
- *                                will always be already decrypted.
+ *                                will always be already decrypted and
+ *                                decoded.
  *                                This function destroys the ping message
  *                                when it succeeds.
+
+ FIXME: I think the next paragraph is now wrong: the argument used to hav e type
+ message *
+
+ *                                This is either the unencrypted transported
+ *                                message or the inner message: in either case
+ *                                it is what _decrypt_message returns.
  *
  *  @retval PEP_STATUS_OK            messageToSend returned with success
  *  @retval PEP_ILLEGAL_VALUE        session, ping_message or messageToSend

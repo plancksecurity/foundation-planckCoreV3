@@ -4,6 +4,8 @@
 #include "baseprotocol.h"
 #include "distribution_codec.h"
 
+#include "status_to_string.h" // FIXME: remove.
+
 #include <assert.h>
 
 
@@ -65,14 +67,33 @@ static PEP_STATUS send_ping_or_pong(PEP_SESSION session,
 
     /* Make a message with the binary attached, as a network-data-structure
        message. */
-    message *m = NULL;
+    message *non_encrypted_m = NULL;
     status = base_prepare_message(session, from, to, BASE_DISTRIBUTION,
-                                  data, size, NULL, & m);
+                                  data, size, NULL, & non_encrypted_m);
     if (status != PEP_STATUS_OK) {
         free(data);
         return status;
     }
 
+    /* "Encrypt" the message in the sense of calling encrypt_message; this, in
+       case we have no key for the recipient, as it will often happen with Ping
+       messages, will alter the message to contain the sender's key... */
+    message *m = NULL;
+    status = encrypt_message(session, non_encrypted_m, NULL, &m,
+                             PEP_enc_PEP, PEP_encrypt_flag_default);
+    fprintf(stderr, "DEBUG send_ping_or_pong after encrypting: status %i (%s)\n", status, pEp_status_to_string(status));
+    if (status == PEP_STATUS_OK)
+        free_message(non_encrypted_m);
+    else if (status == PEP_UNENCRYPTED)
+        m = non_encrypted_m;
+    else {
+        free_message(non_encrypted_m);
+        fprintf(stderr, "DEBUG send_ping_or_pong, not supposed to happen: "
+                "status %i (%s)\n", status, pEp_status_to_string(status));
+        return status;
+    }
+    /* ...a Pong message should actually always be encrypted. */
+    
     /* Send it. */
     status = session->messageToSend(m);
     if (status != PEP_STATUS_OK) {
@@ -126,7 +147,7 @@ PEP_STATUS send_pong(PEP_SESSION session,
                                                     &asn1_message);
     if (status != PEP_STATUS_OK)
         return status;
-    if (asn1_message->choice.echo.choice.ping.challenge.size != 16)
+    if (asn1_message->choice.echo.choice.ping.challenge.size != 16) // just for internal consistency: turn it into an assert
         return PEP_ILLEGAL_VALUE;
     if (asn1_message->choice.echo.present != Echo_PR_ping)
         return PEP_ILLEGAL_VALUE;
