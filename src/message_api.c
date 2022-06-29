@@ -6322,7 +6322,7 @@ fprintf(stderr, "    D 400\n");
                     // Try the rest
                     PEP_STATUS tmpstatus = base_extract_message(session, msg, BASE_DISTRIBUTION, &size, &data,
                                                                 &sender_fpr);
-fprintf(stderr, "    D 500 tmpstatus: %i\n", (int) tmpstatus);
+fprintf(stderr, "    D 500 tmpstatus: %i, size %i, data %p\n", (int) tmpstatus, (int) size, data);
                     if (!tmpstatus && size && data) {
 fprintf(stderr, "    B: it was Distribution\n");
                         tmp_status = process_Distribution_message(session, msg, rating, data, size, sender_fpr);
