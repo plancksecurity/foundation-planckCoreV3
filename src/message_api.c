@@ -4810,13 +4810,14 @@ static PEP_STATUS process_Distribution_message(PEP_SESSION session,
             status = receive_managed_group_message(session, msg, rating, dist);
             break;
         case Distribution_PR_echo:
+system("notify-send pong");
             if (session->enable_echo_protocol) {
-                fprintf(stderr, "SENDING PONG: before\n");
+fprintf(stderr, "SENDING PONG: before\n");
                 status = send_pong(session, dist, msg->from, msg->to);
-                fprintf(stderr, "SENDING PONG: after (status %i)\n", (int) status);
+fprintf(stderr, "SENDING PONG: after (status %i)\n", (int) status);
             }
             else
-                fprintf(stderr, "NOT SENDING PONG (disabled)\n");
+fprintf(stderr, "NOT SENDING PONG (disabled)\n");
             break;
         default:
             status = PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
@@ -6325,7 +6326,7 @@ fprintf(stderr, "    B: it was Distribution\n");
         if (tmp_status == PEP_STATUS_OK) {
 fprintf(stderr, "    C: it was Ordinary\n");
 if (! strcmp(msg->shortmsg, "react")) {
-    fprintf(stderr, "    react to message with subject \"react\" by pinging");
+    fprintf(stderr, "    react to message with subject \"react\" by pinging\n");
 #define HANDLE_IDENTITY_LIST(recipients) \
     { \
         const identity_list *_recipients = (recipients); \
