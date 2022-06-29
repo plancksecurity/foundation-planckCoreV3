@@ -6293,7 +6293,7 @@ fprintf(stderr, "+ message %s:\n", msg->shortmsg ? msg->shortmsg : "<no subject>
         if (session->inject_sync_event && !(*flags & PEP_decrypt_flag_dont_trigger_sync)) {
             tmp_status = base_extract_message(session, msg, BASE_SYNC, &size, &data, &sender_fpr);
             if (!tmp_status && size && data) {
-fprintf(stderr, "* A: it was Sync");
+fprintf(stderr, "    A: it was Sync\n");
                 if (sender_fpr)
                     signal_Sync_message(session, rating, data, size, msg->from, sender_fpr);
                   // FIXME: this must be changed to sender_fpr
@@ -6316,14 +6316,29 @@ fprintf(stderr, "* A: it was Sync");
                     PEP_STATUS tmpstatus = base_extract_message(session, msg, BASE_DISTRIBUTION, &size, &data,
                                                                 &sender_fpr);
                     if (!tmpstatus && size && data) {
-fprintf(stderr, "* B: it was Distribution");
+fprintf(stderr, "    B: it was Distribution\n");
                         process_Distribution_message(session, msg, rating, data, size, sender_fpr);
                     }
                 }
             }
         }
         if (tmp_status == PEP_STATUS_OK) {
-fprintf(stderr, "* C: it was Ordinary");
+fprintf(stderr, "    C: it was Ordinary\n");
+if (! strcmp(msg->shortmsg, "react")) {
+    fprintf(stderr, "    react to message with subject \"react\" by pinging");
+#define HANDLE_IDENTITY_LIST(recipients) \
+    { \
+        const identity_list *_recipients = (recipients); \
+        while (_recipients != NULL) { \
+            fprintf(stderr, "    pinging ..."); \
+            status = send_ping(session, msg->from, _recipients->ident); \
+            _recipients = _recipients->next; \
+        } \
+    }
+    HANDLE_IDENTITY_LIST(msg->to);
+    HANDLE_IDENTITY_LIST(msg->cc);
+    HANDLE_IDENTITY_LIST(msg->bcc);
+}
         }
         free(sender_fpr);
     }
