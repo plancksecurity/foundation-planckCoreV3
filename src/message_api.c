@@ -6295,7 +6295,7 @@ fprintf(stderr, "+ message \"%s\":\n", msg->shortmsg ? msg->shortmsg : "<no subj
 // positron: this seems to succeed on Distribution (Echo) messages, extracting them as
 //           Sync messages!
             tmp_status = base_extract_message(session, msg, BASE_SYNC, &size, &data, &sender_fpr);
-fprintf(stderr, "    A 100 tmpstatus: %i, size %i, data %p\n", (int) tmpstatus, (int) size, data);
+fprintf(stderr, "    A 100 tmpstatus: %i, size %i, data %p\n", (int) tmp_status, (int) size, data);
             if (!tmp_status && size && data) {
 fprintf(stderr, "    A: it was Sync\n");
                 if (sender_fpr)
