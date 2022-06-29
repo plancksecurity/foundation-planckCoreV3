@@ -4821,7 +4821,8 @@ static PEP_STATUS process_Distribution_message(PEP_SESSION session,
         default:
             status = PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
     }
-    // FIXME [positron]: dist is never freed.  I think this is an old memory leak that I should fix.
+
+    ASN_STRUCT_FREE(asn_DEF_Distribution, dist);
     return status;
 }
 
@@ -6281,6 +6282,7 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
 
     // Ok, now we check to see if it was an administrative message. We do this by testing base_extract for success
     // with protocol families.
+fprintf(stderr, "+ message %s:\n", msg->shortmsg ? msg->shortmsg : "<no subject>");
     if (msg && msg->from) {
         size_t size;
         const char *data = NULL;
@@ -6291,6 +6293,7 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
         if (session->inject_sync_event && !(*flags & PEP_decrypt_flag_dont_trigger_sync)) {
             tmp_status = base_extract_message(session, msg, BASE_SYNC, &size, &data, &sender_fpr);
             if (!tmp_status && size && data) {
+fprintf(stderr, "* A: it was Sync");
                 if (sender_fpr)
                     signal_Sync_message(session, rating, data, size, msg->from, sender_fpr);
                   // FIXME: this must be changed to sender_fpr
@@ -6313,13 +6316,18 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
                     PEP_STATUS tmpstatus = base_extract_message(session, msg, BASE_DISTRIBUTION, &size, &data,
                                                                 &sender_fpr);
                     if (!tmpstatus && size && data) {
+fprintf(stderr, "* B: it was Distribution");
                         process_Distribution_message(session, msg, rating, data, size, sender_fpr);
                     }
                 }
             }
         }
+        if (tmp_status == PEP_STATUS_OK) {
+fprintf(stderr, "* C: it was Ordinary");
+        }
         free(sender_fpr);
     }
+fprintf(stderr, "- message %s: DONE\n", msg->shortmsg ? msg->shortmsg : "<no subject>");
 
     // Removed for now - partial fix in ENGINE-647, but we have sync issues. Need to 
     // fix testing issue.

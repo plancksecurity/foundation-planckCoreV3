@@ -79,6 +79,7 @@ DYNAMIC_API PEP_STATUS init(
     _session->messageToSend = messageToSend;
     _session->inject_sync_event = inject_sync_event;
     _session->ensure_passphrase = ensure_passphrase;
+    _session->enable_echo_protocol = true;
     
     status = init_databases(_session);
     if (status != PEP_STATUS_OK)
