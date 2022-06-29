@@ -6324,9 +6324,9 @@ fprintf(stderr, "    B 400\n");
                     PEP_STATUS tmpstatus = base_extract_message(session, msg, BASE_DISTRIBUTION, &size, &data,
                                                                 &sender_fpr);
 fprintf(stderr, "    B 500 tmpstatus: %i, size %i, data %p\n", (int) tmpstatus, (int) size, data);
-//                    if (!tmpstatus && size && data) {
+                    if (!tmpstatus && size && data) {
 // positron: I tentatively removed the restriction on size
-                    if (!tmpstatus) {
+//                    if (!tmpstatus) {
 fprintf(stderr, "    B: it was Distribution\n");
                         tmp_status = process_Distribution_message(session, msg, rating, data, size, sender_fpr);
                     }
