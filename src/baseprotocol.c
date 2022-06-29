@@ -152,7 +152,10 @@ PEP_STATUS base_prepare_message(
     if (!msg->to)
         goto enomem;
 
-    msg->shortmsg = strdup("p≡p key management message - please ignore");
+    if (type == BASE_SYNC)
+        msg->shortmsg = strdup("p≡p key management message (sync) - please ignore");
+    else
+        msg->shortmsg = strdup("p≡p key management message (distribution) - please ignore");
     assert(msg->shortmsg);
     if (!msg->shortmsg)
         goto enomem;
