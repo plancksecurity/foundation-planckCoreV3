@@ -207,10 +207,10 @@ PEP_STATUS base_extract_message(
     status = _get_base_protocol_type_str(type, &type_str);
     if (status != PEP_STATUS_OK || !type_str)
         return status;
-fprintf(stderr, "base_extract_message: searching for a type_str \"%s\" across %i blobs\n", type_str, bloblist_length(msg->attachments));
+fprintf(stderr, "base_extract_message: searching for a MIME type \"%s\" across %i blobs in the message with shortmsg \"%s\"\n", type_str, bloblist_length(msg->attachments), msg->shortmsg);
 
     for (bloblist_t *bl = msg->attachments; bl ; bl = bl->next) {
-fprintf(stderr, "* Looking at a blob of type \"%s\"\n", bl->mime_type);
+fprintf(stderr, "* Looking at a blob with MIME type \"%s\", size %i\n", bl->mime_type, (int) bl->size);
         if (bl->mime_type && strcasecmp(bl->mime_type, type_str) == 0) {
             if (!_payload) {
                 _payload = bl->value;
