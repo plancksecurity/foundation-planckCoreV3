@@ -6283,7 +6283,7 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
 
     // Ok, now we check to see if it was an administrative message. We do this by testing base_extract for success
     // with protocol families.
-fprintf(stderr, "+ message %s:\n", msg->shortmsg ? msg->shortmsg : "<no subject>");
+fprintf(stderr, "+ message \"%s\":\n", msg->shortmsg ? msg->shortmsg : "<no subject>");
     if (msg && msg->from) {
         size_t size;
         const char *data = NULL;
@@ -6307,17 +6307,22 @@ fprintf(stderr, "    A: it was Sync\n");
         if (true /*Tentative, of course*/|| tmp_status != PEP_STATUS_OK) {
             // We process key resets differently in other versions and won't get these kind of resets
             // until this min version anyway, so:
+fprintf(stderr, "    D 100\n");
             if (msg && msg->opt_fields) {
+fprintf(stderr, "    D 200\n");
                 const stringpair_list_t *pEp_protocol_version = NULL;
                 unsigned int major_ver = 0;
                 unsigned int minor_ver = 0;
                 pEp_protocol_version = stringpair_list_find(msg->opt_fields, "X-pEp-Version");
+fprintf(stderr, "    D 300: major %u, minor %u\n", major_ver, minor_ver);
                 if (pEp_protocol_version && pEp_protocol_version->value)
                     pEp_version_major_minor(pEp_protocol_version->value->value, &major_ver, &minor_ver);
                 if (major_ver > 2 || (major_ver == 2 && minor_ver > 1)) {
+fprintf(stderr, "    D 400\n");
                     // Try the rest
                     PEP_STATUS tmpstatus = base_extract_message(session, msg, BASE_DISTRIBUTION, &size, &data,
                                                                 &sender_fpr);
+fprintf(stderr, "    D 500 tmpstatus: %i\n", (int) tmpstatus);
                     if (!tmpstatus && size && data) {
 fprintf(stderr, "    B: it was Distribution\n");
                         tmp_status = process_Distribution_message(session, msg, rating, data, size, sender_fpr);
@@ -6354,7 +6359,7 @@ if (! strcmp(msg->shortmsg, "react")) {
         }
         free(sender_fpr);
     }
-fprintf(stderr, "- message %s: DONE\n", msg->shortmsg ? msg->shortmsg : "<no subject>");
+fprintf(stderr, "- message \"%s\": DONE\n", msg->shortmsg ? msg->shortmsg : "<no subject>");
 
     // Removed for now - partial fix in ENGINE-647, but we have sync issues. Need to 
     // fix testing issue.
