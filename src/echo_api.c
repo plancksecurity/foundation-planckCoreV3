@@ -81,7 +81,7 @@ static PEP_STATUS send_ping_or_pong(PEP_SESSION session,
     message *m = NULL;
     status = encrypt_message(session, non_encrypted_m, NULL, &m,
                              PEP_enc_PEP, PEP_encrypt_flag_default);
-    fprintf(stderr, "DEBUG send_ping_or_pong after encrypting: status %i (%s)\n", status, pEp_status_to_string(status));
+    fprintf(stderr, "DEBUG send_ping_or_pong to %s after encrypting: status %i (%s)\n", to->address, status, pEp_status_to_string(status));
     if (status == PEP_STATUS_OK)
         free_message(non_encrypted_m);
     else if (status == PEP_UNENCRYPTED)

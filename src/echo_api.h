@@ -48,17 +48,6 @@ DYNAMIC_API PEP_STATUS send_ping(PEP_SESSION session,
  *  @param[in]   ping_message     the message we are replying to: this
  *                                will always be already decrypted and
  *                                decoded.
- FIXME: no: see process_Distribution_message in message_api.c
- *                                This function destroys the ping message
- *                                when it succeeds.
-
- FIXME: I think the next paragraph is now wrong: the argument used to have type
- message *
-
- *                                This is either the unencrypted transported
- *                                message or the inner message: in either case
- *                                it is what _decrypt_message returns.
- *
  *  @param[in]   ping_from        The identity sending the message we are
  *                                replying to.
  *  @param[in]   ping_tos         The list of identities which are the recipient
