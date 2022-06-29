@@ -6327,12 +6327,18 @@ fprintf(stderr, "    B: it was Distribution\n");
 fprintf(stderr, "    C: it was Ordinary\n");
 if (! strcmp(msg->shortmsg, "react")) {
     fprintf(stderr, "    react to message with subject \"react\" by pinging\n");
+#define HANDLE_IDENTITY(recipient) \
+    { \
+        const pEp_identity *_recipient = (recipient); \
+        fprintf(stderr, "    pinging %s...\n", _recipient->address); \
+        status = send_ping(session, msg->recv_by, _recipient); \
+    }
 #define HANDLE_IDENTITY_LIST(recipients) \
     { \
         const identity_list *_recipients = (recipients); \
         while (_recipients != NULL) { \
             fprintf(stderr, "    pinging ..."); \
-            status = send_ping(session, msg->recv_by, _recipients->ident); \
+            HANDLE_IDENTITY(_recipients->ident); \
             _recipients = _recipients->next; \
         } \
     }
