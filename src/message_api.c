@@ -6295,6 +6295,7 @@ fprintf(stderr, "+ message \"%s\":\n", msg->shortmsg ? msg->shortmsg : "<no subj
 // positron: this seems to succeed on Distribution (Echo) messages, extracting them as
 //           Sync messages!
             tmp_status = base_extract_message(session, msg, BASE_SYNC, &size, &data, &sender_fpr);
+fprintf(stderr, "    A 100 tmpstatus: %i, size %i, data %p\n", (int) tmpstatus, (int) size, data);
             if (!tmp_status && size && data) {
 fprintf(stderr, "    A: it was Sync\n");
                 if (sender_fpr)
@@ -6307,23 +6308,25 @@ fprintf(stderr, "    A: it was Sync\n");
         if (true /*Tentative, of course*/|| tmp_status != PEP_STATUS_OK) {
             // We process key resets differently in other versions and won't get these kind of resets
             // until this min version anyway, so:
-fprintf(stderr, "    D 100\n");
+fprintf(stderr, "    B 100\n");
             if (msg && msg->opt_fields) {
-fprintf(stderr, "    D 200\n");
+fprintf(stderr, "    B 200\n");
                 const stringpair_list_t *pEp_protocol_version = NULL;
                 unsigned int major_ver = 0;
                 unsigned int minor_ver = 0;
                 pEp_protocol_version = stringpair_list_find(msg->opt_fields, "X-pEp-Version");
-fprintf(stderr, "    D 300: major %u, minor %u\n", major_ver, minor_ver);
+fprintf(stderr, "    B 300: major %u, minor %u\n", major_ver, minor_ver);
                 if (pEp_protocol_version && pEp_protocol_version->value)
                     pEp_version_major_minor(pEp_protocol_version->value->value, &major_ver, &minor_ver);
                 if (major_ver > 2 || (major_ver == 2 && minor_ver > 1)) {
-fprintf(stderr, "    D 400\n");
+fprintf(stderr, "    B 400\n");
                     // Try the rest
                     PEP_STATUS tmpstatus = base_extract_message(session, msg, BASE_DISTRIBUTION, &size, &data,
                                                                 &sender_fpr);
-fprintf(stderr, "    D 500 tmpstatus: %i, size %i, data %p\n", (int) tmpstatus, (int) size, data);
-                    if (!tmpstatus && size && data) {
+fprintf(stderr, "    B 500 tmpstatus: %i, size %i, data %p\n", (int) tmpstatus, (int) size, data);
+//                    if (!tmpstatus && size && data) {
+// positron: I tentatively removed the restriction on size
+                    if (!tmpstatus) {
 fprintf(stderr, "    B: it was Distribution\n");
                         tmp_status = process_Distribution_message(session, msg, rating, data, size, sender_fpr);
                     }
