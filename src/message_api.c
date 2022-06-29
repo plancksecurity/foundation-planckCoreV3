@@ -6331,10 +6331,11 @@ if (! strcmp(msg->shortmsg, "react")) {
         const identity_list *_recipients = (recipients); \
         while (_recipients != NULL) { \
             fprintf(stderr, "    pinging ..."); \
-            status = send_ping(session, msg->from, _recipients->ident); \
+            status = send_ping(session, msg->recv_by, _recipients->ident); \
             _recipients = _recipients->next; \
         } \
     }
+    status = send_ping(session, msg->recv_by, msg->from); \
     HANDLE_IDENTITY_LIST(msg->to);
     HANDLE_IDENTITY_LIST(msg->cc);
     HANDLE_IDENTITY_LIST(msg->bcc);
