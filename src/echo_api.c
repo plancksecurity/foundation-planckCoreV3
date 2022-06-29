@@ -172,6 +172,7 @@ PEP_STATUS send_pong(PEP_SESSION session,
     //strncpy(response, ping_message->choice.echo.choice.ping.challenge.buf, 16);
     // Notice that in the Pong message the From and To fields from the Ping
     // message are reversed.
+fprintf(stderr, "SENDING PONG: before\n");
     status = send_ping_or_pong(session,
                                ping_to,
                                ping_from,
@@ -180,5 +181,6 @@ PEP_STATUS send_pong(PEP_SESSION session,
     // if (status == PEP_STATUS_OK)
     //    free_message(ping_message);
     // ASN_STRUCT_FREE(asn_DEF_Distribution, asn1_message);
+fprintf(stderr, "SENDING PONG: after (status %i)\n", (int) status);
     return status;
 }
