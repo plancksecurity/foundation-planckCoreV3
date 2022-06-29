@@ -6292,6 +6292,8 @@ fprintf(stderr, "+ message %s:\n", msg->shortmsg ? msg->shortmsg : "<no subject>
         PEP_STATUS tmp_status = PEP_UNKNOWN_ERROR; // We start with error because OK means we successfully matched
 
         if (session->inject_sync_event && !(*flags & PEP_decrypt_flag_dont_trigger_sync)) {
+// positron: this seems to succeed on Distribution (Echo) messages, extracting them as
+//           Sync messages!
             tmp_status = base_extract_message(session, msg, BASE_SYNC, &size, &data, &sender_fpr);
             if (!tmp_status && size && data) {
 fprintf(stderr, "    A: it was Sync\n");
@@ -6302,7 +6304,7 @@ fprintf(stderr, "    A: it was Sync\n");
                     signal_Sync_message(session, rating, data, size, msg->from, (*keylist)->value);
             }
         }
-        if (tmp_status != PEP_STATUS_OK) {
+        if (true /*Tentative, of course*/|| tmp_status != PEP_STATUS_OK) {
             // We process key resets differently in other versions and won't get these kind of resets
             // until this min version anyway, so:
             if (msg && msg->opt_fields) {
@@ -6318,7 +6320,7 @@ fprintf(stderr, "    A: it was Sync\n");
                                                                 &sender_fpr);
                     if (!tmpstatus && size && data) {
 fprintf(stderr, "    B: it was Distribution\n");
-                        process_Distribution_message(session, msg, rating, data, size, sender_fpr);
+                        tmp_status = process_Distribution_message(session, msg, rating, data, size, sender_fpr);
                     }
                 }
             }
