@@ -6315,9 +6315,9 @@ fprintf(stderr, "    B 200\n");
                 unsigned int major_ver = 0;
                 unsigned int minor_ver = 0;
                 pEp_protocol_version = stringpair_list_find(msg->opt_fields, "X-pEp-Version");
-fprintf(stderr, "    B 300: major %u, minor %u\n", major_ver, minor_ver);
                 if (pEp_protocol_version && pEp_protocol_version->value)
                     pEp_version_major_minor(pEp_protocol_version->value->value, &major_ver, &minor_ver);
+fprintf(stderr, "    B 300: major %u, minor %u\n", major_ver, minor_ver);
                 if (major_ver > 2 || (major_ver == 2 && minor_ver > 1)) {
 fprintf(stderr, "    B 400\n");
                     // Try the rest
