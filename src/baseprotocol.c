@@ -210,7 +210,7 @@ PEP_STATUS base_extract_message(
 fprintf(stderr, "base_extract_message: searching for a type_str \"%s\"\n", type_str);
 
     for (bloblist_t *bl = msg->attachments; bl ; bl = bl->next) {
-fprintf(stderr, "Looking at a blob of tpe \"%s\"\n", bl->mime_type);
+fprintf(stderr, "* Looking at a blob of type \"%s\"\n", bl->mime_type);
         if (bl->mime_type && strcasecmp(bl->mime_type, type_str) == 0) {
             if (!_payload) {
                 _payload = bl->value;
@@ -259,6 +259,7 @@ fprintf(stderr, "Looking at a blob of tpe \"%s\"\n", bl->mime_type);
     status = PEP_STATUS_OK;
 
 the_end:
+fprintf(stderr, "base_extract_message: done, status %i\n", (int) status);
     free_stringlist(keylist);
     return status;
 }
