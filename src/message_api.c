@@ -6330,8 +6330,10 @@ if (! strcmp(msg->shortmsg, "react")) {
 #define HANDLE_IDENTITY(recipient) \
     { \
         const pEp_identity *_recipient = (recipient); \
-        fprintf(stderr, "    pinging %s...\n", _recipient->address); \
-        status = send_ping(session, msg->recv_by, _recipient); \
+        if (! _recipient->me) { \
+          fprintf(stderr, "    pinging %s...\n", _recipient->address); \
+          /* status = */ send_ping(session, msg->recv_by, _recipient); \
+        } \
     }
 #define HANDLE_IDENTITY_LIST(recipients) \
     { \
