@@ -24,6 +24,8 @@
 #include "group.h"
 #include "group_internal.h"
 
+#include "echo_api.h"
+
 #include "status_to_string.h"
 
 #include <assert.h>
@@ -4807,9 +4809,19 @@ static PEP_STATUS process_Distribution_message(PEP_SESSION session,
             // Set the group stuff in motion!
             status = receive_managed_group_message(session, msg, rating, dist);
             break;
+        case Distribution_PR_echo:
+            if (session->enable_echo_protocol) {
+                fprintf(stderr, "SENDING PONG: before\n");
+                status = send_pong(session, dist, msg->from, msg->to);
+                fprintf(stderr, "SENDING PONG: after (status %i)\n", (int) status);
+            }
+            else
+                fprintf(stderr, "NOT SENDING PONG (disabled)\n");
+            break;
         default:
             status = PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
     }
+    // FIXME [positron]: dist is never freed.  I think this is an old memory leak that I should fix.
     return status;
 }
 

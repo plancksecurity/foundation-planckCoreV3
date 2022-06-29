@@ -76,8 +76,8 @@ static PEP_STATUS send_ping_or_pong(PEP_SESSION session,
     }
 
     /* "Encrypt" the message in the sense of calling encrypt_message; this, in
-       case we have no key for the recipient, as it will often happen with Ping
-       messages, will alter the message to contain the sender's key... */
+       case we have no key for the recipient, as it will normally happen with
+       Ping messages, will alter the message to contain the sender's key. */
     message *m = NULL;
     status = encrypt_message(session, non_encrypted_m, NULL, &m,
                              PEP_enc_PEP, PEP_encrypt_flag_default);
@@ -92,7 +92,6 @@ static PEP_STATUS send_ping_or_pong(PEP_SESSION session,
                 "status %i (%s)\n", status, pEp_status_to_string(status));
         return status;
     }
-    /* ...a Pong message should actually always be encrypted. */
     
     /* Send it. */
     status = session->messageToSend(m);
@@ -112,48 +111,65 @@ DYNAMIC_API PEP_STATUS send_ping(PEP_SESSION session,
 {
     pEpUUID challenge;
     uuid_generate_random(challenge);
-    return send_ping_or_pong(session, from, to, challenge, true);
+    // return send_ping_or_pong(session, from, to, challenge, true);
+
+fprintf(stderr, "SENDING PING: before\n");
+    PEP_STATUS status = send_ping_or_pong(session, from, to, challenge, true);
+fprintf(stderr, "SENDING PING: after (status %i)\n", (int) status);
+    return status;
+}
+
+/* Return the first identity in the given list which is own, or NULL in case no
+   own identity is in the list. */
+static const pEp_identity* my_identity(const identity_list *identities) {
+    const identity_list *rest = identities;
+    while (rest != NULL) {
+        const pEp_identity *candidate = rest->ident;
+        if (candidate->me)
+            return candidate;
+        rest = rest->next;
+    }
+
+    return NULL;
 }
 
 PEP_STATUS send_pong(PEP_SESSION session,
-                     message *ping_message) {
+                     const Distribution_t *ping_message,
+                     const pEp_identity *ping_from,
+                     const identity_list *ping_tos) {
     /* Argument checks.  No need to check for messageToSend here, since we
        will check later when actually sending. */
     assert (session && ping_message);
     if (! (session && ping_message))
         return PEP_ILLEGAL_VALUE;
-    /* Sanity check. */
-    if (ping_message->dir != PEP_dir_incoming)
+    /* Sanity checks. */
+    if (ping_message->present != Distribution_PR_echo)
         return PEP_ILLEGAL_VALUE;
-    if (identity_list_length(ping_message->to) != 1)
-        return PEP_ILLEGAL_VALUE;
-    if (identity_list_length(ping_message->cc) != 0)
-        return PEP_ILLEGAL_VALUE;
-    if (identity_list_length(ping_message->bcc) != 0)
-        return PEP_ILLEGAL_VALUE;
-    if (bloblist_length(ping_message->attachments) != 1)
-        return PEP_ILLEGAL_VALUE;
-    
-    /* Extract identities from the message envelope. */
-    pEp_identity *ping_from = ping_message->from;
-    pEp_identity *ping_to = ping_message->to->ident;
-    /* Decode the ping message into an ASN.1 PER message, and the ASN.1 PER
-       message into a Distribution_t message; extract the fields we need;
-       send the message.  Free. */
-    char *data = ping_message->attachments->value;
-    size_t data_size = ping_message->attachments->size;
-    Distribution_t *asn1_message;
-    PEP_STATUS status = decode_Distribution_message(data, data_size,
-                                                    &asn1_message);
-    if (status != PEP_STATUS_OK)
-        return status;
-    if (asn1_message->choice.echo.choice.ping.challenge.size != 16) // just for internal consistency: turn it into an assert
-        return PEP_ILLEGAL_VALUE;
-    if (asn1_message->choice.echo.present != Echo_PR_ping)
+    const pEp_identity *ping_to = my_identity(ping_tos);
+    if (ping_to == NULL)
         return PEP_ILLEGAL_VALUE;
 
-    pEpUUID response;
-    strncpy(response, asn1_message->choice.echo.choice.ping.challenge.buf, 16);
+    PEP_STATUS status = PEP_STATUS_OK;
+    /* /\* Extract identities from the message envelope. *\/ */
+    /* pEp_identity *ping_from = ping_message->from; */
+    /* pEp_identity *ping_to = ping_message->to->ident; */
+    /* /\* Decode the ping message into an ASN.1 PER message, and the ASN.1 PER */
+    /*    message into a Distribution_t message; extract the fields we need; */
+    /*    send the message.  Free. *\/ */
+    /* char *data = ping_message->attachments->value; */
+    /* size_t data_size = ping_message->attachments->size; */
+    /* Distribution_t *asn1_message; */
+    /* PEP_STATUS status = decode_Distribution_message(data, data_size, */
+    /*                                                 &asn1_message); */
+    /* if (status != PEP_STATUS_OK) */
+    /*     return status; */
+    /* if (asn1_message->choice.echo.choice.ping.challenge.size != 16) // just for internal consistency: turn it into an assert */
+    /*     return PEP_ILLEGAL_VALUE; */
+    /* if (asn1_message->choice.echo.present != Echo_PR_ping) */
+    /*     return PEP_ILLEGAL_VALUE; */
+    /* Simply reuse the challenge allocated string as a response. */
+    const char *response = ping_message->choice.echo.choice.ping.challenge.buf;
+    //strncpy(response, ping_message->choice.echo.choice.ping.challenge.buf, 16);
     // Notice that in the Pong message the From and To fields from the Ping
     // message are reversed.
     status = send_ping_or_pong(session,
@@ -161,8 +177,8 @@ PEP_STATUS send_pong(PEP_SESSION session,
                                ping_from,
                                response,
                                false);
-    if (status == PEP_STATUS_OK)
-        free_message(ping_message);
-    ASN_STRUCT_FREE(asn_DEF_Distribution, asn1_message);
+    // if (status == PEP_STATUS_OK)
+    //    free_message(ping_message);
+    // ASN_STRUCT_FREE(asn_DEF_Distribution, asn1_message);
     return status;
 }

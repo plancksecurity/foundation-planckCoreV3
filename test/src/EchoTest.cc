@@ -152,46 +152,46 @@ TEST_F(EchoTest, check_ping) {
     free_identity(recip);
 }
 
-TEST_F(EchoTest, check_ping_and_pong) {
-    session->messageToSend = storingMessageToSend;
-    PEP_STATUS status = PEP_UNKNOWN_ERROR;
+// TEST_F(EchoTest, check_ping_and_pong) {
+//     session->messageToSend = storingMessageToSend;
+//     PEP_STATUS status = PEP_UNKNOWN_ERROR;
 
-    // 0AE9AA3E320595CF93296BDFA155AC491CCCFC41
-    // D0AF2F9695E186A8DC058B935FE2793DDAC746BE
-    pEp_identity* sender = new_identity("bcc_test_dude_0@pep.foundation", NULL, PEP_OWN_USERID, "BCC Test Sender");
+//     // 0AE9AA3E320595CF93296BDFA155AC491CCCFC41
+//     // D0AF2F9695E186A8DC058B935FE2793DDAC746BE
+//     pEp_identity* sender = new_identity("bcc_test_dude_0@pep.foundation", NULL, PEP_OWN_USERID, "BCC Test Sender");
 
-    pEp_identity* recip = new_identity("bcc_test_dude_1@pep.foundation", "B36E468E7A381946FCDBDDFA84B1F3E853CECCF7", "TOFU_bcc_test_dude_1@pep.foundation", "BCC Test Recip");
+//     pEp_identity* recip = new_identity("bcc_test_dude_1@pep.foundation", "B36E468E7A381946FCDBDDFA84B1F3E853CECCF7", "TOFU_bcc_test_dude_1@pep.foundation", "BCC Test Recip");
 
     
-    // is this needed?
-    status = myself(session, sender);
-    ASSERT_OK;
+//     // is this needed?
+//     status = myself(session, sender);
+//     ASSERT_OK;
     
-    // is this needed?
-    status = update_identity(session, recip);
-    ASSERT_OK;
+//     // is this needed?
+//     status = update_identity(session, recip);
+//     ASSERT_OK;
 
-    // Ping.
-    status = send_ping(session, sender, recip);
-    ASSERT_OK;
+//     // Ping.
+//     status = send_ping(session, sender, recip);
+//     ASSERT_OK;
 
-    // Now take the message we pretended to send, and update so that it looks
-    // as if it were directed to us.
-    message* ping_message = stored_message;
-    pEp_identity* ping_message_from = ping_message->from;
-    pEp_identity* ping_message_to = ping_message->to->ident;
-    ping_message->dir = PEP_dir_incoming;
-    ping_message->from = identity_dup(ping_message_to);
-    ping_message->to->ident = identity_dup(ping_message_from);
+//     // Now take the message we pretended to send, and update so that it looks
+//     // as if it were directed to us.
+//     message* ping_message = stored_message;
+//     pEp_identity* ping_message_from = ping_message->from;
+//     pEp_identity* ping_message_to = ping_message->to->ident;
+//     ping_message->dir = PEP_dir_incoming;
+//     ping_message->from = identity_dup(ping_message_to);
+//     ping_message->to->ident = identity_dup(ping_message_from);
 
-    // Pong.
-    status = send_pong(session, ping_message);
-    ASSERT_OK;
+//     // Pong.
+//     status = send_pong(session, ping_message);
+//     ASSERT_OK;
 
-    // Destroy the pong message, that the current messageToSend keeps.
-    free_message(stored_message);
+//     // Destroy the pong message, that the current messageToSend keeps.
+//     free_message(stored_message);
     
-    // Destroy the original copy.
-    free_identity(sender);
-    free_identity(recip);
-}
+//     // Destroy the original copy.
+//     free_identity(sender);
+//     free_identity(recip);
+// }
