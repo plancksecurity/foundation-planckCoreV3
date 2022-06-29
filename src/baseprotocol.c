@@ -207,7 +207,7 @@ PEP_STATUS base_extract_message(
     status = _get_base_protocol_type_str(type, &type_str);
     if (status != PEP_STATUS_OK || !type_str)
         return status;
-fprintf(stderr, "base_extract_message: searching for a type_str \"%s\"\n", type_str);
+fprintf(stderr, "base_extract_message: searching for a type_str \"%s\" across %i blobs\n", type_str, bloblist_length(msg->attachments));
 
     for (bloblist_t *bl = msg->attachments; bl ; bl = bl->next) {
 fprintf(stderr, "* Looking at a blob of type \"%s\"\n", bl->mime_type);
