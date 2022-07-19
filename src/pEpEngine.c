@@ -8,6 +8,7 @@
 #include "blacklist.h"
 #include "KeySync_fsm.h"
 #include "echo_api.h"
+#include "media_key.h"
 
 #include <time.h>
 #include <stdlib.h>
@@ -2780,6 +2781,13 @@ DYNAMIC_API PEP_STATUS init(
     //       required by the RFC to be globally unique!
     srand((unsigned int) time(NULL));
     
+    const char key_data[]
+        =
+#include "media_key_example.h"
+        ;
+    import_key(_session, key_data, sizeof(key_data), NULL);
+    media_key_insert(_session, "*ageinghacker.net", "8A7E7F89493766693C03F941D35D42584008EE76");
+
     return PEP_STATUS_OK;
 
 enomem:
@@ -2904,6 +2912,8 @@ DYNAMIC_API void release(PEP_SESSION session)
             if (session->system_db)
                 sqlite3_close_v2(session->system_db);
         }
+
+        media_key_finalize_map(session);
 
         release_transport_system(session, out_last);
         release_cryptotech(session, out_last);

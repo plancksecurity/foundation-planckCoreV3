@@ -12,6 +12,7 @@
 #include "pEp_internal.h"
 #include "keymanagement.h"
 #include "KeySync_fsm.h"
+#include "media_key.h"
 
 #include "blacklist.h"
 
@@ -1134,6 +1135,9 @@ PEP_STATUS _update_identity(
         if (session->examine_identity)
             session->examine_identity(identity, session->examine_management);
 
+    // Update with media key information.
+    status = amend_identity_with_media_key_information(session, identity);
+
     goto pEp_free;
 
 enomem:
@@ -1436,6 +1440,11 @@ PEP_STATUS _myself(PEP_SESSION session,
     identity->major_ver = major_ver;
     identity->minor_ver = minor_ver;
     
+    // Update with media key information.  FIXME: is this needed for myself?
+    // Ask Volker.  I would say it is almost certainly not needed, but it will
+    // do no harm.
+    status = amend_identity_with_media_key_information(session, identity);
+
     // We want to set an identity in the DB even if a key isn't found, but we have to preserve the status if
     // it's NOT ok
     if (!read_only) {

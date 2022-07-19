@@ -282,6 +282,8 @@ struct _pEpSession {
     // runtime config
     bool enable_echo_protocol;
 
+    stringpair_list_t *media_key_map; /* See media_key.h for an explanation. */
+
     bool passive_mode;
     bool unencrypted_subject;
     bool service_log;

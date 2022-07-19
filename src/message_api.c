@@ -16,6 +16,7 @@
 #include "sync_codec.h"
 #include "distribution_codec.h"
 #include "echo_api.h"
+#include "media_key.h"
 
 #include "status_to_string.h" // FIXME: remove
 
@@ -1961,8 +1962,8 @@ static PEP_STATUS _update_state_for_ident_list(
         unsigned int* max_version_minor,
         bool* has_pEp_user,
         bool* dest_keys_found,
-        bool suppress_update_for_bcc
-    )
+        bool suppress_update_for_bcc,
+        const char* media_key_or_NULL)
 {
     if (!ident_list || !max_version_major || !max_version_minor
                     || !has_pEp_user || !dest_keys_found
@@ -2041,7 +2042,7 @@ static PEP_STATUS _update_state_for_ident_list(
             *max_comm_type = _get_comm_type(session, *max_comm_type,
                                             _il->ident);
         }
-        else {
+        else if (media_key_or_NULL == NULL) {
             *dest_keys_found = false;
 // ?           status = PEP_KEY_NOT_FOUND;
         }
@@ -2051,14 +2052,14 @@ pEp_done:
     return status;
 }
 
-DYNAMIC_API PEP_STATUS encrypt_message(
+static PEP_STATUS encrypt_message_possibly_with_media_key(
         PEP_SESSION session,
         message *src,
         stringlist_t * extra,
         message **dst,
         PEP_enc_format enc_format,
-        PEP_encrypt_flags_t flags
-    )
+        PEP_encrypt_flags_t flags,
+        const char *media_key_or_NULL)
 {
     PEP_STATUS status = PEP_STATUS_OK;
     message * msg = NULL;
@@ -2078,9 +2079,14 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         return PEP_ILLEGAL_VALUE;
 
     determine_encryption_format(src);
+fprintf(stderr, "C 100: src encryption format is %i\n", src->enc_format);
     // TODO: change this for multi-encryption in message format 2.0
     if (src->enc_format != PEP_enc_none)
         return PEP_ILLEGAL_VALUE;
+fprintf(stderr, "C 110: src encryption format is %i (again)\n", src->enc_format);
+fprintf(stderr, "C 120: encryption format is %i\n", enc_format);
+fprintf(stderr, "C 130: encryption flags are %u\n", (unsigned)flags);
+fprintf(stderr, "CCCC FIXME: use gdb and check when the enc_format is decided\n");
 
     bool force_v_1 = flags & PEP_encrypt_flag_force_version_1;
     
@@ -2120,6 +2126,10 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         if (_k == NULL)
             goto enomem;
     }
+    if (media_key_or_NULL != NULL) {
+        if (stringlist_add(_k, media_key_or_NULL) == NULL)
+            goto enomem;
+    }
 
     bool dest_keys_found = true;
     bool has_pEp_user = false;
@@ -2155,7 +2165,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                                 &max_version_minor,
                                 &has_pEp_user,
                                 &dest_keys_found,
-                                true);
+                                true,
+                                media_key_or_NULL);
                                         
         switch (_status) {
             case PEP_PASSPHRASE_REQUIRED:
@@ -2185,7 +2196,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                             &max_version_minor,
                             &has_pEp_user,
                             &dest_keys_found,
-                            false
+                            false,
+                            media_key_or_NULL
                         );
             switch (_status) {
                 case PEP_PASSPHRASE_REQUIRED:
@@ -2208,7 +2220,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                             &max_version_minor,
                             &has_pEp_user,
                             &dest_keys_found,
-                            false
+                            false,
+                            media_key_or_NULL
                         );
             switch (_status) {
                 case PEP_PASSPHRASE_REQUIRED:
@@ -2249,6 +2262,7 @@ fprintf(stderr, "OK-A 500 %s\n", msg ? msg->shortmsg : NULL);
         stringlist_length(keys)  == 0 ||
         _rating(max_comm_type) < PEP_rating_reliable)
     {
+        //fprintf(stderr, "encrypt_message_possibly_with_media_key: about to make the message unencrypted!\n");
         free_stringlist(keys);
         if ((has_pEp_user || !session->passive_mode) && 
             !(flags & PEP_encrypt_flag_force_no_attached_key)) {
@@ -2256,6 +2270,9 @@ fprintf(stderr, "OK-A 500 %s\n", msg ? msg->shortmsg : NULL);
             added_key_to_real_src = true;
         }
         decorate_message(session, src, PEP_rating_undefined, NULL, true, true);
+//////////////
+fprintf(stderr, "OK-B 10 %s\n", src ? src->shortmsg : NULL);
+//////////////
         return PEP_UNENCRYPTED;
     }
     else {
@@ -2386,6 +2403,70 @@ pEp_error:
     _cleanup_src(src, added_key_to_real_src);
 
     return status;
+}
+
+DYNAMIC_API PEP_STATUS encrypt_message(
+        PEP_SESSION session,
+        message *src,
+        stringlist_t * extra,
+        message **dst,
+        PEP_enc_format enc_format,
+        PEP_encrypt_flags_t flags
+    )
+{
+fprintf(stderr, "BEFORE FIRSST ATTEMPT: enc_format is %i\n", (int)src->enc_format);
+    /* First try encrypting the message ignoring the media key. */
+    PEP_STATUS status
+        = encrypt_message_possibly_with_media_key(session, src,
+                                                  extra, dst, enc_format,
+                                                  flags,
+                                                  NULL);
+    fprintf(stderr, "RIGHT AFTER THE FIRST ATTEMPT: enc_format is %i\n", (int)((*dst)?((*dst)->enc_format):src->enc_format));
+
+    /* Check how it went.  There are three possibilities... */
+    switch(status) {
+    case PEP_STATUS_OK:
+        /* We managed to actually encrypt, without need for a media key.  Good.
+           There is nothing more we need to do. */
+        return status;
+
+    case PEP_UNENCRYPTED: {
+        /* We could not encrypt without using the media key, but maybe we can if
+           we try again using the media key as well. */
+        char *media_key_fpr;
+        PEP_STATUS media_key_status
+            = media_key_for_outgoing_message(session, src, &media_key_fpr);
+        if (media_key_status != PEP_STATUS_OK)
+            return status;
+        else {
+            assert(media_key_fpr != NULL);
+            fprintf(stderr, "encrypt_message: using the media key %s\n", media_key_fpr);
+            add_opt_field(src, "X-pEp-use-media-key", media_key_fpr); // probably only useful for debugging.
+            add_opt_field(src, "X-pEp-use-media-key-inner", media_key_fpr); // probably only useful for debugging.
+            status = encrypt_message_possibly_with_media_key(
+               session, src,
+               extra,
+               dst,
+               PEP_enc_PEP, // Always use the new pEp format
+               flags | PEP_encrypt_flag_force_encryption,
+               media_key_fpr);
+fprintf(stderr, "AFTER THE SECOND ATTEMPT: enc_format is %i\n", (int)((*dst)?((*dst)->enc_format):src->enc_format));
+            if (status == PEP_STATUS_OK) {
+                if (* dst != NULL) {
+                    add_opt_field(* dst, "X-pEp-use-media-key", media_key_fpr);
+                    add_opt_field(* dst, "X-pEp-use-media-key-outer", media_key_fpr);
+                }
+            }
+            free(media_key_fpr);
+            return status;
+        }
+    }
+
+    default:
+        /* The first encryption attempt failed with an actual error,
+           independently from the media key. */
+        return status;
+    }
 }
 
 DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
@@ -5087,12 +5168,25 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
     message *msg = *dst ? *dst : src;
 
-    /* positron: I have seen this happen while modifying the mailbox
-       concurrently. */
+    /* positron, 2022-07: I have seen msg == NULL when modifying the mailbox
+       concurrently.  We should protect the engine from this condition. */
     if (msg == NULL) {
         status = PEP_ILLEGAL_VALUE;
         goto end;
     }
+
+    /* Rating special case: if we received the message encrypted by a media
+       key, change the rating. */
+    bool media_key_found;
+    PEP_STATUS media_key_status
+        = media_key_is_there_a_media_key_in(session, * keylist,
+                                            & media_key_found);
+    if (media_key_status != PEP_STATUS_OK) {
+        status = PEP_ILLEGAL_VALUE;
+        goto end;
+    }
+    if (media_key_found)
+        * rating = media_key_message_rating;
 
 //fprintf(stderr, "+ message %s \"%s\", recv_by %s, dir %s: begin...\n", msg->id, msg->shortmsg ? msg->shortmsg : "<no subject>", (msg->recv_by ? msg->recv_by->address : "NO RECV_BY"), ((msg->dir == PEP_dir_incoming) ? "incoming" : "outgoing"));
 /////// BEGIN: "react" HACK
@@ -5320,6 +5414,13 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
     if (msg->dir != PEP_dir_outgoing)
         return PEP_ILLEGAL_VALUE;
 
+    //////////////////////
+    fprintf(stderr, "outgoing_message_rating: check media key.  FIXME: use it, or just delete this: identities are updated anyway\n");
+    char *media_key_fpr;
+    media_key_for_outgoing_message(session, msg, &media_key_fpr);
+    free(media_key_fpr);
+    //////////////////////
+
     *rating = PEP_rating_undefined;
 
     _max_comm_type_from_identity_list(msg->to, session,
@@ -5338,6 +5439,8 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
     }
     else
         *rating = _MAX(_rating(max_comm_type), PEP_rating_unencrypted);
+    fprintf(stderr, "outgoing_message_rating: rating is %i %s\n", (int)*rating, rating_to_string(*rating));
+    fprintf(stderr, "outgoing_message_rating: max_comm_type is %i 0x%x\n", (int)max_comm_type, (int)max_comm_type);
 
     return PEP_STATUS_OK;
 }
@@ -5361,6 +5464,13 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating_preview(
     if (msg->dir != PEP_dir_outgoing)
         return PEP_ILLEGAL_VALUE;
 
+    //////////////////////
+    fprintf(stderr, "outgoing_message_rating_preview: check media key.  FIXME: use it, or just delete this: identities are updated anyway\n");
+    char *media_key_fpr;
+    media_key_for_outgoing_message(session, msg, &media_key_fpr);
+    free(media_key_fpr);
+    //////////////////////
+
     *rating = PEP_rating_undefined;
 
     _max_comm_type_from_identity_list_preview(msg->to, session,
@@ -5373,6 +5483,8 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating_preview(
             &max_comm_type);
 
     *rating = _MAX(_rating(max_comm_type), PEP_rating_unencrypted);
+    fprintf(stderr, "outgoing_message_rating_preview: rating is %i %s\n", (int)*rating, rating_to_string(*rating));
+    fprintf(stderr, "outgoing_message_rating_preview: max_comm_type is %i 0x%x\n", (int)max_comm_type, (int)max_comm_type);
 
     return PEP_STATUS_OK;
 }
