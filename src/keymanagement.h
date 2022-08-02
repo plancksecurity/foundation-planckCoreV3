@@ -112,7 +112,8 @@ DYNAMIC_API PEP_STATUS update_identity(
  *           retrieve the key set as default key for the given identity in the database,
  *           which may have been set up by myself(), or which were imported
  *           during a first time DB setup from an OpenPGP keyring (compatibility only).
- *           This function generates a keypair on demand (ie. if no valid keypair is found);
+ *           If no valid keypair for the given identity is found, a new one will be 
+ *           generated and set up as default key
  *           because it's synchronous it can need a decent amount of time to return
  *  @warning if you need to do this asynchronous, you need to return an identity
  *           with retrieve_next_identity() where pEp_identity.me is true
