@@ -96,7 +96,7 @@ tstylesheet {
         param "commPartner";
         param "msc";
         param "depth";
-	param "log";
+        param "log";
         const "event", "ancestor-or-self::event/@name";
         const "ownState", "ancestor::state/@name";
         const "eventString" if "/protocol/fsm[1]/external[@name=$event]" {
@@ -108,109 +108,109 @@ tstylesheet {
         const "stopCondition", "(ancestor::state/@timeout='off'  and $depth>$mindepth) or (//state[@name=$target]/@timeout='off' and //state[@name=$commPartnerState]/@timeout='off' and $depth>$mindepth) or $depth>$maxdepth or ($commPartnerState='End' and $target='End')";
 //and //state[@name=$commPartnerState]/@timeout='off'
 
-const "newlog" {
- value "$log";
- | «$whoAmI»: at «$ownState» on «$event» if «$condition» send «$message» go «$target» 
- | «$commPartner»: «$commPartnerState»
- | stop «//state[@name=$ownState]/@timeout» and  «//state[@name=$commPartnerState]/@timeout» and «$depth»>«$mindepth»
- | stop «$stopCondition»
- value "$msc";
- | ----------------------------------------------------------------------------------
-};
-            choose {
-                when "$stopCondition" {
-                    const "secid", "math:random()";
-                    const "id", "concat(generate-id(),substring($secid,3,6))";
-                    const "stateString" choose {
-                        when ("$target and not($target=$ownState)") {
-                        |    «$whoAmI» box «$whoAmI» [label="«$target»"],
-                        }
-                        otherwise {
-                        |    «$whoAmI» box «$whoAmI» [label="«$ownState»"],
-                        }
-                    };
-                    | doc «$depth», «$id»:
-                    value "$newlog";
-                    | STOP
-                    value "$msc";
-                    document "msc/{$id}.msc" method="text" {
-                        | msc {
-                        |    «$msc»
-                        value "$stateString";
-                        |    «$commPartner» box «$commPartner» [label="«$commPartnerState»"];
-                        | }
+        const "newlog" {
+         value "$log";
+         | «$whoAmI»: at «$ownState» on «$event» if «$condition» send «$message» go «$target» 
+         | «$commPartner»: «$commPartnerState»
+         | stop «//state[@name=$ownState]/@timeout» and  «//state[@name=$commPartnerState]/@timeout» and «$depth»>«$mindepth»
+         | stop «$stopCondition»
+         value "$msc";
+         | ----------------------------------------------------------------------------------
+        };
+        choose {
+            when "$stopCondition" {
+                const "secid", "math:random()";
+                const "id", "concat(generate-id(),substring($secid,3,6))";
+                const "stateString" choose {
+                    when ("$target and not($target=$ownState)") {
+                    |    «$whoAmI» box «$whoAmI» [label="«$target»"],
                     }
+                    otherwise {
+                    |    «$whoAmI» box «$whoAmI» [label="«$ownState»"],
+                    }
+                };
+                | doc «$depth», «$id»:
+                value "$newlog";
+                | STOP
+                value "$msc";
+                document "msc/{$id}.msc" method="text" {
+                    | msc {
+                    |    «$msc»
+                    value "$stateString";
+                    |    «$commPartner» box «$commPartner» [label="«$commPartnerState»"];
+                    | }
                 }
-                when "$message and ($target=$ownState or not($target))" {
-                    const "newmsc" {
-                        value "$msc";
-                        |   «$eventString»
-                        |   «$whoAmI» -> «$commPartner» [label="«$message»"];
-                    };
-                    const "nextlog" {
-                        value "$newlog";
-                        |  b «$depth» 
-                    };
-                    apply "/protocol/fsm[1]/state[@name=$commPartnerState]/event[@name=$message]"
-                        with "commPartnerState", "$ownState",
-                        with "whoAmI", "$commPartner",
-                        with "commPartner", "$whoAmI",
-                        with "depth", "$depth+1",
-			with "log", "$nextlog",
-                        with "msc", "$newmsc";
-                }
-                when "$message and $target and not($target=$ownState)" {
-                    const "nextlog" {
-                        value "$newlog";
-                        |  c «$depth» 
-                    };
-                   const "newmsc" {
-                        value "$msc";
-                        |   «$eventString»
-                        |   «$whoAmI» -> «$commPartner» [label="«$message»"];
-                        |   «$whoAmI» box «$whoAmI»     [label="«$target»"];
-                    };
-          //    |      apply "/protocol/fsm[1]/state[@name=«$commPartnerState»]/event[@name=«$message»]"
-          //    |          with "commPartnerState", "«$target»",
-          //    |          with "whoAmI", "«$commPartner»",
-          //    |          with "commPartner", "«$whoAmI»",
-          //    |          with "depth", "«$depth+1»",
-          //    |          with "msc", "$newmsc";
-                    apply "/protocol/fsm[1]/state[@name=$commPartnerState]/event[@name=$message]"
-                        with "commPartnerState", "$target",
-                        with "whoAmI", "$commPartner",
-                        with "commPartner", "$whoAmI",
-                        with "depth", "$depth+1",
-			with "log", "$nextlog",
-                        with "msc", "$newmsc";
-                }
-                when "not($message) and $target and not($target=$ownState)" {
-                    const "nextlog" {
-                        value "$newlog";
-                        |  d «$depth» 
-                    };
-                    const "newmsc" {
-                        value "$msc";
-                        |   «$eventString»
-                        |   «$whoAmI» box «$whoAmI» [label="«$target»"];
-                    };
-                    //apply "/protocol/fsm[1]/state[@name=$target]/event[@name='Init']"
-                    apply "/protocol/fsm[1]/state[@name=$target]/event"
-                        with "commPartnerState", "$commPartnerState",
-                        with "whoAmI", "$whoAmI",
-                        with "commPartner", "$commPartner",
-                        with "depth", "$depth+1",
-			with "log", "$nextlog",
-                        with "msc", "$newmsc";
-                }
-                otherwise {
+            }
+            when "$message and ($target=$ownState or not($target))" {
+                const "newmsc" {
+                    value "$msc";
+                    |   «$eventString»
+                    |   «$whoAmI» -> «$commPartner» [label="«$message»"];
+                };
+                const "nextlog" {
+                    value "$newlog";
+                    |  b «$depth» 
+                };
+                apply "/protocol/fsm[1]/state[@name=$commPartnerState]/event[@name=$message]"
+                    with "commPartnerState", "$ownState",
+                    with "whoAmI", "$commPartner",
+                    with "commPartner", "$whoAmI",
+                    with "depth", "$depth+1",
+                    with "log", "$nextlog",
+                    with "msc", "$newmsc";
+            }
+            when "$message and $target and not($target=$ownState)" {
+                const "nextlog" {
+                    value "$newlog";
+                    |  c «$depth» 
+                };
+               const "newmsc" {
+                    value "$msc";
+                    |   «$eventString»
+                    |   «$whoAmI» -> «$commPartner» [label="«$message»"];
+                    |   «$whoAmI» box «$whoAmI»     [label="«$target»"];
+                };
+      //    |      apply "/protocol/fsm[1]/state[@name=«$commPartnerState»]/event[@name=«$message»]"
+      //    |          with "commPartnerState", "«$target»",
+      //    |          with "whoAmI", "«$commPartner»",
+      //    |          with "commPartner", "«$whoAmI»",
+      //    |          with "depth", "«$depth+1»",
+      //    |          with "msc", "$newmsc";
+                apply "/protocol/fsm[1]/state[@name=$commPartnerState]/event[@name=$message]"
+                    with "commPartnerState", "$target",
+                    with "whoAmI", "$commPartner",
+                    with "commPartner", "$whoAmI",
+                    with "depth", "$depth+1",
+                    with "log", "$nextlog",
+                    with "msc", "$newmsc";
+            }
+            when "not($message) and $target and not($target=$ownState)" {
+                const "nextlog" {
+                    value "$newlog";
+                    |  d «$depth» 
+                };
+                const "newmsc" {
+                    value "$msc";
+                    |   «$eventString»
+                    |   «$whoAmI» box «$whoAmI» [label="«$target»"];
+                };
+                //apply "/protocol/fsm[1]/state[@name=$target]/event[@name='Init']"
+                apply "/protocol/fsm[1]/state[@name=$target]/event"
+                    with "commPartnerState", "$commPartnerState",
+                    with "whoAmI", "$whoAmI",
+                    with "commPartner", "$commPartner",
+                    with "depth", "$depth+1",
+                    with "log", "$nextlog",
+                    with "msc", "$newmsc";
+            }
+            otherwise {
 value "$newlog"
- | o «$depth»
-              //      | msc {
-              //      |    «$msc»
-              //      | }
-                }
-            } //choose
+| o «$depth»
+          //      | msc {
+          //      |    «$msc»
+          //      | }
+            }
+        } //choose
     } //function nextStep
 } //tstylesheet
 
