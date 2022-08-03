@@ -110,12 +110,12 @@ tstylesheet {
 
         const "newlog" {
          value "$log";
+         | ----------------------------------------------------------------------------------
          | «$whoAmI»: at «$ownState» on «$event» if «$condition» send «$message» go «$target» 
          | «$commPartner»: «$commPartnerState»
          | stop «//state[@name=$ownState]/@timeout» and  «//state[@name=$commPartnerState]/@timeout» and «$depth»>«$mindepth»
          | stop «$stopCondition»
 //         value "$msc";
-         | ----------------------------------------------------------------------------------
         };
         const "search" {
             | «$whoAmI» -> «$commPartner» [label="«$message»"];
@@ -138,6 +138,7 @@ tstylesheet {
                     |    «$whoAmI» box «$whoAmI» [label="«$ownState»"],
                     }
                 };
+                | ===========================================================================
                 | doc «$depth», «$id»:
                 value "$newlog";
                 | STOP
@@ -169,10 +170,10 @@ tstylesheet {
                     with "log", "$nextlog",
                     with "msc", "$newmsc";
             }
-            when "$message and $target and not($target=$ownState)" {
+            when "$message and $target and not($target=$ownState) and $eventString" {
                 const "nextlog" {
                     value "$newlog";
-                    |  c «$depth» 
+                    |  c «$depth» , «$eventString»
                 };
                const "newmsc" {
                     value "$msc";
@@ -197,7 +198,7 @@ tstylesheet {
             when "not($message) and $target and not($target=$ownState)" {
                 const "nextlog" {
                     value "$newlog";
-                    |  d «$depth» 
+                    |  d «$depth», «$eventString»
                 };
                 const "newmsc" {
                     value "$msc";
@@ -205,13 +206,28 @@ tstylesheet {
                     |   «$whoAmI» box «$whoAmI» [label="«$target»"];
                 };
                 //apply "/protocol/fsm[1]/state[@name=$target]/event[@name='Init']"
-                apply "/protocol/fsm[1]/state[@name=$target]/event"
-                    with "commPartnerState", "$commPartnerState",
-                    with "whoAmI", "$whoAmI",
-                    with "commPartner", "$commPartner",
-                    with "depth", "$depth+1",
-                    with "log", "$nextlog",
-                    with "msc", "$newmsc";
+                //const "eventString" if
+                for "/protocol/fsm[1]/state[@name=$target]/event" {
+                    const "name", "@name";
+                    | «./@name», «$name»
+                    | «count(/protocol/fsm[1]/external[@name=$name])»
+                    if "boolean(/protocol/fsm[1]/external[@name=$name])" {
+                        apply "."
+                            with "commPartnerState", "$commPartnerState",
+                            with "whoAmI", "$whoAmI",
+                            with "commPartner", "$commPartner",
+                            with "depth", "$depth+1",
+                            with "log", "$nextlog",
+                            with "msc", "$newmsc";
+                    }
+                }
+      //          apply "/protocol/fsm[0]/state[@name=$target]/event"
+      //              with "commPartnerState", "$commPartnerState",
+      //              with "whoAmI", "$whoAmI",
+      //              with "commPartner", "$commPartner",
+      //              with "depth", "$depth+1",
+      //              with "log", "$nextlog",
+      //              with "msc", "$newmsc";
             }
             otherwise {
 value "$newlog"
