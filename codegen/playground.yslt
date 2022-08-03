@@ -1,32 +1,47 @@
 include "yslt.yml2"
 tstylesheet {
-function "concat" {
-    param "text";
-    param "more";
-    const "ourTest", "$_indent < 2";
+//function "concat" {
+//    param "text";
+//    param "more";
+//    const "ourTest", "$_indent < 2";
+//
+////    value "$_indent";
+//    choose {
+//        when "$ourTest" {
+//	   <xsl:variable name="newtext">
+//            value "$more";
+//            value "$text";
+//	    value "$_indent";
+//            value "$more";
+//           </xsl:variable>
+//           | «$newtext»
+////            call "concat" with "text", "$newtext", with "more", "$more", with "_indent", "$_indent+1";
+////            call "concat" with "text", "$newtext", with "more", "'e'", with "_indent", "$_indent+1";
+//        }
+//        otherwise {
+//           > [«$text»]
+//        }
+//    }
+//}
 
-//    value "$_indent";
-    choose {
-        when "$ourTest" {
-	   <xsl:variable name="newtext">
-            value "$more";
-            value "$text";
-	    value "$_indent";
-            value "$more";
-           </xsl:variable>
-           | «$newtext»
-//            call "concat" with "text", "$newtext", with "more", "$more", with "_indent", "$_indent+1";
-//            call "concat" with "text", "$newtext", with "more", "'e'", with "_indent", "$_indent+1";
+   template "/protocol/fsm[1]" {
+        const 'name', '\"name\"';
+        //call "concat" with "_indent", "0", with "text", "'Test'", with "more", "'a'" ;
+        const "whoAmI", "'a'";
+        const "message", "'Beacon'";
+        const "commPartner", "'b'";
+        const "newmsc" {
+                    |   blabladulne
+                    |   «$whoAmI» -> «$commPartner» [label="«$message»"];
+                    |   blablubb
+                };
+        value "$newmsc";
+        const "search" {
+            | «$whoAmI» -> «$commPartner» [label="Beacon"];
         }
-        otherwise {
-           > [«$text»]
+        value "$search";
+        if "contains($newmsc, $search)" {
+            | yippie
         }
-    }
-}
-
-   template "/protocol/fsm[1]/state" {
-   const "name", "@name";
-   call "concat" with "_indent", "0", with "text", "'Test'", with "more", "'a'" ;
-   //value "@name";
    }
 }

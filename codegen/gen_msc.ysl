@@ -78,7 +78,7 @@ tstylesheet {
                 with "whoAmI", "$whoAmI",
                 with "commPartner", "$commPartner",
                 with "msc", "$msc",
-		with "log", "$log",
+                with "log", "$log",
                 with "depth", "$depth";
         }
         call "nextStep"
@@ -114,10 +114,19 @@ tstylesheet {
          | «$commPartner»: «$commPartnerState»
          | stop «//state[@name=$ownState]/@timeout» and  «//state[@name=$commPartnerState]/@timeout» and «$depth»>«$mindepth»
          | stop «$stopCondition»
-         value "$msc";
+//         value "$msc";
          | ----------------------------------------------------------------------------------
         };
+        const "search" {
+            | «$whoAmI» -> «$commPartner» [label="«$message»"];
+        };
         choose {
+            // First check for abort condition(s)
+            when "contains($msc, $search)" {
+                value "$newlog"
+                | loop detected «$depth»
+            }
+            // Then for ground conditions
             when "$stopCondition" {
                 const "secid", "math:random()";
                 const "id", "concat(generate-id(),substring($secid,3,6))";
@@ -132,7 +141,7 @@ tstylesheet {
                 | doc «$depth», «$id»:
                 value "$newlog";
                 | STOP
-                value "$msc";
+ //               value "$msc";
                 document "msc/{$id}.msc" method="text" {
                     | msc {
                     |    «$msc»
@@ -141,6 +150,7 @@ tstylesheet {
                     | }
                 }
             }
+            // Then choose the path to proceed
             when "$message and ($target=$ownState or not($target))" {
                 const "newmsc" {
                     value "$msc";
