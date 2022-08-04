@@ -15,12 +15,12 @@ tstylesheet {
         with "commPartnerState", "'Sole'",
         with "message", "'CannotDecrypt'";
 
-//    apply "/protocol/fsm[1]"
-//        with "whoAmI", "$whoAmI",
-//        with "commPartner", "$commPartner",
-//        with "ownState", "'Sole'",
-//        with "commPartnerState", "'Sole'",
-//        with "message", "'CannotDecrypt'";
+    apply "/protocol/fsm[1]"
+        with "whoAmI", "$whoAmI",
+        with "commPartner", "$commPartner",
+        with "ownState", "'Sole'",
+        with "commPartnerState", "'Sole'",
+        with "message", "'CannotDecrypt'";
 
 //    apply "/protocol/fsm[1]"
 //        with "whoAmI", "$whoAmI",
@@ -72,6 +72,7 @@ tstylesheet {
 	param "log";
         param "depth";
 
+//
         for ("descendant::condition|descendant::else") {
             call "nextStep"
                 with "commPartnerState", "$commPartnerState",
@@ -105,7 +106,8 @@ tstylesheet {
         const "message", "child::send[1]/@name";
         const "condition", "ancestor-or-self::condition/@name";
         const "target", "child::transition[1]/@target";   
-        const "stopCondition", "(ancestor::state/@timeout='off'  and $depth>$mindepth) or (//state[@name=$target]/@timeout='off' and //state[@name=$commPartnerState]/@timeout='off' and $depth>$mindepth) or $depth>$maxdepth or ($commPartnerState='End' and $target='End')";
+        //(ancestor::state/@timeout='off'  and $depth>$mindepth) or 
+        const "stopCondition", "(((ancestor::state/@timeout='off' and not($target)) or //state[@name=$target]/@timeout='off') and //state[@name=$commPartnerState]/@timeout='off' and $depth>$mindepth) or $depth>$maxdepth or ($commPartnerState='End' and $target='End')";
 //and //state[@name=$commPartnerState]/@timeout='off'
 
         const "newlog" {
