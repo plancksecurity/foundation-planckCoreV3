@@ -2,7 +2,7 @@ include yslt.yml2
 
 tstylesheet {
     const "maxdepth", "15";
-    const "mindepth", "4";
+    const "mindepth", "1";
 
     template "/protocol" {
     const "whoAmI", "'a'";
@@ -15,19 +15,19 @@ tstylesheet {
         with "commPartnerState", "'Sole'",
         with "message", "'CannotDecrypt'";
 
-    apply "/protocol/fsm[1]"
-        with "whoAmI", "$whoAmI",
-        with "commPartner", "$commPartner",
-        with "ownState", "'Sole'",
-        with "commPartnerState", "'Sole'",
-        with "message", "'CannotDecrypt'";
+//    apply "/protocol/fsm[1]"
+//        with "whoAmI", "$whoAmI",
+//        with "commPartner", "$commPartner",
+//        with "ownState", "'Sole'",
+//        with "commPartnerState", "'Sole'",
+//        with "message", "'CannotDecrypt'";
 
-    apply "/protocol/fsm[1]"
-        with "whoAmI", "$whoAmI",
-        with "commPartner", "$commPartner",
-        with "ownState", "'Sole'",
-        with "commPartnerState", "'Grouped'",
-        with "message", "'CannotDecrypt'";
+//    apply "/protocol/fsm[1]"
+//        with "whoAmI", "$whoAmI",
+//        with "commPartner", "$commPartner",
+//        with "ownState", "'Sole'",
+//        with "commPartnerState", "'Grouped'",
+//        with "message", "'CannotDecrypt'";
 
     apply "/protocol/fsm[1]"
         with "whoAmI", "$whoAmI",
@@ -115,7 +115,6 @@ tstylesheet {
          | «$commPartner»: «$commPartnerState»
          | stop «//state[@name=$ownState]/@timeout» and  «//state[@name=$commPartnerState]/@timeout» and «$depth»>«$mindepth»
          | stop «$stopCondition»
-//         value "$msc";
         };
         const "search" {
             | «$whoAmI» -> «$commPartner» [label="«$message»"];
@@ -142,7 +141,6 @@ tstylesheet {
                 | doc «$depth», «$id»:
                 value "$newlog";
                 | STOP
- //               value "$msc";
                 document "msc/{$id}.msc" method="text" {
                     | msc {
                     |    «$msc»
@@ -152,6 +150,7 @@ tstylesheet {
                 }
             }
             // Then choose the path to proceed
+            // In case we send a message but don't change our own state
             when "$message and ($target=$ownState or not($target))" {
                 const "newmsc" {
                     value "$msc";
@@ -170,7 +169,9 @@ tstylesheet {
                     with "log", "$nextlog",
                     with "msc", "$newmsc";
             }
-            when "$message and $target and not($target=$ownState) and $eventString" {
+            // In case we send a message and change our own state
+            // Previously existence of $eventString was mandatory, not sure if it should
+            when "$message and $target and not($target=$ownState)" {
                 const "nextlog" {
                     value "$newlog";
                     |  c «$depth» , «$eventString»
@@ -181,12 +182,6 @@ tstylesheet {
                     |   «$whoAmI» -> «$commPartner» [label="«$message»"];
                     |   «$whoAmI» box «$whoAmI»     [label="«$target»"];
                 };
-      //    |      apply "/protocol/fsm[1]/state[@name=«$commPartnerState»]/event[@name=«$message»]"
-      //    |          with "commPartnerState", "«$target»",
-      //    |          with "whoAmI", "«$commPartner»",
-      //    |          with "commPartner", "«$whoAmI»",
-      //    |          with "depth", "«$depth+1»",
-      //    |          with "msc", "$newmsc";
                 apply "/protocol/fsm[1]/state[@name=$commPartnerState]/event[@name=$message]"
                     with "commPartnerState", "$target",
                     with "whoAmI", "$commPartner",
@@ -195,6 +190,7 @@ tstylesheet {
                     with "log", "$nextlog",
                     with "msc", "$newmsc";
             }
+            // In case we send nothing but change our state and wait for user input
             when "not($message) and $target and not($target=$ownState)" {
                 const "nextlog" {
                     value "$newlog";
@@ -205,8 +201,6 @@ tstylesheet {
                     |   «$eventString»
                     |   «$whoAmI» box «$whoAmI» [label="«$target»"];
                 };
-                //apply "/protocol/fsm[1]/state[@name=$target]/event[@name='Init']"
-                //const "eventString" if
                 for "/protocol/fsm[1]/state[@name=$target]/event" {
                     const "name", "@name";
                     | «./@name», «$name»
@@ -232,9 +226,6 @@ tstylesheet {
             otherwise {
 value "$newlog"
 | o «$depth»
-          //      | msc {
-          //      |    «$msc»
-          //      | }
             }
         } //choose
     } //function nextStep
