@@ -2,7 +2,7 @@ include yslt.yml2
 
 tstylesheet {
     const "maxdepth", "15";
-    const "mindepth", "1";
+    const "mindepth", "4";
 
     template "/protocol" {
     const "whoAmI", "'a'";
@@ -13,6 +13,7 @@ tstylesheet {
         with "commPartner", "$commPartner",
         with "ownState", "'Grouped'",
         with "commPartnerState", "'Sole'",
+        with "depth", "0",
         with "message", "'CannotDecrypt'";
 
     apply "/protocol/fsm[1]"
@@ -20,6 +21,7 @@ tstylesheet {
         with "commPartner", "$commPartner",
         with "ownState", "'Sole'",
         with "commPartnerState", "'Sole'",
+        with "depth", "0",
         with "message", "'CannotDecrypt'";
 
 //    apply "/protocol/fsm[1]"
@@ -27,6 +29,7 @@ tstylesheet {
 //        with "commPartner", "$commPartner",
 //        with "ownState", "'Sole'",
 //        with "commPartnerState", "'Grouped'",
+//        with "depth", "3",
 //        with "message", "'CannotDecrypt'";
 
     apply "/protocol/fsm[1]"
@@ -34,6 +37,7 @@ tstylesheet {
         with "commPartner", "$commPartner",
         with "ownState", "'Grouped'",
         with "commPartnerState", "'Grouped'",
+        with "depth", "3",
         with "message", "'CannotDecrypt'";
     }
 
@@ -43,6 +47,7 @@ tstylesheet {
         param "whoAmI";
         param "commPartner";
         param "message";
+        param "depth";
         const "msc"
             ||
               # The entities
@@ -60,7 +65,7 @@ tstylesheet {
                     with "commPartnerState", "$commPartnerState",
                     with "whoAmI", "$whoAmI",
                     with "commPartner", "$commPartner",
-                    with "depth", "0",
+                    with "depth", "$depth",
                     with "msc", "$msc";
     } //template
 
@@ -129,27 +134,15 @@ tstylesheet {
             }
             // Then for ground conditions
             when "$stopCondition" {
-                const "secid", "math:random()";
-                const "id", "concat(generate-id(),substring($secid,3,6))";
-                const "stateString" choose {
-                    when ("$target and not($target=$ownState)") {
-                    |    «$whoAmI» box «$whoAmI» [label="«$target»"],
-                    }
-                    otherwise {
-                    |    «$whoAmI» box «$whoAmI» [label="«$ownState»"],
-                    }
-                };
-                | ===========================================================================
-                | doc «$depth», «$id»:
-                value "$newlog";
-                | STOP
-                document "msc/{$id}.msc" method="text" {
-                    | msc {
-                    |    «$msc»
-                    value "$stateString";
-                    |    «$commPartner» box «$commPartner» [label="«$commPartnerState»"];
-                    | }
-                }
+                call "lastStep"
+                    with "newlog", "$newlog",
+                    with "target", "$target",
+                    with "whoAmI", "$whoAmI",
+                    with "ownState", "$ownState",
+                    with "commPartnerState", "$commPartnerState",
+                    with "commPartner", "$commPartner",
+                    with "msc", "$msc",
+                    with "depth", "$depth";
             }
             // Then choose the path to proceed
             // In case we send a message but don't change our own state
@@ -205,8 +198,6 @@ tstylesheet {
                 };
                 for "/protocol/fsm[1]/state[@name=$target]/event" {
                     const "name", "@name";
-                    | «./@name», «$name»
-                    | «count(/protocol/fsm[1]/external[@name=$name])»
                     if "boolean(/protocol/fsm[1]/external[@name=$name])" {
                         apply "."
                             with "commPartnerState", "$commPartnerState",
@@ -215,6 +206,17 @@ tstylesheet {
                             with "depth", "$depth+1",
                             with "log", "$nextlog",
                             with "msc", "$newmsc";
+                    }
+                    if "count(/protocol/fsm[1]/external[@name=$name])=0 and false" {
+                        call "lastStep" 
+                            with "newlog", "$newlog",
+                            with "target", "$target",
+                            with "whoAmI", "$whoAmI",
+                            with "ownState", "$ownState",
+                            with "commPartnerState", "$commPartnerState",
+                            with "commPartner", "$commPartner",
+                            with "msc", "$msc",
+                            with "depth", "$depth";
                     }
                 }
       //          apply "/protocol/fsm[0]/state[@name=$target]/event"
@@ -231,5 +233,38 @@ value "$newlog"
             }
         } //choose
     } //function nextStep
+
+
+    function "lastStep" {
+        param "newlog";
+        param "target";
+        param "whoAmI";
+        param "ownState";
+        param "commPartnerState";
+        param "commPartner";
+        param "msc";
+        param "depth";
+        const "secid", "math:random()";
+        const "id", "concat(generate-id(),substring($secid,3,6))";
+        const "stateString" choose {
+            when ("$target and not($target=$ownState)") {
+            |    «$whoAmI» box «$whoAmI» [label="«$target»"],
+            }
+            otherwise {
+            |    «$whoAmI» box «$whoAmI» [label="«$ownState»"],
+            }
+        };
+        | ===========================================================================
+        | doc «$depth», «$id»:
+        value "$newlog";
+        | STOP
+        document "msc/{$id}.msc" method="text" {
+            | msc {
+            |    «$msc»
+            value "$stateString";
+            |    «$commPartner» box «$commPartner» [label="«$commPartnerState»"];
+            | }
+        }
+    } //function lastStep
 } //tstylesheet
 
