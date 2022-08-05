@@ -27,10 +27,10 @@ dot := $(patsubst %.fsm,%.dot,$(wildcard *.fsm))
 		$(YML2_PROC) -X - $(subst .act,.fsm,$<) -o $@
 
 clean:
-	rm -rf generated *.gen
+	rm -rf generated *.gen msc
 	rm -f *.xml *.xsl .copy *.dot *.svg
 
-.copy: $(actions) $(statemachines) $(dot)
+.copy: $(actions) $(statemachines) $(dot) $(msc)
 	cp -f generated/*.c generated/*.h ../src
 	cp -f generated/*.asn1 ../asn.1
 	touch .copy
@@ -46,3 +46,8 @@ svg: $(patsubst %.dot,%.svg,$(wildcard *.dot))
 %.svg: %.dot
 	dot -Tsvg $< -o $@ > /dev/null
 
+msc: $(fsm) gen_msc.ysl
+	rm -rf msc
+	mkdir msc
+	$(YML2_PROC) -y gen_msc.ysl sync.fsm -o /dev/null
+	find msc/ -iname "*.msc" -exec echo {} \; -exec mscgen -Tpng -i {} -o {}.png \;
