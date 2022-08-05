@@ -79,11 +79,15 @@ tstylesheet {
 
 //
         for ("descendant::condition|descendant::else") {
+            const "newmsc" {
+                | «$msc» 
+                call "writeConditions" with "whoAmI", "$whoAmI";
+            }
             call "nextStep"
                 with "commPartnerState", "$commPartnerState",
                 with "whoAmI", "$whoAmI",
                 with "commPartner", "$commPartner",
-                with "msc", "$msc",
+                with "msc", "$newmsc",
                 with "log", "$log",
                 with "depth", "$depth";
         }
@@ -266,5 +270,21 @@ value "$newlog"
             | }
         }
     } //function lastStep
+
+
+    function "writeConditions" {
+        param "whoAmI";
+        for ("ancestor-or-self::condition|ancestor-or-self::else") {
+            const "name" {
+                choose {
+                    when "@name" 
+                        value "@name";
+                    otherwise
+                        > not «preceding-sibling::condition/@name»
+                }
+            }
+                | «$whoAmI» abox «$whoAmI» [label="«$name»"];
+        }
+    }
 } //tstylesheet
 
