@@ -6,67 +6,86 @@ tstylesheet {
 
     template "/protocol" {
     const "whoAmI", "'a'";
-    const "commPartner", "'b'";
+    const "secondDevice", "'b'";
+    const "thirdDevice", "'c'";
 
 // This does need a third device in the chart.
 // CannotDecrypt at Grouped now leads to GG->GG situation, but 
 // should in the future also initiate a SGG->GGG situation.
-//    apply "/protocol/fsm[1]"
-//        with "whoAmI", "$whoAmI",
-//        with "commPartner", "$commPartner",
-//        with "ownState", "'Grouped'",
-//        with "commPartnerState", "'Sole'",
-//        with "depth", "0",
-//        with "message", "'CannotDecrypt'";
-
     apply "/protocol/fsm[1]"
         with "whoAmI", "$whoAmI",
-        with "commPartner", "$commPartner",
-        with "ownState", "'Sole'",
-        with "commPartnerState", "'Sole'",
+        with "secondDevice", "$secondDevice",
+        with "thirdDevice", "$thirdDevice",
+        with "ownState", "'Grouped'",
+        with "secondDeviceState", "'Grouped'",
+        with "thirdDeviceState", "'Sole'",
         with "depth", "0",
         with "message", "'CannotDecrypt'";
 
-// This does need a third device in the chart (SGG->GGG)
+// This is handled by gen_msc2.ysl2 because the third device is 
+// all but needed for this one.
 //    apply "/protocol/fsm[1]"
 //        with "whoAmI", "$whoAmI",
-//        with "commPartner", "$commPartner",
+//        with "secondDevice", "$secondDevice",
+//        with "thirdDevice", "$thirdDevice",
 //        with "ownState", "'Sole'",
-//        with "commPartnerState", "'Grouped'",
-//        with "depth", "2",
+//        with "secondDeviceState", "'Sole'",
+//        with "thirdDeviceState", "'Sole'",
+//        with "depth", "0",
 //        with "message", "'CannotDecrypt'";
 
+// This does need a third device in the chart (SGG->GGG)
     apply "/protocol/fsm[1]"
         with "whoAmI", "$whoAmI",
-        with "commPartner", "$commPartner",
-        with "ownState", "'Grouped'",
-        with "commPartnerState", "'Grouped'",
-        with "depth", "3",
+        with "secondDevice", "$secondDevice",
+        with "thirdDevice", "$thirdDevice",
+        with "ownState", "'Sole'",
+        with "secondDeviceState", "'Grouped'",
+        with "thirdDeviceState", "'Grouped'",
+        with "depth", "2",
         with "message", "'CannotDecrypt'";
 
-    apply "/protocol/fsm[1]"
-        with "whoAmI", "$whoAmI",
-        with "commPartner", "$commPartner",
-        with "ownState", "'Grouped'",
-        with "commPartnerState", "'Grouped'",
-        with "depth", "4",
-        with "message", "'KeyGen'";
-
-// This needs a third device in the chart: GGG->SGG
+// The third device is not really needed for those two, so
+// we'll leave it for gen_msc2.ysl2 to deal with.
 //    apply "/protocol/fsm[1]"
 //        with "whoAmI", "$whoAmI",
-//        with "commPartner", "$commPartner",
+//        with "secondDevice", "$secondDevice",
+//        with "thirdDevice", "$thirdDevice",
 //        with "ownState", "'Grouped'",
-//        with "commPartnerState", "'Grouped'",
-//        with "depth", "0",
-//        with "message", "'LeaveDeviceGroup'";
+//        with "secondDeviceState", "'Grouped'",
+//        with "thirdDeviceState", "'Grouped'",
+//        with "depth", "3",
+//        with "message", "'CannotDecrypt'";
+//
+//    apply "/protocol/fsm[1]"
+//        with "whoAmI", "$whoAmI",
+//        with "secondDevice", "$secondDevice",
+//        with "thirdDevice", "$thirdDevice",
+//        with "ownState", "'Grouped'",
+//        with "secondDeviceState", "'Grouped'",
+//        with "thirdDeviceState", "'Grouped'",
+//        with "depth", "4",
+//        with "message", "'KeyGen'";
+
+// This needs a third device in the chart: GGG->SGG
+    apply "/protocol/fsm[1]"
+        with "whoAmI", "$whoAmI",
+        with "secondDevice", "$secondDevice",
+        with "thirdDevice", "$thirdDevice",
+        with "ownState", "'Grouped'",
+        with "secondDeviceState", "'Grouped'",
+        with "thirdDeviceState", "'Grouped'",
+        with "depth", "0",
+        with "message", "'LeaveDeviceGroup'";
     }
 
     template "/protocol/fsm[1]" {
         param "ownState";
-        param "commPartnerState";
+        param "secondDeviceState";
+        param "thirdDeviceState";
         param "whoAmI";
-        param "commPartner";
+        param "secondDevice";
+        param "thirdDevice";
         param "message";
         param "depth";
 
@@ -74,28 +93,33 @@ tstylesheet {
         const "msc"
             ||
               # The entities
-              u [label="User"], a [label="1st Device"], b [label="2nd Device"];
+              u [label="User"], a [label="1st Device"], b [label="2nd Device"], c [label="3rd Device"];
            
               # Small gap before the boxes
               |||;
            
               # Next two on same line due to ','
               «$whoAmI» box «$whoAmI» [label="«$ownState»"],
-              «$commPartner» box «$commPartner» [label="«$commPartnerState»"];
+              «$secondDevice» box «$secondDevice» [label="«$secondDeviceState»"];
+              «$thirdDevice» box «$thirdDevice» [label="«$thirdDeviceState»"];
               u -> «$whoAmI» [label="«$message»"];
             ||
             apply "//state[@name=$ownState]/event[@name=$message]", 1
-                    with "commPartnerState", "$commPartnerState",
+                    with "secondDeviceState", "$secondDeviceState",
+                    with "thirdDeviceState", "$thirdDeviceState",
                     with "whoAmI", "$whoAmI",
-                    with "commPartner", "$commPartner",
+                    with "secondDevice", "$secondDevice",
+                    with "thirdDevice", "$thirdDevice",
                     with "depth", "$depth",
                     with "msc", "$msc";
     } //template
 
     template "protocol/fsm[1]/*/event" {
-        param "commPartnerState";
+        param "secondDeviceState";
+        param "thirdDeviceState";
         param "whoAmI";
-        param "commPartner";
+        param "secondDevice";
+        param "thirdDevice";
         param "msc";
         param "log";
         param "depth";
@@ -108,18 +132,40 @@ tstylesheet {
                 call "writeConditions" with "whoAmI", "$whoAmI";
             }
             call "nextStep"
-                with "commPartnerState", "$commPartnerState",
+                with "secondDeviceState", "$secondDeviceState",
+                with "thirdDeviceState", "$thirdDeviceState",
                 with "whoAmI", "$whoAmI",
-                with "commPartner", "$commPartner",
+                with "secondDevice", "$secondDevice",
+                with "thirdDevice", "$thirdDevice",
+                with "msc", "$newmsc",
+                with "log", "$log",
+                with "depth", "$depth";
+            call "nextStep"
+                with "thirdDeviceState", "$secondDeviceState",
+                with "secondDeviceState", "$thirdDeviceState",
+                with "whoAmI", "$whoAmI",
+                with "secondDevice", "$secondDevice",
+                with "thirdDevice", "$thirdDevice",
                 with "msc", "$newmsc",
                 with "log", "$log",
                 with "depth", "$depth";
         }
         // Some messages and transitions aren't conditional
         call "nextStep"
-            with "commPartnerState", "$commPartnerState",
+            with "secondDeviceState", "$secondDeviceState",
+            with "thirdDeviceState", "$thirdDeviceState",
             with "whoAmI", "$whoAmI",
-            with "commPartner", "$commPartner",
+            with "secondDevice", "$secondDevice",
+            with "thirdDevice", "$thirdDevice",
+            with "msc", "$msc",
+            with "log", "$log",
+            with "depth", "$depth";
+        call "nextStep"
+            with "thirdDeviceState", "$secondDeviceState",
+            with "secondDeviceState", "$thirdDeviceState",
+            with "whoAmI", "$whoAmI",
+            with "secondDevice", "$secondDevice",
+            with "thirdDevice", "$thirdDevice",
             with "msc", "$msc",
             with "log", "$log",
             with "depth", "$depth";
@@ -127,9 +173,11 @@ tstylesheet {
 
     // This is a function, which means it gets called with the previous event or a condition therein.
     function "nextStep" {
-        param "commPartnerState";
+        param "secondDeviceState";
+        param "thirdDeviceState";
         param "whoAmI";
-        param "commPartner";
+        param "secondDevice";
+        param "thirdDevice";
         param "msc";
         param "depth";
         param "log";
@@ -151,21 +199,21 @@ tstylesheet {
         // The ground condition for the recursion is still ugly, but it's doing it's job.
         // I'd like to get rid of that depth stuff and find a better condition for a stop
         // for sequences without transitions.
-        const "stopCondition", "(((ancestor::state/@timeout='off' and not($target)) or //state[@name=$target]/@timeout='off') and //state[@name=$commPartnerState]/@timeout='off' and $depth>$mindepth) or $depth>$maxdepth or ($commPartnerState='End' and $target='End')";
-//and //state[@name=$commPartnerState]/@timeout='off'
+        const "stopCondition", "(((ancestor::state/@timeout='off' and not($target)) or //state[@name=$target]/@timeout='off') and //state[@name=$secondDeviceState]/@timeout='off' and //state[@name=$thirdDeviceState]/@timeout='off' and $depth>$mindepth) or $depth>$maxdepth or ($secondDeviceState='End' and $thirdDeviceState='End' and $target='End')";
 
         // amend the log
         const "newlog" {
          value "$log";
          | ----------------------------------------------------------------------------------
          | «$whoAmI»: at «$ownState» on «$event» if «$condition» send «$message» go «$target» 
-         | «$commPartner»: «$commPartnerState»
-         | stop «//state[@name=$ownState]/@timeout» and  «//state[@name=$commPartnerState]/@timeout» and «$depth»>«$mindepth»
+         | «$secondDevice»: «$secondDeviceState»
+         | «$thirdDevice»: «$thirdDeviceState»
+         | stop «//state[@name=$ownState]/@timeout» and  «//state[@name=$secondDeviceState]/@timeout» and «//state[@name=$thirdDeviceState]/@timeout» and «$depth»>«$mindepth»
          | stop «$stopCondition»
         };
         // Here we prepare a search string for loop detection
         const "search" {
-            | «$whoAmI» -> «$commPartner» [label="«$message»"];
+            | «$whoAmI» -> «$secondDevice» [label="«$message»"];
         };
         choose {
             // First check for abort condition(s)
@@ -182,8 +230,10 @@ tstylesheet {
                     with "target", "$target",
                     with "whoAmI", "$whoAmI",
                     with "ownState", "$ownState",
-                    with "commPartnerState", "$commPartnerState",
-                    with "commPartner", "$commPartner",
+                    with "secondDeviceState", "$secondDeviceState",
+                    with "thirdDeviceState", "$thirdDeviceState",
+                    with "secondDevice", "$secondDevice",
+                    with "thirdDevice", "$thirdDevice",
                     with "msc", "$msc",
                     with "depth", "$depth";
             }
@@ -193,16 +243,19 @@ tstylesheet {
                 const "newmsc" {
                     value "$msc";
                     |   «$eventString»
-                    |   «$whoAmI» -> «$commPartner» [label="«$message»"];
+                    |   «$whoAmI» -> «$secondDevice» [label="«$message»"];
+                    |   «$whoAmI» -> «$thirdDevice» [label="«$message»"];
                 };
                 const "nextlog" {
                     value "$newlog";
                     |  b «$depth» 
                 };
-                apply "/protocol/fsm[1]/state[@name=$commPartnerState]/event[@name=$message]"
-                    with "commPartnerState", "$ownState",
-                    with "whoAmI", "$commPartner",
-                    with "commPartner", "$whoAmI",
+                apply "/protocol/fsm[1]/state[@name=$secondDeviceState]/event[@name=$message]"
+                    with "secondDeviceState", "$ownState",
+                    with "thirdDeviceState", "$thirdDeviceState",
+                    with "whoAmI", "$secondDevice",
+                    with "secondDevice", "$whoAmI",
+                    with "thirdDevice", "$thirdDevice",
                     with "depth", "$depth+1",
                     with "log", "$nextlog",
                     with "msc", "$newmsc";
@@ -217,16 +270,30 @@ tstylesheet {
                const "newmsc" {
                     value "$msc";
                     |   «$eventString»
-                    |   «$whoAmI» -> «$commPartner» [label="«$message»"];
+                    |   «$whoAmI» -> «$secondDevice» [label="«$message»"];
+                    |   «$whoAmI» -> «$thirdDevice» [label="«$message»"];
                     |   «$whoAmI» box «$whoAmI»     [label="«$target»"];
                 };
-                apply "/protocol/fsm[1]/state[@name=$commPartnerState]/event[@name=$message]"
-                    with "commPartnerState", "$target",
-                    with "whoAmI", "$commPartner",
-                    with "commPartner", "$whoAmI",
+                apply "/protocol/fsm[1]/state[@name=$secondDeviceState]/event[@name=$message]"
+                    with "secondDeviceState", "$target",
+                    with "thirdDeviceState", "$thirdDeviceState",
+                    with "whoAmI", "$secondDevice",
+                    with "secondDevice", "$whoAmI",
+                    with "thirdDevice", "$thirdDevice",
                     with "depth", "$depth+1",
                     with "log", "$nextlog",
                     with "msc", "$newmsc";
+                 // Use every possible user input (will be ignored if none is accepted)
+                 call "nexternal"
+                    with "secondDeviceState", "$secondDeviceState",
+                    with "thirdDeviceState", "$thirdDeviceState",
+                    with "whoAmI", "$whoAmI",
+                    with "secondDevice", "$secondDevice",
+                    with "thirdDevice", "$thirdDevice",
+                    with "depth", "$depth+1",
+                    with "log", "$nextlog",
+                    with "msc", "$newmsc",
+                    with "target", "$target";
             }
             // In case we send nothing but change our state and wait for user input
             when "not($message) and $target and not($target=$ownState)" {
@@ -240,18 +307,16 @@ tstylesheet {
                     |   «$whoAmI» box «$whoAmI» [label="«$target»"];
                 };
                 // Use every possible user input
-                for "/protocol/fsm[1]/state[@name=$target]/event" {
-                    const "name", "@name";
-                    if "boolean(/protocol/fsm[1]/external[@name=$name])" {
-                        apply "."
-                            with "commPartnerState", "$commPartnerState",
-                            with "whoAmI", "$whoAmI",
-                            with "commPartner", "$commPartner",
-                            with "depth", "$depth+1",
-                            with "log", "$nextlog",
-                            with "msc", "$newmsc";
-                    }
-                }
+                 call "nexternal"
+                    with "secondDeviceState", "$secondDeviceState",
+                    with "thirdDeviceState", "$thirdDeviceState",
+                    with "whoAmI", "$whoAmI",
+                    with "secondDevice", "$secondDevice",
+                    with "thirdDevice", "$thirdDevice",
+                    with "depth", "$depth+1",
+                    with "log", "$nextlog",
+                    with "msc", "$newmsc",
+                    with "target", "$target";
             }
             // This should never be entered
             otherwise {
@@ -267,8 +332,10 @@ tstylesheet {
         param "target";
         param "whoAmI";
         param "ownState";
-        param "commPartnerState";
-        param "commPartner";
+        param "secondDeviceState";
+        param "thirdDeviceState";
+        param "secondDevice";
+        param "thirdDevice";
         param "msc";
         param "depth";
         // We generate a hopefully unique filename from random numbers
@@ -293,7 +360,8 @@ tstylesheet {
             | msc {
             |    «$msc»
             value "$stateString";
-            |    «$commPartner» box «$commPartner» [label="«$commPartnerState»"];
+            |    «$secondDevice» box «$secondDevice» [label="«$secondDeviceState»"];
+            |    «$thirdDevice» box «$thirdDevice» [label="«$thirdDeviceState»"];
             | }
         }
     } //function lastStep
@@ -313,6 +381,33 @@ tstylesheet {
                 }
             }
                 | «$whoAmI» abox «$whoAmI» [label="«$name»"];
+        }
+    }
+
+    // Because we need this more than once:
+    function "nexternal" {
+        param "secondDeviceState";
+        param "thirdDeviceState";
+        param "whoAmI";
+        param "secondDevice";
+        param "thirdDevice";
+        param "depth";
+        param "log";
+        param "msc";
+        param "target";
+        for "/protocol/fsm[1]/state[@name=$target]/event" {
+            const "name", "@name";
+            if "boolean(/protocol/fsm[1]/external[@name=$name])" {
+                apply "."
+                    with "secondDeviceState", "$secondDeviceState",
+                    with "thirdDeviceState", "$thirdDeviceState",
+                    with "whoAmI", "$whoAmI",
+                    with "secondDevice", "$secondDevice",
+                    with "thirdDevice", "$thirdDevice",
+                    with "depth", "$depth+1",
+                    with "log", "$log",
+                    with "msc", "$msc";
+            }
         }
     }
 } //tstylesheet
