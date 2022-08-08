@@ -74,7 +74,7 @@ tstylesheet {
         const "msc"
             ||
               # The entities
-              ua [label="User"], a [label="1st Device"], b [label="2nd Device"], ub [label="User"];
+              u [label="User"], a [label="1st Device"], b [label="2nd Device"];
            
               # Small gap before the boxes
               |||;
@@ -82,7 +82,7 @@ tstylesheet {
               # Next two on same line due to ','
               «$whoAmI» box «$whoAmI» [label="«$ownState»"],
               «$commPartner» box «$commPartner» [label="«$commPartnerState»"];
-              u«$whoAmI» -> «$whoAmI» [label="«$message»"];
+              u -> «$whoAmI» [label="«$message»"];
             ||
             apply "//state[@name=$ownState]/event[@name=$message]", 1
                     with "commPartnerState", "$commPartnerState",
@@ -137,7 +137,7 @@ tstylesheet {
         const "ownState", "ancestor::state/@name";
         // Include user actions in MSC
         const "eventString" if "/protocol/fsm[1]/external[@name=$event]" {
-           | u«$whoAmI» -> «$whoAmI» [label="«$event»"];
+           | u -> «$whoAmI» [label="«$event»"];
                 };
         // This is the message we're going to send
         // Yes, we only take the first one for now. 
