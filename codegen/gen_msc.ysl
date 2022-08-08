@@ -27,7 +27,7 @@ tstylesheet {
         with "depth", "0",
         with "message", "'CannotDecrypt'";
 
-// Does this need a third device in the chart? (SGG->GGG)
+// This does need a third device in the chart (SGG->GGG)
 //    apply "/protocol/fsm[1]"
 //        with "whoAmI", "$whoAmI",
 //        with "commPartner", "$commPartner",
