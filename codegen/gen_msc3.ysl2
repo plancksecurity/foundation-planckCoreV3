@@ -100,7 +100,7 @@ tstylesheet {
            
               # Next two on same line due to ','
               «$whoAmI» box «$whoAmI» [label="«$ownState»"],
-              «$secondDevice» box «$secondDevice» [label="«$secondDeviceState»"];
+              «$secondDevice» box «$secondDevice» [label="«$secondDeviceState»"],
               «$thirdDevice» box «$thirdDevice» [label="«$thirdDeviceState»"];
               u -> «$whoAmI» [label="«$message»"];
             ||
@@ -140,29 +140,11 @@ tstylesheet {
                 with "msc", "$newmsc",
                 with "log", "$log",
                 with "depth", "$depth";
-            call "nextStep"
-                with "thirdDeviceState", "$secondDeviceState",
-                with "secondDeviceState", "$thirdDeviceState",
-                with "whoAmI", "$whoAmI",
-                with "secondDevice", "$secondDevice",
-                with "thirdDevice", "$thirdDevice",
-                with "msc", "$newmsc",
-                with "log", "$log",
-                with "depth", "$depth";
         }
         // Some messages and transitions aren't conditional
         call "nextStep"
             with "secondDeviceState", "$secondDeviceState",
             with "thirdDeviceState", "$thirdDeviceState",
-            with "whoAmI", "$whoAmI",
-            with "secondDevice", "$secondDevice",
-            with "thirdDevice", "$thirdDevice",
-            with "msc", "$msc",
-            with "log", "$log",
-            with "depth", "$depth";
-        call "nextStep"
-            with "thirdDeviceState", "$secondDeviceState",
-            with "secondDeviceState", "$thirdDeviceState",
             with "whoAmI", "$whoAmI",
             with "secondDevice", "$secondDevice",
             with "thirdDevice", "$thirdDevice",
@@ -259,6 +241,15 @@ tstylesheet {
                     with "depth", "$depth+1",
                     with "log", "$nextlog",
                     with "msc", "$newmsc";
+                apply "/protocol/fsm[1]/state[@name=$secondDeviceState]/event[@name=$message]"
+                    with "thirdDeviceState", "$ownState",
+                    with "secondDeviceState", "$thirdDeviceState",
+                    with "whoAmI", "$secondDevice",
+                    with "thirdDevice", "$whoAmI",
+                    with "secondDevice", "$thirdDevice",
+                    with "depth", "$depth+1",
+                    with "log", "$nextlog",
+                    with "msc", "$newmsc";
             }
             // In case we send a message and change our own state
             // Previously existence of $eventString was mandatory, not sure if it should
@@ -283,6 +274,15 @@ tstylesheet {
                     with "depth", "$depth+1",
                     with "log", "$nextlog",
                     with "msc", "$newmsc";
+                apply "/protocol/fsm[1]/state[@name=$secondDeviceState]/event[@name=$message]"
+                    with "thirdDeviceState", "$target",
+                    with "secondDeviceState", "$thirdDeviceState",
+                    with "whoAmI", "$secondDevice",
+                    with "thirdDevice", "$whoAmI",
+                    with "secondDevice", "$thirdDevice",
+                    with "depth", "$depth+1",
+                    with "log", "$nextlog",
+                    with "msc", "$newmsc";
                  // Use every possible user input (will be ignored if none is accepted)
                  call "nexternal"
                     with "secondDeviceState", "$secondDeviceState",
@@ -290,6 +290,16 @@ tstylesheet {
                     with "whoAmI", "$whoAmI",
                     with "secondDevice", "$secondDevice",
                     with "thirdDevice", "$thirdDevice",
+                    with "depth", "$depth+1",
+                    with "log", "$nextlog",
+                    with "msc", "$newmsc",
+                    with "target", "$target";
+                 call "nexternal"
+                    with "thirdDeviceState", "$secondDeviceState",
+                    with "secondDeviceState", "$thirdDeviceState",
+                    with "whoAmI", "$whoAmI",
+                    with "thirdDevice", "$secondDevice",
+                    with "secondDevice", "$thirdDevice",
                     with "depth", "$depth+1",
                     with "log", "$nextlog",
                     with "msc", "$newmsc",
@@ -360,7 +370,7 @@ tstylesheet {
             | msc {
             |    «$msc»
             value "$stateString";
-            |    «$secondDevice» box «$secondDevice» [label="«$secondDeviceState»"];
+            |    «$secondDevice» box «$secondDevice» [label="«$secondDeviceState»"],
             |    «$thirdDevice» box «$thirdDevice» [label="«$thirdDeviceState»"];
             | }
         }

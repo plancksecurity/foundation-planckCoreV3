@@ -332,7 +332,7 @@ protocol Sync 1 {
                 if sameResponse {
                     do storeNegotiation;
                     do useThisKey;
-                    send GroupHandshake; // Fixme: This will only be understood by other Grouped devices, not by a Sole device trying to join the group.
+                    send GroupHandshake; 
                     go HandshakingGrouped;
                 }
                 else {
