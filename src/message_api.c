@@ -2016,9 +2016,16 @@ static PEP_STATUS _update_state_for_ident_list(
                     }
                 }    
             }
-            if (!(*has_pEp_user) && !EMPTYSTR(_il->ident->user_id))
+            if (!(*has_pEp_user) && !EMPTYSTR(_il->ident->user_id)) {
                 is_pEp_user(session, _il->ident, has_pEp_user);
-            
+                // positron: begin
+                /* When using a media key for encrypting a message every user
+                   involved is a pEp user. */
+                if (media_key_or_NULL != NULL)
+                    * has_pEp_user = true;
+                // positron: end
+                
+            }
             if (!suppress_update_for_bcc && from_ident) {
                 status = bind_own_ident_with_contact_ident(session, from_ident, _il->ident);
                 if (status != PEP_STATUS_OK) {
