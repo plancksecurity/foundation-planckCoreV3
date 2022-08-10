@@ -2293,22 +2293,22 @@ fprintf(stderr, "OK-A 1000 %s\n", msg ? msg->shortmsg : NULL);
         if ((enc_format != PEP_enc_inline) && (enc_format != PEP_enc_inline_EA) && (!force_v_1) && ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp)) {
 fprintf(stderr, "OK-A 2000 %s\n", msg ? msg->shortmsg : NULL);
             wrap_type = ((flags & PEP_encrypt_flag_key_reset_only) ? PEP_message_key_reset : PEP_message_default);
-            //???????????
-            // Special case for when using media keys: replace the subject,
-            // unless subject-replacement is disabled.
-            //
-            // Why this does not happen otherwise is complicated and might be
-            // related to my hack which calls this function twice on the same
-            // message when using a media key.
-            if (media_key_or_NULL != NULL
-                && ! session->unencrypted_subject) {
-fprintf(stderr, "OK-A 2100 %s\n", msg ? msg->shortmsg : NULL);                
-                status = replace_subject(src);
-                if (status == PEP_OUT_OF_MEMORY)
-                    goto enomem;
-fprintf(stderr, "OK-A 2200 %s\n", msg ? msg->shortmsg : NULL);
-            }
-            //????????
+/*             //??????????? */
+/*             // Special case for when using media keys: replace the subject, */
+/*             // unless subject-replacement is disabled. */
+/*             // */
+/*             // Why this does not happen otherwise is complicated and might be */
+/*             // related to my hack which calls this function twice on the same */
+/*             // message when using a media key. */
+/*             if (media_key_or_NULL != NULL */
+/*                 && ! session->unencrypted_subject) { */
+/* fprintf(stderr, "OK-A 2100 %s\n", msg ? msg->shortmsg : NULL);                 */
+/*                 status = replace_subject(src); */
+/*                 if (status == PEP_OUT_OF_MEMORY) */
+/*                     goto enomem; */
+/* fprintf(stderr, "OK-A 2200 %s\n", msg ? msg->shortmsg : NULL); */
+/*             } */
+/*             //???????? */
             _src = wrap_message_as_attachment(NULL, src, wrap_type, false, extra, max_version_major, max_version_minor);
             if (!_src)
                 goto pEp_error;
