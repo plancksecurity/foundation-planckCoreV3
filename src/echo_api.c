@@ -251,7 +251,7 @@ static PEP_STATUS send_ping_or_pong(PEP_SESSION session,
     if (! (session && session->messageToSend && from && to))
         return PEP_ILLEGAL_VALUE;
 
-    if (! session->enable_echo_protocol) {
+    /*if (! session->enable_echo_protocol)*/ {
         fprintf(stderr,  "* Echo protocol disabled: not sending a %s to %s <%s>\n", (ping ? "Ping" : "Pong"), (to->username ? to->username : "<no username>"), (to->address ? to->address : "<no address>"));
         return PEP_STATUS_OK;
     }
