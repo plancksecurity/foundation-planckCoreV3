@@ -2567,6 +2567,7 @@ PEP_STATUS pEp_finalize_sql_stmts(PEP_SESSION session) {
     sqlite3_finalize(session->get_userid_alias_default);
     sqlite3_finalize(session->add_userid_alias);
     sqlite3_finalize(session->replace_identities_fpr);
+    sqlite3_finalize(session->set_default_identity_fpr);
     sqlite3_finalize(session->get_default_identity_fpr);
     sqlite3_finalize(session->remove_fpr_as_identity_default);
     sqlite3_finalize(session->remove_fpr_as_user_default);
