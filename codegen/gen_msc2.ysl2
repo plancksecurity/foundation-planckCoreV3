@@ -144,6 +144,23 @@ tstylesheet {
         // If there are multiple messages sent at the same time, 
         // they are sent to different receipients, which we don't parse atm anyways.
         const "message", "child::send[1]/@name";
+        const "do-before" {
+            for "child::send[1]/preceding-sibling::action" {
+                | «$whoAmI» rbox «$whoAmI» [label="«@name»"];
+            }
+        }
+        const "do-after" {
+            for "child::send[1]/following-sibling::action" {
+                | «$whoAmI» rbox «$whoAmI» [label="«@name»"];
+            }
+        }
+        const "do-without" {
+            if "count(child::send)=0" {
+                for "child::action" {
+                    | «$whoAmI» rbox «$whoAmI» [label="«@name»"];
+                }
+            }
+        }
         // This is here only for the log:
         const "condition", "ancestor-or-self::condition/@name";
         // There can only be one transition, but we don't rely on uniqueness and take the first
@@ -193,7 +210,9 @@ tstylesheet {
                 const "newmsc" {
                     value "$msc";
                     |   «$eventString»
+                    value "$do-before";
                     |   «$whoAmI» -> «$commPartner» [label="«$message»"];
+                    value "$do-after";
                 };
                 const "nextlog" {
                     value "$newlog";
@@ -217,7 +236,9 @@ tstylesheet {
                const "newmsc" {
                     value "$msc";
                     |   «$eventString»
+                    value "$do-before";
                     |   «$whoAmI» -> «$commPartner» [label="«$message»"];
+                    value "$do-after";
                     |   «$whoAmI» box «$whoAmI»     [label="«$target»"];
                 };
                 apply "/protocol/fsm[1]/state[@name=$commPartnerState]/event[@name=$message]"
@@ -246,6 +267,7 @@ tstylesheet {
                 const "newmsc" {
                     value "$msc";
                     |   «$eventString»
+                    value "$do-without";
                     |   «$whoAmI» box «$whoAmI» [label="«$target»"];
                 };
                 // Use every possible user input
