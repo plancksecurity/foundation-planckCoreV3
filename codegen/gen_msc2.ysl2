@@ -196,6 +196,10 @@ tstylesheet {
             }
             // Then for ground conditions
             when "$stopCondition" {
+                const "newmsc" {
+                    value "$msc";
+                    value "$do-without";
+                }
                 call "lastStep"
                     with "newlog", "$newlog",
                     with "target", "$target",
@@ -203,7 +207,7 @@ tstylesheet {
                     with "ownState", "$ownState",
                     with "commPartnerState", "$commPartnerState",
                     with "commPartner", "$commPartner",
-                    with "msc", "$msc",
+                    with "msc", "$newmsc",
                     with "depth", "$depth";
             }
             // Then choose the path to proceed
