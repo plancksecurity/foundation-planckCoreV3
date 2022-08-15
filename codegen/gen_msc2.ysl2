@@ -116,13 +116,15 @@ tstylesheet {
                 with "depth", "$depth";
         }
         // Some messages and transitions aren't conditional
-        call "nextStep"
-            with "commPartnerState", "$commPartnerState",
-            with "whoAmI", "$whoAmI",
-            with "commPartner", "$commPartner",
-            with "msc", "$msc",
-            with "log", "$log",
-            with "depth", "$depth";
+        if "count(descendant::condition)=0" {
+            call "nextStep"
+                with "commPartnerState", "$commPartnerState",
+                with "whoAmI", "$whoAmI",
+                with "commPartner", "$commPartner",
+                with "msc", "$msc",
+                with "log", "$log",
+                with "depth", "$depth";
+        }
     } //template event
 
     // This is a function, which means it gets called with the previous event or a condition therein.
@@ -168,9 +170,8 @@ tstylesheet {
         // The ground condition for the recursion is still ugly, but it's doing it's job.
         // I'd like to get rid of that depth stuff and find a better condition for a stop
         // for sequences without transitions.
-        const "stopCondition", "(((ancestor::state/@timeout='off' and not($target)) or //state[@name=$target]/@timeout='off') and not($message) and //state[@name=$commPartnerState]/@timeout='off' and $depth>$mindepth) or ($commPartnerState='End' and $target='End')";
+        const "stopCondition", "(((ancestor::state/@timeout='off' and not($target)) or //state[@name=$target]/@timeout='off') and not($message) and //state[@name=$commPartnerState]/@timeout='off') or ($commPartnerState='End' and $target='End')";
 //and //state[@name=$commPartnerState]/@timeout='off'
-// or $depth>$maxdepth
 
         // amend the log
         const "newlog" {
@@ -189,7 +190,7 @@ tstylesheet {
             // First check for abort condition(s)
             // Now we only check for loops.
             // In that case we print the log and go to another recursion path.
-            when "contains($msc, $search)" {
+            when "contains($msc, $search) or (not($message) and not($target) and not(child::action))" {
                 value "$newlog"
                 | loop detected «$depth»
             }
