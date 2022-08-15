@@ -168,8 +168,9 @@ tstylesheet {
         // The ground condition for the recursion is still ugly, but it's doing it's job.
         // I'd like to get rid of that depth stuff and find a better condition for a stop
         // for sequences without transitions.
-        const "stopCondition", "(((ancestor::state/@timeout='off' and not($target)) or //state[@name=$target]/@timeout='off') and //state[@name=$commPartnerState]/@timeout='off' and $depth>$mindepth) or $depth>$maxdepth or ($commPartnerState='End' and $target='End')";
+        const "stopCondition", "(((ancestor::state/@timeout='off' and not($target)) or //state[@name=$target]/@timeout='off') and not($message) and //state[@name=$commPartnerState]/@timeout='off' and $depth>$mindepth) or ($commPartnerState='End' and $target='End')";
 //and //state[@name=$commPartnerState]/@timeout='off'
+// or $depth>$maxdepth
 
         // amend the log
         const "newlog" {
