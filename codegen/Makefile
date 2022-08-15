@@ -46,7 +46,7 @@ svg: $(patsubst %.dot,%.svg,$(wildcard *.dot))
 %.svg: %.dot
 	dot -Tsvg $< -o $@ > /dev/null
 
-msc: $(fsm) gen_msc.ysl
+msc: $(fsm) gen_msc.ysl2
 	rm -rf msc
 	mkdir msc
 	$(YML2_PROC) -y gen_msc.ysl sync.fsm -o /dev/null

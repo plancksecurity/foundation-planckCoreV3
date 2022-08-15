@@ -140,8 +140,9 @@ tstylesheet {
                 with "msc", "$newmsc",
                 with "log", "$log",
                 with "depth", "$depth";
-        }
+        } // for condition
         // Some messages and transitions aren't conditional
+        value "$secondDeviceState";
         call "nextStep"
             with "secondDeviceState", "$secondDeviceState",
             with "thirdDeviceState", "$thirdDeviceState",
@@ -169,11 +170,6 @@ tstylesheet {
         const "eventString" if "/protocol/fsm[1]/external[@name=$event]" {
            | u -> «$whoAmI» [label="«$event»"];
                 };
-        // This is the message we're going to send
-        // Yes, we only take the first one for now. 
-        // If there are multiple messages sent at the same time, 
-        // they are sent to different receipients, which we don't parse atm anyways.
-        const "message", "child::send[1]/@name";
         // This is here only for the log:
         const "condition", "ancestor-or-self::condition/@name";
         // There can only be one transition, but we don't rely on uniqueness and take the first
@@ -182,158 +178,180 @@ tstylesheet {
         // I'd like to get rid of that depth stuff and find a better condition for a stop
         // for sequences without transitions.
         const "stopCondition", "(((ancestor::state/@timeout='off' and not($target)) or //state[@name=$target]/@timeout='off') and //state[@name=$secondDeviceState]/@timeout='off' and //state[@name=$thirdDeviceState]/@timeout='off' and $depth>$mindepth) or $depth>$maxdepth or ($secondDeviceState='End' and $thirdDeviceState='End' and $target='End')";
+        // TODO: This is the most important thing to do
+        // This is the message we're going to send
+        // they are sent to different receipients
+        // and for the three-way thing we need to do that
+        if "boolean(child::send)" {
+            | «count(child::send)» message(s)
+            for "child::send" {
+                const "message", "@name";
+                // Here we prepare a search string for loop detection
+                const "search" {
+                    | «$whoAmI» -> «$secondDevice» [label="«$message»"];
+                };
+                choose {
+                    // First check for abort condition(s)
+                    // Now we only check for loops.
+                    // In that case we print the log and go to another recursion path.
+                    when "contains($msc, $search)" {
+                        value "$newlog"
+                        | loop detected «$depth»
+                    }
+                    // Then for ground conditions
+                    when "$stopCondition" {
+                        call "lastStep"
+//                            with "newlog", "$newlog",
+                            with "target", "$target",
+                            with "whoAmI", "$whoAmI",
+                            with "ownState", "$ownState",
+                            with "secondDeviceState", "$secondDeviceState",
+                            with "thirdDeviceState", "$thirdDeviceState",
+                            with "secondDevice", "$secondDevice",
+                            with "thirdDevice", "$thirdDevice",
+                            with "msc", "$msc",
+                            with "depth", "$depth";
+                    }
+                    // Then choose the path to proceed
+                    // In case we send a message but don't change our own state
+                    when "$message and ($target=$ownState or not($target))" {
+                        const "newmsc" {
+                            value "$msc";
+                            |   «$eventString»
+                            |   «$whoAmI» -> «$secondDevice» [label="«$message»"];
+                            |   «$whoAmI» -> «$thirdDevice» [label="«$message»"];
+                        };
+                        const "nextlog" {
+//                            value "$newlog";
+                            |  b «$depth» 
+                        };
+                        value "$secondDeviceState";
+                        value "$nextlog";
+                        apply "/protocol/fsm[1]/state[@name=$secondDeviceState]/event[@name=$message]"
+                            with "secondDeviceState", "$ownState",
+                            with "thirdDeviceState", "$thirdDeviceState",
+                            with "whoAmI", "$secondDevice",
+                            with "secondDevice", "$whoAmI",
+                            with "thirdDevice", "$thirdDevice",
+                            with "depth", "$depth+1",
+                            with "log", "$nextlog",
+                            with "msc", "$newmsc";
+                        apply "/protocol/fsm[1]/state[@name=$secondDeviceState]/event[@name=$message]"
+                            with "thirdDeviceState", "$ownState",
+                            with "secondDeviceState", "$thirdDeviceState",
+                            with "whoAmI", "$secondDevice",
+                            with "thirdDevice", "$whoAmI",
+                            with "secondDevice", "$thirdDevice",
+                            with "depth", "$depth+1",
+                            with "log", "$nextlog",
+                            with "msc", "$newmsc";
+                    }
+                    // In case we send a message and change our own state
+                    // Previously existence of $eventString was mandatory, not sure if it should
+                    when "$message and $target and not($target=$ownState)" {
+                        const "nextlog" {
+//                            value "$newlog";
+                            |  c «$depth» , «$eventString»
+                        };
+                    const "newmsc" {
+                            value "$msc";
+                            |   «$eventString»
+                            |   «$whoAmI» -> «$secondDevice» [label="«$message»"];
+                            |   «$whoAmI» -> «$thirdDevice» [label="«$message»"];
+                            |   «$whoAmI» box «$whoAmI»     [label="«$target»"];
+                        };
+                        apply "/protocol/fsm[1]/state[@name=$secondDeviceState]/event[@name=$message]"
+                            with "secondDeviceState", "$target",
+                            with "thirdDeviceState", "$thirdDeviceState",
+                            with "whoAmI", "$secondDevice",
+                            with "secondDevice", "$whoAmI",
+                            with "thirdDevice", "$thirdDevice",
+                            with "depth", "$depth+1",
+                            with "log", "$nextlog",
+                            with "msc", "$newmsc";
+                        apply "/protocol/fsm[1]/state[@name=$secondDeviceState]/event[@name=$message]"
+                            with "thirdDeviceState", "$target",
+                            with "secondDeviceState", "$thirdDeviceState",
+                            with "whoAmI", "$secondDevice",
+                            with "thirdDevice", "$whoAmI",
+                            with "secondDevice", "$thirdDevice",
+                            with "depth", "$depth+1",
+                            with "log", "$nextlog",
+                            with "msc", "$newmsc";
+                        // Use every possible user input (will be ignored if none is accepted)
+                        call "nexternal"
+                            with "secondDeviceState", "$secondDeviceState",
+                            with "thirdDeviceState", "$thirdDeviceState",
+                            with "whoAmI", "$whoAmI",
+                            with "secondDevice", "$secondDevice",
+                            with "thirdDevice", "$thirdDevice",
+                            with "depth", "$depth+1",
+                            with "log", "$nextlog",
+                            with "msc", "$newmsc",
+                            with "target", "$target";
+                        call "nexternal"
+                            with "thirdDeviceState", "$secondDeviceState",
+                            with "secondDeviceState", "$thirdDeviceState",
+                            with "whoAmI", "$whoAmI",
+                            with "thirdDevice", "$secondDevice",
+                            with "secondDevice", "$thirdDevice",
+                            with "depth", "$depth+1",
+                            with "log", "$nextlog",
+                            with "msc", "$newmsc",
+                            with "target", "$target";
+                    }
+                    // This should never be entered
+                    otherwise {
+//                        value "$newlog"
+                        | o «$depth»
+                    }
+                } //choose
+            }
+        }
+        if "not(boolean(child::send))" {
+            | No message
+            choose {
+                // In case we send nothing but change our state and wait for user input
+                when "not($message) and $target and not($target=$ownState)" {
+                    const "nextlog" {
+//                        value "$newlog";
+                        |  d «$depth», «$eventString»
+                    };
+                    const "newmsc" {
+                        value "$msc";
+                        |   «$eventString»
+                        |   «$whoAmI» box «$whoAmI» [label="«$target»"];
+                    };
+                    // Use every possible user input
+                    call "nexternal"
+                        with "secondDeviceState", "$secondDeviceState",
+                        with "thirdDeviceState", "$thirdDeviceState",
+                        with "whoAmI", "$whoAmI",
+                        with "secondDevice", "$secondDevice",
+                        with "thirdDevice", "$thirdDevice",
+                        with "depth", "$depth+1",
+                        with "log", "$nextlog",
+                        with "msc", "$newmsc",
+                        with "target", "$target";
+                }
+                // This should never be entered
+                otherwise {
+ //                   value "$newlog"
+                    | o «$depth»
+                }
+            } //choose
+        }
 
-        // amend the log
-        const "newlog" {
-         value "$log";
-         | ----------------------------------------------------------------------------------
-         | «$whoAmI»: at «$ownState» on «$event» if «$condition» send «$message» go «$target» 
-         | «$secondDevice»: «$secondDeviceState»
-         | «$thirdDevice»: «$thirdDeviceState»
-         | stop «//state[@name=$ownState]/@timeout» and  «//state[@name=$secondDeviceState]/@timeout» and «//state[@name=$thirdDeviceState]/@timeout» and «$depth»>«$mindepth»
-         | stop «$stopCondition»
-        };
-        // Here we prepare a search string for loop detection
-        const "search" {
-            | «$whoAmI» -> «$secondDevice» [label="«$message»"];
-        };
-        choose {
-            // First check for abort condition(s)
-            // Now we only check for loops.
-            // In that case we print the log and go to another recursion path.
-            when "contains($msc, $search)" {
-                value "$newlog"
-                | loop detected «$depth»
-            }
-            // Then for ground conditions
-            when "$stopCondition" {
-                call "lastStep"
-                    with "newlog", "$newlog",
-                    with "target", "$target",
-                    with "whoAmI", "$whoAmI",
-                    with "ownState", "$ownState",
-                    with "secondDeviceState", "$secondDeviceState",
-                    with "thirdDeviceState", "$thirdDeviceState",
-                    with "secondDevice", "$secondDevice",
-                    with "thirdDevice", "$thirdDevice",
-                    with "msc", "$msc",
-                    with "depth", "$depth";
-            }
-            // Then choose the path to proceed
-            // In case we send a message but don't change our own state
-            when "$message and ($target=$ownState or not($target))" {
-                const "newmsc" {
-                    value "$msc";
-                    |   «$eventString»
-                    |   «$whoAmI» -> «$secondDevice» [label="«$message»"];
-                    |   «$whoAmI» -> «$thirdDevice» [label="«$message»"];
-                };
-                const "nextlog" {
-                    value "$newlog";
-                    |  b «$depth» 
-                };
-                apply "/protocol/fsm[1]/state[@name=$secondDeviceState]/event[@name=$message]"
-                    with "secondDeviceState", "$ownState",
-                    with "thirdDeviceState", "$thirdDeviceState",
-                    with "whoAmI", "$secondDevice",
-                    with "secondDevice", "$whoAmI",
-                    with "thirdDevice", "$thirdDevice",
-                    with "depth", "$depth+1",
-                    with "log", "$nextlog",
-                    with "msc", "$newmsc";
-                apply "/protocol/fsm[1]/state[@name=$secondDeviceState]/event[@name=$message]"
-                    with "thirdDeviceState", "$ownState",
-                    with "secondDeviceState", "$thirdDeviceState",
-                    with "whoAmI", "$secondDevice",
-                    with "thirdDevice", "$whoAmI",
-                    with "secondDevice", "$thirdDevice",
-                    with "depth", "$depth+1",
-                    with "log", "$nextlog",
-                    with "msc", "$newmsc";
-            }
-            // In case we send a message and change our own state
-            // Previously existence of $eventString was mandatory, not sure if it should
-            when "$message and $target and not($target=$ownState)" {
-                const "nextlog" {
-                    value "$newlog";
-                    |  c «$depth» , «$eventString»
-                };
-               const "newmsc" {
-                    value "$msc";
-                    |   «$eventString»
-                    |   «$whoAmI» -> «$secondDevice» [label="«$message»"];
-                    |   «$whoAmI» -> «$thirdDevice» [label="«$message»"];
-                    |   «$whoAmI» box «$whoAmI»     [label="«$target»"];
-                };
-                apply "/protocol/fsm[1]/state[@name=$secondDeviceState]/event[@name=$message]"
-                    with "secondDeviceState", "$target",
-                    with "thirdDeviceState", "$thirdDeviceState",
-                    with "whoAmI", "$secondDevice",
-                    with "secondDevice", "$whoAmI",
-                    with "thirdDevice", "$thirdDevice",
-                    with "depth", "$depth+1",
-                    with "log", "$nextlog",
-                    with "msc", "$newmsc";
-                apply "/protocol/fsm[1]/state[@name=$secondDeviceState]/event[@name=$message]"
-                    with "thirdDeviceState", "$target",
-                    with "secondDeviceState", "$thirdDeviceState",
-                    with "whoAmI", "$secondDevice",
-                    with "thirdDevice", "$whoAmI",
-                    with "secondDevice", "$thirdDevice",
-                    with "depth", "$depth+1",
-                    with "log", "$nextlog",
-                    with "msc", "$newmsc";
-                 // Use every possible user input (will be ignored if none is accepted)
-                 call "nexternal"
-                    with "secondDeviceState", "$secondDeviceState",
-                    with "thirdDeviceState", "$thirdDeviceState",
-                    with "whoAmI", "$whoAmI",
-                    with "secondDevice", "$secondDevice",
-                    with "thirdDevice", "$thirdDevice",
-                    with "depth", "$depth+1",
-                    with "log", "$nextlog",
-                    with "msc", "$newmsc",
-                    with "target", "$target";
-                 call "nexternal"
-                    with "thirdDeviceState", "$secondDeviceState",
-                    with "secondDeviceState", "$thirdDeviceState",
-                    with "whoAmI", "$whoAmI",
-                    with "thirdDevice", "$secondDevice",
-                    with "secondDevice", "$thirdDevice",
-                    with "depth", "$depth+1",
-                    with "log", "$nextlog",
-                    with "msc", "$newmsc",
-                    with "target", "$target";
-            }
-            // In case we send nothing but change our state and wait for user input
-            when "not($message) and $target and not($target=$ownState)" {
-                const "nextlog" {
-                    value "$newlog";
-                    |  d «$depth», «$eventString»
-                };
-                const "newmsc" {
-                    value "$msc";
-                    |   «$eventString»
-                    |   «$whoAmI» box «$whoAmI» [label="«$target»"];
-                };
-                // Use every possible user input
-                 call "nexternal"
-                    with "secondDeviceState", "$secondDeviceState",
-                    with "thirdDeviceState", "$thirdDeviceState",
-                    with "whoAmI", "$whoAmI",
-                    with "secondDevice", "$secondDevice",
-                    with "thirdDevice", "$thirdDevice",
-                    with "depth", "$depth+1",
-                    with "log", "$nextlog",
-                    with "msc", "$newmsc",
-                    with "target", "$target";
-            }
-            // This should never be entered
-            otherwise {
-                value "$newlog"
-                | o «$depth»
-            }
-        } //choose
+//        // amend the log
+//        const "newlog" {
+//         value "$log";
+//         | ----------------------------------------------------------------------------------
+//         | «$whoAmI»: at «$ownState» on «$event» if «$condition» send «$message» go «$target» 
+//         | «$secondDevice»: «$secondDeviceState»
+//         | «$thirdDevice»: «$thirdDeviceState»
+//         | stop «//state[@name=$ownState]/@timeout» and  «//state[@name=$secondDeviceState]/@timeout» and «//state[@name=$thirdDeviceState]/@timeout» and «$depth»>«$mindepth»
+//         | stop «$stopCondition»
+//        };
     } //function nextStep
 
 
