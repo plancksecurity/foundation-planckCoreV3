@@ -146,6 +146,9 @@ tstylesheet {
         // If there are multiple messages sent at the same time, 
         // they are sent to different receipients, which we don't parse atm anyways.
         const "message", "child::send[1]/@name";
+        // There can only be one transition, but we don't rely on uniqueness and take the first
+        const "target", "child::transition[1]/@target";   
+        // before, after and without point to $message
         const "do-before" {
             for "child::send[1]/preceding-sibling::action" {
                 | «$whoAmI» rbox «$whoAmI» [label="«@name»"];
@@ -163,10 +166,15 @@ tstylesheet {
                 }
             }
         }
+        const "do-init" {
+            if "$target" {
+                for "/protocol/fsm[1]/state[@name=$target]/event[@name='Init']/action" {
+                    | «$whoAmI» rbox «$whoAmI» [label="«@name»"];
+                }
+            }
+        }
         // This is here only for the log:
         const "condition", "ancestor-or-self::condition/@name";
-        // There can only be one transition, but we don't rely on uniqueness and take the first
-        const "target", "child::transition[1]/@target";   
         // The ground condition for the recursion is still ugly, but it's doing it's job.
         // I'd like to get rid of that depth stuff and find a better condition for a stop
         // for sequences without transitions.
@@ -246,6 +254,7 @@ tstylesheet {
                     |   «$whoAmI» -> «$commPartner» [label="«$message»"];
                     value "$do-after";
                     |   «$whoAmI» box «$whoAmI»     [label="«$target»"];
+                    value "$do-init";
                 };
                 apply "/protocol/fsm[1]/state[@name=$commPartnerState]/event[@name=$message]"
                     with "commPartnerState", "$target",
@@ -275,6 +284,7 @@ tstylesheet {
                     |   «$eventString»
                     value "$do-without";
                     |   «$whoAmI» box «$whoAmI» [label="«$target»"];
+                    value "$do-init";
                 };
                 // Use every possible user input
                  call "nexternal"
