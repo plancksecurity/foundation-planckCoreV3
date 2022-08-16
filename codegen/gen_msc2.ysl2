@@ -71,19 +71,25 @@ tstylesheet {
         param "depth";
 
         // Prepare MSC header
-        const "msc"
-            ||
-              # The entities
-              u [label="User"], a [label="1st Device"], b [label="2nd Device"];
-           
-              # Small gap before the boxes
-              |||;
-           
-              # Next two on same line due to ','
-              «$whoAmI» box «$whoAmI» [label="«$ownState»"],
-              «$commPartner» box «$commPartner» [label="«$commPartnerState»"];
-              u -> «$whoAmI» [label="«$message»"];
-            ||
+        const "msc" {
+                ||
+                # The entities
+                u [label="User"], a [label="1st Device"], b [label="2nd Device"];
+            
+                # Small gap before the boxes
+                |||;
+            
+                # Next two on same line due to ','
+                «$whoAmI» box «$whoAmI» [label="«$ownState»"],
+                «$commPartner» box «$commPartner» [label="«$commPartnerState»"];
+                ||
+                // Because 2-way MSC's always start with the same state for sync
+                for "/protocol/fsm[1]/state[@name=$ownState]/event[@name='Init']/action" {
+                    |  «$whoAmI» rbox «$whoAmI» [label="«@name»"],
+                    |  «$commPartner» rbox «$commPartner» [label="«@name»"];
+                }
+                |  u -> «$whoAmI» [label="«$message»"];
+            }
             apply "//state[@name=$ownState]/event[@name=$message]", 1
                     with "commPartnerState", "$commPartnerState",
                     with "whoAmI", "$whoAmI",
