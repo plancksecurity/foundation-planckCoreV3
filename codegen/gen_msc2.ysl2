@@ -62,6 +62,12 @@ tstylesheet {
 //        with "message", "'LeaveDeviceGroup'";
     }
 
+    template "action" {
+        param "whoAmI";
+        param "eol", "';'";
+        |  «$whoAmI» rbox «$whoAmI» [label="«@name»"]«$eol»
+    }
+
     template "/protocol/fsm[1]" {
         param "ownState";
         param "commPartnerState";
@@ -85,8 +91,8 @@ tstylesheet {
                 ||
                 // Because 2-way MSC's always start with the same state for sync
                 for "/protocol/fsm[1]/state[@name=$ownState]/event[@name='Init']/action" {
-                    |  «$whoAmI» rbox «$whoAmI» [label="«@name»"],
-                    |  «$commPartner» rbox «$commPartner» [label="«@name»"];
+                    apply "." with "whoAmI", "$commPartner", with "eol", "','";
+                    apply "." with "whoAmI", "$whoAmI";
                 }
                 |  u -> «$whoAmI» [label="«$message»"];
             }
@@ -156,27 +162,19 @@ tstylesheet {
         const "target", "child::transition[1]/@target";   
         // before, after and without point to $message
         const "do-before" {
-            for "child::send[1]/preceding-sibling::action" {
-                | «$whoAmI» rbox «$whoAmI» [label="«@name»"];
-            }
+            apply "child::send[1]/preceding-sibling::action" with "whoAmI", "$whoAmI";
         }
         const "do-after" {
-            for "child::send[1]/following-sibling::action" {
-                | «$whoAmI» rbox «$whoAmI» [label="«@name»"];
-            }
+            apply "child::send[1]/following-sibling::action" with "whoAmI", "$whoAmI";
         }
         const "do-without" {
             if "count(child::send)=0" {
-                for "child::action" {
-                    | «$whoAmI» rbox «$whoAmI» [label="«@name»"];
-                }
+                apply "child::action" with "whoAmI", "$whoAmI";
             }
         }
         const "do-init" {
             if "$target" {
-                for "/protocol/fsm[1]/state[@name=$target]/event[@name='Init']/action" {
-                    | «$whoAmI» rbox «$whoAmI» [label="«@name»"];
-                }
+                apply "/protocol/fsm[1]/state[@name=$target]/event[@name='Init']/action" with "whoAmI", "$whoAmI";
             }
         }
         // This is here only for the log:
@@ -185,7 +183,6 @@ tstylesheet {
         // I'd like to get rid of that depth stuff and find a better condition for a stop
         // for sequences without transitions.
         const "stopCondition", "(((ancestor::state/@timeout='off' and not($target)) or //state[@name=$target]/@timeout='off') and not($message) and //state[@name=$commPartnerState]/@timeout='off') or ($commPartnerState='End' and $target='End')";
-//and //state[@name=$commPartnerState]/@timeout='off'
 
         // amend the log
         const "newlog" {
