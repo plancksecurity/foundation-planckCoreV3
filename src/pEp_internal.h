@@ -287,6 +287,8 @@ struct _pEpSession {
     bool enable_echo_protocol;
     bool enable_echo_in_outgoing_message_rating_preview;
 
+    stringpair_list_t *media_key_map; /* See media_key.h for an explanation. */
+
     bool passive_mode;
     bool unencrypted_subject;
     bool service_log;

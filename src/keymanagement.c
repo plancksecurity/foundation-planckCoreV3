@@ -12,6 +12,7 @@
 #include "pEp_internal.h"
 #include "keymanagement.h"
 #include "KeySync_fsm.h"
+#include "media_key.h"
 
 #include "blacklist.h"
 
@@ -1133,6 +1134,9 @@ PEP_STATUS _update_identity(
         identity->comm_type < PEP_ct_strong_but_unconfirmed)
         if (session->examine_identity)
             session->examine_identity(identity, session->examine_management);
+
+    // Update with media key information.
+    status = amend_identity_with_media_key_information(session, identity);
 
     goto pEp_free;
 

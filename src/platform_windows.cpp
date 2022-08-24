@@ -16,6 +16,7 @@
 #include <string.h>
 #include <string>
 #include <stdexcept>
+#include <shlwapi.h> /* For PathMatchSpecExA . */
 #include "platform_windows.h"
 #include "dynamic_api.h"
 #include <fcntl.h>
@@ -202,6 +203,19 @@ const char *_per_user_directory(void)
 
     path = utf8_string(wstring(tPath));
     return path.c_str();
+}
+
+int pEp_fnmatch(const char *pattern, const char *string) {
+    assert(pattern && string);
+    if (! (pattern && string))
+        abort();
+
+    /* Notice that the argument order is reversed compared to fnmatch on
+       Unix. */
+    return ((PathMatchSpecExA(string, pattern, PMSF_NORMAL)
+            == S_OK)
+            ? 0
+            : 1);
 }
 
 extern "C" {

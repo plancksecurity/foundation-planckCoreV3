@@ -16,6 +16,7 @@
 #include "sync_codec.h"
 #include "distribution_codec.h"
 #include "echo_api.h"
+#include "media_key.h"
 
 #include "status_to_string.h" // FIXME: remove
 
@@ -1961,8 +1962,8 @@ static PEP_STATUS _update_state_for_ident_list(
         unsigned int* max_version_minor,
         bool* has_pEp_user,
         bool* dest_keys_found,
-        bool suppress_update_for_bcc
-    )
+        bool suppress_update_for_bcc,
+        const char* media_key_or_NULL)
 {
     if (!ident_list || !max_version_major || !max_version_minor
                     || !has_pEp_user || !dest_keys_found
@@ -2017,7 +2018,6 @@ static PEP_STATUS _update_state_for_ident_list(
             }
             if (!(*has_pEp_user) && !EMPTYSTR(_il->ident->user_id))
                 is_pEp_user(session, _il->ident, has_pEp_user);
-            
             if (!suppress_update_for_bcc && from_ident) {
                 status = bind_own_ident_with_contact_ident(session, from_ident, _il->ident);
                 if (status != PEP_STATUS_OK) {
@@ -2041,7 +2041,7 @@ static PEP_STATUS _update_state_for_ident_list(
             *max_comm_type = _get_comm_type(session, *max_comm_type,
                                             _il->ident);
         }
-        else {
+        else if (media_key_or_NULL == NULL) {
             *dest_keys_found = false;
 // ?           status = PEP_KEY_NOT_FOUND;
         }
@@ -2051,14 +2051,14 @@ pEp_done:
     return status;
 }
 
-DYNAMIC_API PEP_STATUS encrypt_message(
+static PEP_STATUS encrypt_message_possibly_with_media_key(
         PEP_SESSION session,
         message *src,
         stringlist_t * extra,
         message **dst,
         PEP_enc_format enc_format,
-        PEP_encrypt_flags_t flags
-    )
+        PEP_encrypt_flags_t flags,
+        const char *media_key_or_NULL)
 {
     PEP_STATUS status = PEP_STATUS_OK;
     message * msg = NULL;
@@ -2120,6 +2120,10 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         if (_k == NULL)
             goto enomem;
     }
+    if (media_key_or_NULL != NULL) {
+        if (stringlist_add(_k, media_key_or_NULL) == NULL)
+            goto enomem;
+    }
 
     bool dest_keys_found = true;
     bool has_pEp_user = false;
@@ -2155,7 +2159,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                                 &max_version_minor,
                                 &has_pEp_user,
                                 &dest_keys_found,
-                                true);
+                                true,
+                                media_key_or_NULL);
                                         
         switch (_status) {
             case PEP_PASSPHRASE_REQUIRED:
@@ -2185,7 +2190,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                             &max_version_minor,
                             &has_pEp_user,
                             &dest_keys_found,
-                            false
+                            false,
+                            media_key_or_NULL
                         );
             switch (_status) {
                 case PEP_PASSPHRASE_REQUIRED:
@@ -2208,7 +2214,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                             &max_version_minor,
                             &has_pEp_user,
                             &dest_keys_found,
-                            false
+                            false,
+                            media_key_or_NULL
                         );
             switch (_status) {
                 case PEP_PASSPHRASE_REQUIRED:
@@ -2248,6 +2255,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         stringlist_length(keys)  == 0 ||
         _rating(max_comm_type) < PEP_rating_reliable)
     {
+        //fprintf(stderr, "encrypt_message_possibly_with_media_key: about to make the message unencrypted!\n");
         free_stringlist(keys);
         if ((has_pEp_user || !session->passive_mode) && 
             !(flags & PEP_encrypt_flag_force_no_attached_key)) {
@@ -2266,22 +2274,6 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         message_wrap_type wrap_type = PEP_message_unwrapped;
         if ((enc_format != PEP_enc_inline) && (enc_format != PEP_enc_inline_EA) && (!force_v_1) && ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp)) {
             wrap_type = ((flags & PEP_encrypt_flag_key_reset_only) ? PEP_message_key_reset : PEP_message_default);
-            //???????????
-            // Special case for when using media keys: replace the subject,
-            // unless subject-replacement is disabled.
-            //
-            // Why this does not happen otherwise is complicated and might be
-            // related to my hack which calls this function twice on the same
-            // message when using a media key.
-            if (media_key_or_NULL != NULL
-                && ! session->unencrypted_subject) {
-fprintf(stderr, "OK-A 2100 %s\n", msg ? msg->shortmsg : NULL);                
-                status = replace_subject(src);
-                if (status == PEP_OUT_OF_MEMORY)
-                    goto enomem;
-fprintf(stderr, "OK-A 2200 %s\n", msg ? msg->shortmsg : NULL);
-            }
-            //????????
             _src = wrap_message_as_attachment(NULL, src, wrap_type, false, extra, max_version_major, max_version_minor);
             if (!_src)
                 goto pEp_error;
@@ -2349,6 +2341,30 @@ fprintf(stderr, "OK-A 2200 %s\n", msg ? msg->shortmsg : NULL);
             if (msg->id == NULL)
                 goto enomem;
         }
+//////////////////
+    // Special case for media keys: hide the subject in the outer message in
+    // case we succeeded encrypting.
+    if (media_key_or_NULL != NULL
+        && ! session->unencrypted_subject
+        && status == PEP_STATUS_OK) {
+        assert (msg);
+fprintf (stderr, "Z: replacing subject: BEFORE:  %s\n", msg->shortmsg);
+        char *old_subject = msg->shortmsg;
+#ifdef WIN32
+        msg->shortmsg = strdup("pEp");
+#else
+        const unsigned char pEpstr[] = PEP_SUBJ_STRING;
+        msg->shortmsg = strdup((char*)pEpstr);
+#endif
+        if (msg->shortmsg == NULL && ! EMPTYSTR(old_subject)) {
+            msg->shortmsg = old_subject;
+            return PEP_OUT_OF_MEMORY;
+        }
+        else
+            free(old_subject);
+fprintf (stderr, "Z: replacing subject: AFTER:   %s\n", msg->shortmsg);
+    }
+//////////////////
     }
 
     *dst = msg;
@@ -2360,7 +2376,7 @@ fprintf(stderr, "OK-A 2200 %s\n", msg ? msg->shortmsg : NULL);
     
     // Do similar for extra key list...
     _cleanup_src(src, added_key_to_real_src);
-        
+
     return status;
 
 enomem:
@@ -2375,6 +2391,68 @@ pEp_error:
     _cleanup_src(src, added_key_to_real_src);
 
     return status;
+}
+
+DYNAMIC_API PEP_STATUS encrypt_message(
+        PEP_SESSION session,
+        message *src,
+        stringlist_t * extra,
+        message **dst,
+        PEP_enc_format enc_format,
+        PEP_encrypt_flags_t flags
+    )
+{
+    /* First try encrypting the message ignoring the media key. */
+    PEP_STATUS status
+        = encrypt_message_possibly_with_media_key(session, src,
+                                                  extra, dst, enc_format,
+                                                  flags,
+                                                  NULL);
+
+    /* Check how it went.  There are three possibilities... */
+    switch(status) {
+    case PEP_STATUS_OK:
+        /* We managed to actually encrypt, without need for a media key.  Good.
+           There is nothing more we need to do. */
+        return status;
+
+    case PEP_UNENCRYPTED: {
+        /* We could not encrypt without using the media key, but maybe we can if
+           we try again using the media key as well. */
+        char *media_key_fpr;
+        PEP_STATUS media_key_status
+            = media_key_for_outgoing_message(session, src, &media_key_fpr);
+        if (media_key_status != PEP_STATUS_OK)
+            return status;
+        else {
+            assert(media_key_fpr != NULL);
+            fprintf(stderr, "encrypt_message: using the media key %s\n", media_key_fpr);
+            add_opt_field(src, "X-pEp-use-media-key", media_key_fpr); // probably only useful for debugging.
+            add_opt_field(src, "X-pEp-use-media-key-inner", media_key_fpr); // probably only useful for debugging.
+            status = encrypt_message_possibly_with_media_key(
+               session, src,
+               extra,
+               dst,
+               media_key_enc_format,
+               flags | PEP_encrypt_flag_force_encryption,
+               media_key_fpr);
+            // fprintf(stderr, "AFTER THE SECOND ATTEMPT: enc_format is %i\n", (int)((*dst)?((*dst)->enc_format):src->enc_format));
+            if (status == PEP_STATUS_OK) {
+                if (* dst != NULL) {
+                    add_opt_field(* dst, "X-pEp-use-media-key", media_key_fpr);
+                    add_opt_field(* dst, "X-pEp-use-media-key-outer", media_key_fpr);
+                }
+            }
+            free(media_key_fpr);
+            return status;
+        }
+    }
+
+    default:
+        /* The first encryption attempt failed with an actual error,
+           independently from the media key. */
+        return status;
+    }
 }
 
 DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
@@ -5082,12 +5160,25 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
     message *msg = *dst ? *dst : src;
 
-    /* positron: I have seen this happen while modifying the mailbox
-       concurrently. */
+    /* positron, 2022-07: I have seen msg == NULL when modifying the mailbox
+       concurrently.  We should protect the engine from this condition. */
     if (msg == NULL) {
         status = PEP_ILLEGAL_VALUE;
         goto end;
     }
+
+    /* Rating special case: if we received the message encrypted by a media
+       key, change the rating. */
+    bool media_key_found;
+    PEP_STATUS media_key_status
+        = media_key_is_there_a_media_key_in(session, * keylist,
+                                            & media_key_found);
+    if (media_key_status != PEP_STATUS_OK) {
+        status = PEP_ILLEGAL_VALUE;
+        goto end;
+    }
+    if (media_key_found)
+        * rating = media_key_message_rating;
 
 //fprintf(stderr, "+ message %s \"%s\", recv_by %s, dir %s: begin...\n", msg->id, msg->shortmsg ? msg->shortmsg : "<no subject>", (msg->recv_by ? msg->recv_by->address : "NO RECV_BY"), ((msg->dir == PEP_dir_incoming) ? "incoming" : "outgoing"));
 /////// BEGIN: "react" HACK
