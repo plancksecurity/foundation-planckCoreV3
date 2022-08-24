@@ -8,6 +8,7 @@
 #include "blacklist.h"
 #include "KeySync_fsm.h"
 #include "echo_api.h"
+#include "media_key.h"
 
 #include <time.h>
 #include <stdlib.h>
@@ -2777,6 +2778,20 @@ DYNAMIC_API PEP_STATUS init(
     //       ONLY used for some randomness in generated outer message ID, which are
     //       required by the RFC to be globally unique!
     srand((unsigned int) time(NULL));
+
+#if 0
+    // import positron's testing media key.
+    const char key_data[]
+        =
+#include "media_key_example.h"
+        ;
+    import_key(_session, key_data, sizeof(key_data), NULL);
+    stringpair_list_t *media_key_map
+        = new_stringpair_list(new_stringpair("*ageinghacker.net",
+                                             "8A7E7F89493766693C03F941D35D42584008EE76"));
+    config_media_keys(_session, media_key_map);
+    free_stringpair_list(media_key_map);
+#endif
     
     return PEP_STATUS_OK;
 
