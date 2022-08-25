@@ -8,8 +8,7 @@
 #define MEDIA_KEY_H
 
 #include "pEpEngine.h"
-#include "pEp_internal.h"
-
+#include "message_api.h"
 #include "stringpair.h" // for stringpair_list_t
 
 #ifdef __cplusplus
