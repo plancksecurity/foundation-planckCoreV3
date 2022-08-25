@@ -1,7 +1,7 @@
 # 1st Party Dependencies
 ## Prefer git tags instead of SHA hashes when possible.
 # This is a sequoia version with the old-style FFI, pre-pEpEngineSequoiaBackend
-sequoia=openpgp/v1.3.1
+sequoia=openpgp/v1.7.0
 yml2=2.7.0
 
 # sqlite3 is technically an optional dependency: the engine can also be built
