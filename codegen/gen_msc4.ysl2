@@ -1,0 +1,501 @@
+include yslt.yml2
+
+tstylesheet {
+    const "maxdepth", "15";
+    const "mindepth", "4";
+
+    template "/protocol" {
+    const "whoAmI", "'a'";
+    const "groupLeader", "'b'";
+    const "thirdDevice", "'c'";
+
+// This does need a third device in the chart.
+// CannotDecrypt at Grouped now leads to GG->GG situation, but 
+// should in the future also initiate a SGG->GGG situation.
+    apply "/protocol/fsm[1]"
+        with "whoAmI", "$whoAmI",
+        with "groupLeader", "$groupLeader",
+        with "thirdDevice", "$thirdDevice",
+        with "ownState", "'Grouped'",
+        with "groupLeaderState", "'Grouped'",
+        with "thirdDeviceState", "'Sole'",
+        with "depth", "0",
+        with "message", "'CannotDecrypt'";
+
+//    apply "/protocol/fsm[1]"
+//        with "whoAmI", "$whoAmI",
+//        with "groupLeader", "$groupLeader",
+//        with "thirdDevice", "$thirdDevice",
+//        with "ownState", "'Sole'",
+//        with "groupLeaderState", "'Sole'",
+//        with "thirdDeviceState", "'Sole'",
+//        with "depth", "0",
+//        with "message", "'CannotDecrypt'";
+
+// This does need a third device in the chart (SGG->GGG)
+    apply "/protocol/fsm[1]"
+        with "whoAmI", "$whoAmI",
+        with "groupLeader", "$groupLeader",
+        with "thirdDevice", "$thirdDevice",
+        with "ownState", "'Sole'",
+        with "groupLeaderState", "'Grouped'",
+        with "thirdDeviceState", "'Grouped'",
+        with "depth", "2",
+        with "message", "'CannotDecrypt'";
+
+//    apply "/protocol/fsm[1]"
+//        with "whoAmI", "$whoAmI",
+//        with "groupLeader", "$groupLeader",
+//        with "thirdDevice", "$thirdDevice",
+//        with "ownState", "'Grouped'",
+//        with "groupLeaderState", "'Grouped'",
+//        with "thirdDeviceState", "'Grouped'",
+//        with "depth", "3",
+//        with "message", "'CannotDecrypt'";
+
+//    apply "/protocol/fsm[1]"
+//        with "whoAmI", "$whoAmI",
+//        with "groupLeader", "$groupLeader",
+//        with "thirdDevice", "$thirdDevice",
+//        with "ownState", "'Grouped'",
+//        with "groupLeaderState", "'Grouped'",
+//        with "thirdDeviceState", "'Grouped'",
+//        with "depth", "4",
+//        with "message", "'KeyGen'";
+
+// This needs a third device in the chart: GGG->SGG
+    apply "/protocol/fsm[1]"
+        with "whoAmI", "$whoAmI",
+        with "groupLeader", "$groupLeader",
+        with "thirdDevice", "$thirdDevice",
+        with "ownState", "'Grouped'",
+        with "groupLeaderState", "'Grouped'",
+        with "thirdDeviceState", "'Grouped'",
+        with "depth", "0",
+        with "message", "'LeaveDeviceGroup'";
+    }
+
+    template "action" {
+        param "whoAmI";
+        param "eol", "';'";
+        |  «$whoAmI» rbox «$whoAmI» [label="«@name»"]«$eol»
+    }
+
+    template "/protocol/fsm[1]" {
+        param "ownState";
+        param "groupLeaderState";
+        param "thirdDeviceState";
+        param "whoAmI";
+        param "groupLeader";
+        param "thirdDevice";
+        param "message";
+        param "depth";
+
+        // Prepare MSC header
+        const "msc" {
+                ||
+                # The entities
+                u [label="User"], a [label="1st Device"], b [label="2nd Device"], c [label="3rd Device"];
+            
+                # Small gap before the boxes
+                |||;
+            
+                # Next two on same line due to ','
+                «$whoAmI» box «$whoAmI» [label="«$ownState»"],
+                «$groupLeader» box «$groupLeader» [label="«$groupLeaderState»"];
+                «$thirdDevice» box «$thirdDevice» [label="«$thirdDeviceState»"];
+                ||
+                // Because 2-way MSC's always start with the same state for sync
+                for "/protocol/fsm[1]/state[@name=$ownState]/event[@name='Init']/action" {
+                    |  «$whoAmI» rbox «$whoAmI» [label="«@name»"],
+                    |  «$groupLeader» rbox «$groupLeader» [label="«@name»"];
+                    |  «$thirdDevice» rbox «$thirdDevice» [label="«@name»"];
+                }
+                |  u -> «$whoAmI» [label="«$message»"];
+            }
+            apply "//state[@name=$ownState]/event[@name=$message]", 1
+                    with "groupLeaderState", "$groupLeaderState",
+                    with "thirdDeviceState", "$thirdDeviceState",
+                    with "whoAmI", "$whoAmI",
+                    with "groupLeader", "$groupLeader",
+                    with "thirdDevice", "$thirdDevice",
+                    with "depth", "$depth",
+                    with "msc", "$msc";
+    } //template
+
+    template "protocol/fsm[1]/*/event" {
+        param "groupLeaderState";
+        param "thirdDeviceState";
+        param "whoAmI";
+        param "groupLeader";
+        param "thirdDevice";
+        param "msc";
+        param "log";
+        param "depth";
+
+        // Some messages and transitions are conditional
+        for ("descendant::condition|descendant::else") {
+            // Include conditions in MSC
+            const "newmsc" {
+                | «$msc» 
+                call "writeConditions" with "whoAmI", "$whoAmI";
+            }
+            call "nextStep"
+                with "groupLeaderState", "$groupLeaderState",
+                with "thirdDeviceState", "$thirdDeviceState",
+                with "whoAmI", "$whoAmI",
+                with "groupLeader", "$groupLeader",
+                with "thirdDevice", "$thirdDevice",
+                with "msc", "$newmsc",
+                with "log", "$log",
+                with "depth", "$depth";
+        }
+        // Some messages and transitions aren't conditional
+        if "count(descendant::condition)=0" {
+            call "nextStep"
+                with "groupLeaderState", "$groupLeaderState",
+                with "thirdDeviceState", "$thirdDeviceState",
+                with "whoAmI", "$whoAmI",
+                with "groupLeader", "$groupLeader",
+                with "thirdDevice", "$thirdDevice",
+                with "msc", "$msc",
+                with "log", "$log",
+                with "depth", "$depth";
+        }
+    } //template event
+
+    // This is a function, which means it gets called with the previous event or a condition therein.
+    function "nextStep" {
+        param "groupLeaderState";
+        param "thirdDeviceState";
+        param "whoAmI";
+        param "groupLeader";
+        param "thirdDevice";
+        param "msc";
+        param "depth";
+        param "log";
+        const "event", "ancestor-or-self::event/@name";
+        const "ownState", "ancestor::state/@name";
+        // Include user actions in MSC
+        const "eventString" if "/protocol/fsm[1]/external[@name=$event]" {
+           | u -> «$whoAmI» [label="«$event»"];
+                };
+        // This is the message we're going to send
+        // Yes, we only take the first one for now. 
+        // If there are multiple messages sent at the same time, 
+        // they are sent to different receipients, which we don't parse atm anyways.
+        const "message", "child::send[1]/@name";
+        // There can only be one transition, but we don't rely on uniqueness and take the first
+        const "target", "child::transition[1]/@target";   
+        // before, after and without point to $message
+        const "do-before" {
+            apply "child::send[1]/preceding-sibling::action" with "whoAmI", "$whoAmI";
+        }
+        const "do-after" {
+            apply "child::send[1]/following-sibling::action" with "whoAmI", "$whoAmI";
+        }
+        const "do-without" {
+            if "count(child::send)=0" {
+                apply "child::action" with "whoAmI", "$whoAmI";
+            }
+        }
+        const "do-init" {
+            if "$target" {
+                apply "/protocol/fsm[1]/state[@name=$target]/event[@name='Init']/action" with "whoAmI", "$whoAmI";
+            }
+        }
+        // This is here only for the log:
+        const "condition", "ancestor-or-self::condition/@name";
+        // The ground condition for the recursion is still ugly, but it's doing it's job.
+        // I'd like to get rid of that depth stuff and find a better condition for a stop
+        // for sequences without transitions.
+        const "stopCondition", "(((ancestor::state/@timeout='off' and not($target)) or //state[@name=$target]/@timeout='off') and not($message) and //state[@name=$groupLeaderState]/@timeout='off') or ($groupLeaderState='End' and $target='End') or $depth>$maxdepth";
+//and //state[@name=$groupLeaderState]/@timeout='off'
+//and //state[@name=$thirdDeviceState]/@timeout='off'
+
+        // amend the log
+        const "newlog" {
+         value "$log";
+         | ----------------------------------------------------------------------------------
+         | «$whoAmI»: at «$ownState» on «$event» if «$condition» send «$message» go «$target» 
+         | «$groupLeader»: «$groupLeaderState»
+         | «$thirdDevice»: «$thirdDeviceState»
+         | stop «//state[@name=$ownState]/@timeout» and  «//state[@name=$groupLeaderState]/@timeout» and «$depth»>«$mindepth»
+         | stop «$stopCondition»
+        };
+        // Here we prepare a search string for loop detection
+        const "search" {
+            | «$whoAmI» -> «$groupLeader» [label="«$message»"];
+        };
+        choose {
+            // First check for abort condition(s)
+            // Now we only check for loops.
+            // In that case we print the log and go to another recursion path.
+            when "contains($msc, $search) or (not($message) and not($target) and not(child::action))" {
+                value "$newlog"
+                | loop detected «$depth»
+            }
+            // Then for ground conditions
+            when "$stopCondition" {
+                const "newmsc" {
+                    value "$msc";
+                    value "$do-without";
+                }
+                call "lastStep"
+                    with "newlog", "$newlog",
+                    with "target", "$target",
+                    with "whoAmI", "$whoAmI",
+                    with "ownState", "$ownState",
+                    with "groupLeaderState", "$groupLeaderState",
+                    with "thirdDeviceState", "$thirdDeviceState",
+                    with "groupLeader", "$groupLeader",
+                    with "thirdDevice", "$thirdDevice",
+                    with "msc", "$newmsc",
+                    with "depth", "$depth";
+            }
+            // Then choose the path to proceed
+            // In case we send a message but don't change our own state
+            when "$message and ($target=$ownState or not($target))" {
+                const "newmsc" {
+                    value "$msc";
+                    |   «$eventString»
+                    value "$do-before";
+                    |   «$whoAmI» -> «$groupLeader» [label="«$message»"];
+                    |   «$whoAmI» -> «$thirdDevice» [label="«$message»"];
+                    value "$do-after";
+                    if "/protocol/fsm[1]/state[@name=$thirdDeviceState]/event[@name=$message]" {
+                        call "thirdDeviceEvent" 
+                            with "event", "$message",
+                            with "firstDevice", "$whoAmI",
+                            with "firstDeviceState", "$ownState",
+                            with "groupLeaderState", "$groupLeaderState",
+                            with "thirdDeviceState", "$thirdDeviceState",
+                            with "groupLeader", "$groupLeader",
+                            with "thirdDevice", "$thirdDevice";
+                    }
+                };
+                const "nextlog" {
+                    value "$newlog";
+                    |  b «$depth» 
+                };
+                apply "/protocol/fsm[1]/state[@name=$groupLeaderState]/event[@name=$message]"
+                    with "groupLeaderState", "$ownState",
+                    with "thirdDeviceState", "$thirdDeviceState",
+                    with "whoAmI", "$groupLeader",
+                    with "groupLeader", "$whoAmI",
+                    with "thirdDevice", "$thirdDevice",
+                    with "depth", "$depth+1",
+                    with "log", "$nextlog",
+                    with "msc", "$newmsc";
+            }
+            // In case we send a message and change our own state
+            // Previously existence of $eventString was mandatory, not sure if it should
+            when "$message and $target and not($target=$ownState)" {
+                const "nextlog" {
+                    value "$newlog";
+                    |  c «$depth» , «$eventString»
+                };
+               const "newmsc" {
+                    value "$msc";
+                    |   «$eventString»
+                    value "$do-before";
+                    |   «$whoAmI» -> «$groupLeader» [label="«$message»"];
+                    |   «$whoAmI» -> «$thirdDevice» [label="«$message»"];
+                    value "$do-after";
+                    |   «$whoAmI» box «$whoAmI»     [label="«$target»"];
+                    value "$do-init";
+                    if "/protocol/fsm[1]/state[@name=$thirdDeviceState]/event[@name=$message]" {
+                        call "thirdDeviceEvent" 
+                            with "event", "$message",
+                            with "firstDevice", "$whoAmI",
+                            with "firstDeviceState", "$ownState",
+                            with "groupLeaderState", "$groupLeaderState",
+                            with "thirdDeviceState", "$thirdDeviceState",
+                            with "groupLeader", "$groupLeader",
+                            with "thirdDevice", "$thirdDevice";
+                    }
+                };
+                apply "/protocol/fsm[1]/state[@name=$groupLeaderState]/event[@name=$message]"
+                    with "groupLeaderState", "$target",
+                    with "thirdDeviceState", "$thirdDeviceState",
+                    with "whoAmI", "$groupLeader",
+                    with "groupLeader", "$whoAmI",
+                    with "thirdDevice", "$thirdDevice",
+                    with "depth", "$depth+1",
+                    with "log", "$nextlog",
+                    with "msc", "$newmsc";
+                 // Use every possible user input (will be ignored if none is accepted)
+                 call "nexternal"
+                    with "groupLeaderState", "$groupLeaderState",
+                    with "thirdDeviceState", "$thirdDeviceState",
+                    with "whoAmI", "$whoAmI",
+                    with "groupLeader", "$groupLeader",
+                    with "thirdDevice", "$thirdDevice",
+                    with "depth", "$depth+1",
+                    with "log", "$nextlog",
+                    with "msc", "$newmsc",
+                    with "target", "$target";
+            }
+            // In case we send nothing but change our state and wait for user input
+            when "not($message) and $target and not($target=$ownState)" {
+                const "nextlog" {
+                    value "$newlog";
+                    |  d «$depth», «$eventString»
+                };
+                const "newmsc" {
+                    value "$msc";
+                    |   «$eventString»
+                    value "$do-without";
+                    |   «$whoAmI» box «$whoAmI» [label="«$target»"];
+                    value "$do-init";
+                };
+                // Use every possible user input
+                 call "nexternal"
+                    with "groupLeaderState", "$groupLeaderState",
+                    with "thirdDeviceState", "$thirdDeviceState",
+                    with "whoAmI", "$whoAmI",
+                    with "groupLeader", "$groupLeader",
+                    with "thirdDevice", "$thirdDevice",
+                    with "depth", "$depth+1",
+                    with "log", "$nextlog",
+                    with "msc", "$newmsc",
+                    with "target", "$target";
+            }
+            // This should never be entered
+            otherwise {
+                value "$newlog"
+                | o «$depth»
+            }
+        } //choose
+    } //function nextStep
+
+    function "thirdDeviceEvent" {
+        param "event";
+        param "firstDevice";
+        param "firstDeviceState";
+        param "groupLeaderState";
+        param "thirdDeviceState";
+        param "groupLeader";
+        param "thirdDevice";
+        for "/protocol/fsm[1]/state[@name=$thirdDeviceState]/event[@name=$event]" {
+            for ("descendant::condition|descendant::else") {
+        | «$firstDevice» box «$thirdDevice» [label="Hey!"];
+                call "writeConditions" with "whoAmI", "$thirdDevice";
+                // There can only be one transition, but we don't rely on uniqueness and take the first
+                const "target", "child::transition[1]/@target";
+                // before, after and without point to $message
+                const "do-before" {
+                    apply "child::send[1]/preceding-sibling::action" with "whoAmI", "$thirdDevice";
+                }
+                const "do-after" {
+                    apply "child::send[1]/following-sibling::action" with "whoAmI", "$thirdDevice";
+                }
+                const "do-without" {
+                    if "count(child::send)=0" {
+                        apply "child::action" with "whoAmI", "$thirdDevice";
+                    }
+                }
+                const "do-init" {
+                    if "$target" {
+                        apply "/protocol/fsm[1]/state[@name=$target]/event[@name='Init']/action" with "whoAmI", "$thirdDevice";
+                    }
+                }
+                value "$do-before";
+                value "$do-without";
+                for "child::send" {
+                    |   «$thirdDevice» -> «$groupLeader»,
+                    |   «$thirdDevice» -> «$firstDevice» [label="«@name»"];
+                }
+                value "$do-after";
+                if "$target" |    «$thirdDevice» box «$thirdDevice» [label="«$target»"];
+                value "$do-init";
+            }
+        }
+    }
+
+
+    function "lastStep" {
+        param "newlog";
+        param "target";
+        param "whoAmI";
+        param "ownState";
+        param "groupLeaderState";
+        param "thirdDeviceState";
+        param "groupLeader";
+        param "thirdDevice";
+        param "msc";
+        param "depth";
+        // We generate a hopefully unique filename from random numbers
+        const "secid", "math:random()";
+        const "id", "concat(generate-id(),substring($secid,3,6))";
+        // For the footer of the MSC
+        const "stateString" choose {
+            when ("$target and not($target=$ownState)") {
+            |    «$whoAmI» box «$whoAmI» [label="«$target»"],
+            }
+            otherwise {
+            |    «$whoAmI» box «$whoAmI» [label="«$ownState»"],
+            }
+        };
+        // We write the log
+        | ===========================================================================
+        | doc «$depth», «$id»:
+        value "$newlog";
+        | STOP
+        // and write the finished MSC into a text file
+        document "msc/{$id}.msc" method="text" {
+            | msc {
+            |    «$msc»
+            value "$stateString";
+            |    «$groupLeader» box «$groupLeader» [label="«$groupLeaderState»"];
+            |    «$thirdDevice» box «$thirdDevice» [label="«$thirdDeviceState»"];
+            | }
+        }
+    } //function lastStep
+
+    // A helper function to write conditional clauses into the MSC
+    function "writeConditions" {
+        param "whoAmI";
+        for ("ancestor-or-self::condition|ancestor-or-self::else") {
+            const "name" {
+                choose {
+                    // are we in the if clause
+                    when "@name" 
+                        value "@name";
+                    // or are we in the else clause
+                    otherwise
+                        > not «preceding-sibling::condition/@name»
+                }
+            }
+                | «$whoAmI» abox «$whoAmI» [label="«$name»"];
+        }
+    }
+
+    // Because we need this more than once:
+    function "nexternal" {
+        param "groupLeaderState";
+        param "thirdDeviceState";
+        param "whoAmI";
+        param "groupLeader";
+        param "thirdDevice";
+        param "depth";
+        param "log";
+        param "msc";
+        param "target";
+        for "/protocol/fsm[1]/state[@name=$target]/event" {
+            const "name", "@name";
+            if "boolean(/protocol/fsm[1]/external[@name=$name])" {
+                apply "."
+                    with "groupLeaderState", "$groupLeaderState",
+                    with "thirdDeviceState", "$thirdDeviceState",
+                    with "whoAmI", "$whoAmI",
+                    with "groupLeader", "$groupLeader",
+                    with "thirdDevice", "$thirdDevice",
+                    with "depth", "$depth+1",
+                    with "log", "$log",
+                    with "msc", "$msc";
+            }
+        }
+    }
+} //tstylesheet
+
