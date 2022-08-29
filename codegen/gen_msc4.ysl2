@@ -4,72 +4,73 @@ tstylesheet {
     const "maxdepth", "15";
     const "mindepth", "4";
 
-    template "/protocol" {
-    const "whoAmI", "'a'";
-    const "groupLeader", "'b'";
+    const "firstDevice", "'a'";
+    const "secondDevice", "'b'";
     const "thirdDevice", "'c'";
+    const "Devices" {
+        copy "$firstDevice";
+        copy "$secondDevice";
+        copy "$thirdDevice";
+    }
+
+
+    template "/protocol" {
 
 // This does need a third device in the chart.
 // CannotDecrypt at Grouped now leads to GG->GG situation, but 
 // should in the future also initiate a SGG->GGG situation.
     apply "/protocol/fsm[1]"
-        with "whoAmI", "$whoAmI",
-        with "groupLeader", "$groupLeader",
-        with "thirdDevice", "$thirdDevice",
-        with "ownState", "'Grouped'",
-        with "groupLeaderState", "'Grouped'",
+        with "whoAmI", "$firstDevice",
+        with "groupLeader", "$secondDevice",
+        with "firstDeviceState", "'Grouped'",
+        with "secondDeviceState", "'Grouped'",
         with "thirdDeviceState", "'Sole'",
         with "depth", "0",
         with "message", "'CannotDecrypt'";
 
 //    apply "/protocol/fsm[1]"
-//        with "whoAmI", "$whoAmI",
-//        with "groupLeader", "$groupLeader",
-//        with "thirdDevice", "$thirdDevice",
-//        with "ownState", "'Sole'",
-//        with "groupLeaderState", "'Sole'",
+//        with "whoAmI", "$firstDevice",
+//        with "groupLeader", "$secondDevice",
+//        with "firstDeviceState", "'Sole'",
+//        with "secondDeviceState", "'Sole'",
 //        with "thirdDeviceState", "'Sole'",
 //        with "depth", "0",
 //        with "message", "'CannotDecrypt'";
 
 // This does need a third device in the chart (SGG->GGG)
     apply "/protocol/fsm[1]"
-        with "whoAmI", "$whoAmI",
-        with "groupLeader", "$groupLeader",
-        with "thirdDevice", "$thirdDevice",
-        with "ownState", "'Sole'",
-        with "groupLeaderState", "'Grouped'",
+        with "whoAmI", "$firstDevice",
+        with "groupLeader", "$secondDevice",
+        with "firstDeviceState", "'Sole'",
+        with "secondDeviceState", "'Grouped'",
         with "thirdDeviceState", "'Grouped'",
         with "depth", "2",
         with "message", "'CannotDecrypt'";
 
 //    apply "/protocol/fsm[1]"
-//        with "whoAmI", "$whoAmI",
-//        with "groupLeader", "$groupLeader",
-//        with "thirdDevice", "$thirdDevice",
-//        with "ownState", "'Grouped'",
-//        with "groupLeaderState", "'Grouped'",
+//        with "whoAmI", "$firstDevice",
+//        with "groupLeader", "$secondDevice",
+//        with "firstDeviceState", "'Grouped'",
+//        with "secondDeviceState", "'Grouped'",
 //        with "thirdDeviceState", "'Grouped'",
 //        with "depth", "3",
 //        with "message", "'CannotDecrypt'";
 
 //    apply "/protocol/fsm[1]"
-//        with "whoAmI", "$whoAmI",
-//        with "groupLeader", "$groupLeader",
-//        with "thirdDevice", "$thirdDevice",
-//        with "ownState", "'Grouped'",
-//        with "groupLeaderState", "'Grouped'",
+//        with "whoAmI", "$firstDevice",
+//        with "groupLeader", "$secondDevice",
+//        with "firstDeviceState", "'Grouped'",
+//        with "secondDeviceState", "'Grouped'",
 //        with "thirdDeviceState", "'Grouped'",
 //        with "depth", "4",
 //        with "message", "'KeyGen'";
 
 // This needs a third device in the chart: GGG->SGG
     apply "/protocol/fsm[1]"
-        with "whoAmI", "$whoAmI",
-        with "groupLeader", "$groupLeader",
-        with "thirdDevice", "$thirdDevice",
-        with "ownState", "'Grouped'",
-        with "groupLeaderState", "'Grouped'",
+        with "whoAmI", "$firstDevice",
+        with "groupLeader", "$secondDevice",
+        with "firstDeviceState", "'Grouped'",
+        with "secondDeviceState", "'Grouped'",
         with "thirdDeviceState", "'Grouped'",
         with "depth", "0",
         with "message", "'LeaveDeviceGroup'";
@@ -82,43 +83,44 @@ tstylesheet {
     }
 
     template "/protocol/fsm[1]" {
-        param "ownState";
-        param "groupLeaderState";
+        param "firstDeviceState";
+        param "secondDeviceState";
         param "thirdDeviceState";
         param "whoAmI";
         param "groupLeader";
-        param "thirdDevice";
         param "message";
         param "depth";
 
         // Prepare MSC header
         const "msc" {
-                ||
-                # The entities
-                u [label="User"], a [label="1st Device"], b [label="2nd Device"], c [label="3rd Device"];
-            
-                # Small gap before the boxes
-                |||;
-            
-                # Next two on same line due to ','
-                «$whoAmI» box «$whoAmI» [label="«$ownState»"],
-                «$groupLeader» box «$groupLeader» [label="«$groupLeaderState»"];
-                «$thirdDevice» box «$thirdDevice» [label="«$thirdDeviceState»"];
-                ||
-                // Because 2-way MSC's always start with the same state for sync
-                for "/protocol/fsm[1]/state[@name=$ownState]/event[@name='Init']/action" {
-                    |  «$whoAmI» rbox «$whoAmI» [label="«@name»"],
-                    |  «$groupLeader» rbox «$groupLeader» [label="«@name»"];
-                    |  «$thirdDevice» rbox «$thirdDevice» [label="«@name»"];
-                }
-                |  u -> «$whoAmI» [label="«$message»"];
+        ||
+        # The entities
+        u [label="User"], «$firstDevice» [label="1st Device"], «$secondDevice» [label="2nd Device"], «$thirdDevice» [label="3rd Device"];
+    
+        # Small gap before the boxes
+        |||;
+    
+        # Next two on same line due to ','
+        «$firstDevice» box «$firstDevice» [label="«$firstDeviceState»"],
+        «$secondDevice» box «$secondDevice» [label="«$secondDeviceState»"],
+        «$thirdDevice» box «$thirdDevice» [label="«$thirdDeviceState»"];
+        ||
+        const "Init1",  "count(/protocol/fsm[1]/state[@name=$firstDeviceState]/event[@name='Init']/action)";
+        const "Init2",  "count(/protocol/fsm[1]/state[@name=$secondDeviceState]/event[@name='Init']/action)";
+        const "Init3",  "count(/protocol/fsm[1]/state[@name=$thirdDeviceState]/event[@name='Init']/action)";
+        if "$Init1 >= 1" | «$firstDevice» rbox «$firstDevice» [label="«/protocol/fsm[1]/state[@name=$firstDeviceState]/event[@name='Init']/action[1]/@name»"],
+        if "$Init2 >= 1" | «$secondDevice» rbox «$secondDevice» [label="«/protocol/fsm[1]/state[@name=$secondDeviceState]/event[@name='Init']/action[1]/@name»"],
+        if "$Init3 >= 1" | «$thirdDevice» rbox «$thirdDevice» [label="«/protocol/fsm[1]/state[@name=$thirdDeviceState]/event[@name='Init']/action[1]/@name»"];
+        if "$Init1 >= 2" | $firstDevice» rbox «$firstDevice» [label="«/protocol/fsm[1]/state[@name=$firstDeviceState]/event[@name='Init']/action[2]/@name»"],
+        if "$Init2 >= 2" | $secondDevice» rbox «$secondDevice» [label="«/protocol/fsm[1]/state[@name=$secondDeviceState]/event[@name='Init']/action[2]/@name»"],
+        if "$Init3 >= 2" | $thirdDevice» rbox «$thirdDevice» [label="«/protocol/fsm[1]/state[@name=$thirdDeviceState]/event[@name='Init']/action[2]/@name»"];
+        | u -> «$firstDevice» [label="«$message»"];
             }
-            apply "//state[@name=$ownState]/event[@name=$message]", 1
-                    with "groupLeaderState", "$groupLeaderState",
+            apply "//state[@name=$firstDeviceState]/event[@name=$message]", 1
+                    with "secondDeviceState", "$secondDeviceState",
                     with "thirdDeviceState", "$thirdDeviceState",
                     with "whoAmI", "$whoAmI",
                     with "groupLeader", "$groupLeader",
-                    with "thirdDevice", "$thirdDevice",
                     with "depth", "$depth",
                     with "msc", "$msc";
     } //template
