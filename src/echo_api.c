@@ -111,10 +111,17 @@ PEP_STATUS echo_initialize(PEP_SESSION session)
     if (! (session && session->db))
         return PEP_ILLEGAL_VALUE;
 
+    /* Change the schema if needed, once and for all.  We want to do this
+       *before* prepraring statements using the new column that is created by
+       this upgrade. */
+    PEP_STATUS status = PEP_STATUS_OK;
+    status = upgrade_add_echo_challange_field(session);
+    if (status != PEP_STATUS_OK)
+        goto end;
+
     /* Prepare SQL statements, so that we only do it once and for all.  This
        will be important in the future for embedded platforms with limited
        resources. */
-    PEP_STATUS status = PEP_STATUS_OK;
     int sql_status;
     sql_status = sqlite3_prepare_v2(session->db, echo_get_challenge_text,
                                     -1, &session->echo_get_challenge,
@@ -124,11 +131,6 @@ PEP_STATUS echo_initialize(PEP_SESSION session)
                                     -1, &session->echo_set_challenge,
                                     NULL);
     ON_SQL_ERROR_SET_STATUS_AND_GOTO;
-
-    /* Change the schema if needed, once and for all. */
-    status = upgrade_add_echo_challange_field(session);
-    if (status != PEP_STATUS_OK)
-        goto end;
     
  end:
     return status;
