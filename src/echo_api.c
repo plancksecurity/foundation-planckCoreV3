@@ -6,7 +6,8 @@
 #include "sync_api.h" // for notifyHandshake, currently defined in this header
 
 #include <assert.h>
-#include <sqlite3.h>
+/* Either <sqlite3.h> or "sqlite3.h" has already been included by
+   pEp_internal.h so we do not need to deal with it here.  */
 
 #include "status_to_string.h" // FIXME: remove.
 #include "media_key.h" // for identity_known_to_use_pEp
