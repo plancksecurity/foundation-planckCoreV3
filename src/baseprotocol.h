@@ -84,7 +84,8 @@ PEP_STATUS base_decorate_message(
  *  @param[in]   type       base protocol type
  *  @param[in]   payload    payload to send
  *  @param[in]   size       size of payload
- *  @param[in]   fpr        optional key to sign or NULL
+ *  @param[in]   fpr        optional key to sign or NULL;
+ *                          the message will not be signed if NULL
  *  @param[out]  result     returned message with payload on success
  *  
  *  @retval PEP_STATUS_OK       on success

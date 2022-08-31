@@ -21,7 +21,7 @@ ifeq ($(BUILD_FOR),Linux)
   CPPFLAGS+=-U_REENTRANT
 endif
 
-DISTRIBUTION = distribution keyreset managedgroup exploration
+DISTRIBUTION = distribution keyreset managedgroup exploration echo
 SYNC  = sync keysync trustsync groupsync
 STORAGE = storage messagestorage
 
@@ -40,7 +40,7 @@ libasn1.a: $(ALL_OBJECTS)
 %.o: %.c %.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(OPTIMIZE) $(ASN1C_INC) -c $< -o $@
 
-Sync.c: $(SYNC_FILES) $(DISTRIBUTION_FILES) pEp.asn1
+Sync.c: $(SYNC_FILES) $(DISTRIBUTION_FILES) pEp.asn1  # positrontofdik: is it correct that $(DISTRIBUTION_FILES) is among the dependencies? I would guess not
 	$(ASN1C) -gen-PER $(ASN1C_OPTIONS) $+
 	rm -f converter-sample.c
 	touch Sync.c

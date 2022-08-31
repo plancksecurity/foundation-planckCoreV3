@@ -291,6 +291,10 @@ struct _pEpSession {
     sqlite3_stmt *get_userid_alias_default;
     sqlite3_stmt *add_userid_alias;
 
+    // Distribution.Echo
+    sqlite3_stmt *echo_get_challenge;
+    sqlite3_stmt *echo_set_challenge;
+
     // callbacks
     notifyHandshake_t notifyHandshake;
     inject_sync_event_t inject_sync_event;
@@ -308,6 +312,10 @@ struct _pEpSession {
 //     time_t LastUpdateRequest;
 
     // runtime config
+    bool enable_echo_protocol;
+    bool enable_echo_in_outgoing_message_rating_preview;
+
+    stringpair_list_t *media_key_map; /* See media_key.h for an explanation. */
 
     bool passive_mode;
     bool unencrypted_subject;

@@ -25,6 +25,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <fnmatch.h>
 #include <regex.h>
 
 #include "pEpEngine.h" /* For PEP_STATUS */
@@ -963,4 +964,13 @@ char *_unix_system_db(void)
 error:
     _empty(&path);
     return NULL;
+}
+
+int pEp_fnmatch(const char *pattern, const char *string) {
+    /* The implementation is completely trivial on Unix. */
+    return fnmatch(pattern, string,
+                   /* No FNM_FILE_NAME;
+                      no FNM_PERIOD;
+                      no FNM_NOESCAPE. */
+                   0);
 }

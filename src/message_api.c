@@ -18,6 +18,10 @@
 #include "keymanagement.h"
 #include "sync_codec.h"
 #include "distribution_codec.h"
+#include "echo_api.h"
+#include "media_key.h"
+
+#include "status_to_string.h" // FIXME: remove
 
 #include "keymanagement_internal.h"
 
@@ -2567,8 +2571,8 @@ static PEP_STATUS _update_state_for_ident_list(
         unsigned int* max_version_minor,
         bool* has_pEp_user,
         bool* dest_keys_found,
-        bool suppress_update_for_bcc
-    )
+        bool suppress_update_for_bcc,
+        const char* media_key_or_NULL)
 {
     if (!ident_list || !max_version_major || !max_version_minor
                     || !has_pEp_user || !dest_keys_found
@@ -2600,7 +2604,6 @@ static PEP_STATUS _update_state_for_ident_list(
             
             if (!(*has_pEp_user) && !EMPTYSTR(_il->ident->user_id))
                 is_pEp_user(session, _il->ident, has_pEp_user);
-            
             if (!suppress_update_for_bcc && from_ident) {
                 status = bind_own_ident_with_contact_ident(session, from_ident, _il->ident);
                 if (status != PEP_STATUS_OK) {
@@ -2624,7 +2627,7 @@ static PEP_STATUS _update_state_for_ident_list(
             *max_comm_type = _get_comm_type(session, *max_comm_type,
                                             _il->ident);
         }
-        else {
+        else if (media_key_or_NULL == NULL) {
             *dest_keys_found = false;
 // ?           status = PEP_KEY_NOT_FOUND;
         }
@@ -2664,14 +2667,14 @@ static bool message_is_from_Sync(const message *src)
     return true;
 }
 
-DYNAMIC_API PEP_STATUS encrypt_message(
+static PEP_STATUS encrypt_message_possibly_with_media_key(
         PEP_SESSION session,
         message *src,
         stringlist_t * extra,
         message **dst,
         PEP_enc_format enc_format,
-        PEP_encrypt_flags_t flags
-    )
+        PEP_encrypt_flags_t flags,
+        const char *media_key_or_NULL)
 {
     PEP_STATUS status = PEP_STATUS_OK;
     message * msg = NULL;
@@ -2745,6 +2748,10 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         if (_k == NULL)
             goto enomem;
     }
+    if (media_key_or_NULL != NULL) {
+        if (stringlist_add(_k, media_key_or_NULL) == NULL)
+            goto enomem;
+    }
 
     bool dest_keys_found = true;
     bool has_pEp_user = false;
@@ -2774,7 +2781,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                         &max_version_minor,                                  \
                         &has_pEp_user,                                       \
                         &dest_keys_found,                                    \
-                        (suppress_update_for_bcc)                            \
+                        (suppress_update_for_bcc),                           \
+                        media_key_or_NULL                                    \
                      );                                                      \
             switch (status) {                                                \
                 case PEP_PASSPHRASE_REQUIRED:                                \
@@ -2817,6 +2825,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         stringlist_length(keys)  == 0 ||
         _rating(max_comm_type) < PEP_rating_reliable)
     {
+        //fprintf(stderr, "encrypt_message_possibly_with_media_key: about to make the message unencrypted!\n");
         free_stringlist(keys);
         if ((has_pEp_user || !session->passive_mode) && 
             !(flags & PEP_encrypt_flag_force_no_attached_key)) {
@@ -2915,6 +2924,30 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             if (msg->id == NULL)
                 goto enomem;
         }
+//////////////////
+    // Special case for media keys: hide the subject in the outer message in
+    // case we succeeded encrypting.
+    if (media_key_or_NULL != NULL
+        && ! session->unencrypted_subject
+        && status == PEP_STATUS_OK) {
+        assert (msg);
+fprintf (stderr, "Z: replacing subject: BEFORE:  %s\n", msg->shortmsg);
+        char *old_subject = msg->shortmsg;
+#ifdef WIN32
+        msg->shortmsg = strdup("pEp");
+#else
+        const unsigned char pEpstr[] = PEP_SUBJ_STRING;
+        msg->shortmsg = strdup((char*)pEpstr);
+#endif
+        if (msg->shortmsg == NULL && ! EMPTYSTR(old_subject)) {
+            msg->shortmsg = old_subject;
+            return PEP_OUT_OF_MEMORY;
+        }
+        else
+            free(old_subject);
+fprintf (stderr, "Z: replacing subject: AFTER:   %s\n", msg->shortmsg);
+    }
+//////////////////
     }
 
     *dst = msg;
@@ -2926,7 +2959,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     
     // Do similar for extra key list...
     _cleanup_src(src, added_key_to_real_src);
-        
+
     return status;
 
 enomem:
@@ -2941,6 +2974,68 @@ pEp_error:
     _cleanup_src(src, added_key_to_real_src);
 
     return status;
+}
+
+DYNAMIC_API PEP_STATUS encrypt_message(
+        PEP_SESSION session,
+        message *src,
+        stringlist_t * extra,
+        message **dst,
+        PEP_enc_format enc_format,
+        PEP_encrypt_flags_t flags
+    )
+{
+    /* First try encrypting the message ignoring the media key. */
+    PEP_STATUS status
+        = encrypt_message_possibly_with_media_key(session, src,
+                                                  extra, dst, enc_format,
+                                                  flags,
+                                                  NULL);
+
+    /* Check how it went.  There are three possibilities... */
+    switch(status) {
+    case PEP_STATUS_OK:
+        /* We managed to actually encrypt, without need for a media key.  Good.
+           There is nothing more we need to do. */
+        return status;
+
+    case PEP_UNENCRYPTED: {
+        /* We could not encrypt without using the media key, but maybe we can if
+           we try again using the media key as well. */
+        char *media_key_fpr;
+        PEP_STATUS media_key_status
+            = media_key_for_outgoing_message(session, src, &media_key_fpr);
+        if (media_key_status != PEP_STATUS_OK)
+            return status;
+        else {
+            assert(media_key_fpr != NULL);
+            fprintf(stderr, "encrypt_message: using the media key %s\n", media_key_fpr);
+            add_opt_field(src, "X-pEp-use-media-key", media_key_fpr); // probably only useful for debugging.
+            add_opt_field(src, "X-pEp-use-media-key-inner", media_key_fpr); // probably only useful for debugging.
+            status = encrypt_message_possibly_with_media_key(
+               session, src,
+               extra,
+               dst,
+               media_key_enc_format,
+               flags | PEP_encrypt_flag_force_encryption,
+               media_key_fpr);
+            // fprintf(stderr, "AFTER THE SECOND ATTEMPT: enc_format is %i\n", (int)((*dst)?((*dst)->enc_format):src->enc_format));
+            if (status == PEP_STATUS_OK) {
+                if (* dst != NULL) {
+                    add_opt_field(* dst, "X-pEp-use-media-key", media_key_fpr);
+                    add_opt_field(* dst, "X-pEp-use-media-key-outer", media_key_fpr);
+                }
+            }
+            free(media_key_fpr);
+            return status;
+        }
+    }
+
+    default:
+        /* The first encryption attempt failed with an actual error,
+           independently from the media key. */
+        return status;
+    }
 }
 
 DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
@@ -4788,10 +4883,11 @@ enomem:
     
 }
 
+/* Handle an incoming Distribution-family message. */
 static PEP_STATUS process_Distribution_message(PEP_SESSION session,
-                                               message* msg,
-                                               PEP_rating rating,
-                                               const char* data, size_t size,
+                                               message *msg,
+                                               PEP_rating msg_rating,
+                                               const char *data, size_t size,
                                                char* sender_fpr) {
 
     Distribution_t *dist = NULL;
@@ -4805,11 +4901,40 @@ static PEP_STATUS process_Distribution_message(PEP_SESSION session,
             break; // We'll do something later here on refactor!
         case Distribution_PR_managedgroup:
             // Set the group stuff in motion!
-            status = receive_managed_group_message(session, msg, rating, dist);
+            status = receive_managed_group_message(session, msg,
+                                                   msg_rating, dist);
+            break;
+        case Distribution_PR_echo:
+            switch (dist->choice.echo.present) {
+                case Echo_PR_echoPing:
+                    if (session->enable_echo_protocol)
+                        status = send_pong(session, msg, dist);
+                    else
+                        fprintf(stderr,  "* Echo protocol disabled: not sending Pong in reply to Ping\n");
+                    break;
+                case Echo_PR_echoPong:
+                    fprintf(stderr, "Received a Pong from %s <%s>.\n", msg->from->username, msg->from->address);
+                    status = handle_pong(session, msg->recv_by, msg->from, dist);
+                    if (status == PEP_STATUS_OK)
+                        fprintf(stderr, "Good\n");
+                    else if (status == PEP_DISTRIBUTION_ILLEGAL_MESSAGE) {
+                        /* If the challenge is wrong there is not much we can do
+                           other than detecting a possible forged message. */
+                        fprintf(stderr, "?????????????????????? ");
+                        fprintf(stderr, "Received a Pong from %s <%s> with status %i %s: FORGED?\n", msg->from->username, msg->from->address, (int) status, pEp_status_to_string(status));
+                    }
+                    else
+                        fprintf(stderr, "Error: %i %s\n", (int) status, pEp_status_to_string(status));
+                    break;
+                default:
+                    assert(false);
+            }
             break;
         default:
             status = PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
     }
+
+    ASN_STRUCT_FREE(asn_DEF_Distribution, dist);
     return status;
 }
 
@@ -6263,33 +6388,53 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
 
     message *msg = *dst ? *dst : src;
 
+    /* positron: I have seen msg == NULL at least once, in 2022-07, on the
+       Release_2.1 branch, when modifying the mailbox concurrently.  Protect the
+       engine from this condition. */
+    if (msg == NULL) {
+        status = PEP_ILLEGAL_VALUE;
+        goto end;
+    }
+
+    /* Rating special case: if we received the message encrypted by a media
+       key, change the rating. */
+    bool media_key_found;
+    PEP_STATUS media_key_status
+        = media_key_is_there_a_media_key_in(session, * keylist,
+                                            & media_key_found);
+    if (media_key_status != PEP_STATUS_OK) {
+        status = PEP_ILLEGAL_VALUE;
+        goto end;
+    }
+    if (media_key_found)
+        rating = media_key_message_rating;
+
     /* Set the rating field of the message.  Notice that even in case of non-ok
        result status the value of this field may be meaningful. */
     msg->rating = rating;
 
-    // Ok, now we check to see if it was an administrative message. We do this by testing base_extract for success
-    // with protocol families.
-    if (msg && msg->from) {
-        size_t size;
-        const char *data = NULL;
-        char *sender_fpr = NULL;
-
-        PEP_STATUS tmp_status = PEP_UNKNOWN_ERROR; // We start with error because OK means we successfully matched
-
-        if (session->inject_sync_event && !(*flags & PEP_decrypt_flag_dont_trigger_sync)) {
-            tmp_status = base_extract_message(session, msg, BASE_SYNC, &size, &data, &sender_fpr);
-            if (!tmp_status && size && data) {
-                if (sender_fpr)
-                    signal_Sync_message(session, rating, data, size, msg->from, sender_fpr);
-                  // FIXME: this must be changed to sender_fpr
-                else if (*keylist)
-                    signal_Sync_message(session, rating, data, size, msg->from, (*keylist)->value);
-            }
-        }
-        if (tmp_status != PEP_STATUS_OK) {
-            // We process key resets differently in other versions and won't get these kind of resets
-            // until this min version anyway, so:
-            if (msg && msg->opt_fields) {
+//fprintf(stderr, "+ message %s \"%s\", recv_by %s, dir %s: begin...\n", msg->id, msg->shortmsg ? msg->shortmsg : "<no subject>", (msg->recv_by ? msg->recv_by->address : "NO RECV_BY"), ((msg->dir == PEP_dir_incoming) ? "incoming" : "outgoing"));
+/////// BEGIN: "react" HACK
+/* static bool react_sent = false; */
+/* if (! react_sent && ! strcmp(msg->shortmsg, "react") && ! msg->from->me) { */
+/*     react_sent = true; */
+/*     fprintf(stderr, "    react to message with subject \"react\" by pinging\n"); */
+/* #define HANDLE_IDENTITY(recipient) \ */
+/*     { \ */
+/*         const pEp_identity *_recipient = (recipient); \ */
+/*         if (! _recipient->me) { \ */
+/*           fprintf(stderr, "    pinging %s...\n", _recipient->address); \ */
+/*           /\* status = *\/ send_ping(session, msg->recv_by, _recipient); \ */
+/*         } \ */
+/*     } */
+/*     HANDLE_IDENTITY(msg->from); */
+/* } */
+/////// END: "react" HACK
+    // Check for Distribution messages.
+    {
+        /*
+          // FIXME: possibly reuse this logic if it makes sense.  This was for
+          // disitrubution, not for Sync.
                 const stringpair_list_t *pEp_protocol_version = NULL;
                 unsigned int major_ver = 0;
                 unsigned int minor_ver = 0;
@@ -6297,18 +6442,52 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
                 if (pEp_protocol_version && pEp_protocol_version->value)
                     pEp_version_major_minor(pEp_protocol_version->value->value, &major_ver, &minor_ver);
                 if (major_ver > 2 || (major_ver == 2 && minor_ver > 1)) {
-                    // Try the rest
-                    PEP_STATUS tmpstatus = base_extract_message(session, msg, BASE_DISTRIBUTION, &size, &data,
-                                                                &sender_fpr);
-                    if (!tmpstatus && size && data) {
-                        process_Distribution_message(session, msg, rating, data, size, sender_fpr);
-                    }
-                }
-            }
+        */
+        size_t size;
+        const char *data;
+        char *sender_fpr = NULL;
+        PEP_STATUS tmpstatus = base_extract_message(session, msg, BASE_DISTRIBUTION, &size, &data, &sender_fpr);
+        if (tmpstatus == PEP_STATUS_OK && size > 0 && data != NULL)
+            // We can ignore failure here.
+            process_Distribution_message(session, msg, rating, data, size,
+                                         sender_fpr);
+        free(sender_fpr);
+    } // end of Distribution message handling.
+    // Check for Sync messages.
+    if (session->inject_sync_event
+        && ! (*flags & PEP_decrypt_flag_dont_trigger_sync)
+        && msg->from) {
+        size_t size;
+        const char *data = NULL;
+        char *sender_fpr = NULL;
+
+        PEP_STATUS tmp_status = base_extract_message(
+           session, msg, BASE_SYNC, &size, &data, &sender_fpr);
+        if (!tmp_status && size && data) {
+            if (sender_fpr)
+                signal_Sync_message(session, rating, data, size, msg->from, sender_fpr);
+            // FIXME: this must be changed to sender_fpr
+            else if (*keylist)
+                signal_Sync_message(session, rating, data, size, msg->from, (*keylist)->value);
         }
         free(sender_fpr);
-    }
+    } // end of Sync message handling
 
+    // In case this message is at least reliable, make sure we know every
+    // identity mentioned in it by sending Pings (we accept sending them to PGP
+    // users as well) to unknown identities.
+    // We can do something similar even if the message is not reliable: in that
+    // case we cannot be sure that every recipient identity we do not know uses
+    // pEp -- but we can say that some of the recipients use pEp even without
+    // knowing them, thanks to media keys.  So, for unreliable messages, we want
+    // to sent Ping messages to unknown identities which are known to use pEp.
+    // This implements ENGINE-1007.
+    if (rating >= PEP_rating_reliable)
+        send_ping_to_all_unknowns_in_incoming_message(session, msg);
+    else
+        send_ping_to_unknown_pEp_identities_in_incoming_message(session, msg);
+//fprintf(stderr, "- message %s \"%s\": ...end\n\n", msg->id, msg->shortmsg ? msg->shortmsg : "<no subject>");
+ 
     // Removed for now - partial fix in ENGINE-647, but we have sync issues. Need to 
     // fix testing issue.
     //
@@ -6334,6 +6513,8 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
     //         free(sender_fpr);
     //     }
 
+
+ end:
     free(imported_key_fprs);
     return status;
 }
@@ -6540,6 +6721,11 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
     else
         *rating = _MAX(_rating(max_comm_type), PEP_rating_unencrypted);
 
+    /* We might be able to improve the rating by receving Pong replies from
+       identities which are unknown but are known to use pEp before the message
+       is actually sent. */
+    send_ping_to_unknown_pEp_identities_in_outgoing_message(session, msg);
+
     return PEP_STATUS_OK;
 }
 
@@ -6574,6 +6760,13 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating_preview(
             &max_comm_type);
 
     *rating = _MAX(_rating(max_comm_type), PEP_rating_unencrypted);
+
+    /* We might be able to improve the rating by receving Pong replies from
+       identities which are unknown but are known to use pEp before the message
+       is actually sent.  This behaviour can be disabled in the
+       configuration.  */
+    if (session->enable_echo_in_outgoing_message_rating_preview)
+        send_ping_to_unknown_pEp_identities_in_outgoing_message(session, msg);
 
     return PEP_STATUS_OK;
 }

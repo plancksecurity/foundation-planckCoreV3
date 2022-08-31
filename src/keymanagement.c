@@ -17,6 +17,7 @@
 #include "keymanagement.h"
 #include "keymanagement_internal.h"
 #include "KeySync_fsm.h"
+#include "media_key.h"
 
 static bool key_matches_address(PEP_SESSION session, const char* address,
                                 const char* fpr) {
@@ -881,6 +882,9 @@ DYNAMIC_API PEP_STATUS update_identity(
         if (identity->comm_type == PEP_ct_unknown)
             identity->comm_type = PEP_ct_key_not_found;
     }
+
+    // Update with media key information.
+    status = amend_identity_with_media_key_information(session, identity);
 
     goto pEp_free;
 

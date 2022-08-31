@@ -431,8 +431,35 @@ DYNAMIC_API PEP_STATUS init(
  *           are done
  *  
  */
-
 DYNAMIC_API void release(PEP_SESSION session);
+
+/**
+ *  <!--       config_enable_echo_protocol()      -->
+ *  
+ *  @brief enable or disable the Distribution.Echo protocol (enabled by default)
+ *  
+ *  @param[in]   session    session handle to release
+ *  @param[in]   enable     true iff enabled
+ *  
+ */
+DYNAMIC_API void config_enable_echo_protocol(PEP_SESSION session, bool enable);
+
+/**
+ *  <!--       config_enable_echo_in_outgoing_message_rating_preview()      -->
+ *  
+ *  @brief enable or disable Distribution.Echo.Ping messages from
+ *         outgoing_message_rating_preview (enabled by default)
+ *         Rationale: outgoing_message_rating_preview should return very
+ *                    quickly and this setting is meant as a tentative
+ *                    optimisation.
+ *  
+ *  @param[in]   session    session handle to release
+ *  @param[in]   enable     true iff enabled
+ *  
+ */
+DYNAMIC_API void config_enable_echo_in_outgoing_message_rating_preview(
+   PEP_SESSION session, bool enable);
+
 
 /**
  *  <!--       config_passive_mode()       -->

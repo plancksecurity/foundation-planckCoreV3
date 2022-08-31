@@ -9,6 +9,8 @@
 #include "cryptotech.h"
 #include "transport.h"
 #include "KeySync_fsm.h"
+#include "echo_api.h"
+#include "media_key.h"
 #include "engine_sql.h"
 
 #include <time.h>
@@ -79,6 +81,8 @@ DYNAMIC_API PEP_STATUS init(
     _session->messageToSend = messageToSend;
     _session->inject_sync_event = inject_sync_event;
     _session->ensure_passphrase = ensure_passphrase;
+    _session->enable_echo_protocol = true;
+    _session->enable_echo_in_outgoing_message_rating_preview = true;
     
     status = init_databases(_session);
     if (status != PEP_STATUS_OK)
@@ -105,6 +109,10 @@ DYNAMIC_API PEP_STATUS init(
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
+    status = echo_initialize(_session);
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
+
     status = log_event(_session, "init", "pEp " PEP_ENGINE_VERSION, NULL, NULL);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
@@ -118,11 +126,25 @@ DYNAMIC_API PEP_STATUS init(
     //     goto pEp_error;
 
     *session = _session;
-    
+
     // Note: Following statement is NOT for any cryptographic/secure functionality; it is
     //       ONLY used for some randomness in generated outer message ID, which are
     //       required by the RFC to be globally unique!
     srand((unsigned int) time(NULL));
+
+#if 0
+    // import positron's testing media key.
+    const char key_data[]
+        =
+#include "media_key_example.h"
+        ;
+    import_key(_session, key_data, sizeof(key_data), NULL);
+    stringpair_list_t *media_key_map
+        = new_stringpair_list(new_stringpair("*ageinghacker.net",
+                                             "8A7E7F89493766693C03F941D35D42584008EE76"));
+    config_media_keys(_session, media_key_map);
+    free_stringpair_list(media_key_map);
+#endif
     
     return PEP_STATUS_OK;
 
@@ -178,10 +200,26 @@ DYNAMIC_API void release(PEP_SESSION session)
             session->curr_passphrase = NULL;
         }
 
+        echo_finalize(session);
+
         release_transport_system(session, out_last);
         release_cryptotech(session, out_last);
         free(session);
     }
+}
+
+DYNAMIC_API void config_enable_echo_protocol(PEP_SESSION session, bool enable)
+{
+    assert(session);
+    if (session)
+        session->enable_echo_protocol = enable;
+}
+
+DYNAMIC_API void config_enable_echo_in_outgoing_message_rating_preview(PEP_SESSION session, bool enable)
+{
+    assert(session);
+    if (session)
+        session->enable_echo_in_outgoing_message_rating_preview = enable;
 }
 
 DYNAMIC_API void config_passive_mode(PEP_SESSION session, bool enable)
