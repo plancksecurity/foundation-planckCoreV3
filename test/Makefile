@@ -119,10 +119,6 @@ ifeq ($(BUILD_ON),OS/390)
     LDLIBS+=-lzz
 endif
 
-ifeq ($(OPENPGP),SEQUOIA)
-    LDLIBS+=-lsequoia_openpgp_ffi 
-endif
-
 # Link with libz at the end.  This is needed on some configurations,
 # particularly on static-only configurations, and harmless where not needed.
 LDLIBS+=-lz
