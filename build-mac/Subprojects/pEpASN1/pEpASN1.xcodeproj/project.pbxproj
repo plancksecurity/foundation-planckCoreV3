@@ -277,6 +277,14 @@
 		15A32289260E03F3009D07EB /* INTEGER.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32086260E03BC009D07EB /* INTEGER.h */; };
 		15A3228A260E03F3009D07EB /* ISO639-1.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A32074260E03BB009D07EB /* ISO639-1.h */; };
 		15A3228B260E03F3009D07EB /* Rating.h in Headers */ = {isa = PBXBuildFile; fileRef = 15A3209D260E03BC009D07EB /* Rating.h */; };
+		437D8A1E28C0D507004CE501 /* EchoPing.h in Headers */ = {isa = PBXBuildFile; fileRef = 437D8A1C28C0D507004CE501 /* EchoPing.h */; };
+		437D8A1F28C0D507004CE501 /* EchoPing.h in Headers */ = {isa = PBXBuildFile; fileRef = 437D8A1C28C0D507004CE501 /* EchoPing.h */; };
+		437D8A2028C0D507004CE501 /* EchoPing.c in Sources */ = {isa = PBXBuildFile; fileRef = 437D8A1D28C0D507004CE501 /* EchoPing.c */; };
+		437D8A2128C0D507004CE501 /* EchoPing.c in Sources */ = {isa = PBXBuildFile; fileRef = 437D8A1D28C0D507004CE501 /* EchoPing.c */; };
+		437D8A2428C0D60C004CE501 /* Echo.h in Headers */ = {isa = PBXBuildFile; fileRef = 437D8A2228C0D60C004CE501 /* Echo.h */; };
+		437D8A2528C0D60C004CE501 /* Echo.h in Headers */ = {isa = PBXBuildFile; fileRef = 437D8A2228C0D60C004CE501 /* Echo.h */; };
+		437D8A2628C0D60C004CE501 /* Echo.c in Sources */ = {isa = PBXBuildFile; fileRef = 437D8A2328C0D60C004CE501 /* Echo.c */; };
+		437D8A2728C0D60C004CE501 /* Echo.c in Sources */ = {isa = PBXBuildFile; fileRef = 437D8A2328C0D60C004CE501 /* Echo.c */; };
 		43C49BC027E8CB2500821567 /* Ping.c in Sources */ = {isa = PBXBuildFile; fileRef = 43C49BBE27E8CB2500821567 /* Ping.c */; };
 		43C49BC127E8CB2500821567 /* Ping.c in Sources */ = {isa = PBXBuildFile; fileRef = 43C49BBE27E8CB2500821567 /* Ping.c */; };
 		43C49BC227E8CB2500821567 /* Ping.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C49BBF27E8CB2500821567 /* Ping.h */; };
@@ -439,6 +447,10 @@
 		15A320F1260E03BE009D07EB /* Rollback.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Rollback.c; path = ../../../asn.1/Rollback.c; sourceTree = "<group>"; };
 		15A320F2260E03BE009D07EB /* per_decoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = per_decoder.h; path = ../../../asn.1/per_decoder.h; sourceTree = "<group>"; };
 		15A320F3260E03BE009D07EB /* constr_TYPE.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = constr_TYPE.c; path = ../../../asn.1/constr_TYPE.c; sourceTree = "<group>"; };
+		437D8A1C28C0D507004CE501 /* EchoPing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EchoPing.h; path = ../../../asn.1/EchoPing.h; sourceTree = "<group>"; };
+		437D8A1D28C0D507004CE501 /* EchoPing.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = EchoPing.c; path = ../../../asn.1/EchoPing.c; sourceTree = "<group>"; };
+		437D8A2228C0D60C004CE501 /* Echo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Echo.h; path = ../../../asn.1/Echo.h; sourceTree = "<group>"; };
+		437D8A2328C0D60C004CE501 /* Echo.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Echo.c; path = ../../../asn.1/Echo.c; sourceTree = "<group>"; };
 		43C49BBE27E8CB2500821567 /* Ping.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Ping.c; path = ../../../asn.1/Ping.c; sourceTree = "<group>"; };
 		43C49BBF27E8CB2500821567 /* Ping.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Ping.h; path = ../../../asn.1/Ping.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -501,6 +513,10 @@
 		15A3206B260E0376009D07EB /* src */ = {
 			isa = PBXGroup;
 			children = (
+				437D8A2328C0D60C004CE501 /* Echo.c */,
+				437D8A2228C0D60C004CE501 /* Echo.h */,
+				437D8A1D28C0D507004CE501 /* EchoPing.c */,
+				437D8A1C28C0D507004CE501 /* EchoPing.h */,
 				43C49BBE27E8CB2500821567 /* Ping.c */,
 				43C49BBF27E8CB2500821567 /* Ping.h */,
 				15A32075260E03BB009D07EB /* asn_application.h */,
@@ -654,6 +670,7 @@
 				15A3221D260E03F2009D07EB /* CommitAcceptRequester.h in Headers */,
 				15A3222E260E03F2009D07EB /* xer_encoder.h in Headers */,
 				15A32236260E03F2009D07EB /* PString.h in Headers */,
+				437D8A1E28C0D507004CE501 /* EchoPing.h in Headers */,
 				15A32230260E03F2009D07EB /* KeyReset.h in Headers */,
 				15A32233260E03F2009D07EB /* asn_codecs_prim.h in Headers */,
 				15A32234260E03F2009D07EB /* Command.h in Headers */,
@@ -716,6 +733,7 @@
 				15A3220A260E03F1009D07EB /* GroupKeysForNewMember.h in Headers */,
 				15A32214260E03F2009D07EB /* PrintableString.h in Headers */,
 				15A3222A260E03F2009D07EB /* Version.h in Headers */,
+				437D8A2428C0D60C004CE501 /* Echo.h in Headers */,
 				15A32226260E03F2009D07EB /* per_support.h in Headers */,
 				15A3222C260E03F2009D07EB /* UTF8String.h in Headers */,
 				15A32244260E03F2009D07EB /* Distribution.h in Headers */,
@@ -766,6 +784,7 @@
 				15A32281260E03F3009D07EB /* BIT_STRING.h in Headers */,
 				15A3227D260E03F3009D07EB /* per_decoder.h in Headers */,
 				15A32279260E03F3009D07EB /* ReceiverRating.h in Headers */,
+				437D8A1F28C0D507004CE501 /* EchoPing.h in Headers */,
 				15A32259260E03F3009D07EB /* constraints.h in Headers */,
 				15A32270260E03F3009D07EB /* UTF8String.h in Headers */,
 				15A32266260E03F3009D07EB /* constr_CHOICE.h in Headers */,
@@ -789,6 +808,7 @@
 				15A3227E260E03F3009D07EB /* asn_application.h in Headers */,
 				15A32283260E03F3009D07EB /* GroupKeysAndClose.h in Headers */,
 				15A32262260E03F3009D07EB /* Identity.h in Headers */,
+				437D8A2528C0D60C004CE501 /* Echo.h in Headers */,
 				15A32260260E03F3009D07EB /* ber_tlv_tag.h in Headers */,
 				15A3225B260E03F3009D07EB /* Commands.h in Headers */,
 				15A32264260E03F3009D07EB /* CommitAccept.h in Headers */,
@@ -950,6 +970,7 @@
 				15A32184260E03E3009D07EB /* CommitAcceptRequester.c in Sources */,
 				15A32191260E03E3009D07EB /* Commands.c in Sources */,
 				15A321BC260E03E3009D07EB /* UTF8String.c in Sources */,
+				437D8A2028C0D507004CE501 /* EchoPing.c in Sources */,
 				15A32196260E03E3009D07EB /* CommitAcceptOfferer.c in Sources */,
 				15A3219C260E03E3009D07EB /* Sync.c in Sources */,
 				15A32188260E03E3009D07EB /* NegotiationOpen.c in Sources */,
@@ -962,6 +983,7 @@
 				15A32195260E03E3009D07EB /* BIT_STRING.c in Sources */,
 				15A321A3260E03E3009D07EB /* Version.c in Sources */,
 				15A321A4260E03E3009D07EB /* BOOLEAN.c in Sources */,
+				437D8A2628C0D60C004CE501 /* Echo.c in Sources */,
 				15A3219E260E03E3009D07EB /* Rating.c in Sources */,
 				15A321B9260E03E3009D07EB /* constraints.c in Sources */,
 				15A321AF260E03E3009D07EB /* ISO639-1.c in Sources */,
@@ -1024,6 +1046,7 @@
 				15A321C5260E03E4009D07EB /* CommitAcceptRequester.c in Sources */,
 				15A321D2260E03E4009D07EB /* Commands.c in Sources */,
 				15A321FD260E03E4009D07EB /* UTF8String.c in Sources */,
+				437D8A2128C0D507004CE501 /* EchoPing.c in Sources */,
 				15A321D7260E03E4009D07EB /* CommitAcceptOfferer.c in Sources */,
 				15A321DD260E03E4009D07EB /* Sync.c in Sources */,
 				15A321C9260E03E4009D07EB /* NegotiationOpen.c in Sources */,
@@ -1036,6 +1059,7 @@
 				15A321D6260E03E4009D07EB /* BIT_STRING.c in Sources */,
 				15A321E4260E03E4009D07EB /* Version.c in Sources */,
 				15A321E5260E03E4009D07EB /* BOOLEAN.c in Sources */,
+				437D8A2728C0D60C004CE501 /* Echo.c in Sources */,
 				15A321DF260E03E4009D07EB /* Rating.c in Sources */,
 				15A321FA260E03E4009D07EB /* constraints.c in Sources */,
 				15A321F0260E03E4009D07EB /* ISO639-1.c in Sources */,
