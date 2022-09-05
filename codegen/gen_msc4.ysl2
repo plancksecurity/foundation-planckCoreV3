@@ -223,7 +223,7 @@ tstylesheet {
             | «$whoAmI»: at «$ownState» on «$event» if «$condition» send «child::send» go «$target» 
             value "$states";
             | 
-            // | stop «//state[@name=$ownState]/@timeout» and  «//state[@name=$secondDeviceState]/@timeout» and «$depth»>«$mindepth»
+            | «(((ancestor::state/@timeout='off' and not($target)) or //state[@name=$target]/@timeout='off') and not(child::send) and //state[@name=$states[2]]/@timeout='off' and //state[@name=$states[3]]/@timeout='off')» or «($states[2]='End' and $states[3]='End' and $target='End')» or «$depth>$maxdepth»
             | stop «$stopCondition»
         };
         const "newstates" {
@@ -288,7 +288,7 @@ tstylesheet {
                         const "receives", "boolean($stateset[@name=$state]/event[@name=$message])";
                         // Messages to third Device are already taken care of
                         if "not($whoAmI=$rec) and not($rec=3) and $receives" {
-                            apply "stateset[@name=$states[$rec]]/event[@name=$message]"
+                            apply "$stateset[@name=$states[$rec]]/event[@name=$message]"
                                 with "states", "exsl:node-set($newstates)/*",
                                 with "whoAmI", "$groupLeader",
                                 with "depth", "$depth+1",
@@ -299,7 +299,6 @@ tstylesheet {
                 }
             }
         } //choose
-//////Rework-Marker
         if "not($stopCondition)" {
                  call "nexternal"
                     with "states", "exsl:node-set($newstates)/*",
