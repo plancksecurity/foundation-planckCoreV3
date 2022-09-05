@@ -191,7 +191,7 @@ static PEP_STATUS echo_challenge_for_identity(PEP_SESSION session,
     int sql_status;
 
     /* Look at the database.  First check if we have a stored challenge... */
-    reset_and_clear_bindings(session->echo_get_challenge);
+    sql_reset_and_clear_bindings(session->echo_get_challenge);
     sql_status = sqlite3_bind_text(session->echo_get_challenge,
                                    1, identity->address, -1, SQLITE_STATIC);
     ON_SQL_ERROR_SET_STATUS_AND_GOTO;
@@ -238,7 +238,7 @@ static PEP_STATUS echo_challenge_for_identity(PEP_SESSION session,
 //sprintf(challenge, "to-%s-%i", getenv("USER"), rand() % (1 << 15));
 
     /* ...and store it into the database. */
-    reset_and_clear_bindings(session->echo_set_challenge);
+    sql_reset_and_clear_bindings(session->echo_set_challenge);
     sql_status
         = sqlite3_bind_blob(session->echo_set_challenge,
                             1, challenge, sizeof(pEpUUID), SQLITE_STATIC);
@@ -502,7 +502,7 @@ static bool identity_known(PEP_SESSION session,
         result = false;
         goto end;
     }
-    
+
     status = get_all_keys_for_identity(session, identity_copy, &keys);
     if (status == PEP_KEY_NOT_FOUND)
         result = false;

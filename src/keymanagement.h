@@ -426,6 +426,11 @@ DYNAMIC_API PEP_STATUS set_own_key(
        const char *fpr
     );
 
+/* Just like get_all_keys_for_user , using an identity instead of a user. */
+PEP_STATUS get_all_keys_for_identity(PEP_SESSION session, 
+                                     pEp_identity* identity,
+                                     stringlist_t** keys);
+
 
 /**
  *  <!--       set_own_imported_key()       -->

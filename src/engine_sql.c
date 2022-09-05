@@ -498,7 +498,7 @@ static PEP_STATUS upgrade_revoc_contact_to_13(PEP_SESSION session) {
             int_result = sqlite3_step(update_revoked_w_addr_stmt);
             assert(int_result == SQLITE_DONE);
 
-            sqlite3_reset(update_revoked_w_addr_stmt);
+            sql_reset_and_clear_bindings(update_revoked_w_addr_stmt);
 
             if (int_result != SQLITE_DONE)
                 return PEP_UNKNOWN_DB_ERROR;
@@ -1832,6 +1832,14 @@ PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session) {
         return PEP_UNKNOWN_DB_ERROR;
 
 
+    int_result = sqlite3_prepare_v2(session->db, sql_get_all_keys_for_identity,
+                                    (int)strlen(sql_get_all_keys_for_identity), &session->get_all_keys_for_identity, NULL);
+    assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_DB_ERROR;
+
+
     int_result = sqlite3_prepare_v2(session->db, sql_get_default_own_userid,
                                     (int)strlen(sql_get_default_own_userid), &session->get_default_own_userid, NULL);
     assert(int_result == SQLITE_OK);
@@ -2563,6 +2571,7 @@ PEP_STATUS pEp_finalize_sql_stmts(PEP_SESSION session) {
     sqlite3_finalize(session->get_identities_by_main_key_id);
     sqlite3_finalize(session->get_user_default_key);
     sqlite3_finalize(session->get_all_keys_for_user);
+    sqlite3_finalize(session->get_all_keys_for_identity);
     sqlite3_finalize(session->get_default_own_userid);
     sqlite3_finalize(session->get_userid_alias_default);
     sqlite3_finalize(session->add_userid_alias);

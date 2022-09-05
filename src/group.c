@@ -296,7 +296,7 @@ static PEP_STATUS _set_own_status_joined(PEP_SESSION session,
                                             pEp_identity* as_member) {
     int result = 0;
 
-    sqlite3_reset(session->group_join);
+    sql_reset_and_clear_bindings(session->group_join);
 
     sqlite3_bind_text(session->group_join, 1, group_identity->user_id, -1,
                       SQLITE_STATIC);
@@ -308,7 +308,7 @@ static PEP_STATUS _set_own_status_joined(PEP_SESSION session,
                       SQLITE_STATIC);
     result = sqlite3_step(session->group_join);
 
-    sqlite3_reset(session->group_join);
+    sql_reset_and_clear_bindings(session->group_join);
 
     if (result != SQLITE_DONE)
         return PEP_CANNOT_CREATE_GROUP;
@@ -328,7 +328,7 @@ static PEP_STATUS _remove_member_from_group(PEP_SESSION session,
                                             pEp_identity* member) {
     int result = 0;
 
-    sqlite3_reset(session->group_delete_member);
+    sql_reset_and_clear_bindings(session->group_delete_member);
 
     sqlite3_bind_text(session->group_delete_member, 1, group_identity->user_id, -1,
                       SQLITE_STATIC);
@@ -340,7 +340,7 @@ static PEP_STATUS _remove_member_from_group(PEP_SESSION session,
                       SQLITE_STATIC);
     result = sqlite3_step(session->group_delete_member);
 
-    sqlite3_reset(session->group_delete_member);
+    sql_reset_and_clear_bindings(session->group_delete_member);
 
     if (result != SQLITE_DONE)
         return PEP_UNKNOWN_ERROR;
@@ -358,7 +358,7 @@ static PEP_STATUS _remove_member_from_group(PEP_SESSION session,
  */
 static PEP_STATUS _set_leave_group_status(PEP_SESSION session, pEp_identity* group_identity, pEp_identity* leaver) {
 
-    sqlite3_reset(session->leave_group);
+    sql_reset_and_clear_bindings(session->leave_group);
 
     sqlite3_bind_text(session->leave_group, 1, group_identity->user_id, -1,
                       SQLITE_STATIC);
@@ -371,7 +371,7 @@ static PEP_STATUS _set_leave_group_status(PEP_SESSION session, pEp_identity* gro
 
     int result = sqlite3_step(session->leave_group);
 
-    sqlite3_reset(session->leave_group);
+    sql_reset_and_clear_bindings(session->leave_group);
 
     if (result != SQLITE_DONE)
         return PEP_CANNOT_LEAVE_GROUP;
@@ -388,7 +388,7 @@ static PEP_STATUS _set_leave_group_status(PEP_SESSION session, pEp_identity* gro
 static PEP_STATUS _set_group_as_disabled(PEP_SESSION session, pEp_identity* group_identity) {
     int result = 0;
 
-    sqlite3_reset(session->disable_group);
+    sql_reset_and_clear_bindings(session->disable_group);
 
     sqlite3_bind_text(session->disable_group, 1, group_identity->user_id, -1,
                       SQLITE_STATIC);
@@ -396,7 +396,7 @@ static PEP_STATUS _set_group_as_disabled(PEP_SESSION session, pEp_identity* grou
                       SQLITE_STATIC);
     result = sqlite3_step(session->disable_group);
 
-    sqlite3_reset(session->disable_group);
+    sql_reset_and_clear_bindings(session->disable_group);
 
     if (result != SQLITE_DONE)
         return PEP_CANNOT_DISABLE_GROUP;
@@ -423,7 +423,7 @@ static PEP_STATUS _retrieve_own_membership_info_for_group(PEP_SESSION session, p
     pEp_identity* ident = NULL;
     pEp_member* member = NULL;
 
-    sqlite3_reset(session->retrieve_own_membership_info_for_group);
+    sql_reset_and_clear_bindings(session->retrieve_own_membership_info_for_group);
 
     sqlite3_bind_text(session->retrieve_own_membership_info_for_group, 1, group_identity->user_id, -1,
                       SQLITE_STATIC);
@@ -460,7 +460,7 @@ static PEP_STATUS _retrieve_own_membership_info_for_group(PEP_SESSION session, p
         goto pEp_error;
     }
 
-    sqlite3_reset(session->retrieve_own_membership_info_for_group);
+    sql_reset_and_clear_bindings(session->retrieve_own_membership_info_for_group);
 
     *memberlist = _mbr_list_head;
     return PEP_STATUS_OK;
@@ -469,7 +469,7 @@ enomem:
     status = PEP_OUT_OF_MEMORY;
 
 pEp_error:
-    sqlite3_reset(session->retrieve_own_membership_info_for_group);
+    sql_reset_and_clear_bindings(session->retrieve_own_membership_info_for_group);
 
     if (ident) // Only true if problem allocating member
         free_identity(ident);
@@ -520,7 +520,7 @@ static PEP_STATUS is_invited_group_member(PEP_SESSION session, pEp_identity* gro
     else
         *is_member = sqlite3_column_int(session->is_invited_group_member, 0);
 
-    sqlite3_reset(session->is_invited_group_member);
+    sql_reset_and_clear_bindings(session->is_invited_group_member);
 
     return status;
 }
@@ -588,7 +588,7 @@ PEP_STATUS set_membership_status(PEP_SESSION session,
                                             bool active) {
     int result = 0;
 
-    sqlite3_reset(session->set_group_member_status);
+    sql_reset_and_clear_bindings(session->set_group_member_status);
 
     sqlite3_bind_int(session->set_group_member_status, 1, active);
     sqlite3_bind_text(session->set_group_member_status, 2, group_identity->user_id, -1,
@@ -601,7 +601,7 @@ PEP_STATUS set_membership_status(PEP_SESSION session,
                       SQLITE_STATIC);
     result = sqlite3_step(session->set_group_member_status);
 
-    sqlite3_reset(session->set_group_member_status);
+    sql_reset_and_clear_bindings(session->set_group_member_status);
 
     if (result != SQLITE_DONE)
         return PEP_CANNOT_CREATE_GROUP;
@@ -619,7 +619,7 @@ PEP_STATUS get_group_manager(PEP_SESSION session,
 
     PEP_STATUS status = PEP_STATUS_OK;
 
-    sqlite3_reset(session->get_group_manager);
+    sql_reset_and_clear_bindings(session->get_group_manager);
 
     sqlite3_bind_text(session->get_group_manager, 1, group_identity->user_id, -1,
                       SQLITE_STATIC);
@@ -639,7 +639,7 @@ PEP_STATUS get_group_manager(PEP_SESSION session,
         if (!*manager)
             return PEP_OUT_OF_MEMORY;
     }
-    sqlite3_reset(session->get_group_manager);
+    sql_reset_and_clear_bindings(session->get_group_manager);
     return status;
 }
 
@@ -650,7 +650,7 @@ PEP_STATUS is_group_active(PEP_SESSION session, pEp_identity* group_identity, bo
     PEP_STATUS status = PEP_STATUS_OK;
     *active = false;
 
-    sqlite3_reset(session->is_group_active);
+    sql_reset_and_clear_bindings(session->is_group_active);
     sqlite3_bind_text(session->is_group_active, 1, group_identity->user_id, -1,
                       SQLITE_STATIC);
     sqlite3_bind_text(session->is_group_active, 2, group_identity->address, -1,
@@ -666,7 +666,7 @@ PEP_STATUS is_group_active(PEP_SESSION session, pEp_identity* group_identity, bo
             status = PEP_UNKNOWN_DB_ERROR;
     }
 
-    sqlite3_reset(session->is_group_active);
+    sql_reset_and_clear_bindings(session->is_group_active);
 
     return status;
 }
@@ -703,7 +703,7 @@ PEP_STATUS create_group_entry(PEP_SESSION session,
 
     int result = 0;
 
-    sqlite3_reset(session->create_group);
+    sql_reset_and_clear_bindings(session->create_group);
 
     sqlite3_bind_text(session->create_group, 1, group_identity->user_id, -1,
                       SQLITE_STATIC);
@@ -715,7 +715,7 @@ PEP_STATUS create_group_entry(PEP_SESSION session,
                       SQLITE_STATIC);
     result = sqlite3_step(session->create_group);
 
-    sqlite3_reset(session->create_group);
+    sql_reset_and_clear_bindings(session->create_group);
 
     if (result != SQLITE_DONE)
         return PEP_CANNOT_CREATE_GROUP;
@@ -752,7 +752,7 @@ PEP_STATUS add_own_membership_entry(PEP_SESSION session,
                       SQLITE_STATIC);
     result = sqlite3_step(session->add_own_membership_entry);
 
-    sqlite3_reset(session->add_own_membership_entry);
+    sql_reset_and_clear_bindings(session->add_own_membership_entry);
 
     if (result != SQLITE_DONE)
         return PEP_CANNOT_CREATE_GROUP;
@@ -766,7 +766,7 @@ PEP_STATUS get_own_membership_status(PEP_SESSION session,
                                      bool* have_joined) {
     PEP_STATUS status = PEP_STATUS_OK;
 
-    sqlite3_reset(session->get_own_membership_status);
+    sql_reset_and_clear_bindings(session->get_own_membership_status);
     sqlite3_bind_text(session->get_own_membership_status, 1, group_identity->user_id, -1,
                       SQLITE_STATIC);
     sqlite3_bind_text(session->get_own_membership_status, 2, group_identity->address, -1,
@@ -786,7 +786,7 @@ PEP_STATUS get_own_membership_status(PEP_SESSION session,
             status = PEP_NO_MEMBERSHIP_STATUS_FOUND;
     }
 
-    sqlite3_reset(session->get_own_membership_status);
+    sql_reset_and_clear_bindings(session->get_own_membership_status);
 
     return status;
 }
@@ -812,7 +812,7 @@ PEP_STATUS retrieve_own_membership_info_for_group_and_identity(PEP_SESSION sessi
     pEp_member* me_mem = NULL;
     member_list* memberlist = NULL;
     
-    sqlite3_reset(session->retrieve_own_membership_info_for_group_and_ident);
+    sql_reset_and_clear_bindings(session->retrieve_own_membership_info_for_group_and_ident);
     sqlite3_bind_text(session->retrieve_own_membership_info_for_group_and_ident, 1, group->group_identity->user_id, -1,
                       SQLITE_STATIC);
     sqlite3_bind_text(session->retrieve_own_membership_info_for_group_and_ident, 2, group->group_identity->address, -1,
@@ -896,7 +896,7 @@ PEP_STATUS leave_group(
     // Ok, we clearly joined the group at some point.
     int result = 0;
 
-    sqlite3_reset(session->leave_group);
+    sql_reset_and_clear_bindings(session->leave_group);
 
     sqlite3_bind_text(session->leave_group, 1, group_identity->user_id, -1,
                       SQLITE_STATIC);
@@ -908,7 +908,7 @@ PEP_STATUS leave_group(
                       SQLITE_STATIC);
     result = sqlite3_step(session->leave_group);
 
-    sqlite3_reset(session->leave_group);
+    sql_reset_and_clear_bindings(session->leave_group);
 
     if (result != SQLITE_DONE)
         return PEP_CANNOT_CREATE_GROUP;
@@ -930,7 +930,7 @@ PEP_STATUS group_enable(
 
     int result = 0;
 
-    sqlite3_reset(session->enable_group);
+    sql_reset_and_clear_bindings(session->enable_group);
 
     sqlite3_bind_text(session->enable_group, 1, group_identity->user_id, -1,
                       SQLITE_STATIC);
@@ -938,7 +938,7 @@ PEP_STATUS group_enable(
                       SQLITE_STATIC);
     result = sqlite3_step(session->enable_group);
 
-    sqlite3_reset(session->enable_group);
+    sql_reset_and_clear_bindings(session->enable_group);
 
     if (result != SQLITE_DONE)
         status = PEP_CANNOT_ENABLE_GROUP;
@@ -954,7 +954,7 @@ PEP_STATUS exists_group(
 
     PEP_STATUS status = PEP_STATUS_OK;
 
-    sqlite3_reset(session->exists_group_entry);
+    sql_reset_and_clear_bindings(session->exists_group_entry);
     sqlite3_bind_text(session->exists_group_entry, 1, group_identity->user_id, -1,
                       SQLITE_STATIC);
     sqlite3_bind_text(session->exists_group_entry, 2, group_identity->address, -1,
@@ -972,7 +972,7 @@ PEP_STATUS exists_group(
             status = PEP_UNKNOWN_DB_ERROR;
     }
 
-    sqlite3_reset(session->exists_group_entry);
+    sql_reset_and_clear_bindings(session->exists_group_entry);
 
     return status;
 }
@@ -993,7 +993,7 @@ PEP_STATUS group_add_member(
 
     int result = 0;
 
-    sqlite3_reset(session->group_add_member);
+    sql_reset_and_clear_bindings(session->group_add_member);
 
     sqlite3_bind_text(session->group_add_member, 1, group_identity->user_id, -1,
                       SQLITE_STATIC);
@@ -1007,7 +1007,7 @@ PEP_STATUS group_add_member(
 
     result = sqlite3_step(session->group_add_member);
 
-    sqlite3_reset(session->group_add_member);
+    sql_reset_and_clear_bindings(session->group_add_member);
 
     if (result != SQLITE_DONE)
         status = PEP_CANNOT_ADD_GROUP_MEMBER;
@@ -1031,7 +1031,7 @@ PEP_STATUS retrieve_full_group_membership(
 
     *members = NULL;
 
-    sqlite3_reset(session->get_all_members);
+    sql_reset_and_clear_bindings(session->get_all_members);
     sqlite3_bind_text(session->get_all_members, 1, group_identity->user_id, -1, SQLITE_STATIC);
     sqlite3_bind_text(session->get_all_members, 2, group_identity->address, -1, SQLITE_STATIC);
     int result;
@@ -1065,7 +1065,7 @@ PEP_STATUS retrieve_full_group_membership(
         status = update_identity(session, curr->member->ident);
     }
 
-    sqlite3_reset(session->get_all_members);
+    sql_reset_and_clear_bindings(session->get_all_members);
     *members = retval;
 
     return PEP_STATUS_OK;
@@ -1074,7 +1074,7 @@ enomem:
     status = PEP_OUT_OF_MEMORY;
 
 //pEp_error: // Uncomment if other errors are valid
-    sqlite3_reset(session->get_all_members);
+    sql_reset_and_clear_bindings(session->get_all_members);
     free_memberlist(retval);
     return status;
 }
@@ -1094,7 +1094,7 @@ PEP_STATUS retrieve_active_member_list(
 
     *mbr_list = NULL;
 
-    sqlite3_reset(session->get_active_members);
+    sql_reset_and_clear_bindings(session->get_active_members);
     sqlite3_bind_text(session->get_active_members, 1, group_identity->user_id, -1, SQLITE_STATIC);
     sqlite3_bind_text(session->get_active_members, 2, group_identity->address, -1, SQLITE_STATIC);
     int result;
@@ -1134,7 +1134,7 @@ PEP_STATUS retrieve_active_member_list(
         status = update_identity(session, curr->member->ident);
     }
 
-    sqlite3_reset(session->get_active_members);
+    sql_reset_and_clear_bindings(session->get_active_members);
 
     *mbr_list = retval;
     return PEP_STATUS_OK;
@@ -1143,7 +1143,7 @@ enomem:
     status = PEP_OUT_OF_MEMORY;
 
 //pEp_error: // Uncomment if other errors are valid
-    sqlite3_reset(session->get_active_members);
+    sql_reset_and_clear_bindings(session->get_active_members);
     free_memberlist(retval);
     return status;
 }
@@ -2420,7 +2420,7 @@ PEP_STATUS is_active_group_member(PEP_SESSION session, pEp_identity* group_ident
 
     PEP_STATUS status = PEP_STATUS_OK;
 
-    sqlite3_reset(session->is_active_group_member);
+    sql_reset_and_clear_bindings(session->is_active_group_member);
 
     sqlite3_bind_text(session->is_active_group_member, 1, group_identity->user_id, -1,
                       SQLITE_STATIC);
@@ -2440,7 +2440,7 @@ PEP_STATUS is_active_group_member(PEP_SESSION session, pEp_identity* group_ident
     else
         status = PEP_UNKNOWN_DB_ERROR;
 
-    sqlite3_reset(session->is_active_group_member);
+    sql_reset_and_clear_bindings(session->is_active_group_member);
 
     return status;
 }

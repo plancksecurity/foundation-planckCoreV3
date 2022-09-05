@@ -467,6 +467,20 @@ static const char* sql_get_all_keys_for_user MAYBE_UNUSED =
         "select pgp_keypair_fpr from trust"
         "   where user_id = ?1; ";
 
+static const char* sql_get_all_keys_for_identity MAYBE_UNUSED =
+    /* ?1: address; ?2: user_id */
+    "SELECT T.pgp_keypair_fpr "
+    "  FROM Trust T "
+    "  WHERE T.user_id = ?2 "
+    "UNION "
+    "SELECT P.main_key_id "
+    "  FROM Person P "
+    "  WHERE P.id = ?2 "
+    "UNION "
+    "SELECT I.main_key_id "
+    "  FROM Identity I "
+    "  WHERE I.address = ?1 AND I.user_id = ?2 ";
+
 static const char* sql_get_default_own_userid MAYBE_UNUSED =
         "select id from person"
         "   join identity on id = identity.user_id"
