@@ -103,16 +103,18 @@ DYNAMIC_API PEP_STATUS update_identity(
  *  @retval PEP_OUT_OF_MEMORY   out of memory
  *  @retval any other value on error
  *  
- *  @warning If an fpr was entered and is not a valid key, the reason for failure
+ *  @warning If an fpr was found and is not a valid key, the reason for failure
  *           is immediately returned in the status and, possibly, identity->comm_type
  *  @warning If a default own user_id exists in the database, an alias will 
  *           be created for the default for the input user_id. The ENGINE'S default
  *           user_id is always returned in the .user_id field
- *  @warning myself() NEVER elects keys from the keyring; it will only choose keys
- *           which have been set up explicitly via myself(), or which were imported
- *           during a first time DB setup from an OpenPGP keyring (compatibility only) 
- *           this function generates a keypair on demand; because it's synchronous
- *           it can need a decent amount of time to return
+ *  @warning myself() NEVER elects keys from the keyring; it will only 
+ *           retrieve the key set as default key for the given identity in the database,
+ *           which may have been set up by myself(), or which were imported
+ *           during a first time DB setup from an OpenPGP keyring (compatibility only).
+ *           If no valid keypair for the given identity is found, a new one will be 
+ *           generated and set up as default key
+ *           because it's synchronous it can need a decent amount of time to return
  *  @warning if you need to do this asynchronous, you need to return an identity
  *           with retrieve_next_identity() where pEp_identity.me is true
  *  
