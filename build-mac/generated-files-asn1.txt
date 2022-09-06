@@ -20,6 +20,12 @@ $(SRCROOT)/../asn.1/CommitReject.c
 $(SRCROOT)/../asn.1/CommitReject.h
 $(SRCROOT)/../asn.1/Distribution.c
 $(SRCROOT)/../asn.1/Distribution.h
+$(SRCROOT)/../asn.1/Echo.c
+$(SRCROOT)/../asn.1/Echo.h
+$(SRCROOT)/../asn.1/EchoPing.c
+$(SRCROOT)/../asn.1/EchoPing.h
+$(SRCROOT)/../asn.1/EchoPong.c
+$(SRCROOT)/../asn.1/EchoPong.h
 $(SRCROOT)/../asn.1/ElectGroupKeyResetLeader.c
 $(SRCROOT)/../asn.1/ElectGroupKeyResetLeader.h
 $(SRCROOT)/../asn.1/GroupHandshake.c

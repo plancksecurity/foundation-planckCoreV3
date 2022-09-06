@@ -94,6 +94,14 @@
 		43188A9F23C4B2DE008EF79C /* Sync_actions.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A9223C4B2DE008EF79C /* Sync_actions.c */; };
 		43188AA823C4B4B3008EF79C /* keyreset_command.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188AA223C4B4B3008EF79C /* keyreset_command.c */; };
 		43188AC023C4BBDE008EF79C /* distribution_codec.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188ABE23C4BBDD008EF79C /* distribution_codec.c */; };
+		4343448928C0D7F40033A84F /* media_key.c in Sources */ = {isa = PBXBuildFile; fileRef = 4343446F28C0D7F40033A84F /* media_key.c */; };
+		4343448A28C0D7F40033A84F /* media_key.c in Sources */ = {isa = PBXBuildFile; fileRef = 4343446F28C0D7F40033A84F /* media_key.c */; };
+		4343448B28C0D7F40033A84F /* media_key.h in Headers */ = {isa = PBXBuildFile; fileRef = 4343448828C0D7F40033A84F /* media_key.h */; };
+		4343448C28C0D7F40033A84F /* media_key.h in Headers */ = {isa = PBXBuildFile; fileRef = 4343448828C0D7F40033A84F /* media_key.h */; };
+		4343448F28C0D8490033A84F /* echo_api.h in Headers */ = {isa = PBXBuildFile; fileRef = 4343448D28C0D8490033A84F /* echo_api.h */; };
+		4343449028C0D8490033A84F /* echo_api.h in Headers */ = {isa = PBXBuildFile; fileRef = 4343448D28C0D8490033A84F /* echo_api.h */; };
+		4343449128C0D8490033A84F /* echo_api.c in Sources */ = {isa = PBXBuildFile; fileRef = 4343448E28C0D8490033A84F /* echo_api.c */; };
+		4343449228C0D8490033A84F /* echo_api.c in Sources */ = {isa = PBXBuildFile; fileRef = 4343448E28C0D8490033A84F /* echo_api.c */; };
 		438C43B62167752C00C7425B /* labeled_int_list.c in Sources */ = {isa = PBXBuildFile; fileRef = 438C43B42167752C00C7425B /* labeled_int_list.c */; };
 		43C3778F246A8C0300962D22 /* internal_format.c in Sources */ = {isa = PBXBuildFile; fileRef = 43C3778D246A8C0300962D22 /* internal_format.c */; };
 		43F6921D1F164A47009418F5 /* resource_id.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F6921C1F164A47009418F5 /* resource_id.c */; };
@@ -286,6 +294,10 @@
 		43188ABE23C4BBDD008EF79C /* distribution_codec.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = distribution_codec.c; path = ../src/distribution_codec.c; sourceTree = "<group>"; };
 		43188ABF23C4BBDE008EF79C /* distribution_codec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = distribution_codec.h; path = ../src/distribution_codec.h; sourceTree = "<group>"; };
 		431F04B222733A7E00CCE960 /* key_reset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = key_reset.h; path = ../src/key_reset.h; sourceTree = "<group>"; };
+		4343446F28C0D7F40033A84F /* media_key.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = media_key.c; path = ../src/media_key.c; sourceTree = "<group>"; };
+		4343448828C0D7F40033A84F /* media_key.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = media_key.h; path = ../src/media_key.h; sourceTree = "<group>"; };
+		4343448D28C0D8490033A84F /* echo_api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = echo_api.h; path = ../src/echo_api.h; sourceTree = "<group>"; };
+		4343448E28C0D8490033A84F /* echo_api.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = echo_api.c; path = ../src/echo_api.c; sourceTree = "<group>"; };
 		438C43962167582400C7425B /* sync_api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sync_api.h; path = ../src/sync_api.h; sourceTree = "<group>"; };
 		438C43AF2167752C00C7425B /* labeled_int_list.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = labeled_int_list.h; path = ../src/labeled_int_list.h; sourceTree = "<group>"; };
 		438C43B42167752C00C7425B /* labeled_int_list.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = labeled_int_list.c; path = ../src/labeled_int_list.c; sourceTree = "<group>"; };
@@ -492,6 +504,10 @@
 		64A8264B1B455C5600EECAF0 /* srcref */ = {
 			isa = PBXGroup;
 			children = (
+				4343448E28C0D8490033A84F /* echo_api.c */,
+				4343448D28C0D8490033A84F /* echo_api.h */,
+				4343446F28C0D7F40033A84F /* media_key.c */,
+				4343448828C0D7F40033A84F /* media_key.h */,
 				15CA756027C928B500DF63FE /* security_checks.c */,
 				15CA756127C928B500DF63FE /* security_checks.h */,
 				15CA755E27C928B500DF63FE /* sqlite3.c */,
@@ -579,8 +595,10 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4343449028C0D8490033A84F /* echo_api.h in Headers */,
 				1543DA452577F8BE0041EFB5 /* Sync_func.h in Headers */,
 				1543DA4B2577F8BE0041EFB5 /* Sync_impl.h in Headers */,
+				4343448C28C0D7F40033A84F /* media_key.h in Headers */,
 				1543DA462577F8BE0041EFB5 /* sync_codec.h in Headers */,
 				1543DA492577F8BE0041EFB5 /* KeySync_fsm.h in Headers */,
 				1552DB142577D4F100A92F71 /* pEpEngine_macOS.h in Headers */,
@@ -594,9 +612,11 @@
 			files = (
 				43188A9523C4B2DE008EF79C /* Sync_event.h in Headers */,
 				43188A9623C4B2DE008EF79C /* KeySync_fsm.h in Headers */,
+				4343448F28C0D8490033A84F /* echo_api.h in Headers */,
 				43188A9423C4B2DE008EF79C /* Sync_impl.h in Headers */,
 				43188A9E23C4B2DE008EF79C /* sync_codec.h in Headers */,
 				43188A9923C4B2DE008EF79C /* Sync_func.h in Headers */,
+				4343448B28C0D7F40033A84F /* media_key.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -870,6 +890,7 @@
 				1552DC6D2577D6F900A92F71 /* aux_mime_msg.c in Sources */,
 				1552DC252577D6A600A92F71 /* message.c in Sources */,
 				1552DC6A2577D6F900A92F71 /* pgp_sequoia.c in Sources */,
+				4343448A28C0D7F40033A84F /* media_key.c in Sources */,
 				1552DB162577D4F100A92F71 /* pEpEngine_macOS.m in Sources */,
 				1552DC152577D68F00A92F71 /* platform_unix.c in Sources */,
 				15CA756327C929E500DF63FE /* security_checks.c in Sources */,
@@ -882,6 +903,7 @@
 				1552DC692577D6F900A92F71 /* growing_buf.c in Sources */,
 				1552DC612577D6E000A92F71 /* openpgp_compat.c in Sources */,
 				1552DC6E2577D6F900A92F71 /* base64.c in Sources */,
+				4343449228C0D8490033A84F /* echo_api.c in Sources */,
 				1552DC2D2577D6AE00A92F71 /* keymanagement.c in Sources */,
 				1543DA422577F8BE0041EFB5 /* Sync_actions.c in Sources */,
 				15CA756227C929E500DF63FE /* sqlite3.c in Sources */,
@@ -914,12 +936,14 @@
 				64A826891B455D0800EECAF0 /* trans_auto.c in Sources */,
 				43F73C112166282C00AB4524 /* sync_api.c in Sources */,
 				64A8267D1B455D0800EECAF0 /* keymanagement.c in Sources */,
+				4343449128C0D8490033A84F /* echo_api.c in Sources */,
 				64A8267C1B455D0800EECAF0 /* identity_list.c in Sources */,
 				43F73C0D2166282C00AB4524 /* key_reset.c in Sources */,
 				64A8268A1B455D0800EECAF0 /* transport.c in Sources */,
 				15CA756527C929E600DF63FE /* security_checks.c in Sources */,
 				64A826791B455D0800EECAF0 /* cryptotech.c in Sources */,
 				64A826781B455D0800EECAF0 /* bloblist.c in Sources */,
+				4343448928C0D7F40033A84F /* media_key.c in Sources */,
 				43188A9F23C4B2DE008EF79C /* Sync_actions.c in Sources */,
 				C46EBAED216E445F0042A6A3 /* base64.c in Sources */,
 				15CA756427C929E600DF63FE /* sqlite3.c in Sources */,
