@@ -279,13 +279,12 @@ tstylesheet {
         choose {
             // First check for ground conditions
             when "$stopCondition" {
-                const "newmsc", "$testmsc";
                 call "lastStep"
                     with "newlog", "$newlog",
                     with "target", "$target",
                     with "whoAmI", "$whoAmI",
                     with "states", "$newstates",
-                    with "msc", "$newmsc",
+                    with "msc", "$testmsc",
                     with "depth", "$depth";
             }
             // Then check for abort condition(s)
@@ -324,9 +323,10 @@ tstylesheet {
                 }
             }
             // This will only be entered if there is no message to send
-            when "$target and //state[@name=$target]/event[@name='Init']/send|transition" {
+            when "$target and //state[@name=$target]/event[@name='Init']/send|//state[@name=$target]/event[@name='Init']/transition" {
                 const "nextlog" {
                     value "$newlog";
+                    | «$target» and «count(//state[@name=$target]/event[@name='Init']/send)»
                     | Init needed at «$target»(«$Devices[$whoAmI]»)
                 }
                 value "$nextlog";
@@ -338,12 +338,28 @@ tstylesheet {
                     with "log", "$nextlog",
                     with "msc", "$testmsc";
             }
+            when "$target" {
+                 call "nexternal"
+                    with "states", "$newstates",
+                    with "whoAmI", "$whoAmI",
+                    with "depth", "$depth+1",
+                    with "log", "$newlog",
+                    with "msc", "$testmsc",
+                    with "target", "$newstates[$whoAmI]";
+            }
             otherwise {
                 value "$newlog";
                 | choose not exhaustive
+                call "lastStep"
+                    with "newlog", "$newlog",
+                    with "target", "$target",
+                    with "whoAmI", "$whoAmI",
+                    with "states", "$newstates",
+                    with "msc", "$testmsc",
+                    with "depth", "$depth";
             }
         } //choose
-        if "not($stopCondition)" {
+        if "not(true)" {
                  call "nexternal"
                     with "states", "$newstates",
                     with "whoAmI", "$whoAmI",
@@ -419,11 +435,11 @@ tstylesheet {
             |    «$Devices[$whoAmI]» box «$Devices[$whoAmI]» [label="«$ownState»"],
             }
         };
-        // We write the log
-        | ===========================================================================
-        | doc «$depth», «$id»:
-        value "$newlog";
-        | STOP
+//        // We write the log
+//        | ===========================================================================
+//        | doc «$depth», «$id»:
+//        value "$newlog";
+//        | STOP
         // and write the finished MSC into a text file
         document "msc/{$id}.msc" method="text" {
             | msc {
