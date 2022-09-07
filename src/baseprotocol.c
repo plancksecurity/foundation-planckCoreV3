@@ -321,8 +321,10 @@ PEP_STATUS try_base_prepare_message(
        JSONServerAdapter performs a temporary incomplete initialisation by
        supplying some NULL callbacks, and initialises in a complete way only
        later. */
-    if (session->messageToSend == NULL)
+    if (session->messageToSend == NULL) {
+        fprintf(stderr, "try_base_prepare_message, session %p: about to fail with PEP_SYNC_NO_CHANNEL because there is no session->messageToSend\n", session);
         return PEP_SYNC_NO_CHANNEL;
+    }
 
     PEP_STATUS status = PEP_STATUS_OK;
 

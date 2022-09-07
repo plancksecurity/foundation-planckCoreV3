@@ -39,6 +39,7 @@ DYNAMIC_API PEP_STATUS init(
         ensure_passphrase_t ensure_passphrase
     )
 {
+    fprintf(stderr, "engine init, session %p: begin...\n", session);
     PEP_STATUS status = PEP_STATUS_OK;
 
     // Initialise the path cache.  It is the state of the environment at this
@@ -168,11 +169,13 @@ enomem:
 
 pEp_error:
     release(_session);
+    fprintf(stderr, "engine init, session %p: ...end (%s)\n", session, (status == PEP_STATUS_OK ? "success" : "failure"));
     return status;
 }
 
 DYNAMIC_API void release(PEP_SESSION session)
 {
+    fprintf(stderr, "engine release, session %p: begin...\n", session);
     bool out_last = false;
     int _count = --init_count;
     
@@ -221,6 +224,7 @@ DYNAMIC_API void release(PEP_SESSION session)
         release_cryptotech(session, out_last);
         free(session);
     }
+    fprintf(stderr, "engine release, session %p: ...end\n", session);
 }
 
 DYNAMIC_API void config_enable_echo_protocol(PEP_SESSION session, bool enable)
