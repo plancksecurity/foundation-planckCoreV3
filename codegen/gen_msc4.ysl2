@@ -5,9 +5,9 @@ tstylesheet {
     const "mindepth", "4";
 
     const "_Devices" {
-            device "'a'";
-            device "'b'";
-            device "'c'";
+            device "a";
+            device "b";
+            device "c";
     }
     const "Devices", "exsl:node-set($_Devices)/*";
 
@@ -18,22 +18,22 @@ tstylesheet {
 // This does need a third device in the chart.
 // CannotDecrypt at Grouped now leads to GG->GG situation, but 
 // should in the future also initiate a SGG->GGG situation.
-    apply "/protocol/fsm[1]"
-        with "whoAmI", "1",
-        with "groupLeader", "2",
-        with "firstDeviceState", "'Grouped'",
-        with "secondDeviceState", "'Grouped'",
-        with "thirdDeviceState", "'Sole'",
-        with "depth", "0",
-        with "message", "'CannotDecrypt'";
+//    apply "/protocol/fsm[1]"
+//        with "whoAmI", "1",
+//        with "groupLeader", "2",
+//        with "firstDeviceState", "'Grouped'",
+//        with "secondDeviceState", "'Grouped'",
+//        with "thirdDeviceState", "'Sole'",
+//        with "depth", "0",
+//        with "message", "'CannotDecrypt'";
 
-    apply "/protocol/fsm[1]"
-        with "whoAmI", "1",
-        with "groupLeader", "2",
-        with "firstDeviceState", "'Sole'",
-        with "secondDeviceState", "'Sole'",
-        with "depth", "0",
-        with "message", "'CannotDecrypt'";
+//    apply "/protocol/fsm[1]"
+//        with "whoAmI", "1",
+//        with "groupLeader", "2",
+//        with "firstDeviceState", "'Sole'",
+//        with "secondDeviceState", "'Sole'",
+//        with "depth", "0",
+//        with "message", "'CannotDecrypt'";
 
 // This does need a third device in the chart (SGG->GGG)
     apply "/protocol/fsm[1]"
@@ -62,20 +62,20 @@ tstylesheet {
 //        with "message", "'KeyGen'";
 
 // This needs a third device in the chart: GGG->SGG
-    apply "/protocol/fsm[1]"
-        with "whoAmI", "1",
-        with "groupLeader", "2",
-        with "firstDeviceState", "'Grouped'",
-        with "secondDeviceState", "'Grouped'",
-        with "thirdDeviceState", "'Grouped'",
-        with "depth", "0",
-        with "message", "'LeaveDeviceGroup'";
+//    apply "/protocol/fsm[1]"
+//        with "whoAmI", "1",
+//        with "groupLeader", "2",
+//        with "firstDeviceState", "'Grouped'",
+//        with "secondDeviceState", "'Grouped'",
+//        with "thirdDeviceState", "'Grouped'",
+//        with "depth", "0",
+//        with "message", "'LeaveDeviceGroup'";
     }
 
     template "action" {
         param "whoAmI";
         param "eol", "';'";
-        |  «$whoAmI» rbox «$whoAmI» [label="«@name»"]«$eol»
+        |  «$Devices[$whoAmI]» rbox «$Devices[$whoAmI]» [label="«@name»"]«$eol»
     }
 
     template "/protocol/fsm[1]" {
@@ -104,12 +104,24 @@ tstylesheet {
         const "Init1",  "count(/protocol/fsm[1]/state[@name=$firstDeviceState]/event[@name='Init']/action)";
         const "Init2",  "count(/protocol/fsm[1]/state[@name=$secondDeviceState]/event[@name='Init']/action)";
         const "Init3",  "count(/protocol/fsm[1]/state[@name=$thirdDeviceState]/event[@name='Init']/action)";
-        if "$Init1 >= 1" | «$Devices[1]» rbox «$Devices[1]» [label="«/protocol/fsm[1]/state[@name=$firstDeviceState]/event[@name='Init']/action[1]/@name»"],
-        if "$Init2 >= 1" | «$Devices[2]» rbox «$Devices[2]» [label="«/protocol/fsm[1]/state[@name=$secondDeviceState]/event[@name='Init']/action[1]/@name»"],
-        if "$Init3 >= 1" | «$Devices[3]» rbox «$Devices[3]» [label="«/protocol/fsm[1]/state[@name=$thirdDeviceState]/event[@name='Init']/action[1]/@name»"];
-        if "$Init1 >= 2" | $Devices[1]» rbox «$Devices[1]» [label="«/protocol/fsm[1]/state[@name=$firstDeviceState]/event[@name='Init']/action[2]/@name»"],
-        if "$Init2 >= 2" | $Devices[2]» rbox «$Devices[2]» [label="«/protocol/fsm[1]/state[@name=$secondDeviceState]/event[@name='Init']/action[2]/@name»"],
-        if "$Init3 >= 2" | $Devices[3]» rbox «$Devices[3]» [label="«/protocol/fsm[1]/state[@name=$thirdDeviceState]/event[@name='Init']/action[2]/@name»"];
+        if "$Init1 >= 1" {
+			| «$Devices[1]» rbox «$Devices[1]» [label="«/protocol/fsm[1]/state[@name=$firstDeviceState]/event[@name='Init']/action[1]/@name»"],
+		}
+        if "$Init2 >= 1" {
+			| «$Devices[2]» rbox «$Devices[2]» [label="«/protocol/fsm[1]/state[@name=$secondDeviceState]/event[@name='Init']/action[1]/@name»"],
+		}
+        if "$Init3 >= 1" {
+			| «$Devices[3]» rbox «$Devices[3]» [label="«/protocol/fsm[1]/state[@name=$thirdDeviceState]/event[@name='Init']/action[1]/@name»"];
+		}
+        if "$Init1 >= 2" {
+			| «$Devices[1]» rbox «$Devices[1]» [label="«/protocol/fsm[1]/state[@name=$firstDeviceState]/event[@name='Init']/action[2]/@name»"],
+		}
+        if "$Init2 >= 2" {
+			| «$Devices[2]» rbox «$Devices[2]» [label="«/protocol/fsm[1]/state[@name=$secondDeviceState]/event[@name='Init']/action[2]/@name»"],
+		}
+        if "$Init3 >= 2" {
+			| «$Devices[3]» rbox «$Devices[3]» [label="«/protocol/fsm[1]/state[@name=$thirdDeviceState]/event[@name='Init']/action[2]/@name»"];
+        }
         | u -> «$Devices[1]» [label="«$message»"];
             }
             const "auxStates" {
@@ -136,31 +148,33 @@ tstylesheet {
         param "return";
 
         // Some messages and transitions are conditional
-        for ("descendant::condition|descendant::else") {
-            // Include conditions in MSC
-            const "newmsc" {
-                | «$msc» 
-                call "writeConditions" with "whoAmI", "$whoAmI";
+        if "not($return)" {
+            for ("descendant::condition|descendant::else") {
+                // Include conditions in MSC
+                const "newmsc" {
+                    | «$msc» 
+                    call "writeConditions" with "whoAmI", "$whoAmI";
+                }
+                call "nextStep"
+                    with "states", "$states",
+                    with "whoAmI", "$whoAmI",
+                    with "groupLeader", "$groupLeader",
+                    with "msc", "$newmsc",
+                    with "log", "$log",
+                    with "return", "false",
+                    with "depth", "$depth";
             }
-            call "nextStep"
-                with "states", "$states",
-                with "whoAmI", "$whoAmI",
-                with "groupLeader", "$groupLeader",
-                with "msc", "$newmsc",
-                with "log", "$log",
-                with "return", "false",
-                with "depth", "$depth";
-        }
-        // Some messages and transitions aren't conditional
-        if "count(descendant::condition)=0" {
-            call "nextStep"
-                with "states", "$states",
-                with "whoAmI", "$whoAmI",
-                with "groupLeader", "$groupLeader",
-                with "msc", "$msc",
-                with "log", "$log",
-                with "return", "false",
-                with "depth", "$depth";
+            // Some messages and transitions aren't conditional
+            if "count(descendant::condition)=0" {
+                call "nextStep"
+                    with "states", "$states",
+                    with "whoAmI", "$whoAmI",
+                    with "groupLeader", "$groupLeader",
+                    with "msc", "$msc",
+                    with "log", "$log",
+                    with "return", "false",
+                    with "depth", "$depth";
+            }
         }
     } //template event
 
@@ -184,20 +198,20 @@ tstylesheet {
                 };
         const "do-before" {
             apply "child::send[1]/preceding-sibling::action" with "whoAmI", "$whoAmI";
-        }
+        };
         const "do-after" {
             apply "child::send[1]/following-sibling::action" with "whoAmI", "$whoAmI";
-        }
+        };
         const "do-without" {
             if "count(child::send)=0" {
                 apply "child::action" with "whoAmI", "$whoAmI";
             }
-        }
+        };
         const "do-init" {
             if "$target and not(/protocol/fsm[1]/state[@name=$target]/event[@name='Init']/send)" {
                 apply "/protocol/fsm[1]/state[@name=$target]/event[@name='Init']/action" with "whoAmI", "$whoAmI";
             }
-        }
+        };
         const "messageString" {
             for "child::send" {
                 const "message", "@name";
@@ -211,29 +225,20 @@ tstylesheet {
                     }
                 } 
             }
-        }
-        // The ground condition for the recursion is still ugly, but it's doing it's job.
-        const "stopCondition", "(((ancestor::state/@timeout='off' and not($target)) or //state[@name=$target]/@timeout='off') and not(child::send) and //state[@name=$states[2]]/@timeout='off' and //state[@name=$states[3]]/@timeout='off') or ($states[2]='End' and $states[3]='End' and $target='End') or $depth>$maxdepth";
-
-        // amend the log
-        const "newlog" {
-            const "condition", "ancestor-or-self::condition/@name";
-            value "$log";
-            | ----------------------------------------------------------------------------------
-            | «$whoAmI»: at «$ownState» on «$event» if «$condition» send «child::send» go «$target» 
-            value "$states";
-            | 
-            | «(((ancestor::state/@timeout='off' and not($target)) or //state[@name=$target]/@timeout='off') and not(child::send) and //state[@name=$states[2]]/@timeout='off' and //state[@name=$states[3]]/@timeout='off')» or «($states[2]='End' and $states[3]='End' and $target='End')» or «$depth>$maxdepth»
-            | stop «$stopCondition»
         };
-        const "newstates" {
+        const "auxnewstates" {
             for "$states" {
                 choose {
                     when "$whoAmI=position() and $target" state value "$target";
                     otherwise state value ".";
                 }
             }
-        }
+        };
+        const "newstates", "exsl:node-set($auxnewstates)/*";
+        // The ground condition for the recursion is still ugly, but it's doing it's job.
+//backup        const "stopCondition", "(((ancestor::state/@timeout='off' and not($target)) or //state[@name=$target]/@timeout='off') and not(child::send) and //state[@name=$states[2]]/@timeout='off' and //state[@name=$states[3]]/@timeout='off') or ($states[2]='End' and $states[3]='End' and $target='End') or $depth>$maxdepth";
+        const "stopCondition", "(not(child::send) and (//state[@name=$newstates[1]]/@timeout='off' or $newstates[1]='End') and (//state[@name=$newstates[2]]/@timeout='off' or $newstates[2]='End') and (//state[@name=$newstates[3]]/@timeout='off' or $newstates[3]='End')) or $depth>$maxdepth";
+
         const "testmsc" {
             value "$msc";
             |   «$eventString»
@@ -241,44 +246,64 @@ tstylesheet {
             value "$messageString";
             value "$do-after";
             value "$do-without";
-            if "$target" |   «$whoAmI» box «$whoAmI»     [label="«$target»"];
-            value "$do-init";
+            if "$target" |   «$Devices[$whoAmI]» box «$Devices[$whoAmI]»     [label="«$target»"];
+            if "not($stopCondition)" value "$do-init";
 //            for message that is only understood by thirdDevice {
 //                const "message", "@name";
 //                const "statename", "$states[3]";
 //                apply "//state[@name=$statename]/event[@name=$message]" {
-//                    with "states", "exsl:node-set($newstates)/*",
+//                    with "states", "$newstates",
 //                    with "whoAmI", "$Devices[3]",
 //                    with "log", "$log",
 //                    with "depth", "$depth",
 //                    with "return", "true";
 //            }
-        }
+        };
+        // amend the log
+        const "newlog" {
+            const "condition", "ancestor-or-self::condition/@name";
+            value "$log";
+            | ----------------------------------------------------------------------------------
+            | «$Devices[$whoAmI]»: at «$ownState» on «$event» if «$condition» send «child::send» go «$target» 
+            for "$newstates" | «.»,
+            |
+//            | «not(child::send)» and «//state[@name=$newstates[1]]/@timeout='off'» and «//state[@name=$newstates[2]]/@timeout='off'» and «//state[@name=$newstates[3]]/@timeout='off'»
+//           | «(not(child::send) and //state[@name=$newstates[1]]/@timeout='off' and //state[@name=$newstates[2]]/@timeout='off' and //state[@name=$newstates[3]]/@timeout='off')» or «($newstates[2]='End' and $newstates[3]='End' and $newstates[1]='End')» or «$depth>$maxdepth»
+//backup           | «(((ancestor::state/@timeout='off' and not($target)) or //state[@name=$target]/@timeout='off') and not(child::send) and //state[@name=$states[2]]/@timeout='off' and //state[@name=$states[3]]/@timeout='off')» or «($states[2]='End' and $states[3]='End' and $target='End')» or «$depth>$maxdepth»
+            | loop «$messageString!='' and contains($msc, $messageString)»
+            | dead end «(not(child::send) and not($target) and not(child::action))»
+            | send «boolean(child::send)»
+            | stop «$stopCondition»
+//            value "$testmsc";
+        };
         choose {
-            // First check for abort condition(s)
-            // Now we only check for loops.
-            // In that case we print the log and go to another recursion path.
-            when "contains($msc, $messageString) or (not(child::send) and not($target) and not(child::action))" {
-                value "$newlog"
-                | loop detected «$depth»
-            }
-            // Then for ground conditions
+            // First check for ground conditions
             when "$stopCondition" {
                 const "newmsc", "$testmsc";
                 call "lastStep"
                     with "newlog", "$newlog",
                     with "target", "$target",
                     with "whoAmI", "$whoAmI",
-                    with "states", "$states",
+                    with "states", "$newstates",
                     with "msc", "$newmsc",
                     with "depth", "$depth";
             }
-            when "child::send" {
+            // Then check for abort condition(s)
+            // First we check for loops.
+            // In that case we print the log and go to another recursion path.
+            when "$messageString!='' and contains($msc, $messageString)" {
+                value "$newlog"
+                | loop detected «$depth»
+            }
+            when "(not(child::send) and not($target) and not(child::action))" {
+                value "$newlog"
+                | no path ahead «$depth»
+            }
+            when "boolean(child::send)" {
                 const "nextlog" {
                     value "$newlog";
                     |  b «$depth» 
                 };
-                const "newmsc", "$testmsc";
                 for "child::send" {
                     const "message", "@name";
                     const "stateset", "/protocol/fsm[1]//state";
@@ -289,19 +314,38 @@ tstylesheet {
                         // Messages to third Device are already taken care of
                         if "not($whoAmI=$rec) and not($rec=3) and $receives" {
                             apply "$stateset[@name=$states[$rec]]/event[@name=$message]"
-                                with "states", "exsl:node-set($newstates)/*",
-                                with "whoAmI", "$groupLeader",
+                                with "states", "$newstates",
+                                with "whoAmI", "$rec",
                                 with "depth", "$depth+1",
                                 with "log", "$nextlog",
-                                with "msc", "$newmsc";
+                                with "msc", "$testmsc";
                         }
                     } 
                 }
             }
+            // This will only be entered if there is no message to send
+            when "$target and //state[@name=$target]/event[@name='Init']/send|transition" {
+                const "nextlog" {
+                    value "$newlog";
+                    | Init needed at «$target»(«$Devices[$whoAmI]»)
+                }
+                value "$nextlog";
+                | apply "/protocol/fsm[1]/state[@name=«$newstates[$whoAmI]»]/«event[@name='Init']/@name»"
+                apply "/protocol/fsm[1]/state[@name=$newstates[$whoAmI]]/event[@name='Init']"
+                    with "states", "$newstates",
+                    with "whoAmI", "$whoAmI",
+                    with "depth", "$depth+1",
+                    with "log", "$nextlog",
+                    with "msc", "$testmsc";
+            }
+            otherwise {
+                value "$newlog";
+                | choose not exhaustive
+            }
         } //choose
         if "not($stopCondition)" {
                  call "nexternal"
-                    with "states", "exsl:node-set($newstates)/*",
+                    with "states", "$newstates",
                     with "whoAmI", "$whoAmI",
                     with "depth", "$depth+1",
                     with "log", "$newlog",
@@ -369,10 +413,10 @@ tstylesheet {
         // For the footer of the MSC
         const "stateString" choose {
             when ("$target and not($target=$ownState)") {
-            |    «$whoAmI» box «$whoAmI» [label="«$target»"],
+            |    «$Devices[$whoAmI]» box «$Devices[$whoAmI]» [label="«$target»"],
             }
             otherwise {
-            |    «$whoAmI» box «$whoAmI» [label="«$ownState»"],
+            |    «$Devices[$whoAmI]» box «$Devices[$whoAmI]» [label="«$ownState»"],
             }
         };
         // We write the log
@@ -386,7 +430,14 @@ tstylesheet {
             |    «$msc»
             value "$stateString";
             for "$Devices" {
-                if "not(position()=$whoAmI)" |    «$Devices[position()]» box «$Devices[position()]» [label="«$states[position()]»"];
+                const "pos", "position()";
+                if "not(position()=$whoAmI)" {
+                    |    «$Devices[$pos]» box «$Devices[$pos]» [label="«$states[$pos]»"]
+                    choose {
+                        when "$pos=3" > ;
+                        otherwise > ,
+                    }
+                }
             }
             | }
         }
@@ -406,7 +457,7 @@ tstylesheet {
                         > not «preceding-sibling::condition/@name»
                 }
             }
-                | «$whoAmI» abox «$whoAmI» [label="«$name»"];
+                | «$Devices[$whoAmI]» abox «$Devices[$whoAmI]» [label="«$name»"];
         }
     }
 
@@ -421,11 +472,15 @@ tstylesheet {
         for "/protocol/fsm[1]/state[@name=$target]/event" {
             const "name", "@name";
             if "boolean(/protocol/fsm[1]/external[@name=$name])" {
+                const "newlog" {
+                    value "$log"
+                    | nexternal «$name»
+                }
                 apply "."
                     with "whoAmI", "$whoAmI",
                     with "states", "$states",
                     with "depth", "$depth+1",
-                    with "log", "$log",
+                    with "log", "$newlog",
                     with "msc", "$msc";
             }
         }
