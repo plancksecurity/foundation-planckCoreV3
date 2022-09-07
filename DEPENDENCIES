@@ -2,7 +2,7 @@
 ## Prefer git tags instead of SHA hashes when possible.
 pEpEngineSequoiaBackend=81f582c64d295cac38941a15681c30758799c797
 yml2=2.7.1
-libpEpTransport=5738d9f0703215d923d396fa1720631a7003f284
+libpEpTransport=87b02302835254feb10e3e9743a2a4e5509530bc
 
 # sqlite3 is technically an optional dependency: the engine can also be built
 # with the copy of sqlite3 which is distributed along with its sources.
