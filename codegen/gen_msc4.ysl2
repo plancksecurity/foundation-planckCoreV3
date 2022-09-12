@@ -288,6 +288,7 @@ tstylesheet {
         if "$return=$true" {
                 | «$newstates[3]»;;
                 value "$testmsc";
+                | ###
         }
         if "not($return) or $return=$false" {
             choose {
@@ -435,6 +436,7 @@ tstylesheet {
         param "msc";
         param "target";
         const "stateset", "/protocol/fsm[1]/state";
+//        if "$whoAmI<3" {
         for "$states" {
             const "state", ".";
             const "pos", "position()";
@@ -454,6 +456,7 @@ tstylesheet {
                 }
             }
         }
+//        }
     }
 } //tstylesheet
 
