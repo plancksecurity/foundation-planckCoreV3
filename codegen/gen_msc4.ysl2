@@ -239,7 +239,9 @@ tstylesheet {
                 // Originally this should only be used for messages that are understood only by third Device.
                 // But at least CommitReject, Rollback and CommitAccept MUST be rendered by all receiptients.
                 // So let's try to ditch the condition that no one else understands this message and try what'll happen.
-                if "(boolean(//state[@name=$states[3]]/event[@name=$message]) and not($whoAmI=3))" {
+                // Ok, didn't work out nicely.
+                // Second guess: Allowlist messages.
+                if "((not(//state[@name=$states[1]]/event[@name=$message]) or $whoAmI=1) and (not(//state[@name=$states[2]]/event[@name=$message]) or $whoAmI=2) or contains('CommitReject,CommitAccept,Rollback',$message)) and (boolean(//state[@name=$states[3]]/event[@name=$message]) and not($whoAmI=3))" {
                 apply "//state[@name=$states[3]]/event[@name=$message]" 
                     with "states", "$states",
                     with "whoAmI", "3",
