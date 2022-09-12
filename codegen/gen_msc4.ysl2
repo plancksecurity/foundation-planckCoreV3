@@ -157,7 +157,7 @@ tstylesheet {
                 | «$msc» 
                 call "writeConditions" with "whoAmI", "$whoAmI";
             }
-            call "nextStep"
+            call "prepare4nextStep"
                 with "states", "$states",
                 with "whoAmI", "$whoAmI",
                 with "groupLeader", "$groupLeader",
@@ -168,7 +168,7 @@ tstylesheet {
         }
         // Some messages and transitions aren't conditional
         if "count(descendant::condition)=0" {
-            call "nextStep"
+            call "prepare4nextStep"
                 with "states", "$states",
                 with "whoAmI", "$whoAmI",
                 with "groupLeader", "$groupLeader",
@@ -180,7 +180,7 @@ tstylesheet {
     } //template event
 
     // This is a function, which means it gets called with the previous event or a condition therein.
-    function "nextStep" {
+    function "prepare4nextStep" {
         param "states";
         param "whoAmI";
         param "groupLeader";
@@ -227,6 +227,12 @@ tstylesheet {
                 } 
             }
         };
+        const "messageTest" {
+            for "str:tokenize($messageString,'\n')" {
+                > «contains($msc,.)» or
+            }
+            > false
+        };
         const "thirdPartyStuff" {
             for "child::send" {
                 const "message", "@name";
@@ -264,7 +270,6 @@ tstylesheet {
             value "$do-without";
             if "$target" |   «$Devices[$whoAmI]» box «$Devices[$whoAmI]»     [label="«$target»"];
             if "not($stopCondition)" value "$do-init";
-            if "$thirdPartyStuff" value "substring-after($thirdPartyStuff,';;')";
         };
         // amend the log
         const "newlog" {
@@ -291,78 +296,115 @@ tstylesheet {
                 | ###
         }
         if "not($return) or $return=$false" {
-            choose {
-                // First check for ground conditions
-                when "$stopCondition" {
-                    call "lastStep"
-                        with "newlog", "$newlog",
-                        with "target", "$target",
-                        with "whoAmI", "$whoAmI",
+            const "cwd", ".";
+            for "str:tokenize($thirdPartyStuff,'###')" {
+                const "thirdDeviceMSC", "substring-after(.,';;')";
+                for "$cwd" {
+                call "nextStep"
+                    with "whoAmI", "$whoAmI",
+                    with "depth", "$depth",
+                    with "stopCondition", "$stopCondition",
+                    with "messageTest", "dyn:evaluate($messageTest)",
+                    with "newstates", "$newstates",
+                    with "target", "$target",
+                    with "msc" { value "$testmsc"; value "$thirdDeviceMSC"; },
+                    with "newlog", "$newlog";
+                }
+            } //for tokenize
+            if "not($thirdPartyStuff) or $thirdPartyStuff=''" {
+                call "nextStep"
+                    with "whoAmI", "$whoAmI",
+                    with "depth", "$depth",
+                    with "stopCondition", "$stopCondition",
+                    with "messageTest", "dyn:evaluate($messageTest)",
+                    with "newstates", "$newstates",
+                    with "target", "$target",
+                    with "msc", "$testmsc",
+                    with "newlog", "$newlog";
+            }
+        } //if return=false
+    } //function prepare4nextStep
+
+    function "nextStep" {
+        param "whoAmI";
+        param "depth";
+        param "stopCondition";
+        param "messageTest";
+        param "newstates";
+        param "target";
+        param "msc";
+        param "newlog";
+        choose {
+            // First check for ground conditions
+            when "$stopCondition" {
+                call "lastStep"
+                    with "newlog", "$newlog",
+                    with "target", "$target",
+                    with "whoAmI", "$whoAmI",
+                    with "states", "$newstates",
+                    with "msc", "$msc",
+                    with "depth", "$depth";
+            }
+            // Then check for abort condition(s)
+            // First we check for loops.
+            // In that case we print the log and go to another recursion path.
+            when "$messageTest" {
+                value "$newlog"
+                | loop detected «$depth»
+            }
+            when "(not(child::send) and not($target) and not(child::action))" {
+                value "$newlog"
+                | no path ahead «$depth»
+            }
+            otherwise {
+                if "boolean(child::send)" {
+                    const "nextlog" {
+                        value "$newlog";
+                        |  b «$depth» 
+                    };
+                    for "child::send" {
+                        const "message", "@name";
+                        const "stateset", "/protocol/fsm[1]//state";
+                        for "$Devices" {
+                            const "rec", "position()";
+                            const "state", "$newstates[$rec]";
+                            const "receives", "boolean($stateset[@name=$state]/event[@name=$message])";
+                            // Messages to third Device are already taken care of
+                            if "not($whoAmI=$rec) and not($rec=3) and $receives" {
+                                apply "$stateset[@name=$newstates[$rec]]/event[@name=$message]"
+                                    with "states", "$newstates",
+                                    with "whoAmI", "$rec",
+                                    with "depth", "$depth+1",
+                                    with "log", "$nextlog",
+                                    with "msc", "$msc";
+                            }
+                        } 
+                    }
+                }
+                if "$target and //state[@name=$target]/event[@name='Init']/send|//state[@name=$target]/event[@name='Init']/transition" {
+                    const "nextlog" {
+                        value "$newlog";
+                        | «$target» and «count(//state[@name=$target]/event[@name='Init']/send)»
+                        | Init needed at «$target»(«$Devices[$whoAmI]»)
+                    }
+                    apply "/protocol/fsm[1]/state[@name=$newstates[$whoAmI]]/event[@name='Init']"
                         with "states", "$newstates",
-                        with "msc", "$testmsc",
-                        with "depth", "$depth";
+                        with "whoAmI", "$whoAmI",
+                        with "depth", "$depth+1",
+                        with "log", "$nextlog",
+                        with "msc", "$msc";
                 }
-                // Then check for abort condition(s)
-                // First we check for loops.
-                // In that case we print the log and go to another recursion path.
-                when "$messageString!='' and contains($msc, $messageString)" {
-                    value "$newlog"
-                    | loop detected «$depth»
+                if "$target and not(//state[@name=$target]/event[@name='Init']/send|//state[@name=$target]/event[@name='Init']/transition)" {
+                    call "nexternal"
+                        with "states", "$newstates",
+                        with "whoAmI", "$whoAmI",
+                        with "depth", "$depth+1",
+                        with "log", "$newlog",
+                        with "msc", "$msc",
+                        with "target", "$newstates[$whoAmI]";
                 }
-                when "(not(child::send) and not($target) and not(child::action))" {
-                    value "$newlog"
-                    | no path ahead «$depth»
-                }
-                otherwise {
-                    if "boolean(child::send)" {
-                        const "nextlog" {
-                            value "$newlog";
-                            |  b «$depth» 
-                        };
-                        for "child::send" {
-                            const "message", "@name";
-                            const "stateset", "/protocol/fsm[1]//state";
-                            for "$Devices" {
-                                const "rec", "position()";
-                                const "state", "$states[$rec]";
-                                const "receives", "boolean($stateset[@name=$state]/event[@name=$message])";
-                                // Messages to third Device are already taken care of
-                                if "not($whoAmI=$rec) and not($rec=3) and $receives" {
-                                    apply "$stateset[@name=$states[$rec]]/event[@name=$message]"
-                                        with "states", "$newstates",
-                                        with "whoAmI", "$rec",
-                                        with "depth", "$depth+1",
-                                        with "log", "$nextlog",
-                                        with "msc", "$testmsc";
-                                }
-                            } 
-                        }
-                    }
-                    if "$target and //state[@name=$target]/event[@name='Init']/send|//state[@name=$target]/event[@name='Init']/transition" {
-                        const "nextlog" {
-                            value "$newlog";
-                            | «$target» and «count(//state[@name=$target]/event[@name='Init']/send)»
-                            | Init needed at «$target»(«$Devices[$whoAmI]»)
-                        }
-                        apply "/protocol/fsm[1]/state[@name=$newstates[$whoAmI]]/event[@name='Init']"
-                            with "states", "$newstates",
-                            with "whoAmI", "$whoAmI",
-                            with "depth", "$depth+1",
-                            with "log", "$nextlog",
-                            with "msc", "$testmsc";
-                    }
-                    if "$target and not(//state[@name=$target]/event[@name='Init']/send|//state[@name=$target]/event[@name='Init']/transition)" {
-                        call "nexternal"
-                            with "states", "$newstates",
-                            with "whoAmI", "$whoAmI",
-                            with "depth", "$depth+1",
-                            with "log", "$newlog",
-                            with "msc", "$testmsc",
-                            with "target", "$newstates[$whoAmI]";
-                    }
-                }
-            } //choose
-        } //if $result=false
+            }
+        } //choose
     } //function nextStep
 
     function "lastStep" {
