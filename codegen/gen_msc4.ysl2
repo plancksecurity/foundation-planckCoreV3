@@ -1,7 +1,7 @@
 include yslt.yml2
 
 tstylesheet {
-    const "maxdepth", "15";
+    const "maxdepth", "25";
     const "mindepth", "4";
 
     const "true", "boolean(1)";
@@ -152,6 +152,7 @@ tstylesheet {
 
         // Some messages and transitions are conditional
         for ("descendant::condition|descendant::else") {
+            if "not(child::condition)" {
             // Include conditions in MSC
             const "newmsc" {
                 | «$msc» 
@@ -165,7 +166,7 @@ tstylesheet {
                 with "log", "$log",
                 with "return", "$return",
                 with "depth", "$depth";
-        }
+        }}
         // Some messages and transitions aren't conditional
         if "count(descendant::condition)=0" {
             call "prepare4nextStep"
@@ -225,6 +226,10 @@ tstylesheet {
                         | «$Devices[$whoAmI]» -> «$Devices[$rec]» [label="«$message»"];
                     }
                 } 
+                if "not($stateset[@name=$states[1]]/event[@name=$message] or $stateset[@name=$states[2]]/event[@name=$message] or $stateset[@name=$states[3]]/event[@name=$message])" {
+                   if "$whoAmI<3" | «$Devices[$whoAmI]» -x «$Devices[$whoAmI+1]» [label="«$message»"];
+                   if "$whoAmI=3" | «$Devices[$whoAmI]» -x «$Devices[$whoAmI-1]» [label="«$message»"];
+                }
             }
         };
         const "messageTest" {
@@ -263,8 +268,7 @@ tstylesheet {
         };
         const "newstates", "exsl:node-set($auxnewstates)/*";
         // The ground condition for the recursion is still ugly, but it's doing it's job.
-//backup        const "stopCondition", "(((ancestor::state/@timeout='off' and not($target)) or //state[@name=$target]/@timeout='off') and not(child::send) and //state[@name=$states[2]]/@timeout='off' and //state[@name=$states[3]]/@timeout='off') or ($states[2]='End' and $states[3]='End' and $target='End') or $depth>$maxdepth";
-        const "stopCondition", "(not(child::send) and (//state[@name=$newstates[1]]/@timeout='off' or $newstates[1]='End') and (//state[@name=$newstates[2]]/@timeout='off' or $newstates[2]='End') and (//state[@name=$newstates[3]]/@timeout='off' or $newstates[3]='End')) or $depth>$maxdepth";
+        const "stopCondition", "((not(child::send) or (boolean(child::send) and not(contains($messageString,'->')) and contains($messageString,'-x'))) and (//state[@name=$newstates[1]]/@timeout='off' or $newstates[1]='End') and (//state[@name=$newstates[2]]/@timeout='off' or $newstates[2]='End') and (//state[@name=$newstates[3]]/@timeout='off' or $newstates[3]='End')) or $depth>$maxdepth";
 
         const "testmsc" {
             value "$msc";
@@ -284,12 +288,10 @@ tstylesheet {
             | «$Devices[$whoAmI]»: at «$ownState» on «$event» if «$condition» send «child::send» go «$target» 
             for "$newstates" | «.»,
             |
-//            | «not(child::send)» and «//state[@name=$newstates[1]]/@timeout='off'» and «//state[@name=$newstates[2]]/@timeout='off'» and «//state[@name=$newstates[3]]/@timeout='off'»
-//           | «(not(child::send) and //state[@name=$newstates[1]]/@timeout='off' and //state[@name=$newstates[2]]/@timeout='off' and //state[@name=$newstates[3]]/@timeout='off')» or «($newstates[2]='End' and $newstates[3]='End' and $newstates[1]='End')» or «$depth>$maxdepth»
-//backup           | «(((ancestor::state/@timeout='off' and not($target)) or //state[@name=$target]/@timeout='off') and not(child::send) and //state[@name=$states[2]]/@timeout='off' and //state[@name=$states[3]]/@timeout='off')» or «($states[2]='End' and $states[3]='End' and $target='End')» or «$depth>$maxdepth»
             | loop «$messageString!='' and contains($msc, $messageString)»
             | dead end «(not(child::send) and not($target) and not(child::action))»
             | send «boolean(child::send)»
+            | sendx «boolean(child::send) and not(contains($messageString,'->')) and contains($messageString,'-x')»
             | stop «$stopCondition»
             | "«$thirdDeviceNewState»"
             | tps «$thirdPartyStuff»
@@ -298,11 +300,11 @@ tstylesheet {
         if "$return=$true" {
                 | «$newstates[3]»;;
                 value "$testmsc";
-                | ###
+                > #
         }
         if "not($return) or $return=$false" {
             const "cwd", ".";
-            for "str:tokenize($thirdPartyStuff,'###')" {
+            for "str:tokenize($thirdPartyStuff,'#')" {
                 const "thirdDeviceMSC", "substring-after(.,';;')";
                 for "$cwd" {
                 call "nextStep"
