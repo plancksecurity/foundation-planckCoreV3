@@ -152,7 +152,6 @@ tstylesheet {
 
         // Some messages and transitions are conditional
         for ("descendant::condition|descendant::else") {
-            if "not(child::condition)" {
             // Include conditions in MSC
             const "newmsc" {
                 | «$msc» 
@@ -166,7 +165,7 @@ tstylesheet {
                 with "log", "$log",
                 with "return", "$return",
                 with "depth", "$depth";
-        }}
+        }
         // Some messages and transitions aren't conditional
         if "count(descendant::condition)=0" {
             call "prepare4nextStep"
@@ -256,12 +255,10 @@ tstylesheet {
                 }
             }
         };
-        const "thirdDeviceNewState", "substring-before($thirdPartyStuff,';;')";
         const "auxnewstates" {
             for "$states" {
                 choose {
                     when "$whoAmI=position() and $target" state value "$target";
-                    when "position()=3 and $thirdDeviceNewState!=''" state value "$thirdDeviceNewState";
                     otherwise state value ".";
                 }
             }
@@ -293,7 +290,6 @@ tstylesheet {
             | send «boolean(child::send)»
             | sendx «boolean(child::send) and not(contains($messageString,'->')) and contains($messageString,'-x')»
             | stop «$stopCondition»
-            | "«$thirdDeviceNewState»"
             | tps «$thirdPartyStuff»
 //            value "$testmsc";
         };
@@ -306,13 +302,23 @@ tstylesheet {
             const "cwd", ".";
             for "str:tokenize($thirdPartyStuff,'#')" {
                 const "thirdDeviceMSC", "substring-after(.,';;')";
+                const "thirdDeviceNewState", "substring-before(.,';;')";
+                const "auxNewstates" {
+                    for "$newstates" {
+                        choose {
+                            when "position()=3 and $thirdDeviceNewState!=''" state value "$thirdDeviceNewState";
+                            otherwise state value ".";
+                        }
+                    }
+                };
+                const "statesToPassOn", "exsl:node-set($auxNewstates)/*";
                 for "$cwd" {
                 call "nextStep"
                     with "whoAmI", "$whoAmI",
                     with "depth", "$depth",
                     with "stopCondition", "$stopCondition",
                     with "messageTest", "dyn:evaluate($messageTest)",
-                    with "newstates", "$newstates",
+                    with "newstates", "$statesToPassOn",
                     with "target", "$target",
                     with "msc" { value "$testmsc"; value "$thirdDeviceMSC"; },
                     with "newlog", "$newlog";
@@ -461,7 +467,14 @@ tstylesheet {
     // A helper function to write conditional clauses into the MSC
     function "writeConditions" {
         param "whoAmI";
-        for ("ancestor-or-self::condition|ancestor-or-self::else") {
+        for "ancestor::condition|ancestor::else" {
+            apply "." with "whoAmI", "$whoAmI";
+            apply "child::action" with "whoAmI", "$whoAmI";
+        }
+        apply "." with "whoAmI", "$whoAmI";
+    }
+    template "condition" {
+        param "whoAmI";
             const "name" {
                 choose {
                     // are we in the if clause
@@ -473,7 +486,6 @@ tstylesheet {
                 }
             }
                 | «$Devices[$whoAmI]» abox «$Devices[$whoAmI]» [label="«$name»"];
-        }
     }
 
     // Because we need this more than once:
