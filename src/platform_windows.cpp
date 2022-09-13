@@ -205,7 +205,10 @@ const char *_per_user_directory(void)
     return path.c_str();
 }
 
-int pEp_fnmatch(const char *pattern, const char *string) {
+
+extern "C" {
+
+int pEp_fnmatch(const char* pattern, const char* string) {
     assert(pattern && string);
     if (! (pattern && string))
         abort();
@@ -218,7 +221,6 @@ int pEp_fnmatch(const char *pattern, const char *string) {
             : 1);
 }
 
-extern "C" {
 
 DYNAMIC_API const char *per_user_directory(void)
 {
