@@ -1,3 +1,4 @@
+#define _EXPORT_PEP_ENGINE_DLL
 #include "media_key.h"
 
 #include "pEp_internal.h"
