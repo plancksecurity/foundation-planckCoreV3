@@ -69,16 +69,30 @@ PEP_STATUS media_key_insert(PEP_SESSION session,
                             const char *fpr)
 {
     /* Sanity checks. */
-    assert(session && address_pattern && fpr);
-    if (! (session && address_pattern && fpr))
+    assert(session && address_pattern && fpr && ! EMPTYSTR(fpr));
+    if (! (session && address_pattern && fpr && ! EMPTYSTR(fpr)))
         return PEP_ILLEGAL_VALUE;
 
     /* Work with a normalised version of the address pattern. */
     address_pattern = normalize_address(address_pattern);
 
-    stringpair_list_t *old_map = session->media_key_map;
+    /* Initialise heap-allocated pointers to NULL so that they all have a known
+       value in case of allocation failure. */
+    char *normalized_fpr = NULL;
     stringpair_t *new_pair = NULL;
-    new_pair = new_stringpair(address_pattern, fpr);
+
+    /* Work with a normalised copy of the FPR. */
+    size_t fpr_length = strlen(fpr);
+    normalized_fpr = malloc(fpr_length + 1);
+    if (normalized_fpr == NULL)
+        goto out_of_memory;
+    int i;
+    for (i = 0; i /* <= , to include the trailing '\0' */ <= fpr_length; i ++)
+        normalized_fpr [i] = toupper(fpr [i]);
+
+    /* Make the new entry. */
+    stringpair_list_t *old_map = session->media_key_map;
+    new_pair = new_stringpair(address_pattern, normalized_fpr);
     if (new_pair == NULL)
         goto out_of_memory;
     stringpair_list_t *new_last_element
@@ -89,9 +103,11 @@ PEP_STATUS media_key_insert(PEP_SESSION session,
        have nothing else to do as long as the map was not previously NULL... */
     if (old_map == NULL)
         session->media_key_map = new_last_element;
+    free(normalized_fpr);
     return PEP_STATUS_OK;
 
  out_of_memory:
+    free(normalized_fpr);
     free(new_pair);
     return PEP_OUT_OF_MEMORY;
 }
