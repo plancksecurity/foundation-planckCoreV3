@@ -85,8 +85,9 @@ PEP_STATUS media_key_finalize_map(PEP_SESSION session);
  *
  *  @retval PEP_STATUS_OK         success
  *  @retval PEP_ILLEGAL_VALUE     session NULL, any address pattern or FPR
- *                                NULL.  Notice that the entire map is allowed
- *                                to be NULL and so is any pair in the map.
+ *                                NULL, any FPR is an empty string.  Notice
+ *                                that the entire map is allowed to be NULL
+ *                                and so is any pair in the map.
  *  @retval PEP_OUT_OF_MEMORY     memory allocation failed
  *
  */
@@ -113,7 +114,7 @@ DYNAMIC_API PEP_STATUS config_media_keys(PEP_SESSION session,
  *                                matching the pattern
  *
  *  @retval PEP_STATUS_OK         success
- *  @retval PEP_ILLEGAL_VALUE     any argument NULL
+ *  @retval PEP_ILLEGAL_VALUE     any argument NULL, FPR is an empty string
  *  @retval PEP_OUT_OF_MEMORY     memory allocation failed
  *
  */
