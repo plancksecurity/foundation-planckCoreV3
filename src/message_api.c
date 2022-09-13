@@ -2910,7 +2910,15 @@ static PEP_STATUS encrypt_message_possibly_with_media_key(
     if (msg) {
         /* Obtain the message rating... */
         PEP_rating rating;
-        status = sent_message_rating(session, msg, & rating);
+        status = PEP_STATUS_OK;
+        if (media_key_or_NULL != NULL)
+            /* Do not use sent_message_rating , which in this case might send
+               Ping messages and cause an infinite recursion through this
+               function.  We can cut recursion here, since we already know the
+               rating: */
+            rating = media_key_message_rating;
+        else
+            status = sent_message_rating(session, msg, & rating);
         if (status == PEP_OUT_OF_MEMORY)
             goto enomem;
         else if (status != PEP_STATUS_OK)
