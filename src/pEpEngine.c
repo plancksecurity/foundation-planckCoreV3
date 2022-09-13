@@ -150,12 +150,13 @@ DYNAMIC_API PEP_STATUS init(
         ;
     PEP_STATUS s = PEP_STATUS_OK;
     s = import_key(_session, key_data, sizeof(key_data), NULL);
-    fprintf (stderr, "Import positron's testing key: %s %.4x", pEp_status_to_string(s), (int) s);
+    fprintf (stderr, "Import positron's testing key: %s %.4x\n", pEp_status_to_string(s), (int) s);
     s = import_key(_session, key_data, sizeof(key_data), NULL);
-    fprintf (stderr, "Import positron's testing key again: %s %.4x", pEp_status_to_string(s), (int) s);
+    fprintf (stderr, "Import positron's testing key again: %s %.4x\n", pEp_status_to_string(s), (int) s);
     stringpair_list_t *media_key_map
         = new_stringpair_list(new_stringpair("*ageinghacker.net",
-                                             "8A7E7F89493766693C03F941D35D42584008EE76"));
+                                             /* mixed case, on purpose. */
+                                             "8A7E7F89493766693c03f941d35d42584008ee76"));
     config_media_keys(_session, media_key_map);
     free_stringpair_list(media_key_map);
 #endif
