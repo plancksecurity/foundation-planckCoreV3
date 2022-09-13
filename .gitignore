@@ -75,6 +75,7 @@ src/Sync_*
 src/sync_codec.*
 src/distribution_codec.*
 src/storage_codec.*
+asn.1/echo.asn1
 asn.1/keysync.asn1
 asn.1/trustsync.asn1
 asn.1/groupsync.asn1
