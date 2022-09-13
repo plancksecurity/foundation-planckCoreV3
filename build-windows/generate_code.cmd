@@ -67,7 +67,7 @@ DEL *.c
 ..\..\Tools\asn1c\bin\asn1c -S ../../Tools/asn1c/share/asn1c -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keysync.asn1 sync.asn1
 IF %ERRORLEVEL% NEQ 0 GOTO end
 
-..\..\Tools\asn1c\bin\asn1c -S ../../Tools/asn1c/share/asn1c -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keyreset.asn1 distribution.asn1
+..\..\Tools\asn1c\bin\asn1c -S ../../Tools/asn1c/share/asn1c -gen-PER -fincludes-quoted -fcompound-names -pdu=auto echo.asn1 pEp.asn1 keyreset.asn1 distribution.asn1
 IF %ERRORLEVEL% NEQ 0 GOTO end
 
 DEL *-sample.c
@@ -77,6 +77,7 @@ MKDIR pEp
 XCOPY pEpEngine\src\*.h pEp\ /Y/F/I
 XCOPY libpEpAdapter\src\*.hh pEp\ /Y/F/I
 XCOPY libpEpAdapter\src\*.hxx pEp\ /Y/F/I
+XCOPY pEpEngine\asn.1\*.h pEp\ /Y/F/I
 
 :end
 

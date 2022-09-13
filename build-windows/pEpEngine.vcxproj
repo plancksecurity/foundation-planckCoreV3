@@ -72,14 +72,14 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PEPENGINE_EXPORTS;_CRT_SECURE_NO_WARNINGS;USE_SEQUOIA;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <EnablePREfast>false</EnablePREfast>
-      <AdditionalIncludeDirectories>$(SolutionDir)libetpan\build-windows\include;$(SolutionDir)Tools\asn1c\share\asn1c;$(SolutionDir)sequoia-ffi\openpgp-ffi\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)libetpan\build-windows\include;$(SolutionDir)Tools\asn1c\share\asn1c;$(SolutionDir)sequoia-ffi\openpgp-ffi\include;$(SolutionDir)pep;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>Default</CompileAs>
       <DisableSpecificWarnings>4703</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>sequoia_openpgp_ffi.lib;gmp.lib;nettle.lib;hogweed.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;bcrypt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>sequoia_openpgp_ffi.lib;gmp.lib;nettle.lib;hogweed.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;bcrypt.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <AdditionalLibraryDirectories>$(SolutionDir)sequoia-ffi\target\release\deps;C:\msys64\mingw32\lib</AdditionalLibraryDirectories>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -105,7 +105,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PEPENGINE_EXPORTS;USE_SEQUOIA;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>false</SDLCheck>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(SolutionDir)libetpan\build-windows\include;$(SolutionDir)Tools\asn1c\share\asn1c;$(SolutionDir)sequoia-ffi\openpgp-ffi\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)libetpan\build-windows\include;$(SolutionDir)Tools\asn1c\share\asn1c;$(SolutionDir)sequoia-ffi\openpgp-ffi\include;$(SolutionDir)pep;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ControlFlowGuard>Guard</ControlFlowGuard>
@@ -117,7 +117,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>sequoia_openpgp_ffi.lib;gmp.lib;nettle.lib;hogweed.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;bcrypt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>sequoia_openpgp_ffi.lib;gmp.lib;nettle.lib;hogweed.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;bcrypt.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)sequoia-ffi\target\release\deps;C:\msys64\mingw32\lib</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
@@ -138,6 +138,7 @@
     <ClCompile Include="..\src\bloblist.c" />
     <ClCompile Include="..\src\cryptotech.c" />
     <ClCompile Include="..\src\distribution_codec.c" />
+    <ClCompile Include="..\src\echo_api.c" />
     <ClCompile Include="..\src\email.c" />
     <ClCompile Include="..\src\etpan_mime.c" />
     <ClCompile Include="..\src\growing_buf.c" />
@@ -149,6 +150,7 @@
     <ClCompile Include="..\src\key_reset.c" />
     <ClCompile Include="..\src\labeled_int_list.c" />
     <ClCompile Include="..\src\map_asn1.c" />
+    <ClCompile Include="..\src\media_key.c" />
     <ClCompile Include="..\src\message.c" />
     <ClCompile Include="..\src\message_api.c" />
     <ClCompile Include="..\src\mime.c" />
@@ -182,6 +184,7 @@
     <ClInclude Include="..\src\cryptotech.h" />
     <ClInclude Include="..\src\distribution_codec.h" />
     <ClInclude Include="..\src\dynamic_api.h" />
+    <ClInclude Include="..\src\echo_api.h" />
     <ClInclude Include="..\src\email.h" />
     <ClInclude Include="..\src\etpan_mime.h" />
     <ClInclude Include="..\src\fsm_common.h" />
@@ -194,6 +197,7 @@
     <ClInclude Include="..\src\key_reset.h" />
     <ClInclude Include="..\src\labeled_int_list.h" />
     <ClInclude Include="..\src\map_asn1.h" />
+    <ClInclude Include="..\src\media_key.h" />
     <ClInclude Include="..\src\message.h" />
     <ClInclude Include="..\src\message_api.h" />
     <ClInclude Include="..\src\mime.h" />
