@@ -18,11 +18,13 @@ protocol Sync 1 {
                 if deviceGrouped {
                     send SynchronizeGroupKeys;
                     go Grouped;
-                }
+                } 
+                else {
                 do newChallengeAndNegotiationBase;
                 debug > initial Beacon
                 send Beacon;
                 go Sole;
+                }
             }
         }
 
