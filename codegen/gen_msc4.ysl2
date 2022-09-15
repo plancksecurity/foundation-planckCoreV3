@@ -144,7 +144,7 @@ tstylesheet {
         call "initaction" with "action", "1", with "states", "$states";
         call "initaction" with "action", "2", with "states", "$states";
         call "initaction" with "action", "3", with "states", "$states";
-        | u -> «$Devices[1]» [label="«$message»"];
+        | u -> «$Devices[$whoAmI]» [label="«$message»"];
         }
         apply "//state[@name=$firstDeviceState]/event[@name=$message]", 1
                 with "states", "exsl:node-set($auxStates)/*",
@@ -241,7 +241,7 @@ tstylesheet {
                 } 
                 if "not($stateset[@name=$states[1]]/event[@name=$message] or $stateset[@name=$states[2]]/event[@name=$message] or $stateset[@name=$states[3]]/event[@name=$message])" {
                    if "$whoAmI<3" | «$Devices[$whoAmI]» -x «$Devices[$whoAmI+1]» [label="«$message»"];
-                   if "$whoAmI=3" | «$Devices[$whoAmI]» -x «$Devices[$whoAmI-1]» [label="«$message»"];
+                   if "$whoAmI=3" | «$Devices[$whoAmI]» -x «$Devices[2]» [label="«$message»"];
                 }
             }
         };
