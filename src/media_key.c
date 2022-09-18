@@ -176,7 +176,8 @@ DYNAMIC_API PEP_STATUS config_media_keys(PEP_SESSION session,
     /* Keep the old map, to be restored in case of any error. */
     stringpair_list_t *old_map = session->media_key_map;
 
-    /* Do the work: add every pair to the current map. */
+    /* Do the work: add every pair to a new empty map, disjoint from the old one
+       that we are keeping for the out-of-memory case. */
     session->media_key_map = NULL;
     PEP_STATUS status = PEP_STATUS_OK;
     for (rest = new_map; rest != NULL; rest = rest->next) {
