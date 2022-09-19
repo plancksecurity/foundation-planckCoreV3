@@ -130,29 +130,29 @@ TEST_F(MediaKeyTest, check_lookup) {
 
     /* Here instead of using actual key FPR we use human-readable strings which
        are an abbreviated form or description of the domain. */
-    media_key_insert(session, "*@pep.foundation", "aa:pep");
-    media_key_insert(session, "*@ageinghacker.net", "bb:age");
+    media_key_insert(session, "*@pep.foundation", "AA:PEP");
+    media_key_insert(session, "*@ageinghacker.net", "BB:AGE");
     /* A pattern like "*@*.ageinghacker.net" would have been more explicit, but
        it is nice to have instead "*ageinghacker.net", which is more general
        than the previous one "*@ageinghacker.net": the media-key map order will
        make (proper) subdomains of ageinghacker.net match "*@ageinghacker.net"
        but not "*ageinghacker.net". */
-    media_key_insert(session, "*ageinghacker.net", "bb:age-subdomain");
-    media_key_insert(session, "mailto:*@run-for-your.life", "cc:run");
-    media_key_insert(session, "?lice@the-world-is-burning.com", "dd:enjoy");
+    media_key_insert(session, "*ageinghacker.net", "BB:AGE-SUBDOMAIN");
+    media_key_insert(session, "mailto:*@run-for-your.life", "CC:RUN");
+    media_key_insert(session, "?lice@the-world-is-burning.com", "DD:ENJOY");
 
     /* Do the actual media-key lookups. */
-    TEST_KEY("luca@pep.foundation", "aa:pep");
-    TEST_KEY("luca-pep@run-for-your.life", "cc:run");
-    TEST_KEY("mailto:luca-pep@run-for-your.life", "cc:run");
-    TEST_KEY("somebodyelse@run-for-your.life", "cc:run");
-    TEST_KEY("lucasaiu-pep@ageinghacker.net", "bb:age");
-    TEST_KEY("saiu-pep@ageinghacker.net", "bb:age");
-    TEST_KEY("pep-saiu@abelson.ageinghacker.net", "bb:age-subdomain");
-    TEST_KEY("saiu-pep@sussman.ageinghacker.net", "bb:age-subdomain");
-    TEST_KEY("alice@the-world-is-burning.com", "dd:enjoy");
-    TEST_KEY("mailto:alice@the-world-is-burning.com", "dd:enjoy");
-    TEST_KEY("blice@the-world-is-burning.com", "dd:enjoy");
+    TEST_KEY("luca@pep.foundation", "AA:PEP");
+    TEST_KEY("luca-pep@run-for-your.life", "CC:RUN");
+    TEST_KEY("mailto:luca-pep@run-for-your.life", "CC:RUN");
+    TEST_KEY("somebodyelse@run-for-your.life", "CC:RUN");
+    TEST_KEY("lucasaiu-pep@ageinghacker.net", "BB:AGE");
+    TEST_KEY("saiu-pep@ageinghacker.net", "BB:AGE");
+    TEST_KEY("pep-saiu@abelson.ageinghacker.net", "BB:AGE-SUBDOMAIN");
+    TEST_KEY("saiu-pep@sussman.ageinghacker.net", "BB:AGE-SUBDOMAIN");
+    TEST_KEY("alice@the-world-is-burning.com", "DD:ENJOY");
+    TEST_KEY("mailto:alice@the-world-is-burning.com", "DD:ENJOY");
+    TEST_KEY("blice@the-world-is-burning.com", "DD:ENJOY");
     TEST_KEY("luca@aaargh.com", NULL);
     TEST_KEY("bob@aaargh.com", NULL);
     TEST_KEY("luca-and-bob@aaargh.com", NULL);
