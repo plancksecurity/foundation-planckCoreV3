@@ -77,27 +77,27 @@ extern "C" {
  */
 typedef enum {
     /* A strict lower limit: not intended for actual log entries. */
-    PEP_LOG_LEVEL_NOTHING =    0,
+    PEP_LOG_LEVEL_NOTHING     =   0,
 
     /* Errors. */
-    PEP_LOG_LEVEL_CRITICAL =   10,
-    PEP_LOG_LEVEL_ERROR =      20,
+    PEP_LOG_LEVEL_CRITICAL    =  10,
+    PEP_LOG_LEVEL_ERROR       =  20,
 
     /* Warnings. */
-    PEP_LOG_LEVEL_WARNING =    100,
-    PEP_LOG_LEVEL_BASIC =      PEP_LOG_LEVEL_WARNING,
+    PEP_LOG_LEVEL_WARNING     = 100,
+    PEP_LOG_LEVEL_BASIC       = PEP_LOG_LEVEL_WARNING,
 
     /* Events. */
-    PEP_LOG_LEVEL_EVENT =      200,
-    PEP_LOG_LEVEL_API =        210,
-    PEP_LOG_LEVEL_SERVICE =    PEP_LOG_LEVEL_API,
+    PEP_LOG_LEVEL_EVENT       = 200,
+    PEP_LOG_LEVEL_API         = 210,
+    PEP_LOG_LEVEL_SERVICE     = PEP_LOG_LEVEL_API,
 
     /* Debugging. */
-    PEP_LOG_LEVEL_DEBUG =      300,
-    PEP_LOG_LEVEL_TRACE =      310,
+    PEP_LOG_LEVEL_DEBUG       =  300,
+    PEP_LOG_LEVEL_TRACE       =  310,
 
     /* A strict upper limit: not intended for actual log entries. */
-    PEP_LOG_LEVEL_EVERYTHING = 1000
+    PEP_LOG_LEVEL_EVERYTHING  = 1000
 } PEP_LOG_LEVEL;
 
 /**
