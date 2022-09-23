@@ -111,18 +111,18 @@ typedef enum {
  */
 typedef enum {
     /* Discard log entries. */
-    PEP_LOG_DESTINATION_NONE      = 0,
+    PEP_LOG_DESTINATION_NONE      =  0,
 
     /* Print log entries in text format to the standard output or the standard
        error stream. */
-    PEP_LOG_DESTINATION_STDOUT    = 1,
-    PEP_LOG_DESTINATION_STDERR    = 2,
+    PEP_LOG_DESTINATION_STDOUT    =  1,
+    PEP_LOG_DESTINATION_STDERR    =  2,
 
     /* Send log entries to the syslog service. */
-    PEP_LOG_DESTINATION_SYSLOG    = 4,
+    PEP_LOG_DESTINATION_SYSLOG    =  4,
 
     /* Use the Android logging system. */
-    PEP_LOG_DESTINATION_ANDROID   = 8,
+    PEP_LOG_DESTINATION_ANDROID   =  8,
 
     /* Add entries to a local database. */
     PEP_LOG_DESTINATION_DATABASE  = 16,
