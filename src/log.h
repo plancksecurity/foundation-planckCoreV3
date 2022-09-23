@@ -305,17 +305,17 @@ typedef enum {
         char *_pEp_log_heap_string;                                             \
         char *_pEp_log_entry;                                                   \
         int _pEp_log_vasprintf_result                                           \
-          = _pEp_asprintf(& _pEp_log_heap_string,                               \
-                          /* Here the beginning of the expansion of             \
-                             __VA_ARGS__, if not empty, will be a literal       \
-                             string, which will concatenate with "" with no     \
-                             harm; but if on the other hand __VA_ARGS__         \
-                             expands to nothing there will still be a valid     \
-                             template.  This tricks makes it possible to use    \
-                             the logging facility to trace a line number        \
-                             without supplying any explicit string to print     \
-                             at all, not even "". */                            \
-                          "" __VA_ARGS__);                                      \
+          = pEp_asprintf(& _pEp_log_heap_string,                                \
+                         /* Here the beginning of the expansion of              \
+                            __VA_ARGS__, if not empty, will be a literal        \
+                            string, which will concatenate with "" with no      \
+                            harm; but if on the other hand __VA_ARGS__ expands  \
+                            to nothing there will still be a valid template.    \
+                            This tricks makes it possible to use the logging    \
+                            facility to trace a line number without supplying   \
+                            any explicit string to print at all, not even       \
+                            "". */                                              \
+                         "" __VA_ARGS__);                                       \
         if (_pEp_log_heap_string == NULL || _pEp_log_vasprintf_result < 0)      \
             /* Allocation failure.  This will be very hard to deal with, but    \
                we can make a desperate attempt of writing some memory           \
@@ -392,7 +392,7 @@ DYNAMIC_API PEP_STATUS pEp_log(PEP_SESSION session,
 /* A portable implementations of the non-standard GNU/BSD function asprintf
    which performs formatted output on a malloc-allocated string, to be freed by
    the user.  Set * string_pointer to NULL on allocation failure. */
-int _pEp_asprintf(char **string_pointer, const char *template, ...);
+int pEp_asprintf(char **string_pointer, const char *template, ...);
 
 
 /* Initialisation and finalisation
@@ -400,8 +400,8 @@ int _pEp_asprintf(char **string_pointer, const char *template, ...);
 
 /* These functions are used internally at the time of session initialisation and
    finalisation.  Not for the user. */
-PEP_STATUS pep_log_initialize(PEP_SESSION session);
-PEP_STATUS pep_log_finalize(PEP_SESSION session);
+PEP_STATUS pEp_log_initialize(PEP_SESSION session);
+PEP_STATUS pEp_log_finalize(PEP_SESSION session);
 
 #ifdef __cplusplus
 }

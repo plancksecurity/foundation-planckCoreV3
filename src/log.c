@@ -19,12 +19,12 @@
 /* Initialisation and finalisation
  * ***************************************************************** */
 
-PEP_STATUS pep_log_initialize(PEP_SESSION session)
+PEP_STATUS pEp_log_initialize(PEP_SESSION session)
 {
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS pep_log_finalize(PEP_SESSION session)
+PEP_STATUS pEp_log_finalize(PEP_SESSION session)
 {
     return PEP_STATUS_OK;
 }
@@ -34,7 +34,7 @@ PEP_STATUS pep_log_finalize(PEP_SESSION session)
  * ***************************************************************** */
 
 /* We can rely on vsnprintf , which is standard, for implementing vasprintf . */
-static int _pEp_vasprintf(char **string_pointer, const char *template,
+static int pEp_vasprintf(char **string_pointer, const char *template,
                           va_list args)
 {
     /* Sanity check. */
@@ -81,13 +81,13 @@ static int _pEp_vasprintf(char **string_pointer, const char *template,
     return res;
 }
 
-int _pEp_asprintf(char **string_pointer, const char *template, ...)
+int pEp_asprintf(char **string_pointer, const char *template, ...)
 {
-    /* This is a simple wrapper around _pEp_vasprintf, which does the actual
-       job. */
+    /* This is a simple wrapper around pEp_vasprintf, which does the actual
+       work. */
     va_list ap;
     va_start(ap, template);
-    int res = _pEp_vasprintf(string_pointer, template, ap);
+    int res = pEp_vasprintf(string_pointer, template, ap);
     va_end(ap);
     return res;
 }
@@ -113,7 +113,7 @@ static const char* _log_level_to_string(PEP_LOG_LEVEL level)
     }
 }
 
-/* The implementation of _pEp_log for FILE * output. */
+/* The implementation of pEp_log for FILE * output. */
 static PEP_STATUS _pEp_log_file_star(FILE* file_star,
                                      PEP_SESSION session,
                                      PEP_LOG_LEVEL level,
