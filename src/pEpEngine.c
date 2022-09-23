@@ -12,6 +12,7 @@
 #include "echo_api.h"
 #include "media_key.h"
 #include "engine_sql.h"
+#include "pEp_log.h"
 #include "status_to_string.h"
 
 #include <time.h>
@@ -94,8 +95,12 @@ DYNAMIC_API PEP_STATUS init(
     _session->ensure_passphrase = ensure_passphrase;
     _session->enable_echo_protocol = true;
     _session->enable_echo_in_outgoing_message_rating_preview = true;
-    
-    status = init_databases(_session);
+
+    status = pEp_log_initialize(_session);
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    status = init_databases(_session); /* Every database except log. */
     if (status != PEP_STATUS_OK)
         return status;
 
@@ -127,6 +132,15 @@ DYNAMIC_API PEP_STATUS init(
     status = log_event(_session, "init", "pEp " PEP_ENGINE_VERSION, NULL, NULL);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
+    #define LOG(...) PEP_LOG_EVENT("Engine", "init", __VA_ARGS__);
+    {PEP_SESSION session = _session; PEP_LOG_EVENT("Engine", "init", "foo!");}
+    {PEP_SESSION session = _session; LOG("");} // empty string
+    {PEP_SESSION session = _session; LOG();} // no template at all!
+    {PEP_SESSION session = _session; LOG("bar!");}
+    {PEP_SESSION session = _session; LOG("foobar!");}
+    {PEP_SESSION session = _session; LOG("quux! %i", 2 + 2);}
+    {PEP_SESSION session = _session; LOG("quux! %i", 42);}
+    {PEP_SESSION session = _session; LOG("quux! %i", 42);}
 
     // runtime config
 
@@ -222,6 +236,7 @@ DYNAMIC_API void release(PEP_SESSION session)
 
         release_transport_system(session, out_last);
         release_cryptotech(session, out_last);
+        pEp_log_finalize(session);
         free(session);
     }
     fprintf(stderr, "engine release, session %p: ...end\n", session);
@@ -304,6 +319,7 @@ DYNAMIC_API PEP_STATUS log_event(
         const char *comment
     )
 {
+#warning "FIXME: remove this ugly thing and replace it with my new awesome debugging facility."
     if (!(session && title && entity))
         return PEP_ILLEGAL_VALUE;
 
@@ -328,7 +344,7 @@ DYNAMIC_API PEP_STATUS log_event(
 #endif
     session->service_log = true;
 
-    int result;
+    int result __attribute__ ((unused));
 
     sql_reset_and_clear_bindings(session->log);
     sqlite3_bind_text(session->log, 1, title, -1, SQLITE_STATIC);
@@ -3771,6 +3787,10 @@ PEP_STATUS find_private_keys(PEP_SESSION session, const char* pattern,
                                                                     keylist);
 }
 
+/* These are visible as read-only symbols in some data section of compiled
+   executables. */
+const char *pEpEngineVersion = PEP_ENGINE_VERSION;
+const char *pEpEngineProtcolVersion = PEP_VERSION;
 
 DYNAMIC_API const char* get_engine_version() {
     return PEP_ENGINE_VERSION;

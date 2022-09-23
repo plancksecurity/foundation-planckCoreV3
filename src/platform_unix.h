@@ -31,6 +31,13 @@ typedef unsigned char uuid_t[16];
 #include <uuid/uuid.h>
 #endif
 
+/* In the logging filesystem we use getpid, which apparently is not available in
+   the windows API; for that reason we simulate it in platform_windows.[ch].
+   Anyway we want pid_t and getpid to be unconditionally available -- hence
+   these #include lines. */
+#include <sys/types.h>
+#include <unistd.h>
+
 #ifndef MIN
 #define MIN(A, B) ((A)>(B) ? (B) : (A))
 #endif
@@ -60,8 +67,9 @@ extern "C" {
 /**
  *  <!--       unix_local_db()       -->
  *  
- *  @brief            TODO
- *
+ *  @brief      Return an absolute path to the local database, with Unix
+ *              variables already expanded, making sure that the directory
+ *              exists.
  *  		The returned pointed refers memory managed by
  *  		the engine, which will remain valid until
  *  		the next call to reset_path_cache.
@@ -70,13 +78,19 @@ extern "C" {
 const char *unix_local_db(void);
 
 /**
+ *  <!--       unix_log_db()       -->
+ *  
+ *  @brief      Like unix_local_db, but for the log database.
+ *  
+ */
+const char *unix_log_db(void);
+
+/**
  *  <!--       unix_system_db()       -->
  *  
- *  @brief            TODO
- *
- *  		The returned pointed refers memory managed by
- *  		the engine, which will remain valid until
- *  		the next call to reset_path_cache.
+ *  @brief      Like unix_local_db and unix_log_db, but for the system database.
+ *              Notice that the system database is read-only, and shared by
+ *              multiple Unix users.
  *  
  */
 const char *unix_system_db(void);
@@ -178,6 +192,29 @@ void uuid_unparse_upper(pEpUUID uu, uuid_string_t out);
 #else
 typedef uuid_t pEpUUID;
 #endif
+
+
+/* Feature macros
+ * ***************************************************************** */
+
+/* We can write to stdout and stderr. */
+#define PEP_HAVE_STDOUT_AND_STDERR  1
+
+/* We can use the syslog facility. */
+#define PEP_HAVE_SYSLOG  1
+
+/* We have the Android log if this is Android. */
+#if defined(ANDROID)
+#   define PEP_HAVE_ANDROID_LOG  1
+#endif
+
+/* We do not have the windows log. */
+/* #undef PEP_HAVE_WINDOWS_LOG */
+
+/* Using any compiler we support on these platforms we can use GNU C's extension
+   __PRETTY_FUNCTION__ : same idea as __func__, but the expansion shows classes
+   and namespaces in C++. */
+#define PEP_HAVE_PRETTY_FUNCTION  1
 
 #ifdef __cplusplus
 }

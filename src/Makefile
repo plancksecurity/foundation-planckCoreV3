@@ -23,9 +23,11 @@ else
 endif
     
 CFLAGS+= -I../asn.1 $(EXTRA_MACROS)
+CFLAGS+= -I$(PREFIX)/include
 CPPFLAGS+= -DSQLITE_THREADSAFE=1
 
 LDFLAGS+= -L../asn.1
+LDFLAGS+= -L$(PREFIX)/lib
 ifneq ($(BUILD_ON),OS/390)
 LDFLAGS+= -shared
 LDLIBS+= -lc
@@ -124,6 +126,7 @@ HEADERS_TO_INSTALL = \
   echo_api.h distribution_api.h media_key.h \
   map_asn1.h \
   platform.h platform_unix.h platform_windows.h platform_zos.h \
+  pEp_debug.h pEp_log.h \
   transport.h growing_buf.h $(wildcard ../asn.1/*.h)
 
 # CAVEAT:

@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include <stdarg.h>
 #include <string>
 #include <stdexcept>
 #include <shlwapi.h> /* For PathMatchSpecExA . */
@@ -22,10 +23,12 @@
 #include <fcntl.h>
 #include <tchar.h>
 #include <sys\stat.h>
+#include <processthreadsapi.h>
 
 #include "pEpEngine.h" // just for PEP_STATUS
 
 #define LOCAL_DB_FILENAME "management.db"
+#define LOG_DB_FILENAME "log.db"
 #define SYSTEM_DB_FILENAME "system.db"
 #define KEYS_DB "keys.db"
 #define USER_FOLDER_PATH _per_user_directory()
@@ -308,6 +311,13 @@ const char *windoze_local_db(void) {
     return path.c_str();
 }
 
+const char *windoze_log_db(void) {
+    static string path;
+    if (path.length() == 0)
+        path = managementPath(USER_FOLDER_PATH, LOG_DB_FILENAME);
+    return path.c_str();
+}
+
 const char *windoze_system_db(void) {
     static string path;
     if (path.length() == 0)
@@ -464,10 +474,20 @@ void uuid_unparse_upper(pEpUUID uu, uuid_string_t out)
     }
 }
 
+
+/* Unix system emulation
+ * ***************************************************************** */
+
+_pEp_pid_t getpid(void)
+{
+    return GetCurrentProcessId();
+}
+
+#warning "FIXME: remove this ugly thing and use the new log facility instead"
 void log_output_debug(const char *title,
-                       const char *entity,
-                       const char *description,
-                       const char *comment)
+                      const char *entity,
+                      const char *description,
+                      const char *comment)
 {
     const size_t size = 256;
     char str[size];

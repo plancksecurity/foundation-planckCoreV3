@@ -5952,7 +5952,6 @@ static PEP_STATUS _decrypt_message(
                      rating, msg->from, _keylist);
             if (status != PEP_STATUS_OK)
                 goto pEp_error;
-         
         }
 
         // Ok, one last thing - if the message didn't follow the protocol, amend rating again.  

@@ -47,6 +47,16 @@ extern "C" {
  */
 int pEp_fnmatch(const char *pattern, const char *string);
 
+
+/* Feature macros
+ * ***************************************************************** */
+
+/* Nothing interesting here.  But in the "Feature macros" section of each
+   platform-specifid header file there will be feature macros definitions,
+   as poor man's approximation of what a configure script would discover.
+
+   This is particuarly useful for features implemented as CPP macros. */
+
 #ifdef __cplusplus
 }
 #endif

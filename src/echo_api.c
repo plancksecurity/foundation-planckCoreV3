@@ -31,9 +31,6 @@
 
 /* The functions in this section actually serve to handle prepared SQL
    statements, compiled once and for all from these SQL statements. */
-static const char *echo_upgrade_add_echo_challange_field_text
-= "   ALTER TABLE Identity"
-    " ADD COLUMN echo_challenge BLOB;";
 static const char *echo_get_challenge_text
 = "   SELECT echo_challenge"
     " FROM Identity I"
