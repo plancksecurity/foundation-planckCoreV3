@@ -188,8 +188,9 @@ typedef enum {
  *         current session, found by capturing a variable named "session"
  *         (assumed to be of type PEP_SESSION) in the current scope.
  *
- *  @param[in]     ??? FIXME: document: this is important ?????
+ *  @param[in]     ??? FIXME: document every parameter: this is important
  *                 ??? The template must be a literal string if supplied, but can be omitted altogether
+ *                 ???????????????????????
  *
  */
 #define PEP_LOG_CRITICAL(first, ...)                                  \
