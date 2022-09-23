@@ -178,9 +178,6 @@ typedef enum {
 /* Logging an entry: user macros
  * ***************************************************************** */
 
-/* These are exactly like PEP_LOG, but without the first parameter.  The log
-   level used for the log entry is the one contained in the macro name. */
-
 /**
  *  <!--       PEP_LOG_CRITICAL()       -->
  *
@@ -242,6 +239,8 @@ typedef enum {
 /* Logging facility: internal macros
  * ***************************************************************** */
 
+/* The macros here are used internally to implement the user macros above. */
+
 /**
  *  <!--       PEP_LOG_WITH_LEVEL()       -->
  *
@@ -260,13 +259,13 @@ typedef enum {
  */
 #define PEP_LOG_WITH_LEVEL(first, ...)                                        \
     do {                                                                      \
-       /* Capture the local variable named "session" (static-scoping purists  \
-          will not like this), then call a less convenient macro doing the    \
-          actual job.  The first parameter level is not in any way special,   \
-          except for its position: defining a variadic macro with *zero* or   \
-          more arguments in portable C can be annoying, but we can entirely   \
-          avoid the complication here since there will be at least one        \
-          parameter. . */                                                     \
+       /* Capture the local variable named "session" -- static-scoping        \
+          purists will not like this -- then call a less convenient macro     \
+          doing the actual job.  The first parameter level is not in any way  \
+          special, except for its position: defining a variadic macro with    \
+          *zero* or more arguments in portable C can be annoying, but we can  \
+          entirely avoid the complication here since there will be at least   \
+          one parameter. */                                                   \
         PEP_SESSION _pEp_log_session = (session);                             \
                                                                               \
         /* Do the actual work. */                                             \
