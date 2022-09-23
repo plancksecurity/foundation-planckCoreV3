@@ -12,6 +12,7 @@
 #include "echo_api.h"
 #include "media_key.h"
 #include "engine_sql.h"
+#include "log.h"
 #include "status_to_string.h"
 
 #include <time.h>
@@ -127,6 +128,15 @@ DYNAMIC_API PEP_STATUS init(
     status = log_event(_session, "init", "pEp " PEP_ENGINE_VERSION, NULL, NULL);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
+    #define LOG(...) PEP_LOG_EVENT("Engine", "init", __VA_ARGS__);
+    {PEP_SESSION session = _session; PEP_LOG_EVENT("Engine", "init", "foo!");}
+    {PEP_SESSION session = _session; LOG("");} // empty string
+    {PEP_SESSION session = _session; LOG();} // no template at all!
+    {PEP_SESSION session = _session; LOG("bar!");}
+    {PEP_SESSION session = _session; LOG("foobar!");}
+    {PEP_SESSION session = _session; LOG("quux! %i", 2 + 2);}
+    {PEP_SESSION session = _session; LOG("quux! %i", 42);}
+    {PEP_SESSION session = _session; LOG("quux! %i", 42);}
 
     // runtime config
 
