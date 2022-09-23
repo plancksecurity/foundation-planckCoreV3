@@ -27,33 +27,38 @@ extern "C" {
 //...
 
 /* A convenient way of using this facility for debugging prints is to define
-   a CPP macro with only variadic parameters directly in the C file where it
-   will be used; then one can add calls to the local macro in the functions
-   being debugged:
+   a CPP macro with a short name and only variadic parameters directly in the
+   C file where it will be used; then one can add calls to the local macro in
+   the functions being debugged:
 
    For example imagine a "frob" module in an unnamed application [FIXME:
    Shall I make the system name definable globally?] in frob.c:
 
    98   #define LOG(...) PEP_LOG_TRACE(NULL, "frob", __VA_ARGS__)
    99
-   100  void f(int x) {
-   101      LOG("about to call g; x is %i", x);
-   102      g();
+   100  void foo(int x) {
+   101      LOG("About to call bar.  x is %i", x);
+   102      bar();
    103      int y = x + 2;
    104      LOG("y is %i", y);
    105      LOG();
    106  }
+   107
+   108  void bar(void) {
+   109      LOG("Hello");
+   110  }
 
-   The third call will only show the function name and source location.  Notice
-   that the template is completely absent in that case: one does not even need
-   to supply an empty string.
+   Notice the call at line 105, which will only show the function name and
+   source location.  The that the template is completely absent in that case:
+   one does not even need to supply an empty string.
 
    Assuming PEP_LOG_LEVEL_MAXIMUM to be at least PEP_LOG_LEVEL_TRACE the log
    will contain something like:
 
-   2022-09-23 20:39:13 frob Trace frob.c:101:f about to call g; x is 10
-   2022-09-23 20:39:13 frob Trace frob.c:104:f y is 12
-   2022-09-23 20:39:13 frob Trace frob.c:105:f
+   2022-09-23 20:39:13 frob Trace frob.c:101:foo About to call bar.  x is 10
+   2022-09-23 20:39:13 frob Trace frob.c:109:bar Hello
+   2022-09-23 20:39:13 frob Trace frob.c:104:foo y is 12
+   2022-09-23 20:39:13 frob Trace frob.c:105:foo
 */
 
 
@@ -186,10 +191,6 @@ typedef enum {
  *  @param[in]     ??? FIXME: document: this is important ?????
  *                 ??? The template must be a literal string if supplied, but can be omitted altogether
  *
- *  @warning       This macro is not the most convenient to use from C; the
- *                 macros defined below such as PEP_LOG_CRITICAL and
- *                 PEP_LOG_EVENT are much more natural to write.
- *
  */
 #define PEP_LOG_CRITICAL(first, ...)                                  \
     PEP_LOG_WITH_LEVEL(PEP_LOG_LEVEL_CRITICAL, (first), __VA_ARGS__)
@@ -250,6 +251,11 @@ typedef enum {
  *  @param[in]     level       log level, of type PEP_LOG_LEVEL
  *  @param[in]     ...         the remaining parameters are exactly the same
  *                             as in PEP_LOG_CRITICAL.
+ *
+ *  @warning       This macro is not the most convenient to use from C; the
+ *                 macros defined above such as PEP_LOG_CRITICAL and
+ *                 PEP_LOG_EVENT are more natural to write in most
+ *                 circumstances.
  */
 #define PEP_LOG_WITH_LEVEL(first, ...)                                        \
     do {                                                                      \
@@ -280,6 +286,11 @@ typedef enum {
  *  @param[in]     level       log level, of type PEP_LOG_LEVEL
  *  @param[in]     ...         the remaining parameters are exactly the same
  *                             as in PEP_LOG_CRITICAL.
+ *
+ *  @warning       This macro is not the most convenient to use from C; the
+ *                 macros defined above such as PEP_LOG_CRITICAL and
+ *                 PEP_LOG_EVENT are more natural to write in most
+ *                 circumstances.
  */
 #define PEP_LOG_WITH_SESSION_AND_LEVEL(session, level, system, subsystem, ...)  \
     do {                                                                        \
