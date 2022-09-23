@@ -29,7 +29,7 @@ extern "C" {
 /* A convenient way of using this facility for debugging prints is to define
    a CPP macro with a short name and only variadic parameters directly in the
    C file where it will be used; then one can add calls to the local macro in
-   the functions being debugged:
+   the functions being debugged.
 
    For example imagine a "frob" module in an unnamed application [FIXME:
    Shall I make the system name definable globally?] in frob.c:
