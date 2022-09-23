@@ -311,7 +311,7 @@ typedef enum {
                             string, which will concatenate with "" with no      \
                             harm; but if on the other hand __VA_ARGS__ expands  \
                             to nothing there will still be a valid template.    \
-                            This tricks makes it possible to use the logging    \
+                            This trick makes it possible to use the logging    \
                             facility to trace a line number without supplying   \
                             any explicit string to print at all, not even       \
                             "". */                                              \
