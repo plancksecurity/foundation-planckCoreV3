@@ -18,13 +18,39 @@
 extern "C" {
 #endif
 
+/* Debugging definitions for myself
+ * ***************************************************************** */
+
 #define PEP_LOG_LEVEL_MAXIMUM  PEP_LOG_LEVEL_EVERYTHING // FIXME: a test for myself, of course
 #define PEP_LOG_DESTINATIONS   (PEP_LOG_DESTINATION_STDERR | PEP_LOG_DESTINATION_DATABASE)
+
 
 /* Introduction
  * ***************************************************************** */
 
-//...
+/* This general-purpose log facility is used internally in the Engine, but is
+   also meant for adapters and applications.  The pEp logging facility can
+   output information to any number of "destinations" among the supported ones:
+   databases, standard error, syslog, system-dependent outputs, and so on.
+
+   Each log entry consists of:
+   * a "level", describing the verbosity associated to the current entry;
+   * a system name;
+   * a sub-system name;
+   * a user-specified string;
+   * precise source location: source file name, line number, function name;
+   * timing information.
+
+   Global configuration allows to suppress long entries above a given verbosity.
+
+   At least when called from C this facility is meant to be used from the macro
+   API, which is much more convenient: in particular the macro API allows the
+   user to specify the entry string as a literal string template along with a
+   set of values to be filled in the template, following the formatted output
+   conventions of printf.
+
+   The function API below serves as the internal implementation of the macro
+   API, and possibly for calling the log facility from non-C languages. */
 
 /* A convenient way of using this facility for debugging prints is to define
    a CPP macro with a short name and only variadic parameters directly in the
