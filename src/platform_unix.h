@@ -31,6 +31,13 @@ typedef unsigned char uuid_t[16];
 #include <uuid/uuid.h>
 #endif
 
+/* In the logging filesystem we use getpid, which apparently is not available in
+   the windows API; for that reason we simulate it in platform_windows.[ch].
+   Anyway we want pid_t and getpid to be unconditionally available -- hence
+   these #include lines. */
+#include <sys/types.h>
+#include <unistd.h>
+
 #ifndef MIN
 #define MIN(A, B) ((A)>(B) ? (B) : (A))
 #endif

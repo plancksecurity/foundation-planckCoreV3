@@ -22,6 +22,7 @@
 #include <fcntl.h>
 #include <tchar.h>
 #include <sys\stat.h>
+#include <processthreadsapi.h>
 
 #include "pEpEngine.h" // just for PEP_STATUS
 
@@ -462,6 +463,11 @@ void uuid_unparse_upper(pEpUUID uu, uuid_string_t out)
     else { // if (rpc_status == RPC_S_OUT_OF_MEMORY)
         memset(out, 0, 37);
     }
+}
+
+_pEp_pid_t getpid(void)
+{
+    return GetCurrentProcessId();
 }
 
 void log_output_debug(const char *title,

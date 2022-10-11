@@ -277,6 +277,19 @@ int uuid_parse(char *in, pEpUUID uu);
  */
 void uuid_unparse_upper(pEpUUID uu, uuid_string_t out);
 
+/**
+ *  <!--       getpid()       -->
+ *
+ *  @brief            Return the process ID of the current process.
+ *                    This is apparently missing from the windows API,
+ *                    despite the function being in POSIX, BSD and SYSV.
+ *
+ *  @param[in]  out       pid_t, an integer type
+ *
+ */
+typedef DWORD _pEp_pid_t;
+_pEp_pid_t getpid(void);
+
 #ifndef __cplusplus
 #define inline __inline
 #endif
