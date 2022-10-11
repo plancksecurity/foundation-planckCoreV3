@@ -5,7 +5,7 @@
  */
 
 #define _EXPORT_PEP_ENGINE_DLL
-#include "log.h"
+#include "pEp_log.h"
 
 #include "pEp_internal.h"
 //#include "stringpair.h" // for stringpair_list_t
@@ -100,13 +100,11 @@ int pEp_asprintf(char **string_pointer, const char *template, ...)
 static const char* _log_level_to_string(PEP_LOG_LEVEL level)
 {
     switch (level) {
-    case PEP_LOG_LEVEL_NOTHING:     return "nothing";
     case PEP_LOG_LEVEL_CRITICAL:    return "CRITICAL";
     case PEP_LOG_LEVEL_ERROR:       return "Error";
     case PEP_LOG_LEVEL_WARNING:     return "Warning";
     case PEP_LOG_LEVEL_EVENT:       return "Event";
     case PEP_LOG_LEVEL_API:         return "API";
-    case PEP_LOG_LEVEL_DEBUG:       return "Debug";
     case PEP_LOG_LEVEL_TRACE:       return "Trace";
     case PEP_LOG_LEVEL_EVERYTHING:  return "everything";
     default:                        return "invalid log level";
@@ -118,6 +116,7 @@ static PEP_STATUS _pEp_log_file_star(FILE* file_star,
                                      PEP_SESSION session,
                                      PEP_LOG_LEVEL level,
                                      const timestamp *time,
+                                     pid_t pid,
                                      const char *system_subsystem_prefix,
                                      const char *system,
                                      const char *system_subsystem_separator,
@@ -133,6 +132,7 @@ static PEP_STATUS _pEp_log_file_star(FILE* file_star,
         = fprintf(file_star,
                   "%04i-%02i-%02i %02i:%02i:%02i" /* date, time */
                   "%s%s%s%s"                      /* system, subsystem */
+                  " %li"                          /* pid */
                   " %s"                           /* log level */
                   " %s:%i%s%s"                    /* source location */
                   "%s%s"                          /* entry */
@@ -141,6 +141,7 @@ static PEP_STATUS _pEp_log_file_star(FILE* file_star,
                   time->tm_hour, time->tm_min, time->tm_sec,
                   system_subsystem_prefix, system, system_subsystem_separator,
                       subsystem,
+                  (long) pid,
                   _log_level_to_string(level),
                   source_file_name, source_file_line, function_prefix,
                       function_name,
@@ -175,6 +176,9 @@ DYNAMIC_API PEP_STATUS pEp_log(PEP_SESSION session,
     timestamp* now = new_timestamp(now_in_seconds);
     if (now == NULL)
         return PEP_OUT_OF_MEMORY;
+
+    /* Get the current pid. */
+    pid_t pid = getpid();
 
     /* Normalise system/subsystem strings and compute cosmetic parameters. */
     const char *system_subsystem_prefix = " ";
@@ -213,6 +217,7 @@ DYNAMIC_API PEP_STATUS pEp_log(PEP_SESSION session,
 #define ACTUALS                                                              \
     session, level,                                                          \
     now,                                                                     \
+    pid,                                                                     \
     system_subsystem_prefix, system, system_subsystem_separator, subsystem,  \
     source_file_name, source_file_line, function_prefix, function_name,      \
     entry_prefix, entry

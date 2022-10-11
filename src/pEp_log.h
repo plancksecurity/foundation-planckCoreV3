@@ -102,25 +102,22 @@ extern "C" {
  *           verbosity than the level are ignored.
  */
 typedef enum {
-    /* A strict lower limit: not intended for actual log entries. */
-    PEP_LOG_LEVEL_NOTHING     =   0,
-
     /* Errors. */
-    PEP_LOG_LEVEL_CRITICAL    =  10,
-    PEP_LOG_LEVEL_ERROR       =  20,
+    PEP_LOG_LEVEL_CRITICAL    =   10,
+    PEP_LOG_LEVEL_MINIMUM     =   PEP_LOG_LEVEL_CRITICAL  /* Never do less. */,
+    PEP_LOG_LEVEL_ERROR       =   20,
 
     /* Warnings. */
-    PEP_LOG_LEVEL_WARNING     = 100,
-    PEP_LOG_LEVEL_BASIC       = PEP_LOG_LEVEL_WARNING,
+    PEP_LOG_LEVEL_WARNING     =  100,
+    PEP_LOG_LEVEL_BASIC       =  PEP_LOG_LEVEL_WARNING,
 
     /* Events. */
-    PEP_LOG_LEVEL_EVENT       = 200,
-    PEP_LOG_LEVEL_API         = 210,
-    PEP_LOG_LEVEL_SERVICE     = PEP_LOG_LEVEL_API,
+    PEP_LOG_LEVEL_EVENT       =  200,
+    PEP_LOG_LEVEL_API         =  210,
+    PEP_LOG_LEVEL_SERVICE     =  PEP_LOG_LEVEL_API,
 
     /* Debugging. */
-    PEP_LOG_LEVEL_DEBUG       =  300,
-    PEP_LOG_LEVEL_TRACE       =  310,
+    PEP_LOG_LEVEL_TRACE       =  300,
 
     /* A strict upper limit: not intended for actual log entries. */
     PEP_LOG_LEVEL_EVERYTHING  = 1000
@@ -173,7 +170,7 @@ typedef enum {
     /* If the macro has not been defined already (likely from the build system)
        provide a default for it. */
 #   if defined(_PEP_SERVICE_LOG_OFF)
-#       define PEP_LOG_LEVEL_MAXIMUM  PEP_LOG_LEVEL_NOTHING
+#       define PEP_LOG_LEVEL_MAXIMUM  PEP_LOG_LEVEL_MINIMUM
 #   elif defined(NDEBUG)
 #       define PEP_LOG_LEVEL_MAXIMUM  PEP_LOG_LEVEL_SERVICE
 #   else
@@ -246,13 +243,6 @@ typedef enum {
  */
 #define PEP_LOG_API(first, ...)                                  \
     PEP_LOG_WITH_LEVEL(PEP_LOG_LEVEL_API, (first), __VA_ARGS__)
-
-/**
- *  <!--       PEP_LOG_DEBUG()       -->
- *  @brief Exactly like PEP_LOG_CRITICAL, with a different log level.
- */
-#define PEP_LOG_DEBUG(first, ...)                                      \
-    PEP_LOG_WITH_LEVEL(PEP_LOG_LEVEL_DEBUG, (first), __VA_ARGS__)
 
 /**
  *  <!--       PEP_LOG_TRACE()       -->

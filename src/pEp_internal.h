@@ -103,6 +103,12 @@
 #endif
 
 #include "pEpEngine.h"
+
+/* Make debugging facilities available here very early, so that they can be used
+   anywhere in the pEp Engine sources, whcih are supposed to include
+   pEp_internal.h */
+#include "pEp_debug.h"
+
 #include "key_reset.h"
 
 #include "pEpEngine_internal.h"

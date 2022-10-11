@@ -5,5 +5,5 @@
  */
 
 #define _EXPORT_PEP_ENGINE_DLL  // FIXME: remove unless there is at least one exported *function*
-#include "debug.h"
+#include "pEp_debug.h"
 

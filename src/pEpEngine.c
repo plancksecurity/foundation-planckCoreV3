@@ -12,7 +12,7 @@
 #include "echo_api.h"
 #include "media_key.h"
 #include "engine_sql.h"
-#include "log.h"
+#include "pEp_log.h"
 #include "status_to_string.h"
 
 #include <time.h>
