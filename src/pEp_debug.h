@@ -131,6 +131,7 @@ typedef enum {
                      PEP_CHECK_REQUIREMENTS, PEP_ABORT_ON_VIOLATED_REQUIRE,  \
                      /* See the comment above. */                            \
                      expression, { goto label; })
+// FIXME: Do I need PEP_REQUIRE_ORELSE_GOTO?  If not I can name that PEP_REQUIRE ...
 
 
 /* Requirements
