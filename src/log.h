@@ -430,7 +430,7 @@ PEP_STATUS pEp_log_initialize(PEP_SESSION session);
 PEP_STATUS pEp_log_finalize(PEP_SESSION session);
 
 #ifdef __cplusplus
-}
+} /* extern "C" */
 #endif
 
 #endif // #ifndef PEP_LOG_H
