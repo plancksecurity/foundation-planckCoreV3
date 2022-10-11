@@ -198,7 +198,7 @@ TEST_F(MediaKeyTest, check_removal) {
     CHECK_LOOKUP_FAILURE("foo@foo.bar");
 
     INSERT("*@foo.bar",    "foo");
-    CHECK_LOOKUP("foo@foo.bar", "foo");
+    CHECK_LOOKUP("foo@foo.bar", "FOO");
     CHECK_LOOKUP_FAILURE("bar@bar.bar");
 
     INSERT("*@bar.bar",    "bar");
@@ -209,12 +209,12 @@ TEST_F(MediaKeyTest, check_removal) {
 
     REMOVE("*@quux.bar");
     CHECK_LOOKUP_FAILURE("quux@quux.bar");
-    CHECK_LOOKUP("foobar@foobar.bar", "foobar");
+    CHECK_LOOKUP("foobar@foobar.bar", "FOOBAR");
     CHECK_LOOKUP_FAILURE("foobar@foooooooooobar.bar");
-    CHECK_LOOKUP("bar@bar.bar", "bar");
-    CHECK_LOOKUP("foobar@foobar.bar", "foobar");
+    CHECK_LOOKUP("bar@bar.bar", "BAR");
+    CHECK_LOOKUP("foobar@foobar.bar", "FOOBAR");
     REMOVE("*@foobar.bar");
-    CHECK_LOOKUP("bar@bar.bar", "bar");
+    CHECK_LOOKUP("bar@bar.bar", "BAR");
     CHECK_LOOKUP_FAILURE("foobar@fooobar.bar");
 
     REMOVE("*@bar.bar");
@@ -225,7 +225,7 @@ TEST_F(MediaKeyTest, check_removal) {
     CHECK_LOOKUP_FAILURE("bar@fooobar.bar");
 
     INSERT("*@bar.bar",    "bar");
-    CHECK_LOOKUP("bar@bar.bar", "bar");
+    CHECK_LOOKUP("bar@bar.bar", "BAR");
     REMOVE("*@bar.bar");
     CHECK_REMOVE_FAILURE("*@bar.bar");
     CHECK_LOOKUP_FAILURE("bar@bar.bar");
