@@ -39,7 +39,7 @@ extern "C" {
                                      // which must always be defined
 #define PEP_ENGINE_VERSION_RC    11  // the last already-released RC for this
                                      // patchlevel, or not defined if not an RC
-#define PEP_ENGINE_VERSION_PLUS  +   // Only defined when the repo is in a
+//#define PEP_ENGINE_VERSION_PLUS  +   // Only defined when the repo is in a
                                      // non-released non-RC state.
 
 /* The following macros serve to machine-generate a definition of
