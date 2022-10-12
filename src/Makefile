@@ -23,9 +23,11 @@ else
 endif
     
 CFLAGS+= -I../asn.1 $(EXTRA_MACROS)
+CFLAGS+= -I$(PREFIX)/include
 CPPFLAGS+= -DSQLITE_THREADSAFE=1
 
 LDFLAGS+= -L../asn.1
+LDFLAGS+= -L$(PREFIX)/lib
 ifneq ($(BUILD_ON),OS/390)
 LDFLAGS+= -shared
 LDLIBS+= -lc
