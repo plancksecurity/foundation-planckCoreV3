@@ -314,6 +314,7 @@ DYNAMIC_API PEP_STATUS log_event(
         const char *comment
     )
 {
+#warning "FIXME: remove this ugly thing and replace it with my new awesome debugging facility."
     if (!(session && title && entity))
         return PEP_ILLEGAL_VALUE;
 
@@ -338,7 +339,7 @@ DYNAMIC_API PEP_STATUS log_event(
 #endif
     session->service_log = true;
 
-    int result;
+    int result __attribute__ ((unused));
 
     sql_reset_and_clear_bindings(session->log);
     sqlite3_bind_text(session->log, 1, title, -1, SQLITE_STATIC);

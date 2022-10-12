@@ -294,6 +294,22 @@ _pEp_pid_t getpid(void);
 #define inline __inline
 #endif
 
+
+/* Feature macros
+ * ***************************************************************** */
+
+/* We can write to stdout and stderr. */
+#define PEP_HAVE_STDOUT_AND_STDERR  1
+
+/* We can *not* use the syslog facility. */
+/* #undef PEP_HAVE_SYSLOG */
+
+/* We do not have the Android log. */
+/* #undef PEP_HAVE_ANDROID_LOG */
+
+/* We have the windows log. */
+#define PEP_HAVE_WINDOWS_LOG  1
+
 #ifdef __cplusplus
 }
 #endif
