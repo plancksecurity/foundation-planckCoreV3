@@ -22,7 +22,8 @@ extern "C" {
  * ***************************************************************** */
 
 #define PEP_LOG_LEVEL_MAXIMUM  PEP_LOG_LEVEL_EVERYTHING // FIXME: a test for myself, of course
-#define PEP_LOG_DESTINATIONS   (PEP_LOG_DESTINATION_STDERR | PEP_LOG_DESTINATION_DATABASE)
+//#define PEP_LOG_DESTINATIONS   (PEP_LOG_DESTINATION_STDERR | PEP_LOG_DESTINATION_DATABASE)
+#define PEP_LOG_DESTINATIONS   PEP_LOG_DESTINATION_ALL
 
 
 /* Introduction
@@ -117,7 +118,8 @@ typedef enum {
     PEP_LOG_LEVEL_SERVICE     =  PEP_LOG_LEVEL_API,
 
     /* Debugging. */
-    PEP_LOG_LEVEL_TRACE       =  300,
+    PEP_LOG_LEVEL_FUNCTION    =  300,
+    PEP_LOG_LEVEL_TRACE       =  310,
 
     /* A strict upper limit: not intended for actual log entries. */
     PEP_LOG_LEVEL_EVERYTHING  = 1000
@@ -134,21 +136,28 @@ typedef enum {
  */
 typedef enum {
     /* Discard log entries. */
-    PEP_LOG_DESTINATION_NONE      =  0,
+    PEP_LOG_DESTINATION_NONE      =   0,
 
     /* Print log entries in text format to the standard output or the standard
        error stream. */
-    PEP_LOG_DESTINATION_STDOUT    =  1,
-    PEP_LOG_DESTINATION_STDERR    =  2,
-
-    /* Send log entries to the syslog service. */
-    PEP_LOG_DESTINATION_SYSLOG    =  4,
-
-    /* Use the Android logging system. */
-    PEP_LOG_DESTINATION_ANDROID   =  8,
+    PEP_LOG_DESTINATION_STDOUT    =   1,
+    PEP_LOG_DESTINATION_STDERR    =   2,
 
     /* Add entries to a local database. */
-    PEP_LOG_DESTINATION_DATABASE  = 16,
+    PEP_LOG_DESTINATION_DATABASE  =   4,
+
+    /* Send log entries to the syslog service. */
+    PEP_LOG_DESTINATION_SYSLOG    =   8,
+
+    /* Use the Android logging system. */
+    PEP_LOG_DESTINATION_ANDROID   =  16,
+
+    /* Use the windows logging system. */
+    PEP_LOG_DESTINATION_WINDOWS   =  32,
+
+
+    /* Every possible destination.  This is mostly intended for testing. */
+    PEP_LOG_DESTINATION_ALL       = 255
 } PEP_LOG_DESTINATION_ENUM;
 
 
@@ -196,6 +205,14 @@ typedef enum {
                                        | PEP_LOG_DESTINATION_DATABASE)
 #   endif
 #endif
+
+/* The following feature macros serve to enable or disable log destinations.
+   They should be defined on the command line:
+
+   * PEP_HAVE_STDOUT_AND_STDERR
+   * PEP_HAVE_SYSLOG;
+   * (the database destination is always available)
+   */
 
 
 /* Logging an entry: user macros
@@ -245,11 +262,33 @@ typedef enum {
     PEP_LOG_WITH_LEVEL(PEP_LOG_LEVEL_API, (first), __VA_ARGS__)
 
 /**
+ *  <!--       PEP_LOG_FUNCTION()       -->
+ *  @brief Exactly like PEP_LOG_CRITICAL, with a different log level.
+ */
+#define PEP_LOG_FUNCTION(first, ...)                                  \
+    PEP_LOG_WITH_LEVEL(PEP_LOG_LEVEL_FUNCTION, (first), __VA_ARGS__)
+
+/**
  *  <!--       PEP_LOG_TRACE()       -->
  *  @brief Exactly like PEP_LOG_CRITICAL, with a different log level.
  */
 #define PEP_LOG_TRACE(first, ...)                                      \
     PEP_LOG_WITH_LEVEL(PEP_LOG_LEVEL_TRACE, (first), __VA_ARGS__)
+
+
+/**
+ *  <!--       PEP_LOG_BASIC()       -->
+ *  @brief Exactly like PEP_LOG_CRITICAL, with a different log level.
+ */
+#define PEP_LOG_BASIC(first, ...)                                  \
+    PEP_LOG_WITH_LEVEL(PEP_LOG_LEVEL_BASIC, (first), __VA_ARGS__)
+
+/**
+ *  <!--       PEP_LOG_SERVICE()       -->
+ *  @brief Exactly like PEP_LOG_CRITICAL, with a different log level.
+ */
+#define PEP_LOG_SERVICE(first, ...)                                  \
+    PEP_LOG_WITH_LEVEL(PEP_LOG_LEVEL_SERVICE, (first), __VA_ARGS__)
 
 
 /* Logging facility: internal macros
@@ -320,19 +359,18 @@ typedef enum {
                                                                                 \
         char *_pEp_log_heap_string;                                             \
         char *_pEp_log_entry;                                                   \
-        int _pEp_log_vasprintf_result                                           \
+        int _pEp_log_asprintf_result                                            \
           = pEp_asprintf(& _pEp_log_heap_string,                                \
-                         /* Here the beginning of the expansion of              \
-                            __VA_ARGS__, if not empty, will be a literal        \
-                            string, which will concatenate with "" with no      \
-                            harm; but if on the other hand __VA_ARGS__ expands  \
-                            to nothing there will still be a valid template.    \
-                            This trick makes it possible to use the logging     \
-                            facility to trace a line number without supplying   \
-                            any explicit string to print at all, not even       \
-                            "". */                                              \
+                         /* Here the beginning of the expansion of __VA_ARGS__, \
+                            if not empty, will be a literal string, which will  \
+                            concatenate with "" with no harm; but if on the     \
+                            other hand __VA_ARGS__ expands to nothing there     \
+                            will still be a valid template.  This trick makes   \
+                            it possible to use the logging facility to trace a  \
+                            line number without supplying any explicit string   \
+                            to print at all, not even "". */                    \
                          "" __VA_ARGS__);                                       \
-        if (_pEp_log_heap_string == NULL || _pEp_log_vasprintf_result < 0)      \
+        if (_pEp_log_heap_string == NULL || _pEp_log_asprintf_result < 0)       \
             /* Allocation failure.  This will be very hard to deal with, but    \
                we can make a desperate attempt of writing some memory           \
                allocation error to the log. */                                  \
@@ -402,15 +440,6 @@ DYNAMIC_API PEP_STATUS pEp_log(PEP_SESSION session,
                                const char *entry);
 
 
-/* Logging facility: internal functions implementation
- * ***************************************************************** */
-
-/* A portable implementations of the non-standard GNU/BSD function asprintf
-   which performs formatted output on a malloc-allocated string, to be freed by
-   the user.  Set * string_pointer to NULL on allocation failure. */
-int pEp_asprintf(char **string_pointer, const char *template, ...);
-
-
 /* Initialisation and finalisation
  * ***************************************************************** */
 
@@ -418,6 +447,24 @@ int pEp_asprintf(char **string_pointer, const char *template, ...);
    finalisation.  Not for the user. */
 PEP_STATUS pEp_log_initialize(PEP_SESSION session);
 PEP_STATUS pEp_log_finalize(PEP_SESSION session);
+
+
+/* GNU/BSD formatted output emulation
+ * ***************************************************************** */
+
+/* Prototype for the non-standard GNU/BSD function asprintf, missing on windows,
+   which performs formatted output on a malloc-allocated string to be freed by
+   the caller.
+   Set * string_pointer to NULL on allocation failure.
+
+   This prototype needs to be in a header, since the function is called in the
+   macroexpansion of logging functions, even out of the Engine.  This is a
+   redefinition and not simply a function named asprintf on windows:
+   unfortunately GCC like to give warnings for empty format strings when used on
+   recognised printf-like functions, and empty format strings here are useful;
+   disabling selected warnings in *user* code is very messay.  Better to use our
+   own differently-named function, and prevent the problem.. */
+int pEp_asprintf(char **string_pointer, const char *template, ...);
 
 #ifdef __cplusplus
 } /* extern "C" */

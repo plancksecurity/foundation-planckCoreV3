@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include <stdarg.h>
 #include <string>
 #include <stdexcept>
 #include <shlwapi.h> /* For PathMatchSpecExA . */
@@ -465,21 +466,13 @@ void uuid_unparse_upper(pEpUUID uu, uuid_string_t out)
     }
 }
 
+
+/* Unix system emulation
+ * ***************************************************************** */
+
 _pEp_pid_t getpid(void)
 {
     return GetCurrentProcessId();
-}
-
-void log_output_debug(const char *title,
-                       const char *entity,
-                       const char *description,
-                       const char *comment)
-{
-    const size_t size = 256;
-    char str[size];
-    
-    snprintf(str, size, "*** %s %s %s %s\n", title, entity, description, comment);
-    OutputDebugStringA(str);
 }
 
 DYNAMIC_API PEP_STATUS reset_path_cache(void)

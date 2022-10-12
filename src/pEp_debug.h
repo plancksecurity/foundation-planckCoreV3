@@ -103,35 +103,52 @@ typedef enum {
             PEP_LOG_VIOLATED_CHECK(what_as_string, expression);    \
             if (abort_on_failure)                                  \
                 abort();                                           \
-            else                                                   \
-                do {                                               \
-                    else_statement;                                \
-                } while (false);                                   \
+            do {                                                   \
+                else_statement;                                    \
+            } while (false);                                       \
         }                                                          \
     } while (false)
 
-#define PEP_ASSERT(expression)                                            \
-    PEP_CHECK_ORELSE("assertion",                                         \
-                     PEP_CHECK_ASSERTIONS, PEP_ABORT_ON_VIOLATED_ASSERT,  \
-                     expression, {})
-#define PEP_REQUIRE(expression)                                              \
-    PEP_CHECK_ORELSE("requirement",                                          \
-                     PEP_CHECK_REQUIREMENTS, PEP_ABORT_ON_VIOLATED_REQUIRE,  \
+#define PEP_ASSERT(expression)                                             \
+    PEP_CHECK_ORELSE("assertion",                                          \
+                     PEP_CHECK_ASSERTIONS, PEP_ABORT_ON_VIOLATED_ASSERT,   \
+                     /* I cannot protect the expression with parentheses,  \
+                        because the expression is stringised with # and    \
+                        used for output: it must match the source. */      \
                      expression, {})
 
-#define PEP_REQUIRE_ORELSE_ILLEGAL(expression)                               \
+/* #define PEP_REQUIRE(expression)                                              \ */
+/*     PEP_CHECK_ORELSE("requirement",                                          \ */
+/*                      PEP_CHECK_REQUIREMENTS, PEP_ABORT_ON_VIOLATED_REQUIRE,  \ */
+/*                      expression, {}) */
+/* #define PEP_REQUIRE_ORELSE_ILLEGAL(expression)                               \ */
+/*     PEP_CHECK_ORELSE("requirement",                                          \ */
+/*                      PEP_CHECK_REQUIREMENTS, PEP_ABORT_ON_VIOLATED_REQUIRE,  \ */
+/*                      /\* I cannot protect the expression with parentheses,    \ */
+/*                         because the expression is stringised with # and      \ */
+/*                         used for output: it must match the source. *\/       \ */
+/*                      expression, { return PEP_ILLEGAL_VALUE; }) */
+/* #define PEP_REQUIRE_ORELSE_GOTO(expression, label)                           \ */
+/*     PEP_CHECK_ORELSE("requirement",                                          \ */
+/*                      PEP_CHECK_REQUIREMENTS, PEP_ABORT_ON_VIOLATED_REQUIRE,  \ */
+/*                      /\* See the comment above. *\/                            \ */
+/*                      expression, { goto label; }) */
+/* // FIXME: Do I need PEP_REQUIRE_ORELSE_GOTO?  If not I can name that PEP_REQUIRE ... */
+
+#define PEP_REQUIRE_ORELSE(expression, else_statement)                       \
     PEP_CHECK_ORELSE("requirement",                                          \
                      PEP_CHECK_REQUIREMENTS, PEP_ABORT_ON_VIOLATED_REQUIRE,  \
-                     /* I cannot protect the expression with parentheses,    \
-                        because the expression is stringised with # and      \
-                        used for output: it must match the sources. */       \
-                     expression, { return PEP_STATUS_ILLEGAL_VALUE; })
-#define PEP_REQUIRE_ORELSE_GOTO(expression, label)                           \
-    PEP_CHECK_ORELSE("requirement",                                          \
-                     PEP_CHECK_REQUIREMENTS, PEP_ABORT_ON_VIOLATED_REQUIRE,  \
-                     /* See the comment above. */                            \
-                     expression, { goto label; })
-// FIXME: Do I need PEP_REQUIRE_ORELSE_GOTO?  If not I can name that PEP_REQUIRE ...
+                     /* See comment above*/ expression, else_statement)
+#define PEP_REQUIRE_ORELSE_RETURN(expression, else_expression)  \
+    PEP_REQUIRE_ORELSE(/* See comment above*/ expression,       \
+                       { return (else_expression); })
+#define PEP_REQUIRE_ORELSE_RETURN_ILLEGAL_VALUE(expression)       \
+    PEP_REQUIRE_ORELSE_RETURN(/* See comment above*/ expression,  \
+                              PEP_ILLEGAL_VALUE)
+#define PEP_REQUIRE_ORELSE_RETURN_NULL(expression)                      \
+    PEP_REQUIRE_ORELSE_RETURN(/* See comment above*/ expression, NULL)
+#define PEP_REQUIRE  \
+    PEP_REQUIRE_ORELSE_RETURN_ILLEGAL_VALUE
 
 
 /* Requirements

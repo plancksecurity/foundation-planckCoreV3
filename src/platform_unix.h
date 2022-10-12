@@ -186,6 +186,24 @@ void uuid_unparse_upper(pEpUUID uu, uuid_string_t out);
 typedef uuid_t pEpUUID;
 #endif
 
+
+/* Feature macros
+ * ***************************************************************** */
+
+/* We can write to stdout and stderr. */
+#define PEP_HAVE_STDOUT_AND_STDERR  1
+
+/* We can use the syslog facility. */
+#define PEP_HAVE_SYSLOG  1
+
+/* We have the Android log if this is Android. */
+#if defined(ANDROID)
+#   define PEP_HAVE_ANDROID_LOG  1
+#endif
+
+/* We do not have the windows log. */
+/* #undef PEP_HAVE_WINDOWS_LOG */
+
 #ifdef __cplusplus
 }
 #endif
