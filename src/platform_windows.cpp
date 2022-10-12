@@ -475,6 +475,19 @@ _pEp_pid_t getpid(void)
     return GetCurrentProcessId();
 }
 
+#warning "FIXME: remove this ugly thing and use the new log facility instead"
+void log_output_debug(const char *title,
+                      const char *entity,
+                      const char *description,
+                      const char *comment)
+{
+    const size_t size = 256;
+    char str[size];
+    
+    snprintf(str, size, "*** %s %s %s %s\n", title, entity, description, comment);
+    OutputDebugStringA(str);
+}
+
 DYNAMIC_API PEP_STATUS reset_path_cache(void)
 {
     /* Do nothing and return success.  This only exists for API compatibility
