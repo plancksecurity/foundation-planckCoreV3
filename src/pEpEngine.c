@@ -3782,6 +3782,10 @@ PEP_STATUS find_private_keys(PEP_SESSION session, const char* pattern,
                                                                     keylist);
 }
 
+/* These are visible as read-only symbols in some data section of compiled
+   executables. */
+const char *pEpEngineVersion = PEP_ENGINE_VERSION;
+const char *pEpEngineProtcolVersion = PEP_VERSION;
 
 DYNAMIC_API const char* get_engine_version() {
     return PEP_ENGINE_VERSION;
