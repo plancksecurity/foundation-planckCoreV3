@@ -772,7 +772,7 @@ DYNAMIC_API PEP_STATUS reset_path_cache(void)
 /**
  *  @internal
  *
- *  <!--       _per_user_directory()       -->
+ *  <!--       _per_user_relative_directory()       -->
  *
  *  @brief            TODO
  *
