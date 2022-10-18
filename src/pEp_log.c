@@ -4,6 +4,9 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
+#warning "windows: reimplement syslog using this: https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-openeventloga"
+#warning "android: ask the pEp security people (maybe huss in a friendly way?  ignacio?)"
+
 #define _EXPORT_PEP_ENGINE_DLL
 #include "pEp_log.h"
 
@@ -25,45 +28,6 @@
 #if defined (PEP_HAVE_WINDOWS_LOG)
 #   include <debugapi.h>
 #endif
-
-
-/* Initialisation and finalisation
- * ***************************************************************** */
-
-/* Print a warning about enabled but unsupported destinations.  This will be
-   executed once at startup. */
-static void warn_about_unsupported_destinations(void) {
-#if ! defined (PEP_HAVE_STDOUT_AND_STDERR)
-    if (PEP_LOG_DESTINATIONS & PEP_LOG_DESTINATION_STDOUT)
-        fprintf(stderr, "Warning: stdout logging selected but unavailable\n");
-    if (PEP_LOG_DESTINATIONS & PEP_LOG_DESTINATION_STDERR)
-        fprintf(stderr, "Warning: stderr logging selected but unavailable\n");
-#endif
-    /* The database destination is always available. */
-#if ! defined (PEP_HAVE_SYSLOG)
-    if (PEP_LOG_DESTINATIONS & PEP_LOG_DESTINATION_SYSLOG)
-        fprintf(stderr, "Warning: syslog logging selected but unavailable\n");
-#endif
-#if ! defined (PEP_HAVE_ANDROID_LOG)
-    if (PEP_LOG_DESTINATIONS & PEP_LOG_DESTINATION_ANDROID)
-        fprintf(stderr, "Warning: Android logging selected but unavailable\n");
-#endif
-#if ! defined (PEP_HAVE_WINDOWS_LOG)
-    if (PEP_LOG_DESTINATIONS & PEP_LOG_DESTINATION_WINDOWS)
-        fprintf(stderr, "Warning: windows logging selected but unavailable\n");
-#endif
-}
-
-PEP_STATUS pEp_log_initialize(PEP_SESSION session)
-{
-    warn_about_unsupported_destinations();
-    return PEP_STATUS_OK;
-}
-
-PEP_STATUS pEp_log_finalize(PEP_SESSION session)
-{
-    return PEP_STATUS_OK;
-}
 
 
 /* GNU/BSD formatted output emulation
@@ -135,11 +99,12 @@ int pEp_asprintf(char **string_pointer, const char *template, ...)
 static const char* _log_level_to_string(PEP_LOG_LEVEL level)
 {
     switch (level) {
-    case PEP_LOG_LEVEL_CRITICAL:    return "CRITICAL";
-    case PEP_LOG_LEVEL_ERROR:       return "ERROR";
+    case PEP_LOG_LEVEL_CRITICAL:    return "CRT";
+    case PEP_LOG_LEVEL_ERROR:       return "ERR";
     case PEP_LOG_LEVEL_WARNING:     return "wng";
     case PEP_LOG_LEVEL_EVENT:       return "evt";
     case PEP_LOG_LEVEL_API:         return "api";
+    case PEP_LOG_LEVEL_NONOK:       return "nok";
     case PEP_LOG_LEVEL_FUNCTION:    return "fnc";
     case PEP_LOG_LEVEL_TRACE:       return "trc";
     case PEP_LOG_LEVEL_EVERYTHING:  return "[everything log level (not for entries)]";
@@ -167,7 +132,7 @@ static const char* _log_level_to_string(PEP_LOG_LEVEL level)
 /* Like PEP_LOG_PRINTF_FORMAT and PEP_LOG_PRINTF_ACTUALS, but with
    different fields. */
 #define PEP_LOG_PRINTF_FORMAT_NO_DATE                         \
-    "%s%s%s"                      /* system, subsystem */   \
+    "%s%s%s"                        /* system, subsystem */   \
     " %li"                          /* pid */                 \
     " %s"                           /* log level */           \
     " %s:%i%s%s"                    /* source location */     \
@@ -180,6 +145,278 @@ static const char* _log_level_to_string(PEP_LOG_LEVEL level)
     source_file_name, source_file_line, function_prefix,          \
         function_name,                                            \
     entry_prefix, entry
+
+
+/* Logging facility: database destination.
+ * ***************************************************************** */
+
+/* SQL statements to create the Entries table and its index.  This is executed
+   just once at start up, and does not need to be compiled into a prepared
+   statement. */
+static const char *pEp_log_create_table_text =
+" -- No need for PRAGMA foreign_keys on a single-table\n"
+" -- database with no foreign keys.\n"
+" PRAGMA checkpoint_fullfsync = ON;\n"
+" PRAGMA auto_vacuum = INCREMENTAL;\n"
+" PRAGMA incremental_vacuum = ON;\n"
+" "
+" CREATE TABLE IF NOT EXISTS Entries ("
+"   -- The id is a good approximation of a timestamp, much more efficient.\n"
+"   id               INTEGER  PRIMARY KEY  AUTOINCREMENT,"
+"   Level            INTEGER  NOT NULL,"
+"   Timestamp        INTEGER  NOT NULL     DEFAULT (cast(strftime('%s','now') as int)),"
+"   Pid              INTEGER  NOT NULL,"
+"   System           TEXT,"
+"   Subsystem        TEXT,"
+"   Source_file_name TEXT     NOT NULL,"
+"   Source_file_line INTEGER  NOT NULL,"
+"   Function_name    TEXT     NOT NULL,"
+"   Entry            TEXT"
+" );"
+" "
+" -- This makes aggregate functions such as MIN fast.\n"
+" CREATE UNIQUE INDEX IF NOT EXISTS idx_Entries_Id on Entries (id);"
+" "
+" -- This is very convenient for interactive use.\n"
+"CREATE VIEW IF NOT EXISTS UserEntries AS"
+"  SELECT E.id,"
+"         CASE E.Level WHEN  10 THEN 'CRT'"
+"                      WHEN  20 THEN 'ERR'"
+"                      WHEN 100 THEN 'wng'"
+"                      WHEN 200 THEN 'evt'"
+"                      WHEN 210 THEN 'api'"
+"                      WHEN 300 THEN 'nok'"
+"                      WHEN 310 THEN 'fcn'"
+"                      WHEN 320 THEN 'trc'"
+"                               ELSE CAST(E.Level AS TEXT)"
+"         END AS Lvl,"
+"         datetime(E.timestamp, 'unixepoch', 'localtime') AS Timestamp,"
+"         E.Pid,"
+"         CASE WHEN E.System is NULL THEN"
+"           CASE WHEN E.SubSystem is NULL THEN  NULL"
+"           ELSE                                '/' || E.SubSystem END"
+"         ELSE"
+"           CASE WHEN E.SubSystem is NULL THEN  E.System || '/'"
+"           ELSE                                E.System || '/' || E.SubSystem END"
+"         END AS System_SubSystem,"
+"         (E.Source_file_name || ':' || CAST(E.Source_file_line AS TEXT)"
+"          || ':' || E.Function_name) AS Location,"
+"         E.Entry"
+"  FROM Entries E"
+"  ORDER BY E.id;";
+
+/* Insert a new row. */
+static const char *pEp_log_insert_text =
+" INSERT INTO Entries"
+"   (Level, Pid, System, Subsystem, Source_file_name, Source_file_line,"
+"    Function_name, Entry)"
+" VALUES"
+"   (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8);";
+
+/* Delete the oldest row, if the total number of rows is large enough. */
+static const char *pEp_log_delete_oldest_text =
+" DELETE FROM Entries"
+"                     -- MAX is a faster approximation of COUNT\n"
+" WHERE id = (SELECT (CASE WHEN MAX(id) <= ?1 THEN"
+"                       -1"
+"                     ELSE"
+"                       MIN(id)"
+"                     END)"
+"             FROM Entries);";
+
+/* Pepare the SQL statements worth preparing. */
+static PEP_STATUS _pEp_log_prepare_sql_statements(PEP_SESSION session)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    int sqlite_status = SQLITE_OK;
+
+#define CHECK_SQL_STATUS                    \
+    do {                                    \
+        if (sqlite_status != SQLITE_OK) {   \
+            status = PEP_UNKNOWN_DB_ERROR;  \
+            goto end;                       \
+        }                                   \
+    } while (false)
+    sqlite_status
+        = sqlite3_prepare_v2(session->log_db,
+                             pEp_log_insert_text, -1,
+                             & session->log_insert_prepared_statement,
+                             NULL);
+    CHECK_SQL_STATUS;
+    sqlite_status
+        = sqlite3_prepare_v2(session->log_db,
+                             pEp_log_delete_oldest_text, -1,
+                             & session->log_delete_oldest_prepared_statement,
+                             NULL);
+    CHECK_SQL_STATUS;
+
+ end:
+    return status;
+}
+
+/* Initialise the database subsystem.  Called once at session initialisation. */
+static PEP_STATUS _pEp_log_initialize_database(PEP_SESSION session)
+{
+    assert(session != NULL && session->log_db == NULL);
+    if (! (session != NULL && session->log_db == NULL))
+        return PEP_ILLEGAL_VALUE;
+    PEP_STATUS status = PEP_STATUS_OK;
+    int sqlite_status = SQLITE_OK;
+    char *error_message = NULL;
+
+    /* Open (creating it as needed) the log database. */
+    const char *database_file_path = LOG_DB;
+    if (database_file_path == NULL) {
+        status = PEP_INIT_CANNOT_OPEN_DB;
+        goto end;
+    }
+    sqlite_status = sqlite3_open_v2(database_file_path, & session->log_db,
+                                    SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE
+                                    | SQLITE_OPEN_FULLMUTEX,
+                                    NULL);
+    if (sqlite_status != SQLITE_OK) {
+        sqlite3_close(session->log_db);
+        session->log_db = NULL;
+        status = PEP_INIT_CANNOT_OPEN_DB;
+        goto end;
+    }
+
+    /* Create the log database single table.  No need to prepare this statement
+       which is executed only once. */
+    sqlite_status = sqlite3_exec(session->log_db,
+                                 pEp_log_create_table_text, NULL, NULL,
+                                 & error_message);
+    if (sqlite_status != SQLITE_OK) {
+        fprintf(stderr, "Failed creating the log database table: %s\n",
+                error_message);
+        status = PEP_INIT_CANNOT_OPEN_DB;
+    }
+
+    /* Prepare SQL statements. */
+    status = _pEp_log_prepare_sql_statements(session);
+
+ end:
+    sqlite3_free(error_message);
+    return status;
+}
+
+/* Finalise the database subsystem.  Called once at session release. */
+static PEP_STATUS _pEp_log_finalize_database(PEP_SESSION session)
+{
+    assert(session != NULL && session->log_db != NULL);
+    if (! (session != NULL && session->log_db != NULL))
+        return PEP_ILLEGAL_VALUE;
+
+    PEP_STATUS status = PEP_STATUS_OK;
+    int sqlite_status = SQLITE_OK;
+
+    /* Finialise prepared SQL statements.  Go on even in case of failure. */
+    sqlite_status
+        = sqlite3_finalize(session->log_insert_prepared_statement);
+    if (sqlite_status != SQLITE_OK)
+        status = PEP_UNKNOWN_DB_ERROR;
+    sqlite_status
+        = sqlite3_finalize(session->log_delete_oldest_prepared_statement);
+    if (sqlite_status != SQLITE_OK)
+        status = PEP_UNKNOWN_DB_ERROR;
+
+    /* Close the database. */
+    sqlite_status = sqlite3_close(session->log_db);
+    if (sqlite_status != SQLITE_OK)
+        status = PEP_UNKNOWN_DB_ERROR;
+    /* Out of defensiveness. */
+    session->log_db = NULL;
+
+    return status;
+}
+
+/* Delete the oldest row, if more than PEP_LOG_DATABASE_ROW_NO_MAXIMUM rows seem
+   to be there already.  Do nothing otherwise. */
+static void _pEp_log_delete_oldest_row_when_too_many(PEP_SESSION session)
+{
+    int sqlite_status = SQLITE_OK;
+
+    sql_reset_and_clear_bindings(session->log_delete_oldest_prepared_statement);
+    sqlite_status
+        = sqlite3_bind_int64(session->log_delete_oldest_prepared_statement,
+                             1, PEP_LOG_DATABASE_ROW_NO_MAXIMUM);
+    if (sqlite_status != SQLITE_OK)
+        return;
+    sqlite_status = sqlite3_step(session->log_delete_oldest_prepared_statement);
+
+    /* Here sqlite_status will be SQLITE_DONE on success, including the case in
+       which no row is deleted. */
+}
+
+/* The implementation of pEp_log for the database destination. */
+static PEP_STATUS _pEp_log_db(PEP_SESSION session,
+                              PEP_LOG_LEVEL level,
+                              const timestamp *time,
+                              pid_t pid,
+                              const char *system_subsystem_prefix,
+                              const char *system,
+                              const char *system_subsystem_separator,
+                              const char *subsystem,
+                              const char *source_file_name,
+                              int source_file_line,
+                              const char *function_prefix,
+                              const char *function_name,
+                              const char *entry_prefix,
+                              const char *entry)
+{
+    assert(session != NULL && session->log_db != NULL);
+    if (! (session != NULL && session->log_db != NULL))
+        return PEP_ILLEGAL_VALUE;
+
+    /* If the table has become too large delete the oldest row, before inserting
+       the next one. */
+    _pEp_log_delete_oldest_row_when_too_many(session);
+
+    PEP_STATUS status = PEP_STATUS_OK;
+    int sqlite_status = SQLITE_OK;
+#define CHECK_SQL(expected_sqlite_status)                 \
+    do {                                                  \
+        if (sqlite_status != (expected_sqlite_status)) {  \
+            status = PEP_UNKNOWN_DB_ERROR;                \
+            goto error;                                   \
+        }                                                 \
+    } while (false)
+
+    /* Bind parameters to the compiled statement. */
+    sql_reset_and_clear_bindings(session->log_insert_prepared_statement);
+    sqlite_status = sqlite3_bind_int(session->log_insert_prepared_statement,
+                                     1, level);
+    CHECK_SQL(SQLITE_OK);
+    sqlite_status = sqlite3_bind_int(session->log_insert_prepared_statement,
+                                     2, pid);
+    CHECK_SQL(SQLITE_OK);
+    sqlite_status = sqlite3_bind_text(session->log_insert_prepared_statement,
+                                      3, system, -1, SQLITE_STATIC);
+    CHECK_SQL(SQLITE_OK);
+    sqlite_status = sqlite3_bind_text(session->log_insert_prepared_statement,
+                                      4, subsystem, -1, SQLITE_STATIC);
+    CHECK_SQL(SQLITE_OK);
+    sqlite_status = sqlite3_bind_text(session->log_insert_prepared_statement,
+                                      5, source_file_name, -1, SQLITE_STATIC);
+    CHECK_SQL(SQLITE_OK);
+    sqlite_status = sqlite3_bind_int(session->log_insert_prepared_statement,
+                                     6, source_file_line);
+    CHECK_SQL(SQLITE_OK);
+    sqlite_status = sqlite3_bind_text(session->log_insert_prepared_statement,
+                                      7, function_name, -1, SQLITE_STATIC);
+    CHECK_SQL(SQLITE_OK);
+    sqlite_status = sqlite3_bind_text(session->log_insert_prepared_statement,
+                                      8,
+                                      (EMPTYSTR(entry) ? NULL : entry), -1,
+                                      SQLITE_STATIC);
+    CHECK_SQL(SQLITE_OK);
+
+    sqlite_status = sqlite3_step(session->log_insert_prepared_statement);
+    CHECK_SQL(SQLITE_DONE);
+
+ error:
+    return status;
+}
 
 
 /* Logging facility: FILE* destinations
@@ -290,8 +527,8 @@ static enum android_LogPriority _log_level_to_android_logpriority(
    PEP_LOG_LEVEL level)
 {
     int facility = LOG_USER;
-#define RETURN_ANDROID_LOGPRIORITY(priority) \
-    do { return LOG_MAKEPRI(facility, (priority)); } while (false)
+#define RETURN_ANDROID_LOGPRIORITY(priority)  \
+    { return LOG_MAKEPRI(facility, (priority)); }
 
     switch (level) {
     case PEP_LOG_LEVEL_CRITICAL:
@@ -484,7 +721,7 @@ DYNAMIC_API PEP_STATUS pEp_log(PEP_SESSION session,
 #endif /* #if defined (PEP_HAVE_STDOUT_AND_STDERR) */
 
     if (PEP_LOG_DESTINATIONS & PEP_LOG_DESTINATION_DATABASE)
-        ;  // FIXME: implement.
+        COMBINE_STATUS(_pEp_log_db(ACTUALS));
 
 #if defined (PEP_HAVE_SYSLOG)
     if (PEP_LOG_DESTINATIONS & PEP_LOG_DESTINATION_SYSLOG)
@@ -502,5 +739,58 @@ DYNAMIC_API PEP_STATUS pEp_log(PEP_SESSION session,
 #endif /* #if defined (PEP_HAVE_WINDOWS_LOG) */
 
     free (now);
+    return status;
+}
+
+
+/* Initialisation and finalisation
+ * ***************************************************************** */
+
+/* Print a warning about enabled but unsupported destinations.  This will be
+   executed once at startup. */
+static void warn_about_unsupported_destinations(void) {
+#if ! defined (PEP_HAVE_STDOUT_AND_STDERR)
+    if (PEP_LOG_DESTINATIONS & PEP_LOG_DESTINATION_STDOUT)
+        fprintf(stderr, "Warning: stdout logging selected but unavailable\n");
+    if (PEP_LOG_DESTINATIONS & PEP_LOG_DESTINATION_STDERR)
+        fprintf(stderr, "Warning: stderr logging selected but unavailable\n");
+#endif
+    /* The database destination is always available. */
+#if ! defined (PEP_HAVE_SYSLOG)
+    if (PEP_LOG_DESTINATIONS & PEP_LOG_DESTINATION_SYSLOG)
+        fprintf(stderr, "Warning: syslog logging selected but unavailable\n");
+#endif
+#if ! defined (PEP_HAVE_ANDROID_LOG)
+    if (PEP_LOG_DESTINATIONS & PEP_LOG_DESTINATION_ANDROID)
+        fprintf(stderr, "Warning: Android logging selected but unavailable\n");
+#endif
+#if ! defined (PEP_HAVE_WINDOWS_LOG)
+    if (PEP_LOG_DESTINATIONS & PEP_LOG_DESTINATION_WINDOWS)
+        fprintf(stderr, "Warning: windows logging selected but unavailable\n");
+#endif
+}
+
+PEP_STATUS pEp_log_initialize(PEP_SESSION session)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    warn_about_unsupported_destinations();
+
+    /* The database destination is always enabled: no need for a CPP
+       conditional. */
+    if (PEP_LOG_DESTINATIONS & PEP_LOG_DESTINATION_DATABASE)
+        status = _pEp_log_initialize_database(session);
+
+    return status;
+}
+
+PEP_STATUS pEp_log_finalize(PEP_SESSION session)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    /* The database destination is always enabled: no need for a CPP
+       conditional. */
+    if (PEP_LOG_DESTINATIONS & PEP_LOG_DESTINATION_DATABASE)
+        status = _pEp_log_finalize_database(session);
+
     return status;
 }

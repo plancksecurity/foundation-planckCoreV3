@@ -28,6 +28,7 @@
 #include "pEpEngine.h" // just for PEP_STATUS
 
 #define LOCAL_DB_FILENAME "management.db"
+#define LOG_DB_FILENAME "log.db"
 #define SYSTEM_DB_FILENAME "system.db"
 #define KEYS_DB "keys.db"
 #define USER_FOLDER_PATH _per_user_directory()
@@ -307,6 +308,13 @@ const char *windoze_local_db(void) {
     static string path;
     if (path.length() == 0)
         path = managementPath(USER_FOLDER_PATH, LOCAL_DB_FILENAME);
+    return path.c_str();
+}
+
+const char *windoze_log_db(void) {
+    static string path;
+    if (path.length() == 0)
+        path = managementPath(USER_FOLDER_PATH, LOG_DB_FILENAME);
     return path.c_str();
 }
 

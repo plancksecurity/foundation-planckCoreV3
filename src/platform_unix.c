@@ -35,8 +35,11 @@
 #define MAX_PATH 1024
 #ifndef LOCAL_DB_FILENAME
 #define OLD_LOCAL_DB_FILENAME ".pEp_management.db"
+/* There is no old name for the log database, which was introduced long after
+   the naming convention change. */
 #define OLD_KEYS_DB_FILENAME ".pEp_keys.db"
 #define LOCAL_DB_FILENAME "management.db"
+#define LOG_DB_FILENAME "log.db"
 #define KEYS_DB_FILENAME "keys.db"
 #endif
 #define SYSTEM_DB_FILENAME "system.db"
@@ -429,10 +432,8 @@ static char *_strdup_or_NULL(const char *original)
 }
 
 
-/*
- * Environment variable expansion
- * **********************************************************************
- */
+/* Environment variable expansion
+ * ***************************************************************** */
 
 /* The state of a DFA implementing variable recognition in _expand_variables ,
    below. */
@@ -647,10 +648,8 @@ static PEP_STATUS _expand_variables(char **out,
 }
 
 
-/*
- * Internal path caching functionality
- * **********************************************************************
- */
+/* Internal path caching functionality
+ * ***************************************************************** */
 
 /* Several functions in this compilation unit return paths to files or
  * directories, always returning pointers to the same internally managed memory
@@ -700,6 +699,7 @@ DEFINE_CACHED_PATH (per_machine_directory)
 #endif
 DEFINE_CACHED_PATH (unix_system_db)
 DEFINE_CACHED_PATH (unix_local_db)
+DEFINE_CACHED_PATH (unix_log_db)
 
 /* Free every cache variable and re-initialise it to NULL: this
    re-initialisation is important when this function is used here,
@@ -720,6 +720,7 @@ DYNAMIC_API void clear_path_cache (void)
 #endif
     UNSET (unix_system_db);
     UNSET (unix_local_db);
+    UNSET (unix_log_db);
 
 #undef UNSET
 }
@@ -757,6 +758,7 @@ DYNAMIC_API PEP_STATUS reset_path_cache(void)
 #endif
     SET_OR_FAIL (unix_system_db);
     SET_OR_FAIL (unix_local_db);
+    SET_OR_FAIL (unix_log_db);
 
     return res;
 
@@ -824,7 +826,8 @@ error:
     return NULL;
 }
 
-char *_unix_local_db(void)
+#warning "This code is a mess.  It mixes together the computation of a pathname, checking for its existence, and migrating from old locations.  It does not even work because now the computed path is supposed to contain variables to be expanded elsewhere.  Separate.  Even rewriting would be absurd."
+static char *_unix_local_db(void)
 {
     char* path = (char *) _per_user_directory() /* This memory is not shared. */;
     if (!path)
@@ -938,11 +941,36 @@ the_end:
     return path;
 }
 
+static char *_unix_log_db(void)
+{
+    /* The log database is *always* in the same directory of the local database,
+       on every platform.  This function does not need to worry about the
+       existance of the directory, since _unix_local_db already does the
+       work. */
+
+    char *res = NULL;
+    char *directory = (char *) _per_user_directory();
+    if (directory == NULL)
+        goto error;
+    if (LOG_DB_FILENAME == NULL)
+        goto error;
+    size_t total_length
+        = strlen(directory) + /* '/' */ 1 + strlen (LOG_DB_FILENAME);
+    res = malloc (total_length + /* '\0' */ 1);
+    sprintf(res, "%s/%s", directory, LOG_DB_FILENAME);
+    return res;
+
+ error:
+    free(directory);
+    free(res);
+    return NULL;
+}
+
 static char *_per_machine_directory(void) {
     return _strdup_or_NULL(PER_MACHINE_DIRECTORY);
 }
 
-char *_unix_system_db(void)
+static char *_unix_system_db(void)
 {
     char *path = NULL;
 

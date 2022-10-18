@@ -218,6 +218,21 @@ const char *windoze_local_db(void);
  *  
  *  
  */
+/**
+ *  <!--       windoze_log_db()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  
+ */
+const char *windoze_log_db(void);
+/**
+ *  <!--       windoze_system_db()       -->
+ *  
+ *  @brief            TODO
+ *  
+ *  
+ */
 const char *windoze_system_db(void);
 
 /**
@@ -309,6 +324,10 @@ _pEp_pid_t getpid(void);
 
 /* We have the windows log. */
 #define PEP_HAVE_WINDOWS_LOG  1
+
+/* Using the silly compiler we have here we cannot rely on GNU C's extension
+   __PRETTY_FUNCTION__ : we will use __func__ instead. */
+/* #undef PEP_HAVE_PRETTY_FUNCTION */
 
 #ifdef __cplusplus
 }

@@ -67,8 +67,9 @@ extern "C" {
 /**
  *  <!--       unix_local_db()       -->
  *  
- *  @brief            TODO
- *
+ *  @brief      Return an absolute path to the local database, with Unix
+ *              variables already expanded, making sure that the directory
+ *              exists.
  *  		The returned pointed refers memory managed by
  *  		the engine, which will remain valid until
  *  		the next call to reset_path_cache.
@@ -77,13 +78,19 @@ extern "C" {
 const char *unix_local_db(void);
 
 /**
+ *  <!--       unix_log_db()       -->
+ *  
+ *  @brief      Like unix_local_db, but for the log database.
+ *  
+ */
+const char *unix_log_db(void);
+
+/**
  *  <!--       unix_system_db()       -->
  *  
- *  @brief            TODO
- *
- *  		The returned pointed refers memory managed by
- *  		the engine, which will remain valid until
- *  		the next call to reset_path_cache.
+ *  @brief      Like unix_local_db and unix_log_db, but for the system database.
+ *              Notice that the system database is read-only, and shared by
+ *              multiple Unix users.
  *  
  */
 const char *unix_system_db(void);
@@ -203,6 +210,11 @@ typedef uuid_t pEpUUID;
 
 /* We do not have the windows log. */
 /* #undef PEP_HAVE_WINDOWS_LOG */
+
+/* Using any compiler we support on these platforms we can use GNU C's extension
+   __PRETTY_FUNCTION__ : same idea as __func__, but the expansion shows classes
+   and namespaces in C++. */
+#define PEP_HAVE_PRETTY_FUNCTION  1
 
 #ifdef __cplusplus
 }

@@ -74,6 +74,7 @@
 #ifdef WIN32
 #define KEYS_DB windoze_keys_db()
 #define LOCAL_DB windoze_local_db()
+#define LOG_DB windoze_log_db()
 #define SYSTEM_DB windoze_system_db()
 #else // UNIX
 #ifndef __MVS__
@@ -81,6 +82,7 @@
 #endif
 #include <dlfcn.h>
 #define LOCAL_DB unix_local_db()
+#define LOG_DB unix_log_db()
 #ifdef ANDROID
 #define SYSTEM_DB android_system_db()
 #else
@@ -179,9 +181,14 @@ struct _pEpSession {
     PEP_transport_t *transports;
 
     sqlite3 *db;
+    sqlite3 *log_db;
     sqlite3 *system_db;
 
-    sqlite3_stmt *log;
+    /* Prepared SQL statements (on log_db) for logging.  See pEp_log.c . */
+    sqlite3_stmt *log_insert_prepared_statement;
+    sqlite3_stmt *log_delete_oldest_prepared_statement;
+
+    sqlite3_stmt *log; /* This uses the management DB, and is obsolete. */
     sqlite3_stmt *trustword;
     sqlite3_stmt *get_identity;
     sqlite3_stmt *get_identity_without_trust_check;

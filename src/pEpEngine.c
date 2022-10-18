@@ -95,8 +95,12 @@ DYNAMIC_API PEP_STATUS init(
     _session->ensure_passphrase = ensure_passphrase;
     _session->enable_echo_protocol = true;
     _session->enable_echo_in_outgoing_message_rating_preview = true;
-    
-    status = init_databases(_session);
+
+    status = pEp_log_initialize(_session);
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    status = init_databases(_session); /* Every database except log. */
     if (status != PEP_STATUS_OK)
         return status;
 
@@ -232,6 +236,7 @@ DYNAMIC_API void release(PEP_SESSION session)
 
         release_transport_system(session, out_last);
         release_cryptotech(session, out_last);
+        pEp_log_finalize(session);
         free(session);
     }
     fprintf(stderr, "engine release, session %p: ...end\n", session);
