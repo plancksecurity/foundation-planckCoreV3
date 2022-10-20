@@ -477,6 +477,7 @@ static PEP_STATUS _expand_variables(char **out,
 #else
         = 1 /* Notice that 0 is incorrect: this grows by doubling. */;
 #endif // #ifdef NDEBUG
+    variable_name_beginning = NULL; /* Just to silence a GCC warning. */
     int out_index = 0; /* The out index is also the used out size */
     const char *in = string_with_variables;
     /* In the pEp engine we adopt the convention of "" behaving the same as
