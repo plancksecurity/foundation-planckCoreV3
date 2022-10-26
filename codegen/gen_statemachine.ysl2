@@ -363,9 +363,7 @@ tstylesheet {
                     int event
                 )
             {
-                assert(session);
-                if (!session)
-                    return PEP_ILLEGAL_VALUE;
+                PEP_REQUIRE(session);
 
                 switch (fsm) {
                     case None:
@@ -400,12 +398,10 @@ tstylesheet {
                     identity_list *own_identities
                 )
             {
+                PEP_REQUIRE(session && fsm > 0 && event > None);
+
                 «@name»_t *msg = NULL;
                 «@name»_event_t *ev = NULL;
-
-                assert(session && fsm > 0 && event > None);
-                if (!(session && fsm > 0 && event > None))
-                    return PEP_ILLEGAL_VALUE;
 
                 PEP_STATUS status = PEP_STATUS_OK;
 
@@ -460,9 +456,7 @@ tstylesheet {
                     const char *sender_fpr
                 )
             {
-                assert(session && data && size);
-                if (!(session && data && size))
-                    return PEP_ILLEGAL_VALUE;
+                PEP_REQUIRE(session && data && size);
 
                 if (!session->inject_«yml:lcase(@name)»_event)
                    return PEP_«yml:ucase(@name)»_NO_INJECT_CALLBACK;
@@ -504,11 +498,10 @@ tstylesheet {
 
                 if (sender_fpr) {
                     ev->sender_fpr = strdup(sender_fpr);
-                    assert(ev->sender_fpr);
-                    if (!ev->sender_fpr) {
+                    PEP_WEAK_ASSERT_ORELSE(ev->sender_fpr, {
                         status = PEP_OUT_OF_MEMORY;
                         goto the_end;
-                    }
+                    });
                 }
 
                 int result = session->inject_«yml:lcase(@name)»_event(ev,
@@ -531,12 +524,9 @@ tstylesheet {
                     int message_type
                 )
             {
+                PEP_REQUIRE(session && (int) fsm > None && message_type > None);
+
                 PEP_STATUS status = PEP_STATUS_OK;
-
-                assert(session && (int) fsm > None && message_type > None);
-                if (!(session && (int) fsm > None && message_type > None))
-                    return PEP_ILLEGAL_VALUE;
-
                 time_t now = time(NULL);
                 switch (fsm) {
             ||
@@ -577,11 +567,10 @@ tstylesheet {
                     free(session->«yml:lcase(@name)»_state.transport.sender_fpr);
                     session->«yml:lcase(@name)»_state.transport.sender_fpr =
                             strdup(session->«yml:lcase(@name)»_state.comm_partner.sender_fpr);
-                    assert(session->«yml:lcase(@name)»_state.transport.sender_fpr);
-                    if (!session->«yml:lcase(@name)»_state.transport.sender_fpr) {
+                    PEP_WEAK_ASSERT_ORELSE(session->«yml:lcase(@name)»_state.transport.sender_fpr, {
                         status = PEP_OUT_OF_MEMORY;
                         goto the_end;
-                    }
+                    });
                 }
 
                 switch (fsm) {
@@ -597,11 +586,10 @@ tstylesheet {
                     char *_data = NULL;
   
                     _data = malloc(size);
-                    assert(_data);
-                    if (!_data) {
+                    PEP_WEAK_ASSERT_ORELSE(_data, {
                         status = PEP_OUT_OF_MEMORY;
                         goto the_end;
-                    }
+                    });
                     memcpy(_data, data, size);
 
                     switch (message_type) {
@@ -714,12 +702,12 @@ tstylesheet {
                                     free_identity(ident);
                                     goto the_end;
                                 }
-                                assert(ident->comm_type == PEP_ct_pEp); // we don't deliver otherwise
-                                if (ident->comm_type != PEP_ct_pEp) {
+                                // we don't deliver otherwise:
+                                PEP_WEAK_ASSERT_ORELSE(ident->comm_type == PEP_ct_pEp, {
                                     free_identity(ident);
                                     status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                     continue;
-                                }
+                                });
                                 free_identity(ident);
 
                                 // test if we accepted this as own key already
@@ -728,9 +716,7 @@ tstylesheet {
                                 status = own_key_is_listed(session,
                                         session->«yml:lcase(@name)»_state.comm_partner.sender_fpr,
                                         &is_own_key);
-                                assert(!status);
-                                if (status)
-                                    goto the_end;
+                                PEP_WEAK_ASSERT_ORELSE_GOTO(!status, the_end);
                                 if (!is_own_key) {
                                     status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                     continue;
@@ -765,13 +751,12 @@ tstylesheet {
                             // export secret keys into memory
 
                             key_data = strdup("");
-                            assert(key_data);
-                            if (!key_data) {
+                            PEP_WEAK_ASSERT_ORELSE(key_data, {
                                 free(_data);
                                 free_message(_m);
                                 status = PEP_OUT_OF_MEMORY;
                                 goto the_end;
-                            }
+                            });
                             key_data_size = 1; // N.B. If null termination makes us happy for debugging, fine, but 
                                                // if we include this in the size, libetpan will null terminate and 
                                                // go bananas. We can't have a NUL in the mime text.
@@ -789,7 +774,7 @@ tstylesheet {
                                 }
 
                                 if (status != PEP_KEY_NOT_FOUND) {
-                                    assert(_key_data && _size);
+                                    PEP_ASSERT(_key_data && _size);
                                     char *n = realloc(key_data, key_data_size + _size);
                                     if (!n) {
                                         free(_data);
@@ -811,7 +796,7 @@ tstylesheet {
                                 }
 
                                 if (status != PEP_KEY_NOT_FOUND) {
-                                    assert(_key_data && _size);
+                                    PEP_ASSERT(_key_data && _size);
                                     char *n = realloc(key_data, key_data_size + _size);
                                     if (!n) {
                                         free(_data);
@@ -874,13 +859,12 @@ tstylesheet {
                             // export secret keys into memory
 
                             key_data = strdup("");
-                            assert(key_data);
-                            if (!key_data) {
+                            PEP_WEAK_ASSERT_ORELSE(key_data, {
                                 free(_data);
                                 free_message(_m);
                                 status = PEP_OUT_OF_MEMORY;
                                 goto the_end;
-                            }
+                            });
                             key_data_size = 1; // N.B. If null termination makes us happy for debugging, fine, but 
                                                // if we include this in the size, libetpan will null terminate and 
                                                // go bananas. We can't have a NUL in the mime text.
@@ -898,7 +882,7 @@ tstylesheet {
                                 }
 
                                 if (status != PEP_KEY_NOT_FOUND) {
-                                    assert(_key_data && _size);
+                                    PEP_ASSERT(_key_data && _size);
                                     char *n = realloc(key_data, key_data_size + _size);
                                     if (!n) {
                                         free(_data);
@@ -920,7 +904,7 @@ tstylesheet {
                                 }
 
                                 if (status != PEP_KEY_NOT_FOUND) {
-                                    assert(_key_data && _size);
+                                    PEP_ASSERT(_key_data && _size);
                                     char *n = realloc(key_data, key_data_size + _size);
                                     if (!n) {
                                         free(_data);
@@ -1045,9 +1029,7 @@ tstylesheet {
                     «@name»_event_t *ev
                 )
             {
-                assert(session && ev);
-                if (!(session && ev))
-                    return PEP_ILLEGAL_VALUE;
+                PEP_REQUIRE(session && ev);
 
                 PEP_STATUS status = PEP_STATUS_OK;
                 «@name»_PR fsm = (int) None;
@@ -1580,7 +1562,7 @@ tstylesheet {
         }
         ||
                 default:
-                    assert(0);
+                    assert(false);
                     return "unknown state";
             }
         }
@@ -1639,9 +1621,7 @@ tstylesheet {
                 «@name»_event event
             )
         {
-            assert(session);
-            if (!session)
-                return invalid_state;
+            PEP_REQUIRE_ORELSE_RETURN(session, invalid_state);
 
             if ((int) state == None)
                 state = «@name»_state_Init;
@@ -1650,7 +1630,7 @@ tstylesheet {
                 `` apply "state", 2, mode=fsm
                 default:
                     «@name»_LOG_ERROR("invalid state %s", «@name»_state_name(state));
-                    assert(0);
+                    PEP_ASSERT(false);
                     return invalid_state;
             }
             
@@ -1752,7 +1732,7 @@ tstylesheet {
             return out_of_memory;
         if (status) {
             «$fsm/@name»_LOG_ERROR("executing action «@name»() failed: 0x%x %i %s", (int) status, (int) status, pEp_status_to_string(status));
-            assert(0);
+            PEP_ASSERT(false);
             return invalid_action;
         }
         ||
@@ -1767,7 +1747,7 @@ tstylesheet {
             return out_of_memory;
         if (status) {
             «$fsm/@name»_LOG_ERROR("computing condition «@name» failed: 0x%x %i %s", (int) status, (int) status, pEp_status_to_string(status));
-            assert(0);
+            PEP_ASSERT(false);
             return invalid_condition;
         }
         if (result) {
