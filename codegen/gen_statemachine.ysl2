@@ -1036,7 +1036,7 @@ tstylesheet {
                 free(key_data);
                 free_«@name»_message(msg);
                 if (status)
-                    SERVICE_ERROR_LOG(session, "send_«@name»_message()", status);
+                    PEP_LOG_ERROR("p≡p Engine", "«@name»", "send_«@name»_message failed: 0x%x %i %s", (int) status, (int) status, pEp_status_to_string(status));
                 return status;
             }
 
@@ -1558,6 +1558,7 @@ tstylesheet {
          */
 
         #include "«@name»_fsm.h"
+        #include "pEp_internal.h"
         #include <stdlib.h>
 
         #ifdef NDEBUG
@@ -1607,66 +1608,30 @@ tstylesheet {
         }
 
         /**
-         *  <!--            _str()       -->
+         *  <!--            «@name»_LOG_ERROR()       -->
          *
          *  @internal
          *
-         *  @brief          Convert an integer to a string representation
+         *  @brief          Log at the error level for this protocol.
          *
-         *  @param[in]      n           integer to convert
-         *  @param[in]      hex         true if it should be in hex representation,
-         *                              false for decimal
+         *  @param[in]      template    must be a literal string, or may not
+         *                              be supplied at all; this is a format
+         *                              string like for printf
+         *  @param[in]      ...         any remaining arguments satisfying the
+         *                              template.
          *
-         *  @retval         string      representation of input
-         *  @retval         NULL        if out of memory or input invalid
          */
-        static char *_str(int n, bool hex)
-        {
-            char *buf = calloc(1, 24);
-            assert(buf);
-            if (!buf)
-                return NULL;
-
-            if (hex)
-                snprintf(buf, 24, "%.4x", n);
-            else
-                snprintf(buf, 24, "%d", n);
-            return buf;
-        }
-
-        #define «@name»_ERR_LOG(t, d) log_event(session, (t), "«@name»", (d), "error")
+        #define «@name»_LOG_ERROR(...)  \
+            PEP_LOG_ERROR("p≡p Engine", "@name", "" __VA_ARGS__)
 
         /**
-         *  <!--            _«@name»_ERR_LOG_int()       -->
+         *  <!--            «@name»_LOG_SERVICE()       -->
          *
-         *  @internal
-         *
-         *  @brief          Write a «@name» error to log with integer input as description
-         *
-         *  @param[in]      session         relevant session
-         *  @param[in]      t               C string event name
-         *  @param[in]      n               integer to log (e.g. error status)
-         *  @param[in]      hex             true if integer should be logged in hex format,
-         *                                  false if decimal
-         *
-         *  @retval         PEP_OUT_OF_MEMORY       if out of memory
-         *  @retval         PEP_ILLEGAL_VALUE       if input error during logging
-         *  @retval         PEP_STATUS_OK           otherwise
+         *  @brief          Exactly like «@name»_LOG_ERROR, with a different log
+         *                  level.
          */
-        __attribute__((__unused__))
-        static PEP_STATUS _«@name»_ERR_LOG_int(PEP_SESSION session, char *t, int n, bool hex)
-        {
-            char *_buf = _str(n, hex);
-            if (!_buf)
-                return PEP_OUT_OF_MEMORY;
-            PEP_STATUS status = «@name»_ERR_LOG(t, _buf);
-            free(_buf);
-            return status;
-        }
-
-        #define «@name»_ERR_LOG_INT(t, n) _«@name»_ERR_LOG_int(session, (t), (n), false)
-        #define «@name»_ERR_LOG_HEX(t, n) _«@name»_ERR_LOG_int(session, (t), (n), true)
-        #define «@name»_SERVICE_LOG(t, d) SERVICE_LOG(session, (t), "«@name»", (d))
+        #define «@name»_LOG_SERVICE(...)  \
+            PEP_LOG_SERVICE("p≡p Engine", "@name", "" __VA_ARGS__)
 
         «@name»_state fsm_«@name»(
                 PEP_SESSION session,
@@ -1684,7 +1649,7 @@ tstylesheet {
             switch (state) {
                 `` apply "state", 2, mode=fsm
                 default:
-                    «@name»_ERR_LOG("invalid state", «@name»_state_name(state));
+                    «@name»_LOG_ERROR("invalid state %s", «@name»_state_name(state));
                     assert(0);
                     return invalid_state;
             }
@@ -1702,7 +1667,7 @@ tstylesheet {
             otherwise | case «@name»:
         }
         ||
-            «../@name»_SERVICE_LOG("in state", "«@name»");
+            «../@name»_LOG_SERVICE("in state «@name»");
 
             switch (event) {
                 case None:
@@ -1713,7 +1678,7 @@ tstylesheet {
         if "not(event[@name='Init'])"
         ||
                 case Init:
-                    «../@name»_SERVICE_LOG("received Init but nothing to do", "Init");
+                    «../@name»_LOG_SERVICE("received Init but nothing to do Init");
                     break;
 
         ||
@@ -1721,7 +1686,7 @@ tstylesheet {
                 `` apply "event", 2, mode=fsm
                 default:
                     // ignore events not handled here
-                    «../@name»_SERVICE_LOG("ignoring event", «../@name»_event_name(event));
+                    «../@name»_LOG_SERVICE("ignoring event %s", «../@name»_event_name(event));
                     return invalid_event;
             }
             break;
@@ -1735,12 +1700,12 @@ tstylesheet {
         if "condition" |> bool result = false;
         if "condition|action|send" |
         ||
-            «../../@name»_SERVICE_LOG("received event", "«@name»");
+            «../../@name»_LOG_SERVICE("received event «@name»");
             `` apply "transition|action|condition|else|send|debug";
         ||
         if "name(*[last()])!='transition'" {
             |
-            |> «../../@name»_SERVICE_LOG("remaining in state", "«../@name»");
+            |> «../../@name»_LOG_SERVICE("remaining in state «../@name»");
             |> break;
         }
         ||
@@ -1753,7 +1718,7 @@ tstylesheet {
         const "fsm", "ancestor::fsm";
         ||
 
-        «$fsm/@name»_SERVICE_LOG("transition to state", "«@target»");
+        «$fsm/@name»_LOG_SERVICE("transition to state «@target»");
         return «@target»;
         ||
     }
@@ -1763,30 +1728,30 @@ tstylesheet {
         const "protocol", "ancestor::protocol";
         ||
 
-        «$fsm/@name»_SERVICE_LOG("send message", "«@name»");
+        «$fsm/@name»_LOG_SERVICE("send message «@name»");
         status = send_«$protocol/@name»_message(session, «$fsm/@id», «$fsm/@name»_PR_«yml:mixedCase(@name)»);
         if (status == PEP_OUT_OF_MEMORY)
             return out_of_memory;
         if (status) {
-            «$fsm/@name»_ERR_LOG_HEX("sending «@name» failed", status);
+            «$fsm/@name»_LOG_ERROR("sending «@name» failed 0x%x %i %s", (int) status, (int) status, pEp_status_to_string(status));
             return cannot_send;
         }
         ||
     }
 
     template "debug"
-        | KeySync_SERVICE_LOG("«.»", "«ancestor::protocol/@name»");
+        | «ancestor::fsm/@name»_LOG_SERVICE("«.» «ancestor::protocol/@name»");
 
     template "action" {
         const "fsm", "ancestor::fsm";
         ||
 
-        «$fsm/@name»_SERVICE_LOG("do action", "«@name»");
+        «$fsm/@name»_LOG_SERVICE("do action «@name»");
         status = «@name»(session);
         if (status == PEP_OUT_OF_MEMORY)
             return out_of_memory;
         if (status) {
-            «$fsm/@name»_ERR_LOG_HEX("executing action «@name»() failed", status);
+            «$fsm/@name»_LOG_ERROR("executing action «@name»() failed: 0x%x %i %s", (int) status, (int) status, pEp_status_to_string(status));
             assert(0);
             return invalid_action;
         }
@@ -1801,12 +1766,12 @@ tstylesheet {
         if (status == PEP_OUT_OF_MEMORY)
             return out_of_memory;
         if (status) {
-            «$fsm/@name»_ERR_LOG_HEX("computing condition «@name» failed", status);
+            «$fsm/@name»_LOG_ERROR("computing condition «@name» failed: 0x%x %i %s", (int) status, (int) status, pEp_status_to_string(status));
             assert(0);
             return invalid_condition;
         }
         if (result) {
-            «$fsm/@name»_SERVICE_LOG("condition applies", "«@name»");
+            «$fsm/@name»_LOG_SERVICE("condition applies «@name»");
         ||
         apply "transition|action|condition|else|send|debug";
         | }
@@ -1817,7 +1782,7 @@ tstylesheet {
             error "else without if";
 
         | else {
-        |> «ancestor::fsm/@name»_SERVICE_LOG("condition does not apply", "«preceding-sibling::*[last()]/@name»");
+        |> «ancestor::fsm/@name»_LOG_SERVICE("condition does not apply «preceding-sibling::*[last()]/@name»");
         apply "transition|action|condition|else|send|debug";
         | }
     }
