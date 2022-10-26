@@ -22,6 +22,14 @@
 #include <sqlite3.h>
 #endif
 
+/* Define convenient logging macros for this compilation unit. */
+#define LOG_WITH_MACRO_NAME(name, ...)     \
+    name("p≡p", "Engine", "" __VA_ARGS__)
+#define LOG_API(...)       LOG_WITH_MACRO_NAME(PEP_LOG_API, __VA_ARGS__)
+#define LOG_EVENT(...)     LOG_WITH_MACRO_NAME(PEP_LOG_EVENT, __VA_ARGS__)
+#define LOG_ERROR(...)     LOG_WITH_MACRO_NAME(PEP_LOG_ERROR, __VA_ARGS__)
+#define LOG_CRITICAL(...)  LOG_WITH_MACRO_NAME(PEP_LOG_CRITICAL, __VA_ARGS__)
+
 void
 sql_reset_and_clear_bindings(sqlite3_stmt *s)
 {
@@ -40,7 +48,6 @@ DYNAMIC_API PEP_STATUS init(
         ensure_passphrase_t ensure_passphrase
     )
 {
-    fprintf(stderr, "engine init, session %p: begin...\n", session);
     PEP_STATUS status = PEP_STATUS_OK;
 
     // Initialise the path cache.  It is the state of the environment at this
@@ -100,6 +107,19 @@ DYNAMIC_API PEP_STATUS init(
     if (status != PEP_STATUS_OK)
         return status;
 
+    /* Since here there is no variable named "session" to capture we cannot use
+       the ordinary PEP_LOG_* macros.  But it is very easy to define an
+       automatic variable temporarily. */
+#define _LOG_WITH_MACRO_NAME(name, ...)         \
+    do {                                        \
+        PEP_SESSION session = _session;         \
+        name("p≡p", "Engine", "" __VA_ARGS__);  \
+    } while (false)
+#define _LOG_ERROR(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_ERROR, __VA_ARGS__)
+#define _LOG_EVENT(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_EVENT, __VA_ARGS__)
+#define _LOG_API(...)    _LOG_WITH_MACRO_NAME(PEP_LOG_API, __VA_ARGS__)
+#define _LOG_TRACE(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_TRACE, __VA_ARGS__)
+
     status = init_databases(_session); /* Every database except log. */
     if (status != PEP_STATUS_OK)
         return status;
@@ -129,18 +149,8 @@ DYNAMIC_API PEP_STATUS init(
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
-    status = log_event(_session, "init", "pEp " PEP_ENGINE_VERSION, NULL, NULL);
-    if (status != PEP_STATUS_OK)
-        goto pEp_error;
-    #define LOG(...) PEP_LOG_EVENT("Engine", "init", __VA_ARGS__);
-    {PEP_SESSION session = _session; PEP_LOG_EVENT("Engine", "init", "foo!");}
-    {PEP_SESSION session = _session; LOG("");} // empty string
-    {PEP_SESSION session = _session; LOG();} // no template at all!
-    {PEP_SESSION session = _session; LOG("bar!");}
-    {PEP_SESSION session = _session; LOG("foobar!");}
-    {PEP_SESSION session = _session; LOG("quux! %i", 2 + 2);}
-    {PEP_SESSION session = _session; LOG("quux! %i", 42);}
-    {PEP_SESSION session = _session; LOG("quux! %i", 42);}
+    _LOG_EVENT("p≡p Engine version " PEP_ENGINE_VERSION "   protocol version " PEP_VERSION);
+    _LOG_API("initialise session %p", _session);
 
     // runtime config
 
@@ -165,9 +175,9 @@ DYNAMIC_API PEP_STATUS init(
         ;
     PEP_STATUS s = PEP_STATUS_OK;
     s = import_key(_session, key_data, sizeof(key_data), NULL);
-    fprintf (stderr, "Import positron's testing key: %s %.4x\n", pEp_status_to_string(s), (int) s);
+    _LOG_TRACE("Import positron's testing key: %s %.4x\n", pEp_status_to_string(s), (int) s);
     s = import_key(_session, key_data, sizeof(key_data), NULL);
-    fprintf (stderr, "Import positron's testing key again: %s %.4x\n", pEp_status_to_string(s), (int) s);
+    _LOG_TRACE("Import positron's testing key again: %s %.4x\n", pEp_status_to_string(s), (int) s);
     stringpair_list_t *media_key_map
         = new_stringpair_list(new_stringpair("*ageinghacker.net",
                                              /* mixed case, on purpose. */
@@ -175,21 +185,26 @@ DYNAMIC_API PEP_STATUS init(
     config_media_keys(_session, media_key_map);
     free_stringpair_list(media_key_map);
 #endif
-    
+
     return PEP_STATUS_OK;
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
 
 pEp_error:
+    _LOG_ERROR("failed at init for session %p: 0x%x %i %s", session,
+               (int) status, (int) status, pEp_status_to_string(status));
     release(_session);
-    fprintf(stderr, "engine init, session %p: ...end (%s)\n", session, (status == PEP_STATUS_OK ? "success" : "failure"));
     return status;
+#undef _LOG_ERROR
+#undef _LOG_EVENT
+#undef _LOG_API
+#undef _LOG_TRACE
 }
 
 DYNAMIC_API void release(PEP_SESSION session)
 {
-    fprintf(stderr, "engine release, session %p: begin...\n", session);
+    LOG_API("finalising session %p", session);
     bool out_last = false;
     int _count = --init_count;
     
@@ -209,6 +224,7 @@ DYNAMIC_API void release(PEP_SESSION session)
         clear_path_cache ();
 
         if (session->db) {
+            LOG_EVENT("finalizing database state for session %p", session);
             pEp_finalize_sql_stmts(session);
             if (session->db) {
                 if (out_last) {
@@ -239,7 +255,6 @@ DYNAMIC_API void release(PEP_SESSION session)
         pEp_log_finalize(session);
         free(session);
     }
-    fprintf(stderr, "engine release, session %p: ...end\n", session);
 }
 
 DYNAMIC_API void config_enable_echo_protocol(PEP_SESSION session, bool enable)
@@ -309,76 +324,6 @@ DYNAMIC_API void config_service_log(PEP_SESSION session, bool enable)
     assert(session);
     if (session)
         session->service_log = enable;
-}
-
-DYNAMIC_API PEP_STATUS log_event(
-        PEP_SESSION session,
-        const char *title,
-        const char *entity,
-        const char *description,
-        const char *comment
-    )
-{
-#warning "FIXME: remove this ugly thing and replace it with my new awesome debugging facility."
-    if (!(session && title && entity))
-        return PEP_ILLEGAL_VALUE;
-
-#if defined(_WIN32) && !defined(NDEBUG)
-    log_output_debug(title, entity, description, comment);
-#endif
-
-#if defined(ANDROID) && !defined(NDEBUG)
-    __android_log_print(ANDROID_LOG_DEBUG, "pEpEngine", " %s :: %s :: %s :: %s ",
-            title, entity, description, comment);
-#endif
-
-// N.B. If testing (so NDEBUG not defined) but this message is spam,
-//      put -D_PEP_SERVICE_LOG_OFF into CFLAGS/CXXFLAGS     
-#if !defined(NDEBUG) && !defined(_PEP_SERVICE_LOG_OFF)
-#ifndef NDEBUG
-    printf("\x1b[%dm", session->debug_color);
-#endif
-    fprintf(stdout, "\n*** %s %s %s %s\n", title, entity, description, comment);
-#ifndef NDEBUG
-    printf("\x1b[0m");
-#endif
-    session->service_log = true;
-
-    int result __attribute__ ((unused));
-
-    sql_reset_and_clear_bindings(session->log);
-    sqlite3_bind_text(session->log, 1, title, -1, SQLITE_STATIC);
-    sqlite3_bind_text(session->log, 2, entity, -1, SQLITE_STATIC);
-    if (description)
-        sqlite3_bind_text(session->log, 3, description, -1, SQLITE_STATIC);
-    else
-        sqlite3_bind_null(session->log, 3);
-    if (comment)
-        sqlite3_bind_text(session->log, 4, comment, -1, SQLITE_STATIC);
-    else
-        sqlite3_bind_null(session->log, 4);
-    result = sqlite3_step(session->log);
-    sql_reset_and_clear_bindings(session->log);
-    
-#endif
-    return PEP_STATUS_OK; // We ignore errors for this function.
-}
-
-DYNAMIC_API PEP_STATUS log_service(
-        PEP_SESSION session,
-        const char *title,
-        const char *entity,
-        const char *description,
-        const char *comment
-    )
-{
-    if (!session)
-        return PEP_ILLEGAL_VALUE;
-
-    if (session->service_log)
-        return log_event(session, title, entity, description, comment);
-    else
-        return PEP_STATUS_OK;
 }
 
 DYNAMIC_API PEP_STATUS trustword(
@@ -2482,12 +2427,10 @@ PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
     sqlite3_bind_text(session->replace_userid, 2, old_uid, -1,
             SQLITE_STATIC);
     result = sqlite3_step(session->replace_userid);
-#ifndef NDEBUG
     if (result != SQLITE_DONE) {
         const char *errmsg = sqlite3_errmsg(session->db);
-        log_event(session, "SQLite3 error", "replace_userid", errmsg, NULL);
+        LOG_ERROR("SQLite3 error: replace_userid failed: %s", errmsg);
     }
-#endif // !NDEBUG
     sql_reset_and_clear_bindings(session->replace_userid);
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_PERSON; // May need clearer retval
@@ -3826,27 +3769,6 @@ DYNAMIC_API PEP_STATUS reset_pEptest_hack(PEP_SESSION session)
         return PEP_UNKNOWN_DB_ERROR;
 
     return PEP_STATUS_OK;
-}
-
-DYNAMIC_API void _service_error_log(PEP_SESSION session, const char *entity,
-        PEP_STATUS status, const char *where)
-{
-    char buffer[128];
-    static const size_t size = 127;
-    memset(buffer, 0, size+1);
-#ifdef PEP_STATUS_TO_STRING
-    snprintf(buffer, size, "%s %.4x", pEp_status_to_string(status), status);
-#else
-    snprintf(buffer, size, "error %.4x", status);
-#endif
-    log_service(session, "### service error log ###", entity, buffer, where);
-}
-
-DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color)
-{
-#ifndef NDEBUG
-    session->debug_color = ansi_color;
-#endif
 }
 
 PEP_STATUS set_all_userids_to_own(PEP_SESSION session, identity_list* id_list) {
