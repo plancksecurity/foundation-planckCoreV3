@@ -37,6 +37,24 @@
 #include <math.h>
 
 
+/* Logging.
+ * ***************************************************************** */
+
+/* Define convenient logging macros for this compilation unit. */
+#define _LOG_WITH_MACRO_NAME(name, ...)     \
+    name("p≡p Engine", "message_api", "" __VA_ARGS__)
+#define LOG_CRITICAL(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_CRITICAL, __VA_ARGS__)
+#define LOG_ERROR(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_ERROR, __VA_ARGS__)
+#define LOG_WARNING(...)   _LOG_WITH_MACRO_NAME(PEP_LOG_WARNING, __VA_ARGS__)
+#define LOG_API(...)       _LOG_WITH_MACRO_NAME(PEP_LOG_API, __VA_ARGS__)
+#define LOG_EVENT(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_EVENT, __VA_ARGS__)
+#define LOG_FUNCTION(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_FUNCTION, __VA_ARGS__)
+#define LOG_TRACE(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_TRACE, __VA_ARGS__)
+
+
+/* All the rest.
+ * ***************************************************************** */
+
 // These are globals used in generating message IDs and should only be
 // computed once, as they're either really constants or OS-dependent
 
@@ -2825,7 +2843,7 @@ static PEP_STATUS encrypt_message_possibly_with_media_key(
         stringlist_length(keys)  == 0 ||
         _rating(max_comm_type) < PEP_rating_reliable)
     {
-        //fprintf(stderr, "encrypt_message_possibly_with_media_key: about to make the message unencrypted!\n");
+        LOG_TRACE("encrypt_message_possibly_with_media_key: about to make the message unencrypted!");
         free_stringlist(keys);
         if ((has_pEp_user || !session->passive_mode) && 
             !(flags & PEP_encrypt_flag_force_no_attached_key)) {
@@ -2939,7 +2957,7 @@ static PEP_STATUS encrypt_message_possibly_with_media_key(
         && ! session->unencrypted_subject
         && status == PEP_STATUS_OK) {
         assert (msg);
-fprintf (stderr, "Z: replacing subject: BEFORE:  %s\n", msg->shortmsg);
+LOG_TRACE("Z: replacing subject: BEFORE:  %s", msg->shortmsg);
         char *old_subject = msg->shortmsg;
 #ifdef WIN32
         msg->shortmsg = strdup("pEp");
@@ -2953,7 +2971,7 @@ fprintf (stderr, "Z: replacing subject: BEFORE:  %s\n", msg->shortmsg);
         }
         else
             free(old_subject);
-fprintf (stderr, "Z: replacing subject: AFTER:   %s\n", msg->shortmsg);
+LOG_TRACE("Z: replacing subject: AFTER:   %s", msg->shortmsg);
     }
 //////////////////
     }
@@ -3017,7 +3035,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             return status;
         else {
             assert(media_key_fpr != NULL);
-            fprintf(stderr, "encrypt_message: using the media key %s\n", media_key_fpr);
+            LOG_TRACE("encrypt_message: using the media key %s", media_key_fpr);
             add_opt_field(src, "X-pEp-use-media-key", media_key_fpr); // probably only useful for debugging.
             add_opt_field(src, "X-pEp-use-media-key-inner", media_key_fpr); // probably only useful for debugging.
             status = encrypt_message_possibly_with_media_key(
@@ -3027,7 +3045,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                media_key_enc_format,
                flags | PEP_encrypt_flag_force_encryption,
                media_key_fpr);
-            // fprintf(stderr, "AFTER THE SECOND ATTEMPT: enc_format is %i\n", (int)((*dst)?((*dst)->enc_format):src->enc_format));
+            // LOG_TRACE("AFTER THE SECOND ATTEMPT: enc_format is %i", (int)((*dst)?((*dst)->enc_format):src->enc_format));
             if (status == PEP_STATUS_OK) {
                 if (* dst != NULL) {
                     add_opt_field(* dst, "X-pEp-use-media-key", media_key_fpr);
@@ -4918,21 +4936,20 @@ static PEP_STATUS process_Distribution_message(PEP_SESSION session,
                     if (session->enable_echo_protocol)
                         status = send_pong(session, msg, dist);
                     else
-                        fprintf(stderr,  "* Echo protocol disabled: not sending Pong in reply to Ping\n");
+                        LOG_EVENT("Echo protocol disabled: not sending Pong in reply to Ping");
                     break;
                 case Echo_PR_echoPong:
-                    fprintf(stderr, "Received a Pong from %s <%s>.\n", msg->from->username, msg->from->address);
+                    LOG_EVENT("Received a Pong from %s <%s>", msg->from->username, msg->from->address);
                     status = handle_pong(session, msg->recv_by, msg->from, dist);
                     if (status == PEP_STATUS_OK)
-                        fprintf(stderr, "Good\n");
+                        LOG_EVENT("Good");
                     else if (status == PEP_DISTRIBUTION_ILLEGAL_MESSAGE) {
                         /* If the challenge is wrong there is not much we can do
                            other than detecting a possible forged message. */
-                        fprintf(stderr, "?????????????????????? ");
-                        fprintf(stderr, "Received a Pong from %s <%s> with status %i %s: FORGED?\n", msg->from->username, msg->from->address, (int) status, pEp_status_to_string(status));
+                        LOG_WARNING("Received a Pong from %s <%s> with status %i %s: FORGED?", msg->from->username, msg->from->address, (int) status, pEp_status_to_string(status));
                     }
                     else
-                        fprintf(stderr, "Error: %i %s\n", (int) status, pEp_status_to_string(status));
+                        LOG_ERROR("Error: 0x%x %i %s", (int) status, (int) status, pEp_status_to_string(status));
                     break;
                 default:
                     assert(false);
@@ -6420,17 +6437,17 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
        result status the value of this field may be meaningful. */
     msg->rating = rating;
 
-//fprintf(stderr, "+ message %s \"%s\", recv_by %s, dir %s: begin...\n", msg->id, msg->shortmsg ? msg->shortmsg : "<no subject>", (msg->recv_by ? msg->recv_by->address : "NO RECV_BY"), ((msg->dir == PEP_dir_incoming) ? "incoming" : "outgoing"));
+//LOG_TRACE("+ message %s \"%s\", recv_by %s, dir %s: begin...\n", msg->id, msg->shortmsg ? msg->shortmsg : "<no subject>", (msg->recv_by ? msg->recv_by->address : "NO RECV_BY"), ((msg->dir == PEP_dir_incoming) ? "incoming" : "outgoing"));
 /////// BEGIN: "react" HACK
 /* static bool react_sent = false; */
 /* if (! react_sent && ! strcmp(msg->shortmsg, "react") && ! msg->from->me) { */
 /*     react_sent = true; */
-/*     fprintf(stderr, "    react to message with subject \"react\" by pinging\n"); */
+/*     LOG_TRACE("    react to message with subject \"react\" by pinging\n"); */
 /* #define HANDLE_IDENTITY(recipient) \ */
 /*     { \ */
 /*         const pEp_identity *_recipient = (recipient); \ */
 /*         if (! _recipient->me) { \ */
-/*           fprintf(stderr, "    pinging %s...\n", _recipient->address); \ */
+/*           LOG_TRACE("    pinging %s...\n", _recipient->address); \ */
 /*           /\* status = *\/ send_ping(session, msg->recv_by, _recipient); \ */
 /*         } \ */
 /*     } */
@@ -6493,7 +6510,7 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
         send_ping_to_all_unknowns_in_incoming_message(session, msg);
     else
         send_ping_to_unknown_pEp_identities_in_incoming_message(session, msg);
-//fprintf(stderr, "- message %s \"%s\": ...end\n\n", msg->id, msg->shortmsg ? msg->shortmsg : "<no subject>");
+//LOG_TRACE("- message %s \"%s\": ...end\n\n", msg->id, msg->shortmsg ? msg->shortmsg : "<no subject>");
  
     // Removed for now - partial fix in ENGINE-647, but we have sync issues. Need to 
     // fix testing issue.
