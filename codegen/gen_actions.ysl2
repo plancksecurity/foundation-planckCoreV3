@@ -155,10 +155,7 @@ tstylesheet {
         ||
         PEP_STATUS «@name»(PEP_SESSION session, bool *result)
         {
-            assert(session && result);
-            if (!(session && result))
-                return PEP_ILLEGAL_VALUE;
-
+            PEP_REQUIRE(session && result);
         ||
         copy "$content";
         ||
@@ -174,10 +171,7 @@ tstylesheet {
         ||
         PEP_STATUS «@name»(PEP_SESSION session)
         {
-            assert(session);
-            if (!session)
-                return PEP_ILLEGAL_VALUE;
-
+            PEP_REQUIRE(session);
         ||
         copy "$content";
         ||
@@ -193,10 +187,7 @@ tstylesheet {
         ||
         PEP_STATUS «@name»TimeoutHandler(PEP_SESSION session)
         {
-            assert(session);
-            if (!session)
-                return PEP_ILLEGAL_VALUE;
-
+            PEP_REQUIRE(session);
         ||
         copy "$content";
         ||
