@@ -54,13 +54,8 @@ PEP_STATUS base_decorate_message(
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
-    assert(msg);
-    assert(payload);
-    assert(size);
-    assert(type == BASE_SYNC || type == BASE_DISTRIBUTION);
-
-    if (!(msg && payload && size && type))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(msg && payload && size
+                && (type == BASE_SYNC || type == BASE_DISTRIBUTION));
 
     bloblist_t *bl;
 
@@ -99,7 +94,7 @@ PEP_STATUS base_decorate_message(
         if (status)
             goto error;
 
-        assert(sign && sign_size);
+        PEP_ASSERT(sign && sign_size);
 
         bl = bloblist_add(bl, sign, sign_size,
                 _BASE_PROTO_MIME_TYPE_SIGN, "electronic_signature.asc");
@@ -129,15 +124,8 @@ PEP_STATUS base_prepare_message(
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
-    assert(me);
-    assert(partner);
-    assert(payload);
-    assert(size);
-    assert(result);
-    assert(type == BASE_SYNC || type == BASE_DISTRIBUTION);
-
-    if (!(me && partner && payload && size && result && type))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(me && partner && payload && size && result
+                && (type == BASE_SYNC || type == BASE_DISTRIBUTION));
 
     *result = NULL;
 
@@ -160,15 +148,11 @@ PEP_STATUS base_prepare_message(
         msg->shortmsg = strdup("p≡p key management message (Sync) - please ignore");
     else
         msg->shortmsg = strdup("p≡p key management message (Distribution) - please ignore");
-    assert(msg->shortmsg);
-    if (!msg->shortmsg)
-        goto enomem;
+    PEP_WEAK_ASSERT_ORELSE_GOTO(msg->shortmsg, enomem);
 
     msg->longmsg = strdup("This message is part of p≡p's concept to manage keys.\n\n"
                         "You can safely ignore it. It will be deleted automatically.\n");
-    assert(msg->longmsg);
-    if (!msg->longmsg)
-        goto enomem;
+    PEP_WEAK_ASSERT_ORELSE_GOTO(msg->longmsg, enomem);
 
     status = base_decorate_message(session, msg, type, payload, size, fpr);
     if (status == PEP_STATUS_OK)
@@ -189,13 +173,10 @@ PEP_STATUS base_extract_message(
         char **fpr
     )
 {
+    PEP_REQUIRE(session && msg && size && payload && fpr
+                && (type == BASE_SYNC || type == BASE_DISTRIBUTION));
+
     PEP_STATUS status = PEP_STATUS_OK;
-
-    assert(session && msg && size && payload && fpr);
-    assert(type == BASE_SYNC || type == BASE_DISTRIBUTION);
-    if (!(session && msg && size && payload && fpr && type))
-        return PEP_ILLEGAL_VALUE;
-
     *size = 0;
     *payload = NULL;
     *fpr = NULL;
@@ -268,13 +249,13 @@ fprintf(stderr, "B base_extract_message: about the message %s: this should not h
         case Distribution_PR_echo:
             _require_signature = false; break;
         default:
-            assert(false);
+            PEP_UNEXPECTED_VALUE(_dist->present);
         }
         ASN_STRUCT_FREE(asn_DEF_Distribution, _dist);
         break;
     }
     default:
-        assert(false);
+        PEP_IMPOSSIBLE;
     }
     if (_require_signature && _sign) {
         status = verify_text(session, _payload, _payload_size, _sign, _sign_size, &keylist);
@@ -286,11 +267,10 @@ fprintf(stderr,"Q %s: SIGNATURE MISMATCH: THIS IS NOT NORMAL.\n", (msg->shortmsg
         }
 
         _fpr = strdup(keylist->value);
-        assert(_fpr);
-        if (!_fpr) {
+        PEP_WEAK_ASSERT_ORELSE(_fpr, {
             status = PEP_OUT_OF_MEMORY;
             goto the_end;
-        }
+        });
     }
 
     *size = _payload_size;
@@ -328,19 +308,9 @@ PEP_STATUS try_base_prepare_message(
 
     PEP_STATUS status = PEP_STATUS_OK;
 
-    assert(session && session->messageToSend && session->notifyHandshake);
-    assert(me);
-    assert(partner);
-    assert(payload);
-    assert(size);
-    assert(result);
-    assert(type == BASE_SYNC || type == BASE_DISTRIBUTION);
-
-    if (!(session && session->messageToSend && session->notifyHandshake))
-        return PEP_ILLEGAL_VALUE;
-
-    if (!(me && partner && payload && size && result && type))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && session->messageToSend && session->notifyHandshake
+                && me && partner && payload && size && result
+                && (type == BASE_SYNC || type == BASE_DISTRIBUTION));
 
     // https://dev.pep.foundation/Engine/MessageToSendPassphrase
 
