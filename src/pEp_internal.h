@@ -410,22 +410,6 @@ void decorate_message(
     bool add_version,
     bool clobber);
 
-#if defined(NDEBUG) || defined(NOLOG)
-#define DEBUG_LOG(TITLE, ENTITY, DESC)
-#else
-#ifdef ANDROID
-#include <android/log.h>
-#define  LOG_MORE(...)  __android_log_print(ANDROID_LOG_DEBUG, "pEpEngine", " %s :: %s :: %s :: %s ", __VA_ARGS__);
-#else
-#include <stdio.h>
-#define  LOG_MORE(...)  fprintf(stderr, "pEpEngine DEBUG_LOG('%s','%s','%s','%s')\n", __VA_ARGS__);
-#endif
-#define DEBUG_LOG(TITLE, ENTITY, DESC) {\
-    log_event(session, (TITLE), (ENTITY), (DESC), "debug " __FILE__ ":" S_LINE);\
-    LOG_MORE((TITLE), (ENTITY), (DESC), __FILE__ ":" S_LINE)\
-}
-#endif
-
 /**
  *  @internal
  *  @enum    _normalize_hex_rest_t
