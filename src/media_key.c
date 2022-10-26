@@ -8,15 +8,19 @@
 #include <string.h>
 
 
-/* Debugging.
+/* Logging.
  * ***************************************************************** */
 
-//#define DEBUG_MEDIA_KEY
-
-#if ! defined(DEBUG_MEDIA_KEY)
-# define fprintf(stream, ...)               \
-    do { /* Do nothing. */ } while (false)
-#endif
+/* Define convenient logging macros for this compilation unit. */
+#define _LOG_WITH_MACRO_NAME(name, ...)     \
+    name("p≡p Engine", "media keys", "" __VA_ARGS__)
+#define LOG_CRITICAL(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_CRITICAL, __VA_ARGS__)
+#define LOG_ERROR(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_ERROR, __VA_ARGS__)
+#define LOG_WARNING(...)   _LOG_WITH_MACRO_NAME(PEP_LOG_WARNING, __VA_ARGS__)
+#define LOG_API(...)       _LOG_WITH_MACRO_NAME(PEP_LOG_API, __VA_ARGS__)
+#define LOG_EVENT(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_EVENT, __VA_ARGS__)
+#define LOG_FUNCTION(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_FUNCTION, __VA_ARGS__)
+#define LOG_TRACE(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_TRACE, __VA_ARGS__)
 
 
 /* Initialisation and finalisation.
@@ -221,13 +225,12 @@ PEP_STATUS media_key_lookup_address(PEP_SESSION session,
     for (rest = session->media_key_map; rest != NULL; rest = rest->next) {
         const char *item_address_pattern = rest->value->key;
         const char *item_fpr = rest->value->value;
-//fprintf(stderr, "* check: <%s, %s>\n", item_address_pattern, item_fpr);
         if (! pEp_fnmatch(item_address_pattern, address)) {
             *fpr_result = strdup(item_fpr);
             if (*fpr_result == NULL)
                 return PEP_OUT_OF_MEMORY;
             else {
-                fprintf(stderr, "<%s>: media key %s, matching pattern %s\n", address, *fpr_result, item_address_pattern);
+                LOG_TRACE("<%s>: media key %s, matching pattern %s", address, *fpr_result, item_address_pattern);
                 return PEP_STATUS_OK;
             }
         }
@@ -324,14 +327,14 @@ PEP_STATUS identity_known_to_use_pEp(PEP_SESSION session,
 PEP_STATUS amend_identity_with_media_key_information(PEP_SESSION session,
                                                      pEp_identity *identity)
 {
-#define DUMP                                                              \
-    do {                                                                  \
-        fprintf(stderr, "  enc_format 0x%x %i\n",                         \
-                (int) identity->enc_format, (int) identity->enc_format);  \
-        fprintf(stderr, "  comm_type  0x%x %i\n",                         \
-                (int) identity->comm_type, (int) identity->comm_type);    \
-        fprintf(stderr, "  version    %i.%i\n",                           \
-                (int) identity->major_ver, (int) identity->minor_ver);    \
+#define DUMP                                                                \
+    do {                                                                    \
+        LOG_TRACE("  enc_format 0x%x %i",                                   \
+                  (int) identity->enc_format, (int) identity->enc_format);  \
+        LOG_TRACE("  comm_type  0x%x %i",                                   \
+                  (int) identity->comm_type, (int) identity->comm_type);    \
+        LOG_TRACE("  version    %i.%i",                                     \
+                  (int) identity->major_ver, (int) identity->minor_ver);    \
     } while (false)
 
     /* Sanity checks. */
@@ -354,7 +357,7 @@ PEP_STATUS amend_identity_with_media_key_information(PEP_SESSION session,
 
     /* If we arrived here there is a media key.  Amend the identity so that it
        is recognised as using a recent pEp version. */
-    fprintf(stderr, "%s <%s>: amending because of a media key...\n", identity->username, identity->address); \
+    LOG_TRACE("%s <%s>: amending because of a media key...", identity->username, identity->address);
     DUMP;
     if (identity->enc_format == PEP_enc_auto
         || identity->enc_format < PEP_enc_PEP)
@@ -373,7 +376,7 @@ PEP_STATUS amend_identity_with_media_key_information(PEP_SESSION session,
         identity->major_ver = 2;
         identity->minor_ver = 1;
     }
-    fprintf(stderr, "  ->\n");
+    LOG_TRACE("  ->");
     DUMP;
     return PEP_STATUS_OK;
 }
@@ -400,7 +403,6 @@ static bool media_key_is_a_media_key(const stringpair_list_t *map,
     const stringpair_list_t *rest;
     for (rest = map; rest != NULL; rest = rest->next) {
         const char *item_fpr = rest->value->value;
-        //fprintf(stderr, "Comparing %s against the known media key %s\n", fpr, item_fpr);
         if (fprs_equal(fpr, item_fpr))
             return true;
     }
@@ -422,7 +424,6 @@ PEP_STATUS media_key_is_there_a_media_key_in(PEP_SESSION session,
     * found = false;
     for (rest = keylist; rest != NULL; rest = rest->next) {
         const char *fpr = rest->value;
-        //fprintf(stderr, "Checking if %s is a known media key\n", fpr);
         if (media_key_is_a_media_key(map, fpr)) {
             * found = true;
             break;
@@ -511,6 +512,6 @@ PEP_STATUS media_key_for_outgoing_message(PEP_SESSION session,
  end:
     if (fpr_result != NULL)
         * fpr_result = candidate_key;
-    fprintf(stderr, "* The message %s has media key %s\n", (msg->shortmsg ? msg->shortmsg : "(no subject)"), (candidate_key ? candidate_key : "(no key)"));
+    LOG_TRACE("* The message %s has media key %s", (msg->shortmsg ? msg->shortmsg : "(no subject)"), (candidate_key ? candidate_key : "(no key)"));
     return status;
 }
