@@ -4,8 +4,6 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-// (setq show-trailing-whitespace t indicate-empty-lines t)
-
 #ifndef PEP_ENGINE_DEBUG_H
 #define PEP_ENGINE_DEBUG_H
 
@@ -61,15 +59,13 @@ typedef enum {
 /* Define defensiveness and fatality mode.
  * ***************************************************************** */
 
-/* FIXME: About this section: I am not even remotely sure that these four
-          definitions match what Volker wants; however I think I can satisfy
-          any requirement he has by combining their four values. */
-
 /* These constant expressions evaluate to non-false when we check for
    requirements or assertions at all; otherwise assertions and requirements
    will be completely ignored, with the condition not even computed.
    These Boolean values express *defensiveness*. */
 #define PEP_CHECK_REQUIREMENTS  \
+    true
+#define PEP_CHECK_WEAK_ASSERTIONS  \
     true
 #define PEP_CHECK_ASSERTIONS  \
     (PEP_SAFETY_MODE == PEP_SAFETY_MODE_MAINTAINER)
@@ -78,6 +74,8 @@ typedef enum {
    cause an abort.
    These Boolean values express *fatality*. */
 #define PEP_ABORT_ON_VIOLATED_REQUIRE  \
+    (PEP_SAFETY_MODE == PEP_SAFETY_MODE_MAINTAINER)
+#define PEP_ABORT_ON_VIOLATED_WEAK_ASSERT  \
     (PEP_SAFETY_MODE == PEP_SAFETY_MODE_MAINTAINER)
 #define PEP_ABORT_ON_VIOLATED_ASSERT  \
     (PEP_SAFETY_MODE >= PEP_SAFETY_MODE_DEBUG)
@@ -150,6 +148,31 @@ typedef enum {
                          used for output: it must match the source. */      \
                       expression, {})
 
+/**
+ *  <!--       PEP_WEAK_ASSERT_ORELSE()       -->
+ *
+ *  @brief Expand to a weak assertion on the given expression.  The
+ *         run-time behaviour depends on defensiveness and fatality mode.
+ *         Unless the fatality mode says that we should abort, on checked
+ *         and violated assertion here we execute the given statement; this
+ *         will usually either return a result or jump to a label
+ *         performing some cleanup and then returning a result.
+ *
+ *  @param[in]  expression     the expression asserted to be true
+ *  @param[in]  else_statement the statement to execute when we are checking,
+ *                             the expression evaluates to false and we do not
+ *                             abort on failure.
+ *
+ */
+#define PEP_WEAK_ASSERT_ORELSE(expression, else_statement)                  \
+    _PEP_CHECK_ORELSE("weak assertion",                                     \
+                      PEP_CHECK_WEAK_ASSERTIONS,                            \
+                      PEP_ABORT_ON_VIOLATED_WEAK_ASSERT,                    \
+                      /* I cannot protect the expression with parentheses,  \
+                         because the expression is stringised with # and    \
+                         used for output: it must match the source. */      \
+                      expression, else_statement)
+
 /* Expand to a requirement, executing the given statement in case of failure,
    when not aborting. */
 #define _PEP_REQUIRE_ORELSE(expression, else_statement)                         \
@@ -181,7 +204,7 @@ typedef enum {
  */
 #define PEP_REQUIRE_ORELSE_RETURN_ILLEGAL_VALUE(expression)        \
     _PEP_REQUIRE_ORELSE_RETURN(/* See comment above*/ expression,  \
-                              PEP_ILLEGAL_VALUE)
+                               PEP_ILLEGAL_VALUE)
 
 /**
  *  <!--       PEP_REQUIRE_ORELSE_RETURN_NULL()       -->
@@ -193,7 +216,7 @@ typedef enum {
  *  @param[in]  expression     the expression required to be true
  *
  */
-#define PEP_REQUIRE_ORELSE_RETURN_NULL(expression)                      \
+#define PEP_REQUIRE_ORELSE_RETURN_NULL(expression)                       \
     _PEP_REQUIRE_ORELSE_RETURN(/* See comment above*/ expression, NULL)
 
 /**
@@ -202,8 +225,14 @@ typedef enum {
  *  @brief A convenience short alias for PEP_REQUIRE_ORELSE_RETURN_ILLEGAL_VALUE
  *         which is by far the most common use case of requirements.
  */
-#define PEP_REQUIRE  \
-    PEP_REQUIRE_ORELSE_RETURN_ILLEGAL_VALUE
+#define PEP_REQUIRE  PEP_REQUIRE_ORELSE_RETURN_ILLEGAL_VALUE
+
+/**
+ *  <!--       PEP_WEAK_ASSERT()       -->
+ *
+ *  @brief A convenience shorter alias for PEP_WEAK_ASSERT_ORELSE.
+ */
+#define PEP_WEAK_ASSERT  PEP_WEAK_ASSERT_ORELSE
 
 
 /* Handling status checks and local failure.  [TENTATIVE]
@@ -248,3 +277,11 @@ typedef enum {
 #endif
 
 #endif // #ifndef PEP_ENGINE_DEBUG_H
+
+/*
+  Local Variables:
+    eval: (setq show-trailing-whitespace t indicate-empty-lines t)
+    eval: (flyspell-mode t)
+    eval: (ispell-change-dictionary "british")
+  End:
+*/
