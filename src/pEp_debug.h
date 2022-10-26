@@ -4,8 +4,6 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-// (setq show-trailing-whitespace t indicate-empty-lines t)
-
 #ifndef PEP_ENGINE_DEBUG_H
 #define PEP_ENGINE_DEBUG_H
 
@@ -18,7 +16,6 @@ extern "C" {
 
 #include "pEpEngine.h"
 #include "pEp_log.h"    /* We log on requirement / assertion failure. */
-#include "status_to_string.h" /* for _PEP_LOG_LOCAL_FAILURE_IF_ENABLED */
 
 
 /* Safety modes
@@ -61,15 +58,13 @@ typedef enum {
 /* Define defensiveness and fatality mode.
  * ***************************************************************** */
 
-/* FIXME: About this section: I am not even remotely sure that these four
-          definitions match what Volker wants; however I think I can satisfy
-          any requirement he has by combining their four values. */
-
 /* These constant expressions evaluate to non-false when we check for
    requirements or assertions at all; otherwise assertions and requirements
    will be completely ignored, with the condition not even computed.
    These Boolean values express *defensiveness*. */
 #define PEP_CHECK_REQUIREMENTS  \
+    true
+#define PEP_CHECK_WEAK_ASSERTIONS  \
     true
 #define PEP_CHECK_ASSERTIONS  \
     (PEP_SAFETY_MODE == PEP_SAFETY_MODE_MAINTAINER)
@@ -78,6 +73,8 @@ typedef enum {
    cause an abort.
    These Boolean values express *fatality*. */
 #define PEP_ABORT_ON_VIOLATED_REQUIRE  \
+    (PEP_SAFETY_MODE == PEP_SAFETY_MODE_MAINTAINER)
+#define PEP_ABORT_ON_VIOLATED_WEAK_ASSERT  \
     (PEP_SAFETY_MODE == PEP_SAFETY_MODE_MAINTAINER)
 #define PEP_ABORT_ON_VIOLATED_ASSERT  \
     (PEP_SAFETY_MODE >= PEP_SAFETY_MODE_DEBUG)
@@ -89,9 +86,10 @@ typedef enum {
 /* Here a "check" is either an assertion or a requirement. */
 
 /* Complain to the log about a violated check. */
-#define _PEP_LOG_VIOLATED_CHECK(what_as_string, expression)      \
-    PEP_LOG_CRITICAL("p≡p", "Engine",                            \
-                     what_as_string " violated: " # expression)
+#define _PEP_LOG_VIOLATED_CHECK(logging_macro, what_as_string,   \
+                                expression_as_string)            \
+    logging_macro("p≡p", "Engine", what_as_string " violated: "  \
+                  expression_as_string)
 
 /* Emit a logging entry about the current function being entered, level Function
    -- as long as the feature is enabled via PEP_LOG_FUNCTION_ENTRY . */
@@ -108,23 +106,40 @@ typedef enum {
    expression whose evaluation failed.  Notice that this uses a captured
    variable of type PEP_STATUS named "status". */
 #if defined (PEP_LOG_LOCAL_FAILURE)
-#   define _PEP_LOG_LOCAL_FAILURE_IF_ENABLED(expression)             \
+#   define _PEP_LOG_LOCAL_FAILURE_IF_ENABLED(expression_as_string)   \
         PEP_LOG_NONOK("p≡p", "Engine",                               \
                       "%s evaluated to %li %s",                      \
-                      # expression,                                  \
+                      (expression_as_string),                        \
                       (long) status, pEp_status_to_string (status))
 #else
-#   define _PEP_LOG_LOCAL_FAILURE_IF_ENABLED(expression)  \
+#   define _PEP_LOG_LOCAL_FAILURE_IF_ENABLED(expression_as_string)  \
     do { } while (false)
 #endif
 
 /* Perform a chack.  In case of failure log if appropriate according to the kind
    of check, and either execute the given statement or abort, as requested. */
-#define _PEP_CHECK_ORELSE(what_as_string, check, abort_on_failure,  \
+#define _PEP_CHECK_ORELSE(logging_macro,                            \
+                          what_as_string, expression_as_string,     \
+                          check, abort_on_failure,                  \
                           expression, else_statement)               \
     do {                                                            \
+        /* Before checking anything check that the session pointer  \
+           is non-NULL; this makes it unnecessary for the user to   \
+           check explicitly every time. */                          \
+        if ((check) && (session) == NULL)  {                        \
+            _PEP_LOG_VIOLATED_CHECK(logging_macro,                  \
+                                    what_as_string " precondition", \
+                                    "session != NULL");             \
+            if (abort_on_failure)                                   \
+                abort();                                            \
+            do {                                                    \
+                else_statement;                                     \
+            } while (false);                                        \
+        }                                                           \
         if ((check) && ! (expression)) {                            \
-            _PEP_LOG_VIOLATED_CHECK(what_as_string, expression);    \
+            _PEP_LOG_VIOLATED_CHECK(logging_macro,                  \
+                                    what_as_string,                 \
+                                    expression_as_string);          \
             if (abort_on_failure)                                   \
                 abort();                                            \
             do {                                                    \
@@ -143,30 +158,146 @@ typedef enum {
  *
  */
 #define PEP_ASSERT(expression)                                              \
-    _PEP_CHECK_ORELSE("assertion",                                          \
+    _PEP_CHECK_ORELSE(PEP_LOG_CRITICAL, "assertion", # expression,          \
                       PEP_CHECK_ASSERTIONS, PEP_ABORT_ON_VIOLATED_ASSERT,   \
-                      /* I cannot protect the expression with parentheses,  \
-                         because the expression is stringised with # and    \
-                         used for output: it must match the source. */      \
-                      expression, {})
+                      (expression), {})
 
-/* Expand to a requirement, executing the given statement in case of failure,
-   when not aborting. */
-#define _PEP_REQUIRE_ORELSE(expression, else_statement)                         \
+/* An internal factor of PEP_WEAK_ASSERT_ORELSE, PEP_WEAK_ASSERT_ORELSE_RETURN
+   and friends, PEP_WEAK_ASSERT_ORELSE_GOTO.  It is necessary to stringize
+   expression into expression_as_string immediately after the first call from
+   user code in order for the expression to be pritned non macro-expanded, which
+   is highly desirable: for example we want to print "false" and not "0".  Of
+   course expression_as_string should never be visible to the user. */
+#define _PEP_WEAK_ASSERT_ORELSE(expression, expression_as_string,               \
+                                else_statement)                                 \
+    _PEP_CHECK_ORELSE(PEP_LOG_WARNING, "weak assertion", expression_as_string,  \
+                      PEP_CHECK_WEAK_ASSERTIONS,                                \
+                      PEP_ABORT_ON_VIOLATED_WEAK_ASSERT,                        \
+                      (expression), else_statement)
+
+/**
+ *  <!--       PEP_WEAK_ASSERT_ORELSE()       -->
+ *
+ *  @brief Expand to a weak assertion on the given expression.  The
+ *         run-time behaviour depends on defensiveness and fatality mode.
+ *         Unless the fatality mode says that we should abort, on checked
+ *         and violated assertion here we execute the given statement; this
+ *         will usually either return a result or jump to a label
+ *         performing some cleanup and then returning a result.
+ *
+ *  @param[in]  expression     the expression asserted to be true
+ *  @param[in]  else_statement the statement to execute when we are checking,
+ *                             the expression evaluates to false and we do not
+ *                             abort on failure.
+ *
+ */
+#define PEP_WEAK_ASSERT_ORELSE(expression, else_statement)  \
+    _PEP_WEAK_ASSERT_ORELSE((expression), # expression,     \
+                            else_statement)
+
+/**
+ *  <!--       PEP_WEAK_ASSERT_ORELSE_GOTO()       -->
+ *
+ *  @brief Like PEP_WEAK_ASSERT_ORELSE, but instead of a statement to execute
+ *         in case of on checked and violated assertion this takes a label to
+ *         jump to..
+ *
+ *  @param[in]  expression     the expression asserted to be true
+ *  @param[in]  else_label     the label to jump to when we are checking, the
+ *                             expression evaluates to false and we do not abort
+ *                             on failure.
+ *
+ */
+#define PEP_WEAK_ASSERT_ORELSE_GOTO(expression, label)   \
+    _PEP_WEAK_ASSERT_ORELSE((expression), # expression,  \
+                            { goto label; })
+
+/**
+ *  <!--       PEP_WEAK_ASSERT_ORELSE_RETURN()       -->
+ *
+ *  @brief Like PEP_WEAK_ASSERT_ORELSE, but instead of a statement to execute
+ *         in case of on checked and violated assertion this takes a label to
+ *         jump to..
+ *
+ *  @param[in]  expression     the expression asserted to be true
+ *  @param[in]  else_result    the expression to evaluate for its result to
+ *                             return when we are checking, the expression
+ *                             evaluates to false and we do not abort on
+ *                             failure.
+ *
+ */
+#define PEP_WEAK_ASSERT_ORELSE_RETURN(expression, else_result)  \
+    _PEP_WEAK_ASSERT_ORELSE((expression), # expression,         \
+                            { return (else_result); })
+
+/**
+ *  <!--       PEP_WEAK_ASSERT_ORELSE_ILLEGAL_VALUE()       -->
+ *
+ *  @brief Like PEP_WEAK_ASSERT_ORELSE, without an explicit statement to execute
+ *         in case of on checked and violated assertion.  In such a case the
+ *         expansion of this macro just returns PEP_ILLEGAL_VALUE.
+ *
+ *  @param[in]  expression     the expression asserted to be true
+ *
+ */
+#define PEP_WEAK_ASSERT_ORELSE_ILLEGAL_VALUE(expression)     \
+    _PEP_WEAK_ASSERT_ORELSE((expression), # expression,      \
+                            { return PEP_ILLEGAL_VALUE; } )
+
+/**
+ *  <!--       PEP_WEAK_ASSERT_ORELSE_NULL()       -->
+ *
+ *  @brief Like PEP_WEAK_ASSERT_ORELSE_ILLEGAL_VALUE, but instead of returning
+ *         PEP_ILLEGAL_VALUE return NULL.
+ *
+ *  @param[in]  expression     the expression asserted to be true
+ *
+ */
+#define PEP_WEAK_ASSERT_ORELSE_NULL(expression, label)   \
+    _PEP_WEAK_ASSERT_ORELSE((expression), # expression,  \
+                            { return NULL; } )
+
+/* This has the same role as _PEP_WEAK_ASSERT_ORELSE.  See its comment. */
+#define _PEP_REQUIRE_ORELSE(expression, expression_as_string,  \
+                            else_statement)                    \
     do {                                                                        \
         /* This is used at the beginning of more or less every function, so why \
            not getting this log entry for free?  Of course this will not be     \
            enabled in production because of PEP_LOG_LEVEL_MAXIMUM . */          \
         _PEP_LOG_FUNCTION_ENTRY_IF_ENABLED;                                     \
-        _PEP_CHECK_ORELSE("requirement",                                        \
+        _PEP_CHECK_ORELSE(PEP_LOG_ERROR, "requirement", expression_as_string,   \
                           PEP_CHECK_REQUIREMENTS, PEP_ABORT_ON_VIOLATED_REQUIRE,\
-                         /* See comment above*/ expression, else_statement);    \
+                          (expression), else_statement);                        \
     } while (false)
 
-/* Expand to a requirement, returning the result of the evaluation of the given
-   expression in case of non-aborting failure. */
-#define _PEP_REQUIRE_ORELSE_RETURN(expression, else_expression)  \
-    _PEP_REQUIRE_ORELSE(/* See comment above*/ expression,       \
+/**
+ *  <!--       PEP_REQUIRE_ORELSE()       -->
+ *
+ *  @brief     Expand to a requirement, executing the given statement in case
+ *             of failure, when not aborting.
+ *
+ *  @param[in]  expression       the expression required to be true
+ *  @param[in]  else_expression  the expression to evaluate for its result, to
+ *                               return in case of failure.
+ *
+ */
+#define PEP_REQUIRE_ORELSE(expression, else_statement)               \
+    _PEP_REQUIRE_ORELSE((expression), # expression, else_statement)
+
+/**
+ *  <!--       PEP_REQUIRE_ORELSE_RETURN()       -->
+ *
+ *  @brief     Expand to a requirement, returning the result of the
+ *             evaluation of the given expression in case of non-aborting
+ *             failure.
+ *
+ *  @param[in]  expression       the expression required to be true
+ *  @param[in]  else_expression  the expression to evaluate for its result, to
+ *                               return in case of failure.
+ *
+ */
+#define PEP_REQUIRE_ORELSE_RETURN(expression, else_expression)  \
+    _PEP_REQUIRE_ORELSE((expression), # expression,             \
                         { return (else_expression); })
 
 /**
@@ -179,9 +310,9 @@ typedef enum {
  *  @param[in]  expression     the expression required to be true
  *
  */
-#define PEP_REQUIRE_ORELSE_RETURN_ILLEGAL_VALUE(expression)        \
-    _PEP_REQUIRE_ORELSE_RETURN(/* See comment above*/ expression,  \
-                              PEP_ILLEGAL_VALUE)
+#define PEP_REQUIRE_ORELSE_RETURN_ILLEGAL_VALUE(expression)  \
+    _PEP_REQUIRE_ORELSE((expression), # expression,          \
+                        { return PEP_ILLEGAL_VALUE; })
 
 /**
  *  <!--       PEP_REQUIRE_ORELSE_RETURN_NULL()       -->
@@ -193,8 +324,9 @@ typedef enum {
  *  @param[in]  expression     the expression required to be true
  *
  */
-#define PEP_REQUIRE_ORELSE_RETURN_NULL(expression)                      \
-    _PEP_REQUIRE_ORELSE_RETURN(/* See comment above*/ expression, NULL)
+#define PEP_REQUIRE_ORELSE_RETURN_NULL(expression)   \
+    _PEP_REQUIRE_ORELSE((expression), # expression,  \
+                        { return NULL; })
 
 /**
  *  <!--       PEP_REQUIRE()       -->
@@ -202,8 +334,67 @@ typedef enum {
  *  @brief A convenience short alias for PEP_REQUIRE_ORELSE_RETURN_ILLEGAL_VALUE
  *         which is by far the most common use case of requirements.
  */
-#define PEP_REQUIRE  \
-    PEP_REQUIRE_ORELSE_RETURN_ILLEGAL_VALUE
+#define PEP_REQUIRE  PEP_REQUIRE_ORELSE_RETURN_ILLEGAL_VALUE
+
+/**
+ *  <!--       PEP_WEAK_ASSERT()       -->
+ *
+ *  @brief A convenience shorter alias for PEP_WEAK_ASSERT_ORELSE.
+ */
+#define PEP_WEAK_ASSERT  PEP_WEAK_ASSERT_ORELSE
+
+
+/* Fatal assertion variants.
+ * ***************************************************************** */
+
+/* The common code in fatal assertion variants. */
+#define _PEP_ASSERT_VARIANT(...)                     \
+    do {                                             \
+        PEP_LOG_CRITICAL("p≡p", NULL, __VA_ARGS__);  \
+        PEP_ASSERT(false);                           \
+    } while (false)
+
+
+/**
+ *  <!--       PEP_UNIMPLEMENTED()       -->
+ *
+ *  @brief Like PEP_UNREACHABLE with a different message for a different use.
+ */
+#define PEP_UNIMPLEMENTED  \
+    _PEP_ASSERT_VARIANT("this functionality is not implemented yet")
+
+/**
+ *  <!--       PEP_UNREACHABLE()       -->
+ *
+ *  @brief Fail fatally, unless assertions are non-aborting, first logging an
+ *         critical message appropriate for an "unreachable" situation.
+ */
+#define PEP_UNREACHABLE  \
+    _PEP_ASSERT_VARIANT("this program point is supposed to be unreachable")
+
+/**
+ *  <!--       PEP_IMPOSSIBLE()       -->
+ *
+ *  @brief Like PEP_UNREACHABLE with a different message for a different use.
+ */
+#define PEP_IMPOSSIBLE  \
+    _PEP_ASSERT_VARIANT("this is supposed to be impossible")
+
+
+/**
+ *  <!--       PEP_UNEXPECTED_VALUE()       -->
+ *
+ *  @brief Like PEP_UNREACHABLE with a different message for a different use.
+ *         Show the unexpected integer value in the log.
+ *         This is meant to be used in the default branch of switch statements
+ *         which are supposed to be already complete.
+ */
+#define PEP_UNEXPECTED_VALUE(integer_value)                                 \
+    do {                                                                    \
+        long _pEp_unexpected_value = (long) (integer_value);                \
+        _PEP_ASSERT_VARIANT("unexpected value 0x%lx %li",                   \
+                            _pEp_unexpected_value, _pEp_unexpected_value);  \
+    } while (false)
 
 
 /* Handling status checks and local failure.  [TENTATIVE]
@@ -212,19 +403,19 @@ typedef enum {
 /* This API is tentative.  Volker does not like it and I am not very convinced
    myself.  It will probably go away.  Nobody should use it yet. */
 
-#define _PEP_SET_STATUS_ORELSE(expression, else_statement,  \
-                               ...)                         \
-    do {                                                    \
-        status = (expression);                              \
-        if (status != PEP_STATUS_OK) {                      \
-            _PEP_LOG_LOCAL_FAILURE_IF_ENABLED(expression);  \
-            do {                                            \
-                __VA_ARGS__;                                \
-            } while (false);                                \
-            do {                                            \
-                else_statement;                             \
-            } while (false);                                \
-        }                                                   \
+#define _PEP_SET_STATUS_ORELSE(expression, else_statement,    \
+                               ...)                           \
+    do {                                                      \
+        status = (expression);                                \
+        if (status != PEP_STATUS_OK) {                        \
+            _PEP_LOG_LOCAL_FAILURE_IF_ENABLED(# expression);  \
+            do {                                              \
+                __VA_ARGS__;                                  \
+            } while (false);                                  \
+            do {                                              \
+                else_statement;                               \
+            } while (false);                                  \
+        }                                                     \
     } while (false)
 
 #define PEP_SET_STATUS_ORELSE_GOTO(expression, label, ...)          \
@@ -248,3 +439,11 @@ typedef enum {
 #endif
 
 #endif // #ifndef PEP_ENGINE_DEBUG_H
+
+/*
+  Local Variables:
+    eval: (setq show-trailing-whitespace t indicate-empty-lines t)
+    eval: (flyspell-mode t)
+    eval: (ispell-change-dictionary "british")
+  End:
+*/
