@@ -4,6 +4,12 @@
  * @license  GNU General Public License 3.0 - see LICENSE.txt
  */
 
+/* In this compilation unit, like in key_reset.c, several functions do not take
+   a session as a paramter; this prevents me from using the new debugging and
+   logging functionalities.  I wonder if we should systematically add a session
+   paramter to our functions, even when not needed, just for this.  --positron,
+   2022-10 */
+
 #include "pEp_internal.h"
 #include "message_api.h"
 #include "pEpEngine.h"
@@ -1449,6 +1455,8 @@ static PEP_STATUS encrypt_PGP_inline(
         PEP_encrypt_flags_t flags
     )
 {
+    PEP_REQUIRE(session && src && dst);
+
     char *ctext = NULL;
     size_t csize = 0;
 
@@ -1462,30 +1470,23 @@ static PEP_STATUS encrypt_PGP_inline(
     // shortmsg is copied
     if (src->shortmsg) {
         dst->shortmsg = strdup(src->shortmsg);
-        assert(dst->shortmsg);
-        if (!dst->shortmsg)
-            return PEP_OUT_OF_MEMORY;
+        PEP_WEAK_ASSERT_ORELSE_RETURN(dst->shortmsg, PEP_OUT_OF_MEMORY);
     }
 
     // id stays the same
     if (src->id) {
         dst->id = strdup(src->id);
-        assert(dst->id);
-        if (!dst->id)
-            return PEP_OUT_OF_MEMORY;
+        PEP_WEAK_ASSERT_ORELSE_RETURN(dst->id, PEP_OUT_OF_MEMORY);
     }
 
     char *_ctext = realloc(ctext, csize + 1);
-    assert(_ctext);
-    if (!_ctext)
-        return PEP_OUT_OF_MEMORY;
+    PEP_WEAK_ASSERT_ORELSE_RETURN(_ctext, PEP_OUT_OF_MEMORY);
     _ctext[csize] = 0;
 
     dst->longmsg = _ctext;
 
     dst->attachments = new_bloblist(NULL, 0, NULL, NULL);
-    if (!dst->attachments)
-        return PEP_OUT_OF_MEMORY;
+    PEP_WEAK_ASSERT_ORELSE_RETURN(!dst->attachments, PEP_OUT_OF_MEMORY);
 
     bloblist_t *ad = dst->attachments;
 
@@ -1496,9 +1497,7 @@ static PEP_STATUS encrypt_PGP_inline(
             return status;
 
         char *_ctext = realloc(ctext, csize + 1);
-        assert(_ctext);
-        if (!_ctext)
-            return PEP_OUT_OF_MEMORY;
+        PEP_WEAK_ASSERT_ORELSE_RETURN(ctext, PEP_OUT_OF_MEMORY);
         _ctext[csize] = 0;
 
         ad = bloblist_add(ad, _ctext, csize + 1, "text/html", NULL);
@@ -1535,16 +1534,12 @@ static PEP_STATUS encrypt_PGP_inline(
                 return status;
 
             char *_ctext = realloc(ctext, csize + 1);
-            assert(_ctext);
-            if (!_ctext)
-                return PEP_OUT_OF_MEMORY;
+            PEP_WEAK_ASSERT_ORELSE_RETURN(_ctext, PEP_OUT_OF_MEMORY);
             _ctext[csize] = 0;
 
             size_t len = strlen(as->filename);
             char *filename = malloc(len + 5);
-            assert(filename);
-            if (!filename)
-                return PEP_OUT_OF_MEMORY;
+            PEP_WEAK_ASSERT_ORELSE_RETURN(filename, PEP_OUT_OF_MEMORY);
 
             memcpy(filename, as->filename, len);
             memcpy(filename + len, ".pgp", 5);
@@ -1589,22 +1584,22 @@ static PEP_STATUS encrypt_PGP_MIME(
     message_wrap_type wrap_type
     )
 {
+    PEP_REQUIRE(session && src && dst && dst->longmsg == NULL);
     PEP_STATUS status = PEP_STATUS_OK;
     bool free_ptext = false;
     char *ptext = NULL;
     char *ctext = NULL;
     char *mimetext = NULL;
     size_t csize;
-    assert(dst->longmsg == NULL);
     dst->enc_format = PEP_enc_PGP_MIME;
 
-    if (src->shortmsg)
+    if (src->shortmsg) {
         dst->shortmsg = strdup(src->shortmsg);
-        
+        PEP_WEAK_ASSERT_ORELSE_GOTO(dst->shortmsg, enomem);
+    }
+
     message *_src = calloc(1, sizeof(message));
-    assert(_src);
-    if (_src == NULL)
-        goto enomem;
+    PEP_WEAK_ASSERT_ORELSE_GOTO(_src, enomem);
 //    _src->longmsg = ptext;
     _src->longmsg = src->longmsg;
     _src->longmsg_formatted = src->longmsg_formatted;
@@ -1613,9 +1608,7 @@ static PEP_STATUS encrypt_PGP_MIME(
     
     bool wrapped = (wrap_type != PEP_message_unwrapped);
     status = mime_encode_message(_src, true, &mimetext, wrapped);
-    assert(status == PEP_STATUS_OK);
-    if (status != PEP_STATUS_OK)
-        goto pEp_error;
+    PEP_WEAK_ASSERT_ORELSE_GOTO(status == PEP_STATUS_OK, pEp_error);
 
     if (free_ptext){
         free(ptext);
@@ -1623,9 +1616,7 @@ static PEP_STATUS encrypt_PGP_MIME(
     }
     free(_src);
     _src = NULL;
-    assert(mimetext);
-    if (mimetext == NULL)
-        goto pEp_error;
+    PEP_WEAK_ASSERT_ORELSE_GOTO(mimetext, pEp_error);
 
     if (flags & PEP_encrypt_flag_force_unsigned)
         status = encrypt_only(session, keys, mimetext, strlen(mimetext),
@@ -1639,18 +1630,13 @@ static PEP_STATUS encrypt_PGP_MIME(
 
     dst->longmsg = strdup("this message was encrypted with p≡p "
         "https://pEp-project.org");
-    assert(dst->longmsg);
-    if (dst->longmsg == NULL)
-        goto enomem;
+    PEP_WEAK_ASSERT_ORELSE_GOTO(dst->longmsg, enomem);
 
     char *v = strdup("Version: 1");
-    assert(v);
-    if (v == NULL)
-        goto enomem;
+    PEP_WEAK_ASSERT_ORELSE_GOTO(v, enomem);
 
     bloblist_t *_a = new_bloblist(v, strlen(v), "application/pgp-encrypted", NULL);
-    if (_a == NULL)
-        goto enomem;
+    PEP_WEAK_ASSERT_ORELSE_GOTO(_a, enomem);
     dst->attachments = _a;
 
     _a = bloblist_add(_a, ctext, csize, "application/octet-stream",
@@ -1871,13 +1857,12 @@ static PEP_rating decrypt_rating(PEP_STATUS status)
  */
 static PEP_rating key_rating(PEP_SESSION session, const char *fpr)
 {
-
-    assert(session);
-    assert(fpr);
-
-    if (session == NULL || fpr == NULL)
-        return PEP_rating_undefined;
-
+    PEP_REQUIRE_ORELSE_RETURN(session && ! EMPTYSTR(fpr),
+                              /* positron, 2022-10: this return code is
+                                 bizarre, but is not my idea: it was like
+                                 this even before my refactoring to introduce
+                                 PEP_REQUIRE and friends. */
+                              PEP_rating_undefined);
 
     PEP_comm_type bare_comm_type = PEP_ct_unknown;
     PEP_comm_type resulting_comm_type = PEP_ct_unknown;
@@ -1932,12 +1917,10 @@ static PEP_rating worst_rating(PEP_rating rating1, PEP_rating rating2) {
  */
 static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist, char* sender_fpr, PEP_rating sender_rating)
 {
+    PEP_REQUIRE_ORELSE_RETURN(keylist && ! EMPTYSTR(keylist->value),
+                              PEP_rating_undefined);
+
     PEP_rating rating = sender_rating;
-
-    assert(keylist && keylist->value);
-    if (keylist == NULL || keylist->value == NULL)
-        return PEP_rating_undefined;
-
     stringlist_t *_kl;
     for (_kl = keylist; _kl && _kl->value; _kl = _kl->next) {
 
@@ -2030,8 +2013,7 @@ static PEP_comm_type _get_comm_type_preview(
     pEp_identity *ident
     )
 {
-    assert(session);
-    assert(ident);
+    PEP_REQUIRE(session && ident);
 
     PEP_STATUS status = PEP_STATUS_OK;
 
@@ -2187,11 +2169,8 @@ bool import_attached_keys(
         char** pEp_sender_key
     )
 {
-    assert(session);
-    assert(msg);
-
-    if (session == NULL || msg == NULL)
-        return false;
+    PEP_REQUIRE_ORELSE_RETURN(session && msg,
+                              false);
 
     char* _sender_key_retval = NULL;
     stringlist_t* _keylist = imported_key_list ? *imported_key_list : NULL;
@@ -2359,14 +2338,13 @@ bool import_attached_keys(
  */
 PEP_STATUS _attach_key(PEP_SESSION session, const char* fpr, message *msg, const char* filename)
 {
+    PEP_REQUIRE(session && msg);
     char *keydata = NULL;
     size_t size = 0;
 
     PEP_STATUS status = export_key(session, fpr, &keydata, &size);
-    assert(status == PEP_STATUS_OK);
-    if (status != PEP_STATUS_OK)
-        return status;
-    assert(size);
+    PEP_WEAK_ASSERT_ORELSE_RETURN(status == PEP_STATUS_OK, status);
+    PEP_ASSERT(size);
 
     if (EMPTYSTR(filename))
         filename = "file://pEpkey.asc";
@@ -2384,14 +2362,9 @@ PEP_STATUS _attach_key(PEP_SESSION session, const char* fpr, message *msg, const
 
 void attach_own_key(PEP_SESSION session, message *msg)
 {
-    assert(session);
-    assert(msg);
-
+    PEP_REQUIRE_ORELSE(session && msg, { return; });
+    PEP_REQUIRE_ORELSE(msg->from && ! EMPTYSTR(msg->from->fpr), { return; });
     if (msg->dir == PEP_dir_incoming)
-        return;
-
-    assert(msg->from && msg->from->fpr);
-    if (msg->from == NULL || msg->from->fpr == NULL)
         return;
 
     if(_attach_key(session, msg->from->fpr, msg, "file://sender_key.asc") != PEP_STATUS_OK)
@@ -2694,22 +2667,15 @@ static PEP_STATUS encrypt_message_possibly_with_media_key(
         PEP_encrypt_flags_t flags,
         const char *media_key_or_NULL)
 {
+    PEP_REQUIRE(session && src && src->from && dst
+                && src->dir == PEP_dir_outgoing);
+
     PEP_STATUS status = PEP_STATUS_OK;
     message * msg = NULL;
     stringlist_t * keys = NULL;
     message* _src = src;
 
     bool added_key_to_real_src = false;
-    
-    assert(session);
-    assert(src && src->from);
-    assert(dst);
-
-    if (!(session && src && src->from && dst))
-        return PEP_ILLEGAL_VALUE;
-
-    if (src->dir == PEP_dir_incoming)
-        return PEP_ILLEGAL_VALUE;
 
     // Reset the message rating before doing anything...
     src->rating = PEP_rating_undefined;
@@ -2904,7 +2870,7 @@ static PEP_STATUS encrypt_message_possibly_with_media_key(
                 break;
 
             default:
-                assert(0);
+                PEP_ASSERT(false);
                 status = PEP_ILLEGAL_VALUE;
                 goto pEp_error;
         }
@@ -2920,9 +2886,7 @@ static PEP_STATUS encrypt_message_possibly_with_media_key(
 
     if (msg && msg->shortmsg == NULL) {
         msg->shortmsg = strdup("");
-        assert(msg->shortmsg);
-        if (msg->shortmsg == NULL)
-            goto enomem;
+        PEP_WEAK_ASSERT_ORELSE_GOTO(msg->shortmsg, enomem);
     }
 
     if (msg) {
@@ -2946,9 +2910,7 @@ static PEP_STATUS encrypt_message_possibly_with_media_key(
         decorate_message(session, msg, rating, NULL, true, true);
         if (_src->id) {
             msg->id = strdup(_src->id);
-            assert(msg->id);
-            if (msg->id == NULL)
-                goto enomem;
+            PEP_WEAK_ASSERT_ORELSE_GOTO(msg->id, enomem);
         }
 //////////////////
     // Special case for media keys: hide the subject in the outer message in
@@ -2956,7 +2918,7 @@ static PEP_STATUS encrypt_message_possibly_with_media_key(
     if (media_key_or_NULL != NULL
         && ! session->unencrypted_subject
         && status == PEP_STATUS_OK) {
-        assert (msg);
+        PEP_ASSERT(msg);
 LOG_TRACE("Z: replacing subject: BEFORE:  %s", msg->shortmsg);
         char *old_subject = msg->shortmsg;
 #ifdef WIN32
@@ -3034,7 +2996,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         if (media_key_status != PEP_STATUS_OK)
             return status;
         else {
-            assert(media_key_fpr != NULL);
+            PEP_ASSERT(media_key_fpr != NULL);
             LOG_TRACE("encrypt_message: using the media key %s", media_key_fpr);
             add_opt_field(src, "X-pEp-use-media-key", media_key_fpr); // probably only useful for debugging.
             add_opt_field(src, "X-pEp-use-media-key-inner", media_key_fpr); // probably only useful for debugging.
@@ -3073,29 +3035,16 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
         PEP_encrypt_flags_t flags
     )
 {
-    assert(session);
-    assert(src);
-    assert(dst);
-    assert(to_fpr);
-        
-    if (!session || !src || !dst || !to_fpr)
-        return PEP_ILLEGAL_VALUE;
-        
-    if (enc_format == PEP_enc_none)
-        return PEP_ILLEGAL_VALUE;
-    
-    if (src->cc || src->bcc)
-        return PEP_ILLEGAL_VALUE;
-        
-    if (!src->to || src->to->next)
-        return PEP_ILLEGAL_VALUE;
-        
-    if (!src->from->address || !src->to->ident || !src->to->ident->address)
-        return PEP_ILLEGAL_VALUE;
-            
-    if (strcasecmp(src->from->address, src->to->ident->address) != 0)
-        return PEP_ILLEGAL_VALUE;
-    
+    PEP_REQUIRE(session && src && dst && to_fpr
+                && enc_format != PEP_enc_none
+                && ! src->cc
+                && ! src->bcc
+                && src->to
+                && ! src->to->next
+                && src->from->address
+                && src->to->ident
+                && ! EMPTYSTR(src->to->ident->address)
+                && strcasecmp(src->from->address, src->to->ident->address) == 0);
     stringlist_t* keys = NULL;
 
     char* own_id = NULL;
@@ -3267,22 +3216,17 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         PEP_encrypt_flags_t flags
     )
 {
+    PEP_REQUIRE(session && target_id && src && dst
+                && enc_format != PEP_enc_none);
+    // if (src->dir == PEP_dir_incoming)
+    //     return PEP_ILLEGAL_VALUE;
+
     PEP_STATUS status = PEP_STATUS_OK;
     message * msg = NULL;
     stringlist_t * keys = NULL;
     message* _src = src;
 
-    assert(session);
-    assert(target_id);
-    assert(src);
-    assert(dst);
-    assert(enc_format != PEP_enc_none);
 
-    if (!(session && target_id && src && dst && enc_format != PEP_enc_none))
-        return PEP_ILLEGAL_VALUE;
-
-    // if (src->dir == PEP_dir_incoming)
-    //     return PEP_ILLEGAL_VALUE;
 
     determine_encryption_format(src);
     if (src->enc_format != PEP_enc_none)
@@ -3373,7 +3317,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
             break;
 
         default:
-            assert(0);
+            PEP_ASSERT(false);
             status = PEP_ILLEGAL_VALUE;
             goto pEp_error;
     }
@@ -3388,9 +3332,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         if (!src->shortmsg) {
             free(msg->shortmsg);
             msg->shortmsg = _pEp_subj_copy();
-            assert(msg->shortmsg);
-            if (msg->shortmsg == NULL)
-                goto enomem;
+            PEP_WEAK_ASSERT_ORELSE_GOTO(msg->shortmsg, enomem);
         }
         else {
             if (session->unencrypted_subject && (flags & PEP_encrypt_reencrypt)) {
@@ -3401,9 +3343,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
 
         if (_src->id) {
             msg->id = strdup(_src->id);
-            assert(msg->id);
-            if (msg->id == NULL)
-                goto enomem;
+            PEP_WEAK_ASSERT_ORELSE_GOTO(msg->id, enomem);
         }
         decorate_message(session, msg, PEP_rating_undefined, NULL, true, true);
     }
@@ -3879,7 +3819,7 @@ static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg,
             break;
         default:
                 // BUG: must implement more
-                NOT_IMPLEMENTED
+                NOT_IMPLEMENTED;
     }
     return PEP_STATUS_OK;
 
@@ -3939,7 +3879,7 @@ static PEP_STATUS get_crypto_text(message* src, char** crypto_text, size_t* text
             break;
 
         default:
-            NOT_IMPLEMENTED
+            NOT_IMPLEMENTED;
     }
     
     return status;
@@ -3974,10 +3914,7 @@ static PEP_STATUS verify_decrypted(PEP_SESSION session,
                                    PEP_STATUS* decrypt_status,
                                    PEP_cryptotech crypto) {
 
-    assert(src && src->from);
-    
-    if (!src && !src->from)
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(src && src->from);
 
     PEP_STATUS _cached_decrypt_status = *decrypt_status;
         
@@ -4160,9 +4097,7 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
             }
             else {
                 char *copy = malloc(_s->size);
-                assert(copy);
-                if (copy == NULL)
-                    return PEP_OUT_OF_MEMORY;
+                PEP_WEAK_ASSERT_ORELSE_RETURN(copy, PEP_OUT_OF_MEMORY);
                 memcpy(copy, _s->value, _s->size);
 
                 if (!has_uri_prefix && _s->filename)
@@ -4176,9 +4111,7 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
         }
         else {
             char *copy = malloc(_s->size);
-            assert(copy);
-            if (copy == NULL)
-                return PEP_OUT_OF_MEMORY;
+            PEP_WEAK_ASSERT_ORELSE_RETURN(copy, PEP_OUT_OF_MEMORY);
             memcpy(copy, _s->value, _s->size);
 
             char* filename_uri = NULL;
@@ -4227,9 +4160,7 @@ static PEP_STATUS import_keys_from_decrypted_msg(PEP_SESSION session,
                                                       char** pEp_sender_key
     )
 {
-    assert(msg && keys_were_imported && imported_private);
-    if (!(msg && keys_were_imported && imported_private))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(msg && keys_were_imported && imported_private);
 
     PEP_STATUS status = PEP_STATUS_OK;
     *keys_were_imported = false;
@@ -4261,11 +4192,10 @@ static PEP_STATUS import_keys_from_decrypted_msg(PEP_SESSION session,
             if (own_id) {
                 free(il->ident->user_id);
                 il->ident->user_id = strdup(own_id);
-                assert(il->ident->user_id);
-                if (!il->ident->user_id) {
+                PEP_WEAK_ASSERT_ORELSE(il->ident->user_id, {
                     status = PEP_OUT_OF_MEMORY;
                     break;
-                }
+                });
             }
             il->ident->me = true;
         }
@@ -4341,12 +4271,7 @@ static PEP_STATUS update_sender_to_pEp_trust(
         unsigned int major,
         unsigned int minor) 
 {
-    assert(session);
-    assert(sender);
-    assert(keylist && !EMPTYSTR(keylist->value));
-    
-    if (!session || !sender || !keylist || EMPTYSTR(keylist->value))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && sender && keylist && !EMPTYSTR(keylist->value));
         
     free(sender->fpr);
     sender->fpr = NULL;
@@ -4952,7 +4877,7 @@ static PEP_STATUS process_Distribution_message(PEP_SESSION session,
                         LOG_ERROR("Error: 0x%x %i %s", (int) status, (int) status, pEp_status_to_string(status));
                     break;
                 default:
-                    assert(false);
+                    PEP_ASSERT(false);
             }
             break;
         default:
@@ -5123,15 +5048,7 @@ static PEP_STATUS _decrypt_message(
         uint64_t* changed_public_keys
     )
 {
-    assert(session);
-    assert(src);
-    assert(dst);
-    assert(keylist);
-    assert(rating);
-    assert(flags);
-
-    if (!(session && src && dst && keylist && rating && flags))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && src && dst && keylist && rating && flags);
 
     /*** Begin init ***/
     PEP_STATUS status = PEP_STATUS_OK;
@@ -5632,7 +5549,7 @@ static PEP_STATUS _decrypt_message(
 
             default:
                 // BUG: must implement more
-                NOT_IMPLEMENTED
+                PEP_UNIMPLEMENTED;
             }
         }
 
@@ -6030,9 +5947,7 @@ static PEP_STATUS _decrypt_message(
                     
         if (calculated_src->id && calculated_src != msg) {
             msg->id = strdup(calculated_src->id);
-            assert(msg->id);
-            if (msg->id == NULL)
-                goto enomem;
+            PEP_WEAK_ASSERT_ORELSE_GOTO(msg->id, enomem);
         }
     } // End prepare output message for return
 
@@ -6292,9 +6207,7 @@ static PEP_STATUS _decrypt_message(
             else if (!has_extra_keys && session->unencrypted_subject) { // this is just unencrypted subj.
                 free(src->shortmsg);
                 src->shortmsg = strdup(msg->shortmsg);
-                assert(src->shortmsg);
-                if (!src->shortmsg)
-                    goto enomem;
+                PEP_WEAK_ASSERT_ORELSE_GOTO(src->shortmsg, enomem);
                 *flags |= PEP_decrypt_flag_src_modified;
             }
         }
@@ -6305,9 +6218,7 @@ static PEP_STATUS _decrypt_message(
     if (EMPTYSTR(msg->shortmsg) && EMPTYSTR(msg->longmsg) && EMPTYSTR(msg->longmsg_formatted)) {
         free(msg->shortmsg);
         msg->shortmsg = strdup("pEp");
-        assert(msg->shortmsg);
-        if (!msg->shortmsg)
-            goto enomem;
+        PEP_WEAK_ASSERT_ORELSE_GOTO(msg->shortmsg, enomem);
 
         if (src->enc_format == PEP_enc_inline_EA) {
             stringpair_t *entry = new_stringpair("pEp-auto-consume", "yes");
@@ -6386,14 +6297,7 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
         PEP_decrypt_flags_t *flags
     )
 {
-    assert(session);
-    assert(src);
-    assert(dst);
-    assert(keylist);
-    assert(flags);
-
-    if (!(session && src && dst && keylist && flags))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && src && dst && keylist && flags);
 
     if (!(*flags & PEP_decrypt_flag_untrusted_server))
         *keylist = NULL;
@@ -6557,9 +6461,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     /* Check that the rating output parameter has been passed correctly;
        initialise it just to ease debugging (stress the passed pointer by
        dereferencing it), even if it would not be necessary. */
-    assert(rating);
-    if (! rating)
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(rating);
     * rating = PEP_rating_undefined;
 
     /* Do the actual work. */
@@ -6582,12 +6484,7 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
         pEp_identity **ident
     )
 {
-    assert(session);
-    assert(msg);
-    assert(ident);
-
-    if (!(session && msg && ident))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && msg && ident);
 
     message *dst = NULL;
     stringlist_t *keylist = NULL;
@@ -6711,20 +6608,11 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
         PEP_rating *rating
     )
 {
+    PEP_REQUIRE(session && msg && msg->dir == PEP_dir_outgoing && rating);
+
     PEP_comm_type max_comm_type = PEP_ct_pEp;
     
     bool comm_type_determined = false;
-
-    assert(session);
-    assert(msg);
-    assert(msg->dir == PEP_dir_outgoing);
-    assert(rating);
-
-    if (!(session && msg && rating))
-        return PEP_ILLEGAL_VALUE;
-
-    if (msg->dir != PEP_dir_outgoing)
-        return PEP_ILLEGAL_VALUE;
 
     *rating = PEP_rating_undefined;
 
@@ -6759,19 +6647,9 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating_preview(
         PEP_rating *rating
     )
 {
+    PEP_REQUIRE(session && msg && msg->dir == PEP_dir_outgoing && rating);
+
     PEP_comm_type max_comm_type = PEP_ct_pEp;
-
-    assert(session);
-    assert(msg);
-    assert(msg->dir == PEP_dir_outgoing);
-    assert(rating);
-
-    if (!(session && msg && rating))
-        return PEP_ILLEGAL_VALUE;
-
-    if (msg->dir != PEP_dir_outgoing)
-        return PEP_ILLEGAL_VALUE;
-
     *rating = PEP_rating_undefined;
 
     _max_comm_type_from_identity_list_preview(msg->to, session,
@@ -6807,14 +6685,9 @@ DYNAMIC_API PEP_STATUS identity_rating(
         PEP_rating *rating
     )
 {
+    PEP_REQUIRE(session && ident && rating);
+
     PEP_STATUS status = PEP_STATUS_OK;
-
-    assert(session);
-    assert(ident);
-    assert(rating);
-
-    if (!(session && ident && rating))
-        return PEP_ILLEGAL_VALUE;
 
     *rating = PEP_rating_undefined;
 
