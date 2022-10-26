@@ -4,7 +4,6 @@
 #include "pEp_internal.h"
 #include "stringpair.h" // for stringpair_list_t
 
-#include <assert.h>
 #include <string.h>
 
 
@@ -28,9 +27,7 @@
 
 PEP_STATUS media_key_finalize_map(PEP_SESSION session) {
     /* Sanity checks. */
-    assert(session);
-    if(session == NULL)
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session);
 
     /* Do the work. */
     free_stringpair_list(session->media_key_map);
@@ -73,9 +70,8 @@ PEP_STATUS media_key_insert(PEP_SESSION session,
                             const char *fpr)
 {
     /* Sanity checks. */
-    assert(session && address_pattern && fpr && ! EMPTYSTR(fpr));
-    if (! (session && address_pattern && fpr && ! EMPTYSTR(fpr)))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && address_pattern && fpr
+                && ! EMPTYSTR(address_pattern) && ! EMPTYSTR(fpr));
 
     /* Work with a normalised version of the address pattern. */
     address_pattern = normalize_address(address_pattern);
@@ -120,9 +116,7 @@ PEP_STATUS media_key_remove(PEP_SESSION session,
                             const char *address_pattern)
 {
     /* Sanity checks. */
-    assert(session && address_pattern);
-    if (! (session && address_pattern))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && address_pattern && ! EMPTYSTR(address_pattern));
 
     /* Work with a normalised version of the address pattern, so that we can
        abstract from "mailto:" prefixes.  The stored address patterns have been
@@ -158,9 +152,8 @@ DYNAMIC_API PEP_STATUS config_media_keys(PEP_SESSION session,
                                          const stringpair_list_t *new_map)
 {
     /* Sanity checks. */
-    assert(session);
-    if (! (session))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session);
+
     /* A more complicated sanity check: that the new map is well formed. */
     const stringpair_list_t *rest;
     for (rest = new_map; rest != NULL; rest = rest->next)
@@ -210,9 +203,7 @@ PEP_STATUS media_key_lookup_address(PEP_SESSION session,
                                     char **fpr_result)
 {
     /* Sanity checks. */
-    assert(session && address && fpr_result);
-    if (! (session && address && fpr_result))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && address && ! EMPTYSTR(address) && fpr_result);
 
     /* Use a normalised version of the address; it is better to do this once and
        for all, out of the loop.  Notice that the address patterns being tested
@@ -248,9 +239,8 @@ PEP_STATUS media_key_has_identity_a_media_key(PEP_SESSION session,
                                               bool *has_media_key)
 {
     /* Sanity checks. */
-    assert(session && identity && has_media_key);
-    if (! (session && identity && has_media_key))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && identity && has_media_key
+                && ! EMPTYSTR(identity->address));
 
     char *media_key = NULL;
     PEP_STATUS status
@@ -283,9 +273,9 @@ PEP_STATUS identity_known_to_use_pEp(PEP_SESSION session,
                                      bool *known_to_use_pEp)
 {
     /* Sanity checks. */
-    assert(session && identity && known_to_use_pEp);
-    if (! (session && identity && known_to_use_pEp))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && identity && known_to_use_pEp
+                && ! EMPTYSTR(identity->address)
+                && ! EMPTYSTR(identity->user_id));
 
     bool result = false;
     PEP_STATUS status = PEP_STATUS_OK;
@@ -327,6 +317,9 @@ PEP_STATUS identity_known_to_use_pEp(PEP_SESSION session,
 PEP_STATUS amend_identity_with_media_key_information(PEP_SESSION session,
                                                      pEp_identity *identity)
 {
+    /* Sanity checks. */
+    PEP_REQUIRE(session && identity);
+
 #define DUMP                                                                \
     do {                                                                    \
         LOG_TRACE("  enc_format 0x%x %i",                                   \
@@ -336,11 +329,6 @@ PEP_STATUS amend_identity_with_media_key_information(PEP_SESSION session,
         LOG_TRACE("  version    %i.%i",                                     \
                   (int) identity->major_ver, (int) identity->minor_ver);    \
     } while (false)
-
-    /* Sanity checks. */
-    assert(session && identity);
-    if (! (session && identity))
-        return PEP_ILLEGAL_VALUE;
 
     /* Check whether the identity has a media key: */
     bool has_media_key;
@@ -414,9 +402,7 @@ PEP_STATUS media_key_is_there_a_media_key_in(PEP_SESSION session,
                                              bool *found)
 {
     /* Sanity checks. */
-    assert(session && found);
-    if (! (session && found))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && found);
 
     /* Check every element. */
     const stringpair_list_t *map = session->media_key_map;
@@ -442,6 +428,9 @@ static PEP_STATUS media_key_add_address(PEP_SESSION session,
                                         const pEp_identity *identity,
                                         char **fpr_inout)
 {
+    PEP_REQUIRE(session && identity && fpr_inout
+                && ! EMPTYSTR(identity->address));
+
     char *fpr_for_identity = NULL;
     PEP_STATUS status = media_key_lookup_address(session, identity->address,
                                                  & fpr_for_identity);
@@ -468,6 +457,8 @@ static PEP_STATUS media_key_add_addresses(PEP_SESSION session,
                                           const identity_list *identities,
                                           char **fpr_inout)
 {
+    PEP_REQUIRE(session && fpr_inout);
+
     PEP_STATUS status = PEP_STATUS_OK;
     const identity_list *rest;
     for (rest = identities;
@@ -482,11 +473,9 @@ PEP_STATUS media_key_for_outgoing_message(PEP_SESSION session,
                                           char **fpr_result)
 {
     /* Sanity checks. */
-    assert(session && msg);
-    if (! (session && msg))
-        return PEP_ILLEGAL_VALUE;
-    if (msg->dir != PEP_dir_outgoing)
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && msg
+                /* fpr_result is allowed to be NULL. */
+                && msg->dir == PEP_dir_outgoing);
 
     /* Special case: if there is any Bcc recipient then we can use no media
        key. */
