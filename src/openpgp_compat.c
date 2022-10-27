@@ -13,11 +13,7 @@ DYNAMIC_API PEP_STATUS OpenPGP_list_keyinfo (
         PEP_SESSION session, const char* search_pattern, stringpair_list_t** keyinfo_list
     )
 {
-    assert(session);
-    assert(keyinfo_list);
-
-    if (!(session && keyinfo_list))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && keyinfo_list);
 
     stringpair_list_t* _keyinfo_list = NULL;
     
