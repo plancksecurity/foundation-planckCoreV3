@@ -93,7 +93,6 @@
 #include <locale.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <math.h>
@@ -128,8 +127,13 @@
 #include "sync_api.h"
 #include "Sync_func.h"
 
-
-#define NOT_IMPLEMENTED assert(0); return PEP_UNKNOWN_ERROR;
+/* This old macro is still useful for the contexts where PEP_UNIMPLEMENTED does
+   not work because a "session" variable is not defined. */
+#define NOT_IMPLEMENTED            \
+    do {                           \
+        assert(false);             \
+        return PEP_UNKNOWN_ERROR;  \
+    } while (false)
 
 struct _pEpSession;
 typedef struct _pEpSession pEpSession;
