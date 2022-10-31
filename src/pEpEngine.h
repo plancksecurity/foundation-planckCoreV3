@@ -2055,7 +2055,7 @@ DYNAMIC_API PEP_STATUS reset_path_cache(void);
  *
  *  @brief      Empty the path cache, releasing resources.  
  *
- *  This may invalidate
+ *              This may invalidate
  *              the memory used by the results of per_user_relative_directory,
  *              per_user_directory, per_machine_directory, android_system_db,
  *              unix_system_db, unix_local_db.
