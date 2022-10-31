@@ -2046,6 +2046,8 @@ DYNAMIC_API PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user);
  *  @retval     PEP_UNBOUND_ENVIRONMENT_VARIABLE  unknown variable referenced
  *  @retval     PEP_PATH_SYNTAX_ERROR             invalid syntax in argument
  *  @retval     PEP_OUT_OF_MEMORY                 out of memory
+ *  @retval     PEP_CANNOT_CREATE_TEMP_FILE       failed creating paths or
+ *                                                setting path attributes
  *
  */
 DYNAMIC_API PEP_STATUS reset_path_cache(void);

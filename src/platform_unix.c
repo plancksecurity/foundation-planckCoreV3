@@ -44,6 +44,14 @@
 #endif
 #define SYSTEM_DB_FILENAME "system.db"
 
+/* Here the definitions in pEp_internal.h are not visible. */
+#define EMPTYSTR(STR) ((STR) == NULL || (STR)[0] == '\0')
+
+
+/* Forward-declaration. */
+static char *_per_user_directory(void);
+
+
 #ifndef strndup
 char *strndup (const char *s, size_t n)
 {
@@ -242,6 +250,44 @@ void uuid_unparse_upper(pEpUUID uu, uuid_string_t out)
 }
 #endif
 
+
+/* String utilities
+ * ***************************************************************** */
+
+/* Return the concatenation of the two given strings, which must be
+   non-empty, or NULL on error.  The result is malloc-allocated. */
+static char *_string_concatenate_2(const char *a, const char *b)
+{
+    /* Sanity check. */
+    assert(! EMPTYSTR(a) && ! EMPTYSTR(b));
+    if (! (! EMPTYSTR(a) && ! EMPTYSTR(b)))
+        return NULL;
+
+    size_t total_length = strlen(a) + strlen(b);
+    char *res = malloc(total_length + /* '\0' */ 1);
+    if (res == NULL)
+        goto end;
+    sprintf(res, "%s%s", a, b);
+
+ end:
+    return res;
+}
+
+/* Like _string_concatenate_2, for three strings. */
+static char *_string_concatenate_3(const char *a, const char *b, const char *c)
+{
+    /* Sanity check. */
+    assert(! EMPTYSTR(a) && ! EMPTYSTR(b) && ! EMPTYSTR(c));
+    if (! (! EMPTYSTR(a) && ! EMPTYSTR(b) && ! EMPTYSTR(c)))
+        return NULL;
+
+    char *a_b = _string_concatenate_2(a, b);
+    if (a_b == NULL)
+        return NULL;
+    else
+        return _string_concatenate_2(a_b, c);
+}
+
 #if !defined(BSD) && !defined(__APPLE__)
 
 size_t strlcpy(char* dst, const char* src, size_t size) {
@@ -367,50 +413,6 @@ static void _empty(char **p)
 
 /**
  *  @internal
- *  
- *  <!--       _move()       -->
- *  
- *  @brief            TODO
- *  
- *  @param[in]    *o        constchar
- *  @param[in]    *ext        constchar
- *  @param[in]    *n        constchar
- *  
- */
-static void _move(const char *o, const char *ext, const char *n)
-{
-    assert(o && ext && n);
-    if (!(o && ext && n))
-        return;
-
-    char *_old = strdup(o);
-    assert(_old);
-    if (!_old)
-        return;
-
-    char *r = _stradd(&_old, ext);
-    if (!r) {
-        free(_old);
-        return;
-    }
-
-    char *_new = strdup(n);
-    assert(_new);
-    if (!_new) {
-        free(_old);
-        return;
-    }
-
-    r = _stradd(&_new, ext);
-    if (r)
-        rename(_old, _new);
-
-    free(_old);
-    free(_new);
-}
-
-/**
- *  @internal
  *
  *  <!--       _strdup_or_NULL()       -->
  *
@@ -429,6 +431,224 @@ static char *_strdup_or_NULL(const char *original)
     if (original == NULL)
         original = "";
     return strdup (original);
+}
+
+
+/* File and directory utilities
+ * ***************************************************************** */
+
+/**
+ *  @internal
+ *  
+ *  <!--       _home_directory()       -->
+ *  
+ *  @brief     Return the absolute pathname of the so-to-speak "home directory",
+ *             which also takes into account the value of PEP_HOME for debugging
+ *             builds.
+ *  @retval    a non-empty string, not to be freed by the user   success
+ *  @retval    NULL                                              any error
+ */
+static const char* _home_directory(void)
+{
+    const char *res;
+
+#ifndef NDEBUG
+    /* Only in debug mode we consider PEP_HOME... */
+    res = getenv("PEP_HOME");
+
+    /* ...But even in debug mode we fall back to HOME when PEP_HOME is undefined
+       or empty. */
+    if (EMPTYSTR(res))
+#endif
+    res = getenv("HOME");
+
+    /* We should have found a result by now. */
+    assert(! EMPTYSTR(res));
+    if (EMPTYSTR(res))
+        return NULL;
+    return res;
+}
+
+/* A helper for _move_files_from_old_to_new_if_necessary. */
+static PEP_STATUS _move_db_if_source_exists(const char *old_directory,
+                                            const char *old_db_file,
+                                            const char *new_directory,
+                                            const char *new_db_file,
+                                            bool *source_exists)
+{
+    /* Sanity check. */
+    assert(! EMPTYSTR(old_directory) && ! EMPTYSTR(old_db_file)
+           && ! EMPTYSTR(new_directory) && ! EMPTYSTR(new_db_file));
+    if (! (! EMPTYSTR(old_directory) && ! EMPTYSTR(old_db_file)
+           && ! EMPTYSTR(new_directory) && ! EMPTYSTR(new_db_file)))
+        return PEP_ILLEGAL_VALUE;
+
+    PEP_STATUS status = PEP_STATUS_OK;
+
+#define FAIL(new_status) do { status = (new_status); goto end; } while (false)
+
+    /* Compose filenames. */
+    char *old_pathname = _string_concatenate_3(old_directory, "/", old_db_file);
+    char *new_pathname = _string_concatenate_3(new_directory, "/", new_db_file);
+    if (old_pathname == NULL || new_pathname == NULL)
+        FAIL(PEP_OUT_OF_MEMORY);
+
+    /* Check if the source file exists. */
+    struct stat stat_struct;
+    int stat_result = stat(old_pathname, & stat_struct);
+    if (stat_result != 0)
+        switch (errno) {
+        case ENOENT:
+            /* The source does not exist, but this is not an error. */
+            if (source_exists != NULL)
+                * source_exists = false;
+            goto end;
+        default:
+            FAIL(PEP_UNKNOWN_ERROR);
+        }
+    if (source_exists != NULL)
+        * source_exists = true;
+
+    /* Actually move the file. */
+    int rename_result = rename(old_pathname, new_pathname);
+    if (rename_result != 0)
+        FAIL(PEP_CANNOT_CREATE_TEMP_FILE);
+
+ end:
+    free(old_pathname);
+    free(new_pathname);
+    return status;
+#undef FAIL
+}
+
+/**
+ *  @internal
+ *  
+ *  <!--       _move_files_from_old_to_new_if_necessary()       -->
+ *  
+ *  @brief     In case the old per-user files exists in the home directory
+ *             move them to the new per-user directory; this also applies to
+ *             "-shm" and "-wal" files.
+ *             Assume the cache to be correctly set.
+ *             Only return error status is moving is attempted but fails.
+ */
+static PEP_STATUS _move_files_from_old_to_new_if_necessary(void)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+#define FAIL(new_status)  \
+    do { status = (new_status); goto error; } while (false)
+#define CHECK(expression)                \
+    do {                                 \
+        if (! (expression)) {            \
+            status = PEP_UNKNOWN_ERROR;  \
+            goto error;                  \
+        }                                \
+    } while (false)
+#define CHECK_STATUS  \
+    do { if (status != PEP_STATUS_OK) goto error; } while (false)
+
+    const char *old_directory = _home_directory();
+    const char *new_directory = _per_user_directory();
+    char *old_file = NULL;
+    CHECK(! EMPTYSTR(new_directory));
+
+    bool source_existed;
+#define MOVE(old_file, new_file) /* old_file and new_file must be literals */   \
+    do {                                                                        \
+        status                                                                  \
+            = _move_db_if_source_exists(old_directory, old_file,                \
+                                        new_directory, new_file,                \
+                                        & source_existed);                      \
+        CHECK_STATUS;                                                           \
+        if (source_existed) {                                                   \
+            status = _move_db_if_source_exists(old_directory,                   \
+                                               old_file "-shm",                 \
+                                               new_directory,                   \
+                                               new_file "-shm",                 \
+                                               NULL);                           \
+            CHECK_STATUS;                                                       \
+            status = _move_db_if_source_exists(old_directory,                   \
+                                               old_file "-wal",                 \
+                                               new_directory,                   \
+                                               new_file "-wal",                 \
+                                               NULL);                           \
+            CHECK_STATUS;                                                       \
+        }                                                                       \
+    } while (false)
+
+    /* Move the local database and the key database. */
+    MOVE(OLD_LOCAL_DB_FILENAME, LOCAL_DB_FILENAME);
+    MOVE(OLD_KEYS_DB_FILENAME, KEYS_DB_FILENAME);
+    /* No need to do the same for the debug database, which has never been in
+       the old directory. */
+
+#undef FAIL
+#undef CHECK
+#undef CHECK_STATUS
+#undef MOVE
+    return status;
+
+ error:
+    free(old_file);
+    return status;
+}
+
+
+/* Directory creation
+ * ***************************************************************** */
+
+/* Make a directory unless it exists already, and make sure it has the correct
+   owner and permissions.  Return error state only if it was not possible to fix
+   the existing state.  Fail if the path exists as a non-directory. */
+static PEP_STATUS _mkdir(const char *directory_path)
+{
+    /* Make sure the directory exists and has the correct attributes. */
+    struct stat stat_struct;
+    int stat_result = stat(directory_path, & stat_struct);
+    if (stat_result != 0)
+        switch (errno) {
+        case ENOENT:
+            {
+                /* The directory does not exist.  Make it. */
+                int mkdir_result = mkdir(directory_path,
+                                         /* u+rwx, nothing else */ 0700);
+                if (mkdir_result != 0)
+                    return PEP_CANNOT_CREATE_TEMP_FILE;
+                else
+                    return PEP_STATUS_OK;
+            }
+        default:
+            return PEP_UNKNOWN_ERROR;
+        }
+
+    /* If we arrived here some filesystem object with the given path existed
+       already. */
+    if (stat_struct.st_uid != getuid())
+        /* Existing filesystem object but wrong owner. */
+        return PEP_CANNOT_CREATE_TEMP_FILE;
+    if (! S_ISDIR(stat_struct.st_mode))
+        /* Existing filesystem object but not a directory. */
+        return PEP_CANNOT_CREATE_TEMP_FILE;
+    else if (   ! (stat_struct.st_mode & S_IRUSR)
+             || ! (stat_struct.st_mode & S_IWUSR)
+             || ! (stat_struct.st_mode & S_IXUSR)
+             ||   (stat_struct.st_mode & S_IRGRP)
+             ||   (stat_struct.st_mode & S_IWGRP)
+             ||   (stat_struct.st_mode & S_IXGRP)
+             ||   (stat_struct.st_mode & S_IROTH)
+             ||   (stat_struct.st_mode & S_IWOTH)
+             ||   (stat_struct.st_mode & S_IXOTH))
+        /* Existing directory but wrong permissions: fix them. */
+        {
+            int chmod_result = chmod(directory_path,
+                                     /* u+rwx, nothing else */ 0700);
+            if (chmod_result != 0)
+                return PEP_CANNOT_CREATE_TEMP_FILE;
+        }
+
+    /* If we arrived here the directory already existed and everything is
+       right. */
+    return PEP_STATUS_OK;
 }
 
 
@@ -730,6 +950,12 @@ DYNAMIC_API PEP_STATUS reset_path_cache(void)
 {
     PEP_STATUS res = PEP_STATUS_OK;
 
+#define GOTO_ON_ERROR                       \
+    do {                                    \
+        if (res != PEP_STATUS_OK)           \
+            goto free_everything_and_fail;  \
+    } while (false)
+
 #define SET_OR_FAIL(name)                                                 \
     do {                                                                  \
         unexpanded_path = (_ ## name)();                                  \
@@ -738,8 +964,7 @@ DYNAMIC_API PEP_STATUS reset_path_cache(void)
             goto free_everything_and_fail;                                \
         }                                                                 \
         res = _expand_variables(& _ ## name ## _cache, unexpanded_path);  \
-        if (res != PEP_STATUS_OK)                                         \
-            goto free_everything_and_fail;                                \
+        GOTO_ON_ERROR;                                                    \
         /* Clear unxpanded_path for the next call of SET_OR_FAIL. */      \
         free((void *) unexpanded_path);                                   \
         unexpanded_path = NULL;                                           \
@@ -751,15 +976,30 @@ DYNAMIC_API PEP_STATUS reset_path_cache(void)
 
     const char *unexpanded_path = NULL;
 
-    SET_OR_FAIL (per_user_relative_directory);
-    SET_OR_FAIL (per_user_directory);
-    SET_OR_FAIL (per_machine_directory);
+    /* Compute paths. */
+    SET_OR_FAIL(per_user_relative_directory);
+    SET_OR_FAIL(per_user_directory);
+    SET_OR_FAIL(per_machine_directory);
 #ifdef ANDROID
-    SET_OR_FAIL (android_system_db);
+    SET_OR_FAIL(android_system_db);
 #endif
-    SET_OR_FAIL (unix_system_db);
-    SET_OR_FAIL (unix_local_db);
-    SET_OR_FAIL (unix_log_db);
+    SET_OR_FAIL(unix_system_db);
+    SET_OR_FAIL(unix_local_db);
+    SET_OR_FAIL(unix_log_db);
+
+    /* At this point each global string variable contains an already expanded
+       path name. */
+
+    /* Make the per-user directory (the per system directory has already been
+       made at installation time, and we will notice problems when trying to
+       open the system database).  The per-user directory is used for both the
+       "local database" management.db and for the logging database log.db . */
+    res = _mkdir(_per_user_directory_cache);
+    GOTO_ON_ERROR;
+
+    /* Move from old paths to new paths. */
+    res = _move_files_from_old_to_new_if_necessary();
+    GOTO_ON_ERROR;
 
     return res;
 
@@ -769,6 +1009,7 @@ DYNAMIC_API PEP_STATUS reset_path_cache(void)
     return res;
 
 #undef SET_OR_FAIL
+#undef GOTO_ON_ERROR
 }
 
 
@@ -797,14 +1038,9 @@ static char *_per_user_directory(void)
 {
     char *path = NULL;
 
-    const char *home = NULL;
-#ifndef NDEBUG
-    home = getenv("PEP_HOME");
-    if (!home)
-#endif
-    home = getenv("HOME");
-    assert(home);
-    if (!home)
+    const char *home = _home_directory();
+    assert(! EMPTYSTR(home));
+    if (EMPTYSTR(home))
         return NULL;
 
     path = strdup(home);
@@ -827,144 +1063,19 @@ error:
     return NULL;
 }
 
-#warning "This code is a mess.  It mixes together the computation of a pathname, checking for its existence, and migrating from old locations.  It does not even work because now the computed path is supposed to contain variables to be expanded elsewhere.  Separate.  Even rewriting would be absurd."
+/* Compute the path, without touching the actual filesystem.  Notice that
+   variables still need to be expanded ...*/
 static char *_unix_local_db(void)
 {
-    char* path = (char *) _per_user_directory() /* This memory is not shared. */;
-    if (!path)
-        return NULL;
-
-    char *path_c = NULL;
-    char *old_path = NULL;
-    char *old_path_c = NULL;
-
-    struct stat dir;
-    int r = stat(path, &dir);
-    if (r) {
-        if (errno == ENOENT) {
-            // directory does not yet exist
-            r = mkdir(path, 0700);
-            if (r)
-                goto error;
-        }
-        else {
-            goto error;
-        }
-    }
-
-    char *_path = _stradd(&path, "/");   
-    if (!_path)
-        goto error;
-
-    // make a copy of this path in case we need to move files
-    path_c = strdup(path);
-    assert(path_c);
-    if (!path_c)
-        goto error;
-
-    _path = _stradd(&path, LOCAL_DB_FILENAME);
-    if (!_path)
-        goto error;
-
-    struct stat file;
-    r = stat(path, &file);
-    if (r) {
-        if (errno == ENOENT) {
-            // we do not have management.db yet, let's test if we need to move
-            // one with the old name
-            const char *home = NULL;
-#ifndef NDEBUG
-            home = getenv("PEP_HOME");
-            if (!home)
-#endif
-            home = getenv("HOME");
-            // we were already checking for HOME existing, so this is only a
-            // safeguard
-            assert(home);
-
-            old_path = strdup(home);
-            assert(old_path);
-            if (!old_path)
-                goto error;
-
-            char *_old_path = _stradd(&old_path, "/");   
-            if (!_old_path)
-                goto error;
-
-            old_path_c = strdup(old_path);
-            assert(old_path_c);
-            if (!old_path_c)
-                goto error;
-
-            _old_path = _stradd(&old_path, OLD_LOCAL_DB_FILENAME);
-            if (!_old_path)
-                goto error;
-
-            struct stat old;
-            r = stat(old_path, &old);
-            if (r == 0) {
-                // old file existing, new file not yet existing, move
-                rename(old_path, path);
-
-                // if required move associated files, too
-                _move(old_path, "-shm", path);
-                _move(old_path, "-wal", path);
-
-                // move keys database
-                _old_path = _stradd(&old_path_c, OLD_KEYS_DB_FILENAME);
-                if (!_old_path)
-                    goto error;
-
-                _path = _stradd(&path_c, KEYS_DB_FILENAME);
-                if (!_path)
-                    goto error;
-
-                rename(old_path_c, path_c);
-
-                // if required move associated files, too
-                _move(old_path_c, "-shm", path_c);
-                _move(old_path_c, "-wal", path_c);
-            }
-        }
-        else {
-            goto error;
-        }
-    }
-    goto the_end;
-
-error:
-    _empty(&path);
-
-the_end:
-    free(path_c);
-    free(old_path);
-    free(old_path_c);
-    return path;
+    return _string_concatenate_3(_per_user_directory(), "/", LOCAL_DB_FILENAME);
 }
 
+/* Like _unix_local_db for the log database: compute the path, without touching
+   the actual filesystem.  No need to make sure here that the directory exists;
+   notice that variables still need to be expanded ...*/
 static char *_unix_log_db(void)
 {
-    /* The log database is *always* in the same directory of the local database,
-       on every platform.  This function does not need to worry about the
-       existance of the directory, since _unix_local_db already does the
-       work. */
-
-    char *res = NULL;
-    char *directory = (char *) _per_user_directory();
-    if (directory == NULL)
-        goto error;
-    if (LOG_DB_FILENAME == NULL)
-        goto error;
-    size_t total_length
-        = strlen(directory) + /* '/' */ 1 + strlen (LOG_DB_FILENAME);
-    res = malloc (total_length + /* '\0' */ 1);
-    sprintf(res, "%s/%s", directory, LOG_DB_FILENAME);
-    return res;
-
- error:
-    free(directory);
-    free(res);
-    return NULL;
+    return _string_concatenate_3(_per_user_directory(), "/", LOG_DB_FILENAME);
 }
 
 static char *_per_machine_directory(void) {
@@ -994,6 +1105,10 @@ error:
     _empty(&path);
     return NULL;
 }
+
+
+/* Library functions
+ * ***************************************************************** */
 
 int pEp_fnmatch(const char *pattern, const char *string) {
     /* The implementation is completely trivial on Unix. */
