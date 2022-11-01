@@ -272,6 +272,11 @@ PEP_STATUS identity_known_to_use_pEp(PEP_SESSION session,
                                      const pEp_identity *identity,
                                      bool *known_to_use_pEp)
 {
+    // TEMPORARY: begin
+    PEP_REQUIRE(session && identity && known_to_use_pEp);
+    PEP_REQUIRE(! EMPTYSTR(identity->address));
+    PEP_REQUIRE(! EMPTYSTR(identity->user_id));
+    // TEMPORARY: end
     /* Sanity checks. */
     PEP_REQUIRE(session && identity && known_to_use_pEp
                 && ! EMPTYSTR(identity->address)
