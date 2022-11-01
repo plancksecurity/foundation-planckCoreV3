@@ -332,7 +332,7 @@ typedef enum _PEP_rating {
  */
 
 struct _message;
-typedef PEP_STATUS (*messageToSend_t)(struct _message *msg);
+typedef PEP_STATUS (*messageToSend_t)(struct _message *msg); ///< @see message
 
 
 struct Sync_event;
