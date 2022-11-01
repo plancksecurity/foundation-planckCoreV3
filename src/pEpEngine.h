@@ -320,8 +320,11 @@ typedef enum _PEP_rating {
 
 /**
  *  <!--       messageToSend()       -->
+ *  @typedef *messageToSend_t
  *  
- *  @brief A message needs to be delivered by application
+ *  @brief Pointer to function nmessageToSend()
+ *
+ *  A message needs to be delivered by application. 
  *  
  *  @param[in]   msg    message struct with message to send
  *  
