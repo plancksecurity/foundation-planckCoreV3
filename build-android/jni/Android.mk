@@ -43,7 +43,8 @@ ENGINE_SRC_FILES := $(shell find $(LOCAL_PATH)/../../src/ ! -name "*gpg*" ! -nam
 ASN1_SRC_FILES := $(wildcard $(LOCAL_PATH)/../../asn.1/*.c)
 LOCAL_SRC_FILES := $(ENGINE_SRC_FILES:%=%)  $(ASN1_SRC_FILES:$(LOCAL_PATH)/%=%)
 #LOCAL_SRC_FILES := $(GPGBUILD)/$(TARGET_ARCH_ABI)/include
-LOCAL_SRC_FILES := $(LIB_PEP_TRANSPORT_PATH)/src/*.h
+#LOCAL_SRC_FILES := $(LIB_PEP_TRANSPORT_PATH)/src/*.h
+
 
 
 include $(BUILD_STATIC_LIBRARY)
