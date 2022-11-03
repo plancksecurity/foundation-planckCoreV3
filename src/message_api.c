@@ -2809,7 +2809,7 @@ static PEP_STATUS encrypt_message_possibly_with_media_key(
         stringlist_length(keys)  == 0 ||
         _rating(max_comm_type) < PEP_rating_reliable)
     {
-        LOG_TRACE("encrypt_message_possibly_with_media_key: about to make the message unencrypted!");
+        LOG_TRACE("about to make the message unencrypted!");
         free_stringlist(keys);
         if ((has_pEp_user || !session->passive_mode) && 
             !(flags & PEP_encrypt_flag_force_no_attached_key)) {
@@ -2997,7 +2997,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             return status;
         else {
             PEP_ASSERT(media_key_fpr != NULL);
-            LOG_TRACE("encrypt_message: using the media key %s", media_key_fpr);
+            LOG_TRACE("using the media key %s", media_key_fpr);
             add_opt_field(src, "X-pEp-use-media-key", media_key_fpr); // probably only useful for debugging.
             add_opt_field(src, "X-pEp-use-media-key-inner", media_key_fpr); // probably only useful for debugging.
             status = encrypt_message_possibly_with_media_key(
