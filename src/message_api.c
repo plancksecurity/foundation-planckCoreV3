@@ -48,7 +48,7 @@
 
 /* Define convenient logging macros for this compilation unit. */
 #define _LOG_WITH_MACRO_NAME(name, ...)     \
-    name("p≡p Engine", "message_api", "" __VA_ARGS__)
+    name("p≡p", "Engine", "" __VA_ARGS__)
 #define LOG_CRITICAL(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_CRITICAL, __VA_ARGS__)
 #define LOG_ERROR(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_ERROR, __VA_ARGS__)
 #define LOG_WARNING(...)   _LOG_WITH_MACRO_NAME(PEP_LOG_WARNING, __VA_ARGS__)
