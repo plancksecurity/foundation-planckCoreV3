@@ -1,0 +1,28 @@
+Platform-specific notes: windows
+================================
+
+For more information please see https://dev.pep.foundation/Windows .
+
+
+Character encoding
+------------------
+
+It is important that we can emit Unicode output.
+
+Internal memory
+...............
+The p≡p Engine works internally using UTF-8 strings
+
+Console
+.......
+The p≡p Engine always prints to the console in UTF-8.
+
+It is the user's responsibility to configure the console.
+
+Other output
+............
+In every other contexts on this platform, including system logs, the
+output is in wide chars: we treat that as if it were UTF-16, ignoring
+the difference between UTF-16 and UCS-2.
+
+This is achieved using -W functions.

@@ -169,7 +169,18 @@ typedef enum {
          sqlite> SELECT * FROM UserEntries;  */
     PEP_LOG_DESTINATION_DATABASE  =   4,
 
-    /* Send log entries to the syslog service. */
+    /* Send log entries to the syslog service, or (on windows) on the native log
+       destination obtained from OpenEventLogW -- windows logging is implemented
+       as an emulated syslog API. */
+    /*
+      https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-openeventlogw
+      OpenEventLogW
+      example: https://learn.microsoft.com/en-us/windows/win32/eventlog/querying-for-event-source-messages
+
+      ReportEvent
+      example: https://learn.microsoft.com/en-us/windows/win32/eventlog/reporting-an-event
+      */
+
     PEP_LOG_DESTINATION_SYSLOG    =   8,
 
     /* Use the Android logging system. */
