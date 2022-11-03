@@ -1275,9 +1275,21 @@ static PEP_STATUS _upgrade_DB_to_ver_10(PEP_SESSION session) {
 }
 
 static PEP_STATUS _force_upgrade_own_latest_message_version(PEP_SESSION session) {
-    // N.B. WE DEFINE PEP_VERSION - IF WE'RE AT 9-DIGIT MAJOR OR MINOR VERSIONS, ER, BAD.
-    char major_buf[10];
-    char minor_buf[10];
+    PEP_REQUIRE(session != NULL);
+
+    PEP_STATUS status = PEP_STATUS_OK;
+#define OUT_OF_MEMORY                \
+    do {                             \
+        status = PEP_OUT_OF_MEMORY;  \
+        goto end;                    \
+    } while (false)
+
+    // N.B. WE DEFINE PEP_VERSION - MAJOR OR MINOR VERSIONS MUST NOT BE TOO LONG.
+#define VERSION_DIGIT_NO 10
+    char major_buf[VERSION_DIGIT_NO];
+    char minor_buf[VERSION_DIGIT_NO];
+
+    char *version_upgrade_stmt = NULL;
 
     // Guess we were abusing sscanf here, so we'll do it this way:
     const char *cptr = PEP_VERSION;
@@ -1286,6 +1298,8 @@ static PEP_STATUS _force_upgrade_own_latest_message_version(PEP_SESSION session)
 
     char *bufptr = major_buf;
     while (*cptr != '.' && *cptr != '\0') {
+        if (major_len == VERSION_DIGIT_NO)
+            OUT_OF_MEMORY;
         *bufptr++ = *cptr++;
         major_len++;
     }
@@ -1295,6 +1309,8 @@ static PEP_STATUS _force_upgrade_own_latest_message_version(PEP_SESSION session)
     if (*cptr == '.') {
         cptr++;
         while (*cptr != '\0') {
+            if (minor_len == VERSION_DIGIT_NO)
+                OUT_OF_MEMORY;
             *bufptr++ = *cptr++;
             minor_len++;
         }
@@ -1316,7 +1332,9 @@ static PEP_STATUS _force_upgrade_own_latest_message_version(PEP_SESSION session)
                            strlen(version_upgrade_midstr) + minor_len +
                            strlen(version_upgrade_endstr);
 
-    char *version_upgrade_stmt = calloc(new_stringlen + 1, 1);
+    version_upgrade_stmt = calloc(new_stringlen + 1, 1);
+    if (version_upgrade_stmt == NULL)
+        OUT_OF_MEMORY;
     snprintf(version_upgrade_stmt, new_stringlen + 1, "%s%s%s%s%s",
              version_upgrade_startstr, major_buf, version_upgrade_midstr, minor_buf, version_upgrade_endstr);
 
@@ -1327,12 +1345,15 @@ static PEP_STATUS _force_upgrade_own_latest_message_version(PEP_SESSION session)
             NULL,
             NULL
     );
-    free(version_upgrade_stmt);
 
+ end:
+    free(version_upgrade_stmt);
     if (int_result != SQLITE_OK)
         return PEP_UNKNOWN_DB_ERROR;
 
-    return PEP_STATUS_OK;
+    return status;
+#undef OUT_OF_MEMORY
+#undef VERSION_DIGIT_NO
 }
 
 static PEP_STATUS _upgrade_DB_to_ver_12(PEP_SESSION session) {
