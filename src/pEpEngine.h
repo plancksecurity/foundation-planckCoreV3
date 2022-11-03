@@ -2052,8 +2052,7 @@ DYNAMIC_API void clear_path_cache(void);
 
 /* These must go away, but I am temporarily introducing them so as not to
    break Engine users. */
-#define _DO_NOTHING do { } while (false)
-#define set_debug_color(...) _DO_NOTHING
+DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color);
 
 #ifdef __cplusplus
 }

@@ -3681,3 +3681,12 @@ PEP_STATUS set_all_userids_to_own(PEP_SESSION session, identity_list* id_list) {
     }
     return status;    
 }
+
+
+/* Temporary compatibility definitions
+ * ***************************************************************** */
+void set_debug_color(PEP_SESSION session, int ansi_color)
+{
+    LOG_WARNING("deprecated function");
+    PEP_REQUIRE_ORELSE(session != NULL, { return; });
+}
