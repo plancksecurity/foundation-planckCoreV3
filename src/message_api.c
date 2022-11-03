@@ -6297,7 +6297,10 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
         PEP_decrypt_flags_t *flags
     )
 {
-    PEP_REQUIRE(session && src && dst && keylist && flags);
+    PEP_REQUIRE(session && src && ! EMPTYSTR(src->id) && dst && keylist
+                && flags);
+
+    LOG_TRACE("%s \"%s\", recv_by %s, %s", src->id, (src->shortmsg ? src->shortmsg : "NO SUBJECT"), (src->recv_by ? src->recv_by->address : "NO RECV_BY"), ((src->dir == PEP_dir_incoming) ? "incoming" : "outgoing"));
 
     if (!(*flags & PEP_decrypt_flag_untrusted_server))
         *keylist = NULL;
@@ -6458,11 +6461,14 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_decrypt_flags_t *flags
     )
 {
-    /* Check that the rating output parameter has been passed correctly;
-       initialise it just to ease debugging (stress the passed pointer by
-       dereferencing it), even if it would not be necessary. */
-    PEP_REQUIRE(rating);
+    /* Check, among the rest, that the rating output parameter has been passed
+       correctly; initialise it just to ease debugging (stress the passed
+       pointer by dereferencing it), even if it would not be necessary. */
+    PEP_REQUIRE(session && src && ! EMPTYSTR(src->id) && dst && keylist && flags
+                && rating);
     * rating = PEP_rating_undefined;
+
+    LOG_TRACE("%s \"%s\", recv_by %s, %s", src->id, (src->shortmsg ? src->shortmsg : "NO SUBJECT"), (src->recv_by ? src->recv_by->address : "NO RECV_BY"), ((src->dir == PEP_dir_incoming) ? "incoming" : "outgoing"));
 
     /* Do the actual work. */
     PEP_STATUS res = decrypt_message_2(session, src, dst, keylist, flags);
