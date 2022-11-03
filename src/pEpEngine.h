@@ -21,12 +21,6 @@ extern "C" {
 #include "labeled_int_list.h"    
 #include "timestamp.h"
 
-#ifdef SQLITE3_FROM_OS
-#include <sqlite3.h>
-#else
-#include "sqlite3.h"
-#endif
-
 #define PEP_VERSION "3.2" ///< pEp *protocol* version
 
 /// @def PEP_ENGINE_VERSION
@@ -91,19 +85,6 @@ extern "C" {
                              _PEP_ENGINE_VERSION_PLUS_STRING)
 
 #define PEP_OWN_USERID "pEp_own_userId"
-    
-/**
- *  <!--       sql_reset_and_clear_bindings()       -->
- *  
- *  @brief Both reset and clear bindings in the ointed sqlite3 prepared
- *         statement
- *  
- *  @param[in]   s    prepared SQL statement
- *  
- *
- */
-void
-sql_reset_and_clear_bindings(sqlite3_stmt *s);
 
 // pEp Engine API
 

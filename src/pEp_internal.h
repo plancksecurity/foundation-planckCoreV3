@@ -373,6 +373,19 @@ PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first);
 void release_transport_system(PEP_SESSION session, bool out_last);
 
 /**
+ *  <!--       sql_reset_and_clear_bindings()       -->
+ *
+ *  @brief Both reset and clear bindings in the ointed sqlite3 prepared
+ *         statement
+ *
+ *  @param[in]   s    prepared SQL statement
+ *
+ *
+ */
+void
+sql_reset_and_clear_bindings(sqlite3_stmt *s);
+
+/**
  *  @internal
  * 
  *  <!--       encrypt_only()       -->
