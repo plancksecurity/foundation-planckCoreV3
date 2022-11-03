@@ -2046,6 +2046,15 @@ DYNAMIC_API PEP_STATUS reset_path_cache(void);
  */
 DYNAMIC_API void clear_path_cache(void);
 
+
+/* Temporary compatibility definitions
+ * ***************************************************************** */
+
+/* These must go away, but I am temporarily introducing them so as not to
+   break Engine users. */
+#define _DO_NOTHING do { } while (false)
+#define set_debug_color(...) _DO_NOTHING
+
 #ifdef __cplusplus
 }
 #endif
