@@ -5528,6 +5528,19 @@ DYNAMIC_API PEP_STATUS identity_rating(
     if (status == PEP_STATUS_OK)
         *rating = _rating(ident->comm_type);
 
+    /* If we know of no key for this identity but its address pattern matches
+       a media key we can do a little better. */
+    if (status == PEP_STATUS_OK
+        /* from media_key_comm_type which is PEP_ct_unconfirmed_encryption */
+        && * rating == PEP_rating_unreliable) {
+        bool has_a_media_key;
+        PEP_STATUS media_key_status
+            = media_key_has_identity_a_media_key(session, ident,
+                                                 & has_a_media_key);
+        if (media_key_status == PEP_STATUS_OK && has_a_media_key)
+            * rating = media_key_message_rating;
+    }
+
     return status;
 }
 

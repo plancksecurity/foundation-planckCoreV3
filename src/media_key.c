@@ -383,7 +383,7 @@ PEP_STATUS amend_identity_with_media_key_information(PEP_SESSION session,
  * ***************************************************************** */
 
 const PEP_rating media_key_message_rating
-  = PEP_rating_unreliable;
+  = PEP_rating_media_key_protected;
 //  = PEP_rating_under_attack; // for tests, of course.
 
 /* This is useful for determining the colour of an outgoing message. */

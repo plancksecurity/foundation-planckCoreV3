@@ -342,6 +342,8 @@ const char* tl_rating_string(PEP_rating rating) {
             return "PEP_rating_have_no_key";
         case PEP_rating_unencrypted:
             return "PEP_rating_unencrypted";
+        case PEP_rating_media_key_protected:
+            return "PEP_rating_media_key_protected";
         case PEP_rating_unreliable:
             return "PEP_rating_unreliable";
         case PEP_rating_reliable:
