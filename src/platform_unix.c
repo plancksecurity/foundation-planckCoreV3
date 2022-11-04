@@ -100,6 +100,9 @@ void *alloca(unsigned long x)
 }
 #endif
 
+#ifdef ANDROID
+#include <uuid.h>
+#endif
 #if defined(ANDROID) || defined(__MVS__)
 /* FIXME : timegm will miss when linking for x86_64 on android, when supported */
 #ifndef __LP64__ 
