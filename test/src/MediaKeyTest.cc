@@ -62,25 +62,6 @@ namespace {
                 engine->start();
                 ASSERT_NE(engine->session, nullptr);
                 session = engine->session;
-
-                // Engine is up. Keep on truckin'
-                
-                string keystr = slurp("test_keys/priv/bcc_test_dude_0-0x1CCCFC41_priv.asc");
-                PEP_STATUS status = import_key(session, keystr.c_str(), keystr.size(), NULL);
-                ASSERT_TRUE(status == PEP_TEST_KEY_IMPORT_SUCCESS);    
-                pEp_identity * me = new_identity("bcc_test_dude_0@pep.foundation", "0AE9AA3E320595CF93296BDFA155AC491CCCFC41", PEP_OWN_USERID, "BCC Test Sender");
-                status = set_own_key(session, me, "0AE9AA3E320595CF93296BDFA155AC491CCCFC41");
-                keystr = slurp("test_keys/pub/bcc_test_dude_0-0x1CCCFC41_pub.asc");
-                status = import_key(session, keystr.c_str(), keystr.size(), NULL);
-                ASSERT_TRUE(status == PEP_TEST_KEY_IMPORT_SUCCESS);
-                keystr = slurp("test_keys/pub/bcc_test_dude_1-0xDAC746BE_pub.asc");
-                status = import_key(session, keystr.c_str(), keystr.size(), NULL);
-                ASSERT_TRUE(status == PEP_TEST_KEY_IMPORT_SUCCESS);
-                keystr = slurp("test_keys/pub/bcc_test_dude_2-0x53CECCF7_pub.asc");
-                status = import_key(session, keystr.c_str(), keystr.size(), NULL);
-                ASSERT_TRUE(status == PEP_TEST_KEY_IMPORT_SUCCESS);    
-
-                free_identity(me);
             }
 
             void TearDown() override {
@@ -231,4 +212,106 @@ TEST_F(MediaKeyTest, check_removal) {
     CHECK_LOOKUP_FAILURE("bar@bar.bar");
 
     CHECK_REMOVE_FAILURE("*@nonexisting.bar");
+}
+
+TEST_F(MediaKeyTest, check_rating_no_media_key) {
+    PEP_STATUS status = PEP_UNKNOWN_ERROR;
+#define S                                      \
+    do {                                       \
+        ASSERT_EQ(status, PEP_KEY_NOT_FOUND);  \
+    } while (false)
+
+    if (! slurp_and_import_key(session, "test_keys/priv/pep-test-mary-0x7F59F03CD04A226E_priv.asc"))
+        { ASSERT_EQ(true, false); }
+    const char *media_key_fpr = "599B3D67800DB37E2DCE05C07F59F03CD04A226E";
+
+    /* Make some identities. */
+#define MAKE_IDENTITY(variable_name, username, id, email, fpr, key_file,       \
+                      has_media_key)                                           \
+    pEp_identity *variable_name = new_identity(email, NULL, id, username);     \
+    ASSERT_NE(variable_name, (pEp_identity *) NULL);                           \
+    std::cerr << "ok-a\n";\
+    status = set_identity(session, variable_name);                          \
+    std::cerr << "ok-a.1\n";\
+    S;                                                                          \
+    std::cerr << "ok-a.2\n";\
+    if (fpr != NULL) {                                                           \
+        status = set_as_pEp_user(session, variable_name);                       \
+        S; \
+    } \
+    status = update_identity(session, variable_name);                          \
+    S;                                                                          \
+    std::cerr << "ok-a.5\n";                                                        \
+    /* Apparently it is correct for status to be PEP_KEY_NOT_FOUND here. */     \
+    /*S;*/                                                                          \
+    std::cerr << "ok-b\n";\
+    if (fpr != NULL) {                                                         \
+    std::cerr << "ok-b.1\n";\
+        if (! slurp_and_import_key(session, key_file)) {                       \
+            ASSERT_EQ(true, false);                                            \
+        }                                                                      \
+        else \
+            std::cerr << "ok-b.1.1\n";                                           \
+    std::cerr << "ok-b.2\n";\
+        status = set_comm_partner_key(session, variable_name, fpr);            \
+    std::cerr << "ok-b.3\n";\
+        S;                                                                     \
+    std::cerr << "ok-b.4\n";\
+    }                                                                          \
+    std::cerr << "ok-c\n";\
+    if (has_media_key) {                                                       \
+        status = media_key_insert(session, email, media_key_fpr);              \
+        S;                                                                     \
+    }
+
+    /*
+    std::cerr << "* alice\n";\
+    MAKE_IDENTITY(alice, "Alice in Wonderland", "alice",
+                  "alice@wonderland.net",
+                  "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97",
+                  "/home/luca/pep-src/pep-engine/test/test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc",
+                  false);
+    std::cerr << "* bob\n";\
+    MAKE_IDENTITY(keyless_bob, "Keyless Bob", "keyless-bob",
+                  "bob@nokey.net",
+                  NULL,
+                  NULL,
+                  false);
+    */
+    //status = set_trust(session, alice); S;
+
+    pEp_identity* media_key_charles = new_identity("charles@we-have-media-keys", NULL, "charles-id", "Media-Key-Charlie");
+    //status = set_identity(session, media_key_charles); S;
+    status = update_identity(session, media_key_charles); S;
+    const char* both_keys_david_fpr = "A5B3473EA7CBB5DF7A4F595A8883DC4BCD8BAC06";
+    if (! slurp_and_import_key(session, "test_keys/pub/carol-0xCD8BAC06_pub.asc"))
+        { ASSERT_EQ(true, false); }
+    pEp_identity* both_keys_david = new_identity("david@we-have-media-keys", both_keys_david_fpr, "david-id", "Both-Keys David");
+    status = set_identity(session, both_keys_david); S;
+    status = set_trust(session, both_keys_david); S;
+
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    PEP_rating rating = PEP_rating_b0rken;
+/*
+#define ASSERT_RATING(identity, expected_rating)                  \
+    do {                                                          \
+        status = identity_rating(session, (identity), & rating);  \
+        ASSERT_EQ(status, PEP_STATUS_OK);                         \
+        ASSERT_EQ(rating, (expected_rating));                     \
+    } while (false)
+
+    ASSERT_RATING(alice, PEP_rating_under_attack);
+
+    //char *found_key;
+    //PEP_STATUS status = find_keys(session, bob_fpr, &found_key);
+    //
+
+    ASSERT_RATING(keyless_bob, PEP_rating_under_attack);
+    ASSERT_RATING(media_key_charles, PEP_rating_under_attack);
+    ASSERT_RATING(both_keys_david, PEP_rating_under_attack);
+*/
+
+#undef S
+#undef MAKE_IDENTITY
+#undef ASSERT_RATING
 }
