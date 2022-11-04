@@ -216,9 +216,9 @@ TEST_F(MediaKeyTest, check_removal) {
 
 TEST_F(MediaKeyTest, check_rating_no_media_key) {
     PEP_STATUS status = PEP_UNKNOWN_ERROR;
-#define S                                      \
-    do {                                       \
-        ASSERT_EQ(status, PEP_KEY_NOT_FOUND);  \
+#define S                                  \
+    do {                                   \
+        ASSERT_EQ(status, PEP_STATUS_OK);  \
     } while (false)
 
     if (! slurp_and_import_key(session, "test_keys/priv/pep-test-mary-0x7F59F03CD04A226E_priv.asc"))
