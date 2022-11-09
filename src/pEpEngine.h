@@ -318,11 +318,12 @@ typedef enum _PEP_rating {
 } PEP_rating;
 
 
+struct _message;  ///< @see message
+
 /**
  *  <!--       messageToSend()       -->
- *  @typedef *messageToSend_t
  *  
- *  @brief Pointer to function nmessageToSend()
+ *  @brief Pointer to function messageToSend()
  *
  *  A message needs to be delivered by application.
  *  
@@ -334,8 +335,7 @@ typedef enum _PEP_rating {
  *  
  */
 
-struct _message;
-typedef PEP_STATUS (*messageToSend_t)(struct _message *msg); ///< @see message
+typedef PEP_STATUS (*messageToSend_t)(struct _message *msg); 
 
 
 struct Sync_event;
