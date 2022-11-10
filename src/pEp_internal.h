@@ -159,6 +159,27 @@
                    ? "incoming" : "outgoing"));                         \
     } while (false)
 
+/* Factors of LOG_STATUS and LOG_NONOK_STATUS, useful in case I want to
+   generalise it later. */
+#define _LOG_STATUS_WITH_THE_STATUS_BEING_WHEN(the_status, condition)   \
+    do {                                                                \
+        PEP_STATUS _log_status_the_status = (the_status);               \
+        if (condition(_log_status_the_status))                          \
+            LOG_WARNING("status is %i %s\n",                            \
+                        _log_status_the_status,                         \
+                        pEp_status_to_string(_log_status_the_status));  \
+    } while (false)
+#define _IS_ANY_STATUS(a_status)     true
+#define _IS_NONOK_STATUS(a_status)  ((a_status) != PEP_STATUS_OK)
+
+/* Log the current value of the status, as per any visible "status" variable. */
+#define LOG_STATUS                                                  \
+    _LOG_STATUS_WITH_THE_STATUS_BEING_WHEN(status, _IS_ANY_STATUS)
+#define LOG_NONOK_STATUS                                              \
+    _LOG_STATUS_WITH_THE_STATUS_BEING_WHEN(status, _IS_NONOK_STATUS)
+#define LOG_STATUS_WHEN(condition)                             \
+    _LOG_STATUS_WITH_THE_STATUS_BEING_WHEN(status, condition)
+
 
 /* Old-style debugging / assertions.
  * ***************************************************************** */

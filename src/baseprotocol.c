@@ -240,7 +240,9 @@ PEP_STATUS base_extract_message(
         Distribution_t *_dist = NULL;
         status = decode_Distribution_message(_payload, _payload_size, &_dist);
         if (status != PEP_STATUS_OK) {
-fprintf(stderr, "B base_extract_message: about the message %s: this should not happen: status is %i %s\n", msg->shortmsg, status, pEp_status_to_string(status));
+LOG_MESSAGE("about the message", msg);
+LOG_STATUS;
+LOG_TRACE("this should not happen: status is %i %s\n", status, pEp_status_to_string(status));
             goto the_end;
         }
         switch (_dist->present) {
