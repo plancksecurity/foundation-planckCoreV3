@@ -43,39 +43,6 @@
 #include <math.h>
 
 
-/* Logging.
- * ***************************************************************** */
-
-/* Define convenient logging macros for this compilation unit. */
-#define _LOG_WITH_MACRO_NAME(name, ...)     \
-    name("p≡p", "Engine", "" __VA_ARGS__)
-#define LOG_CRITICAL(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_CRITICAL, __VA_ARGS__)
-#define LOG_ERROR(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_ERROR, __VA_ARGS__)
-#define LOG_WARNING(...)   _LOG_WITH_MACRO_NAME(PEP_LOG_WARNING, __VA_ARGS__)
-#define LOG_API(...)       _LOG_WITH_MACRO_NAME(PEP_LOG_API, __VA_ARGS__)
-#define LOG_EVENT(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_EVENT, __VA_ARGS__)
-#define LOG_FUNCTION(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_FUNCTION, __VA_ARGS__)
-#define LOG_TRACE(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_TRACE, __VA_ARGS__)
-
-#define LOG_MESSAGE(literal_string, the_message)                        \
-    do {                                                                \
-        message *_log_message_m = (the_message);                        \
-        LOG_TRACE(literal_string "[%s %s, recv_by %s, %s]",             \
-                  (_log_message_m->id ? _log_message_m->id : "NO ID"),  \
-                  (_log_message_m->shortmsg                             \
-                   ? _log_message_m->shortmsg                           \
-                   : "NO-SHORTMSG"),                                    \
-                  ((_log_message_m->recv_by                             \
-                    && ! EMPTYSTR(_log_message_m->recv_by->address))    \
-                   ? _log_message_m->recv_by->address                   \
-                   : "NO-RECV_BY-ADDRESS"),                             \
-                  ((_log_message_m->dir == PEP_dir_incoming)            \
-                   ? "incoming" : "outgoing"));                         \
-    } while (false)
-
-/* All the rest.
- * ***************************************************************** */
-
 // These are globals used in generating message IDs and should only be
 // computed once, as they're either really constants or OS-dependent
 

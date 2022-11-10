@@ -22,14 +22,6 @@
 #include <sqlite3.h>
 #endif
 
-/* Define convenient logging macros for this compilation unit. */
-#define LOG_WITH_MACRO_NAME(name, ...)     \
-    name("p≡p", "Engine", "" __VA_ARGS__)
-#define LOG_API(...)       LOG_WITH_MACRO_NAME(PEP_LOG_API, __VA_ARGS__)
-#define LOG_EVENT(...)     LOG_WITH_MACRO_NAME(PEP_LOG_EVENT, __VA_ARGS__)
-#define LOG_WARNING(...)   LOG_WITH_MACRO_NAME(PEP_LOG_WARNING, __VA_ARGS__)
-#define LOG_ERROR(...)     LOG_WITH_MACRO_NAME(PEP_LOG_ERROR, __VA_ARGS__)
-#define LOG_CRITICAL(...)  LOG_WITH_MACRO_NAME(PEP_LOG_CRITICAL, __VA_ARGS__)
 
 void
 sql_reset_and_clear_bindings(sqlite3_stmt *s)
@@ -111,15 +103,15 @@ DYNAMIC_API PEP_STATUS init(
     /* Since here there is no variable named "session" to capture we cannot use
        the ordinary PEP_LOG_* macros.  But it is very easy to define an
        automatic variable temporarily. */
-#define _LOG_WITH_MACRO_NAME(name, ...)         \
+#define _INTERNAL_LOG_WITH_MACRO_NAME(name, ...)         \
     do {                                        \
         PEP_SESSION session = _session;         \
         name("p≡p", "Engine", "" __VA_ARGS__);  \
     } while (false)
-#define _LOG_ERROR(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_ERROR, __VA_ARGS__)
-#define _LOG_EVENT(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_EVENT, __VA_ARGS__)
-#define _LOG_API(...)    _LOG_WITH_MACRO_NAME(PEP_LOG_API, __VA_ARGS__)
-#define _LOG_TRACE(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_TRACE, __VA_ARGS__)
+#define _LOG_ERROR(...)  _INTERNAL_LOG_WITH_MACRO_NAME(PEP_LOG_ERROR, __VA_ARGS__)
+#define _LOG_EVENT(...)  _INTERNAL_LOG_WITH_MACRO_NAME(PEP_LOG_EVENT, __VA_ARGS__)
+#define _LOG_API(...)    _INTERNAL_LOG_WITH_MACRO_NAME(PEP_LOG_API, __VA_ARGS__)
+#define _LOG_TRACE(...)  _INTERNAL_LOG_WITH_MACRO_NAME(PEP_LOG_TRACE, __VA_ARGS__)
 
     status = init_databases(_session); /* Every database except log. */
     if (status != PEP_STATUS_OK)
@@ -197,6 +189,7 @@ pEp_error:
                (int) status, (int) status, pEp_status_to_string(status));
     release(_session);
     return status;
+#undef _INTERNAL_LOG_WITH_MACRO_NAME
 #undef _LOG_ERROR
 #undef _LOG_EVENT
 #undef _LOG_API

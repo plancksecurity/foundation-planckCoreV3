@@ -99,7 +99,10 @@ extern "C" {
    #define LOG_CRITICAL(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_CRITICAL, __VA_ARGS__)
    #define LOG_ERROR(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_ERROR, __VA_ARGS__)
    #define LOG_WARNING(...)   _LOG_WITH_MACRO_NAME(PEP_LOG_WARNING, __VA_ARGS__)
-*/
+
+   This is in fact what every compilation unit gets for free for using *inside*
+   the Engine, just by including pEp_internal.h: look at the "Logging" section
+   in pEp_internal.h .  */
 
 
 /* Parameters

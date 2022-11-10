@@ -12,21 +12,6 @@
 #include "media_key.h" // for identity_known_to_use_pEp
 
 
-/* Logging.
- * ***************************************************************** */
-
-/* Define convenient logging macros for this compilation unit. */
-#define _LOG_WITH_MACRO_NAME(name, ...)     \
-    name("p≡p Engine", "Distribution.Echo", "" __VA_ARGS__)
-#define LOG_CRITICAL(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_CRITICAL, __VA_ARGS__)
-#define LOG_ERROR(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_ERROR, __VA_ARGS__)
-#define LOG_WARNING(...)   _LOG_WITH_MACRO_NAME(PEP_LOG_WARNING, __VA_ARGS__)
-#define LOG_API(...)       _LOG_WITH_MACRO_NAME(PEP_LOG_API, __VA_ARGS__)
-#define LOG_EVENT(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_EVENT, __VA_ARGS__)
-#define LOG_FUNCTION(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_FUNCTION, __VA_ARGS__)
-#define LOG_TRACE(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_TRACE, __VA_ARGS__)
-
-
 /* Initialisation and finalisation
  * ***************************************************************** */
 
