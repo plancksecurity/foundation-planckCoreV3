@@ -278,7 +278,8 @@ typedef enum _PEP_rating {
     PEP_rating_cannot_decrypt = 1,
     PEP_rating_have_no_key = 2,
     PEP_rating_unencrypted = 3,
-    PEP_rating_unreliable = 5,
+    PEP_rating_unreliable = 4,
+    PEP_rating_media_key_protected = 5,
 
     PEP_rating_b0rken = -2,
 

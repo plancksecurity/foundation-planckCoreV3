@@ -62,25 +62,6 @@ namespace {
                 engine->start();
                 ASSERT_NE(engine->session, nullptr);
                 session = engine->session;
-
-                // Engine is up. Keep on truckin'
-                
-                string keystr = slurp("test_keys/priv/bcc_test_dude_0-0x1CCCFC41_priv.asc");
-                PEP_STATUS status = import_key(session, keystr.c_str(), keystr.size(), NULL);
-                ASSERT_TRUE(status == PEP_TEST_KEY_IMPORT_SUCCESS);    
-                pEp_identity * me = new_identity("bcc_test_dude_0@pep.foundation", "0AE9AA3E320595CF93296BDFA155AC491CCCFC41", PEP_OWN_USERID, "BCC Test Sender");
-                status = set_own_key(session, me, "0AE9AA3E320595CF93296BDFA155AC491CCCFC41");
-                keystr = slurp("test_keys/pub/bcc_test_dude_0-0x1CCCFC41_pub.asc");
-                status = import_key(session, keystr.c_str(), keystr.size(), NULL);
-                ASSERT_TRUE(status == PEP_TEST_KEY_IMPORT_SUCCESS);
-                keystr = slurp("test_keys/pub/bcc_test_dude_1-0xDAC746BE_pub.asc");
-                status = import_key(session, keystr.c_str(), keystr.size(), NULL);
-                ASSERT_TRUE(status == PEP_TEST_KEY_IMPORT_SUCCESS);
-                keystr = slurp("test_keys/pub/bcc_test_dude_2-0x53CECCF7_pub.asc");
-                status = import_key(session, keystr.c_str(), keystr.size(), NULL);
-                ASSERT_TRUE(status == PEP_TEST_KEY_IMPORT_SUCCESS);    
-
-                free_identity(me);
             }
 
             void TearDown() override {
@@ -231,4 +212,80 @@ TEST_F(MediaKeyTest, check_removal) {
     CHECK_LOOKUP_FAILURE("bar@bar.bar");
 
     CHECK_REMOVE_FAILURE("*@nonexisting.bar");
+}
+
+TEST_F(MediaKeyTest, check_rating_no_media_key) {
+    PEP_STATUS status = PEP_STATUS_OK;
+#define S                                  \
+    do {                                   \
+        ASSERT_EQ(status, PEP_STATUS_OK);  \
+    } while (false)
+
+    if (! slurp_and_import_key(session, "test_keys/priv/pep-test-mary-0x7F59F03CD04A226E_priv.asc"))
+        { ASSERT_EQ(true, false); }
+    const char *media_key_fpr = "599B3D67800DB37E2DCE05C07F59F03CD04A226E";
+
+    /* Make some identities. */
+#define MAKE_IDENTITY(variable_name, username, id, email, fpr, key_file,       \
+                      has_media_key)                                           \
+    pEp_identity *variable_name = new_identity(email, NULL, id, username);     \
+    ASSERT_NE(variable_name, (pEp_identity *) NULL);                           \
+    /*status = set_identity(session, variable_name); S; */                     \
+    if (fpr != NULL) {                                                         \
+        status = set_as_pEp_user(session, variable_name);                      \
+        S;                                                                     \
+    }                                                                          \
+    status = update_identity(session, variable_name);                          \
+    S;                                                                         \
+    /* Apparently it is correct for status to be PEP_KEY_NOT_FOUND here. */    \
+    if (fpr != NULL) {                                                         \
+        if (! slurp_and_import_key(session, key_file)) {                       \
+            ASSERT_EQ(true, false);                                            \
+        }                                                                      \
+        status = set_comm_partner_key(session, variable_name, fpr);            \
+        S;                                                                     \
+    }                                                                          \
+    if (has_media_key) {                                                       \
+        status = media_key_insert(session, email, media_key_fpr);              \
+        S;                                                                     \
+    }
+
+    MAKE_IDENTITY(keyed_alice, "Alice in the wonderland of keys", "keyed-alice",
+                  "keyed-alice@key-wonderland.net",
+                  "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97",
+                  "/home/luca/pep-src/pep-engine/test/test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc",
+                  false);
+    MAKE_IDENTITY(keyless_bob, "Keyless Bob", "keyless-bob",
+                  "bob@nokey.net",
+                  NULL,
+                  NULL,
+                  false);
+    MAKE_IDENTITY(media_key_charles, "Media-Key Charles", "media-key-charles",
+                  "charlie@foobar-media-keys.com",
+                  NULL,
+                  NULL,
+                  true);
+    MAKE_IDENTITY(both_keys_david, "Both-Keys Dave", "dave-both-keys",
+                  "dave@every-way-at-the-same-time.org",
+                  "A5B3473EA7CBB5DF7A4F595A8883DC4BCD8BAC06",
+                  "test_keys/pub/carol-0xCD8BAC06_pub.asc",
+                  true);
+    //status = set_trust(session, keyed_alice); S;
+
+    PEP_rating rating = PEP_rating_b0rken;
+#define ASSERT_RATING(identity, expected_rating)                  \
+    do {                                                          \
+        status = identity_rating(session, (identity), & rating);  \
+        S;                                                        \
+        ASSERT_EQ(rating, (expected_rating));                     \
+    } while (false)
+
+    ASSERT_RATING(keyed_alice,       PEP_rating_reliable);
+    ASSERT_RATING(keyless_bob,       PEP_rating_have_no_key);
+    ASSERT_RATING(media_key_charles, PEP_rating_media_key_protected);
+    ASSERT_RATING(both_keys_david,   PEP_rating_reliable);
+
+#undef S
+#undef MAKE_IDENTITY
+#undef ASSERT_RATING
 }
