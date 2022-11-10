@@ -19,7 +19,7 @@ extern "C" {
 
 
 /**
- *  @enum    PEP_encrypt_flags
+ *  @typedef    PEP_encrypt_flags
  *
  *  @brief    TODO
  *
@@ -48,7 +48,7 @@ typedef enum _PEP_encrypt_flags {
     PEP_encrypt_reencrypt = 0x40
 } PEP_encrypt_flags; 
 
-typedef unsigned int PEP_encrypt_flags_t;
+typedef unsigned int PEP_encrypt_flags_t; ///< @copy PEP_encrypt_flags
 
 /**
  *  @enum    message_wrap_type
@@ -220,7 +220,7 @@ typedef enum _PEP_color {
 DYNAMIC_API PEP_color color_from_rating(PEP_rating rating);
 
 /**
- *  @enum    PEP_decrypt_flags
+ *  @typedef    PEP_decrypt_flags
  *
  *  @brief    TODO
  *
@@ -236,7 +236,7 @@ typedef enum _PEP_decrypt_flags {
     PEP_decrypt_flag_dont_trigger_sync = 0x200
 } PEP_decrypt_flags; 
 
-typedef unsigned int PEP_decrypt_flags_t;
+typedef unsigned int PEP_decrypt_flags_t; ///<@copy PEP_decrypt_flags
 
 
 /**
