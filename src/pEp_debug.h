@@ -92,11 +92,13 @@ typedef enum {
                   expression_as_string)
 
 /* Emit a logging entry about the current function being entered, level Function
-   -- as long as the feature is enabled via PEP_LOG_FUNCTION_ENTRY . */
+   -- as long as the feature is enabled via PEP_LOG_FUNCTION_ENTRY .  There is
+   no need to pollute the output with anything more than the function name,
+   which is always included anyway, and the logging level which is
+   "function". */
 #if defined (PEP_LOG_FUNCTION_ENTRY)
 #   define _PEP_LOG_FUNCTION_ENTRY_IF_ENABLED                                 \
-        PEP_LOG_FUNCTION("p≡p", "Engine",                                     \
-                         "Enter" /* no need to repeat the function name. */)
+        PEP_LOG_FUNCTION("p≡p", "Engine")
 #else
 #   define _PEP_LOG_FUNCTION_ENTRY_IF_ENABLED  \
     do { } while (false)
