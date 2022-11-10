@@ -1501,7 +1501,7 @@ static PEP_STATUS encrypt_PGP_inline(
     dst->longmsg = _ctext;
 
     dst->attachments = new_bloblist(NULL, 0, NULL, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(!dst->attachments, PEP_OUT_OF_MEMORY);
+    PEP_WEAK_ASSERT_ORELSE_RETURN(dst->attachments, PEP_OUT_OF_MEMORY);
 
     bloblist_t *ad = dst->attachments;
 
