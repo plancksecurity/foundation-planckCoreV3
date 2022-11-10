@@ -57,6 +57,21 @@
 #define LOG_FUNCTION(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_FUNCTION, __VA_ARGS__)
 #define LOG_TRACE(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_TRACE, __VA_ARGS__)
 
+#define LOG_MESSAGE(literal_string, the_message)                        \
+    do {                                                                \
+        message *_log_message_m = (the_message);                        \
+        LOG_TRACE(literal_string "[%s %s, recv_by %s, %s]",             \
+                  (_log_message_m->id ? _log_message_m->id : "NO ID"),  \
+                  (_log_message_m->shortmsg                             \
+                   ? _log_message_m->shortmsg                           \
+                   : "NO-SHORTMSG"),                                    \
+                  ((_log_message_m->recv_by                             \
+                    && ! EMPTYSTR(_log_message_m->recv_by->address))    \
+                   ? _log_message_m->recv_by->address                   \
+                   : "NO-RECV_BY-ADDRESS"),                             \
+                  ((_log_message_m->dir == PEP_dir_incoming)            \
+                   ? "incoming" : "outgoing"));                         \
+    } while (false)
 
 /* All the rest.
  * ***************************************************************** */
@@ -6297,10 +6312,9 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
         PEP_decrypt_flags_t *flags
     )
 {
-    PEP_REQUIRE(session && src && ! EMPTYSTR(src->id) && dst && keylist
-                && flags);
+    PEP_REQUIRE(session && src && dst && keylist && flags);
 
-    LOG_TRACE("%s \"%s\", recv_by %s, %s", src->id, (src->shortmsg ? src->shortmsg : "NO SUBJECT"), (src->recv_by ? src->recv_by->address : "NO RECV_BY"), ((src->dir == PEP_dir_incoming) ? "incoming" : "outgoing"));
+    LOG_MESSAGE("src is ", src);
 
     if (!(*flags & PEP_decrypt_flag_untrusted_server))
         *keylist = NULL;
@@ -6344,7 +6358,7 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
        result status the value of this field may be meaningful. */
     msg->rating = rating;
 
-//LOG_TRACE("+ message %s \"%s\", recv_by %s, dir %s: begin...\n", msg->id, msg->shortmsg ? msg->shortmsg : "<no subject>", (msg->recv_by ? msg->recv_by->address : "NO RECV_BY"), ((msg->dir == PEP_dir_incoming) ? "incoming" : "outgoing"));
+//LOG_MESSAGE("msg is ", msg);
 /////// BEGIN: "react" HACK
 /* static bool react_sent = false; */
 /* if (! react_sent && ! strcmp(msg->shortmsg, "react") && ! msg->from->me) { */
@@ -6417,7 +6431,7 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
         send_ping_to_all_unknowns_in_incoming_message(session, msg);
     else
         send_ping_to_unknown_pEp_identities_in_incoming_message(session, msg);
-//LOG_TRACE("- message %s \"%s\": ...end\n\n", msg->id, msg->shortmsg ? msg->shortmsg : "<no subject>");
+//LOG_MESSAGE("msg is ", msg);
  
     // Removed for now - partial fix in ENGINE-647, but we have sync issues. Need to 
     // fix testing issue.
@@ -6464,11 +6478,10 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     /* Check, among the rest, that the rating output parameter has been passed
        correctly; initialise it just to ease debugging (stress the passed
        pointer by dereferencing it), even if it would not be necessary. */
-    PEP_REQUIRE(session && src && ! EMPTYSTR(src->id) && dst && keylist && flags
-                && rating);
+    PEP_REQUIRE(session && src && dst && keylist && flags && rating);
     * rating = PEP_rating_undefined;
 
-    LOG_TRACE("%s \"%s\", recv_by %s, %s", src->id, (src->shortmsg ? src->shortmsg : "NO SUBJECT"), (src->recv_by ? src->recv_by->address : "NO RECV_BY"), ((src->dir == PEP_dir_incoming) ? "incoming" : "outgoing"));
+    LOG_MESSAGE("src is ", src);
 
     /* Do the actual work. */
     PEP_STATUS res = decrypt_message_2(session, src, dst, keylist, flags);
