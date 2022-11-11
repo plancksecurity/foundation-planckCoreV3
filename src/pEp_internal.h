@@ -165,8 +165,9 @@
     do {                                                                \
         PEP_STATUS _log_status_the_status = (the_status);               \
         if (condition(_log_status_the_status))                          \
-            LOG_WARNING("status is %i %s\n",                            \
-                        _log_status_the_status,                         \
+            LOG_WARNING("status is 0x%x %i %s\n",                       \
+                        (int) _log_status_the_status,                   \
+                        (int) _log_status_the_status,                   \
                         pEp_status_to_string(_log_status_the_status));  \
     } while (false)
 #define _IS_ANY_STATUS(a_status)     true
