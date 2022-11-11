@@ -154,6 +154,8 @@ typedef enum {
  *           destination.
  *           Not every platform will support every possibility; entries logged
  *           to an unsupported destination will simply be discarded.
+ *
+ *           This type is used for PEP_LOG_DESTINATIONS: see below.
  */
 typedef enum {
     /* No destination: if PEP_LOG_DESTINATION is defined as this then every
