@@ -240,9 +240,9 @@ PEP_STATUS base_extract_message(
         Distribution_t *_dist = NULL;
         status = decode_Distribution_message(_payload, _payload_size, &_dist);
         if (status != PEP_STATUS_OK) {
-LOG_MESSAGE("about the message", msg);
-LOG_STATUS;
-LOG_TRACE("this should not happen: status is %i %s\n", status, pEp_status_to_string(status));
+            LOG_MESSAGE("about the message", msg);
+            LOG_STATUS;
+            LOG_WARNING("this should not happen");
             goto the_end;
         }
         switch (_dist->present) {
