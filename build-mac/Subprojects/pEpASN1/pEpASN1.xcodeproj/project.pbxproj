@@ -1220,7 +1220,7 @@
 			);
 			name = "Generate Code";
 			outputFileListPaths = (
-				"$(SRCROOT)/generated-files-asn1.txt",
+				"$(SRCROOT)/generated-files.txt",
 			);
 			outputPaths = (
 			);
