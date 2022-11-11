@@ -6385,19 +6385,21 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
         free(sender_fpr);
     } // end of Sync message handling
 
-    // In case this message is at least reliable, make sure we know every
-    // identity mentioned in it by sending Pings (we accept sending them to PGP
-    // users as well) to unknown identities.
-    // We can do something similar even if the message is not reliable: in that
-    // case we cannot be sure that every recipient identity we do not know uses
-    // pEp -- but we can say that some of the recipients use pEp even without
-    // knowing them, thanks to media keys.  So, for unreliable messages, we want
-    // to sent Ping messages to unknown identities which are known to use pEp.
-    // This implements ENGINE-1007.
-    if (rating >= PEP_rating_reliable)
-        send_ping_to_all_unknowns_in_incoming_message(session, msg);
-    else
-        send_ping_to_unknown_pEp_identities_in_incoming_message(session, msg);
+    if (msg->dir == PEP_dir_incoming /* it is *almost* always the case */) {
+        // In case this message is at least reliable, make sure we know every
+        // identity mentioned in it by sending Pings (we accept sending them to
+        // PGP users as well) to unknown identities.
+        // We can do something similar even if the message is not reliable: in
+        // that case we cannot be sure that every recipient identity we do not
+        // know uses pEp -- but we can say that some of the recipients use pEp
+        // even without knowing them, thanks to media keys.  So, for unreliable
+        // messages, we want to sent Ping messages to unknown identities which
+        // are known to use pEp.  This implements ENGINE-1007.
+        if (rating >= PEP_rating_reliable)
+            send_ping_to_all_unknowns_in_incoming_message(session, msg);
+        else
+            send_ping_to_unknown_pEp_identities_in_incoming_message(session, msg);
+    }
 //LOG_MESSAGE("msg is ", msg);
  
     // Removed for now - partial fix in ENGINE-647, but we have sync issues. Need to 
