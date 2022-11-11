@@ -1172,8 +1172,7 @@
 			inputPaths = (
 			);
 			outputFileListPaths = (
-				"$(SRCROOT)/generated-files-asn1.txt",
-				"$(SRCROOT)/generated-files-sync.txt",
+				"$(SRCROOT)/generated-files.txt",
 			);
 			outputPaths = (
 			);
