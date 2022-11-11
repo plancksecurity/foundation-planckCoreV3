@@ -507,7 +507,7 @@ DYNAMIC_API void config_use_only_own_private_keys(PEP_SESSION session, bool enab
 /**
  *  <!--       config_service_log()       -->
  *  
- *  @brief Log more for service purposes
+ *  @brief     DEPRECATED function.  Log more for service purposes.
  *  
  *  @param[in]  session     session handle
  *  @param[in]  enable      flag if enabled or disabled

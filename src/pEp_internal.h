@@ -142,12 +142,18 @@
 #define LOG_EVENT(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_EVENT, __VA_ARGS__)
 #define LOG_FUNCTION(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_FUNCTION, __VA_ARGS__)
 #define LOG_TRACE(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_TRACE, __VA_ARGS__)
+#define LOG_PRODUCTION(...)_LOG_WITH_MACRO_NAME(PEP_LOG_PRODUCTION, __VA_ARGS__)
+#define LOG_BASIC(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_BASIC, __VA_ARGS__)
+#define LOG_SERVICE(...)   _LOG_WITH_MACRO_NAME(PEP_LOG_SERVICE, __VA_ARGS__)
 
-#define LOG_MESSAGE(literal_string, the_message)                        \
+#define LOG_MESSAGE_WITH(literal_string, the_message, macro)            \
     do {                                                                \
-        message *_log_message_m = (the_message);                        \
-        LOG_TRACE(literal_string "[%s %s, recv_by %s, %s]",             \
-                  (_log_message_m->id ? _log_message_m->id : "NO ID"),  \
+        const message *_log_message_m = (the_message);                  \
+        if (the_message == NULL)                                        \
+            macro(literal_string ": NULL");                             \
+        else                                                            \
+            macro(literal_string ": [%s %s, recv_by %s, %s]",           \
+                  (_log_message_m->id ? _log_message_m->id : "NO-ID"),  \
                   (_log_message_m->shortmsg                             \
                    ? _log_message_m->shortmsg                           \
                    : "NO-SHORTMSG"),                                    \
@@ -159,27 +165,99 @@
                    ? "incoming" : "outgoing"));                         \
     } while (false)
 
-/* Factors of LOG_STATUS and LOG_NONOK_STATUS, useful in case I want to
-   generalise it later. */
-#define _LOG_STATUS_WITH_THE_STATUS_BEING_WHEN(the_status, condition)   \
-    do {                                                                \
-        PEP_STATUS _log_status_the_status = (the_status);               \
-        if (condition(_log_status_the_status))                          \
-            LOG_WARNING("status is 0x%x %i %s\n",                       \
-                        (int) _log_status_the_status,                   \
-                        (int) _log_status_the_status,                   \
-                        pEp_status_to_string(_log_status_the_status));  \
+/* Log the given literal string and the given message at the level specified in
+   the macro name.
+   Example:
+     LOG_MESSAGE_WARNING("unexpected direction", msg);  */
+#define LOG_MESSAGE_CRITICAL(literal_string, the_message)  \
+    LOG_MESSAGE_WITH(literal_string, (the_message), LOG_CRITICAL)
+#define LOG_MESSAGE_ERROR(literal_string, the_message)  \
+    LOG_MESSAGE_WITH(literal_string, (the_message), LOG_ERROR)
+#define LOG_MESSAGE_WARNING(literal_string, the_message)  \
+    LOG_MESSAGE_WITH(literal_string, (the_message), LOG_WARNING)
+#define LOG_MESSAGE_API(literal_string, the_message)  \
+    LOG_MESSAGE_WITH(literal_string, (the_message), LOG_API)
+#define LOG_MESSAGE_EVENT(literal_string, the_message)  \
+    LOG_MESSAGE_WITH(literal_string, (the_message), LOG_EVENT)
+#define LOG_MESSAGE_FUNCTION(literal_string, the_message)  \
+    LOG_MESSAGE_WITH(literal_string, (the_message), LOG_FUNCTION)
+#define LOG_MESSAGE_TRACE(literal_string, the_message)  \
+    LOG_MESSAGE_WITH(literal_string, (the_message), LOG_TRACE)
+#define LOG_MESSAGE_PRODUCTION(literal_string, the_message)  \
+    LOG_MESSAGE_WITH(literal_string, (the_message), LOG_PRODUCTION)
+#define LOG_MESSAGE_BASIC(literal_string, the_message)  \
+    LOG_MESSAGE_WITH(literal_string, (the_message), LOG_BASIC)
+#define LOG_MESSAGE_SERVICE(literal_string, the_message)  \
+    LOG_MESSAGE_WITH(literal_string, (the_message), LOG_SERVICE)
+
+/* Factors of LOG_STATUS* and LOG_NONOK_STATUS*. */
+#define _LOG_STATUS_WITH_THE_STATUS_BEING_WHEN_WITH(the_status, condition,  \
+                                                    logging_macro)          \
+    do {                                                                    \
+        PEP_STATUS _log_status_the_status = (the_status);                   \
+        if (condition(_log_status_the_status))                              \
+            logging_macro("status is 0x%x %i %s\n",                         \
+                        (int) _log_status_the_status,                       \
+                        (int) _log_status_the_status,                       \
+                        pEp_status_to_string(_log_status_the_status));      \
     } while (false)
-#define _IS_ANY_STATUS(a_status)     true
+#define _IS_ANY_STATUS(a_status)    true
 #define _IS_NONOK_STATUS(a_status)  ((a_status) != PEP_STATUS_OK)
 
 /* Log the current value of the status, as per any visible "status" variable. */
-#define LOG_STATUS                                                  \
-    _LOG_STATUS_WITH_THE_STATUS_BEING_WHEN(status, _IS_ANY_STATUS)
-#define LOG_NONOK_STATUS                                              \
-    _LOG_STATUS_WITH_THE_STATUS_BEING_WHEN(status, _IS_NONOK_STATUS)
-#define LOG_STATUS_WHEN(condition)                             \
-    _LOG_STATUS_WITH_THE_STATUS_BEING_WHEN(status, condition)
+#define LOG_STATUS_WITH(logging_macro)                                   \
+    _LOG_STATUS_WITH_THE_STATUS_BEING_WHEN_WITH(status, _IS_ANY_STATUS,  \
+                                                logging_macro)
+#define LOG_NONOK_STATUS_WITH(logging_macro)                               \
+    _LOG_STATUS_WITH_THE_STATUS_BEING_WHEN_WITH(status, _IS_NONOK_STATUS,  \
+                                                logging_macro)
+#define LOG_STATUS_WHEN_WITH(condition, logging_macro)                        \
+    _LOG_STATUS_WITH_THE_STATUS_BEING_WHEN(status, condition, logging_macro)
+
+/* Log the current status, captured from a variable named "status", at the level
+   named in the macro name; respectively:
+   - always;
+   - if the status is different from PEP_STATUS_OK;
+   - if the given prefix operator applied to the status returns nonzero.
+     Examples of such operators are _IS_ANY_STATUS and _IS_NONOK_STATUS, defined
+     above. */
+#define LOG_STATUS_CRITICAL LOG_STATUS_WITH(LOG_CRITICAL)
+#define LOG_NONOK_STATUS_CRITICAL LOG_NONOK_STATUS_WITH(LOG_CRITICAL)
+#define LOG_STATUS_WHEN_CRITICAL(condition) LOG_NONOK_STATUS_WITH(condition, LOG_CRITICAL)
+#define LOG_STATUS_ERROR LOG_STATUS_WITH(LOG_ERROR)
+#define LOG_NONOK_STATUS_ERROR LOG_NONOK_STATUS_WITH(LOG_ERROR)
+#define LOG_STATUS_WHEN_ERROR(condition) LOG_NONOK_STATUS_WITH(condition, LOG_ERROR)
+#define LOG_STATUS_WARNING LOG_STATUS_WITH(LOG_WARNING)
+#define LOG_NONOK_STATUS_WARNING LOG_NONOK_STATUS_WITH(LOG_WARNING)
+#define LOG_STATUS_WHEN_WARNING(condition) LOG_NONOK_STATUS_WITH(condition, LOG_WARNING)
+#define LOG_STATUS_API LOG_STATUS_WITH(LOG_API)
+#define LOG_NONOK_STATUS_API LOG_NONOK_STATUS_WITH(LOG_API)
+#define LOG_STATUS_WHEN_API(condition) LOG_NONOK_STATUS_WITH(condition, LOG_API)
+#define LOG_STATUS_EVENT LOG_STATUS_WITH(LOG_EVENT)
+#define LOG_NONOK_STATUS_EVENT LOG_NONOK_STATUS_WITH(LOG_EVENT)
+#define LOG_STATUS_WHEN_EVENT(condition) LOG_NONOK_STATUS_WITH(condition, LOG_EVENT)
+#define LOG_STATUS_FUNCTION LOG_STATUS_WITH(LOG_FUNCTION)
+#define LOG_NONOK_STATUS_FUNCTION LOG_NONOK_STATUS_WITH(LOG_FUNCTION)
+#define LOG_STATUS_WHEN_FUNCTION(condition) LOG_NONOK_STATUS_WITH(condition, LOG_FUNCTION)
+#define LOG_STATUS_TRACE LOG_STATUS_WITH(LOG_TRACE)
+#define LOG_NONOK_STATUS_TRACE LOG_NONOK_STATUS_WITH(LOG_TRACE)
+#define LOG_STATUS_WHEN_TRACE(condition) LOG_NONOK_STATUS_WITH(condition, LOG_TRACE)
+#define LOG_STATUS_PRODUCTION LOG_STATUS_WITH(LOG_PRODUCTION)
+#define LOG_NONOK_STATUS_PRODUCTION LOG_NONOK_STATUS_WITH(LOG_PRODUCTION)
+#define LOG_STATUS_WHEN_PRODUCTION(condition) LOG_NONOK_STATUS_WITH(condition, LOG_PRODUCTION)
+#define LOG_STATUS_BASIC LOG_STATUS_WITH(LOG_BASIC)
+#define LOG_NONOK_STATUS_BASIC LOG_NONOK_STATUS_WITH(LOG_BASIC)
+#define LOG_STATUS_WHEN_BASIC(condition) LOG_NONOK_STATUS_WITH(condition, LOG_BASIC)
+#define LOG_STATUS_SERVICE LOG_STATUS_WITH(LOG_SERVICE)
+#define LOG_NONOK_STATUS_SERVICE LOG_NONOK_STATUS_WITH(LOG_SERVICE)
+#define LOG_STATUS_WHEN_SERVICE(condition) LOG_NONOK_STATUS_WITH(condition, LOG_SERVICE)
+
+/* Log a well-visible message about the current function being deprecated.  This
+   is meant to be used at the beginning of a function body. */
+#define DEPRECATED                                                   \
+    LOG_CRITICAL("deprecated: please remove any use of %s , which "  \
+                 "is going to disappear in a future release",        \
+                 PEP_func_OR_PRETTY_FUNCTION)
 
 
 /* Old-style debugging / assertions.

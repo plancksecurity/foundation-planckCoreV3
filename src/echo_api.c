@@ -566,7 +566,7 @@ static PEP_STATUS send_ping_to_unknowns_in_incoming_message(PEP_SESSION session,
         /* Applications are supposed never to let this happen, but in practice
            it is difficult to find a reasonable value for messages received as
            Bcc. */
-        LOG_WARNING("APPLICATION BUG: message %s \"%s\" has no Recv-By", msg->id, msg->shortmsg ? msg->shortmsg : "<no subject>");
+        LOG_MESSAGE_WARNING("APPLICATION BUG: message has no Recv-By", msg);
         return PEP_ILLEGAL_VALUE;
     }
 

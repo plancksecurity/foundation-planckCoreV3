@@ -312,6 +312,7 @@ DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys(PEP_SESSION session, bool 
 DYNAMIC_API void config_service_log(PEP_SESSION session, bool enable)
 {
     PEP_REQUIRE_ORELSE(session, { return; });
+    DEPRECATED;
     session->service_log = enable;
 }
 

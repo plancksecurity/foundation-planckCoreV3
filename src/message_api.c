@@ -6281,7 +6281,7 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
 {
     PEP_REQUIRE(session && src && dst && keylist && flags);
 
-    LOG_MESSAGE("src is ", src);
+    LOG_MESSAGE_TRACE("src is ", src);
 
     if (!(*flags & PEP_decrypt_flag_untrusted_server))
         *keylist = NULL;
@@ -6325,7 +6325,7 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
        result status the value of this field may be meaningful. */
     msg->rating = rating;
 
-//LOG_MESSAGE("msg is ", msg);
+//LOG_MESSAGE_TRACE("msg is ", msg);
 /////// BEGIN: "react" HACK
 /* static bool react_sent = false; */
 /* if (! react_sent && ! strcmp(msg->shortmsg, "react") && ! msg->from->me) { */
@@ -6400,7 +6400,7 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
         else
             send_ping_to_unknown_pEp_identities_in_incoming_message(session, msg);
     }
-//LOG_MESSAGE("msg is ", msg);
+//LOG_MESSAGE_TRACE("msg is ", msg);
  
     // Removed for now - partial fix in ENGINE-647, but we have sync issues. Need to 
     // fix testing issue.
@@ -6450,7 +6450,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     PEP_REQUIRE(session && src && dst && keylist && flags && rating);
     * rating = PEP_rating_undefined;
 
-    LOG_MESSAGE("src is ", src);
+    LOG_MESSAGE_TRACE("src is ", src);
 
     /* Do the actual work. */
     PEP_STATUS res = decrypt_message_2(session, src, dst, keylist, flags);
