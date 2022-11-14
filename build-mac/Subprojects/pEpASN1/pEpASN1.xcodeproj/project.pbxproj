@@ -1208,6 +1208,7 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = "/bin/sh -l";
 			shellScript = "export LANG=en_US.UTF-8\n\necho \"***************************************\"\necho \"*** Generate files: ACTION: $ACTION ***\"\necho \"***************************************\"\n\ncd \"${PROJECT_DIR}/../../..\"\n\nmake asn1\n";
+			showEnvVarsInLog = 0;
 		};
 		1515860426CE6E79003D8685 /* Generate Code */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1227,6 +1228,7 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = "/bin/sh -l";
 			shellScript = "export LANG=en_US.UTF-8\n\necho \"***************************************\"\necho \"*** Generate files: ACTION: $ACTION ***\"\necho \"***************************************\"\n\ncd \"${PROJECT_DIR}/../../..\"\n\nmake asn1\n";
+			showEnvVarsInLog = 0;
 		};
 		15A32292260E0452009D07EB /* Copy Artefacts & Headers to Custom Build Dir */ = {
 			isa = PBXShellScriptBuildPhase;
