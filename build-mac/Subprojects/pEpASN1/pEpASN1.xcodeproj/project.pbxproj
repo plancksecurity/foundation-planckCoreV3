@@ -1208,6 +1208,7 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = "/bin/sh -l";
 			shellScript = "export LANG=en_US.UTF-8\n\necho \"***************************************\"\necho \"*** Generate files: ACTION: $ACTION ***\"\necho \"***************************************\"\n\ncd \"${PROJECT_DIR}/../../..\"\n\nmake asn1\n";
+			showEnvVarsInLog = 0;
 		};
 		1515860426CE6E79003D8685 /* Generate Code */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1220,13 +1221,14 @@
 			);
 			name = "Generate Code";
 			outputFileListPaths = (
-				"$(SRCROOT)/generated-files-asn1.txt",
+				"$(SRCROOT)/generated-files.txt",
 			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = "/bin/sh -l";
 			shellScript = "export LANG=en_US.UTF-8\n\necho \"***************************************\"\necho \"*** Generate files: ACTION: $ACTION ***\"\necho \"***************************************\"\n\ncd \"${PROJECT_DIR}/../../..\"\n\nmake asn1\n";
+			showEnvVarsInLog = 0;
 		};
 		15A32292260E0452009D07EB /* Copy Artefacts & Headers to Custom Build Dir */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1521,6 +1523,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = NQLYU6MGPN;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
 			};
 			name = Debug;
 		};
@@ -1530,6 +1533,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = NQLYU6MGPN;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
 			};
 			name = Debug_BUILD_ALL_SUPPORTED_ARCHS;
 		};
@@ -1539,6 +1543,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = NQLYU6MGPN;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
 			};
 			name = Release;
 		};

@@ -254,10 +254,7 @@
 		1552DB142577D4F100A92F71 /* pEpEngine_macOS.h in Headers */ = {isa = PBXBuildFile; fileRef = 1552DB132577D4F100A92F71 /* pEpEngine_macOS.h */; };
 		1552DB162577D4F100A92F71 /* pEpEngine_macOS.m in Sources */ = {isa = PBXBuildFile; fileRef = 1552DB152577D4F100A92F71 /* pEpEngine_macOS.m */; };
 		156AFEB82672089100AF0039 /* libetpan.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64289E351B8B630200FC617B /* libetpan.a */; };
-		1585EF4426A08A9800B822E1 /* libgmp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1585EF4026A08A9800B822E1 /* libgmp.a */; };
 		1585EF4526A08A9800B822E1 /* libnettle.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1585EF4126A08A9800B822E1 /* libnettle.a */; };
-		1585EF4626A08A9800B822E1 /* libhogweed.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1585EF4226A08A9800B822E1 /* libhogweed.a */; };
-		1585EF4726A08A9800B822E1 /* libsequoia_openpgp_ffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1585EF4326A08A9800B822E1 /* libsequoia_openpgp_ffi.a */; };
 		15A3233E260E0D2A009D07EB /* libpEpASN1_iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15A322F7260E0B75009D07EB /* libpEpASN1_iOS.a */; };
 		15A32429260E1873009D07EB /* libpEpASN1_macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15A322F5260E0B75009D07EB /* libpEpASN1_macOS.a */; };
 		6400FB8B1B8CA1CF005221E3 /* libetpan-ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64289E371B8B630200FC617B /* libetpan-ios.a */; };
@@ -577,10 +574,7 @@
 			files = (
 				15A3233E260E0D2A009D07EB /* libpEpASN1_iOS.a in Frameworks */,
 				6400FB8B1B8CA1CF005221E3 /* libetpan-ios.a in Frameworks */,
-				1585EF4426A08A9800B822E1 /* libgmp.a in Frameworks */,
 				1585EF4526A08A9800B822E1 /* libnettle.a in Frameworks */,
-				1585EF4626A08A9800B822E1 /* libhogweed.a in Frameworks */,
-				1585EF4726A08A9800B822E1 /* libsequoia_openpgp_ffi.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1172,13 +1166,12 @@
 			inputPaths = (
 			);
 			outputFileListPaths = (
-				"$(SRCROOT)/generated-files-asn1.txt",
-				"$(SRCROOT)/generated-files-sync.txt",
+				"$(SRCROOT)/generated-files.txt",
 			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
+			shellPath = "/bin/sh -l";
 			shellScript = "export LANG=en_US.UTF-8\n\necho \"***************************************\"\necho \"*** Generate files: ACTION: $ACTION ***\"\necho \"***************************************\"\n\ncd \"${PROJECT_DIR}/..\"\n\nmake asn1\n";
 			showEnvVarsInLog = 0;
 		};
@@ -1620,6 +1613,7 @@
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				USER_HEADER_SEARCH_PATHS = "";
 			};
@@ -1857,6 +1851,7 @@
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				USER_HEADER_SEARCH_PATHS = "";
 			};
@@ -1876,6 +1871,7 @@
 				New_Setting = "";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				USER_HEADER_SEARCH_PATHS = "";
 			};
