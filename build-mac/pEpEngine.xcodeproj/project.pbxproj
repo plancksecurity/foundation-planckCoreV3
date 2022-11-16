@@ -1628,6 +1628,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"DEBUG=1",
+					"PEP_LOG_DESTINATIONS=PEP_LOG_DESTINATION_STDOUT",
 				);
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
@@ -1866,6 +1867,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"DEBUG=1",
+					"PEP_LOG_DESTINATIONS=PEP_LOG_DESTINATION_STDOUT",
 				);
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
@@ -1887,7 +1889,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = NO;
-				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"PEP_LOG_DESTINATIONS=PEP_LOG_DESTINATION_STDOUT",
+				);
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
 					"$(PROJECT_DIR)/../../OpenSSL-for-iPhone/include",
