@@ -310,10 +310,10 @@ PEP_STATUS try_base_prepare_message(
        JSONServerAdapter performs a temporary incomplete initialisation by
        supplying some NULL callbacks, and initialises in a complete way only
        later. */
-    PEP_REQUIRE_ORELSE(session->messageToSend != NULL,
-                       { LOG_ERROR("there is no session->messageToSend in %p",
-                                   session);
-                         return PEP_SYNC_NO_CHANNEL; });
+    if (session->messageToSend == NULL) {
+        LOG_ERROR("there is no session->messageToSend in %p", session);
+        return PEP_SYNC_NO_CHANNEL;
+    }
 
     // https://dev.pep.foundation/Engine/MessageToSendPassphrase
 
