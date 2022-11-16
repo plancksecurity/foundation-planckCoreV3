@@ -410,6 +410,8 @@
 		432210382924C70300AE872F /* Echo.c in Sources */ = {isa = PBXBuildFile; fileRef = 432210362924C70300AE872F /* Echo.c */; };
 		4322103A2924C90800AE872F /* EchoPing.c in Sources */ = {isa = PBXBuildFile; fileRef = 432210392924C90800AE872F /* EchoPing.c */; };
 		4322103B2924C90800AE872F /* EchoPing.c in Sources */ = {isa = PBXBuildFile; fileRef = 432210392924C90800AE872F /* EchoPing.c */; };
+		432210432924CC7F00AE872F /* EchoPong.c in Sources */ = {isa = PBXBuildFile; fileRef = 432210422924CC7F00AE872F /* EchoPong.c */; };
+		432210442924CC7F00AE872F /* EchoPong.c in Sources */ = {isa = PBXBuildFile; fileRef = 432210422924CC7F00AE872F /* EchoPong.c */; };
 		43788990272831D200E80F5A /* PIdentity.c in Sources */ = {isa = PBXBuildFile; fileRef = 4378898E272831D200E80F5A /* PIdentity.c */; };
 		43788991272831D200E80F5A /* PIdentity.c in Sources */ = {isa = PBXBuildFile; fileRef = 4378898E272831D200E80F5A /* PIdentity.c */; };
 		43788992272831D200E80F5A /* PIdentity.h in Headers */ = {isa = PBXBuildFile; fileRef = 4378898F272831D200E80F5A /* PIdentity.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -645,6 +647,7 @@
 		15EB0D8A26D7D1C500CDFF4F /* PStringPair.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PStringPair.h; path = ../../../asn.1/PStringPair.h; sourceTree = "<group>"; };
 		432210362924C70300AE872F /* Echo.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Echo.c; path = ../../../asn.1/Echo.c; sourceTree = "<group>"; };
 		432210392924C90800AE872F /* EchoPing.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = EchoPing.c; path = ../../../asn.1/EchoPing.c; sourceTree = "<group>"; };
+		432210422924CC7F00AE872F /* EchoPong.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = EchoPong.c; path = ../../../asn.1/EchoPong.c; sourceTree = "<group>"; };
 		4378898E272831D200E80F5A /* PIdentity.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = PIdentity.c; path = ../../../asn.1/PIdentity.c; sourceTree = "<group>"; };
 		4378898F272831D200E80F5A /* PIdentity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PIdentity.h; path = ../../../asn.1/PIdentity.h; sourceTree = "<group>"; };
 		437889942728321800E80F5A /* PIdentityList.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = PIdentityList.c; path = ../../../asn.1/PIdentityList.c; sourceTree = "<group>"; };
@@ -709,6 +712,7 @@
 		15A3206B260E0376009D07EB /* src */ = {
 			isa = PBXGroup;
 			children = (
+				432210422924CC7F00AE872F /* EchoPong.c */,
 				432210392924C90800AE872F /* EchoPing.c */,
 				432210362924C70300AE872F /* Echo.c */,
 				437889942728321800E80F5A /* PIdentityList.c */,
@@ -1306,6 +1310,7 @@
 				151584CF26CE5347003D8685 /* InitUnledGroupKeyReset.c in Sources */,
 				151584E626CE5347003D8685 /* MessageDirection.c in Sources */,
 				1515851426CE5347003D8685 /* GroupSyncUpdate.c in Sources */,
+				432210432924CC7F00AE872F /* EchoPong.c in Sources */,
 				151584C626CE5347003D8685 /* ExploreAnswer.c in Sources */,
 				151584ED26CE5347003D8685 /* per_opentype.c in Sources */,
 				151584DA26CE5347003D8685 /* OwnKeysRequester.c in Sources */,
@@ -1409,6 +1414,7 @@
 				1515847326CE5345003D8685 /* InitUnledGroupKeyReset.c in Sources */,
 				1515848A26CE5345003D8685 /* MessageDirection.c in Sources */,
 				151584B826CE5345003D8685 /* GroupSyncUpdate.c in Sources */,
+				432210442924CC7F00AE872F /* EchoPong.c in Sources */,
 				1515846A26CE5345003D8685 /* ExploreAnswer.c in Sources */,
 				1515849126CE5345003D8685 /* per_opentype.c in Sources */,
 				1515847E26CE5345003D8685 /* OwnKeysRequester.c in Sources */,
