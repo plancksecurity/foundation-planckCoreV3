@@ -261,6 +261,8 @@
 		432210352924C65A00AE872F /* media_key.c in Sources */ = {isa = PBXBuildFile; fileRef = 432210332924C65A00AE872F /* media_key.c */; };
 		4322103D2924C94A00AE872F /* echo_api.c in Sources */ = {isa = PBXBuildFile; fileRef = 4322103C2924C94A00AE872F /* echo_api.c */; };
 		4322103E2924C94A00AE872F /* echo_api.c in Sources */ = {isa = PBXBuildFile; fileRef = 4322103C2924C94A00AE872F /* echo_api.c */; };
+		432210402924C97E00AE872F /* pEp_log.c in Sources */ = {isa = PBXBuildFile; fileRef = 4322103F2924C97E00AE872F /* pEp_log.c */; };
+		432210412924C97E00AE872F /* pEp_log.c in Sources */ = {isa = PBXBuildFile; fileRef = 4322103F2924C97E00AE872F /* pEp_log.c */; };
 		43B2AD612923EE2500D8C6F8 /* libpep_engine_sequoia_backend.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 43B2AD422923EE2500D8C6F8 /* libpep_engine_sequoia_backend.a */; };
 		43B2AD8C2923EF0000D8C6F8 /* libnettle.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1585EF4126A08A9800B822E1 /* libnettle.a */; };
 		43B2AD8D2923F05300D8C6F8 /* libhogweed.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1585EF4226A08A9800B822E1 /* libhogweed.a */; };
@@ -553,6 +555,7 @@
 		4309FF0327315E560055C6C9 /* pEpTransport.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = pEpTransport.xcodeproj; path = "../../libpEpTransport/build-mac/pEpTransport.xcodeproj"; sourceTree = "<group>"; };
 		432210332924C65A00AE872F /* media_key.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = media_key.c; path = ../src/media_key.c; sourceTree = "<group>"; };
 		4322103C2924C94A00AE872F /* echo_api.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = echo_api.c; path = ../src/echo_api.c; sourceTree = "<group>"; };
+		4322103F2924C97E00AE872F /* pEp_log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pEp_log.c; path = ../src/pEp_log.c; sourceTree = "<group>"; };
 		43B2AD422923EE2500D8C6F8 /* libpep_engine_sequoia_backend.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpep_engine_sequoia_backend.a; path = "../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libpep_engine_sequoia_backend.a"; sourceTree = "<group>"; };
 		644297BF1BE11C65002BC73B /* pEpTrustWords.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = pEpTrustWords.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		644297C11BE11C65002BC73B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -700,6 +703,7 @@
 		64A8264B1B455C5600EECAF0 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				4322103F2924C97E00AE872F /* pEp_log.c */,
 				4322103C2924C94A00AE872F /* echo_api.c */,
 				432210332924C65A00AE872F /* media_key.c */,
 				1515837326CE4FB7003D8685 /* baseprotocol.c */,
@@ -1248,6 +1252,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				432210412924C97E00AE872F /* pEp_log.c in Sources */,
 				1552DB162577D4F100A92F71 /* pEpEngine_macOS.m in Sources */,
 				1515852026CE536A003D8685 /* trans_auto.c in Sources */,
 				1515853626CE536A003D8685 /* storage_codec.c in Sources */,
@@ -1341,6 +1346,7 @@
 				1515839726CE4FB8003D8685 /* KeySync_fsm.c in Sources */,
 				1515839326CE4FB8003D8685 /* Sync_impl.c in Sources */,
 				1515838C26CE4FB8003D8685 /* internal_format.c in Sources */,
+				432210402924C97E00AE872F /* pEp_log.c in Sources */,
 				1515835C26CE4F82003D8685 /* stringpair.c in Sources */,
 				1515838F26CE4FB8003D8685 /* map_asn1.c in Sources */,
 				151583A526CE4FB8003D8685 /* labeled_int_list.c in Sources */,
