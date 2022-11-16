@@ -295,8 +295,8 @@ typedef enum _PEP_rating {
 
     // red
 
-    PEP_rating_mistrust = -1,
-    PEP_rating_under_attack = -3
+    PEP_rating_mistrust = -1,    // manual detection of an attack
+    PEP_rating_under_attack = -3 // automated detection of an attack
 } PEP_rating;
 
 
