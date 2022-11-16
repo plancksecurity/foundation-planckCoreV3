@@ -296,6 +296,13 @@ PEP_STATUS try_base_prepare_message(
         message **result
     )
 {
+    PEP_REQUIRE(session
+                //&& session->messageToSend // temporarily disabled: see below
+                && session->notifyHandshake
+                && me && partner && payload && size && result
+                && (type == BASE_SYNC || type == BASE_DISTRIBUTION));
+    PEP_STATUS status = PEP_STATUS_OK;
+
     /* Special case: if messageToSend is not defined there is no way to handle
        passphrases: in that case just exit with PEP_SYNC_NO_CHANNEL.  This is
        required for pEp4Thunderbird (P4TB-413) with the most recent
@@ -304,15 +311,9 @@ PEP_STATUS try_base_prepare_message(
        supplying some NULL callbacks, and initialises in a complete way only
        later. */
     if (session->messageToSend == NULL) {
-        fprintf(stderr, "try_base_prepare_message, session %p: about to fail with PEP_SYNC_NO_CHANNEL because there is no session->messageToSend\n", session);
+        LOG_ERROR("there is no session->messageToSend in %p", session);
         return PEP_SYNC_NO_CHANNEL;
     }
-
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    PEP_REQUIRE(session && session->messageToSend && session->notifyHandshake
-                && me && partner && payload && size && result
-                && (type == BASE_SYNC || type == BASE_DISTRIBUTION));
 
     // https://dev.pep.foundation/Engine/MessageToSendPassphrase
 
