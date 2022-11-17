@@ -1,5 +1,5 @@
 /**
- * @file    log.c
+ * @file    pEp_log.c
  * @brief   pEp logging facility
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
