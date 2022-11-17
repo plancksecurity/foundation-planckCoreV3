@@ -25,7 +25,8 @@ char * e2as(const char * str);
 char * as2e(const char * str);
 #endif
 
-#if defined(ANDROID) || defined(__MVS__)
+#if defined(ANDROID)
+#elif defined(__MVS__)
 typedef unsigned char uuid_t[16];
 #else
 #include <uuid/uuid.h>
