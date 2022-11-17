@@ -125,7 +125,7 @@ const char *android_system_db(void);
 
 #elif defined(__APPLE__)
 #if TARGET_OS_IPHONE // read as `if iOS`
-    extern char *perMachineDirectory; // adapter will provide
+    extern char *perMachineDirectory; // adapter must provide
 #define PER_MACHINE_DIRECTORY perMachineDirectory
     // It has been decided not to define PER_USER_DIRECTORY for iOS but HOME (which is defined by
     // the OS), at least temporarely.
