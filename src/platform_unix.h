@@ -52,8 +52,12 @@ typedef unsigned char uuid_t[16];
 #define PER_USER_DIRECTORY ".pEp"
 #endif
 
+#if defined(__APPLE__) // macOS, iOS
+#include "TargetConditionals.h" // for TARGET_OS_IPHONE etc.
+#endif
+
 #ifndef PER_MACHINE_DIRECTORY
-#if defined(__APPLE__) && !defined(TARGET_OS_IPHONE)
+#if defined(__APPLE__) && !defined(TARGET_OS_IPHONE) // macOS
 #define PER_MACHINE_DIRECTORY "/Library/Application Support/pEp"
 #else
 #define PER_MACHINE_DIRECTORY "/usr/local/share/pEp"
@@ -119,11 +123,9 @@ char *stpcpy(char *, const char *);
 const char *android_system_db(void);
 #define SYSTEM_DB android_system_db()
 
-#elif __APPLE__
-#include "TargetConditionals.h"
-#include <string.h>
-#if TARGET_OS_IPHONE //read as `if iOS`
-    extern char* perMachineDirectory;
+#elif defined(__APPLE__)
+#if TARGET_OS_IPHONE // read as `if iOS`
+    extern char *perMachineDirectory; // adapter will provide
 #define PER_MACHINE_DIRECTORY perMachineDirectory
     // It has been decided not to define PER_USER_DIRECTORY for iOS but HOME (which is defined by
     // the OS), at least temporarely.
