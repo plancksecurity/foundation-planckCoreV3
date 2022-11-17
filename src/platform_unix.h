@@ -57,7 +57,7 @@ typedef unsigned char uuid_t[16];
 #endif
 
 #ifndef PER_MACHINE_DIRECTORY
-#if defined(__APPLE__) && !defined(TARGET_OS_IPHONE) // macOS
+#if defined(__APPLE__) && !TARGET_OS_IPHONE // macOS
 #define PER_MACHINE_DIRECTORY "/Library/Application Support/pEp"
 #else
 #define PER_MACHINE_DIRECTORY "/usr/local/share/pEp"
