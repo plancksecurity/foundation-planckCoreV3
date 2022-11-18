@@ -56,38 +56,38 @@ struct _message_ref_list;
  */
 typedef struct _message {
     PEP_msg_direction dir;
-    char *id;                               // UTF-8 string of message ID
-    char *shortmsg;                         // UTF-8 string of short message
-    char *longmsg;                          // UTF-8 string of long message
-                                            // (plain)
-    char *longmsg_formatted;                // UTF-8 string of long message
-                                            // (formatted)
-    bloblist_t *attachments;                // blobs with attachements
-    char *rawmsg_ref;                       // reference to raw message data
-    size_t rawmsg_size;                     // size of raw message data
-    timestamp *sent;                        // when the message is sent
-    timestamp *recv;                        // when the message is received
-    pEp_identity *from;                     // whom the message is from
-    identity_list *to;                      // whom the message is to
-    pEp_identity *recv_by;                  // via which identity the message
-                                            // is received
-    identity_list *cc;                      // whom a CC is being sent
-    identity_list *bcc;                     // whom a BCC is being sent
-    identity_list *reply_to;                // where a reply should go to
-    stringlist_t *in_reply_to;              // list of UTF-8 strings with
-                                            // MessageIDs of refering messages
-    struct _message *refering_msg_ref;      // reference to refering message
-    stringlist_t * references;               // list of UTF-8 strings with references
-    struct _message_ref_list *refered_by;   // list of references to messages being
-                                            // refered
-    stringlist_t *keywords;                 // list of UTF-8 strings with keywords
-    char *comments;                         // UTF-8 string with comments
-    stringpair_list_t *opt_fields;          // optional fields
-    PEP_enc_format enc_format;              // format of encrypted data
-    char* _sender_fpr;                      // INTERNAL USE ONLY - fingerprint of 
-                                            // sending signer.
-                                            // (read_only to the outside)
-    PEP_rating rating;                      // message rating
+    char *id;                               ///< UTF-8 string of message ID
+    char *shortmsg;                         ///< UTF-8 string of short message
+    char *longmsg;                          ///< UTF-8 string of long message
+                                            ///< (plain)
+    char *longmsg_formatted;                ///< UTF-8 string of long message
+                                            ///< (formatted)
+    bloblist_t *attachments;                ///< blobs with attachements
+    char *rawmsg_ref;                       ///< reference to raw message data
+    size_t rawmsg_size;                     ///< size of raw message data
+    timestamp *sent;                        ///< when the message is sent
+    timestamp *recv;                        ///< when the message is received
+    pEp_identity *from;                     ///< whom the message is from
+    identity_list *to;                      ///< whom the message is to
+    pEp_identity *recv_by;                  ///< via which identity the message
+                                            ///< is received
+    identity_list *cc;                      ///< whom a CC is being sent
+    identity_list *bcc;                     ///< whom a BCC is being sent
+    identity_list *reply_to;                ///< where a reply should go to
+    stringlist_t *in_reply_to;              ///< list of UTF-8 strings with
+                                            ///</< MessageIDs of refering messages
+    struct _message *refering_msg_ref;      ///< reference to refering message
+    stringlist_t * references;               ///< list of UTF-8 strings with references
+    struct _message_ref_list *refered_by;   ///< list of references to messages being
+                                            ///< refered
+    stringlist_t *keywords;                 ///< list of UTF-8 strings with keywords
+    char *comments;                         ///< UTF-8 string with comments
+    stringpair_list_t *opt_fields;          ///< optional fields
+    PEP_enc_format enc_format;              ///< format of encrypted data
+    char* _sender_fpr;                      ///< INTERNAL USE ONLY - fingerprint of 
+                                            ///< sending signer.
+                                            ///< (read_only to the outside)
+    PEP_rating rating;                      ///< message rating
 } message;
 
 /**
@@ -97,7 +97,7 @@ typedef struct _message {
  *  
  */
 typedef struct _message_ref_list {
-    message *msg_ref;                       // reference to message
+    message *msg_ref;                       ///< reference to message
     struct _message_ref_list *next;
 } message_ref_list;
 
