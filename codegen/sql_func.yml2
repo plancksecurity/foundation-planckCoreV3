@@ -17,10 +17,8 @@ function "init_sql" {
     indent(2); copy '$sql';
     ||
             , -1, &_sql, NULL);
-        assert(int_result == SQLITE_OK);
-        if (!(int_result == SQLITE_OK))
-            return PEP_UNKNOWN_ERROR;
-
+        PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK,
+                                      PEP_UNKNOWN_ERROR);
     ||
 }
 
@@ -32,7 +30,7 @@ function "exec_sql_int" {
     ||
         int _result = 0;
         int_result = sqlite3_step(_sql);
-        assert(int_result == SQLITE_ROW);
+        PEP_ASSERT(int_result == SQLITE_ROW);
         if (int_result == SQLITE_ROW)
             _result = sqlite3_column_int(_sql, 0);
         sqlite3_finalize(_sql);

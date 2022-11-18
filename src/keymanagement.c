@@ -143,10 +143,7 @@ PEP_STATUS validate_fpr(PEP_SESSION session,
                              exp_time,
                              &expired);
         
-        assert(status == PEP_STATUS_OK);
-        if (status != PEP_STATUS_OK)
-            return status;
-
+        PEP_WEAK_ASSERT_ORELSE_RETURN(status == PEP_STATUS_OK, status);
     }
             
     // Renew key if it's expired, our own, has a private part,
@@ -256,10 +253,8 @@ PEP_STATUS get_all_keys_for_user(PEP_SESSION session,
 PEP_STATUS get_all_keys_for_identity(PEP_SESSION session,
                                      pEp_identity* identity,
                                      stringlist_t** keys) {
-
-    if (!session || ! identity || EMPTYSTR(identity->address)
-        || EMPTYSTR(identity->user_id) || !keys)
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && identity && ! EMPTYSTR(identity->address)
+                && ! EMPTYSTR(identity->user_id) && keys);
         
     PEP_STATUS status = PEP_STATUS_OK;
         
@@ -294,11 +289,7 @@ PEP_STATUS get_all_keys_for_identity(PEP_SESSION session,
 
 PEP_STATUS get_user_default_key(PEP_SESSION session, const char* user_id,
                                 char** default_key) {
-    assert(session);
-    assert(user_id);
-    
-    if (!session || !user_id)
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && user_id);
 
     PEP_STATUS status = PEP_STATUS_OK;
             
@@ -476,8 +467,7 @@ static void transfer_ident_lang_and_flags(pEp_identity* new_ident,
  *  
  */
 static void adjust_pEp_trust_status(PEP_SESSION session, pEp_identity* identity) {
-    assert(session);
-    assert(identity);
+    PEP_REQUIRE_ORELSE(session && identity, { return; });
 
     if (!session || !identity ||
          identity->comm_type < PEP_ct_strong_but_unconfirmed ||
@@ -667,14 +657,9 @@ DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
     )
 {
+    PEP_REQUIRE(session && identity && !EMPTYSTR(identity->address));
+
     PEP_STATUS status = PEP_STATUS_OK;
-
-    assert(session);
-    assert(identity);
-    assert(!EMPTYSTR(identity->address));
-
-    if (!(session && identity && !EMPTYSTR(identity->address)))
-        return PEP_ILLEGAL_VALUE;
 
     /* The fpr field is output only: in case it was set, unset it before doing
        anything else. */
@@ -812,7 +797,7 @@ DYNAMIC_API PEP_STATUS update_identity(
 
                     // this_uid should never be NULL, as this is half of the ident
                     // DB primary key
-                    assert(!EMPTYSTR(candidate_id));
+                    PEP_ASSERT(!EMPTYSTR(candidate_id));
 
                     // grab some information about the stored identity
                     bool candidate_has_real_id = strstr(candidate_id, "TOFU_") != candidate_id;
@@ -834,9 +819,7 @@ DYNAMIC_API PEP_STATUS update_identity(
                     // bool patch_input_id_conditions = input_has_user_id || names_match || weak_candidate_name; // No longer necessary, as we don't compare usernames
                     if (input_addr_only || candidate_id_best) {
                         identity->user_id = strdup(candidate_id);
-                        assert(identity->user_id);
-                        if (!identity->user_id)
-                            goto enomem;
+                        PEP_WEAK_ASSERT_ORELSE_GOTO(identity->user_id, enomem);
 
                         stored_ident = identity_dup(candidate);
                         break;
@@ -965,9 +948,8 @@ PEP_STATUS elect_ownkey(
     identity->fpr = NULL;
 
     status = find_private_keys(session, identity->address, &keylist);
-    assert(status != PEP_OUT_OF_MEMORY);
-    if (status == PEP_OUT_OF_MEMORY)
-        return PEP_OUT_OF_MEMORY;
+    PEP_WEAK_ASSERT_ORELSE_RETURN(status != PEP_OUT_OF_MEMORY,
+                                  PEP_OUT_OF_MEMORY);
     
     if (keylist != NULL && keylist->value != NULL)
     {
@@ -979,22 +961,20 @@ PEP_STATUS elect_ownkey(
             bool is_own = false;
             
             status = own_key_is_listed(session, _keylist->value, &is_own);
-            assert(status == PEP_STATUS_OK);
-            if (status != PEP_STATUS_OK) {
+            PEP_WEAK_ASSERT_ORELSE(status == PEP_STATUS_OK, {
                 free_stringlist(keylist);
                 return status;
-            }
+            });
             
             if (is_own)
             {
                 PEP_comm_type _comm_type_key;
                 
                 status = get_key_rating(session, _keylist->value, &_comm_type_key);
-                assert(status != PEP_OUT_OF_MEMORY);
-                if (status == PEP_OUT_OF_MEMORY) {
+                PEP_WEAK_ASSERT_ORELSE(status != PEP_OUT_OF_MEMORY, {
                     free_stringlist(keylist);
                     return PEP_OUT_OF_MEMORY;
-                }
+                });
                 
                 if (_comm_type_key != PEP_ct_compromised &&
                     _comm_type_key != PEP_ct_unknown)
@@ -1012,12 +992,10 @@ PEP_STATUS elect_ownkey(
         if (_fpr)
         {
             identity->fpr = strdup(_fpr);
-            assert(identity->fpr);
-            if (identity->fpr == NULL)
-            {
+            PEP_WEAK_ASSERT_ORELSE(identity->fpr, {
                 free_stringlist(keylist);
                 return PEP_OUT_OF_MEMORY;
-            }
+            });
         }
         free_stringlist(keylist);
     }
@@ -1057,15 +1035,9 @@ PEP_STATUS _myself(PEP_SESSION session,
                    bool ignore_flags,
                    bool read_only)
 {
+    PEP_REQUIRE(session && identity && !EMPTYSTR(identity->address));
 
     PEP_STATUS status;
-
-    assert(session);
-    assert(identity);
-    assert(!EMPTYSTR(identity->address));
-
-    if (!session || !identity || EMPTYSTR(identity->address))
-        return PEP_ILLEGAL_VALUE;
 
     // ignore input fpr
 
@@ -1079,9 +1051,7 @@ PEP_STATUS _myself(PEP_SESSION session,
     if (EMPTYSTR(identity->user_id)) {
         free(identity->user_id);
         identity->user_id = strdup(PEP_OWN_USERID);
-        assert(identity->user_id);
-        if (!identity->user_id)
-            return PEP_OUT_OF_MEMORY;
+        PEP_WEAK_ASSERT_ORELSE_RETURN(identity->user_id, PEP_OUT_OF_MEMORY);
     }
 
     // Cache the input username, if there is one and it's not read_only; NULL
@@ -1106,9 +1076,7 @@ PEP_STATUS _myself(PEP_SESSION session,
         if (read_only) {
             free(identity->user_id);
             identity->user_id = strdup(default_own_id);
-            assert(identity->user_id);
-            if (!identity->user_id)
-                return PEP_OUT_OF_MEMORY;
+            PEP_WEAK_ASSERT_ORELSE_RETURN(identity->user_id, PEP_OUT_OF_MEMORY);
         }
         else {
             status = set_userid_alias(session, default_own_id, identity->user_id);
@@ -1118,11 +1086,10 @@ PEP_STATUS _myself(PEP_SESSION session,
                 
             free(identity->user_id);
             identity->user_id = strdup(default_own_id);
-            assert(identity->user_id);
-            if (identity->user_id == NULL) {
+            PEP_WEAK_ASSERT_ORELSE(identity->user_id, {
                 status = PEP_OUT_OF_MEMORY;
                 goto pEp_free;
-            }
+            });
         }
     }
 
@@ -1147,11 +1114,7 @@ PEP_STATUS _myself(PEP_SESSION session,
                           identity->user_id,
                           &stored_identity);
 
-    assert(status != PEP_OUT_OF_MEMORY);
-    if (status == PEP_OUT_OF_MEMORY) {
-        status = PEP_OUT_OF_MEMORY;
-        goto pEp_free;
-    }
+    PEP_WEAK_ASSERT_ORELSE_GOTO(status != PEP_OUT_OF_MEMORY, pEp_free);
 
     // Set usernames - priority is input username > stored name > address
     // If there's an input username, we always patch the username with that
@@ -1165,11 +1128,10 @@ PEP_STATUS _myself(PEP_SESSION session,
         if (uname) {
             free(identity->username);
             identity->username = strdup(uname);
-            assert(identity->username);
-            if (identity->username == NULL) {
+            PEP_WEAK_ASSERT_ORELSE(identity->username, {
                 status = PEP_OUT_OF_MEMORY;
                 goto pEp_free;
-            }
+            });
         }
     }
 
@@ -1189,11 +1151,10 @@ PEP_STATUS _myself(PEP_SESSION session,
                 case PEP_STATUS_OK:    
                     if (stored_identity->comm_type >= PEP_ct_strong_but_unconfirmed) {
                         identity->fpr = strdup(stored_identity->fpr);
-                        assert(identity->fpr);
-                        if (!identity->fpr) {
+                        PEP_WEAK_ASSERT_ORELSE(identity->fpr, {
                             status = PEP_OUT_OF_MEMORY;
                             goto pEp_free;
-                        }
+                        });
                         valid_key_found = true;            
                     }
                     else {
@@ -1203,11 +1164,10 @@ PEP_STATUS _myself(PEP_SESSION session,
                             goto pEp_free;
                         if (revoked) {
                             revoked_fpr = strdup(stored_identity->fpr);
-                            assert(revoked_fpr);
-                            if (!revoked_fpr) {
+                            PEP_WEAK_ASSERT_ORELSE(revoked_fpr, {
                                 status = PEP_OUT_OF_MEMORY;
                                 goto pEp_free;
-                            }
+                            });
                         }
                     }
                     break;
@@ -1229,10 +1189,7 @@ PEP_STATUS _myself(PEP_SESSION session,
             free(identity->fpr);
             identity->fpr = NULL;
             status = generate_keypair(session, identity);
-            assert(status != PEP_OUT_OF_MEMORY);
-
-            if (status == PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED)
-                goto pEp_free;
+            PEP_WEAK_ASSERT_ORELSE_GOTO(status != PEP_OUT_OF_MEMORY, pEp_free);
                 
             if (status != PEP_STATUS_OK) {
                 char buf[11];
@@ -1244,7 +1201,7 @@ PEP_STATUS _myself(PEP_SESSION session,
                 if (revoked_fpr) {
                     status = set_revoked(session, revoked_fpr,
                                          stored_identity->fpr, time(NULL));
-                    assert(status == PEP_STATUS_OK);                     
+                    PEP_ASSERT(status == PEP_STATUS_OK);                     
                 }
             }
         }
@@ -1304,15 +1261,9 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
         pEp_identity *ident
     )
 {
+    PEP_REQUIRE(session && ident && ! EMPTYSTR(ident->fpr));
+
     PEP_STATUS status = PEP_STATUS_OK;
-
-    assert(session);
-    assert(ident);
-    assert(!EMPTYSTR(ident->fpr));
-
-    if (!(session && ident && ident->fpr))
-        return PEP_ILLEGAL_VALUE;
-
     bool has_private = false;
     
     status = contains_priv_key(session, ident->fpr, &has_private);        
@@ -1374,17 +1325,12 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
         pEp_identity *ident
     )
 {
+    PEP_REQUIRE(session && ident
+                && ! EMPTYSTR(ident->fpr)
+                && ! EMPTYSTR(ident->address)
+                && ! EMPTYSTR(ident->user_id));
+
     PEP_STATUS status = PEP_STATUS_OK;
-
-    assert(session);
-    assert(ident);
-    assert(!EMPTYSTR(ident->fpr));
-    assert(!EMPTYSTR(ident->address));
-    assert(!EMPTYSTR(ident->user_id));
-
-    if (!(session && ident && ident->fpr && ident->fpr[0] != '\0' && ident->address &&
-            ident->user_id))
-        return PEP_ILLEGAL_VALUE;
 
     // we do not change the input struct at ALL.
     pEp_identity* input_copy = identity_dup(ident);
@@ -1478,17 +1424,11 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
         pEp_identity *ident
     )
 {
+    PEP_REQUIRE(session && ident && ! EMPTYSTR(ident->address)
+                && ! EMPTYSTR(ident->user_id)
+                && ! EMPTYSTR(ident->fpr));
+
     PEP_STATUS status = PEP_STATUS_OK;
-
-    assert(session);
-    assert(ident);
-    assert(!EMPTYSTR(ident->address));
-    assert(!EMPTYSTR(ident->user_id));
-    assert(!EMPTYSTR(ident->fpr));
-
-    if (!ident || EMPTYSTR(ident->address) || EMPTYSTR(ident->user_id) ||
-            EMPTYSTR(ident->fpr))
-        return PEP_ILLEGAL_VALUE;
 
     if (is_me(session, ident))
         return PEP_ILLEGAL_VALUE;
@@ -1608,15 +1548,8 @@ DYNAMIC_API PEP_STATUS trust_own_key(
         pEp_identity* ident
     ) 
 {
-    assert(session);
-    assert(ident);
-    assert(!EMPTYSTR(ident->address));
-    assert(!EMPTYSTR(ident->user_id));
-    assert(!EMPTYSTR(ident->fpr));
-    
-    if (!ident || EMPTYSTR(ident->address) || EMPTYSTR(ident->user_id) ||
-            EMPTYSTR(ident->fpr))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && ident && ! EMPTYSTR(ident->address)
+                && ! EMPTYSTR(ident->user_id) && ! EMPTYSTR(ident->fpr));
 
     if (!is_me(session, ident))
         return PEP_ILLEGAL_VALUE;
@@ -1648,13 +1581,10 @@ DYNAMIC_API PEP_STATUS own_key_is_listed(
         bool *listed
     )
 {
+    PEP_REQUIRE(session && ! EMPTYSTR(fpr) && listed);
+
     PEP_STATUS status = PEP_STATUS_OK;
     int count;
-    
-    assert(session && fpr && fpr[0] && listed);
-    
-    if (!(session && fpr && fpr[0] && listed))
-        return PEP_ILLEGAL_VALUE;
     
     *listed = false;
     
@@ -1685,12 +1615,9 @@ PEP_STATUS _own_identities_retrieve(
         identity_flags_t excluded_flags
       )
 {
+    PEP_REQUIRE(session && own_identities);
+    
     PEP_STATUS status = PEP_STATUS_OK;
-    
-    assert(session && own_identities);
-    if (!(session && own_identities))
-        return PEP_ILLEGAL_VALUE;
-    
     *own_identities = NULL;
     identity_list *_own_identities = new_identity_list(NULL);
     if (_own_identities == NULL)
@@ -1790,12 +1717,9 @@ PEP_STATUS _own_keys_retrieve(
         bool private_only
       )
 {
+    PEP_REQUIRE(session && keylist);
+    
     PEP_STATUS status = PEP_STATUS_OK;
-    
-    assert(session && keylist);
-    if (!(session && keylist))
-        return PEP_ILLEGAL_VALUE;
-    
     *keylist = NULL;
     stringlist_t *_keylist = NULL;
     
@@ -1951,18 +1875,11 @@ DYNAMIC_API PEP_STATUS set_own_key(
        const char *fpr
     )
 {
+    PEP_REQUIRE(session && me && ! EMPTYSTR(fpr)
+                && ! EMPTYSTR(me->address) && ! EMPTYSTR(me->user_id)
+                && ! EMPTYSTR(me->username));
+
     PEP_STATUS status = PEP_STATUS_OK;
-    
-    assert(session && me);
-    assert(!EMPTYSTR(fpr));
-    assert(!EMPTYSTR(me->address));
-    assert(!EMPTYSTR(me->user_id));
-    assert(!EMPTYSTR(me->username));
-
-    if (!session || !me || EMPTYSTR(fpr) || EMPTYSTR(me->address) ||
-            EMPTYSTR(me->user_id) || EMPTYSTR(me->username))
-        return PEP_ILLEGAL_VALUE;
-
     if (me->fpr == fpr)
         me->fpr = NULL;
 
@@ -1985,9 +1902,7 @@ DYNAMIC_API PEP_STATUS set_own_key(
     if (me->fpr)
         free(me->fpr);
     me->fpr = strdup(fpr);
-    assert(me->fpr);
-    if (!me->fpr)
-        return PEP_OUT_OF_MEMORY;
+    PEP_WEAK_ASSERT_ORELSE_RETURN(me->fpr, PEP_OUT_OF_MEMORY);
 
     status = validate_fpr(session, me, true, true);
     if (status)
@@ -2008,18 +1923,11 @@ DYNAMIC_API PEP_STATUS set_own_imported_key(
         pEp_identity* me,
         const char* fpr,
         bool sticky) {
+    PEP_REQUIRE(session && me && ! EMPTYSTR (fpr)
+                && ! EMPTYSTR(me->address) && ! EMPTYSTR(me->user_id)
+                && ! EMPTYSTR(me->username));
 
     PEP_STATUS status = PEP_STATUS_OK;
-
-    assert(session && me);
-    assert(!EMPTYSTR(fpr));
-    assert(!EMPTYSTR(me->address));
-    assert(!EMPTYSTR(me->user_id));
-    assert(!EMPTYSTR(me->username));
-
-    if (!session || !me || EMPTYSTR(fpr) || EMPTYSTR(me->address) ||
-            EMPTYSTR(me->user_id) || EMPTYSTR(me->username))
-        return PEP_ILLEGAL_VALUE;
 
     // Last, but not least, be sure we can encrypt with it
     status = probe_encrypt(session, fpr);
@@ -2038,25 +1946,16 @@ DYNAMIC_API PEP_STATUS set_own_imported_key(
 
 PEP_STATUS contains_priv_key(PEP_SESSION session, const char *fpr,
                              bool *has_private) {
-
-    assert(session);
-    assert(fpr);
-    assert(has_private);
-    
-    if (!(session && fpr && has_private))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && fpr && has_private);
 
     return session->cryptotech[PEP_crypt_OpenPGP].contains_priv_key(session, fpr, has_private);
 }
 
 PEP_STATUS add_mistrusted_key(PEP_SESSION session, const char* fpr)
 {
-    int result;
-
-    assert(!EMPTYSTR(fpr));
+    PEP_REQUIRE(session && ! EMPTYSTR(fpr));
     
-    if (!(session) || EMPTYSTR(fpr))
-        return PEP_ILLEGAL_VALUE;
+    int result;
 
     sql_reset_and_clear_bindings(session->add_mistrusted_key);
     sqlite3_bind_text(session->add_mistrusted_key, 1, fpr, -1,
@@ -2073,13 +1972,9 @@ PEP_STATUS add_mistrusted_key(PEP_SESSION session, const char* fpr)
 
 PEP_STATUS delete_mistrusted_key(PEP_SESSION session, const char* fpr)
 {
+    PEP_REQUIRE(session && ! EMPTYSTR(fpr));
+
     int result;
-
-    assert(!EMPTYSTR(fpr));
-    
-    if (!(session) || EMPTYSTR(fpr))
-        return PEP_ILLEGAL_VALUE;
-
     sql_reset_and_clear_bindings(session->delete_mistrusted_key);
     sqlite3_bind_text(session->delete_mistrusted_key, 1, fpr, -1,
             SQLITE_STATIC);
@@ -2096,14 +1991,9 @@ PEP_STATUS delete_mistrusted_key(PEP_SESSION session, const char* fpr)
 PEP_STATUS is_mistrusted_key(PEP_SESSION session, const char* fpr,
                              bool* mistrusted)
 {
+    PEP_REQUIRE(session && ! EMPTYSTR(fpr));
+
     PEP_STATUS status = PEP_STATUS_OK;
-
-    assert(session);
-    assert(!EMPTYSTR(fpr));
-
-    if (!(session && fpr))
-        return PEP_ILLEGAL_VALUE;
-
     *mistrusted = false;
 
     sql_reset_and_clear_bindings(session->is_mistrusted_key);

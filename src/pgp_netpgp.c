@@ -5,6 +5,24 @@
  * @license This file is under GNU General Public License 3.0 see LICENSE.txt
  */
 
+/* Logging.
+ * ***************************************************************** */
+
+/* Define convenient logging macros for this compilation unit. */
+#define _LOG_WITH_MACRO_NAME(name, ...)     \
+    name("p≡p Engine", "pgp_netpgp", "" __VA_ARGS__)
+#define LOG_CRITICAL(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_CRITICAL, __VA_ARGS__)
+#define LOG_ERROR(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_ERROR, __VA_ARGS__)
+#define LOG_WARNING(...)   _LOG_WITH_MACRO_NAME(PEP_LOG_WARNING, __VA_ARGS__)
+#define LOG_API(...)       _LOG_WITH_MACRO_NAME(PEP_LOG_API, __VA_ARGS__)
+#define LOG_EVENT(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_EVENT, __VA_ARGS__)
+#define LOG_FUNCTION(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_FUNCTION, __VA_ARGS__)
+#define LOG_TRACE(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_TRACE, __VA_ARGS__)
+
+
+/* Everything else.
+ * ***************************************************************** */
+
 /*
 * Check to see if this machine uses EBCDIC.  (Yes, believe it or
 * not, there are still machines out there that use EBCDIC.)
@@ -39,6 +57,9 @@
 #include <unistd.h>
 #endif
 
+/* positron, 2022-10: TRACE_FUNCS is now redundant with the new logging system,
+   but I am keeping it for the function not having a session parameter, because
+   these cannot use the new API. */
 #if 0
 #define TRACE_FUNCS() printf("Trace fun: %s:%d, %s\n",__FILE__,__LINE__,__FUNCTION__);
 #else
@@ -141,11 +162,9 @@ static void release_netpgp()
 
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
-    TRACE_FUNCS()
     PEP_STATUS status = PEP_STATUS_OK;
 
-    assert(session);
-    if(!session) return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session);
 
     if (in_first) {
         if((status = init_netpgp()) != PEP_STATUS_OK)
@@ -157,9 +176,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 
 void pgp_release(PEP_SESSION session, bool out_last)
 {
-    TRACE_FUNCS()
-    assert(session);
-    if(!session) return;
+    PEP_REQUIRE_ORELSE(session, { return; });
 
     if (out_last){
         release_netpgp();
@@ -282,27 +299,18 @@ PEP_STATUS pgp_decrypt_and_verify(
     char** filename_ptr // will be ignored
     )
 {
-    TRACE_FUNCS()
     char *_ptext = NULL;
     char* passphrase = NULL;
 
     PEP_STATUS result;
     stringlist_t *_keylist = NULL;
 
-    assert(session);
-    assert(ctext);
-    assert(csize);
-    assert(ptext);
-    assert(psize);
-    assert(keylist);
+    PEP_REQUIRE(session && ctext && csize && ptext && psize && keylist);
 
     passphrase = session->curr_passphrase;
     if(passphrase && passphrase[0]) {
         netpgp_set_validation_password(passphrase);
     }
-
-    if(!session || !ctext || !csize || !ptext || !psize || !keylist)
-        return PEP_ILLEGAL_VALUE;
 
     if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
@@ -426,7 +434,6 @@ PEP_STATUS pgp_verify_text(
     const char *signature, size_t sig_size, stringlist_t **keylist
     )
 {
-    TRACE_FUNCS()
     pgp_memory_t *signedmem;
     pgp_memory_t *sig;
     pgp_validation_t *vresult;
@@ -434,15 +441,8 @@ PEP_STATUS pgp_verify_text(
     PEP_STATUS result;
     stringlist_t *_keylist;
 
-    assert(session);
-    assert(text);
-    assert(size);
-    assert(signature);
-    assert(sig_size);
-    assert(keylist);
-
-    if(!session || !text || !size || !signature || !sig_size || !keylist)
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && ! EMPTYSTR(text) && size && ! EMPTYSTR(signature)
+                && sig_size && keylist);
 
     if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
@@ -516,7 +516,6 @@ PEP_STATUS pgp_sign_only(
     size_t psize, char **stext, size_t *ssize
     )
 {
-    TRACE_FUNCS()
     pgp_key_t *signer = NULL;
     pgp_seckey_t *seckey = NULL;
     pgp_memory_t *signedmem = NULL;
@@ -531,15 +530,8 @@ PEP_STATUS pgp_sign_only(
 
     PEP_STATUS result;
 
-    assert(session);
-    assert(fpr);
-    assert(ptext);
-    assert(psize);
-    assert(stext);
-    assert(ssize);
-
-    if(!session || !ptext || !psize || !stext || !ssize || !fpr || !fpr[0])
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && ! EMPTYSTR(fpr) && ! EMPTYSTR(ptext) && psize
+                && stext && ssize);
 
     if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
@@ -553,7 +545,7 @@ PEP_STATUS pgp_sign_only(
         goto unlock_netpgp;
     }
     
-    assert(fpr && fpr[0]);
+    PEP_ASSERT(! EMPTYSTR(fpr));
 
     uint8_t *uint_fpr = NULL;
     size_t fprlen;
@@ -563,7 +555,7 @@ PEP_STATUS pgp_sign_only(
         if ((signer = (pgp_key_t *)pgp_getkeybyfpr(netpgp->io, netpgp->secring, uint_fpr, fprlen, &from, NULL, 1,1)) == NULL) {
             /* reject revoked and expired */
             result = PEP_KEY_NOT_FOUND;
-printf("%s:%d, Key not found\n",__FILE__,__LINE__);
+            LOG_WARNING("Key not found");
 
             goto free_snrs;
         }
@@ -632,11 +624,10 @@ printf("%s:%d, Key not found\n",__FILE__,__LINE__);
     // Allocate transferable buffer
     char *_buffer = malloc(_ssize + 1);
 
-    assert(_buffer);
-    if (_buffer == NULL) {
+    PEP_WEAK_ASSERT_ORELSE(_buffer, {
         result = PEP_OUT_OF_MEMORY;
         goto free_signedmem;
-    }
+    });
 
     memcpy(_buffer, _stext, _ssize);
     *stext = _buffer;
@@ -661,7 +652,6 @@ PEP_STATUS pgp_encrypt_and_sign(
     size_t psize, char **ctext, size_t *csize
     )
 {
-    TRACE_FUNCS()
     PEP_STATUS result = PEP_STATUS_OK;
     stringlist_t *klp;
     int ret;
@@ -675,7 +665,8 @@ PEP_STATUS pgp_encrypt_and_sign(
     pgp_key_t *signer = NULL;
     pgp_key_t *key = NULL;
 
-    assert(netpgp->secring);
+    PEP_REQUIRE(session);
+    PEP_ASSERT(netpgp->secring);
 
     string_to_uint(keylist->value, &fpr, &len);
 
@@ -709,7 +700,6 @@ PEP_STATUS pgp_encrypt_only(
         size_t psize, char **ctext, size_t *csize
     )
 {
-    TRACE_FUNCS()
     PEP_STATUS result = PEP_STATUS_OK;
     pgp_memory_t *mem;
     pgp_keyring_t *rcpts = NULL;
@@ -745,7 +735,6 @@ PEP_STATUS pgp_generate_keypair(
     PEP_SESSION session, pEp_identity *identity
     )
 {
-    TRACE_FUNCS()
     pgp_key_t    newseckey;
     pgp_key_t    *newpubkey;
 
@@ -754,15 +743,9 @@ PEP_STATUS pgp_generate_keypair(
     const char *hashalg;
     const char *cipher;
 
-    assert(session);
-    assert(identity);
-    assert(identity->address);
-    assert(identity->fpr == NULL);
-    assert(identity->username);
-
-    if(!session || !identity ||
-       !identity->address || identity->fpr || !identity->username)
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && identity && ! EMPTYSTR(identity->address)
+                && identity->fpr == NULL
+                && ! EMPTYSTR(identity->username));
 
     if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
@@ -858,17 +841,12 @@ unlock_netpgp:
 
 PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fprstr)
 {
-    TRACE_FUNCS()
     uint8_t *fpr;
     size_t length;
 
     PEP_STATUS result;
 
-    assert(session);
-    assert(fprstr);
-
-    if (!session || !fprstr)
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && ! EMPTYSTR(fprstr));
 
     if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
@@ -984,20 +962,15 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
                               stringlist_t** imported_keys,
                               uint64_t* changed_key_index)
 {
-    TRACE_FUNCS()
-
     int ret;
     PEP_STATUS result = PEP_STATUS_OK;
     char* passphrase = NULL;
 
-    if (!imported_keys && changed_key_index)
-        return PEP_ILLEGAL_VALUE;
-
     stringlist_t* key_fprs = NULL;
     pgp_memory_t *mem = NULL;
- 
-    assert(session);
-    assert(key_data);
+
+    PEP_REQUIRE(session && ! EMPTYSTR(key_data));
+    PEP_REQUIRE(imported_keys || ! changed_key_index);
 
     passphrase = session->curr_passphrase;
     if(passphrase && passphrase[0]) {
@@ -1006,9 +979,6 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
 
     //pgp_set_debug_level("validate.c");
     //pgp_set_debug_level("reader.c");
-
-    if(!session || !key_data)
-        return PEP_ILLEGAL_VALUE;
 
     if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
@@ -1121,7 +1091,6 @@ PEP_STATUS pgp_export_keydata(
     bool secret
     )
 {
-    TRACE_FUNCS()
     pgp_key_t *key;
     uint8_t *fpr = NULL;
     size_t fprlen;
@@ -1131,18 +1100,12 @@ PEP_STATUS pgp_export_keydata(
     size_t buflen;
     const pgp_keyring_t *srcring;
 
-    assert(session);
-    assert(fprstr);
-    assert(key_data);
-    assert(size);
+    PEP_REQUIRE(session && ! EMPTYSTR(fprstr) && key_data && size);
 
     if (secret)
         srcring = netpgp->secring;
     else
         srcring = netpgp->pubring;
-    
-    if (!session || !fprstr || !key_data || !size)
-        return PEP_ILLEGAL_VALUE;
 
     if(pthread_mutex_lock(&netpgp_mutex)) {
         return PEP_UNKNOWN_ERROR;
@@ -1183,8 +1146,9 @@ struct HKP_answer {
 
 PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern)
 {
-    TRACE_FUNCS()
-    assert(!"pgp_recv_key not implemented");
+    PEP_REQUIRE(session);
+    PEP_LOG_CRITICAL("not implemented");
+    PEP_ASSERT(false);
     return PEP_UNKNOWN_ERROR;
 }
 
@@ -1301,19 +1265,11 @@ PEP_STATUS pgp_find_keys(
     PEP_SESSION session, const char *pattern, stringlist_t **keylist
     )
 {
-    TRACE_FUNCS()
     stringlist_t *_keylist, *_k;
 
     PEP_STATUS result;
 
-    assert(session);
-    assert(pattern);
-    assert(keylist);
-
-    if (!session || !pattern || !keylist )
-    {
-        return PEP_ILLEGAL_VALUE;
-    }
+    PEP_REQUIRE(session && ! EMPTYSTR(pattern) && keylist);
 
     if (pthread_mutex_lock(&netpgp_mutex))
     {
@@ -1349,8 +1305,9 @@ unlock_netpgp:
 
 PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern)
 {
-    TRACE_FUNCS()
-    assert(!"pgp_send_key not implemented");
+    PEP_REQUIRE(session);
+    PEP_LOG_CRITICAL("not implemented");
+    PEP_ASSERT(false);
     return PEP_UNKNOWN_ERROR;
 }
 
@@ -1358,7 +1315,6 @@ PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern)
 PEP_STATUS pgp_get_key_rating(
     PEP_SESSION session, const char *fprstr, PEP_comm_type *comm_type)
 {
-    TRACE_FUNCS()
     pgp_key_t *key;
     uint8_t *fpr = NULL;
     unsigned from = 0;
@@ -1367,12 +1323,7 @@ PEP_STATUS pgp_get_key_rating(
 
     PEP_STATUS status = PEP_STATUS_OK;
 
-    assert(session);
-    assert(fprstr);
-    assert(comm_type);
-
-    if (!session || !fprstr || !comm_type )
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && ! EMPTYSTR(fprstr) && comm_type);
 
     *comm_type = PEP_ct_unknown;
 
@@ -1427,7 +1378,6 @@ PEP_STATUS pgp_renew_key(
         const timestamp *ts
     )
 {
-    TRACE_FUNCS()
     pgp_key_t *pkey;
     pgp_key_t *skey;
     uint8_t fpr[PGP_FINGERPRINT_SIZE];
@@ -1438,11 +1388,7 @@ PEP_STATUS pgp_renew_key(
 
     PEP_STATUS status = PEP_STATUS_OK;
 
-    assert(session);
-    assert(fprstr);
-
-    if (!session || !fprstr )
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && ! EMPTYSTR(fprstr));
 
     if(ts)
     {
@@ -1524,18 +1470,13 @@ PEP_STATUS pgp_revoke_key(
         const char *reason
     )
 {
-    TRACE_FUNCS()
     uint8_t *fpr = NULL;
     size_t length;
     unsigned from = 0;
 
     PEP_STATUS status = PEP_STATUS_OK;
 
-    assert(session);
-    assert(fprstr);
-
-    if (!session || !fprstr)
-        return PEP_UNKNOWN_ERROR;
+    PEP_REQUIRE(session && ! EMPTYSTR(fprstr));
 
     if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
@@ -1585,16 +1526,10 @@ PEP_STATUS pgp_key_expired(
         bool *expired
     )
 {
-    TRACE_FUNCS()
     PEP_STATUS status = PEP_STATUS_OK;
     PEP_comm_type comm_type;
 
-    assert(session);
-    assert(fprstr);
-    assert(expired);
-
-    if (!session || !fprstr || !expired)
-        return PEP_UNKNOWN_ERROR;
+    PEP_REQUIRE(session && ! EMPTYSTR(fprstr) && expired);
 
     // TODO : take "when" in account
 
@@ -1618,13 +1553,10 @@ PEP_STATUS pgp_key_revoked(
         bool *revoked
     )
 {
-    TRACE_FUNCS()
     PEP_STATUS status = PEP_STATUS_OK;
     PEP_comm_type comm_type;
 
-    assert(session);
-    assert(fprstr);
-    assert(revoked);
+    PEP_REQUIRE(session && ! EMPTYSTR(fprstr) && revoked);
 
     *revoked = false;
 
@@ -1646,7 +1578,6 @@ PEP_STATUS pgp_key_created(
         time_t *created
     )
 {
-    TRACE_FUNCS()
     uint8_t *fpr;
     pgp_key_t *key;
     size_t length;
@@ -1654,12 +1585,7 @@ PEP_STATUS pgp_key_created(
 
     PEP_STATUS status = PEP_STATUS_OK;
 
-    assert(session);
-    assert(fprstr);
-    assert(created);
-
-    if (!session || !fprstr || !created)
-        return PEP_UNKNOWN_ERROR;
+    PEP_REQUIRE(session && ! EMPTYSTR(fprstr) && created);
 
     *created = 0;
 
@@ -1698,10 +1624,8 @@ unlock_netpgp:
 PEP_STATUS pgp_list_keyinfo(
         PEP_SESSION session, const char* pattern, stringpair_list_t** keyinfo_list)
 {
-    TRACE_FUNCS()
-
-    if (!session || !keyinfo_list)
-        return PEP_UNKNOWN_ERROR;
+    PEP_REQUIRE_ORELSE_RETURN(session && keyinfo_list,
+                              PEP_UNKNOWN_ERROR);
 
     if (pthread_mutex_lock(&netpgp_mutex))
     {
@@ -1729,13 +1653,11 @@ PEP_STATUS pgp_find_private_keys(
     PEP_SESSION session, const char *pattern, stringlist_t **keylist
 )
 {
-    TRACE_FUNCS()
     stringlist_t *_keylist, *_k;
 
     PEP_STATUS result;
 
-    assert(session);
-    assert(keylist);
+    PEP_REQUIRE(session && keylist);
 
     //if (!session || !keylist )
     //{
@@ -1776,7 +1698,7 @@ PEP_STATUS pgp_contains_priv_key(
         const char *fpr,
         bool *has_private)
 {
-    TRACE_FUNCS()
+    PEP_REQUIRE(session && has_private);
     stringlist_t* keylist = NULL;
     PEP_STATUS status = pgp_find_private_keys(session, fpr, &keylist);
     if (status == PEP_STATUS_OK && keylist) {
@@ -1792,12 +1714,13 @@ PEP_STATUS pgp_contains_priv_key(
 PEP_STATUS pgp_import_ultimately_trusted_keypairs(PEP_SESSION session) {
     // Not implemented - netpgp doesn't appear to keep track of trust status in
     // a meaningful way, though there is space for it in the structs.
-    TRACE_FUNCS()
+    PEP_REQUIRE(session);
+    PEP_LOG_WARNING("not implemented");
     return PEP_STATUS_OK;
 }
 
 PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session, PEP_CIPHER_SUITE suite) {
-    TRACE_FUNCS()
+    PEP_REQUIRE(session);
     if (suite == PEP_CIPHER_SUITE_DEFAULT) {
         return PEP_STATUS_OK;
     } else {

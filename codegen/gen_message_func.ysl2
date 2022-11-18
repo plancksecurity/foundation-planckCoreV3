@@ -293,12 +293,9 @@ void free_«@name»_message(«@name»_t *msg)
 PEP_STATUS update_«@name»_state(PEP_SESSION session, «@name»_t *msg,
         «@name»_PR *fsm, int *message_type)
 {
+    PEP_REQUIRE(session && msg && fsm && message_type);
+
     int result = 0;
-
-    assert(session && msg && fsm && message_type);
-    if (!(session && msg && fsm && message_type))
-        return PEP_ILLEGAL_VALUE;
-
     *fsm = 0;
     *message_type = None;
 
@@ -317,9 +314,7 @@ PEP_STATUS update_«@name»_state(PEP_SESSION session, «@name»_t *msg,
 
 PEP_STATUS update_«@name»_message(PEP_SESSION session, «@name»_t *msg)
 {
-    assert(session && msg);
-    if (!(session && msg))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && msg);
 
     int fsm = msg->present;
     switch (fsm) {
@@ -371,9 +366,7 @@ template "auto" choose {
         {
             long *major = (long *) malloc(sizeof(long));
             long *minor = (long *) malloc(sizeof(long));
-            assert(major && minor);
-            if (!(major && minor))
-                return PEP_OUT_OF_MEMORY;
+            PEP_WEAK_ASSERT_ORELSE_RETURN(major && minor, PEP_OUT_OF_MEMORY);
 
             *major = «$fsm/version/@major»;
             *minor = «$fsm/version/@minor»;

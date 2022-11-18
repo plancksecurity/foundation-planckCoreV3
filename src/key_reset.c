@@ -5,6 +5,12 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
+/* In this compilation unit very few functions take a session as a
+   paramter; this prevents me from using the new debugging and logging
+   functionalities.  I wonder if we should systematically add a session
+   paramter to our functions, even when not needed, just for this.
+   --positron, 2022-10 */
+
 #include "pEp_internal.h"
 #include "dynamic_api.h"
 #include "message_api.h"
@@ -59,10 +65,8 @@ static PEP_STATUS _generate_reset_structs(PEP_SESSION session,
                                           bloblist_t** key_attachments,
                                           keyreset_command_list** command_list,
                                           bool include_secret) {
-
-    if (!session || !reset_ident || EMPTYSTR(old_fpr) || EMPTYSTR(new_fpr) ||
-        !key_attachments || !command_list)
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && reset_ident && ! EMPTYSTR(old_fpr)
+                && ! EMPTYSTR(new_fpr) && key_attachments && command_list);
     
     // Ok, generate payload here...
     pEp_identity* outgoing_ident = identity_dup(reset_ident);
@@ -378,14 +382,10 @@ PEP_STATUS has_key_reset_been_sent(
         const char* revoked_fpr,
         bool* contacted)
 {
-    assert(session);
-    assert(contacted);
-    assert(user_id);
-    assert(revoked_fpr);
-    assert(!EMPTYSTR(user_id));
-
-    if (!session || !contacted || EMPTYSTR(from_addr) || EMPTYSTR(revoked_fpr) || EMPTYSTR(user_id))
-        return PEP_ILLEGAL_VALUE;
+    PEP_ASSERT(session
+               && ! EMPTYSTR(from_addr) && ! EMPTYSTR(user_id)
+               && ! EMPTYSTR(revoked_fpr)
+               && contacted);
     
     *contacted = false;
                     
@@ -428,13 +428,10 @@ PEP_STATUS set_reset_contact_notified(
         const char* contact_id
     )
 {
+    PEP_REQUIRE(session && ! EMPTYSTR(own_address) && ! EMPTYSTR(revoke_fpr)
+                && ! EMPTYSTR(contact_id));
+
     PEP_STATUS status = PEP_STATUS_OK;
-    
-    assert(session && !EMPTYSTR(own_address) && !EMPTYSTR(revoke_fpr) && !EMPTYSTR(contact_id));
-    
-    if (!session || EMPTYSTR(own_address) || EMPTYSTR(revoke_fpr) || EMPTYSTR(contact_id))
-        return PEP_ILLEGAL_VALUE;
-    
     sql_reset_and_clear_bindings(session->set_revoke_contact_as_notified);
     sqlite3_bind_text(session->set_revoke_contact_as_notified, 1, revoke_fpr, -1, 
             SQLITE_STATIC);
@@ -462,9 +459,7 @@ PEP_STATUS set_reset_contact_notified(
 // FIXME: fpr ownership
 PEP_STATUS receive_key_reset(PEP_SESSION session,
                              message* reset_msg) {
-
-    if (!session || !reset_msg || !reset_msg->_sender_fpr)
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && reset_msg && ! EMPTYSTR(reset_msg->_sender_fpr));
 
     PEP_STATUS status = PEP_STATUS_OK;
 
@@ -1018,13 +1013,11 @@ PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
                                      pEp_identity* from_ident,
                                      const char* old_fpr, 
                                      const char* new_fpr) {
-    assert(old_fpr);
-    assert(new_fpr);
-    assert(session);
+    PEP_REQUIRE(session
+                && from_ident && ! EMPTYSTR(from_ident->address)
+                && ! EMPTYSTR(from_ident->user_id)
+                && ! EMPTYSTR(old_fpr) && ! EMPTYSTR(new_fpr));
 //    assert(session->messageToSend); NO. Don't assert this, FFS.
-    
-    if (!session || !old_fpr || !new_fpr || !from_ident || EMPTYSTR(from_ident->address) || EMPTYSTR(from_ident->user_id))
-        return PEP_ILLEGAL_VALUE;
 
     messageToSend_t send_cb = session->messageToSend;
     if (!send_cb)
@@ -1426,15 +1419,9 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
                                                          identity_list* key_idents, 
                                                          char* old_key,
                                                          bool grouped_only) {
-    assert(session);
-    assert(key_idents);
-    assert(old_key);
-    
-    if (!session || !key_idents || EMPTYSTR(old_key))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && key_idents && ! EMPTYSTR (old_key));
 
     messageToSend_t send_cb = session->messageToSend;
-    
     if (!send_cb)
         return PEP_SYNC_NO_MESSAGE_SEND_CALLBACK;
 
@@ -1646,10 +1633,7 @@ pEp_error:
 }
 
 DYNAMIC_API PEP_STATUS key_reset_own_grouped_keys(PEP_SESSION session) {
-    assert(session);
-    
-    if (!session)
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session);
 
     stringlist_t* keys = NULL;
     char* user_id = NULL;    

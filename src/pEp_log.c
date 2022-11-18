@@ -17,6 +17,15 @@
 #include <assert.h>
 #include <string.h>
 
+/* Using transactions is not terribly important for semantics in this case, but
+   here it makes performance better when the oldest row is being deleted, as one
+   can show by undefining this:
+   On positron's machine (log 1000 entries,
+                          PEP_LOG_DATABASE_ROW_NO_MAXIMUM set to 4000):
+     real 34.90   no transactions
+     real 18.24   transactions  */
+#define TRANSACTIONS
+
 #if defined (PEP_HAVE_SYSLOG)
 #   include <syslog.h>
 #endif
@@ -154,8 +163,13 @@ static const char* _log_level_to_string(PEP_LOG_LEVEL level)
    just once at start up, and does not need to be compiled into a prepared
    statement. */
 static const char *pEp_log_create_table_text =
-" -- No need for PRAGMA foreign_keys on a single-table\n"
-" -- database with no foreign keys.\n"
+" PRAGMA secure_delete = OFF;\n"
+" PRAGMA page_size = 4096;\n" /* This should be the same as the filesystem
+                                 page size*/
+" VACUUM;\n" /* I have verified with this statement *commented out* that the
+                database file does not grow to an unbounded size. */
+" -- No need for PRAGMA foreign_keys on a single-table database with\n"
+" -- no foreign keys.\n"
 " PRAGMA checkpoint_fullfsync = ON;\n"
 " PRAGMA auto_vacuum = INCREMENTAL;\n"
 " PRAGMA incremental_vacuum = ON;\n"
@@ -164,7 +178,7 @@ static const char *pEp_log_create_table_text =
 "   -- The id is a good approximation of a timestamp, much more efficient.\n"
 "   id               INTEGER  PRIMARY KEY  AUTOINCREMENT,"
 "   Level            INTEGER  NOT NULL,"
-"   Timestamp        INTEGER  NOT NULL     DEFAULT (cast(strftime('%s','now') as int)),"
+"   Timestamp        TEXT     NOT NULL     DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')),"
 "   Pid              INTEGER  NOT NULL,"
 "   System           TEXT,"
 "   Subsystem        TEXT,"
@@ -190,7 +204,7 @@ static const char *pEp_log_create_table_text =
 "                      WHEN 320 THEN 'trc'"
 "                               ELSE CAST(E.Level AS TEXT)"
 "         END AS Lvl,"
-"         datetime(E.timestamp, 'unixepoch', 'localtime') AS Timestamp,"
+"         E.Timestamp,"
 "         E.Pid,"
 "         CASE WHEN E.System is NULL THEN"
 "           CASE WHEN E.SubSystem is NULL THEN  NULL"
@@ -205,6 +219,14 @@ static const char *pEp_log_create_table_text =
 "  FROM Entries E"
 "  ORDER BY E.id;";
 
+/* Begin a transaction. */
+static const char *pEp_log_begin_transaction_text =
+"  BEGIN TRANSACTION;";
+
+/* Commit the current transaction. */
+static const char *pEp_log_commit_transaction_text =
+"  COMMIT TRANSACTION;";
+
 /* Insert a new row. */
 static const char *pEp_log_insert_text =
 " INSERT INTO Entries"
@@ -217,7 +239,7 @@ static const char *pEp_log_insert_text =
 static const char *pEp_log_delete_oldest_text =
 " DELETE FROM Entries"
 "                     -- MAX is a faster approximation of COUNT\n"
-" WHERE id = (SELECT (CASE WHEN MAX(id) <= ?1 THEN"
+" WHERE id = (SELECT (CASE WHEN MAX(id) < ?1 THEN"
 "                       -1"
 "                     ELSE"
 "                       MIN(id)"
@@ -237,6 +259,18 @@ static PEP_STATUS _pEp_log_prepare_sql_statements(PEP_SESSION session)
             goto end;                       \
         }                                   \
     } while (false)
+    sqlite_status
+        = sqlite3_prepare_v2(session->log_db,
+                             pEp_log_begin_transaction_text, -1,
+                             & session->log_begin_transaction_prepared_statement,
+                             NULL);
+    CHECK_SQL_STATUS;
+    sqlite_status
+        = sqlite3_prepare_v2(session->log_db,
+                             pEp_log_commit_transaction_text, -1,
+                             & session->log_commit_transaction_prepared_statement,
+                             NULL);
+    CHECK_SQL_STATUS;
     sqlite_status
         = sqlite3_prepare_v2(session->log_db,
                              pEp_log_insert_text, -1,
@@ -309,16 +343,28 @@ static PEP_STATUS _pEp_log_finalize_database(PEP_SESSION session)
 
     PEP_STATUS status = PEP_STATUS_OK;
     int sqlite_status = SQLITE_OK;
+#define CHECK_SQL                                                        \
+    do {                                                                 \
+        if (sqlite_status != SQLITE_OK) {                                \
+            status = PEP_UNKNOWN_DB_ERROR;                               \
+            /* Do not jump.  Recovery from error is difficult here, and  \
+               this should not happen anyway. */                         \
+        }                                                                \
+    } while (false)
 
     /* Finialise prepared SQL statements.  Go on even in case of failure. */
     sqlite_status
+        = sqlite3_finalize(session->log_begin_transaction_prepared_statement);
+    CHECK_SQL;
+    sqlite_status
+        = sqlite3_finalize(session->log_commit_transaction_prepared_statement);
+    CHECK_SQL;
+    sqlite_status
         = sqlite3_finalize(session->log_insert_prepared_statement);
-    if (sqlite_status != SQLITE_OK)
-        status = PEP_UNKNOWN_DB_ERROR;
+    CHECK_SQL;
     sqlite_status
         = sqlite3_finalize(session->log_delete_oldest_prepared_statement);
-    if (sqlite_status != SQLITE_OK)
-        status = PEP_UNKNOWN_DB_ERROR;
+    CHECK_SQL;
 
     /* Close the database. */
     sqlite_status = sqlite3_close(session->log_db);
@@ -328,6 +374,7 @@ static PEP_STATUS _pEp_log_finalize_database(PEP_SESSION session)
     session->log_db = NULL;
 
     return status;
+#undef CHECK_SQL
 }
 
 /* Delete the oldest row, if more than PEP_LOG_DATABASE_ROW_NO_MAXIMUM rows seem
@@ -368,10 +415,6 @@ static PEP_STATUS _pEp_log_db(PEP_SESSION session,
     if (! (session != NULL && session->log_db != NULL))
         return PEP_ILLEGAL_VALUE;
 
-    /* If the table has become too large delete the oldest row, before inserting
-       the next one. */
-    _pEp_log_delete_oldest_row_when_too_many(session);
-
     PEP_STATUS status = PEP_STATUS_OK;
     int sqlite_status = SQLITE_OK;
 #define CHECK_SQL(expected_sqlite_status)                 \
@@ -381,6 +424,16 @@ static PEP_STATUS _pEp_log_db(PEP_SESSION session,
             goto error;                                   \
         }                                                 \
     } while (false)
+
+#ifdef TRANSACTIONS
+    sql_reset_and_clear_bindings(session->log_begin_transaction_prepared_statement);
+    sqlite_status = sqlite3_step(session->log_begin_transaction_prepared_statement);
+    CHECK_SQL(SQLITE_DONE);
+#endif // #ifdef TRANSACTIONS
+
+    /* If the table has become too large delete the oldest row, before inserting
+       the next one. */
+    _pEp_log_delete_oldest_row_when_too_many(session);
 
     /* Bind parameters to the compiled statement. */
     sql_reset_and_clear_bindings(session->log_insert_prepared_statement);
@@ -414,8 +467,15 @@ static PEP_STATUS _pEp_log_db(PEP_SESSION session,
     sqlite_status = sqlite3_step(session->log_insert_prepared_statement);
     CHECK_SQL(SQLITE_DONE);
 
+#ifdef TRANSACTIONS
+    sql_reset_and_clear_bindings(session->log_commit_transaction_prepared_statement);
+    sqlite_status = sqlite3_step(session->log_commit_transaction_prepared_statement);
+    CHECK_SQL(SQLITE_DONE);
+#endif // #ifdef TRANSACTIONS
+
  error:
     return status;
+#undef CHECK_SQL
 }
 
 
@@ -751,9 +811,9 @@ DYNAMIC_API PEP_STATUS pEp_log(PEP_SESSION session,
 static void warn_about_unsupported_destinations(void) {
 #if ! defined (PEP_HAVE_STDOUT_AND_STDERR)
     if (PEP_LOG_DESTINATIONS & PEP_LOG_DESTINATION_STDOUT)
-        fprintf(stderr, "Warning: stdout logging selected but unavailable\n");
+        printf("Warning: stdout logging selected but unavailable\n");
     if (PEP_LOG_DESTINATIONS & PEP_LOG_DESTINATION_STDERR)
-        fprintf(stderr, "Warning: stderr logging selected but unavailable\n");
+        printf("Warning: stderr logging selected but unavailable\n");
 #endif
     /* The database destination is always available. */
 #if ! defined (PEP_HAVE_SYSLOG)
@@ -794,3 +854,5 @@ PEP_STATUS pEp_log_finalize(PEP_SESSION session)
 
     return status;
 }
+
+

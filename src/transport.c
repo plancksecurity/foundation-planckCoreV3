@@ -8,17 +8,16 @@
 #include "trans_auto.h"
 
 #include <memory.h>
-#include <assert.h>
 
 PEP_transport_t transports[PEP_trans__count];
     
 PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first)
 {
-    assert(session);
+    PEP_REQUIRE(session);
     session->transports = transports;
 
     if (in_first) {
-        assert(PEP_trans__count == 1);
+        PEP_ASSERT(PEP_trans__count == 1);
         memset(transports, 0, sizeof(PEP_transport_t) * PEP_trans__count);
 
         transports[PEP_trans_auto].id = PEP_trans_auto;
@@ -39,7 +38,7 @@ PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first)
 
 void release_transport_system(PEP_SESSION session, bool out_last)
 {
-    assert(session);
+    PEP_REQUIRE_ORELSE(session, { return; });
     // nothing yet
 }
 

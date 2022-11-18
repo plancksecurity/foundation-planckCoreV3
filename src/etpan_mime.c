@@ -2252,7 +2252,7 @@ DYNAMIC_API PEP_STATUS mime_encode_message(
             break;
 
         case PEP_enc_S_MIME:
-            NOT_IMPLEMENTED
+            NOT_IMPLEMENTED;
                 
         case PEP_enc_PGP_MIME:
             status = mime_encode_message_PGP_MIME(msg, omit_fields, &mime);
@@ -2264,7 +2264,7 @@ DYNAMIC_API PEP_STATUS mime_encode_message(
             break;
 
         default:
-            NOT_IMPLEMENTED
+            NOT_IMPLEMENTED;
     }
 
     if (status != PEP_STATUS_OK)

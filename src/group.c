@@ -1043,9 +1043,7 @@ PEP_STATUS retrieve_full_group_membership(
         pEp_identity *ident = new_identity((const char *) sqlite3_column_text(session->get_all_members, 1),
                                            NULL,(const char *) sqlite3_column_text(session->get_all_members, 0),
                                            NULL);
-        assert(ident);
-        if (ident == NULL)
-            goto enomem;
+        PEP_WEAK_ASSERT_ORELSE_GOTO(ident, enomem);
 
         pEp_member* new_mem = new_member(ident);
         new_mem->joined = sqlite3_column_int(session->get_all_members, 2);
@@ -1106,9 +1104,7 @@ PEP_STATUS retrieve_active_member_list(
         pEp_identity *ident = new_identity((const char *) sqlite3_column_text(session->get_active_members, 1),
                 NULL,(const char *) sqlite3_column_text(session->get_active_members, 0),
                 NULL);
-        assert(ident);
-        if (ident == NULL)
-            goto enomem;
+        PEP_WEAK_ASSERT_ORELSE_GOTO(ident, enomem);
 
         pEp_member* member = new_member(ident);
         if (!member)

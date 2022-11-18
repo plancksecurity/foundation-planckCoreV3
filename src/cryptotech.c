@@ -14,16 +14,16 @@
 
 #include <stdlib.h>
 #include <memory.h>
-#include <assert.h>
 
 
 PEP_cryptotech_t cryptotech[PEP_crypt__count];
 
 PEP_STATUS init_cryptotech(PEP_SESSION session, bool in_first)
 {
+    PEP_REQUIRE(session);
     PEP_STATUS status = PEP_STATUS_OK;
 
-    assert(PEP_crypt__count == 2);
+    PEP_ASSERT(PEP_crypt__count == 2);
 
     if (in_first) {
         memset(cryptotech, 0, sizeof(PEP_cryptotech_t) * PEP_crypt__count);

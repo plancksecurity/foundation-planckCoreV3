@@ -21,12 +21,6 @@ extern "C" {
 #include "labeled_int_list.h"    
 #include "timestamp.h"
 
-#ifdef SQLITE3_FROM_OS
-#include <sqlite3.h>
-#else
-#include "sqlite3.h"
-#endif
-
 #define PEP_VERSION "3.2" ///< pEp *protocol* version
 
 /// @def PEP_ENGINE_VERSION
@@ -91,19 +85,6 @@ extern "C" {
                              _PEP_ENGINE_VERSION_PLUS_STRING)
 
 #define PEP_OWN_USERID "pEp_own_userId"
-    
-/**
- *  <!--       sql_reset_and_clear_bindings()       -->
- *  
- *  @brief Both reset and clear bindings in the ointed sqlite3 prepared
- *         statement
- *  
- *  @param[in]   s    prepared SQL statement
- *  
- *
- */
-void
-sql_reset_and_clear_bindings(sqlite3_stmt *s);
 
 // pEp Engine API
 
@@ -297,7 +278,8 @@ typedef enum _PEP_rating {
     PEP_rating_cannot_decrypt = 1,
     PEP_rating_have_no_key = 2,
     PEP_rating_unencrypted = 3,
-    PEP_rating_unreliable = 5,
+    PEP_rating_unreliable = 4,
+    PEP_rating_media_key_protected = 5,
 
     PEP_rating_b0rken = -2,
 
@@ -696,88 +678,6 @@ DYNAMIC_API PEP_STATUS encrypt_and_sign(
  */
 
 DYNAMIC_API PEP_STATUS probe_encrypt(PEP_SESSION session, const char *fpr);
-
-/**
- *  <!--       set_debug_color()       -->
- *  
- *  @brief            TODO
- *  
- *  @param[in]  session        session handle
- *  @param[in]  ansi_color     int
- *  
- */
-DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color);
-
-/**
- *  <!--       log_event()       -->
- *  
- *  @brief Log a user defined event defined by UTF-8 encoded strings into
- *         management log
- *  
- *  @param[in]   session        session handle
- *  @param[in]   title          C string with event name
- *  @param[in]   entity         C string with name of entity which is logging
- *  @param[in]   description    C string with long description for event or NULL if
- *                                  omitted
- *  @param[in]   comment        C string with user defined comment or NULL if
- *                                  omitted
- *  
- *  @retval PEP_STATUS_OK       log entry created
- *  @retval PEP_ILLEGAL_VALUE   illegal parameter value  
- *  
- */
-
-DYNAMIC_API PEP_STATUS log_event(
-        PEP_SESSION session,
-        const char *title,
-        const char *entity,
-        const char *description,
-        const char *comment
-    );
-
-
-/**
- *  <!--       log_service()       -->
- *  
- *  @brief            TODO
- *  
- *  @param[in]  session        session handle
- *  @param[in]  title          const char*
- *  @param[in]  entity         const char*
- *  @param[in]  description    const char*
- *  @param[in]  comment        const char*
-
- *  @retval PEP_STATUS_OK
- *  @retval PEP_ILLEGAL_VALUE
- *  
- */
-DYNAMIC_API PEP_STATUS log_service(PEP_SESSION session, const char *title,
-        const char *entity, const char *description, const char *comment);
-
-#define _STR_(x) #x
-#define _D_STR_(x) _STR_(x)
-#define S_LINE _D_STR_(__LINE__)
-
-#define SERVICE_LOG(session, title, entity, desc) \
-    log_service((session), (title), (entity), (desc), "service " __FILE__ ":" S_LINE)
-
-/**
- *  @internal
- *  <!--       _service_error_log()       -->
- *  
- *  @brief            TODO
- *  
- *  @param[in]  session       session handle
- *  @param[in]  entity        const char*
- *  @param[in]  status        PEP_STATUS
- *  @param[in]  where         const char*
- *  
- */
-DYNAMIC_API void _service_error_log(PEP_SESSION session, const char *entity,
-        PEP_STATUS status, const char *where);
-
-#define SERVICE_ERROR_LOG(session, entity, status) \
-    _service_error_log((session), (entity), (status), __FILE__ ":" S_LINE)
 
 /**
  *  <!--       trustword()       -->
@@ -2131,6 +2031,8 @@ DYNAMIC_API PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user);
  *  @retval     PEP_UNBOUND_ENVIRONMENT_VARIABLE  unknown variable referenced
  *  @retval     PEP_PATH_SYNTAX_ERROR             invalid syntax in argument
  *  @retval     PEP_OUT_OF_MEMORY                 out of memory
+ *  @retval     PEP_CANNOT_CREATE_TEMP_FILE       failed creating paths or
+ *                                                setting path attributes
  *
  */
 DYNAMIC_API PEP_STATUS reset_path_cache(void);
@@ -2140,13 +2042,21 @@ DYNAMIC_API PEP_STATUS reset_path_cache(void);
  *
  *  @brief      Empty the path cache, releasing resources.  
  *
- *  This may invalidate
+ *              This may invalidate
  *              the memory used by the results of per_user_relative_directory,
  *              per_user_directory, per_machine_directory, android_system_db,
  *              unix_system_db, unix_local_db.
  *
  */
 DYNAMIC_API void clear_path_cache(void);
+
+
+/* Temporary compatibility definitions
+ * ***************************************************************** */
+
+/* These must go away, but I am temporarily introducing them so as not to
+   break Engine users. */
+DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color);
 
 #ifdef __cplusplus
 }

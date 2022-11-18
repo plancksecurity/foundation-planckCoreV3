@@ -93,7 +93,6 @@
 #include <locale.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <math.h>
@@ -128,8 +127,13 @@
 #include "sync_api.h"
 #include "Sync_func.h"
 
-
-#define NOT_IMPLEMENTED assert(0); return PEP_UNKNOWN_ERROR;
+/* This old macro is still useful for the contexts where PEP_UNIMPLEMENTED does
+   not work because a "session" variable is not defined. */
+#define NOT_IMPLEMENTED            \
+    do {                           \
+        assert(false);             \
+        return PEP_UNKNOWN_ERROR;  \
+    } while (false)
 
 struct _pEpSession;
 typedef struct _pEpSession pEpSession;
@@ -185,6 +189,8 @@ struct _pEpSession {
     sqlite3 *system_db;
 
     /* Prepared SQL statements (on log_db) for logging.  See pEp_log.c . */
+    sqlite3_stmt *log_begin_transaction_prepared_statement;
+    sqlite3_stmt *log_commit_transaction_prepared_statement;
     sqlite3_stmt *log_insert_prepared_statement;
     sqlite3_stmt *log_delete_oldest_prepared_statement;
 
@@ -367,6 +373,19 @@ PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first);
 void release_transport_system(PEP_SESSION session, bool out_last);
 
 /**
+ *  <!--       sql_reset_and_clear_bindings()       -->
+ *
+ *  @brief Both reset and clear bindings in the ointed sqlite3 prepared
+ *         statement
+ *
+ *  @param[in]   s    prepared SQL statement
+ *
+ *
+ */
+void
+sql_reset_and_clear_bindings(sqlite3_stmt *s);
+
+/**
  *  @internal
  * 
  *  <!--       encrypt_only()       -->
@@ -407,22 +426,6 @@ void decorate_message(
     stringlist_t *keylist,
     bool add_version,
     bool clobber);
-
-#if defined(NDEBUG) || defined(NOLOG)
-#define DEBUG_LOG(TITLE, ENTITY, DESC)
-#else
-#ifdef ANDROID
-#include <android/log.h>
-#define  LOG_MORE(...)  __android_log_print(ANDROID_LOG_DEBUG, "pEpEngine", " %s :: %s :: %s :: %s ", __VA_ARGS__);
-#else
-#include <stdio.h>
-#define  LOG_MORE(...)  fprintf(stderr, "pEpEngine DEBUG_LOG('%s','%s','%s','%s')\n", __VA_ARGS__);
-#endif
-#define DEBUG_LOG(TITLE, ENTITY, DESC) {\
-    log_event(session, (TITLE), (ENTITY), (DESC), "debug " __FILE__ ":" S_LINE);\
-    LOG_MORE((TITLE), (ENTITY), (DESC), __FILE__ ":" S_LINE)\
-}
-#endif
 
 /**
  *  @internal

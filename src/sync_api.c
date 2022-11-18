@@ -9,7 +9,6 @@
 #include "pEp_internal.h"
 
 #include <memory.h>
-#include <assert.h>
 
 #include "KeySync_fsm.h"
 
@@ -52,9 +51,7 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
     if (retrieve_next_sync_event == NULL)
         retrieve_next_sync_event = retrieve_next_sync_event_dummy;
 
-    assert(session && notifyHandshake && retrieve_next_sync_event);
-    if (!(session && notifyHandshake && retrieve_next_sync_event))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && notifyHandshake && retrieve_next_sync_event);
 
     identity_list *own_identities = NULL;
     PEP_STATUS status = own_identities_retrieve(session, &own_identities);
@@ -89,9 +86,7 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
         const identity_list *identities_sharing
     )
 {
-    assert(session);
-    if (!session)
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session);
 
     for (const identity_list *_il = identities_sharing; _il && _il->ident;
             _il = _il->next) {
@@ -144,12 +139,9 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
 {
     Sync_event_t *event= NULL;
 
-    assert(session && session->retrieve_next_sync_event);
-    if (!(session && session->retrieve_next_sync_event))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && session->retrieve_next_sync_event);
 
-    log_event(session, "sync_protocol thread started", "pEp sync protocol",
-            NULL, NULL);
+    PEP_LOG_EVENT("p≡p Engine", "Sync", "sync_protocol thread started");
 
     while (true) 
     {
@@ -162,8 +154,7 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
     }
     session->sync_obj = NULL;
 
-    log_event(session, "sync_protocol thread shutdown", "pEp sync protocol",
-            NULL, NULL);
+    PEP_LOG_EVENT("p≡p Engine", "Sync", "sync_protocol thread shutdown");
 
     return PEP_STATUS_OK;
 }
@@ -174,9 +165,7 @@ DYNAMIC_API PEP_STATUS do_sync_protocol_step(
         SYNC_EVENT event
     )
 {
-    assert(session);
-    if (!session)
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session);
 
     if (!event)
         return PEP_STATUS_OK;
@@ -189,9 +178,7 @@ DYNAMIC_API PEP_STATUS do_sync_protocol_step(
 
 DYNAMIC_API bool is_sync_thread(PEP_SESSION session)
 {
-    assert(session);
-    if (!session)
-        return false;
+    PEP_REQUIRE_ORELSE_RETURN(session, false);
     return session->retrieve_next_sync_event != NULL;
 }
 
@@ -205,9 +192,7 @@ DYNAMIC_API PEP_STATUS enter_device_group(
         const identity_list *identities_sharing
     )
 {
-    assert(session);
-    if (!session)
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session);
 
     for (const identity_list *_il = identities_sharing; _il && _il->ident;
             _il = _il->next) {
@@ -263,9 +248,7 @@ the_end:
 
 PEP_STATUS disable_sync(PEP_SESSION session)
 {
-    assert(session);
-    if (!session)
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session);
 
     if (session->inject_sync_event)
         session->inject_sync_event((void *) SHUTDOWN, NULL);
@@ -287,9 +270,7 @@ the_end:
 }
 
 DYNAMIC_API PEP_STATUS leave_device_group(PEP_SESSION session) {
-    assert(session);
-    if (!session)
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session);
 
     bool grouped = false;
     PEP_STATUS status = deviceGrouped(session, &grouped);
@@ -308,9 +289,8 @@ DYNAMIC_API PEP_STATUS leave_device_group(PEP_SESSION session) {
 DYNAMIC_API PEP_STATUS enable_identity_for_sync(PEP_SESSION session,
         pEp_identity *ident)
 {
-    assert(session && ident && ident->user_id && ident->user_id[0] && ident->address && ident->address[0]);
-    if (!(session && ident && ident->user_id && ident->user_id[0] && ident->address && ident->address[0]))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && ident && ! EMPTYSTR(ident->user_id)
+                && ! EMPTYSTR(ident->address));
 
     // safeguard: in case the delivered identity is not valid fetch flags from the database
     //            while doing this check if this is an own identity and return an error if not
@@ -319,7 +299,7 @@ DYNAMIC_API PEP_STATUS enable_identity_for_sync(PEP_SESSION session,
     PEP_STATUS status = get_identity(session, ident->address, ident->user_id, &stored_ident);
     if (status)
         return status;
-    assert(stored_ident);
+    PEP_ASSERT(stored_ident);
     if (!stored_ident->me) {
         free_identity(stored_ident);
         return PEP_ILLEGAL_VALUE;
@@ -360,9 +340,7 @@ DYNAMIC_API PEP_STATUS enable_identity_for_sync(PEP_SESSION session,
 DYNAMIC_API PEP_STATUS disable_identity_for_sync(PEP_SESSION session,
         pEp_identity *ident)
 {
-    assert(session && ident);
-    if (!(session && ident))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && ident);
 
     // safeguard: in case the delivered identity is not valid fetch flags from the database
     //            while doing this check if this is an own identity and return an error if not
@@ -371,7 +349,7 @@ DYNAMIC_API PEP_STATUS disable_identity_for_sync(PEP_SESSION session,
     PEP_STATUS status = get_identity(session, ident->address, ident->user_id, &stored_ident);
     if (status)
         return status;
-    assert(stored_ident);
+    PEP_ASSERT(stored_ident);
     if (!stored_ident->me) {
         free_identity(stored_ident);
         return PEP_ILLEGAL_VALUE;
@@ -407,9 +385,7 @@ DYNAMIC_API PEP_STATUS disable_identity_for_sync(PEP_SESSION session,
 
 DYNAMIC_API PEP_STATUS disable_all_sync_channels(PEP_SESSION session)
 {
-    assert(session);
-    if (!session)
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session);
 
     identity_list *own_identities = NULL;
     PEP_STATUS status = own_identities_retrieve(session, &own_identities);
@@ -429,9 +405,7 @@ DYNAMIC_API PEP_STATUS disable_all_sync_channels(PEP_SESSION session)
 DYNAMIC_API PEP_STATUS sync_reinit(PEP_SESSION session)
 {
     /* Check that the session is valid. */
-    assert(session);
-    if (!session)
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session);
 
     /* Go to the appropriate state. */
     return signal_Sync_event(session, Sync_PR_keysync, CannotDecrypt, NULL);

@@ -4,12 +4,11 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-// (setq show-trailing-whitespace t indicate-empty-lines t)
-
 #ifndef PEP_LOG_H
 #define PEP_LOG_H
 
 #include "pEpEngine.h"
+#include "status_to_string.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -17,34 +16,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/* Debugging definitions for myself
- * ***************************************************************** */
-
-#define PEP_LOG_LEVEL_MAXIMUM  PEP_LOG_LEVEL_EVERYTHING // FIXME: a test for myself, of course
-//#define PEP_LOG_DESTINATIONS   (PEP_LOG_DESTINATION_STDERR | PEP_LOG_DESTINATION_DATABASE | PEP_LOG_DESTINATION_SYSLOG)
-#define PEP_LOG_DESTINATIONS   (PEP_LOG_DESTINATION_STDERR | PEP_LOG_DESTINATION_DATABASE)
-//#define PEP_LOG_DESTINATIONS   PEP_LOG_DESTINATION_ALL
-
-/* If this is enabled then requirements at function entry will also log a line
-   (level Function) about the function being entered.  Since this can make the
-   logs very noisy I made it possible to disable the feature independently from
-   PEP_LOG_LEVEL_MAXIMUM , by commenting-out this line. */
-#define PEP_LOG_FUNCTION_ENTRY  1
-
-/* If this is enabled then *failed* status checkswill also log a line (level
-   NonOK) about the expression, usually a function call, failing.  Since this
-   can make the logs noisy I made it possible to disable the feature
-   independently from PEP_LOG_LEVEL_MAXIMUM , by commenting-out this line. */
-#define PEP_LOG_LOCAL_FAILURE  1
-
-/* Every time database rows become more than this number delete the oldest one.
-   This is needed to prevent the database from growing to an unbounded size.
-
-   Just as a rule of thumb:
-   - 10000 entries take 1MB
-   - 1 entry takes ~100B   */
-#define PEP_LOG_DATABASE_ROW_NO_MAXIMUM 100000
 
 
 /* Introduction
@@ -116,7 +87,19 @@ extern "C" {
    Here "trc" is an abbreviation of the log level name; 523621 is the process id
    of the running process; (it would be useful to show a thread id as well next
    to the process id, but unfortunately the value of thread ids varies depending
-   on the thread API, even on the same system). */
+   on the thread API, even on the same system).
+
+
+   Logging at multiple log levels in the same compilation units requires
+   multiple macros, but these are easy to factor with a single "higher-order"
+   definition taking a macro name as a parameter:
+
+   #define _LOG_WITH_MACRO_NAME(name, ...)     \
+      name("p≡p Engine", "my beautiful module", "" __VA_ARGS__)
+   #define LOG_CRITICAL(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_CRITICAL, __VA_ARGS__)
+   #define LOG_ERROR(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_ERROR, __VA_ARGS__)
+   #define LOG_WARNING(...)   _LOG_WITH_MACRO_NAME(PEP_LOG_WARNING, __VA_ARGS__)
+*/
 
 
 /* Parameters
@@ -170,7 +153,8 @@ typedef enum {
  *           to an unsupported destination will simply be discarded.
  */
 typedef enum {
-    /* Discard log entries. */
+    /* No destination: if PEP_LOG_DESTINATION is defined as this then every
+       log entry is simply discarded. */
     PEP_LOG_DESTINATION_NONE      =   0,
 
     /* Print log entries in text format to the standard output or the standard
@@ -178,10 +162,25 @@ typedef enum {
     PEP_LOG_DESTINATION_STDOUT    =   1,
     PEP_LOG_DESTINATION_STDERR    =   2,
 
-    /* Add entries to a local database. */
+    /* Add entries to a local database.  The database file is named log.db , and
+       always kept in the same directory as management.db .  The recommended way
+       for humans to read entries is through the view UserEntries:
+         sqlite3 ~/.pEp/log.db
+         sqlite> SELECT * FROM UserEntries;  */
     PEP_LOG_DESTINATION_DATABASE  =   4,
 
-    /* Send log entries to the syslog service. */
+    /* Send log entries to the syslog service, or (on windows) on the native log
+       destination obtained from OpenEventLogW -- windows logging is implemented
+       as an emulated syslog API. */
+    /*
+      https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-openeventlogw
+      OpenEventLogW
+      example: https://learn.microsoft.com/en-us/windows/win32/eventlog/querying-for-event-source-messages
+
+      ReportEvent
+      example: https://learn.microsoft.com/en-us/windows/win32/eventlog/reporting-an-event
+      */
+
     PEP_LOG_DESTINATION_SYSLOG    =   8,
 
     /* Use the Android logging system. */
@@ -229,6 +228,10 @@ typedef enum {
  *           unsigned-integer expression.  For every PEP_LOG_DESTINATION_ENUM
  *           case, if the case bit value is contained in the constant then the
  *           destination is used.
+ *           Notice that this macro is only ever used from pEp_log.c , and so
+ *           its value is only important at engine compile time: software using
+ *           the Engine, including adapters, do not need to be concerned with
+ *           defining the macro in a way consistent with the Engine.
  */
 #if ! defined(PEP_LOG_DESTINATIONS)
     /* If the macro has not been defined already (likely from the build system)
@@ -242,6 +245,26 @@ typedef enum {
                                        | PEP_LOG_DESTINATION_DATABASE)
 #   endif
 #endif
+
+/* If this is enabled then requirements at function entry will also log a line
+   (level Function) about the function being entered.  Since this can make the
+   logs very noisy I made it possible to disable the feature independently from
+   PEP_LOG_LEVEL_MAXIMUM , by commenting-out this line. */
+#define PEP_LOG_FUNCTION_ENTRY  1
+
+/* If this is enabled then *failed* status checkswill also log a line (level
+   NonOK) about the expression, usually a function call, failing.  Since this
+   can make the logs noisy I made it possible to disable the feature
+   independently from PEP_LOG_LEVEL_MAXIMUM , by commenting-out this line. */
+#define PEP_LOG_LOCAL_FAILURE  1
+
+/* Every time database rows become more than this number delete the oldest one.
+   This is needed to prevent the database from growing to an unbounded size.
+
+   Just as a rule of thumb:
+   - 10000 entries take 1MB
+   - 1 entry takes ~100B   */
+#define PEP_LOG_DATABASE_ROW_NO_MAXIMUM 10000
 
 
 /* Logging an entry: user macros
@@ -530,14 +553,36 @@ PEP_STATUS pEp_log_finalize(PEP_SESSION session);
    This prototype needs to be in a header, since the function is called in the
    macroexpansion of logging functions, even out of the Engine.  This is a
    redefinition and not simply a function named asprintf on windows:
-   unfortunately GCC like to give warnings for empty format strings when used on
-   recognised printf-like functions, and empty format strings here are useful;
-   disabling selected warnings in *user* code is very messay.  Better to use our
-   own differently-named function, and prevent the problem.. */
+   unfortunately GCC likes to give warnings for empty format strings when used
+   on recognised printf-like functions, and empty format strings here are
+   useful; disabling selected warnings in *user* code is very messay.  Better to
+   use our own differently-named function, and prevent the problem.. */
 int pEp_asprintf(char **string_pointer, const char *template_, ...);
+
+
+/* Compatibility
+ * ***************************************************************** */
+
+/* The new log system no longer supports this macro.  Let us make sure it is not
+   used by mistake. */
+#if defined(_PEP_SERVICE_LOG_OFF) || defined(NOLOG)
+#   error "The macros _PEP_SERVICE_LOG_OFF and NOLOG are obsolete.  If you want"
+#   error "to customise logging please define PEP_LOG_LEVEL_MAXIMUM and"
+#   error "PEP_LOG_DESTINATIONS instead, which are well explained in the"
+#   error "comments in src/pEp_log.h ."
+#endif
+
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
 #endif // #ifndef PEP_LOG_H
+
+/*
+  Local Variables:
+    eval: (setq show-trailing-whitespace t indicate-empty-lines t)
+    eval: (flyspell-mode t)
+    eval: (ispell-change-dictionary "british")
+  End:
+*/

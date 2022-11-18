@@ -45,7 +45,7 @@
                 free (lvalue_pointer);                                          \
                 lvalue_pointer = NULL;                                          \
             }                                                                   \
-            (lvalue_pointer) = calloc (1, (size));                              \
+            (lvalue_pointer) = calloc(1, (size));                               \
             if ((lvalue_pointer) == NULL)                                       \
                 goto label;                                                     \
         }                                                                       \
@@ -58,11 +58,11 @@ PIdentity_t *PIdentity_from_Struct(
 {
     bool allocated = !result;
 
-    CHECK_NON_NULLITY_OR_RETURN (ident, NULL);
+    CHECK_NON_NULLITY_OR_RETURN(ident, NULL);
 
     if (allocated)
         result = (PIdentity_t *) calloc(1, sizeof(PIdentity_t));
-    CHECK_NON_NULLITY_OR_RETURN (result, NULL);
+    CHECK_NON_NULLITY_OR_RETURN(result, NULL);
 
     if (ident->address) {
         int r = OCTET_STRING_fromBuf(&result->address, ident->address, -1);
@@ -70,8 +70,8 @@ PIdentity_t *PIdentity_from_Struct(
             goto error;
     }
 
-    if (! EMPTYSTR (ident->fpr)) {
-        ALLOCATE_OR_GOTO (result->fpr, sizeof (Hash_t), error);
+    if (! EMPTYSTR(ident->fpr)) {
+        ALLOCATE_OR_GOTO(result->fpr, sizeof (Hash_t), error);
         if (OCTET_STRING_fromString(result->fpr, ident->fpr))
             goto error;
     }
@@ -82,8 +82,8 @@ PIdentity_t *PIdentity_from_Struct(
             goto error;
     }
 
-    if (! EMPTYSTR (ident->username)) {
-        ALLOCATE_OR_GOTO (result->username, sizeof (PString_t), error);
+    if (! EMPTYSTR(ident->username)) {
+        ALLOCATE_OR_GOTO(result->username, sizeof (PString_t), error);
         int r = OCTET_STRING_fromBuf(result->username, ident->username, -1);
         if (r)
             goto error;
@@ -93,8 +93,8 @@ PIdentity_t *PIdentity_from_Struct(
         result->comm_type = ident->comm_type;
     }
 
-    ALLOCATE_OR_GOTO (result->lang, sizeof (ISO639_1_t), error);
-    if (! EMPTYSTR (ident->lang)) {
+    ALLOCATE_OR_GOTO(result->lang, sizeof (ISO639_1_t), error);
+    if (! EMPTYSTR(ident->lang)) {
         int r = OCTET_STRING_fromBuf(result->lang, ident->lang, 2);
         assert(r == 0);
         if(r != 0)
@@ -125,25 +125,25 @@ pEp_identity *PIdentity_to_Struct(PIdentity_t *ident, pEp_identity *result)
 
     if (allocated)
         result = new_identity(NULL, NULL, NULL, NULL);
-    CHECK_NON_NULLITY_OR_RETURN (result, NULL);
+    CHECK_NON_NULLITY_OR_RETURN(result, NULL);
 
     result->address = strndup((char *) ident->address.buf,
             ident->address.size);
-    CHECK_NON_NULLITY_OR_GOTO (result->address, enomem);
+    CHECK_NON_NULLITY_OR_GOTO(result->address, enomem);
 
-    if (ident->fpr && ! EMPTYSTR (ident->fpr->buf)) {
+    if (ident->fpr && ! EMPTYSTR(ident->fpr->buf)) {
         result->fpr = strndup((char *) ident->fpr->buf, ident->fpr->size);
-        CHECK_NON_NULLITY_OR_GOTO (result->fpr, enomem);
+        CHECK_NON_NULLITY_OR_GOTO(result->fpr, enomem);
     }
 
     result->user_id = strndup((char *) ident->user_id.buf,
             ident->user_id.size);
-    CHECK_NON_NULLITY_OR_GOTO (result->user_id, enomem);
+    CHECK_NON_NULLITY_OR_GOTO(result->user_id, enomem);
 
-    if (ident->username && ! EMPTYSTR (ident->username->buf)) {
+    if (ident->username && ! EMPTYSTR(ident->username->buf)) {
         result->username = strndup((char *) ident->username->buf,
                                    ident->username->size);
-        CHECK_NON_NULLITY_OR_GOTO (result->username, enomem);
+        CHECK_NON_NULLITY_OR_GOTO(result->username, enomem);
     }
 
     result->comm_type = (PEP_comm_type) ident->comm_type;

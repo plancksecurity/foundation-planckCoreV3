@@ -5,7 +5,6 @@
 #include "distribution_codec.h"
 #include "sync_api.h" // for notifyHandshake, currently defined in this header
 
-#include <assert.h>
 /* Either <sqlite3.h> or "sqlite3.h" has already been included by
    pEp_internal.h so we do not need to deal with it here.  */
 
@@ -13,17 +12,19 @@
 #include "media_key.h" // for identity_known_to_use_pEp
 
 
-/* Debugging.
+/* Logging.
  * ***************************************************************** */
 
-#define DEBUG_ECHO
-
-#if ! defined(DEBUG_ECHO)
-# define echo_log(stream, ...)               \
-    do { /* Do nothing. */ } while (false)
-# else
-# define echo_log fprintf
-#endif
+/* Define convenient logging macros for this compilation unit. */
+#define _LOG_WITH_MACRO_NAME(name, ...)     \
+    name("p≡p Engine", "Distribution.Echo", "" __VA_ARGS__)
+#define LOG_CRITICAL(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_CRITICAL, __VA_ARGS__)
+#define LOG_ERROR(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_ERROR, __VA_ARGS__)
+#define LOG_WARNING(...)   _LOG_WITH_MACRO_NAME(PEP_LOG_WARNING, __VA_ARGS__)
+#define LOG_API(...)       _LOG_WITH_MACRO_NAME(PEP_LOG_API, __VA_ARGS__)
+#define LOG_EVENT(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_EVENT, __VA_ARGS__)
+#define LOG_FUNCTION(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_FUNCTION, __VA_ARGS__)
+#define LOG_TRACE(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_TRACE, __VA_ARGS__)
 
 
 /* Initialisation and finalisation
@@ -43,20 +44,21 @@ static const char *echo_set_challenge_text
     " AND user_id = ?3;";
 
 /* This is a convenient way to check for SQL errors without duplicating code. */
-#define ON_SQL_ERROR_SET_STATUS_AND_GOTO               \
-    do {                                               \
-        if (sql_status != SQLITE_OK                    \
-            && sql_status != SQLITE_DONE               \
-            && sql_status != SQLITE_ROW) {             \
-            status = PEP_UNKNOWN_DB_ERROR;             \
-            /* This should not happen in production,   \
-               so I can afford a debug print when      \
-               something unexpected happens. */        \
-            if (sql_status == SQLITE_ERROR)            \
-                fprintf(stderr, "SQL ERROR: %s\n",     \
-                        sqlite3_errmsg(session->db));  \
-            goto end;                                  \
-        }                                              \
+#define ON_SQL_ERROR_SET_STATUS_AND_GOTO                 \
+    do {                                                 \
+        if (sql_status != SQLITE_OK                      \
+            && sql_status != SQLITE_DONE                 \
+            && sql_status != SQLITE_ROW) {               \
+            status = PEP_UNKNOWN_DB_ERROR;               \
+            /* This should not happen in production,     \
+               so I can afford a debug print when        \
+               something unexpected happens. */          \
+            if (sql_status == SQLITE_ERROR)              \
+                LOG_ERROR("SQL ERROR %i: %s",            \
+                          sql_status,                    \
+                          sqlite3_errmsg(session->db));  \
+            goto end;                                    \
+        }                                                \
     } while (false)
 
 
@@ -77,9 +79,7 @@ static const char *echo_set_challenge_text
  */
 static PEP_STATUS upgrade_add_echo_challange_field(PEP_SESSION session) {
     /* Sanity checks. */
-    assert(session);
-    if (! session)
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session);
 
     /* Alter the table.  This is executed only once at initialisation time,
        so keeping the SQL statement prepared would be counter-productive. */
@@ -105,9 +105,7 @@ static PEP_STATUS upgrade_add_echo_challange_field(PEP_SESSION session) {
 PEP_STATUS echo_initialize(PEP_SESSION session)
 {
     /* Sanity checks. */
-    assert(session && session->db);
-    if (! (session && session->db))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && session->db);
 
     /* Change the schema if needed, once and for all.  We want to do this
        *before* prepraring statements using the new column that is created by
@@ -129,7 +127,7 @@ PEP_STATUS echo_initialize(PEP_SESSION session)
                                     -1, &session->echo_set_challenge,
                                     NULL);
     ON_SQL_ERROR_SET_STATUS_AND_GOTO;
-    
+
  end:
     return status;
 }
@@ -137,9 +135,7 @@ PEP_STATUS echo_initialize(PEP_SESSION session)
 PEP_STATUS echo_finalize(PEP_SESSION session)
 {
     /* Sanity checks. */
-    assert(session);
-    if (! session)
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session);
 
     /* Finialise prepared SQL statements. */
     sqlite3_finalize(session->echo_get_challenge);
@@ -175,9 +171,7 @@ static PEP_STATUS echo_challenge_for_identity(PEP_SESSION session,
                                               pEpUUID challenge)
 {
     /* Sanity checks. */
-    assert(session && identity && challenge);
-    if (! (session && identity && challenge))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && identity && challenge);
 
     /* I need this below, in some cases.  It is easier to declare it here and to
        set it to NULL, in order to free it unconditionally at the end. */
@@ -293,7 +287,7 @@ PEP_STATUS handle_pong(PEP_SESSION session,
     else {
         /* Good response.  Okay, notify the application that some rating
            might have improved.  */
-        fprintf(stderr, "session->notifyHandshake is %p\n", session->notifyHandshake);
+        LOG_EVENT("session->notifyHandshake is %p", session->notifyHandshake);
         if (session->notifyHandshake == NULL)
             return PEP_SYNC_NO_NOTIFY_CALLBACK;
         pEp_identity *own_identity_copy = identity_dup(own_identity);
@@ -301,7 +295,7 @@ PEP_STATUS handle_pong(PEP_SESSION session,
             = identity_dup(partner_identity);
         if (own_identity_copy != NULL || partner_identity_copy != NULL)
             goto fail;
-        echo_log(stderr, "SYNC_NOTIFY_OUTGOING_RATING_CHANGE\n");
+        LOG_EVENT("SYNC_NOTIFY_OUTGOING_RATING_CHANGE");
         return session->notifyHandshake(own_identity_copy,
                                         partner_identity_copy,
                                         SYNC_NOTIFY_OUTGOING_RATING_CHANGE);
@@ -357,7 +351,7 @@ static PEP_STATUS send_ping_or_pong(PEP_SESSION session,
         return PEP_ILLEGAL_VALUE;
 
     if (! session->enable_echo_protocol) {
-        fprintf(stderr,  "* Echo protocol disabled: not sending a %s to %s <%s>\n", (ping ? "Ping" : "Pong"), (to->username ? to->username : "<no username>"), (to->address ? to->address : "<no address>"));
+        LOG_EVENT("Echo protocol disabled: not sending a %s to %s <%s>", (ping ? "Ping" : "Pong"), (to->username ? to->username : "<no username>"), (to->address ? to->address : "<no address>"));
         return PEP_STATUS_OK;
     }
 
@@ -393,7 +387,7 @@ static PEP_STATUS send_ping_or_pong(PEP_SESSION session,
     message *m = NULL;
     status = encrypt_message(session, non_encrypted_m, NULL, &m,
                              PEP_enc_PEP, PEP_encrypt_flag_default);
-    echo_log(stderr, "  send %s from %s <%s> to %s <%s>, status after encrypting %i %s\n", (ping ? "Ping" : "Pong"), from->username, from->address, to->username, to->address, status, pEp_status_to_string(status));
+    LOG_EVENT("send %s from %s <%s> to %s <%s>, status after encrypting %i %s", (ping ? "Ping" : "Pong"), from->username, from->address, to->username, to->address, status, pEp_status_to_string(status));
     if (status == PEP_STATUS_OK)
         free_message(non_encrypted_m);
     else if (status == PEP_UNENCRYPTED)
@@ -432,12 +426,11 @@ PEP_STATUS send_ping(PEP_SESSION session,
 PEP_STATUS send_pong(PEP_SESSION session,
                      const message *ping_message,
                      const Distribution_t *ping_distribution_message) {
-fprintf(stderr, "WWWW session->notifyHandshake is %p\n", session->notifyHandshake);
     /* Argument checks.  No need to check for messageToSend here, since we
        will check later when actually sending. */
-    assert(session && ping_message && ping_distribution_message);
-    if (! (session && ping_message && ping_distribution_message))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && ping_message && ping_distribution_message);
+    LOG_TRACE("session->notifyHandshake is %p", session->notifyHandshake);
+
     /* Sanity checks. */
     if (ping_message->dir != PEP_dir_incoming)
         return PEP_ILLEGAL_VALUE;
@@ -527,11 +520,9 @@ static void send_ping_if_unknown(PEP_SESSION session,
                                  const pEp_identity *to_identity,
                                  bool only_if_pEp)
 {
-    assert(session && from_identity);
-    if (! (session && from_identity))
-        return;
+    PEP_REQUIRE_ORELSE(session && from_identity, { return; });
     if (! from_identity->me) {
-        echo_log(stderr, "send_ping_if_unknown: trying to send from non-own identity %s <%s>\n", from_identity->username, from_identity->address);
+        LOG_WARNING("send_ping_if_unknown: trying to send from non-own identity %s <%s>", from_identity->username, from_identity->address);
         return;
     }
 
@@ -551,7 +542,7 @@ static void send_ping_if_unknown(PEP_SESSION session,
                 PEP_STATUS status = identity_known_to_use_pEp (session, to_identity,
                                                                & known_to_use_pEp);
                 if (status != PEP_STATUS_OK) {
-echo_log(stderr, "!!!! send_ping_if_unknown: %s -> %s FAILED: status %i %s\n", from_identity->address, to_identity->address, (int)status,pEp_status_to_string(status));
+                    LOG_WARNING("send_ping_if_unknown: %s -> %s FAILED: status 0x%x %i %s", from_identity->address, to_identity->address, (int) status, (int) status, pEp_status_to_string(status));
                     return;
                 }
                 if (known_to_use_pEp)
@@ -581,11 +572,8 @@ static PEP_STATUS send_ping_to_unknowns_in_incoming_message(PEP_SESSION session,
                                                             bool only_pEp)
 {
     /* Sanity checks. */
-    assert(session && msg);
-    if (! (session && msg))
-        return PEP_ILLEGAL_VALUE;
-    if (msg->dir != PEP_dir_incoming)
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && msg
+                && msg->dir == PEP_dir_incoming);
 
     /* Find the identity who received the message and should send Pings. */
     const pEp_identity *ping_from_identity = msg->recv_by;
@@ -593,7 +581,7 @@ static PEP_STATUS send_ping_to_unknowns_in_incoming_message(PEP_SESSION session,
         /* Applications are supposed never to let this happen, but in practice
            it is difficult to find a reasonable value for messages received as
            Bcc. */
-        fprintf(stderr, "APPLICATION BUG: message %s \"%s\" has no Recv-By\n", msg->id, msg->shortmsg ? msg->shortmsg : "<no subject>");
+        LOG_WARNING("APPLICATION BUG: message %s \"%s\" has no Recv-By", msg->id, msg->shortmsg ? msg->shortmsg : "<no subject>");
         return PEP_ILLEGAL_VALUE;
     }
 
@@ -615,32 +603,27 @@ static PEP_STATUS send_ping_to_unknowns_in_incoming_message(PEP_SESSION session,
 PEP_STATUS send_ping_to_all_unknowns_in_incoming_message(PEP_SESSION session,
                                                          const message *msg)
 {
-    //echo_log(stderr, "send_ping_to_all_unknowns_in_incoming_message\n");
+    PEP_REQUIRE(session && msg);
     return send_ping_to_unknowns_in_incoming_message (session, msg, false);
 }
 
 PEP_STATUS send_ping_to_unknown_pEp_identities_in_incoming_message(PEP_SESSION session,
                                                                    const message *msg)
 {
-    //echo_log(stderr, "send_ping_to_unknown_pEp_identities_in_incoming_message\n");
+    PEP_REQUIRE(session && msg);
     return send_ping_to_unknowns_in_incoming_message (session, msg, true);
 }
 
 PEP_STATUS send_ping_to_unknown_pEp_identities_in_outgoing_message(PEP_SESSION session,
                                                                    const message *msg)
 {
-    //echo_log(stderr, "send_ping_to_unknown_pEp_identities_in_outgoing_message\n");
     /* Sanity checks. */
-    assert(session && msg);
-    if (! (session && msg))
-        return PEP_ILLEGAL_VALUE;
-    if (msg->dir != PEP_dir_outgoing)
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && msg && msg->dir == PEP_dir_outgoing);
 
     /* Find the identity who is sending the message and should send Pings. */
     const pEp_identity *ping_from_identity = msg->from;
     if (msg->from == NULL) {
-        fprintf(stderr, "message %s \"%s\" has no From\n", msg->id, msg->shortmsg ? msg->shortmsg : "<no subject>");
+        LOG_ERROR("message %s \"%s\" has no From", msg->id, msg->shortmsg ? msg->shortmsg : "<no subject>");
         return PEP_ILLEGAL_VALUE;
     }
 

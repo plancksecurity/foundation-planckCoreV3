@@ -76,26 +76,21 @@ condition fromGroupMember
 
 condition keyElectionWon
 ||
+    PEP_REQUIRE(session);
     pEp_identity *from = session->sync_state.transport.from;
     char *sender_fpr = session->sync_state.comm_partner.sender_fpr;
 
-    assert(from && from->address && from->address[0] && from->user_id &&
-            from->user_id[0]);
-    if (!(from && from->address && from->address[0] && from->user_id &&
-            from->user_id[0]))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(from && from->address && from->address[0] && from->user_id &&
+                from->user_id[0]);
 
     pEp_identity *me = NULL;
     PEP_STATUS status = get_identity(session, from->address, from->user_id, &me);
-    assert(status == PEP_STATUS_OK);
-    if (status)
-        return status;
+    PEP_WEAK_ASSERT_ORELSE_RETURN(status == PEP_STATUS_OK, status);
 
-    assert(me->fpr && me->fpr[0]);
-    if (!(me->fpr && me->fpr[0])) {
+    PEP_WEAK_ASSERT_ORELSE(me->fpr && me->fpr[0], {
         free_identity(me);
         return PEP_ILLEGAL_VALUE;
-    }
+    });
 
     size_t len = MIN(strlen(sender_fpr), strlen(me->fpr));
     *result = strncasecmp(sender_fpr, me->fpr, len) > 0;
@@ -236,19 +231,17 @@ action storeNegotiation {
     // we take the actual signature of the last message and store it in our
     // state for the comm_partner
 
-    assert(session->sync_state.transport.sender_fpr);
-
+    PEP_ASSERT(session->sync_state.transport.sender_fpr);
     free(session->sync_state.comm_partner.sender_fpr);
 
     session->sync_state.comm_partner.sender_fpr
             = strdup(session->sync_state.transport.sender_fpr);
-    assert(session->sync_state.comm_partner.sender_fpr);
-    if (!session->sync_state.comm_partner.sender_fpr)
-        return PEP_OUT_OF_MEMORY;
+    PEP_WEAK_ASSERT_ORELSE_RETURN(session->sync_state.comm_partner.sender_fpr,
+                                  PEP_OUT_OF_MEMORY);
 
     // we store the comm_partner's identity
     
-    assert(session->sync_state.transport.from);
+    PEP_ASSERT(session->sync_state.transport.from);
 
     free_identity(session->sync_state.comm_partner.identity);
 
@@ -267,30 +260,24 @@ action storeNegotiation {
 function "show_handshake" {
     param "type";
     ||
-        assert(session->notifyHandshake);
-        if (!session->notifyHandshake)
-            return PEP_SYNC_NO_NOTIFY_CALLBACK;
+        PEP_REQUIRE_ORELSE_RETURN(session->notifyHandshake,
+                                  PEP_SYNC_NO_NOTIFY_CALLBACK);
 
     ||
     choose {
     when "$type = 'SYNC_NOTIFY_INIT_ADD_OUR_DEVICE' or $type = 'SYNC_NOTIFY_INIT_ADD_OTHER_DEVICE' or $type = 'SYNC_NOTIFY_INIT_FORM_GROUP'"
     ||
-        assert(session->sync_state.transport.from);
-        if (!session->sync_state.transport.from)
-            return PEP_ILLEGAL_VALUE;
+        PEP_REQUIRE(session->sync_state.transport.from);
 
         pEp_identity *from = session->sync_state.transport.from;
         pEp_identity *me = NULL;
         PEP_STATUS status = get_identity(session, from->address, from->user_id, &me);
-        assert(status == PEP_STATUS_OK);
-        if (status)
-            return status;
+        PEP_WEAK_ASSERT_ORELSE_RETURN(status == PEP_STATUS_OK, status);
 
-        assert(me->fpr && me->fpr[0]);
-        if (!(me->fpr && me->fpr[0])) {
+        PEP_WEAK_ASSERT_ORELSE(me->fpr && me->fpr[0], {
             free_identity(me);
             return PEP_ILLEGAL_VALUE;
-        }
+        });
 
         pEp_identity *partner = identity_dup(from);
         if (!partner) {
@@ -298,26 +285,24 @@ function "show_handshake" {
             return PEP_OUT_OF_MEMORY;
         }
 
-        assert(session->sync_state.comm_partner.sender_fpr);
+        PEP_ASSERT(session->sync_state.comm_partner.sender_fpr);
         if (session->sync_state.comm_partner.sender_fpr) {
             free(partner->fpr);
             partner->fpr = strdup(session->sync_state.comm_partner.sender_fpr);
-            assert(partner->fpr);
-            if (!partner->fpr) {
+            PEP_WEAK_ASSERT_ORELSE(partner->fpr, {
                 free_identity(me);
                 free_identity(partner);
                 return PEP_OUT_OF_MEMORY;
-            }
+            });
         }
 
         free(partner->user_id);
         partner->user_id = strdup("#NV");
-        assert(partner->user_id);
-        if (!partner->user_id) {
+        PEP_WEAK_ASSERT_ORELSE(partner->user_id, {
             free_identity(me);
             free_identity(partner);
             return PEP_OUT_OF_MEMORY;
-        }
+        });
 
         status = session->notifyHandshake(me, partner, «$type»);
         if (status)
@@ -327,12 +312,11 @@ function "show_handshake" {
     ||
         pEp_identity *me = new_identity(NULL, NULL, NULL, NULL);
         pEp_identity *partner = new_identity(NULL, NULL, NULL, NULL);
-        assert(me && partner);
-        if (!(me && partner)) {
+        PEP_WEAK_ASSERT_ORELSE(me && partner, {
             free_identity(me);
             free_identity(partner);
             return PEP_OUT_OF_MEMORY;
-        }
+        });
 
         PEP_STATUS status = session->notifyHandshake(me, partner, «$type»);
         if (status)
@@ -519,9 +503,7 @@ action receivedKeysAreDefaultKeys
 
 action useThisKey
 ||
-    assert(session->sync_state.comm_partner.sender_fpr);
-    if (!session->sync_state.comm_partner.sender_fpr)
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session->sync_state.comm_partner.sender_fpr);
 
     const char *fpr = session->sync_state.comm_partner.sender_fpr;
     OCTET_STRING_fromBuf(&session->sync_state.keysync.key, fpr, strlen(fpr));
@@ -529,14 +511,10 @@ action useThisKey
 
 action storeThisKey
 ||
-    assert(session->sync_state.keysync.key.size);
-    if (!session->sync_state.keysync.key.size)
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session->sync_state.keysync.key.size);
 
     char *fpr = strndup((const char *) session->sync_state.keysync.key.buf, session->sync_state.keysync.key.size);
-    assert(fpr);
-    if (!fpr)
-        return PEP_OUT_OF_MEMORY;
+    PEP_WEAK_ASSERT_ORELSE_RETURN(fpr, PEP_OUT_OF_MEMORY);
 
     free(session->sync_state.comm_partner.sender_fpr);
     session->sync_state.comm_partner.sender_fpr = fpr;
@@ -544,20 +522,17 @@ action storeThisKey
 
 action trustThisKey
 ||
-    assert(session->sync_state.transport.from && session->sync_state.comm_partner.sender_fpr);
-    if (!(session->sync_state.transport.from && session->sync_state.comm_partner.sender_fpr))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session->sync_state.transport.from && session->sync_state.comm_partner.sender_fpr);
 
     pEp_identity *ident = identity_dup(session->sync_state.transport.from);
     if (!ident)
         return PEP_OUT_OF_MEMORY;
     free(ident->fpr);
     ident->fpr = strdup(session->sync_state.comm_partner.sender_fpr);
-    assert(ident->fpr);
-    if (!ident->fpr) {
+    PEP_WEAK_ASSERT_ORELSE(ident->fpr, {
         free_identity(ident);
         return PEP_OUT_OF_MEMORY;
-    }
+    });
 
     PEP_STATUS status = trust_own_key(session, ident);
     if (status) {
@@ -571,16 +546,12 @@ action trustThisKey
 
 action untrustThisKey
 ||
-    assert(session->sync_state.transport.from && session->sync_state.comm_partner.sender_fpr);
-    if (!(session->sync_state.transport.from && session->sync_state.comm_partner.sender_fpr))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session->sync_state.transport.from && session->sync_state.comm_partner.sender_fpr);
 
     pEp_identity *ident = session->sync_state.transport.from;
     free(ident->fpr);
     ident->fpr = strdup(session->sync_state.comm_partner.sender_fpr);
-    assert(ident->fpr);
-    if (!ident->fpr)
-        return PEP_OUT_OF_MEMORY;
+    PEP_WEAK_ASSERT_ORELSE_RETURN(ident->fpr, PEP_OUT_OF_MEMORY);
 
     PEP_STATUS status = key_reset_trust(session, ident);
     if (status)

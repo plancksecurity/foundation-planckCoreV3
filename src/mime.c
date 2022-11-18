@@ -5,6 +5,12 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
+/* In this compilation unit, like in others, functions do not take a session as
+   a paramter; this prevents me from using the new debugging and logging
+   functionalities.  I wonder if we should systematically add a session paramter
+   to our functions, even when not needed, just for this.  --positron,
+   2022-10 */
+
 #define _EXPORT_PEP_ENGINE_DLL
 #include "mime.h"
 #include "pEp_internal.h"

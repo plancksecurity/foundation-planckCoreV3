@@ -224,28 +224,6 @@ protocol session {
     }
 
 
-    method log_event
-    doc="""
-        log a user defined event defined by UTF-8 encoded strings into 
-        management log.
-        """
-    {
-        // parms
-
-        use string title doc="string with event name";
-
-        use string entity doc="string with name of entity which is logging";
-
-        use string description doc="string with long description for event or NULL if omitted";
-
-        use string comment doc="string with user defined comment or NULL if omitted";
-        
-        // exceptions
-
-       throws illegal_value doc="illegal parameter values";
-    }
-
-
     method get_default own_userid doc="get the user_id of the own user"
     {
         // parms
