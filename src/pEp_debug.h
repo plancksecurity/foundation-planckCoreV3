@@ -1,5 +1,5 @@
 /**
- * @file    debug.h
+ * @file    pEp_debug.h
  * @brief   pEp Engine debugging facilities
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */

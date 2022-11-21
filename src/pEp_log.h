@@ -1,5 +1,5 @@
 /**
- * @file    log.h
+ * @file    pEp_log.h
  * @brief   pEp logging facility
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
@@ -21,7 +21,8 @@ extern "C" {
 /* Introduction
  * ***************************************************************** */
 
-/* This general-purpose log facility is used internally in the Engine, but is
+/*
+   This general-purpose log facility is used internally in the Engine, but is
    also meant for adapters and applications.  The pEp logging facility can
    output information to any number of "destinations" among the supported ones:
    databases, standard error, syslog, system-dependent outputs, and so on.
@@ -107,6 +108,7 @@ extern "C" {
 
 /**
  *  @enum    PEP_LOG_LEVEL
+ *  @typedef PEP_LOG_LEVEL
  *
  *  @brief   This can be thought of the verbosity or redundance or
  *           non-importance or a log entry: the higher the value is, the less
