@@ -98,7 +98,7 @@ typedef enum {
    "function". */
 #if defined (PEP_LOG_FUNCTION_ENTRY)
 #   define _PEP_LOG_FUNCTION_ENTRY_IF_ENABLED                                 \
-        PEP_LOG_FUNCTION("p≡p", "Engine")
+        PEP_LOG_FUNCTION("p≡p", "Engine", "")
 #else
 #   define _PEP_LOG_FUNCTION_ENTRY_IF_ENABLED  \
     do { } while (false)
