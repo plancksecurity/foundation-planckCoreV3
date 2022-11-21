@@ -124,6 +124,7 @@ const char *android_system_db(void);
 #define SYSTEM_DB android_system_db()
 
 #elif defined(__APPLE__)
+#include <string.h>
 #if TARGET_OS_IPHONE // read as `if iOS`
     extern char *perMachineDirectory; // adapter must provide
 #define PER_MACHINE_DIRECTORY perMachineDirectory
