@@ -2779,7 +2779,7 @@ DYNAMIC_API PEP_STATUS init(
     //       required by the RFC to be globally unique!
     srand((unsigned int) time(NULL));
 
-#if 0
+#if 1
     // import positron's testing media key.
     const char key_data[]
         =
