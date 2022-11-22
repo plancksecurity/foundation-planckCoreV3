@@ -302,7 +302,7 @@ PEP_STATUS handle_pong(PEP_SESSION session,
         pEp_identity *own_identity_copy = identity_dup(own_identity);
         pEp_identity *partner_identity_copy
             = identity_dup(partner_identity);
-        if (own_identity_copy != NULL || partner_identity_copy != NULL)
+        if (own_identity_copy == NULL || partner_identity_copy == NULL)
             goto fail;
         echo_log(stderr, "SYNC_NOTIFY_OUTGOING_RATING_CHANGE\n");
         return session->notifyHandshake(own_identity_copy,
