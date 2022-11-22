@@ -1,0 +1,53 @@
+This is a list of changes since Autumn 2022.
+Newer changes are at the top of this file.
+
+
+[next release or RC]
+
+
+v2.1.66
+* handle_pong: fix bug preventing notification from being called, reported by
+  Alex Sualdea
+
+v2.1.65
+* No change since v2.1.65-RC1 except for the version string.
+
+v2.1.65-RC1
+Starting from this point we consistently adopt the "v" prefix for tags,
+abandoning our previous convention of using "Release_".
+* fix gitea #83, #84: there is a new rating for messages (and identities)
+  protected by a media key: PEP_rating_media_key_protected , still with no
+  colour.
+* in the unusual case that we decrypt an *outgoing* message, do not send pings
+
+Release_2.1.64
+* fix memory handling bug in config_media_keys, reported by dirk;
+* media keys: normalise keys to upper case.  Fail if FPRs are empty strings.
+
+Release_2.1.63
+* minor source fixes for windwos, contributed by Alex
+* build system updates for windows, contributed by Alex
+* Merge PR PEMA-24 by Dirk: build system for iOS
+
+Release_2.1.62
+* echo_api.c: do not unconditionally use <>-style #include.  This fixes the
+  Android build.
+
+Release_2.1.61
+* Distribution.Echo: fix database initialisation bug which broke init()
+
+Release_2.1.60
+* revert dependency to the older sequoia openpgp/v1.3.1
+
+Release_2.1.59
+* minor build system / installation fixes, thanks to heck
+* (tentatively) require sequoia/openpgp/v1.7.0 , which should be the last
+  version still using the old-style FFI
+
+Release_2.1.58
+* add Distribution.Echo protocol
+* add Media keys
+
+Release_2.1.57
+* Minor bug fixes, particularly fixing the name of the Sequoia package and
+  library at link time.
