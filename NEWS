@@ -1,0 +1,45 @@
+This is a list of changes since Autumn 2022.  We did not formally keep track of
+changes older than that, and in particular the changes from v2 to v3 are too
+numerous to list.
+Newer changes are at the top of this file.
+
+
+[next release or RC]
+
+
+v3.2.0-RC12
+* handle_pong: fix bug preventing notification from being called, reported by
+  Alex Sualdea
+
+v3.2.0-RC11
+* add the new pEp_log functionality -- notice that some platform code is
+  UNTESTED; I am waiting for feedback from platform maintainers;
+* add the new pEp_debug functionality;
+* convert existing code to use the new logging and debugging functionality;
+* set_debug_color: remove DYNAMIC_API function.
+* log_event, log_service, _service_error_log:  remove DYNAMIC_API functions,
+  replaced by the new log functionality in src/pEp_log.h; I could re-implement
+  the old functions based on the new API if people want that, but using the API
+
+v3.2.0-RC10
+From this point on we consistently adopt the new naming scheme for tags: we
+start the tag name with "v" instead of "Release_".
+* fix compilation on windows (probably: untested).
+
+Release_3.2.0-RC9
+* BUILD: Fix - Effectively add include and lib dir from local.conf' (#82)
+* unfinished debug / log changes
+* (broken on windows)
+
+v3.2.0-RC8
+No complete change log for this RC, the first in the 3.x series to be actually
+used.  The most important change from 2.x is Key-Election Removal; the list of
+other changes (but not the changes themselves) is now lost.
+Highligths:
+* Switch from the old Sequoia-FFI to pEpEngineSequoiaBackend;
+* Distribution.Echo protocol, ported from 2.x;
+* Media keys, ported from 2.x;
+
+
+
+
