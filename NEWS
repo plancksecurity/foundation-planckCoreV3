@@ -1,11 +1,4 @@
-This is a list of changes since Autumn 2022.  We did not formally keep track of
-changes older than that, and in particular the changes from v2 to v3 are too
-numerous to list.
-Newer changes are at the top of this file.
-
-
-[next release or RC]
-
+* add NEWS file
 
 v3.2.0-RC12
 * handle_pong: fix bug preventing notification from being called, reported by
@@ -43,3 +36,7 @@ Highligths:
 
 
 
+This is a list of changes since Autumn 2022.  We did not formally keep track of
+changes older than that, and in particular the changes from v2 to v3 are too
+numerous to list.
+Newer changes are at the top of this file.
