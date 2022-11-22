@@ -1,5 +1,5 @@
 /**
- * @file    debug.h
+ * @file    pEp_debug.h
  * @brief   pEp Engine debugging facilities
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
@@ -97,8 +97,8 @@ typedef enum {
    which is always included anyway, and the logging level which is
    "function". */
 #if defined (PEP_LOG_FUNCTION_ENTRY)
-#   define _PEP_LOG_FUNCTION_ENTRY_IF_ENABLED                                 \
-        PEP_LOG_FUNCTION("p≡p", "Engine")
+#   define _PEP_LOG_FUNCTION_ENTRY_IF_ENABLED  \
+        PEP_LOG_FUNCTION("p≡p", "Engine", "")
 #else
 #   define _PEP_LOG_FUNCTION_ENTRY_IF_ENABLED  \
     do { } while (false)

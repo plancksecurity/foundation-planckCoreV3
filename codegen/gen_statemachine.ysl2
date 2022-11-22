@@ -1603,8 +1603,7 @@ tstylesheet {
          *                              template.
          *
          */
-        #define «@name»_LOG_ERROR(...)  \
-            PEP_LOG_ERROR("p≡p Engine", "@name", "" __VA_ARGS__)
+        #define «@name»_LOG_ERROR  LOG_ERROR
 
         /**
          *  <!--            «@name»_LOG_SERVICE()       -->
@@ -1612,8 +1611,7 @@ tstylesheet {
          *  @brief          Exactly like «@name»_LOG_ERROR, with a different log
          *                  level.
          */
-        #define «@name»_LOG_SERVICE(...)  \
-            PEP_LOG_SERVICE("p≡p Engine", "@name", "" __VA_ARGS__)
+        #define «@name»_LOG_SERVICE LOG_SERVICE
 
         «@name»_state fsm_«@name»(
                 PEP_SESSION session,

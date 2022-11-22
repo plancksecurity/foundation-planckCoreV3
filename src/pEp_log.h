@@ -1,5 +1,5 @@
 /**
- * @file    log.h
+ * @file    pEp_log.h
  * @brief   pEp logging facility
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
@@ -288,9 +288,12 @@ typedef enum {
  *  @param[in]  template   a literal string (*not* a generic expression)
  *                         expressing a template to be filled with the rest of
  *                         the arguments, if any, in the style of printf.
- *                         The template can also be not given at all: calling
- *                         PEP_LOG_CRITICAL with only two arguments is correct,
- *                         and uses an empty string as the logged entry string.
+ *                         If the compiler supports the GNU C extension allowing
+ *                         for zero arguments in variadic macros (supported by
+ *                         both GCC and Clang) then the template can also be not
+ *                         given at all: calling PEP_LOG_CRITICAL with only two
+ *                         arguments is correct, and uses an empty string as the
+ *                         logged entry string.
  *  @param[in]  ...        Other arguments matching the template, following
  *                         the formatted-output conventions of printf.
  *

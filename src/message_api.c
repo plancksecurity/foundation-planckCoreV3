@@ -3024,7 +3024,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
                 && ! src->bcc
                 && src->to
                 && ! src->to->next
-                && src->from->address
+                && ! EMPTYSTR(src->from->address)
                 && src->to->ident
                 && ! EMPTYSTR(src->to->ident->address)
                 && strcasecmp(src->from->address, src->to->ident->address) == 0);
