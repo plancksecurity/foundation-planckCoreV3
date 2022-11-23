@@ -1,4 +1,7 @@
 * add NEWS file
+* Merge pull request 'PEMA-41 Make the ObjC adapterbuild for iOS agains the
+  latest engine (master/v3.2.0-RC11)' (#92) from dirk/pEpEngine:PEMA-41 into
+  master
 
 v3.2.0-RC12
 * handle_pong: fix bug preventing notification from being called, reported by
