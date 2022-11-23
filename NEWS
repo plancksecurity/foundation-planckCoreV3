@@ -1,4 +1,6 @@
 * add NEWS file
+* add release script (for the Engine maintainer): the Engine version is now in a
+  machine-generated file src/pEpEngine_version.h
 * Merge pull request 'PEMA-41 Make the ObjC adapterbuild for iOS agains the
   latest engine (master/v3.2.0-RC11)' (#92) from dirk/pEpEngine:PEMA-41 into
   master
