@@ -6,6 +6,9 @@
 v3.2.0-RC12
 * handle_pong: fix bug preventing notification from being called, reported by
   Alex Sualdea
+* Merge pull request 'PEMA-103-hotfix' (#88) from
+  TSaschabc/pEpEngine:PEMA-103-hotfix into master
+* Update sqlite amalgamation to 3.40.0
 
 v3.2.0-RC11
 * add the new pEp_log functionality -- notice that some platform code is
