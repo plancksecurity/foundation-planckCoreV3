@@ -4907,11 +4907,14 @@ static void get_protocol_version_from_headers(
 }
 
 static void get_message_version_from_headers(
+        PEP_SESSION session,
         stringpair_list_t* field_list,
         unsigned int* major_ver,
         unsigned int* minor_ver
     ) 
 {
+    PEP_REQUIRE_ORELSE(session && major_ver && minor_ver, { return; });
+
     *major_ver = 0;
     *minor_ver = 0;
     const stringpair_list_t* pEp_message_version = stringpair_list_find(field_list, X_PEP_MSG_VER_KEY);
@@ -5423,7 +5426,7 @@ static PEP_STATUS _decrypt_message(
                             // FIXME: From SENDER >= 2.2, we should be VERY careful here -- check back on this one
                             //
 
-                            get_message_version_from_headers(src->opt_fields, &msg_major_ver, &msg_minor_ver);
+                            get_message_version_from_headers(session, src->opt_fields, &msg_major_ver, &msg_minor_ver);
 
                             const char* key_claim_fpr = NULL;
 
@@ -5655,7 +5658,7 @@ static PEP_STATUS _decrypt_message(
                         //     pEp_version_major_minor(pEp_protocol_version->value->value, &major_ver, &minor_ver);
                         get_protocol_version_from_headers(session, inner_message->opt_fields, &major_ver, &minor_ver);   
                         if (major_ver > 2 || (major_ver == 2 && minor_ver > 1)) 
-                            get_message_version_from_headers(inner_message->opt_fields, &msg_major_ver, &msg_minor_ver);
+                            get_message_version_from_headers(session, inner_message->opt_fields, &msg_major_ver, &msg_minor_ver);
                             
                         // Sort out pEp user status and version number based on INNER message.
                         
