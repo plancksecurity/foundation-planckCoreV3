@@ -4890,11 +4890,14 @@ static PEP_STATUS process_Distribution_message(PEP_SESSION session,
 }
 
 static void get_protocol_version_from_headers(
+        PEP_SESSION session,
         stringpair_list_t* field_list,
         unsigned int* major_ver,
         unsigned int* minor_ver
     ) 
 {
+    PEP_REQUIRE_ORELSE(session && major_ver && minor_ver, { return; });
+
     *major_ver = 0;
     *minor_ver = 0;
     const stringpair_list_t* pEp_protocol_version = stringpair_list_find(field_list, "X-pEp-Version");
@@ -5210,7 +5213,8 @@ static PEP_STATUS _decrypt_message(
     // Get protocol information listed on the OUTER message. This will not be used if there 
     // is an inner message and is not relied on for any security-relevant functionality since 
     // it is *fully manipulable on-the-wire*. It'll be recalculated if we have inner headers.
-    get_protocol_version_from_headers(src->opt_fields, &major_ver, &minor_ver);
+    get_protocol_version_from_headers(session,
+                                      src->opt_fields, &major_ver, &minor_ver);
 
     if (major_ver == 0) {
         msg_major_ver = 1;
@@ -5649,7 +5653,7 @@ static PEP_STATUS _decrypt_message(
                         
                         // if (pEp_protocol_version && pEp_protocol_version->value)
                         //     pEp_version_major_minor(pEp_protocol_version->value->value, &major_ver, &minor_ver);
-                        get_protocol_version_from_headers(inner_message->opt_fields, &major_ver, &minor_ver);   
+                        get_protocol_version_from_headers(session, inner_message->opt_fields, &major_ver, &minor_ver);   
                         if (major_ver > 2 || (major_ver == 2 && minor_ver > 1)) 
                             get_message_version_from_headers(inner_message->opt_fields, &msg_major_ver, &msg_minor_ver);
                             
