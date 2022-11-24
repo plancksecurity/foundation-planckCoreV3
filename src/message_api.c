@@ -1264,6 +1264,7 @@ enomem:
  *
  *  @brief            TODO
  *
+ *  @param[in]    session          session
  *  @param[in]    *envelope        message
  *  @param[in]    *attachment        message
  *  @param[in]    wrap_type        message_wrap_type
@@ -1273,15 +1274,14 @@ enomem:
  *  @param[in]    max_minor        unsignedint
  *
  */
-static PEP_STATUS wrap_message_as_attachment(message* envelope,
+static PEP_STATUS wrap_message_as_attachment(
+    PEP_SESSION session, message* envelope,
     message* attachment, message** new_message, message_wrap_type wrap_type, 
     bool keep_orig_subject, stringlist_t* extra_keys,
     unsigned int max_major, unsigned int max_minor) {
-    
-    *new_message = NULL;
+    PEP_REQUIRE(session && attachment && new_message);
 
-    if (!attachment)
-        return PEP_ILLEGAL_VALUE;
+    *new_message = NULL;
     
     message* _envelope = envelope;
 
@@ -2809,7 +2809,7 @@ static PEP_STATUS encrypt_message_possibly_with_media_key(
         message_wrap_type wrap_type = PEP_message_unwrapped;
         if ((enc_format != PEP_enc_inline) && (enc_format != PEP_enc_inline_EA) && (!force_v_1) && ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp)) {
             wrap_type = ((flags & PEP_encrypt_flag_key_reset_only) ? PEP_message_key_reset : PEP_message_default);
-            status = wrap_message_as_attachment(NULL, src, &_src, wrap_type, false, extra, max_version_major, max_version_minor);
+            status = wrap_message_as_attachment(session, NULL, src, &_src, wrap_type, false, extra, max_version_major, max_version_minor);
             if (status != PEP_STATUS_OK)
                 goto pEp_error;
             else if (!_src) {
@@ -3278,7 +3278,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
 
     unsigned int major_ver, minor_ver;
     pEp_version_major_minor(PEP_VERSION, &major_ver, &minor_ver);
-    status = wrap_message_as_attachment(NULL, src, &_src, PEP_message_default, false, extra, major_ver, minor_ver);
+    status = wrap_message_as_attachment(session, NULL, src, &_src, PEP_message_default, false, extra, major_ver, minor_ver);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
     else if (!_src) {
