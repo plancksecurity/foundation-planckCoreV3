@@ -1230,6 +1230,8 @@
 			inputFileListPaths = (
 			);
 			inputPaths = (
+				"$(SRCROOT)/../../../Makefile",
+				"$(SRCROOT)/$(SRCROOT)/../../../asn.1/Makefile",
 			);
 			name = "Generate Code";
 			outputFileListPaths = (
