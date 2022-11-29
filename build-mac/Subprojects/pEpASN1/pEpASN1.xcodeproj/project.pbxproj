@@ -1239,7 +1239,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = "/bin/sh -l";
-			shellScript = "export LANG=en_US.UTF-8\n\necho \"***************************************\"\necho \"*** Generate files: ACTION: $ACTION ***\"\necho \"***************************************\"\n\ncd \"${PROJECT_DIR}/../../..\"\n\nmake asn1\n\n# Assume that this patch only fails when already applied\npatch asn.1/asn_internal.h build-mac/patches/asn_internal.h.patch || true\n";
+			shellScript = "export LANG=en_US.UTF-8\n\necho \"***************************************\"\necho \"*** Generate files: ACTION: $ACTION ***\"\necho \"***************************************\"\n\ncd \"${PROJECT_DIR}/../../..\"\n\nmake asn1\n\n# Assume that this patch only fails when already applied,\n# and delete the rej file.\npatch asn.1/asn_internal.h build-mac/patches/asn_internal.h.patch || true\nrm -f asn.1/asn_internal.h.rej\n";
 			showEnvVarsInLog = 0;
 		};
 		15A32292260E0452009D07EB /* Copy Artefacts & Headers to Custom Build Dir */ = {
