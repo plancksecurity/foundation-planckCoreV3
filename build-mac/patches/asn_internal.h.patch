@@ -7,9 +7,9 @@
 -#define	ASN__DEFAULT_STACK_MAX	(30000)
 +#if defined(__APPLE__) && defined(DEBUG)
 +/* Assume address sanitizer is enabled, which will blow up the stack a lot */
-+#define    ASN__DEFAULT_STACK_MAX    (3000000)
++#define ASN__DEFAULT_STACK_MAX (3000000)
 +#else
-+#define ASN__DEFAULT_STACK_MAX  (30000)
++#define ASN__DEFAULT_STACK_MAX (30000)
 +#endif
  static int __attribute__((unused))
  ASN__STACK_OVERFLOW_CHECK(asn_codec_ctx_t *ctx) {
