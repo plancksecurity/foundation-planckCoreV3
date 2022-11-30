@@ -369,6 +369,12 @@ release ()
     git commit -m "add trailing \"+\" sign to version after $version, prepend an empty line to NEWS" \
         "$versionfile" NEWS
     git push --tags origin HEAD:"$branchname"
+    cat <<EOF
+
+Now go to
+  https://gitea.pep.foundation/pEp.foundation/pEpEngine/releases/new
+and mark an Engine release for $version on branch $branchname .
+EOF
 }
 
 # Global variable definitions
