@@ -1,3 +1,4 @@
+v2.1.67
 * Add NEWS file.
 * add release script (for the Engine maintainer): the Engine version is now in a
   machine-generated file src/pEpEngine_version.h
