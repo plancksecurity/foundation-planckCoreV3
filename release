@@ -1,0 +1,568 @@
+#!/bin/bash -e
+# This is a Bash (-*- sh -*- for what concerns Emacs) script.
+
+# @file      release
+# @brief     A helper script for positron to make releases
+# @license   GNU General Public License 3.0 - see LICENSE.txt
+
+# Portability is not terribly important, as this script is only meant to be
+# executed by the p≡p Engine maintainer; however it should probably run on
+# reasonably POSIX-like systems.  If in doubt run on a GNU system.
+
+
+# Utility
+# #####################################################
+
+fatal ()
+{
+    echo "$scriptname FATAL ERROR: $@" \
+         > /dev/stderr
+    exit -1
+}
+
+confirm ()
+{
+    prompt="$@"
+    echo -ne "$prompt\nDo you want to continue? (y/n)\n> "
+
+    while read reply; do
+        reply=$(echo "$reply" | tr '[:upper:]' '[:lower:]')
+        if test "$reply" == 'y' || test "$reply" == 'ye' \
+                || test "$reply" == 'yes'; then
+            return
+        elif test "$reply" == 'n' || test "$reply" == 'no'; then
+            fatal 'you backed out'
+        else
+            echo 'I did not understand.'
+            echo -ne "$prompt\nDo you want to continue? (y/n)\n> "
+        fi
+    done
+}
+
+
+
+# Global initialisation
+# #####################################################
+
+scriptname="$0"
+scriptcommandline="$@"
+
+# Sanity checks.  These are meant to catch distraction, not malice.
+
+# Make sure we are in a reasonable directory.
+cd $(dirname "$0")
+if ! test -e src/pEpEngine.h || ! test -e src/echo_api.c; then
+    fatal "this is not a recent p≡p Engine source directory"
+fi
+if ! test -e .git/config; then
+    fatal "this does not look like a git repository containing the p≡p Engine"
+fi
+
+# Make sure this script is not executed by mistake by somebody who is just
+# playing around.  This behaviour is trivial to change in case of actual need,
+# but since it modifies the sources and the repository it should not be run
+# blindly.
+if test "$HOSTNAME" != 'moore'; then
+    fatal "you are on $HOSTNAME, not on positron's computer.  You should not do this."
+fi
+if test "$USER" != 'luca'; then
+    fatal "you are $USER, not positron.  You should not do this."
+fi
+
+
+# Version component handling
+# #####################################################
+
+# Given a version, fail fatally if it is ill-formed; do nothing in case of
+# success.
+validate_version ()
+{
+    version="$1"
+    if ! echo "$version" \
+            | grep -q '^v\?[0-9]\+\.[0-9]\+\(\.[0-9]\+\(-\?RC[0-9]\+\)\?\)\?$'; then
+        fatal "ill-formed version \"$version\""
+    elif echo "$version" | grep -q '\.0[0-9]'; then
+        fatal "ill-formed version \"$version\" ('0' most significant digit)"
+    elif echo "$version" | grep -q -- '-\?RC0$'; then
+        fatal "ill-formed version \"$version\" ('-RC0' is not valid)"
+    fi
+}
+
+# Given version components print a nice complete version, without a "v" prefix.
+# Arguments:
+# * major version number
+# * minor version number
+# * patch version number (optional)
+# * RC version number (optional)
+make_version ()
+(
+    major="$1"
+    minor="$2"
+    patch="$3"
+    rc="$4"
+    if test "$patch" = ''; then
+        patch='0'
+    fi
+    if test "$rc" = '0'; then
+        rc=''
+    fi
+    if test "$rc" = ''; then
+        echo "$major.$minor.$patch"
+    else
+        echo "$major.$minor.$patch-RC$rc"
+    fi
+)
+
+# Given a version return its major (respectively: minor, patch, RC) component.
+major_of ()
+(
+    validate_version "$1"
+    echo "$1" | sed 's/^v\?\([0-9]\+\)\..*$/\1/'
+)
+minor_of ()
+(
+    validate_version "$1"
+    echo "$1" | sed 's/^v\?[0-9]\+\.\([0-9]\+\)\..*$/\1/'
+)
+patch_of ()
+(
+    version="$1"
+    validate_version "$version"
+    result=$(echo "$version" | sed 's/^v\?[0-9]\+\.[0-9]\+\.\([0-9]\+\).*/\1/')
+    if test "$result" = "$version"; then
+        echo '0'
+    else
+        echo "$result"
+    fi
+)
+rc_of ()
+(
+    validate_version "$1"
+    if echo "$1" | grep -q 'RC[0-9]\+'; then
+        echo "$1" | sed 's/^.*RC\([0-9]\+\)$/\1/'
+    else
+        echo '0'
+    fi
+)
+
+# Given a version, return success iff the version is an RC version.
+is_rc ()
+{
+    validate_version "$1"
+    rc=$(rc_of "$1")
+    test "$rc" != '0'
+}
+
+
+# RC successor versions
+# #####################################################
+
+next_major_rc ()
+(
+    version="$1"; validate_version "$version"
+    major=$(major_of "$version"); minor=$(minor_of "$version")
+    patch=$(patch_of "$version"); rc=$(rc_of "$version")
+
+    test "$minor" != '0' && fatal "next major RC: non-zero minor in $version"
+    test "$patch" != '0' && fatal "next major RC: non-zero patch in $version"
+    if is_rc "$version"; then
+        make_version "$major" "$minor" "$patch" $(( "$rc" + 1 ))
+    else
+        make_version $(( "$major" + 1 )) 0 0 1
+    fi
+)
+
+next_minor_rc ()
+(
+    version="$1"; validate_version "$version"
+    major=$(major_of "$version"); minor=$(minor_of "$version")
+    patch=$(patch_of "$version"); rc=$(rc_of "$version")
+
+    test "$patch" != '0' && fatal "next minor RC: non-zero patch in $version"
+    if is_rc "$version"; then
+        make_version "$major" "$minor" "$patch" $(( "$rc" + 1 ))
+    else
+        make_version "$major" $(( "$minor" + 1 )) 0 1
+    fi
+)
+
+next_patch_rc ()
+(
+    version="$1"; validate_version "$version"
+    major=$(major_of "$version"); minor=$(minor_of "$version")
+    patch=$(patch_of "$version"); rc=$(rc_of "$version")
+
+    if is_rc "$version"; then
+        make_version "$major" "$minor" "$patch" $(( "$rc" + 1 ))
+    else
+        make_version "$major" "$minor" $(( "$patch" + 1 )) 1
+    fi
+)
+
+
+# Non-RC successor versions
+# #####################################################
+
+next_major ()
+(
+    version="$1"; validate_version "$version"
+    major=$(major_of "$version"); minor=$(minor_of "$version")
+    patch=$(patch_of "$version"); rc=$(rc_of "$version")
+
+    if is_rc "$version"; then
+        test "$minor" != '0' && fatal "next major: non-zero minor in RC version $version"
+        test "$patch" != '0' && fatal "next major: non-zero patch in RC version $version"
+        make_version "$major" "$minor" "$patch"
+    else
+        make_version $(( "$major" + 1 )) 0 0
+    fi
+)
+
+next_minor ()
+(
+    version="$1"; validate_version "$version"
+    major=$(major_of "$version"); minor=$(minor_of "$version")
+    patch=$(patch_of "$version"); rc=$(rc_of "$version")
+
+    if is_rc "$version"; then
+        test "$patch" != '0' && fatal "next minor: non-zero patch in RC version $version"
+        make_version "$major" "$minor" "$patch"
+    else
+        make_version "$major" $(( "$minor" + 1 )) 0
+    fi
+)
+
+next_patch ()
+(
+    version="$1"; validate_version "$version"
+    major=$(major_of "$version"); minor=$(minor_of "$version")
+    patch=$(patch_of "$version"); rc=$(rc_of "$version")
+
+    if is_rc "$version"; then
+        make_version "$major" "$minor" "$patch"
+    else
+        make_version "$major" "$minor" $(( "$patch" + 1 ))
+    fi
+)
+
+
+# Code generation
+# #####################################################
+
+# Emit the content of src/pEp_engine_version.h to stdout
+# * version
+# * a Boolean value (either 'yes' or 'no') for plus;
+# * a branch suffix, which may be empty
+emit_version_h_content ()
+{
+    version="$1"; validate_version "$version"
+    plus="$2"
+    case "$plus" in
+        'yes') true;;
+        'no')  true;;
+        * )    fatal "emit_version_h_content: invalid value \"$plus\" for plus";;
+    esac
+    branchsuffix="$3"
+
+    if test "$plus" = 'yes'; then
+        plusornothing='+'
+    else
+        plusornothing=''
+    fi
+
+    major=$(major_of "$version")
+    minor=$(minor_of "$version")
+    patch=$(patch_of "$version")
+    rc=$(rc_of "$version")
+    if is_rc "$version"; then
+       rc_or_release='Release Candidate'
+    else
+       rc_or_release='release'
+    fi
+
+    cat <<EOF
+/**
+ * @file      pEp_engine_version.h
+ * @brief     machine-generated version information for the pEp Engine
+ * @generated by the p≡p Engine $scriptname script with options
+ *            $scriptcommandline
+ * @license   GNU General Public License 3.0 - see LICENSE.txt
+ */
+#ifndef _PEP_ENGINE_VERSION_H_
+#define _PEP_ENGINE_VERSION_H_
+
+#define PEP_ENGINE_VERSION_MAJOR          $major
+#define PEP_ENGINE_VERSION_MINOR          $minor
+#define PEP_ENGINE_VERSION_PATCH          $patch
+
+$(if is_rc "$version"; then
+    echo "#define PEP_ENGINE_VERSION_RC             $(printf '%-4i' $rc)/* This is a Release Candidate. */"
+  else
+    echo '/* PEP_ENGINE_VERSION_RC is not defined: not a Release Candidate. */'
+  fi)
+
+$(if test "$plus" = 'yes'; then
+    echo "#define PEP_ENGINE_VERSION_PLUS           +   /* This is a MODIFIED $rc_or_release */"
+  else
+    echo "/* PEP_ENGINE_VERSION_PLUS not defined: this is an UNmodified $rc_or_release. */"
+  fi)
+
+$(if test "$branchsuffix" != ''; then
+    echo "#define PEP_ENGINE_VERSION_BRANCH_SUFFIX  $branchsuffix /* A non-release branch */"
+  else
+    echo "/* PEP_ENGINE_VERSION_BRANCH_SUFFIX not defined. */"
+  fi)
+
+/* The main version string for the user. */
+#define PEP_ENGINE_VERSION "$version$plusornothing"
+
+#endif /* #ifndef _PEP_ENGINE_VERSION_H_ */
+EOF
+}
+
+# Argument
+# * a line to be passed to echo -ne
+prepend_to_NEWS ()
+{
+    line_for_echo_ne="$1"
+
+    (mv NEWS NEWS-bk \
+         && echo -en "$line_for_echo_ne" | cat - NEWS-bk > NEWS \
+         && rm NEWS-bk) \
+        || (mv NEWS-bk NEWS; fatal 'could not update NEWS')
+}
+
+
+# Releasing function
+# #####################################################
+
+release ()
+{
+    version="$1"
+
+    confirm "Releasing version $version on branch $branchname"
+
+    if ! echo "$branchname" | grep -q '^Release_' \
+       && test "$branchname" != 'master'; then
+        fatal "branch \"$branchname\" does not look like a release branch name"
+    fi
+    if test "$gitrepositoryclean" == 'no'; then
+        fatal "git repository not clean"
+    fi
+    firstlineinNEWS=$(echo $(head --lines=1 NEWS))
+    if test "$firstlineinNEWS" == ''; then
+        fatal 'The first line in NEWS is empty: it should not be, since we are about to prepend the version number to a list of changes'
+    fi
+
+    versionfile=src/pEpEngine_version.h
+    prepend_to_NEWS "v$version\n"
+    emit_version_h_content "$version" 'no' > "$versionfile"
+    git add "$versionfile"
+    git commit -m "set version to $version" \
+        "$versionfile" NEWS
+    git tag --sign \
+        --local-user='positron@pep.foundation' \
+        -m "v$version" \
+        "v$version"
+    emit_version_h_content "$version" 'yes' > "$versionfile"
+    prepend_to_NEWS "\n"
+    git commit -m "add trailing \"+\" sign to version after $version, prepend an empty line to NEWS" \
+        "$versionfile" NEWS
+    git push --tags origin HEAD:"$branchname"
+}
+
+# Global variable definitions
+# #####################################################
+
+# Compute version data from the git repository state.
+latestcommit=$(git log | grep '^commit ' | head --lines=1 | awk '{print $2}')
+latestvtagcommitline=$(git log --decorate=full \
+                           | grep ' (tag: refs/tags/v' | head --lines=1)
+latestvtagcommit=$(echo "$latestvtagcommitline" | awk '{print $2}')
+latestvtagname=$(echo "$latestvtagcommitline" | awk '{print $4}' \
+                     | sed 's@.*/\(v[0-9][^)]\+\))$@\1@')
+branchname=$(git branch --show-current)
+if test "$branchname" = ''; then
+    branchname='detached-head'
+fi
+if test "$(git status --short --untracked-files=no)" == ''; then
+    gitrepositoryclean=yes
+else
+    gitrepositoryclean=no
+fi
+
+
+### # Just for testing, of course #############################
+# branchname='foobar'
+# #latestvtagname='v3.2.9-RC2'
+# latestvtagname='v3.2.9'
+# gitrepositoryclean=yes
+###############################################################
+
+# Compute the release number from the most recent git tag name.
+latestversion=$(echo "$latestvtagname" | sed 's/^v//')
+
+# Compute the release branch suffix from the branch name; leave it empty
+# if the repository is on a release branch.
+if test "$branchname" == 'master' \
+        || echo "$branchname" | grep -q '^Release_'; then
+    branchsuffix=''
+else
+    branchsuffix="-$branchname"
+fi
+
+# Validate and normalise the current version.
+validate_version "$latestversion"
+latestmajor=$(major_of "$latestversion")
+latestminor=$(minor_of "$latestversion")
+latestpatch=$(patch_of "$latestversion")
+latestrc=$(rc_of "$latestversion")
+latestversion=$(make_version "$latestmajor" "$latestminor" "$latestpatch" "$latestrc")
+
+
+# echo $latestversion
+# patch_of "$latestversion"
+# rc_of "$latestversion"
+# exit 0
+
+# Command line handling
+# #####################################################
+
+help ()
+{
+            cat <<EOF
+SYNOPSIS
+  $scriptname [option] ...
+
+Common options
+   --help                 Print this help message
+   --version              Print version information about this script
+
+Version numbers
+   --latest, --current    Deal with the current version number
+   --next-major           Deal with the next major release's version number
+   --next-minor           Deal with the next minor release's version number
+   --next-patch           Deal with the next patch release's version number
+   --next-major-rc        Deal with the next major RC's version number
+   --next-minor-rc        Deal with the next minor RC's version number
+   --next-patch-rc        Deal with the next patch RC's version number
+
+Actions
+   --release              Make a release
+   --print                Just show a release number (default)
+
+EOF
+            exit 0
+}
+
+version ()
+{
+            cat <<EOF
+$scriptname is not versioned.
+
+This comes from p≡p.  Written by Luca Saiu.
+EOF
+            exit 0
+}
+
+# Arguments:
+# * the version
+handle_version_number ()
+{
+    version="$1"
+
+    theversion="$version"
+    if test "$anyversionspecified" = 'yes'; then
+        fatal "specified two different versions: you had already described $theversion"
+    fi
+    anyversionspecified='yes'
+}
+
+# Arguments:
+# * the action
+handle_action ()
+{
+    action="$1"
+
+    if test "$release" != 'no'; then
+        fatal "an action was already specified (release)"
+    elif test "$print" != 'no'; then
+        fatal "an action was already specified (print)"
+    elif test "$action" = 'release'; then
+        release='yes'
+    elif test "$action" = 'print'; then
+        print='yes'
+    else
+        fatal "unknown action $action"
+    fi
+}
+
+require_version_number ()
+{
+    if test "$anyversionspecified" = 'no'; then
+        fatal "no version number specified"
+    fi
+
+    # Check that the version is actually correct.  This is needed in case some
+    # previous error was ignored: see the comment after the argument loop;
+    # however we do not need to print an error message here, since one has been
+    # printed already.
+    validate_version "$theversion" &> /dev/null
+}
+
+if test "$#" = '0'; then
+    fatal "not enough arguments: see --help"
+fi
+
+release='no'
+print='no'
+anyversionspecified='no'
+theversion=''
+for arg in "$@"; do
+    case "$arg" in
+        # Common.
+        '--help' )
+            help;;
+        '--version' )
+            version;;
+
+        # Version numbers.
+        '--latest' | '--current' )
+            handle_version_number "$latestversion";;
+        '--next-major' )
+            handle_version_number $(next_major "$latestversion");;
+        '--next-minor' )
+            handle_version_number $(next_minor "$latestversion");;
+        '--next-patch' )
+            handle_version_number $(next_patch "$latestversion");;
+        '--next-major-rc' )
+            handle_version_number $(next_major_rc "$latestversion");;
+        '--next-minor-rc' )
+            handle_version_number $(next_minor_rc "$latestversion");;
+        '--next-patch-rc' )
+            handle_version_number $(next_patch_rc "$latestversion");;
+
+        # Actions
+        '--release' )
+            handle_action 'release';;
+        '--print' )
+            handle_action 'print';;
+
+        # Default.
+        * )
+            fatal "unknown argument $arg";;
+    esac
+done
+
+# Make sure a version number was specified.  This is also necessary to catch
+# version errors, since we use functions such as next_minor inside $( ... ),
+# which makes errors not fatal.
+require_version_number
+# emit_version_h_content "$theversion" 'yes' "$branchsuffix"
+# fatal "remove this"
+
+if test "$release" != 'no'; then
+    release "$theversion"
+else # we take print to be the default
+    echo "$theversion"
+fi

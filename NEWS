@@ -1,9 +1,7 @@
-This is a list of changes since Autumn 2022.
-Newer changes are at the top of this file.
-
-
-[next release or RC]
-
+* Add NEWS file.
+* add release script (for the Engine maintainer): the Engine version is now in a
+  machine-generated file src/pEpEngine_version.h
+* No user-visible changes
 
 v2.1.66
 * handle_pong: fix bug preventing notification from being called, reported by
@@ -51,3 +49,7 @@ Release_2.1.58
 Release_2.1.57
 * Minor bug fixes, particularly fixing the name of the Sequoia package and
   library at link time.
+
+
+This is a list of changes since Autumn 2022.
+Newer changes are at the top of this file.
