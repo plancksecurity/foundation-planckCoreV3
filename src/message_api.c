@@ -4604,7 +4604,7 @@ static bool reject_fpr(PEP_SESSION session, const char* fpr) {
 static bool import_header_keys(PEP_SESSION session, message* src, stringlist_t** imported_key_list, uint64_t* changed_keys) {
     PEP_REQUIRE(session && src);
 
-    stringpair_list_t* header_keys = stringpair_list_find(src->opt_fields, "Autocrypt"); 
+    stringpair_list_t* header_keys = stringpair_list_find_case_insensitive(src->opt_fields, "Autocrypt"); 
     if (!header_keys || !header_keys->value)
         return false;
     const char* value = header_keys->value->value;
@@ -4900,8 +4900,7 @@ static void get_protocol_version_from_headers(
 
     *major_ver = 0;
     *minor_ver = 0;
-    const stringpair_list_t* pEp_protocol_version = stringpair_list_find(field_list, "X-pEp-Version");
-                        
+    const stringpair_list_t* pEp_protocol_version = stringpair_list_find_case_insensitive(field_list, "X-pEp-Version");
     if (pEp_protocol_version && pEp_protocol_version->value)
         pEp_version_major_minor(pEp_protocol_version->value->value, major_ver, minor_ver);           
 }
@@ -4917,7 +4916,7 @@ static void get_message_version_from_headers(
 
     *major_ver = 0;
     *minor_ver = 0;
-    const stringpair_list_t* pEp_message_version = stringpair_list_find(field_list, X_PEP_MSG_VER_KEY);
+    const stringpair_list_t* pEp_message_version = stringpair_list_find_case_insensitive(field_list, X_PEP_MSG_VER_KEY);
                         
     if (pEp_message_version && pEp_message_version->value)
         pEp_version_major_minor(pEp_message_version->value->value, major_ver, minor_ver);           
@@ -5652,7 +5651,7 @@ static PEP_STATUS _decrypt_message(
                         inner_message->enc_format = src->enc_format;
 
                         // const stringpair_list_t* pEp_protocol_version = NULL;
-                        // pEp_protocol_version = stringpair_list_find(inner_message->opt_fields, "X-pEp-Version");
+                        // pEp_protocol_version = stringpair_list_find_case_insensitive(inner_message->opt_fields, "X-pEp-Version");
                         
                         // if (pEp_protocol_version && pEp_protocol_version->value)
                         //     pEp_version_major_minor(pEp_protocol_version->value->value, &major_ver, &minor_ver);
@@ -5677,7 +5676,7 @@ static PEP_STATUS _decrypt_message(
                         // A 2.0 client can only send a 2.0 message here.
                         // So first off: if not 2.2 or greater, infer version:
                         if (major_ver == 2 && minor_ver < 2) {
-                            stringpair_list_t* searched = stringpair_list_find(inner_message->opt_fields, X_PEP_MSG_WRAP_KEY);
+                            stringpair_list_t* searched = stringpair_list_find_case_insensitive(inner_message->opt_fields, X_PEP_MSG_WRAP_KEY);
                             if (searched) {
                                 // 2.1 message
                                 msg_major_ver = 2;
@@ -5701,13 +5700,13 @@ static PEP_STATUS _decrypt_message(
 
                         // So first, let's grab a sender fpr if we have one. That depends on the sender'd CLIENT version.
                         if (major_ver > 2 || (major_ver == 2 && minor_ver > 0)) {
-                            stringpair_list_t* searched = stringpair_list_find(inner_message->opt_fields, "X-pEp-Sender-FPR");                             
+                            stringpair_list_t* searched = stringpair_list_find_case_insensitive(inner_message->opt_fields, "X-pEp-Sender-FPR");                             
                             inner_message->_sender_fpr = ((searched && searched->value && searched->value->value) ? strdup(searched->value->value) : NULL);
                         }
 
                         // Ok, now get the message wrapping info
                         if (msg_major_ver > 2 || (msg_major_ver == 2 && msg_minor_ver > 0)) {
-                            stringpair_list_t* searched = stringpair_list_find(inner_message->opt_fields, X_PEP_MSG_WRAP_KEY);
+                            stringpair_list_t* searched = stringpair_list_find_case_insensitive(inner_message->opt_fields, X_PEP_MSG_WRAP_KEY);
                             if (searched && searched->value && searched->value->value) {
                                 is_inner = (strcmp(searched->value->value, "INNER") == 0);
                                 // FIXME: This is a mess, but we need to keep backwards compat before refactor
@@ -6374,7 +6373,7 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
                 const stringpair_list_t *pEp_protocol_version = NULL;
                 unsigned int major_ver = 0;
                 unsigned int minor_ver = 0;
-                pEp_protocol_version = stringpair_list_find(msg->opt_fields, "X-pEp-Version");
+                pEp_protocol_version = stringpair_list_find_case_insensitive(msg->opt_fields, "X-pEp-Version");
                 if (pEp_protocol_version && pEp_protocol_version->value)
                     pEp_version_major_minor(pEp_protocol_version->value->value, &major_ver, &minor_ver);
                 if (major_ver > 2 || (major_ver == 2 && minor_ver > 1)) {
