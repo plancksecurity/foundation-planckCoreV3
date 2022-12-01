@@ -209,6 +209,19 @@ DYNAMIC_API stringpair_list_t *stringpair_list_find(
         const char *key
     );
 
+/**
+ *  <!--       stringpair_list_find_case_insensitive()       -->
+ *  
+ *  @brief Identical to stringpair_list_find except that the key comparison
+ *         is performed case-insensitively; of course there is no restriction
+ *         on values.
+ *  
+ */
+DYNAMIC_API stringpair_list_t *stringpair_list_find_case_insensitive(
+        stringpair_list_t *stringpair_list,
+        const char *key
+    );
+
 // ONLY DELETES ONE.
 /**
  *  <!--       stringpair_list_delete_by_key()       -->
