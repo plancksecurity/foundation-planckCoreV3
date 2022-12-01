@@ -4212,7 +4212,7 @@ static PEP_STATUS import_keys_from_decrypted_msg(PEP_SESSION session,
 /**
  *  @internal
  *
- *  <!--       pEp_version_upgrade_or_ignore()       -->
+ *  <!--       protocol_version_upgrade_or_ignore()       -->
  *
  *  @brief            TODO
  *
@@ -4224,7 +4224,7 @@ static PEP_STATUS import_keys_from_decrypted_msg(PEP_SESSION session,
  *  @retval PEP_STATUS_OK
  *  @retval any other value on error
  */
-static PEP_STATUS pEp_version_upgrade_or_ignore(
+static PEP_STATUS protocol_version_upgrade_or_ignore(
         PEP_SESSION session,
         pEp_identity* ident,
         unsigned int major,
@@ -4234,7 +4234,7 @@ static PEP_STATUS pEp_version_upgrade_or_ignore(
     PEP_STATUS status = PEP_STATUS_OK;        
     int ver_compare = compare_versions(major, minor, ident->major_ver, ident->minor_ver);
     if (ver_compare > 0)
-        status = set_pEp_version(session, ident, major, minor);        
+        status = set_protocol_version(session, ident, major, minor);        
     
     return status;    
 }
@@ -4312,7 +4312,7 @@ static PEP_STATUS update_sender_to_pEp_trust(
                 major = 2;
                 minor = 0;
             }
-            status = pEp_version_upgrade_or_ignore(session, sender, major, minor);    
+            status = protocol_version_upgrade_or_ignore(session, sender, major, minor);    
             break;
         default:
             status = PEP_CANNOT_SET_TRUST;
@@ -5054,6 +5054,27 @@ static PEP_STATUS _decrypt_message(
 {
     PEP_REQUIRE(session && src && dst && keylist && rating && flags);
 
+/* Upgrade the pEp protocol version supported by the identity who sent the
+   message.  This is called in case of success, after the sender identity
+   has already been updated, when the identity is non-own.
+   On error return error. */
+#define UPGRADE_PROTOCOL_VERSION_IF_NEEDED(message_whose_from_is_relevant)      \
+    do {                                                                        \
+        pEp_identity *_the_from = (message_whose_from_is_relevant)->from;       \
+        if (_the_from != NULL && ! is_me(session, _the_from)) {                 \
+            PEP_STATUS _upgrade_version_status                                  \
+                = protocol_version_upgrade_or_ignore(session, _the_from,        \
+                                                     major_ver, minor_ver);     \
+            if (_upgrade_version_status != PEP_STATUS_OK)                       \
+                return _upgrade_version_status;                                 \
+            LOG_TRACE("%s <%s> upgraded to protocol version %i.%i",             \
+                      (_the_from->username ? _the_from->username                \
+                       : "NO-USERNAME"),                                        \
+                      (_the_from->address ? _the_from->address : "NO-ADDRESS"), \
+                      major_ver, minor_ver);                                    \
+        }                                                                       \
+    } while (false)
+
     /*** Begin init ***/
     PEP_STATUS status = PEP_STATUS_OK;
     PEP_STATUS decrypt_status = PEP_CANNOT_DECRYPT_UNKNOWN;
@@ -5272,7 +5293,7 @@ static PEP_STATUS _decrypt_message(
             // Set default key if there isn't one
             // This is the case ONLY for unencrypted messages and differs from the 1.0 and 2.x cases,
             // in case you are led to think this is pure code duplication.
-            if (src->from->address) {
+            if (! EMPTYSTR(src->from->address)) {
                 PEP_STATUS incoming_status = status;
                 const char* sender_key = NULL;
                 if (imported_sender_key_fpr) { // pEp protocol version 2.2 or greater, or someone knows to use the filename
@@ -5312,7 +5333,11 @@ static PEP_STATUS _decrypt_message(
 
         // we return the status value here because it's important to know when 
         // we have a DB error here as soon as we have the info.
-        return (status == PEP_STATUS_OK ? PEP_UNENCRYPTED : status);
+        if (status == PEP_STATUS_OK) {
+            status = PEP_UNENCRYPTED;
+            UPGRADE_PROTOCOL_VERSION_IF_NEEDED(src);
+        }
+        return status;
     }
     /*** End check for and deal with unencrypted messages ***/
 
@@ -6274,8 +6299,10 @@ static PEP_STATUS _decrypt_message(
     }
     free(input_from_username); // This was set to NULL in both places ownership could be legitimately grabbed.
 
-    if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
+    if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
+        UPGRADE_PROTOCOL_VERSION_IF_NEEDED(msg);
         return PEP_STATUS_OK;
+    }
     else
         return decrypt_status;
 

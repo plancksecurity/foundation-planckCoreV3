@@ -1319,7 +1319,7 @@ PEP_STATUS set_identity_entry(PEP_SESSION session, pEp_identity* identity,
 }
 
 
-// This will NOT call set_as_pEp_user, nor set_pEp_version; you have to do that separately.
+// This will NOT call set_as_pEp_user, nor set_protocol_version; you have to do that separately.
 DYNAMIC_API PEP_STATUS set_identity(
         PEP_SESSION session, const pEp_identity *identity
     )
@@ -1380,7 +1380,7 @@ DYNAMIC_API PEP_STATUS set_identity(
         }
     }
     
-    status = set_pEp_version(session, ident_copy, ident_copy->major_ver, ident_copy->minor_ver);
+    status = set_protocol_version(session, ident_copy, ident_copy->major_ver, ident_copy->minor_ver);
     if (status != PEP_STATUS_OK) {
         sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
         goto pEp_free;            
@@ -1460,7 +1460,7 @@ PEP_STATUS update_pEp_user_trust_vals(PEP_SESSION session,
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_TRUST;
 
-    PEP_STATUS status = upgrade_pEp_version_by_user_id(session, user, 2, 1);
+    PEP_STATUS status = upgrade_protocol_version_by_user_id(session, user, 2, 1);
     
     return status;
 }
@@ -1498,20 +1498,20 @@ DYNAMIC_API PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user) 
 }
 
 // This ONLY sets the version flag. Must be called outside of a transaction.
-PEP_STATUS set_pEp_version(PEP_SESSION session, pEp_identity* ident, unsigned int new_ver_major, unsigned int new_ver_minor) {
+PEP_STATUS set_protocol_version(PEP_SESSION session, pEp_identity* ident, unsigned int new_ver_major, unsigned int new_ver_minor) {
     PEP_REQUIRE(session && ident && ! EMPTYSTR(ident->user_id)
                 && ! EMPTYSTR(ident->address));
 
-    sql_reset_and_clear_bindings(session->set_pEp_version);
-    sqlite3_bind_double(session->set_pEp_version, 1, new_ver_major);
-    sqlite3_bind_double(session->set_pEp_version, 2, new_ver_minor);    
-    sqlite3_bind_text(session->set_pEp_version, 3, ident->address, -1,
+    sql_reset_and_clear_bindings(session->set_protocol_version);
+    sqlite3_bind_double(session->set_protocol_version, 1, new_ver_major);
+    sqlite3_bind_double(session->set_protocol_version, 2, new_ver_minor);    
+    sqlite3_bind_text(session->set_protocol_version, 3, ident->address, -1,
             SQLITE_STATIC);
-    sqlite3_bind_text(session->set_pEp_version, 4, ident->user_id, -1,
+    sqlite3_bind_text(session->set_protocol_version, 4, ident->user_id, -1,
             SQLITE_STATIC);
     
-    int result = sqlite3_step(session->set_pEp_version);
-    sql_reset_and_clear_bindings(session->set_pEp_version);
+    int result = sqlite3_step(session->set_protocol_version);
+    sql_reset_and_clear_bindings(session->set_protocol_version);
         
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_PEP_VERSION;
@@ -1520,7 +1520,7 @@ PEP_STATUS set_pEp_version(PEP_SESSION session, pEp_identity* ident, unsigned in
 }
 
 // Generally ONLY called by set_as_pEp_user, and ONLY from < 2.0 to 2.0.
-PEP_STATUS upgrade_pEp_version_by_user_id(PEP_SESSION session, 
+PEP_STATUS upgrade_protocol_version_by_user_id(PEP_SESSION session, 
         pEp_identity* ident, 
         unsigned int new_ver_major,
         unsigned int new_ver_minor
@@ -1528,14 +1528,14 @@ PEP_STATUS upgrade_pEp_version_by_user_id(PEP_SESSION session,
 {
     PEP_REQUIRE(session && ident && ! EMPTYSTR(ident->user_id));
 
-    sql_reset_and_clear_bindings(session->upgrade_pEp_version_by_user_id);
-    sqlite3_bind_int(session->upgrade_pEp_version_by_user_id, 1, new_ver_major);
-    sqlite3_bind_int(session->upgrade_pEp_version_by_user_id, 2, new_ver_minor);    
-    sqlite3_bind_text(session->upgrade_pEp_version_by_user_id, 3, ident->user_id, -1,
+    sql_reset_and_clear_bindings(session->upgrade_protocol_version_by_user_id);
+    sqlite3_bind_int(session->upgrade_protocol_version_by_user_id, 1, new_ver_major);
+    sqlite3_bind_int(session->upgrade_protocol_version_by_user_id, 2, new_ver_minor);    
+    sqlite3_bind_text(session->upgrade_protocol_version_by_user_id, 3, ident->user_id, -1,
             SQLITE_STATIC);
     
-    int result = sqlite3_step(session->upgrade_pEp_version_by_user_id);
-    sql_reset_and_clear_bindings(session->upgrade_pEp_version_by_user_id);
+    int result = sqlite3_step(session->upgrade_protocol_version_by_user_id);
+    sql_reset_and_clear_bindings(session->upgrade_protocol_version_by_user_id);
         
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_PEP_VERSION;

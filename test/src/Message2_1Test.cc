@@ -254,7 +254,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_1) {
     ASSERT_OK;
     ASSERT_NOTNULL(carol);
 
-    status = set_pEp_version(session, carol, 2, 1);
+    status = set_protocol_version(session, carol, 2, 1);
 
     // default should be 2.1 after setting pep status
     status = update_identity(session, carol);
@@ -430,7 +430,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_2_0) {
     ASSERT_OK;
     ASSERT_NOTNULL(bob);
 
-    status = set_pEp_version(session, bob, 2, 1);
+    status = set_protocol_version(session, bob, 2, 1);
 
     // default should be 2.1 after setting pep status
     status = update_identity(session, bob);
@@ -444,7 +444,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_2_0) {
     ASSERT_OK;
     ASSERT_NOTNULL(carol);
 
-    status = set_pEp_version(session, carol, 2, 1);
+    status = set_protocol_version(session, carol, 2, 1);
 
     // default should be 2.1 after setting pep status
     status = update_identity(session, carol);
@@ -458,7 +458,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_2_0) {
     ASSERT_OK;
     ASSERT_NOTNULL(dave);
 
-    status = set_pEp_version(session, dave, 2, 0);
+    status = set_protocol_version(session, dave, 2, 0);
 
     // default should be 2.1 after setting pep status
     status = update_identity(session, dave);
@@ -472,7 +472,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_2_0) {
     ASSERT_OK;
     ASSERT_NOTNULL(alex);
 
-    status = set_pEp_version(session, alex, 2, 1);
+    status = set_protocol_version(session, alex, 2, 1);
 
     // default should be 2.1 after setting pep status
     status = update_identity(session, alex);
@@ -525,7 +525,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_1_0_OpenPGP) {
     ASSERT_OK;
     ASSERT_NOTNULL(bob);
 
-    status = set_pEp_version(session, bob, 2, 1);
+    status = set_protocol_version(session, bob, 2, 1);
 
     // default should be 2.1 after setting pep status
     status = update_identity(session, bob);
@@ -539,7 +539,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_1_0_OpenPGP) {
     ASSERT_OK;
     ASSERT_NOTNULL(carol);
 
-    status = set_pEp_version(session, carol, 2, 1);
+    status = set_protocol_version(session, carol, 2, 1);
 
     // default should be 2.1 after setting pep status
     status = update_identity(session, carol);
@@ -553,7 +553,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_1_0_OpenPGP) {
     ASSERT_OK;
     ASSERT_NOTNULL(dave);
 
-    status = set_pEp_version(session, dave, 2, 0);
+    status = set_protocol_version(session, dave, 2, 0);
 
     // default should be 2.1 after setting pep status
     status = update_identity(session, dave);
@@ -567,7 +567,7 @@ TEST_F(Message2_1Test, check_message2_1_recip_mixed_1_0_OpenPGP) {
     ASSERT_OK;
     ASSERT_NOTNULL(alex);
 
-    status = set_pEp_version(session, alex, 1, 0);
+    status = set_protocol_version(session, alex, 1, 0);
 
     // default should be 1.0 after setting pep status
     status = update_identity(session, alex);

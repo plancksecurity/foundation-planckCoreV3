@@ -414,7 +414,7 @@ PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr);
 
 /**
  *  @internal
- *  <!--       set_pEp_version()       -->
+ *  <!--       set_protocol_version()       -->
  *
  *  @brief            TODO
  *
@@ -428,7 +428,7 @@ PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr);
  *  @retval     PEP_CANNOT_SET_PEP_VERSION
  *
  */
-PEP_STATUS set_pEp_version(PEP_SESSION session, pEp_identity* ident, unsigned int new_ver_major, unsigned int new_ver_minor);
+PEP_STATUS set_protocol_version(PEP_SESSION session, pEp_identity* ident, unsigned int new_ver_major, unsigned int new_ver_minor);
 
 /**
  *  @internal
@@ -451,7 +451,7 @@ PEP_STATUS clear_trust_info(PEP_SESSION session,
 
 /**
  *  @internal
- *  <!--       upgrade_pEp_version_by_user_id()       -->
+ *  <!--       upgrade_protocol_version_by_user_id()       -->
  *
  *  @brief            TODO
  *
@@ -467,7 +467,7 @@ PEP_STATUS clear_trust_info(PEP_SESSION session,
  *  @retval     PEP_CANNOT_SET_PEP_VERSION
  *
  */
-PEP_STATUS upgrade_pEp_version_by_user_id(PEP_SESSION session,
+PEP_STATUS upgrade_protocol_version_by_user_id(PEP_SESSION session,
         pEp_identity* ident,
         unsigned int new_ver_major,
         unsigned int new_ver_minor

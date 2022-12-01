@@ -439,7 +439,7 @@ TEST_F(GroupEncryptionTest, check_add_invite_exist_members) {
     ASSERT_OK;
     status = update_identity(session, member_1);
     ASSERT_OK;
-    status = set_pEp_version(session, member_1, 2, 2);
+    status = set_protocol_version(session, member_1, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_1);
     ASSERT_OK;
@@ -449,7 +449,7 @@ TEST_F(GroupEncryptionTest, check_add_invite_exist_members) {
     ASSERT_OK;
     status = update_identity(session, member_2);
     ASSERT_OK;
-    status = set_pEp_version(session, member_2, 2, 2);
+    status = set_protocol_version(session, member_2, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_2);
     ASSERT_OK;
@@ -459,7 +459,7 @@ TEST_F(GroupEncryptionTest, check_add_invite_exist_members) {
     ASSERT_OK;
     status = update_identity(session, member_3);
     ASSERT_OK;
-    status = set_pEp_version(session, member_3, 2, 2);
+    status = set_protocol_version(session, member_3, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_3);
     ASSERT_OK;
@@ -515,7 +515,7 @@ TEST_F(GroupEncryptionTest, check_add_invite_exist_members) {
     ASSERT_OK;
     status = update_identity(session, member_4);
     ASSERT_OK;
-    status = set_pEp_version(session, member_4, 2, 2);
+    status = set_protocol_version(session, member_4, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
@@ -578,7 +578,7 @@ TEST_F(GroupEncryptionTest, check_add_invite_empty_members) {
     ASSERT_OK;
     status = update_identity(session, member_4);
     ASSERT_OK;
-    status = set_pEp_version(session, member_4, 2, 2);
+    status = set_protocol_version(session, member_4, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
@@ -640,7 +640,7 @@ TEST_F(GroupEncryptionTest, check_add_invite_empty_members_empty_head) {
     ASSERT_OK;
     status = update_identity(session, member_4);
     ASSERT_OK;
-    status = set_pEp_version(session, member_4, 2, 2);
+    status = set_protocol_version(session, member_4, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
@@ -736,7 +736,7 @@ TEST_F(GroupEncryptionTest, check_add_invite_member_no_key) {
     pEp_identity* member_4 = new_identity(member_4_address, NULL, "MEMBER4", member_4_name);
     status = update_identity(session, member_4);
     ASSERT_OK;
-    status = set_pEp_version(session, member_4, 2, 2);
+    status = set_protocol_version(session, member_4, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
@@ -856,7 +856,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create) {
     ASSERT_OK;
     status = update_identity(session, member_1);
     ASSERT_OK;
-    status = set_pEp_version(session, member_1, 2, 2);
+    status = set_protocol_version(session, member_1, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_1);
     ASSERT_OK;
@@ -866,7 +866,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create) {
     ASSERT_OK;
     status = update_identity(session, member_2);
     ASSERT_OK;
-    status = set_pEp_version(session, member_2, 2, 2);
+    status = set_protocol_version(session, member_2, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_2);
     ASSERT_OK;
@@ -876,7 +876,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create) {
     ASSERT_OK;
     status = update_identity(session, member_3);
     ASSERT_OK;
-    status = set_pEp_version(session, member_3, 2, 2);
+    status = set_protocol_version(session, member_3, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_3);
     ASSERT_OK;
@@ -886,7 +886,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create) {
     ASSERT_OK;
     status = update_identity(session, member_4);
     ASSERT_OK;
-    status = set_pEp_version(session, member_4, 2, 2);
+    status = set_protocol_version(session, member_4, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
@@ -1309,7 +1309,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_extant_key) {
     ASSERT_OK;
     status = update_identity(session, member_1);
     ASSERT_OK;
-    status = set_pEp_version(session, member_1, 2, 2);
+    status = set_protocol_version(session, member_1, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_1);
     ASSERT_OK;
@@ -1319,7 +1319,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_extant_key) {
     ASSERT_OK;
     status = update_identity(session, member_2);
     ASSERT_OK;
-    status = set_pEp_version(session, member_2, 2, 2);
+    status = set_protocol_version(session, member_2, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_2);
     ASSERT_OK;
@@ -1329,7 +1329,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_extant_key) {
     ASSERT_OK;
     status = update_identity(session, member_3);
     ASSERT_OK;
-    status = set_pEp_version(session, member_3, 2, 2);
+    status = set_protocol_version(session, member_3, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_3);
     ASSERT_OK;
@@ -1339,7 +1339,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_extant_key) {
     ASSERT_OK;
     status = update_identity(session, member_4);
     ASSERT_OK;
-    status = set_pEp_version(session, member_4, 2, 2);
+    status = set_protocol_version(session, member_4, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
@@ -1730,7 +1730,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_join_receive) {
     ASSERT_OK;
     status = update_identity(session, member_1);
     ASSERT_OK;
-    status = set_pEp_version(session, member_1, 2, 2);
+    status = set_protocol_version(session, member_1, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_1);
     ASSERT_OK;
@@ -1811,7 +1811,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_send) {
     ASSERT_OK;
     status = update_identity(session, member_1);
     ASSERT_OK;
-    status = set_pEp_version(session, member_1, 2, 2);
+    status = set_protocol_version(session, member_1, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_1);
     ASSERT_OK;
@@ -1821,7 +1821,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_send) {
     ASSERT_OK;
     status = update_identity(session, member_2);
     ASSERT_OK;
-    status = set_pEp_version(session, member_2, 2, 2);
+    status = set_protocol_version(session, member_2, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_2);
     ASSERT_OK;
@@ -1831,7 +1831,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_send) {
     ASSERT_OK;
     status = update_identity(session, member_3);
     ASSERT_OK;
-    status = set_pEp_version(session, member_3, 2, 2);
+    status = set_protocol_version(session, member_3, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_3);
     ASSERT_OK;
@@ -1841,7 +1841,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_send) {
     ASSERT_OK;
     status = update_identity(session, member_4);
     ASSERT_OK;
-    status = set_pEp_version(session, member_4, 2, 2);
+    status = set_protocol_version(session, member_4, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
@@ -2130,7 +2130,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_join_member_unknown) {
     ASSERT_OK;
     status = update_identity(session, member_1);
     ASSERT_OK;
-    status = set_pEp_version(session, member_1, 2, 2);
+    status = set_protocol_version(session, member_1, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_1);
     ASSERT_OK;
@@ -2140,7 +2140,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_join_member_unknown) {
     ASSERT_OK;
     status = update_identity(session, member_2);
     ASSERT_OK;
-    status = set_pEp_version(session, member_2, 2, 2);
+    status = set_protocol_version(session, member_2, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_2);
     ASSERT_OK;
@@ -2267,7 +2267,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_different_own_identity_m
     ASSERT_OK;
     status = update_identity(session, member_1);
     ASSERT_OK;
-    status = set_pEp_version(session, member_1, 2, 2);
+    status = set_protocol_version(session, member_1, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_1);
     ASSERT_OK;
@@ -2277,7 +2277,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_different_own_identity_m
     ASSERT_OK;
     status = update_identity(session, member_2);
     ASSERT_OK;
-    status = set_pEp_version(session, member_2, 2, 2);
+    status = set_protocol_version(session, member_2, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_2);
     ASSERT_OK;
@@ -2287,7 +2287,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_different_own_identity_m
     ASSERT_OK;
     status = update_identity(session, member_3);
     ASSERT_OK;
-    status = set_pEp_version(session, member_3, 2, 2);
+    status = set_protocol_version(session, member_3, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_3);
     ASSERT_OK;
@@ -2297,7 +2297,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_different_own_identity_m
     ASSERT_OK;
     status = update_identity(session, member_4);
     ASSERT_OK;
-    status = set_pEp_version(session, member_4, 2, 2);
+    status = set_protocol_version(session, member_4, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
@@ -2543,7 +2543,7 @@ TEST_F(GroupEncryptionTest, not_a_test_message_gen_for_group_dissolve_not_manage
     ASSERT_OK;
     status = update_identity(session, member_2);
     ASSERT_OK;
-    status = set_pEp_version(session, member_2, 2, 2);
+    status = set_protocol_version(session, member_2, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_2);
     ASSERT_OK;
@@ -2685,7 +2685,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_no_recents) {
     ASSERT_OK;
     status = update_identity(session, member_1);
     ASSERT_OK;
-    status = set_pEp_version(session, member_1, 2, 2);
+    status = set_protocol_version(session, member_1, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_1);
     ASSERT_OK;
@@ -2695,7 +2695,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_no_recents) {
     ASSERT_OK;
     status = update_identity(session, member_2);
     ASSERT_OK;
-    status = set_pEp_version(session, member_2, 2, 2);
+    status = set_protocol_version(session, member_2, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_2);
     ASSERT_OK;
@@ -2705,7 +2705,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_no_recents) {
     ASSERT_OK;
     status = update_identity(session, member_3);
     ASSERT_OK;
-    status = set_pEp_version(session, member_3, 2, 2);
+    status = set_protocol_version(session, member_3, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_3);
     ASSERT_OK;
@@ -2715,7 +2715,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_no_recents) {
     ASSERT_OK;
     status = update_identity(session, member_4);
     ASSERT_OK;
-    status = set_pEp_version(session, member_4, 2, 2);
+    status = set_protocol_version(session, member_4, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
@@ -2810,7 +2810,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_no_recents_two_active
     ASSERT_OK;
     status = update_identity(session, member_1);
     ASSERT_OK;
-    status = set_pEp_version(session, member_1, 2, 2);
+    status = set_protocol_version(session, member_1, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_1);
     ASSERT_OK;
@@ -2820,7 +2820,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_no_recents_two_active
     ASSERT_OK;
     status = update_identity(session, member_2);
     ASSERT_OK;
-    status = set_pEp_version(session, member_2, 2, 2);
+    status = set_protocol_version(session, member_2, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_2);
     ASSERT_OK;
@@ -2830,7 +2830,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_no_recents_two_active
     ASSERT_OK;
     status = update_identity(session, member_3);
     ASSERT_OK;
-    status = set_pEp_version(session, member_3, 2, 2);
+    status = set_protocol_version(session, member_3, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_3);
     ASSERT_OK;
@@ -2840,7 +2840,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_no_recents_two_active
     ASSERT_OK;
     status = update_identity(session, member_4);
     ASSERT_OK;
-    status = set_pEp_version(session, member_4, 2, 2);
+    status = set_protocol_version(session, member_4, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
@@ -2976,7 +2976,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_two_recents) {
     ASSERT_OK;
     status = update_identity(session, member_1);
     ASSERT_OK;
-    status = set_pEp_version(session, member_1, 2, 2);
+    status = set_protocol_version(session, member_1, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_1);
     ASSERT_OK;
@@ -2986,7 +2986,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_two_recents) {
     ASSERT_OK;
     status = update_identity(session, member_2);
     ASSERT_OK;
-    status = set_pEp_version(session, member_2, 2, 2);
+    status = set_protocol_version(session, member_2, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_2);
     ASSERT_OK;
@@ -2996,7 +2996,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_two_recents) {
     ASSERT_OK;
     status = update_identity(session, member_3);
     ASSERT_OK;
-    status = set_pEp_version(session, member_3, 2, 2);
+    status = set_protocol_version(session, member_3, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_3);
     ASSERT_OK;
@@ -3006,7 +3006,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_two_recents) {
     ASSERT_OK;
     status = update_identity(session, member_4);
     ASSERT_OK;
-    status = set_pEp_version(session, member_4, 2, 2);
+    status = set_protocol_version(session, member_4, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
@@ -3324,7 +3324,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_two_recents_two_missi
     ASSERT_OK;
     status = update_identity(session, member_1);
     ASSERT_OK;
-    status = set_pEp_version(session, member_1, 2, 2);
+    status = set_protocol_version(session, member_1, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_1);
     ASSERT_OK;
@@ -3334,7 +3334,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_two_recents_two_missi
     ASSERT_OK;
     status = update_identity(session, member_2);
     ASSERT_OK;
-    status = set_pEp_version(session, member_2, 2, 2);
+    status = set_protocol_version(session, member_2, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_2);
     ASSERT_OK;
@@ -3344,7 +3344,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_two_recents_two_missi
     ASSERT_OK;
     status = update_identity(session, member_3);
     ASSERT_OK;
-    status = set_pEp_version(session, member_3, 2, 2);
+    status = set_protocol_version(session, member_3, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_3);
     ASSERT_OK;
@@ -3354,7 +3354,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_two_recents_two_missi
     ASSERT_OK;
     status = update_identity(session, member_4);
     ASSERT_OK;
-    status = set_pEp_version(session, member_4, 2, 2);
+    status = set_protocol_version(session, member_4, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
@@ -3512,7 +3512,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_one_recent_all_missin
     ASSERT_OK;
     status = update_identity(session, member_1);
     ASSERT_OK;
-    status = set_pEp_version(session, member_1, 2, 2);
+    status = set_protocol_version(session, member_1, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_1);
     ASSERT_OK;
@@ -3522,7 +3522,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_one_recent_all_missin
     ASSERT_OK;
     status = update_identity(session, member_2);
     ASSERT_OK;
-    status = set_pEp_version(session, member_2, 2, 2);
+    status = set_protocol_version(session, member_2, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_2);
     ASSERT_OK;
@@ -3532,7 +3532,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_one_recent_all_missin
     ASSERT_OK;
     status = update_identity(session, member_3);
     ASSERT_OK;
-    status = set_pEp_version(session, member_3, 2, 2);
+    status = set_protocol_version(session, member_3, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_3);
     ASSERT_OK;
@@ -3542,7 +3542,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_one_recent_all_missin
     ASSERT_OK;
     status = update_identity(session, member_4);
     ASSERT_OK;
-    status = set_pEp_version(session, member_4, 2, 2);
+    status = set_protocol_version(session, member_4, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
@@ -3657,7 +3657,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_no_recents_all_missin
     ASSERT_OK;
     status = update_identity(session, member_1);
     ASSERT_OK;
-    status = set_pEp_version(session, member_1, 2, 2);
+    status = set_protocol_version(session, member_1, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_1);
     ASSERT_OK;
@@ -3667,7 +3667,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_no_recents_all_missin
     ASSERT_OK;
     status = update_identity(session, member_2);
     ASSERT_OK;
-    status = set_pEp_version(session, member_2, 2, 2);
+    status = set_protocol_version(session, member_2, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_2);
     ASSERT_OK;
@@ -3677,7 +3677,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_no_recents_all_missin
     ASSERT_OK;
     status = update_identity(session, member_3);
     ASSERT_OK;
-    status = set_pEp_version(session, member_3, 2, 2);
+    status = set_protocol_version(session, member_3, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_3);
     ASSERT_OK;
@@ -3687,7 +3687,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_no_recents_all_missin
     ASSERT_OK;
     status = update_identity(session, member_4);
     ASSERT_OK;
-    status = set_pEp_version(session, member_4, 2, 2);
+    status = set_protocol_version(session, member_4, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
@@ -3741,7 +3741,7 @@ TEST_F(GroupEncryptionTest, check_protocol_remove_member_from_group_two_recents)
     ASSERT_OK;
     status = update_identity(session, member_1);
     ASSERT_OK;
-    status = set_pEp_version(session, member_1, 2, 2);
+    status = set_protocol_version(session, member_1, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_1);
     ASSERT_OK;
@@ -3751,7 +3751,7 @@ TEST_F(GroupEncryptionTest, check_protocol_remove_member_from_group_two_recents)
     ASSERT_OK;
     status = update_identity(session, member_2);
     ASSERT_OK;
-    status = set_pEp_version(session, member_2, 2, 2);
+    status = set_protocol_version(session, member_2, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_2);
     ASSERT_OK;
@@ -3761,7 +3761,7 @@ TEST_F(GroupEncryptionTest, check_protocol_remove_member_from_group_two_recents)
     ASSERT_OK;
     status = update_identity(session, member_3);
     ASSERT_OK;
-    status = set_pEp_version(session, member_3, 2, 2);
+    status = set_protocol_version(session, member_3, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_3);
     ASSERT_OK;
@@ -3771,7 +3771,7 @@ TEST_F(GroupEncryptionTest, check_protocol_remove_member_from_group_two_recents)
     ASSERT_OK;
     status = update_identity(session, member_4);
     ASSERT_OK;
-    status = set_pEp_version(session, member_4, 2, 2);
+    status = set_protocol_version(session, member_4, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
@@ -3951,7 +3951,7 @@ TEST_F(GroupEncryptionTest, check_protocol_remove_member_not_joined_from_group_t
     ASSERT_OK;
     status = update_identity(session, member_1);
     ASSERT_OK;
-    status = set_pEp_version(session, member_1, 2, 2);
+    status = set_protocol_version(session, member_1, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_1);
     ASSERT_OK;
@@ -3961,7 +3961,7 @@ TEST_F(GroupEncryptionTest, check_protocol_remove_member_not_joined_from_group_t
     ASSERT_OK;
     status = update_identity(session, member_2);
     ASSERT_OK;
-    status = set_pEp_version(session, member_2, 2, 2);
+    status = set_protocol_version(session, member_2, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_2);
     ASSERT_OK;
@@ -3971,7 +3971,7 @@ TEST_F(GroupEncryptionTest, check_protocol_remove_member_not_joined_from_group_t
     ASSERT_OK;
     status = update_identity(session, member_3);
     ASSERT_OK;
-    status = set_pEp_version(session, member_3, 2, 2);
+    status = set_protocol_version(session, member_3, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_3);
     ASSERT_OK;
@@ -3981,7 +3981,7 @@ TEST_F(GroupEncryptionTest, check_protocol_remove_member_not_joined_from_group_t
     ASSERT_OK;
     status = update_identity(session, member_4);
     ASSERT_OK;
-    status = set_pEp_version(session, member_4, 2, 2);
+    status = set_protocol_version(session, member_4, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;
@@ -4159,7 +4159,7 @@ TEST_F(GroupEncryptionTest, check_protocol_remove_unknown_member_from_group_two_
     ASSERT_OK;
     status = update_identity(session, member_1);
     ASSERT_OK;
-    status = set_pEp_version(session, member_1, 2, 2);
+    status = set_protocol_version(session, member_1, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_1);
     ASSERT_OK;
@@ -4169,7 +4169,7 @@ TEST_F(GroupEncryptionTest, check_protocol_remove_unknown_member_from_group_two_
     ASSERT_OK;
     status = update_identity(session, member_2);
     ASSERT_OK;
-    status = set_pEp_version(session, member_2, 2, 2);
+    status = set_protocol_version(session, member_2, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_2);
     ASSERT_OK;
@@ -4179,7 +4179,7 @@ TEST_F(GroupEncryptionTest, check_protocol_remove_unknown_member_from_group_two_
     ASSERT_OK;
     status = update_identity(session, member_3);
     ASSERT_OK;
-    status = set_pEp_version(session, member_3, 2, 2);
+    status = set_protocol_version(session, member_3, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_3);
     ASSERT_OK;
@@ -4189,7 +4189,7 @@ TEST_F(GroupEncryptionTest, check_protocol_remove_unknown_member_from_group_two_
     ASSERT_OK;
     status = update_identity(session, member_4);
     ASSERT_OK;
-    status = set_pEp_version(session, member_4, 2, 2);
+    status = set_protocol_version(session, member_4, 2, 2);
     ASSERT_OK;
     status = set_as_pEp_user(session, member_4);
     ASSERT_OK;

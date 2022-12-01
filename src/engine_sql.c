@@ -1858,13 +1858,13 @@ PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session) {
                                     NULL);
     PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
 
-    int_result = sqlite3_prepare_v2(session->db, sql_set_pEp_version,
-                                    (int)strlen(sql_set_pEp_version), &session->set_pEp_version,
+    int_result = sqlite3_prepare_v2(session->db, sql_set_protocol_version,
+                                    (int)strlen(sql_set_protocol_version), &session->set_protocol_version,
                                     NULL);
     PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
 
-    int_result = sqlite3_prepare_v2(session->db, sql_upgrade_pEp_version_by_user_id,
-                                    (int)strlen(sql_upgrade_pEp_version_by_user_id), &session->upgrade_pEp_version_by_user_id,
+    int_result = sqlite3_prepare_v2(session->db, sql_upgrade_protocol_version_by_user_id,
+                                    (int)strlen(sql_upgrade_protocol_version_by_user_id), &session->upgrade_protocol_version_by_user_id,
                                     NULL);
     PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
 
@@ -2117,7 +2117,7 @@ PEP_STATUS pEp_finalize_sql_stmts(PEP_SESSION session) {
     sqlite3_finalize(session->delete_person);
     sqlite3_finalize(session->update_person);
     sqlite3_finalize(session->set_as_pEp_user);
-    sqlite3_finalize(session->upgrade_pEp_version_by_user_id);
+    sqlite3_finalize(session->upgrade_protocol_version_by_user_id);
     sqlite3_finalize(session->is_pEp_user);
     sqlite3_finalize(session->exists_person);
     sqlite3_finalize(session->add_into_social_graph);
@@ -2135,7 +2135,7 @@ PEP_STATUS pEp_finalize_sql_stmts(PEP_SESSION session) {
     sqlite3_finalize(session->set_identity_flags);
     sqlite3_finalize(session->unset_identity_flags);
     sqlite3_finalize(session->set_ident_enc_format);
-    sqlite3_finalize(session->set_pEp_version);
+    sqlite3_finalize(session->set_protocol_version);
     sqlite3_finalize(session->exists_trust_entry);
     sqlite3_finalize(session->clear_trust_info);
     sqlite3_finalize(session->set_trust);

@@ -331,7 +331,7 @@ static const char *sql_set_ident_enc_format MAYBE_UNUSED =
         "          end) = 1 "
         "          and user_id = ?3 ;";
 
-static const char *sql_set_pEp_version MAYBE_UNUSED =
+static const char *sql_set_protocol_version MAYBE_UNUSED =
         "update identity "
         "   set pEp_version_major = ?1, "
         "       pEp_version_minor = ?2 "
@@ -342,7 +342,7 @@ static const char *sql_set_pEp_version MAYBE_UNUSED =
         "          end) = 1 "
         "          and user_id = ?4 ;";
 
-static const char *sql_upgrade_pEp_version_by_user_id MAYBE_UNUSED =
+static const char *sql_upgrade_protocol_version_by_user_id MAYBE_UNUSED =
         "update identity "
         "   set pEp_version_major = ?1, "
         "       pEp_version_minor = ?2 "

@@ -122,7 +122,7 @@ namespace {
                     alice = TestUtilsPreset::generateAndSetOpenPGPPartnerIdentity(session, TestUtilsPreset::ALICE, true, trust);
                 }
                 if (major > 0) {
-                    status = set_pEp_version(session, alice, major, minor);
+                    status = set_protocol_version(session, alice, major, minor);
                 }
                 *outmsg = gen_outgoing_message_template(me, alice);
                 return status;

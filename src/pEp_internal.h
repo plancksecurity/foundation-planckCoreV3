@@ -357,7 +357,7 @@ struct _pEpSession {
     sqlite3_stmt *exists_person;    
     sqlite3_stmt *set_as_pEp_user;
     sqlite3_stmt *is_pEp_user;
-    sqlite3_stmt *upgrade_pEp_version_by_user_id;
+    sqlite3_stmt *upgrade_protocol_version_by_user_id;
     sqlite3_stmt *add_into_social_graph;
     sqlite3_stmt *get_own_address_binding_from_contact;
     sqlite3_stmt *set_revoke_contact_as_notified;
@@ -377,7 +377,7 @@ struct _pEpSession {
     sqlite3_stmt *set_identity_flags;
     sqlite3_stmt *unset_identity_flags;
     sqlite3_stmt *set_ident_enc_format;
-    sqlite3_stmt *set_pEp_version; 
+    sqlite3_stmt *set_protocol_version; 
     sqlite3_stmt *clear_trust_info;   
     sqlite3_stmt *set_trust;
     sqlite3_stmt *update_trust;
