@@ -3767,7 +3767,7 @@ static char* seek_good_trusted_private_fpr(PEP_SESSION session, char* own_id,
 }
 
 static bool import_header_keys(PEP_SESSION session, message* src, stringlist_t** imported_key_list, uint64_t* changed_keys) {
-    stringpair_list_t* header_keys = stringpair_list_find(src->opt_fields, "Autocrypt"); 
+    stringpair_list_t* header_keys = stringpair_list_find_case_insensitive(src->opt_fields, "Autocrypt"); 
     if (!header_keys || !header_keys->value)
         return false;
     const char* value = header_keys->value->value;
@@ -4014,7 +4014,7 @@ static void get_protocol_version_from_headers(
 {
     *major_ver = 0;
     *minor_ver = 0;
-    const stringpair_list_t* pEp_protocol_version = stringpair_list_find(field_list, "X-pEp-Version");
+    const stringpair_list_t* pEp_protocol_version = stringpair_list_find_case_insensitive(field_list, "X-pEp-Version");
                         
     if (pEp_protocol_version && pEp_protocol_version->value)
         pEp_version_major_minor(pEp_protocol_version->value->value, major_ver, minor_ver);           
@@ -4582,7 +4582,7 @@ static PEP_STATUS _decrypt_message(
                         inner_message->enc_format = src->enc_format;
 
                         const stringpair_list_t* pEp_protocol_version = NULL;
-                        pEp_protocol_version = stringpair_list_find(inner_message->opt_fields, "X-pEp-Version");
+                        pEp_protocol_version = stringpair_list_find_case_insensitive(inner_message->opt_fields, "X-pEp-Version");
                         
                         if (pEp_protocol_version && pEp_protocol_version->value)
                             pEp_version_major_minor(pEp_protocol_version->value->value, &major_ver, &minor_ver);
@@ -4600,9 +4600,9 @@ static PEP_STATUS _decrypt_message(
                             goto pEp_error;                                         
                             
                         if (major_ver > 2 || (major_ver == 2 && minor_ver > 0)) {
-                            stringpair_list_t* searched = stringpair_list_find(inner_message->opt_fields, "X-pEp-Sender-FPR");                             
+                            stringpair_list_t* searched = stringpair_list_find_case_insensitive(inner_message->opt_fields, "X-pEp-Sender-FPR");                             
                             inner_message->_sender_fpr = ((searched && searched->value && searched->value->value) ? strdup(searched->value->value) : NULL);
-                            searched = stringpair_list_find(inner_message->opt_fields, X_PEP_MSG_WRAP_KEY);
+                            searched = stringpair_list_find_case_insensitive(inner_message->opt_fields, X_PEP_MSG_WRAP_KEY);
                             if (searched && searched->value && searched->value->value) {
                                 is_inner = (strcmp(searched->value->value, "INNER") == 0);
                                 if (!is_inner)
