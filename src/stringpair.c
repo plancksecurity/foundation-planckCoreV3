@@ -238,9 +238,10 @@ DYNAMIC_API stringpair_list_t *stringpair_list_delete_by_key(
 }
 
 
-DYNAMIC_API stringpair_list_t *stringpair_list_find(
+static stringpair_list_t *stringpair_list_find_possibly_case_sensitive(
         stringpair_list_t *stringpair_list,
-        const char *key
+        const char *key,
+        bool case_sensitive
     )
 {
     assert(key);
@@ -248,10 +249,34 @@ DYNAMIC_API stringpair_list_t *stringpair_list_find(
     if (!key || !stringpair_list || !stringpair_list->value)
     	return NULL;
 
+    int (*comparison_function)(const char *, const char *);
+    if (case_sensitive)
+        comparison_function = strcoll;
+    else
+        comparison_function = strcasecmp;
+
     for (stringpair_list_t *_l = stringpair_list; _l; _l = _l->next) {
-        if (strcoll(key, _l->value->key) == 0)
+        if (comparison_function(key, _l->value->key) == 0)
             return _l;
     }
 
     return NULL;
+}
+
+DYNAMIC_API stringpair_list_t *stringpair_list_find(
+        stringpair_list_t *stringpair_list,
+        const char *key
+    )
+{
+    return stringpair_list_find_possibly_case_sensitive(stringpair_list, key,
+                                                        true);
+}
+
+DYNAMIC_API stringpair_list_t *stringpair_list_find_case_insensitive(
+        stringpair_list_t *stringpair_list,
+        const char *key
+    )
+{
+    return stringpair_list_find_possibly_case_sensitive(stringpair_list, key,
+                                                        false);
 }
