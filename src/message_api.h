@@ -238,64 +238,65 @@ typedef enum _PEP_decrypt_flags {
 
 typedef unsigned int PEP_decrypt_flags_t; ///<@copy PEP_decrypt_flags
 
-
 /**
  *  <!--       decrypt_message_2()     -->
  *
  *  @brief Decrypt message in memory
  *
  *  @param[in]     session    session handle
- *  @param[in,out] src        message to decrypt - see warning about identities below.
- *                            the rating field of src (instead of dst) is updated
- *                            in case encryption fails.
- *  @param[out]    dst        pointer to new decrypted message or NULL on failure
- *  @param[in,out] keylist    in: stringlist with additional keyids for reencryption if needed
- *                            (will be freed and replaced with output keylist)
- *                            out: stringlist with keyids used for signing and encryption. first
- *                            first key is signer, additional keys are the ones it was encrypted
- *                            to. Only signer and whichever of the user's keys was used are
- *                            reliable
+ *  @param[in,out] src        message to decrypt - see warning about identities
+ * below. the rating field of src (instead of dst) is updated in case encryption
+ * fails.
+ *  @param[out]    dst        pointer to new decrypted message or NULL on
+ * failure
+ *  @param[in,out] keylist    in: stringlist with additional keyids for
+ * reencryption if needed (will be freed and replaced with output keylist) out:
+ * stringlist with keyids used for signing and encryption. first first key is
+ * signer, additional keys are the ones it was encrypted to. Only signer and
+ * whichever of the user's keys was used are reliable
  *  @param[in,out] flags      flags to signal special decryption features
  *
  *  @retval <ERROR>                 any error status
  *  @retval PEP_DECRYPTED           if message decrypted but not verified
  *  @retval PEP_CANNOT_REENCRYPT    if message was decrypted (and possibly
- *                                  verified) but a reencryption operation is expected by the caller
- *                                  and failed
+ *                                  verified) but a reencryption operation is
+ * expected by the caller and failed
  *  @retval PEP_STATUS_OK           on success
  *
  *  @note Flags above are as follows:
  *  @verbatim
  *  ---------------------------------------------------------------------------------------------|
- *  Incoming flags                                                                               |
+ *  Incoming flags |
  *  ---------------------------------------------------------------------------------------------|
- *  Flag                                  | Description                                          |
+ *  Flag                                  | Description |
  *  --------------------------------------|------------------------------------------------------|
- *  PEP_decrypt_flag_untrusted_server     | used to signal that decrypt function should engage   |
- *                                        | in behaviour specified for when the server storing   |
- *                                        | the source is untrusted.                             |
+ *  PEP_decrypt_flag_untrusted_server     | used to signal that decrypt function
+ * should engage   | | in behaviour specified for when the server storing   | |
+ * the source is untrusted.                             | | |
+ *  PEP_decrypt_flag_dont_trigger_sync    | used to signal that decrypt function
+ * should not      | | consume Sync messages itself but leave it to the     | |
+ * caller.                                              |
  *  ---------------------------------------------------------------------------------------------|
- *  Outgoing flags                                                                               |
+ *  Outgoing flags |
  *  ---------------------------------------------------------------------------------------------|
- *  PEP_decrypt_flag_own_private_key      | private key was imported for one of our addresses    |
- *                                        | (NOT trusted or set to be used - handshake/trust is  |
- *                                        | required for that)                                   |
- *                                        |                                                      |
- *  PEP_decrypt_flag_src_modified         | indicates that the modified_src field should contain |
- *                                        | a modified version of the source, at the moment      |
- *                                        | always as a result of the input flags.               |
- *                                        |                                                      |
- *  PEP_decrypt_flag_consume              | used by sync to indicate this was a pEp internal     |
- *                                        | message and should be consumed externally without    |
- *                                        | showing it as a normal message to the user           |
- *                                        |                                                      |
- *  PEP_decrypt_flag_ignore               | used by sync                                         |
- *  ---------------------------------------------------------------------------------------------| @endverbatim
+ *  PEP_decrypt_flag_own_private_key      | private key was imported for one of
+ * our addresses    | | (NOT trusted or set to be used - handshake/trust is  |
+ *                                        | required for that) | | |
+ *  PEP_decrypt_flag_src_modified         | indicates that the modified_src
+ * field should contain | | a modified version of the source, at the moment | |
+ * always as a result of the input flags.               | | |
+ *  PEP_decrypt_flag_consume              | used by sync to indicate this was a
+ * pEp internal     | | message and should be consumed externally without    |
+ *                                        | showing it as a normal message to
+ * the user           | |                                                      |
+ *  PEP_decrypt_flag_ignore               | used by sync |
+ *  ---------------------------------------------------------------------------------------------|
+ * @endverbatim
  *
  *  @ownership src remains with the caller; HOWEVER, the contents
- *               might be modified (strings freed and allocated anew or set to NULL,
- *               etc) intentionally; when this happens, PEP_decrypt_flag_src_modified
- *               is set.
+ *               might be modified (strings freed and allocated anew or set to
+ * NULL, etc) intentionally; when this happens, PEP_decrypt_flag_src_modified is
+ * set.
  *
  *  @ownership dst goes to the caller
  *
@@ -303,17 +304,20 @@ typedef unsigned int PEP_decrypt_flags_t; ///<@copy PEP_decrypt_flags
  *
  *  @note if src is unencrypted this function returns PEP_UNENCRYPTED and sets
  *        dst to NULL
- *  @note if src->enc_format is PEP_enc_inline_EA on input then elevated attachments
- *        will be expected
+ *  @note if src->enc_format is PEP_enc_inline_EA on input then elevated
+ * attachments will be expected
  *
  *
- *  @warning decrypt_message RELIES on the fact that identity information provided in src for recips and
- *           sender is AS TAKEN FROM THE ORIGINAL PARSED MESSAGE. This means that if update_identity or
- *           myself is called on those identities by the caller before passing the message struct to decrypt_message,
- *           the caller will have to cache and restore those to their original state before sending them
- *           to this function. ADAPTERS AND APPLICATIONS PLEASE TAKE NOTE OF THIS. (Obviously, this doesn't
- *           include information like user_ids, but we very specifically need the incoming usernames preserved
- *           so that they can be handled by the internal algorithm appropriately)
+ *  @warning decrypt_message RELIES on the fact that identity information
+ * provided in src for recips and sender is AS TAKEN FROM THE ORIGINAL PARSED
+ * MESSAGE. This means that if update_identity or myself is called on those
+ * identities by the caller before passing the message struct to
+ * decrypt_message, the caller will have to cache and restore those to their
+ * original state before sending them to this function. ADAPTERS AND
+ * APPLICATIONS PLEASE TAKE NOTE OF THIS. (Obviously, this doesn't include
+ * information like user_ids, but we very specifically need the incoming
+ * usernames preserved so that they can be handled by the internal algorithm
+ * appropriately)
  */
 
 DYNAMIC_API PEP_STATUS decrypt_message_2(
