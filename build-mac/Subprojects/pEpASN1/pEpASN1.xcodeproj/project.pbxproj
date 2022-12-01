@@ -406,6 +406,12 @@
 		15EB0D8C26D7D1C500CDFF4F /* PStringPair.c in Sources */ = {isa = PBXBuildFile; fileRef = 15EB0D8926D7D1C500CDFF4F /* PStringPair.c */; };
 		15EB0D8D26D7D1C500CDFF4F /* PStringPair.h in Headers */ = {isa = PBXBuildFile; fileRef = 15EB0D8A26D7D1C500CDFF4F /* PStringPair.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		15EB0D8E26D7D1C500CDFF4F /* PStringPair.h in Headers */ = {isa = PBXBuildFile; fileRef = 15EB0D8A26D7D1C500CDFF4F /* PStringPair.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		432210372924C70300AE872F /* Echo.c in Sources */ = {isa = PBXBuildFile; fileRef = 432210362924C70300AE872F /* Echo.c */; };
+		432210382924C70300AE872F /* Echo.c in Sources */ = {isa = PBXBuildFile; fileRef = 432210362924C70300AE872F /* Echo.c */; };
+		4322103A2924C90800AE872F /* EchoPing.c in Sources */ = {isa = PBXBuildFile; fileRef = 432210392924C90800AE872F /* EchoPing.c */; };
+		4322103B2924C90800AE872F /* EchoPing.c in Sources */ = {isa = PBXBuildFile; fileRef = 432210392924C90800AE872F /* EchoPing.c */; };
+		432210432924CC7F00AE872F /* EchoPong.c in Sources */ = {isa = PBXBuildFile; fileRef = 432210422924CC7F00AE872F /* EchoPong.c */; };
+		432210442924CC7F00AE872F /* EchoPong.c in Sources */ = {isa = PBXBuildFile; fileRef = 432210422924CC7F00AE872F /* EchoPong.c */; };
 		43788990272831D200E80F5A /* PIdentity.c in Sources */ = {isa = PBXBuildFile; fileRef = 4378898E272831D200E80F5A /* PIdentity.c */; };
 		43788991272831D200E80F5A /* PIdentity.c in Sources */ = {isa = PBXBuildFile; fileRef = 4378898E272831D200E80F5A /* PIdentity.c */; };
 		43788992272831D200E80F5A /* PIdentity.h in Headers */ = {isa = PBXBuildFile; fileRef = 4378898F272831D200E80F5A /* PIdentity.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -639,6 +645,9 @@
 		15EB0D7726D7CBDE00CDFF4F /* PBlob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PBlob.h; path = ../../../asn.1/PBlob.h; sourceTree = "<group>"; };
 		15EB0D8926D7D1C500CDFF4F /* PStringPair.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = PStringPair.c; path = ../../../asn.1/PStringPair.c; sourceTree = "<group>"; };
 		15EB0D8A26D7D1C500CDFF4F /* PStringPair.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PStringPair.h; path = ../../../asn.1/PStringPair.h; sourceTree = "<group>"; };
+		432210362924C70300AE872F /* Echo.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Echo.c; path = ../../../asn.1/Echo.c; sourceTree = "<group>"; };
+		432210392924C90800AE872F /* EchoPing.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = EchoPing.c; path = ../../../asn.1/EchoPing.c; sourceTree = "<group>"; };
+		432210422924CC7F00AE872F /* EchoPong.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = EchoPong.c; path = ../../../asn.1/EchoPong.c; sourceTree = "<group>"; };
 		4378898E272831D200E80F5A /* PIdentity.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = PIdentity.c; path = ../../../asn.1/PIdentity.c; sourceTree = "<group>"; };
 		4378898F272831D200E80F5A /* PIdentity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PIdentity.h; path = ../../../asn.1/PIdentity.h; sourceTree = "<group>"; };
 		437889942728321800E80F5A /* PIdentityList.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = PIdentityList.c; path = ../../../asn.1/PIdentityList.c; sourceTree = "<group>"; };
@@ -703,6 +712,9 @@
 		15A3206B260E0376009D07EB /* src */ = {
 			isa = PBXGroup;
 			children = (
+				432210422924CC7F00AE872F /* EchoPong.c */,
+				432210392924C90800AE872F /* EchoPing.c */,
+				432210362924C70300AE872F /* Echo.c */,
 				437889942728321800E80F5A /* PIdentityList.c */,
 				437889952728321800E80F5A /* PIdentityList.h */,
 				4378898E272831D200E80F5A /* PIdentity.c */,
@@ -1208,6 +1220,7 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = "/bin/sh -l";
 			shellScript = "export LANG=en_US.UTF-8\n\necho \"***************************************\"\necho \"*** Generate files: ACTION: $ACTION ***\"\necho \"***************************************\"\n\ncd \"${PROJECT_DIR}/../../..\"\n\nmake asn1\n";
+			showEnvVarsInLog = 0;
 		};
 		1515860426CE6E79003D8685 /* Generate Code */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1220,13 +1233,14 @@
 			);
 			name = "Generate Code";
 			outputFileListPaths = (
-				"$(SRCROOT)/generated-files-asn1.txt",
+				"$(SRCROOT)/generated-files.txt",
 			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = "/bin/sh -l";
 			shellScript = "export LANG=en_US.UTF-8\n\necho \"***************************************\"\necho \"*** Generate files: ACTION: $ACTION ***\"\necho \"***************************************\"\n\ncd \"${PROJECT_DIR}/../../..\"\n\nmake asn1\n";
+			showEnvVarsInLog = 0;
 		};
 		15A32292260E0452009D07EB /* Copy Artefacts & Headers to Custom Build Dir */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1286,6 +1300,7 @@
 				151584FE26CE5347003D8685 /* OCTET_STRING.c in Sources */,
 				151584BE26CE5347003D8685 /* constraints.c in Sources */,
 				151584D026CE5347003D8685 /* per_support.c in Sources */,
+				432210372924C70300AE872F /* Echo.c in Sources */,
 				151584C326CE5347003D8685 /* asn_codecs_prim.c in Sources */,
 				151584F026CE5347003D8685 /* constr_SET_OF.c in Sources */,
 				151584CB26CE5347003D8685 /* per_encoder.c in Sources */,
@@ -1295,6 +1310,7 @@
 				151584CF26CE5347003D8685 /* InitUnledGroupKeyReset.c in Sources */,
 				151584E626CE5347003D8685 /* MessageDirection.c in Sources */,
 				1515851426CE5347003D8685 /* GroupSyncUpdate.c in Sources */,
+				432210432924CC7F00AE872F /* EchoPong.c in Sources */,
 				151584C626CE5347003D8685 /* ExploreAnswer.c in Sources */,
 				151584ED26CE5347003D8685 /* per_opentype.c in Sources */,
 				151584DA26CE5347003D8685 /* OwnKeysRequester.c in Sources */,
@@ -1310,6 +1326,7 @@
 				437889962728321800E80F5A /* PIdentityList.c in Sources */,
 				151584EC26CE5347003D8685 /* GroupTrustThisKey.c in Sources */,
 				151584CD26CE5347003D8685 /* GroupKeysUpdate.c in Sources */,
+				4322103A2924C90800AE872F /* EchoPing.c in Sources */,
 				151584D826CE5347003D8685 /* Distribution.c in Sources */,
 				151584D926CE5347003D8685 /* IdentityList.c in Sources */,
 				151584EA26CE5347003D8685 /* Storage.c in Sources */,
@@ -1387,6 +1404,7 @@
 				151584A226CE5345003D8685 /* OCTET_STRING.c in Sources */,
 				1515846226CE5345003D8685 /* constraints.c in Sources */,
 				1515847426CE5345003D8685 /* per_support.c in Sources */,
+				432210382924C70300AE872F /* Echo.c in Sources */,
 				1515846726CE5345003D8685 /* asn_codecs_prim.c in Sources */,
 				1515849426CE5345003D8685 /* constr_SET_OF.c in Sources */,
 				1515846F26CE5345003D8685 /* per_encoder.c in Sources */,
@@ -1396,6 +1414,7 @@
 				1515847326CE5345003D8685 /* InitUnledGroupKeyReset.c in Sources */,
 				1515848A26CE5345003D8685 /* MessageDirection.c in Sources */,
 				151584B826CE5345003D8685 /* GroupSyncUpdate.c in Sources */,
+				432210442924CC7F00AE872F /* EchoPong.c in Sources */,
 				1515846A26CE5345003D8685 /* ExploreAnswer.c in Sources */,
 				1515849126CE5345003D8685 /* per_opentype.c in Sources */,
 				1515847E26CE5345003D8685 /* OwnKeysRequester.c in Sources */,
@@ -1411,6 +1430,7 @@
 				437889972728321800E80F5A /* PIdentityList.c in Sources */,
 				1515849026CE5345003D8685 /* GroupTrustThisKey.c in Sources */,
 				1515847126CE5345003D8685 /* GroupKeysUpdate.c in Sources */,
+				4322103B2924C90800AE872F /* EchoPing.c in Sources */,
 				1515847C26CE5345003D8685 /* Distribution.c in Sources */,
 				1515847D26CE5345003D8685 /* IdentityList.c in Sources */,
 				1515848E26CE5345003D8685 /* Storage.c in Sources */,
@@ -1521,6 +1541,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = NQLYU6MGPN;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
 			};
 			name = Debug;
 		};
@@ -1530,6 +1551,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = NQLYU6MGPN;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
 			};
 			name = Debug_BUILD_ALL_SUPPORTED_ARCHS;
 		};
@@ -1539,6 +1561,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = NQLYU6MGPN;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
 			};
 			name = Release;
 		};

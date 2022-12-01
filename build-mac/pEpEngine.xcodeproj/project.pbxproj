@@ -254,12 +254,18 @@
 		1552DB142577D4F100A92F71 /* pEpEngine_macOS.h in Headers */ = {isa = PBXBuildFile; fileRef = 1552DB132577D4F100A92F71 /* pEpEngine_macOS.h */; };
 		1552DB162577D4F100A92F71 /* pEpEngine_macOS.m in Sources */ = {isa = PBXBuildFile; fileRef = 1552DB152577D4F100A92F71 /* pEpEngine_macOS.m */; };
 		156AFEB82672089100AF0039 /* libetpan.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64289E351B8B630200FC617B /* libetpan.a */; };
-		1585EF4426A08A9800B822E1 /* libgmp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1585EF4026A08A9800B822E1 /* libgmp.a */; };
-		1585EF4526A08A9800B822E1 /* libnettle.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1585EF4126A08A9800B822E1 /* libnettle.a */; };
-		1585EF4626A08A9800B822E1 /* libhogweed.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1585EF4226A08A9800B822E1 /* libhogweed.a */; };
-		1585EF4726A08A9800B822E1 /* libsequoia_openpgp_ffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1585EF4326A08A9800B822E1 /* libsequoia_openpgp_ffi.a */; };
 		15A3233E260E0D2A009D07EB /* libpEpASN1_iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15A322F7260E0B75009D07EB /* libpEpASN1_iOS.a */; };
 		15A32429260E1873009D07EB /* libpEpASN1_macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15A322F5260E0B75009D07EB /* libpEpASN1_macOS.a */; };
+		432210142924C58600AE872F /* libgmp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1585EF4026A08A9800B822E1 /* libgmp.a */; };
+		432210342924C65A00AE872F /* media_key.c in Sources */ = {isa = PBXBuildFile; fileRef = 432210332924C65A00AE872F /* media_key.c */; };
+		432210352924C65A00AE872F /* media_key.c in Sources */ = {isa = PBXBuildFile; fileRef = 432210332924C65A00AE872F /* media_key.c */; };
+		4322103D2924C94A00AE872F /* echo_api.c in Sources */ = {isa = PBXBuildFile; fileRef = 4322103C2924C94A00AE872F /* echo_api.c */; };
+		4322103E2924C94A00AE872F /* echo_api.c in Sources */ = {isa = PBXBuildFile; fileRef = 4322103C2924C94A00AE872F /* echo_api.c */; };
+		432210402924C97E00AE872F /* pEp_log.c in Sources */ = {isa = PBXBuildFile; fileRef = 4322103F2924C97E00AE872F /* pEp_log.c */; };
+		432210412924C97E00AE872F /* pEp_log.c in Sources */ = {isa = PBXBuildFile; fileRef = 4322103F2924C97E00AE872F /* pEp_log.c */; };
+		43B2AD612923EE2500D8C6F8 /* libpep_engine_sequoia_backend.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 43B2AD422923EE2500D8C6F8 /* libpep_engine_sequoia_backend.a */; };
+		43B2AD8C2923EF0000D8C6F8 /* libnettle.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1585EF4126A08A9800B822E1 /* libnettle.a */; };
+		43B2AD8D2923F05300D8C6F8 /* libhogweed.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1585EF4226A08A9800B822E1 /* libhogweed.a */; };
 		6400FB8B1B8CA1CF005221E3 /* libetpan-ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64289E371B8B630200FC617B /* libetpan-ios.a */; };
 		644297C51BE11CE0002BC73B /* system.db in Resources */ = {isa = PBXBuildFile; fileRef = 64951A1B1BE0FCD800B10E71 /* system.db */; };
 /* End PBXBuildFile section */
@@ -547,6 +553,10 @@
 		1585EF5A26A08B2000B822E1 /* CommonPEPDependencies.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = CommonPEPDependencies.xcodeproj; path = "../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/CommonPEPDependencies.xcodeproj"; sourceTree = "<group>"; };
 		15A3203B260E030B009D07EB /* pEpASN1.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = pEpASN1.xcodeproj; path = Subprojects/pEpASN1/pEpASN1.xcodeproj; sourceTree = "<group>"; };
 		4309FF0327315E560055C6C9 /* pEpTransport.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = pEpTransport.xcodeproj; path = "../../libpEpTransport/build-mac/pEpTransport.xcodeproj"; sourceTree = "<group>"; };
+		432210332924C65A00AE872F /* media_key.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = media_key.c; path = ../src/media_key.c; sourceTree = "<group>"; };
+		4322103C2924C94A00AE872F /* echo_api.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = echo_api.c; path = ../src/echo_api.c; sourceTree = "<group>"; };
+		4322103F2924C97E00AE872F /* pEp_log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pEp_log.c; path = ../src/pEp_log.c; sourceTree = "<group>"; };
+		43B2AD422923EE2500D8C6F8 /* libpep_engine_sequoia_backend.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpep_engine_sequoia_backend.a; path = "../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libpep_engine_sequoia_backend.a"; sourceTree = "<group>"; };
 		644297BF1BE11C65002BC73B /* pEpTrustWords.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = pEpTrustWords.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		644297C11BE11C65002BC73B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		64796A3F1B455AA5004B1C24 /* libpEpEngine.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpEpEngine.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -577,10 +587,10 @@
 			files = (
 				15A3233E260E0D2A009D07EB /* libpEpASN1_iOS.a in Frameworks */,
 				6400FB8B1B8CA1CF005221E3 /* libetpan-ios.a in Frameworks */,
-				1585EF4426A08A9800B822E1 /* libgmp.a in Frameworks */,
-				1585EF4526A08A9800B822E1 /* libnettle.a in Frameworks */,
-				1585EF4626A08A9800B822E1 /* libhogweed.a in Frameworks */,
-				1585EF4726A08A9800B822E1 /* libsequoia_openpgp_ffi.a in Frameworks */,
+				43B2AD612923EE2500D8C6F8 /* libpep_engine_sequoia_backend.a in Frameworks */,
+				432210142924C58600AE872F /* libgmp.a in Frameworks */,
+				43B2AD8C2923EF0000D8C6F8 /* libnettle.a in Frameworks */,
+				43B2AD8D2923F05300D8C6F8 /* libhogweed.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -590,6 +600,7 @@
 		154917EB22B926080091B6D6 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				43B2AD422923EE2500D8C6F8 /* libpep_engine_sequoia_backend.a */,
 				1585EF4026A08A9800B822E1 /* libgmp.a */,
 				1585EF4226A08A9800B822E1 /* libhogweed.a */,
 				1585EF4126A08A9800B822E1 /* libnettle.a */,
@@ -692,6 +703,9 @@
 		64A8264B1B455C5600EECAF0 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				4322103F2924C97E00AE872F /* pEp_log.c */,
+				4322103C2924C94A00AE872F /* echo_api.c */,
+				432210332924C65A00AE872F /* media_key.c */,
 				1515837326CE4FB7003D8685 /* baseprotocol.c */,
 				1515838126CE4FB7003D8685 /* cryptotech.c */,
 				1515837026CE4FB7003D8685 /* distribution_codec.c */,
@@ -1172,13 +1186,12 @@
 			inputPaths = (
 			);
 			outputFileListPaths = (
-				"$(SRCROOT)/generated-files-asn1.txt",
-				"$(SRCROOT)/generated-files-sync.txt",
+				"$(SRCROOT)/generated-files.txt",
 			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
+			shellPath = "/bin/sh -l";
 			shellScript = "export LANG=en_US.UTF-8\n\necho \"***************************************\"\necho \"*** Generate files: ACTION: $ACTION ***\"\necho \"***************************************\"\n\ncd \"${PROJECT_DIR}/..\"\n\nmake asn1\n";
 			showEnvVarsInLog = 0;
 		};
@@ -1239,6 +1252,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				432210412924C97E00AE872F /* pEp_log.c in Sources */,
 				1552DB162577D4F100A92F71 /* pEpEngine_macOS.m in Sources */,
 				1515852026CE536A003D8685 /* trans_auto.c in Sources */,
 				1515853626CE536A003D8685 /* storage_codec.c in Sources */,
@@ -1247,7 +1261,9 @@
 				1515852D26CE536A003D8685 /* pEpEngine.c in Sources */,
 				1515852926CE536A003D8685 /* message.c in Sources */,
 				1515852B26CE536A003D8685 /* GroupSync_fsm.c in Sources */,
+				432210352924C65A00AE872F /* media_key.c in Sources */,
 				1515853026CE536A003D8685 /* key_reset.c in Sources */,
+				4322103E2924C94A00AE872F /* echo_api.c in Sources */,
 				1515852426CE536A003D8685 /* pgp_sequoia.c in Sources */,
 				1515854826CE536B003D8685 /* resource_id.c in Sources */,
 				1515853E26CE536A003D8685 /* timestamp.c in Sources */,
@@ -1304,6 +1320,7 @@
 				1515839D26CE4FB8003D8685 /* Sync_func.c in Sources */,
 				1515836826CE4F82003D8685 /* internal_format.c in Sources */,
 				1515833026CE4F81003D8685 /* engine_sql.c in Sources */,
+				432210342924C65A00AE872F /* media_key.c in Sources */,
 				1515831826CE4F81003D8685 /* pgp_sequoia.c in Sources */,
 				1515835226CE4F82003D8685 /* message_api.c in Sources */,
 				151583A426CE4FB8003D8685 /* timestamp.c in Sources */,
@@ -1312,6 +1329,7 @@
 				1515838A26CE4FB8003D8685 /* storage_codec.c in Sources */,
 				1515839526CE4FB8003D8685 /* Sync_actions.c in Sources */,
 				1515835D26CE4F82003D8685 /* transport.c in Sources */,
+				4322103D2924C94A00AE872F /* echo_api.c in Sources */,
 				1515833A26CE4F81003D8685 /* resource_id.c in Sources */,
 				1515831126CE4F81003D8685 /* message.c in Sources */,
 				1515835626CE4F82003D8685 /* platform_unix.c in Sources */,
@@ -1328,6 +1346,7 @@
 				1515839726CE4FB8003D8685 /* KeySync_fsm.c in Sources */,
 				1515839326CE4FB8003D8685 /* Sync_impl.c in Sources */,
 				1515838C26CE4FB8003D8685 /* internal_format.c in Sources */,
+				432210402924C97E00AE872F /* pEp_log.c in Sources */,
 				1515835C26CE4F82003D8685 /* stringpair.c in Sources */,
 				1515838F26CE4FB8003D8685 /* map_asn1.c in Sources */,
 				151583A526CE4FB8003D8685 /* labeled_int_list.c in Sources */,
@@ -1609,6 +1628,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"DEBUG=1",
+					"PEP_LOG_DESTINATIONS=PEP_LOG_DESTINATION_STDOUT",
 				);
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
@@ -1620,6 +1640,7 @@
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				USER_HEADER_SEARCH_PATHS = "";
 			};
@@ -1846,6 +1867,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"DEBUG=1",
+					"PEP_LOG_DESTINATIONS=PEP_LOG_DESTINATION_STDOUT",
 				);
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
@@ -1857,6 +1879,7 @@
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				USER_HEADER_SEARCH_PATHS = "";
 			};
@@ -1866,7 +1889,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = NO;
-				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"PEP_LOG_DESTINATIONS=PEP_LOG_DESTINATION_STDOUT",
+				);
 				HEADER_SEARCH_PATHS = (
 					"${inherited}",
 					"$(PROJECT_DIR)/../../OpenSSL-for-iPhone/include",
@@ -1876,6 +1902,7 @@
 				New_Setting = "";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				USER_HEADER_SEARCH_PATHS = "";
 			};

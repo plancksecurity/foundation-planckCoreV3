@@ -12,21 +12,6 @@
 #include "media_key.h" // for identity_known_to_use_pEp
 
 
-/* Logging.
- * ***************************************************************** */
-
-/* Define convenient logging macros for this compilation unit. */
-#define _LOG_WITH_MACRO_NAME(name, ...)     \
-    name("p≡p Engine", "Distribution.Echo", "" __VA_ARGS__)
-#define LOG_CRITICAL(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_CRITICAL, __VA_ARGS__)
-#define LOG_ERROR(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_ERROR, __VA_ARGS__)
-#define LOG_WARNING(...)   _LOG_WITH_MACRO_NAME(PEP_LOG_WARNING, __VA_ARGS__)
-#define LOG_API(...)       _LOG_WITH_MACRO_NAME(PEP_LOG_API, __VA_ARGS__)
-#define LOG_EVENT(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_EVENT, __VA_ARGS__)
-#define LOG_FUNCTION(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_FUNCTION, __VA_ARGS__)
-#define LOG_TRACE(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_TRACE, __VA_ARGS__)
-
-
 /* Initialisation and finalisation
  * ***************************************************************** */
 
@@ -293,7 +278,7 @@ PEP_STATUS handle_pong(PEP_SESSION session,
         pEp_identity *own_identity_copy = identity_dup(own_identity);
         pEp_identity *partner_identity_copy
             = identity_dup(partner_identity);
-        if (own_identity_copy != NULL || partner_identity_copy != NULL)
+        if (own_identity_copy == NULL || partner_identity_copy == NULL)
             goto fail;
         LOG_EVENT("SYNC_NOTIFY_OUTGOING_RATING_CHANGE");
         return session->notifyHandshake(own_identity_copy,
@@ -581,7 +566,7 @@ static PEP_STATUS send_ping_to_unknowns_in_incoming_message(PEP_SESSION session,
         /* Applications are supposed never to let this happen, but in practice
            it is difficult to find a reasonable value for messages received as
            Bcc. */
-        LOG_WARNING("APPLICATION BUG: message %s \"%s\" has no Recv-By", msg->id, msg->shortmsg ? msg->shortmsg : "<no subject>");
+        LOG_MESSAGE_WARNING("APPLICATION BUG: message has no Recv-By", msg);
         return PEP_ILLEGAL_VALUE;
     }
 

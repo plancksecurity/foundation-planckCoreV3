@@ -43,39 +43,6 @@
 #include <math.h>
 
 
-/* Logging.
- * ***************************************************************** */
-
-/* Define convenient logging macros for this compilation unit. */
-#define _LOG_WITH_MACRO_NAME(name, ...)     \
-    name("p≡p", "Engine", "" __VA_ARGS__)
-#define LOG_CRITICAL(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_CRITICAL, __VA_ARGS__)
-#define LOG_ERROR(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_ERROR, __VA_ARGS__)
-#define LOG_WARNING(...)   _LOG_WITH_MACRO_NAME(PEP_LOG_WARNING, __VA_ARGS__)
-#define LOG_API(...)       _LOG_WITH_MACRO_NAME(PEP_LOG_API, __VA_ARGS__)
-#define LOG_EVENT(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_EVENT, __VA_ARGS__)
-#define LOG_FUNCTION(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_FUNCTION, __VA_ARGS__)
-#define LOG_TRACE(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_TRACE, __VA_ARGS__)
-
-#define LOG_MESSAGE(literal_string, the_message)                        \
-    do {                                                                \
-        message *_log_message_m = (the_message);                        \
-        LOG_TRACE(literal_string "[%s %s, recv_by %s, %s]",             \
-                  (_log_message_m->id ? _log_message_m->id : "NO ID"),  \
-                  (_log_message_m->shortmsg                             \
-                   ? _log_message_m->shortmsg                           \
-                   : "NO-SHORTMSG"),                                    \
-                  ((_log_message_m->recv_by                             \
-                    && ! EMPTYSTR(_log_message_m->recv_by->address))    \
-                   ? _log_message_m->recv_by->address                   \
-                   : "NO-RECV_BY-ADDRESS"),                             \
-                  ((_log_message_m->dir == PEP_dir_incoming)            \
-                   ? "incoming" : "outgoing"));                         \
-    } while (false)
-
-/* All the rest.
- * ***************************************************************** */
-
 // These are globals used in generating message IDs and should only be
 // computed once, as they're either really constants or OS-dependent
 
@@ -437,7 +404,7 @@ void decorate_message(
     bool clobber
     )
 {
-    assert(msg);
+    PEP_REQUIRE_ORELSE(msg, { return; });
 
     if (add_version)
         replace_opt_field(msg, "X-pEp-Version", PEP_VERSION, clobber);
@@ -1501,7 +1468,7 @@ static PEP_STATUS encrypt_PGP_inline(
     dst->longmsg = _ctext;
 
     dst->attachments = new_bloblist(NULL, 0, NULL, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(!dst->attachments, PEP_OUT_OF_MEMORY);
+    PEP_WEAK_ASSERT_ORELSE_RETURN(dst->attachments, PEP_OUT_OF_MEMORY);
 
     bloblist_t *ad = dst->attachments;
 
@@ -2489,6 +2456,7 @@ static void _cleanup_src(message* src, bool remove_attached_key) {
  *  @retval     PEP_CANNOT_SET_IDENTITY
  */
 static PEP_STATUS id_list_set_enc_format(PEP_SESSION session, identity_list* id_list, PEP_enc_format enc_format) {
+    PEP_REQUIRE(session);
     PEP_STATUS status = PEP_STATUS_OK;
     identity_list* id_list_curr = id_list;
     for ( ; id_list_curr && id_list_curr->ident && status == PEP_STATUS_OK; id_list_curr = id_list_curr->next) {
@@ -2580,11 +2548,9 @@ static PEP_STATUS _update_state_for_ident_list(
         bool suppress_update_for_bcc,
         const char* media_key_or_NULL)
 {
-    if (!ident_list || !max_version_major || !max_version_minor
-                    || !has_pEp_user || !dest_keys_found
-                    || !keylist)
-        return PEP_ILLEGAL_VALUE;
-        
+    PEP_REQUIRE(session && ident_list && max_version_major && max_version_minor
+                && has_pEp_user && dest_keys_found && keylist);
+
     PEP_STATUS status = PEP_STATUS_OK;
     
     identity_list* _il = ident_list;
@@ -2988,6 +2954,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_encrypt_flags_t flags
     )
 {
+    PEP_REQUIRE(session);
+
     /* First try encrypting the message ignoring the media key. */
     PEP_STATUS status
         = encrypt_message_possibly_with_media_key(session, src,
@@ -3056,7 +3024,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
                 && ! src->bcc
                 && src->to
                 && ! src->to->next
-                && src->from->address
+                && ! EMPTYSTR(src->from->address)
                 && src->to->ident
                 && ! EMPTYSTR(src->to->ident->address)
                 && strcasecmp(src->from->address, src->to->ident->address) == 0);
@@ -3549,7 +3517,10 @@ static PEP_STATUS _get_signed_text(const char* ptext, const size_t psize,
 static PEP_STATUS combine_keylists(PEP_SESSION session, stringlist_t** verify_in,
                                    stringlist_t** keylist_in_out, 
                                    pEp_identity* from) {
-    
+    PEP_REQUIRE(session
+                /* verify_in and even * verify_in are allowed to be NULL */
+                /* keylist_in_out is allowed to be NULL */);
+
     if (!verify_in || !(*verify_in)) // this isn't really a problem.
         return PEP_STATUS_OK;
     
@@ -3647,7 +3618,8 @@ static PEP_STATUS amend_rating_according_to_sender_and_recipients(
        PEP_rating *rating,
        pEp_identity *sender,
        stringlist_t *recipients) {
-    
+    PEP_REQUIRE(session && rating);
+
     PEP_STATUS status = PEP_STATUS_OK;
 
     if (*rating > PEP_rating_mistrust) {
@@ -3929,7 +3901,7 @@ static PEP_STATUS verify_decrypted(PEP_SESSION session,
                                    PEP_STATUS* decrypt_status,
                                    PEP_cryptotech crypto) {
 
-    PEP_REQUIRE(src && src->from);
+    PEP_REQUIRE(session && src && src->from);
 
     PEP_STATUS _cached_decrypt_status = *decrypt_status;
         
@@ -4006,7 +3978,8 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
                                      message** msg_ptr, 
                                      char* ptext,
                                      size_t psize) {
-                            
+    PEP_REQUIRE(session && msg_ptr);
+
     PEP_STATUS status = PEP_STATUS_OK;
     
     *msg_ptr = clone_to_empty_message(src);
@@ -4175,7 +4148,7 @@ static PEP_STATUS import_keys_from_decrypted_msg(PEP_SESSION session,
                                                       char** pEp_sender_key
     )
 {
-    PEP_REQUIRE(msg && keys_were_imported && imported_private);
+    PEP_REQUIRE(session && msg && keys_were_imported && imported_private);
 
     PEP_STATUS status = PEP_STATUS_OK;
     *keys_were_imported = false;
@@ -4251,7 +4224,8 @@ static PEP_STATUS pEp_version_upgrade_or_ignore(
         pEp_identity* ident,
         unsigned int major,
         unsigned int minor) {
-            
+    PEP_REQUIRE(session && ident);
+
     PEP_STATUS status = PEP_STATUS_OK;        
     int ver_compare = compare_versions(major, minor, ident->major_ver, ident->minor_ver);
     if (ver_compare > 0)
@@ -4505,7 +4479,9 @@ static bool is_trusted_own_priv_fpr(PEP_SESSION session,
                        const char* own_id, 
                        const char* fpr
     ) 
-{   
+{
+    PEP_REQUIRE(session);
+
     bool retval = false;
     if (!EMPTYSTR(fpr)) {
         pEp_identity* test_identity = new_identity(NULL, fpr, own_id, NULL);
@@ -4539,6 +4515,8 @@ static bool is_trusted_own_priv_fpr(PEP_SESSION session,
  */
 __attribute__ ((__unused__))
 static bool reject_fpr(PEP_SESSION session, const char* fpr) {
+    PEP_REQUIRE_ORELSE(session && ! EMPTYSTR(fpr), { return false; });
+
     bool reject = true;
 
     PEP_STATUS status = key_revoked(session, fpr, &reject);
@@ -4619,6 +4597,8 @@ static bool reject_fpr(PEP_SESSION session, const char* fpr) {
  *  @retval     bool
  */
 static bool import_header_keys(PEP_SESSION session, message* src, stringlist_t** imported_key_list, uint64_t* changed_keys) {
+    PEP_REQUIRE(session && src);
+
     stringpair_list_t* header_keys = stringpair_list_find(src->opt_fields, "Autocrypt"); 
     if (!header_keys || !header_keys->value)
         return false;
@@ -4855,6 +4835,7 @@ static PEP_STATUS process_Distribution_message(PEP_SESSION session,
                                                PEP_rating msg_rating,
                                                const char *data, size_t size,
                                                char* sender_fpr) {
+    PEP_REQUIRE(session);
 
     Distribution_t *dist = NULL;
     PEP_STATUS status = decode_Distribution_message(data, size, &dist);
@@ -4938,9 +4919,8 @@ static PEP_STATUS set_default_key_fpr_if_valid(
             const char* new_fpr
    ) 
 {
-    if (EMPTYSTR(new_fpr))
-        return PEP_ILLEGAL_VALUE;
-        
+    PEP_REQUIRE(session && ! EMPTYSTR(new_fpr));
+
     free(ident->fpr);
     ident->fpr = strdup(new_fpr);
     if (!ident->fpr)
@@ -4963,8 +4943,7 @@ static PEP_STATUS _check_and_set_default_key(
         const char* sender_key
     )
 {
-    if (!session || !src_ident)
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && src_ident);
 
     if (EMPTYSTR(src_ident->address) || EMPTYSTR(sender_key))
         return PEP_STATUS_OK; // DOH, we're not setting anything here
@@ -6314,7 +6293,7 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
 {
     PEP_REQUIRE(session && src && dst && keylist && flags);
 
-    LOG_MESSAGE("src is ", src);
+    LOG_MESSAGE_TRACE("src is ", src);
 
     if (!(*flags & PEP_decrypt_flag_untrusted_server))
         *keylist = NULL;
@@ -6358,7 +6337,7 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
        result status the value of this field may be meaningful. */
     msg->rating = rating;
 
-//LOG_MESSAGE("msg is ", msg);
+//LOG_MESSAGE_TRACE("msg is ", msg);
 /////// BEGIN: "react" HACK
 /* static bool react_sent = false; */
 /* if (! react_sent && ! strcmp(msg->shortmsg, "react") && ! msg->from->me) { */
@@ -6418,20 +6397,22 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
         free(sender_fpr);
     } // end of Sync message handling
 
-    // In case this message is at least reliable, make sure we know every
-    // identity mentioned in it by sending Pings (we accept sending them to PGP
-    // users as well) to unknown identities.
-    // We can do something similar even if the message is not reliable: in that
-    // case we cannot be sure that every recipient identity we do not know uses
-    // pEp -- but we can say that some of the recipients use pEp even without
-    // knowing them, thanks to media keys.  So, for unreliable messages, we want
-    // to sent Ping messages to unknown identities which are known to use pEp.
-    // This implements ENGINE-1007.
-    if (rating >= PEP_rating_reliable)
-        send_ping_to_all_unknowns_in_incoming_message(session, msg);
-    else
-        send_ping_to_unknown_pEp_identities_in_incoming_message(session, msg);
-//LOG_MESSAGE("msg is ", msg);
+    if (msg->dir == PEP_dir_incoming /* it is *almost* always the case */) {
+        // In case this message is at least reliable, make sure we know every
+        // identity mentioned in it by sending Pings (we accept sending them to
+        // PGP users as well) to unknown identities.
+        // We can do something similar even if the message is not reliable: in
+        // that case we cannot be sure that every recipient identity we do not
+        // know uses pEp -- but we can say that some of the recipients use pEp
+        // even without knowing them, thanks to media keys.  So, for unreliable
+        // messages, we want to sent Ping messages to unknown identities which
+        // are known to use pEp.  This implements ENGINE-1007.
+        if (rating >= PEP_rating_reliable)
+            send_ping_to_all_unknowns_in_incoming_message(session, msg);
+        else
+            send_ping_to_unknown_pEp_identities_in_incoming_message(session, msg);
+    }
+//LOG_MESSAGE_TRACE("msg is ", msg);
  
     // Removed for now - partial fix in ENGINE-647, but we have sync issues. Need to 
     // fix testing issue.
@@ -6481,7 +6462,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     PEP_REQUIRE(session && src && dst && keylist && flags && rating);
     * rating = PEP_rating_undefined;
 
-    LOG_MESSAGE("src is ", src);
+    LOG_MESSAGE_TRACE("src is ", src);
 
     /* Do the actual work. */
     PEP_STATUS res = decrypt_message_2(session, src, dst, keylist, flags);
@@ -6557,6 +6538,8 @@ static void _max_comm_type_from_identity_list(
         bool *comm_type_determined
     )
 {
+    PEP_REQUIRE_ORELSE(session && max_comm_type && comm_type_determined,
+                       { return; });
 
     identity_list * il;
     for (il = identities; il != NULL; il = il->next)
@@ -6600,6 +6583,8 @@ static void _max_comm_type_from_identity_list_preview(
         PEP_comm_type *max_comm_type
     )
 {
+    PEP_REQUIRE_ORELSE(session && max_comm_type, { return; });
+
     identity_list * il;
     for (il = identities; il != NULL; il = il->next)
     {
@@ -6898,11 +6883,9 @@ DYNAMIC_API PEP_STATUS get_trustwords(
         const char* lang, char **words, size_t *wsize, bool full
     )
 {
-    assert(session && id1 && id1->fpr && id2 && id2->fpr&& lang && words &&
-            wsize);
-    if (!(session && id1 && id1->fpr && id2 && id2->fpr&& lang && words &&
-                wsize))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && id1 && ! EMPTYSTR(id1->fpr) && id2
+                && ! EMPTYSTR(id2->fpr) && ! EMPTYSTR(lang) && words &&
+                wsize);
 
     return get_trustwords_for_fprs(session, id1->fpr, id2->fpr, lang, words,
             wsize, full);
@@ -6944,9 +6927,8 @@ DYNAMIC_API PEP_STATUS get_trustwords_for_fprs(
         const char* lang, char **words, size_t *wsize, bool full
     )
 {
-    assert(session && fpr1 && fpr2 && words && wsize);
-    if (!(session && fpr1 && fpr2 && words && wsize))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && ! EMPTYSTR(fpr1) && ! EMPTYSTR(fpr2) && words
+                && wsize);
 
     const int SHORT_NUM_TWORDS = 5; 
     PEP_STATUS status = PEP_STATUS_OK;
@@ -7061,21 +7043,9 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
     const char* lang, char **words, bool full
 )
 {
-    assert(session);
-    assert(msg);
-    assert(received_by);
-    assert(received_by->address);
-    assert(lang);
-    assert(words);
+    PEP_REQUIRE(session && msg && received_by && ! EMPTYSTR(received_by->address)
+                && ! EMPTYSTR(lang) && words);
 
-    if (!(session && 
-          msg &&
-          received_by && 
-          received_by->address && 
-          lang && 
-          words))
-        return PEP_ILLEGAL_VALUE;
-    
     pEp_identity* partner = NULL;
      
     PEP_STATUS status = PEP_STATUS_OK;
@@ -7321,17 +7291,12 @@ DYNAMIC_API PEP_STATUS re_evaluate_message_rating(
     PEP_rating *rating
 )
 {
+    PEP_REQUIRE(session && msg && rating);
+
     PEP_STATUS status = PEP_STATUS_OK;
     stringlist_t *_keylist = x_keylist;
     bool must_free_keylist = false;
     PEP_rating _rating;
-
-    assert(session);
-    assert(msg);
-    assert(rating);
-
-    if (!(session && msg && rating))
-        return PEP_ILLEGAL_VALUE;
 
     *rating = PEP_rating_undefined;
 
@@ -7409,9 +7374,7 @@ DYNAMIC_API PEP_STATUS get_key_rating_for_user(
         PEP_rating *rating
     )
 {
-    assert(session && user_id && user_id[0] && fpr && fpr[0] && rating);
-    if (!(session && user_id && user_id[0] && fpr && fpr[0] && rating))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && ! EMPTYSTR(user_id) && ! EMPTYSTR(fpr) && rating);
 
     *rating = PEP_rating_undefined;
 
@@ -7444,12 +7407,10 @@ PEP_STATUS try_encrypt_message(
         PEP_encrypt_flags_t flags
     )
 {
+    PEP_REQUIRE(session && session->messageToSend && session->notifyHandshake
+                && src && src->from && dst);
+
     PEP_STATUS status = PEP_STATUS_OK;
-
-    assert(session && session->messageToSend && session->notifyHandshake);
-    assert(src && src->from);
-    assert(dst);
-
     if (!(session && session->messageToSend && session->notifyHandshake && src
                 && src->from && dst))
         return PEP_ILLEGAL_VALUE;

@@ -100,7 +100,10 @@ extern "C" {
    #define LOG_CRITICAL(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_CRITICAL, __VA_ARGS__)
    #define LOG_ERROR(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_ERROR, __VA_ARGS__)
    #define LOG_WARNING(...)   _LOG_WITH_MACRO_NAME(PEP_LOG_WARNING, __VA_ARGS__)
-*/
+
+   This is in fact what every compilation unit gets for free for using *inside*
+   the Engine, just by including pEp_internal.h: look at the "Logging" section
+   in pEp_internal.h .  */
 
 
 /* Parameters
@@ -153,6 +156,8 @@ typedef enum {
  *           destination.
  *           Not every platform will support every possibility; entries logged
  *           to an unsupported destination will simply be discarded.
+ *
+ *           This type is used for PEP_LOG_DESTINATIONS: see below.
  */
 typedef enum {
     /* No destination: if PEP_LOG_DESTINATION is defined as this then every
@@ -285,9 +290,12 @@ typedef enum {
  *  @param[in]  template   a literal string (*not* a generic expression)
  *                         expressing a template to be filled with the rest of
  *                         the arguments, if any, in the style of printf.
- *                         The template can also be not given at all: calling
- *                         PEP_LOG_CRITICAL with only two arguments is correct,
- *                         and uses an empty string as the logged entry string.
+ *                         If the compiler supports the GNU C extension allowing
+ *                         for zero arguments in variadic macros (supported by
+ *                         both GCC and Clang) then the template can also be not
+ *                         given at all: calling PEP_LOG_CRITICAL with only two
+ *                         arguments is correct, and uses an empty string as the
+ *                         logged entry string.
  *  @param[in]  ...        Other arguments matching the template, following
  *                         the formatted-output conventions of printf.
  *
