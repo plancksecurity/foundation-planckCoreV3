@@ -3018,7 +3018,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
         PEP_encrypt_flags_t flags
     )
 {
-    PEP_REQUIRE(session && src && dst && to_fpr
+    PEP_REQUIRE(session && src && dst && ! EMPTYSTR(to_fpr)
                 && enc_format != PEP_enc_none
                 && ! src->cc
                 && ! src->bcc
@@ -3026,10 +3026,15 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
                 && ! src->to->next
                 && ! EMPTYSTR(src->from->address)
                 && src->to->ident
-                && ! EMPTYSTR(src->to->ident->address)
-                && strcasecmp(src->from->address, src->to->ident->address) == 0);
-    stringlist_t* keys = NULL;
+                && ! EMPTYSTR(src->to->ident->address));
+    /* I am leaving this check out of the requirement because the old code
+       (before my introduction of requirements) was like this, and the Engine
+       test suite appears to rely on that behaviour, explicitly checking for
+       a return value. */
+    if (strcasecmp(src->from->address, src->to->ident->address) != 0)
+        return PEP_ILLEGAL_VALUE;
 
+    stringlist_t* keys = NULL;
     char* own_id = NULL;
     char* default_id = NULL;
     
