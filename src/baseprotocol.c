@@ -248,6 +248,14 @@ PEP_STATUS base_extract_message(
         switch (_dist->present) {
         case Distribution_PR_keyreset:
             _require_signature = true; break;
+        case Distribution_PR_managedgroup:
+            LOG_ERROR("here I am tentatively assuming that an administrative message with protocol Distribution_PR_managedgroup requires a signature");
+            LOG_ERROR("FIXME: confirm with Volker");
+            _require_signature = true;
+            break;
+        case Distribution_PR_exploration:
+            PEP_UNIMPLEMENTED; // FIXME: ask Volker if this requires a valid signature
+            break;
         case Distribution_PR_echo:
             _require_signature = false; break;
         default:
