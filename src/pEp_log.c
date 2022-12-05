@@ -731,7 +731,7 @@ DYNAMIC_API PEP_STATUS pEp_log(PEP_SESSION session,
     /* Normalise location strings and compute cosmetic parameters. */
     if (EMPTYSTR(source_file_name))
         source_file_name = "UNKNOWN_FILE";
-    const char *function_prefix = ":";
+    const char *function_prefix = " ";
     if (EMPTYSTR(function_name)) {
         function_prefix = "";
         function_name = "";
