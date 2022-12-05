@@ -1,3 +1,6 @@
+* New API function stringpair_list_find_case_insensitive
+* When searching for message headers always compare names case-insensitively.
+  This is an incompatibile change, but the previous behaviour was incorrect.
 
 v3.2.0-RC13
 * add NEWS file
