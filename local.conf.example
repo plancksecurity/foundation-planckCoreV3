@@ -1,0 +1,113 @@
+# This file has the syntax of a -*- makefile -*- fragment.
+# Copyright 2022, pEp Foundation
+# This file is part of pEpEngine
+# This file may be used under the terms of the GNU General Public License version 3
+# see LICENSE.txt
+
+
+# Introduction
+# #########################################################
+
+# The user is free to write a local.conf file in the same directory containing
+# Makefile.conf in order to override some default definitions.
+
+# This file is a template for the user to rename into local.conf and edit to
+# suit her own configuration.
+
+
+# Satefy mode.
+# #########################################################
+
+# You may uncomment one of the DEBUG definitions, or its un-definition, below.
+
+# Build the Engine in production mode, with assertions disabled.  In this mode
+# API functions will check their requirements and return PEP_ILLEVAL_VALUE on
+# failure.
+#
+# undefine DEBUG
+
+# Build the Engine in debug mode.  In this mode API functions check that
+# requirements on their parameters are satisfied, and return PEP_ILLEGAL_VALUE
+# on failure.
+# Weak assertions (consistency checks on the state) are also checked.
+#
+# This is the default.
+#
+# DEBUG = debug
+
+# Build the Engine in maintainer mode.  In this mode API functions check that
+# requirements on their parameters are satisfied, weak assertions are enabled
+# and so are internal assetions, only intended for Engine developers; on any
+# check violation the engine aborts in order to make the failure visible.
+#
+# This mode is intended for the few developers of the Engine itself, and not
+# for Engine users.
+#
+# DEBUG = maintainer
+
+
+# Logging level.
+# #########################################################
+
+# You may uncomment one of the MAXLOGLEVEL definitions below.
+
+# The "maximum logging level" defines the verbosity of the most verbose (which
+# is to say least important) message that will be logged.  You may uncomment one
+# of the following definitions.
+# The default logging level depends on the safety mode.
+
+# These levels are in order of increasing verbosity.
+#
+# MAXLOGLEVEL = CRITICAL
+# MAXLOGLEVEL = ERROR
+# MAXLOGLEVEL = WARNING
+# MAXLOGLEVEL = EVENT
+# MAXLOGLEVEL = API
+# MAXLOGLEVEL = NONOK
+# MAXLOGLEVEL = FUNCTION
+# MAXLOGLEVEL = TRACE
+# MAXLOGLEVEL = EVERYTHING
+
+# Use a maximum logging level appropriate for a production system; this is
+# equivalent to one of the levels above.
+#
+# MAXLOGLEVEL = PRODUCTION
+
+# Use a maximum logging level appropriate for a basic installation.
+#
+# MAXLOGLEVEL = BASIC
+
+# Use a maximum logging level appropriate for servicing the Engine.
+#
+# MAXLOGLEVEL = SERVICE
+
+# Output every possible message.
+#
+# MAXLOGLEVEL = EVERYTHING
+
+
+# Logging destinations.
+# #########################################################
+
+# You may uncomment one of the LOGDESTINATIONS definitions below, or write
+# your own following the same pattern.
+
+# It is possible to send log messages to a combination of the "destinations"
+# specified as the PEP_LOG_DESTINATION_ENUM cases in src/pEp_log.h .
+#
+# The variable definition must be a valid C constant expression, quoted to
+# prevent shell expansion.
+#
+# In case of a missing definition a reasonable default will be provided.
+
+# Log to stderr.
+#
+# LOGDESTINATIONS = PEP_LOG_DESTINATION_STDERR
+
+# Log to both stderr and the log.db database.
+#
+# LOGDESTINATIONS = '(PEP_LOG_DESTINATION_STDERR|PEP_LOG_DESTINATION_DATABASE)'
+
+# Log to stderr, syslog and the log.db database.
+#
+# LOGDESTINATIONS = '(PEP_LOG_DESTINATION_STDERR|PEP_LOG_DESTINATION_SYSLOG|PEP_LOG_DESTINATION_DATABASE)'
