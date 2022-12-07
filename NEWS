@@ -1,3 +1,6 @@
+* Provide a local.conf.example
+* In local.conf.example explain how the DEBUG variable has changed behaviour
+  in an incompatible way since Engine 3.2.0-RC13
 * New API function stringpair_list_find_case_insensitive
 * When searching for message headers always compare names case-insensitively.
   This is an incompatibile change, but the previous behaviour was incorrect.

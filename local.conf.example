@@ -18,13 +18,26 @@
 # Satefy mode.
 # #########################################################
 
-# You may uncomment one of the DEBUG definitions, or its un-definition, below.
+# You may uncomment one of the three DEBUG definitions below.  Any other
+# definition of DEBUG will result in a build-time error.
 
-# Build the Engine in production mode, with assertions disabled.  In this mode
+# Build the Engine in release mode, with assertions disabled.  In this mode
 # API functions will check their requirements and return PEP_ILLEVAL_VALUE on
 # failure.
+# Notice that the behaviour of DEBUG has changed in a slightly incompatible way
+# since Engine 3.2.0-RC13 , even if the change is unlikely to actually bother
+# users.  It used to be the case that in order to have a release build the DEBUG
+# variable needed to be *undefined*, as in
+#   undefine DEBUG
+# using the undefine directive from GNU make.  Now it is perfectly equivalent
+# to undefine DEBUG or to define it as empty.
+# An old local.conf file using an *empty* definition of DEBUG will now result
+# in a release build, and not in a debug build.  A debug build can be obtained
+# by changing the definition from 'DEBUG =' to 'DEBUG = debug', as in the
+# alternative shown below.
 #
-# undefine DEBUG
+# # Build the Engine in release mode.
+# DEBUG =
 
 # Build the Engine in debug mode.  In this mode API functions check that
 # requirements on their parameters are satisfied, and return PEP_ILLEGAL_VALUE
@@ -33,6 +46,7 @@
 #
 # This is the default.
 #
+# # Build the Engine in debug mode.
 # DEBUG = debug
 
 # Build the Engine in maintainer mode.  In this mode API functions check that
@@ -43,6 +57,7 @@
 # This mode is intended for the few developers of the Engine itself, and not
 # for Engine users.
 #
+# # Build the Engine in maintainer mode.
 # DEBUG = maintainer
 
 
@@ -96,9 +111,9 @@
 # specified as the PEP_LOG_DESTINATION_ENUM cases in src/pEp_log.h .
 #
 # The variable definition must be a valid C constant expression, quoted to
-# prevent shell expansion.
+# prevent shell expansion since it will be used in a compilation command line..
 #
-# In case of a missing definition a reasonable default will be provided.
+# In case of a missing definition a reasonable default will be used.
 
 # Log to stderr.
 #
