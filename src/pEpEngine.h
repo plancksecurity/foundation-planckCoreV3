@@ -813,8 +813,10 @@ typedef struct _pEp_identity {
     char lang[3];              ///< language of conversation
                                ///< ISO 639-1 ALPHA-2, last byte is 0
     bool me;                   ///< if this is the local user herself/himself
-    unsigned int major_ver;    ///< highest version of pEp message received, if any
-    unsigned int minor_ver;    ///< highest version of pEp message received, if any
+    unsigned int major_ver;    ///< major component of the highest protocol
+                               ///< version supported in a received message,
+                               ///< or 0 if none
+    unsigned int minor_ver;    ///< like major_ver but for the minor component
     PEP_enc_format enc_format; ///< Last specified format we encrypted to for this identity
     identity_flags_t flags;    ///< identity_flag1 | identity_flag2 | ...
 } pEp_identity;
