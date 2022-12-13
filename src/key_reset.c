@@ -509,7 +509,7 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
     }
     else {    
         status = update_identity(session, sender_id);
-        if (!sender_id->user_id)
+        if (EMPTYSTR(sender_id->user_id))
             return PEP_UNKNOWN_ERROR;
     }
     if (status != PEP_STATUS_OK) // Do we need to be more specific??
@@ -580,8 +580,8 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
     // is actually only one, but could be more later.
     for ( ; curr_cl && curr_cl->command; curr_cl = curr_cl->next) {    
         keyreset_command* curr_cmd = curr_cl->command;
-        if (!curr_cmd || !curr_cmd->ident || !curr_cmd->ident->fpr ||
-            !curr_cmd->ident->address) {
+        if (!curr_cmd || !curr_cmd->ident || EMPTYSTR(curr_cmd->ident->fpr) ||
+            EMPTYSTR(curr_cmd->ident->address)) {
             return PEP_MALFORMED_KEY_RESET_MSG;        
         }
         pEp_identity* curr_ident = curr_cmd->ident;
