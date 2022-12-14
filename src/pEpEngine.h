@@ -21,7 +21,19 @@ extern "C" {
 #include "labeled_int_list.h"    
 #include "timestamp.h"
 
-#define PEP_VERSION "3.2" ///< pEp *protocol* version
+#define PEP_PROTOCOL_VERSION_MAJOR  3 ///< pEp *protocol* version major component
+#define PEP_PROTOCOL_VERSION_MINOR  2 ///< pEp *protocol* version minor component
+
+/* Expand to a literal string made by juxtaposing the two given components, both
+   stringised, with a dot in between.  There are no parens around the expansion,
+   so that the expansion itself can be juxtaposed in its turn. */
+#define _COMPOSE_MAJOR_AND_MINOR(major, minor)  \
+  # major "." # minor
+
+#define PEP_PROTOCOL_VERSION                              \
+    _COMPOSE_MAJOR_AND_MINOR(PEP_PROTOCOL_VERSION_MAJOR,  \
+                             PEP_PROTOCOL_VERSION_MINOR)  ///< pEp *protocol* version
+#define PEP_VERSION  PEP_PROTOCOL_VERSION ///< deprecated alias for PEP_PROTOCOL_VERSION
 
 /// @def PEP_ENGINE_VERSION
 /// RELEASE version this targets.  Each item indicates the last already-released

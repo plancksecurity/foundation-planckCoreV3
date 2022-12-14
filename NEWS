@@ -4,11 +4,12 @@
 * New API function stringpair_list_find_case_insensitive
 * When searching for message headers always compare names case-insensitively.
   This is an incompatibile change, but the previous behaviour was incorrect.
-* set_as_pEp_user: do not hardwire the pEp protocol version to 2.1!  For the
-  time being hardwire that to the new version.  Add a #warning to bug me until
-  I make it clean, removing this gratutious source of bugs (it was also
-  difficult to see and to grep).  When I fix that, before the next release or
-  RC, I will change this message as well.
+* bug fix in set_as_pEp_user: do not hardwire the pEp protocol version to 2.1!
+  The code doing that was particularly treacherous.  In order to prevent such
+  errors in the future, introduce and use...
+* PEP_PROTOCOL_VERSION_MAJOR, PEP_PROTOCOL_VERSION_MINOR: ...New macros.
+* PEP_VERSION is now only a deprecated alias for PEP_PROTOCOL_VERSION,
+  automatically computed from the two macros above.
 
 v3.2.0-RC13
 * add NEWS file

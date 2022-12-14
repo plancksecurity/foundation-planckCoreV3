@@ -142,7 +142,7 @@ DYNAMIC_API PEP_STATUS init(
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
-    _LOG_EVENT("p≡p Engine version " PEP_ENGINE_VERSION "   protocol version " PEP_VERSION);
+    _LOG_EVENT("p≡p Engine version %s   protocol version %s", PEP_ENGINE_VERSION, PEP_VERSION);
     _LOG_API("initialise session %p", _session);
 
     // runtime config
@@ -1460,9 +1460,10 @@ PEP_STATUS update_pEp_user_trust_vals(PEP_SESSION session,
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_TRUST;
 
-#warning "the protocol version is hardwired here in a way that is even difficult to see.  I will only remove this warning after making the two components easy to access."
-    PEP_STATUS status = upgrade_protocol_version_by_user_id(session, user, 3, 2);
-    
+    PEP_STATUS status
+        = upgrade_protocol_version_by_user_id(session, user,
+                                              PEP_PROTOCOL_VERSION_MAJOR,
+                                              PEP_PROTOCOL_VERSION_MINOR);
     return status;
 }
 
