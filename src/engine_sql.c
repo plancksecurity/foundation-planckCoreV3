@@ -1274,6 +1274,7 @@ static PEP_STATUS _upgrade_DB_to_ver_10(PEP_SESSION session) {
     return PEP_STATUS_OK;
 }
 
+#warning "_force_upgrade_own_latest_message_version is misnamed: I think that is about the protocol version, not the message version.  FIXME: confirm with fdik"
 static PEP_STATUS _force_upgrade_own_latest_message_version(PEP_SESSION session) {
     PEP_REQUIRE(session != NULL);
 
