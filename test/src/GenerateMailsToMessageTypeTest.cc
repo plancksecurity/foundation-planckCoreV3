@@ -145,7 +145,7 @@ namespace {
 #if GMTMTT_WRITEOUT
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_unencrypted_bob) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAliceUnencrypted.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "BobToAliceUnencrypted.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, false,  false, false, -1, -1, &msg);
     ASSERT_OK;
@@ -154,7 +154,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_unen
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_unencrypted_sylvia) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAliceUnencrypted.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "SylviaToAliceUnencrypted.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, false,  false, false, -1, -1, &msg);
     ASSERT_OK;
@@ -163,7 +163,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_unen
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_OpenPGP_bob) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_OpenPGP.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "BobToAlice_OpenPGP.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  false, false, -1, -1, &msg);
     ASSERT_OK;
@@ -172,7 +172,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_Open
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_OpenPGP_sylvia) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_OpenPGP.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "SylviaToAlice_OpenPGP.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  false, false, -1, -1, &msg);
     ASSERT_OK;
@@ -181,7 +181,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_Open
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_1_0_bob) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_1_0.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "BobToAlice_1_0.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  true, true, 1, 0, &msg);
     ASSERT_OK;
@@ -190,7 +190,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_1_0_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_1_0_sylvia) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_1_0.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "SylviaToAlice_1_0.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  true, false, 1, 0, &msg);
     ASSERT_OK;
@@ -199,7 +199,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_1_0_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_0_bob) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_2_0.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "BobToAlice_2_0.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  true, true, 2, 0, &msg);
     ASSERT_OK;
@@ -208,7 +208,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_0_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_0_sylvia) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_2_0.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "SylviaToAlice_2_0.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  true, true, 2, 0, &msg);
     ASSERT_OK;
@@ -217,7 +217,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_0_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_1_bob) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_2_1.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "BobToAlice_2_1.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  true, true, 2, 1, &msg);
     ASSERT_OK;
@@ -226,7 +226,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_1_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_1_sylvia) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_2_1.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "SylviaToAlice_2_1.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  true, true, 2, 1, &msg);
     ASSERT_OK;
@@ -235,7 +235,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_1_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_2_bob) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_2_2.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "BobToAlice_2_2.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  true, true, 2, 2, &msg);
     ASSERT_OK;
@@ -244,7 +244,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_2_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_2_sylvia) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_2_2.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "SylviaToAlice_2_2.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  true, true, 2, 2, &msg);
     ASSERT_OK;
@@ -255,7 +255,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_2_
 /////// No keys
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_unencrypted_bob_no_attached_key) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAliceUnencrypted_NoKey.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "BobToAliceUnencrypted_NoKey.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, false,  false, false, -1, -1, &msg);
     ASSERT_OK;
@@ -264,7 +264,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_unen
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_unencrypted_sylvia_no_attached_key) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAliceUnencrypted_NoKey.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "SylviaToAliceUnencrypted_NoKey.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, false,  false, false, -1, -1, &msg);
     ASSERT_OK;
@@ -273,7 +273,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_unen
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_OpenPGP_bob_no_attached_key) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_OpenPGP_NoKey.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "BobToAlice_OpenPGP_NoKey.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  false, false, -1, -1, &msg);
     ASSERT_OK;
@@ -282,7 +282,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_Open
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_OpenPGP_sylvia_no_attached_key) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_OpenPGP_NoKey.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "SylviaToAlice_OpenPGP_NoKey.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  false, false, -1, -1, &msg);
     ASSERT_OK;
@@ -291,7 +291,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_Open
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_1_0_bob_no_attached_key) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_1_0_NoKey.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "BobToAlice_1_0_NoKey.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  true, true, 1, 0, &msg);
     ASSERT_OK;
@@ -300,7 +300,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_1_0_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_1_0_sylvia_no_attached_key) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_1_0_NoKey.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "SylviaToAlice_1_0_NoKey.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  true, false, 1, 0, &msg);
     ASSERT_OK;
@@ -309,7 +309,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_1_0_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_0_bob_no_attached_key) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_2_0_NoKey.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "BobToAlice_2_0_NoKey.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  true, true, 2, 0, &msg);
     ASSERT_OK;
@@ -318,7 +318,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_0_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_0_sylvia_no_attached_key) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_2_0_NoKey.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "SylviaToAlice_2_0_NoKey.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  true, true, 2, 0, &msg);
     ASSERT_OK;
@@ -327,7 +327,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_0_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_1_bob_no_attached_key) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_2_1_NoKey.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "BobToAlice_2_1_NoKey.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  true, true, 2, 1, &msg);
     ASSERT_OK;
@@ -336,7 +336,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_1_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_1_sylvia_no_attached_key) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_2_1_NoKey.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "SylviaToAlice_2_1_NoKey.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  true, true, 2, 1, &msg);
     ASSERT_OK;
@@ -345,7 +345,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_1_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_2_bob_no_attached_key) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_2_2_NoKey.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "BobToAlice_2_2_NoKey.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  true, true, 2, 2, &msg);
     ASSERT_OK;
@@ -354,7 +354,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_2_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_2_sylvia_no_attached_key) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_2_2_NoKey.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "SylviaToAlice_2_2_NoKey.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  true, true, 2, 2, &msg);
     ASSERT_OK;
@@ -364,7 +364,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_2_
 
 // Multiple keys
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_unencrypted_bob_two_keys) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAliceUnencrypted_TwoKeys.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "BobToAliceUnencrypted_TwoKeys.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, false,  false, false, -1, -1, &msg);
     ASSERT_OK;
@@ -375,7 +375,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_unen
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_unencrypted_sylvia_two_keys) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAliceUnencrypted_TwoKeys.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "SylviaToAliceUnencrypted_TwoKeys.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, false,  false, false, -1, -1, &msg);
     ASSERT_OK;
@@ -386,7 +386,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_unen
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_OpenPGP_bob_two_keys) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_OpenPGP_TwoKeys.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "BobToAlice_OpenPGP_TwoKeys.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  false, false, -1, -1, &msg);
     ASSERT_OK;
@@ -397,7 +397,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_Open
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_OpenPGP_sylvia_two_keys) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_OpenPGP_TwoKeys.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "SylviaToAlice_OpenPGP_TwoKeys.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  false, false, -1, -1, &msg);
     ASSERT_OK;
@@ -408,7 +408,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_Open
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_1_0_bob_two_keys) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_1_0_TwoKeys.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "BobToAlice_1_0_TwoKeys.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  true, true, 1, 0, &msg);
     ASSERT_OK;
@@ -419,7 +419,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_1_0_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_1_0_sylvia_two_keys) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_1_0_TwoKeys.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "SylviaToAlice_1_0_TwoKeys.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  true, false, 1, 0, &msg);
     ASSERT_OK;
@@ -430,7 +430,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_1_0_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_0_bob_two_keys) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_2_0_TwoKeys.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "BobToAlice_2_0_TwoKeys.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  true, true, 2, 0, &msg);
     ASSERT_OK;
@@ -441,7 +441,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_0_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_0_sylvia_two_keys) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_2_0_TwoKeys.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "SylviaToAlice_2_0_TwoKeys.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  true, true, 2, 0, &msg);
     ASSERT_OK;
@@ -452,7 +452,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_0_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_1_bob_two_keys) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_2_1_TwoKeys.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "BobToAlice_2_1_TwoKeys.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  true, true, 2, 1, &msg);
     ASSERT_OK;
@@ -463,7 +463,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_1_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_1_sylvia_two_keys) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_2_1_TwoKeys.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "SylviaToAlice_2_1_TwoKeys.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  true, true, 2, 1, &msg);
     ASSERT_OK;
@@ -474,7 +474,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_1_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_2_bob_two_keys) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "BobToAlice_2_2_TwoKeys.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "BobToAlice_2_2_TwoKeys.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::BOB, true,  true, true, 2, 2, &msg);
     ASSERT_OK;
@@ -485,7 +485,7 @@ TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_2_
 }
 
 TEST_F(GenerateMailsToMessageTypeTest, check_generate_mails_to_message_type_2_2_sylvia_two_keys) {
-    string filename = string("test_mails/CanonicalFrom") + PEP_VERSION + "SylviaToAlice_2_2_TwoKeys.eml";
+    string filename = string("test_mails/CanonicalFrom") + PEP_PROTOCOL_VERSION + "SylviaToAlice_2_2_TwoKeys.eml";
     message* msg = NULL;
     PEP_STATUS status = gen_testcase_message(TestUtilsPreset::SYLVIA, true,  true, true, 2, 2, &msg);
     ASSERT_OK;

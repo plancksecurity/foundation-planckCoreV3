@@ -1733,7 +1733,7 @@ DYNAMIC_API const char* get_engine_version();
  *  
  *  @brief Returns the pEp protocol version
  *  
- *  @retval     PEP_VERSION
+ *  @retval     PEP_PROTOCOL_VERSION
  *  
  */
 

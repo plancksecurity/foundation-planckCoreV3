@@ -425,7 +425,7 @@ PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr);
  *
  *  @retval     PEP_STATUS_OK
  *  @retval     PEP_ILLEGAL_VALUE           illegal parameter value
- *  @retval     PEP_CANNOT_SET_PEP_VERSION
+ *  @retval     PEP_CANNOT_SET_PEP_PROTOCOL_VERSION
  *
  */
 PEP_STATUS set_protocol_version(PEP_SESSION session, pEp_identity* ident, unsigned int new_ver_major, unsigned int new_ver_minor);
@@ -464,7 +464,7 @@ PEP_STATUS clear_trust_info(PEP_SESSION session,
  *
  *  @retval     PEP_STATUS_OK
  *  @retval     PEP_ILLEGAL_VALUE           illegal parameter value
- *  @retval     PEP_CANNOT_SET_PEP_VERSION
+ *  @retval     PEP_CANNOT_SET_PEP_PROTOCOL_VERSION
  *
  */
 PEP_STATUS upgrade_protocol_version_by_user_id(PEP_SESSION session,

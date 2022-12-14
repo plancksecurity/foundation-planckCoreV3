@@ -277,8 +277,8 @@ const char* tl_status_string(PEP_STATUS status) {
             return "PEP_CANNOT_SET_PERSON";
         case PEP_CANNOT_SET_PGP_KEYPAIR:
             return "PEP_CANNOT_SET_PGP_KEYPAIR";
-        case PEP_CANNOT_SET_PEP_VERSION:
-            return "PEP_CANNOT_SET_PEP_VERSION";
+        case PEP_CANNOT_SET_PEP_PROTOCOL_VERSION:
+            return "PEP_CANNOT_SET_PEP_PROTOCOL_VERSION";
         case PEP_CANNOT_SET_IDENTITY:
             return "PEP_CANNOT_SET_IDENTITY";
         case PEP_CANNOT_SET_TRUST:

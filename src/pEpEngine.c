@@ -142,7 +142,7 @@ DYNAMIC_API PEP_STATUS init(
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
-    _LOG_EVENT("p≡p Engine version %s   protocol version %s", PEP_ENGINE_VERSION, PEP_VERSION);
+    _LOG_EVENT("p≡p Engine version %s   protocol version %s", PEP_ENGINE_VERSION, PEP_PROTOCOL_VERSION);
     _LOG_API("initialise session %p", _session);
 
     // runtime config
@@ -1516,7 +1516,7 @@ PEP_STATUS set_protocol_version(PEP_SESSION session, pEp_identity* ident, unsign
     sql_reset_and_clear_bindings(session->set_protocol_version);
         
     if (result != SQLITE_DONE)
-        return PEP_CANNOT_SET_PEP_VERSION;
+        return PEP_CANNOT_SET_PEP_PROTOCOL_VERSION;
     
     return PEP_STATUS_OK;
 }
@@ -1540,7 +1540,7 @@ PEP_STATUS upgrade_protocol_version_by_user_id(PEP_SESSION session,
     sql_reset_and_clear_bindings(session->upgrade_protocol_version_by_user_id);
         
     if (result != SQLITE_DONE)
-        return PEP_CANNOT_SET_PEP_VERSION;
+        return PEP_CANNOT_SET_PEP_PROTOCOL_VERSION;
     
     return PEP_STATUS_OK;    
 }
@@ -3632,14 +3632,14 @@ PEP_STATUS find_private_keys(PEP_SESSION session, const char* pattern,
 /* These are visible as read-only symbols in some data section of compiled
    executables. */
 const char *pEpEngineVersion = PEP_ENGINE_VERSION;
-const char *pEpEngineProtcolVersion = PEP_VERSION;
+const char *pEpEngineProtcolVersion = PEP_PROTOCOL_VERSION;
 
 DYNAMIC_API const char* get_engine_version() {
     return PEP_ENGINE_VERSION;
 }
 
 DYNAMIC_API const char* get_protocol_version() {
-    return PEP_VERSION;
+    return PEP_PROTOCOL_VERSION;
 }
 
 DYNAMIC_API PEP_STATUS reset_pEptest_hack(PEP_SESSION session)

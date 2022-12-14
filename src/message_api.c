@@ -407,7 +407,7 @@ void decorate_message(
     PEP_REQUIRE_ORELSE(msg, { return; });
 
     if (add_version)
-        replace_opt_field(msg, "X-pEp-Version", PEP_VERSION, clobber);
+        replace_opt_field(msg, "X-pEp-Version", PEP_PROTOCOL_VERSION, clobber);
 
     if (rating != PEP_rating_undefined) {
         replace_opt_field(msg, "X-EncStatus", rating_to_string(rating), clobber);
@@ -1287,7 +1287,7 @@ static PEP_STATUS wrap_message_as_attachment(
 
     PEP_STATUS status = PEP_STATUS_OK;
 
-    replace_opt_field(attachment, "X-pEp-Version", PEP_VERSION, true);
+    replace_opt_field(attachment, "X-pEp-Version", PEP_PROTOCOL_VERSION, true);
 
     if (extra_keys) {
         char* ex_keystr = stringlist_to_string(extra_keys);
