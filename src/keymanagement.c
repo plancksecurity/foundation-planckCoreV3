@@ -1216,12 +1216,9 @@ PEP_STATUS _myself(PEP_SESSION session,
         identity->fpr = NULL;
         identity->comm_type = PEP_ct_unknown;
     }
-    
-    unsigned int major_ver = 0;
-    unsigned int minor_ver = 0;
-    pEp_version_major_minor(PEP_VERSION, &major_ver, &minor_ver);
-    identity->major_ver = major_ver;
-    identity->minor_ver = minor_ver;
+
+    identity->major_ver = PEP_PROTOCOL_VERSION_MAJOR;
+    identity->minor_ver = PEP_PROTOCOL_VERSION_MINOR;
     
     // We want to set an identity in the DB even if a key isn't found, but we have to preserve the status if
     // it's NOT ok

@@ -2722,9 +2722,8 @@ static PEP_STATUS encrypt_message_possibly_with_media_key(
     bool has_pEp_user = false;
     
     PEP_comm_type max_comm_type = PEP_ct_pEp;
-    unsigned int max_version_major = 0;
-    unsigned int max_version_minor = 0;
-    pEp_version_major_minor(PEP_VERSION, &max_version_major, &max_version_minor);
+    unsigned int max_version_major = PEP_PROTOCOL_VERSION_MAJOR;
+    unsigned int max_version_minor = PEP_PROTOCOL_VERSION_MINOR;
     
     identity_list * _il __attribute__((__unused__)) = NULL;
 
@@ -3276,8 +3275,8 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     // if (!(flags & PEP_encrypt_flag_force_no_attached_key))
     //     _attach_key(session, target_fpr, src);
 
-    unsigned int major_ver, minor_ver;
-    pEp_version_major_minor(PEP_VERSION, &major_ver, &minor_ver);
+    unsigned int major_ver = PEP_PROTOCOL_VERSION_MAJOR;
+    unsigned int minor_ver = PEP_PROTOCOL_VERSION_MINOR;
     status = wrap_message_as_attachment(session, NULL, src, &_src, PEP_message_default, false, extra, major_ver, minor_ver);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
