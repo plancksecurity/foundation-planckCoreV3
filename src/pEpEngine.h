@@ -105,7 +105,8 @@ typedef enum {
     PEP_CANNOT_SET_TRUST                            = 0x0384,
     PEP_KEY_BLACKLISTED                             = 0x0385,       /// @deprecated
     PEP_CANNOT_FIND_PERSON                          = 0x0386,
-    PEP_CANNOT_SET_PEP_VERSION                      = 0X0387,
+    PEP_CANNOT_SET_PEP_PROTOCOL_VERSION             = 0X0387,
+#define PEP_CANNOT_SET_PEP_VERSION  PEP_CANNOT_SET_PEP_PROTOCOL_VERSION ///< compatibility alias for PEP_CANNOT_SET_PEP_PROTOCOL_VERSION
     
     PEP_CANNOT_FIND_ALIAS                           = 0x0391,
     PEP_CANNOT_SET_ALIAS                            = 0x0392,
