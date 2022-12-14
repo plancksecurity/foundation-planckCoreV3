@@ -1460,7 +1460,8 @@ PEP_STATUS update_pEp_user_trust_vals(PEP_SESSION session,
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_TRUST;
 
-    PEP_STATUS status = upgrade_protocol_version_by_user_id(session, user, 2, 1);
+#warning "the protocol version is hardwired here in a way that is even difficult to see.  I will only remove this warning after making the two components easy to access."
+    PEP_STATUS status = upgrade_protocol_version_by_user_id(session, user, 3, 2);
     
     return status;
 }
