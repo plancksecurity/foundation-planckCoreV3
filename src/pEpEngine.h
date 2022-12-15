@@ -24,11 +24,19 @@ extern "C" {
 #define PEP_PROTOCOL_VERSION_MAJOR  3 ///< pEp *protocol* version major component
 #define PEP_PROTOCOL_VERSION_MINOR  2 ///< pEp *protocol* version minor component
 
+/* Expand to the stringification of the macro parameter, itself unexpanded. */
+#define _STRINGIFY_UNEXPANDED(whatever)  \
+    # whatever
+
+/* Expand to the stringification of the expansion of the macro parameter. */
+#define _STRINGIFY(whatever)       \
+    _STRINGIFY_UNEXPANDED(whatever)
+
 /* Expand to a literal string made by juxtaposing the two given components, both
    stringised, with a dot in between.  There are no parens around the expansion,
    so that the expansion itself can be juxtaposed in its turn. */
 #define _COMPOSE_MAJOR_AND_MINOR(major, minor)  \
-  # major "." # minor
+    _STRINGIFY(major) "." _STRINGIFY(minor)
 
 #define PEP_PROTOCOL_VERSION                              \
     _COMPOSE_MAJOR_AND_MINOR(PEP_PROTOCOL_VERSION_MAJOR,  \
