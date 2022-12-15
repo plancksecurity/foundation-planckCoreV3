@@ -226,15 +226,24 @@ typedef enum {
  *  
  */
 typedef enum _PEP_enc_format {
-    PEP_enc_none = 0,                       // message is not encrypted
-    PEP_enc_pieces = 1,                     // inline PGP + PGP extensions, was removed
-    PEP_enc_inline = 1,                     // still there
-    PEP_enc_S_MIME,                         // RFC5751
-    PEP_enc_PGP_MIME,                       // RFC3156
-    PEP_enc_PEP,                            // pEp encryption format
-    PEP_enc_PGP_MIME_Outlook1,              // Message B0rken by Outlook type 1
-    PEP_enc_inline_EA,
-    PEP_enc_auto = 255                      // figure out automatically where possible
+    PEP_enc_none = 0,            // message is not encrypted
+    PEP_enc_pieces = 1,          // inline PGP + PGP extensions -- now removed
+    PEP_enc_inline = 1,          // still used; old PGP inline (only written)
+    PEP_enc_S_MIME = 2,          // RFC5751 (we currently lack an implementation,
+                                 // but want to support it)
+    PEP_enc_PGP_MIME = 3,        // RFC3156 aka pEp message format version 1
+    PEP_enc_PEP_message_v1 = 3,  // alias
+    PEP_enc_PEP = 4,             // pEp encryption format, aka pEp message format
+                                 // version "newest"
+    PEP_enc_PEP_message_v2 = 4,  // alias
+    PEP_enc_PGP_MIME_Outlook1,   // Message B0rken by Outlook type 1 (only read)
+    PEP_enc_inline_EA,           // crypto text in the longmsg field, with an
+                                 // initial byte mark telling whether the content
+                                 // is an attachment; this is there, differently
+                                 // from the other cases, because of a *channel*
+                                 // restriction and not because of the
+                                 // communication partner (read and written)
+    PEP_enc_auto = 255           // figure out automatically where possible
 } PEP_enc_format;
 
 /**

@@ -12,6 +12,8 @@
   automatically computed from the two macros above.
 * Rename PEP_CANNOT_SET_PEP_VERSION to PEP_CANNOT_SET_PEP_PROTOCOL_VERSION; keep
   the old name as a compatibility alias
+* PEP_enc_format: new case aliases PEP_enc_PEP_message_v1 and
+  PEP_enc_PEP_message_v2; the numeric values have not changes.
 
 v3.2.0-RC13
 * add NEWS file
