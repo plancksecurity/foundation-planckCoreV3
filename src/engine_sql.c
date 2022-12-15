@@ -1274,8 +1274,7 @@ static PEP_STATUS _upgrade_DB_to_ver_10(PEP_SESSION session) {
     return PEP_STATUS_OK;
 }
 
-#warning "_force_upgrade_own_latest_message_version is misnamed: I think that is about the protocol version, not the message version.  FIXME: confirm with fdik"
-static PEP_STATUS _force_upgrade_own_latest_message_version(PEP_SESSION session) {
+static PEP_STATUS _force_upgrade_own_latest_protocol_version(PEP_SESSION session) {
     PEP_REQUIRE(session != NULL);
 
     PEP_STATUS status = PEP_STATUS_OK;
@@ -1294,7 +1293,7 @@ static PEP_STATUS _force_upgrade_own_latest_message_version(PEP_SESSION session)
     char *version_upgrade_stmt = NULL;
 
     // Guess we were abusing sscanf here, so we'll do it this way:
-    const char *cptr = PEP_VERSION;
+    const char *cptr = PEP_PROTOCOL_VERSION;
     size_t major_len = 0;
     size_t minor_len = 0;
 
@@ -1397,7 +1396,7 @@ static PEP_STATUS _upgrade_DB_to_ver_12(PEP_SESSION session) {
 
     return PEP_STATUS_OK;
     // Superceded by the -to-version-18 upgrade.
-//    return _force_upgrade_own_latest_message_version(session);
+//    return _force_upgrade_own_latest_protocol_version(session);
 }
 
 static PEP_STATUS _upgrade_DB_to_ver_14(PEP_SESSION session) {
@@ -1465,7 +1464,7 @@ static PEP_STATUS _upgrade_DB_to_ver_18(PEP_SESSION session) {
     );
     PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
 
-    return _force_upgrade_own_latest_message_version(session);
+    return _force_upgrade_own_latest_protocol_version(session);
 }
 
 static PEP_STATUS _upgrade_DB_to_ver_19(PEP_SESSION session) {
