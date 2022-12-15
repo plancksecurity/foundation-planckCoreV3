@@ -1290,6 +1290,7 @@ static PEP_STATUS _force_upgrade_own_latest_message_version(PEP_SESSION session)
     char major_buf[VERSION_DIGIT_NO];
     char minor_buf[VERSION_DIGIT_NO];
 
+    int int_result = SQLITE_OK;
     char *version_upgrade_stmt = NULL;
 
     // Guess we were abusing sscanf here, so we'll do it this way:
@@ -1339,7 +1340,7 @@ static PEP_STATUS _force_upgrade_own_latest_message_version(PEP_SESSION session)
     snprintf(version_upgrade_stmt, new_stringlen + 1, "%s%s%s%s%s",
              version_upgrade_startstr, major_buf, version_upgrade_midstr, minor_buf, version_upgrade_endstr);
 
-    int int_result = sqlite3_exec(
+    int_result = sqlite3_exec(
             session->db,
             version_upgrade_stmt,
             NULL,
