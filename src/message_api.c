@@ -2484,6 +2484,35 @@ static PEP_STATUS id_list_set_enc_format(PEP_SESSION session, identity_list* id_
     return status;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       most_generally_supported_enc_format()       -->
+ *
+ *  @param[in]     session
+ *  @param[in]     a       one supported enc_format
+ *  @param[in]     b       another supported enc_format
+ *  @param[out]    out     the synthesis of the two
+ *
+ *  @retval                PEP_STATUS_OK or an error
+ *
+ *  @brief Given message formats supported by two communication partners
+ *         return the most generally supported one.
+ */
+static PEP_STATUS most_generally_supported_enc_format(PEP_SESSION session,
+                                                      PEP_enc_format a,
+                                                      PEP_enc_format b,
+                                                      PEP_enc_format *out)
+{
+    PEP_REQUIRE(session && out);
+
+    PEP_STATUS status = PEP_STATUS_OK;
+#warning "FIXME: implement for real"
+    * out = a;
+
+    return status;
+}
+
 // N.B.
 // depends on update_identity and friends having already been called on list
 /**
@@ -2491,21 +2520,33 @@ static PEP_STATUS id_list_set_enc_format(PEP_SESSION session, identity_list* id_
  *
  *  <!--       update_encryption_format()       -->
  *
+ *  @brief Update the pointed enc_format, setting it to be the most generally
+ *         supported among its current value and the enc_format supported by
+ *         the identities in the list.
+ *
  *  @brief            TODO
  *
  *  @param[in]    *id_list        identity_list
  *  @param[in]    *enc_format        PEP_enc_format
  *
+ *  @retval                PEP_STATUS_OK or an error
  */
-static void update_encryption_format(identity_list* id_list, PEP_enc_format* enc_format) {
+static PEP_STATUS update_encryption_format(PEP_SESSION session,
+                                           identity_list* id_list,
+                                           PEP_enc_format* enc_format) {
+    PEP_STATUS status = PEP_STATUS_OK;
     identity_list* id_list_curr;
     for (id_list_curr = id_list; id_list_curr && id_list_curr->ident; id_list_curr = id_list_curr->next) {
         PEP_enc_format format = id_list_curr->ident->enc_format;
         if (format != PEP_enc_none) {
-            *enc_format = format;
-            break;
+            status = most_generally_supported_enc_format(session,
+                                                         format, * enc_format,
+                                                         enc_format);
+            if (status != PEP_STATUS_OK)
+                break;
         }
     }
+    return status;
 }
 
 /**
@@ -2787,12 +2828,19 @@ static PEP_STATUS encrypt_message_possibly_with_media_key(
     if (max_version_major < 2)
         force_v_1 = true;
 
+#define UPDATE_ENCRYPTION_FORMAT(list)                                    \
+    do {                                                                  \
+        status = update_encryption_format(session, (list), &enc_format);  \
+        if (status != PEP_STATUS_OK)                                      \
+            goto pEp_error;                                                   \
+    } while (false)
+
     if (enc_format == PEP_enc_auto) {
-        update_encryption_format(src->to, &enc_format);
+        UPDATE_ENCRYPTION_FORMAT(src->to);
         if (enc_format == PEP_enc_auto && src->cc)
-            update_encryption_format(src->cc, &enc_format);
+            UPDATE_ENCRYPTION_FORMAT(src->cc);
         if (enc_format == PEP_enc_auto && src->bcc)
-            update_encryption_format(src->bcc, &enc_format);
+            UPDATE_ENCRYPTION_FORMAT(src->bcc);
         if (enc_format == PEP_enc_auto)
             enc_format = PEP_enc_PEP;
     }    
