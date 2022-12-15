@@ -130,6 +130,8 @@ static const char * rating_to_string(PEP_rating rating)
         return "unencrypted";
     case PEP_rating_unreliable:
         return "unreliable";
+    case PEP_rating_media_key_protected:
+        return "media_key_protected";
     case PEP_rating_reliable:
         return "reliable";
     case PEP_rating_trusted:
