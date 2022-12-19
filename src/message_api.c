@@ -2517,6 +2517,11 @@ static bool env_format_reasonable_for_more_generally_supported_enc_format(
  *
  *  <!--       more_generally_supported_enc_format()       -->
  *
+ *  @brief Given message formats supported by two communication partners
+ *         return the most generally supported one.
+ *         This is intended for protocols required by communication partners,
+ *         and not for restrictions imposed by the channel.
+ *
  *  @param[in]     session
  *  @param[in]     a       one supported enc_format
  *  @param[in]     b       another supported enc_format
@@ -2524,8 +2529,6 @@ static bool env_format_reasonable_for_more_generally_supported_enc_format(
  *
  *  @retval                PEP_STATUS_OK or an error
  *
- *  @brief Given message formats supported by two communication partners
- *         return the most generally supported one.
  */
 static PEP_STATUS more_generally_supported_enc_format(PEP_SESSION session,
                                                       PEP_enc_format a,
@@ -2535,6 +2538,7 @@ static PEP_STATUS more_generally_supported_enc_format(PEP_SESSION session,
     PEP_REQUIRE(session && out);
 
     PEP_STATUS status = PEP_STATUS_OK;
+    PEP_enc_format _a = a, _b = b;
 
     /* First normalise: make sure that a <= b, to reduce the case combination
        space. */
@@ -2546,28 +2550,27 @@ static PEP_STATUS more_generally_supported_enc_format(PEP_SESSION session,
 
     if (! env_format_reasonable_for_more_generally_supported_enc_format(session,
                                                                         a)) {
-        LOG_CRITICAL("invalid more_generally_supported_enc_format %i", (int) a);
+        LOG_CRITICAL("invalid more_generally_supported_enc_format %i %s", (int) a, PEP_enc_format_to_string(a));
         goto error;
     }
     if (! env_format_reasonable_for_more_generally_supported_enc_format(session,
                                                                         b)) {
-        LOG_CRITICAL("invalid more_generally_supported_enc_format %i", (int) b);
+        LOG_CRITICAL("invalid more_generally_supported_enc_format %i %s", (int) b, PEP_enc_format_to_string(b));
         goto error;
     }
-    //
-    * out = PEP_enc_S_MIME;return PEP_STATUS_OK; // FIXME: obvisously a test ////////////////////////////////////////////
-    //
 
     if (a == PEP_enc_none)
         * out = PEP_enc_none;
     else if (b == PEP_enc_auto)
         * out = a;
     else {
+        /*
         PEP_ASSERT(a == PEP_enc_PEP_message_v1 || a == PEP_enc_PEP_message_v2
                    || a == PEP_enc_inline_EA);
         PEP_ASSERT(b == PEP_enc_PEP_message_v1 || b == PEP_enc_PEP_message_v2
                    || b == PEP_enc_inline_EA
                    || b == PEP_enc_auto);
+                   */
         if (a == PEP_enc_inline_EA || b == PEP_enc_inline_EA)
             * out = PEP_enc_inline_EA;
         else
@@ -2576,10 +2579,14 @@ static PEP_STATUS more_generally_supported_enc_format(PEP_SESSION session,
     }
 
  end:
+    if (status == PEP_STATUS_OK)
+        LOG_CRITICAL("<%s, %s> -> %s", PEP_enc_format_to_string(_a), PEP_enc_format_to_string(_b), PEP_enc_format_to_string(* out));
+    else
+        LOG_CRITICAL("<%s, %s> -> FAILURE", PEP_enc_format_to_string(_a), PEP_enc_format_to_string(_b));
     return status;
 
  error:
-    PEP_ASSERT(false);
+    //PEP_ASSERT(false); // FIXME: this may in fact be a good idea ///////////////////////////////////////////////////////////////
     status = PEP_ILLEGAL_VALUE;
     goto end;
 }

@@ -22,6 +22,33 @@
 #include <sqlite3.h>
 #endif
 
+const char * PEP_enc_format_to_string(PEP_enc_format x)
+{
+    switch (x) {
+    case PEP_enc_none:
+        return "none";
+    case PEP_enc_inline:
+        /* PEP_enc_pieces: effectively an alias for this case. */
+        return "inline";
+    case PEP_enc_S_MIME:
+        return "S-MIME";
+    case PEP_enc_PEP_message_v1:
+        /* PEP_enc_PGP_MIME: an alias for this case. */
+        return "pEp-v1";
+    case PEP_enc_PEP_message_v2:
+        /* PEP_enc_PEP: an alias for this case. */
+        return "pEp-v2";
+    case PEP_enc_PGP_MIME_Outlook1:
+        return "MIME-Outlook1";
+    case PEP_enc_inline_EA:
+        return "inline-EA";
+    case PEP_enc_auto:
+        return "auto";
+
+    default:
+        return "<unknown-or-invalid-env-format>";
+    };
+}
 
 void
 sql_reset_and_clear_bindings(sqlite3_stmt *s)

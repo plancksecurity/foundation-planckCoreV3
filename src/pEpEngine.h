@@ -262,6 +262,18 @@ typedef enum _PEP_enc_format {
 } PEP_enc_format;
 
 /**
+ *  <!--       PEP_enc_format_to_string()       -->
+ *
+ *  @brief      Return a human-readable representation of the given enum case.
+ *
+ *  @param[in]  x             the enum value
+ *
+ *  @retval                   a string with static storage duration, always
+ *                            non-NULL
+ */
+const char * PEP_enc_format_to_string(PEP_enc_format x);
+
+/**
  *  @enum    PEP_rating
  *
  *  @brief    TODO
