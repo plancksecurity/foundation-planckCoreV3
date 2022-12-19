@@ -2484,10 +2484,38 @@ static PEP_STATUS id_list_set_enc_format(PEP_SESSION session, identity_list* id_
     return status;
 }
 
+/* Return true iff the given enc_format can be supported as an required format
+   for an identity, as required by most_generally_supported_enc_format. */
+static bool env_format_reasonable_for_more_generally_supported_enc_format(
+   PEP_SESSION session,
+   PEP_enc_format f)
+{
+    switch (f) {
+    case PEP_enc_none:
+        return true;
+
+    case PEP_enc_inline:
+    case PEP_enc_S_MIME:
+    case PEP_enc_PGP_MIME_Outlook1:
+        return false;
+
+    case PEP_enc_PEP_message_v1:
+    case PEP_enc_PEP_message_v2:
+    case PEP_enc_inline_EA:
+        return true;
+
+    case PEP_enc_auto:
+        return true;
+
+    default:
+        PEP_UNEXPECTED_VALUE(f);
+    }
+}
+
 /**
  *  @internal
  *
- *  <!--       most_generally_supported_enc_format()       -->
+ *  <!--       more_generally_supported_enc_format()       -->
  *
  *  @param[in]     session
  *  @param[in]     a       one supported enc_format
@@ -2499,7 +2527,7 @@ static PEP_STATUS id_list_set_enc_format(PEP_SESSION session, identity_list* id_
  *  @brief Given message formats supported by two communication partners
  *         return the most generally supported one.
  */
-static PEP_STATUS most_generally_supported_enc_format(PEP_SESSION session,
+static PEP_STATUS more_generally_supported_enc_format(PEP_SESSION session,
                                                       PEP_enc_format a,
                                                       PEP_enc_format b,
                                                       PEP_enc_format *out)
@@ -2507,10 +2535,53 @@ static PEP_STATUS most_generally_supported_enc_format(PEP_SESSION session,
     PEP_REQUIRE(session && out);
 
     PEP_STATUS status = PEP_STATUS_OK;
-#warning "FIXME: implement for real"
-    * out = a;
 
+    /* First normalise: make sure that a <= b, to reduce the case combination
+       space. */
+    if (a > b) {
+        PEP_enc_format tmp = a;
+        a = b;
+        b = tmp;
+    }
+
+    if (! env_format_reasonable_for_more_generally_supported_enc_format(session,
+                                                                        a)) {
+        LOG_CRITICAL("invalid more_generally_supported_enc_format %i", (int) a);
+        goto error;
+    }
+    if (! env_format_reasonable_for_more_generally_supported_enc_format(session,
+                                                                        b)) {
+        LOG_CRITICAL("invalid more_generally_supported_enc_format %i", (int) b);
+        goto error;
+    }
+    //
+    * out = PEP_enc_S_MIME;return PEP_STATUS_OK; // FIXME: obvisously a test ////////////////////////////////////////////
+    //
+
+    if (a == PEP_enc_none)
+        * out = PEP_enc_none;
+    else if (b == PEP_enc_auto)
+        * out = a;
+    else {
+        PEP_ASSERT(a == PEP_enc_PEP_message_v1 || a == PEP_enc_PEP_message_v2
+                   || a == PEP_enc_inline_EA);
+        PEP_ASSERT(b == PEP_enc_PEP_message_v1 || b == PEP_enc_PEP_message_v2
+                   || b == PEP_enc_inline_EA
+                   || b == PEP_enc_auto);
+        if (a == PEP_enc_inline_EA || b == PEP_enc_inline_EA)
+            * out = PEP_enc_inline_EA;
+        else
+            * out = a; /* the numerically smaller value (now a, by construction)
+                          is supported by both sides. */
+    }
+
+ end:
     return status;
+
+ error:
+    PEP_ASSERT(false);
+    status = PEP_ILLEGAL_VALUE;
+    goto end;
 }
 
 // N.B.
@@ -2524,10 +2595,8 @@ static PEP_STATUS most_generally_supported_enc_format(PEP_SESSION session,
  *         supported among its current value and the enc_format supported by
  *         the identities in the list.
  *
- *  @brief            TODO
- *
- *  @param[in]    *id_list        identity_list
- *  @param[in]    *enc_format        PEP_enc_format
+ *  @param[in]     id_list        identity_list
+ *  @param[inout]  enc_format     PEP_enc_format
  *
  *  @retval                PEP_STATUS_OK or an error
  */
@@ -2537,11 +2606,12 @@ static PEP_STATUS update_encryption_format(PEP_SESSION session,
     PEP_STATUS status = PEP_STATUS_OK;
     identity_list* id_list_curr;
     for (id_list_curr = id_list; id_list_curr && id_list_curr->ident; id_list_curr = id_list_curr->next) {
-        PEP_enc_format format = id_list_curr->ident->enc_format;
-        if (format != PEP_enc_none) {
-            status = most_generally_supported_enc_format(session,
-                                                         format, * enc_format,
-                                                         enc_format);
+        PEP_enc_format this_format = id_list_curr->ident->enc_format;
+        if (this_format != PEP_enc_none) {
+            status
+                = more_generally_supported_enc_format(session,
+                                                      this_format, * enc_format,
+                                                      enc_format);
             if (status != PEP_STATUS_OK)
                 break;
         }
@@ -2828,11 +2898,11 @@ static PEP_STATUS encrypt_message_possibly_with_media_key(
     if (max_version_major < 2)
         force_v_1 = true;
 
-#define UPDATE_ENCRYPTION_FORMAT(list)                                    \
-    do {                                                                  \
-        status = update_encryption_format(session, (list), &enc_format);  \
-        if (status != PEP_STATUS_OK)                                      \
-            goto pEp_error;                                                   \
+#define UPDATE_ENCRYPTION_FORMAT(list)                                     \
+    do {                                                                   \
+        status = update_encryption_format(session, (list), & enc_format);  \
+        if (status != PEP_STATUS_OK)                                       \
+            goto pEp_error;                                                \
     } while (false)
 
     if (enc_format == PEP_enc_auto) {
