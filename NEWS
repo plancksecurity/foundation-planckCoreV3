@@ -2,6 +2,8 @@
   domain by default
 * Match header names case-insensitively: this is an incompatible change, but
   the Engine's previous behaviour was clearly incorrect
+* fix windows compilation problem releated to strcasecmp; problem reported by
+  Alex.
 
 v2.1.67
 * Add NEWS file.
