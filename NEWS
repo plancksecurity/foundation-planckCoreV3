@@ -15,6 +15,9 @@
 * PEP_enc_format: new case aliases PEP_enc_PEP_message_v1 and
   PEP_enc_PEP_message_v2; the numeric values have not changes.
 * rating_to_string: add a case for PEP_rating_media_key_protected, fixing #94.
+* fix windows compilation problem releated to strcasecmp; problem reported by
+  Alex.  This fixes
+  https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/109 .
 
 v3.2.0-RC13
 * add NEWS file
