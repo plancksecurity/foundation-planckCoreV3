@@ -5,7 +5,8 @@ v2.1.68
 * Match header names case-insensitively: this is an incompatible change, but
   the Engine's previous behaviour was clearly incorrect
 * fix windows compilation problem releated to strcasecmp; problem reported by
-  Alex.
+  Alex.  This fixes
+  https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/109
 
 v2.1.67
 * Add NEWS file.
