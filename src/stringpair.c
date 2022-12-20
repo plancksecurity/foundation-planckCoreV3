@@ -248,6 +248,12 @@ DYNAMIC_API stringpair_list_t *stringpair_list_delete_by_key(
     return sp_list;
 }
 
+/* Exactly like strcasecmp, but guaranteed to be defined as a function and not
+   only as a macro.  Unfortunately we need this for windows. */
+static int strcasecmp_as_a_function(const char *a, const char *b)
+{
+    return strcasecmp(a, b);
+}
 
 static stringpair_list_t *stringpair_list_find_possibly_case_sensitive(
         stringpair_list_t *stringpair_list,
@@ -264,7 +270,7 @@ static stringpair_list_t *stringpair_list_find_possibly_case_sensitive(
     if (case_sensitive)
         comparison_function = strcoll;
     else
-        comparison_function = strcasecmp;
+        comparison_function = strcasecmp_as_a_function;
 
     for (stringpair_list_t *_l = stringpair_list; _l; _l = _l->next) {
         if (comparison_function(key, _l->value->key) == 0)
