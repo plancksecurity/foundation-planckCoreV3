@@ -1,3 +1,4 @@
+v2.1.68
 * do not load positron's testing media key associated to the ageinghacker.net
   domain by default
 * Match header names case-insensitively: this is an incompatible change, but

@@ -10,15 +10,15 @@
 
 #define PEP_ENGINE_VERSION_MAJOR          2
 #define PEP_ENGINE_VERSION_MINOR          1
-#define PEP_ENGINE_VERSION_PATCH          67
+#define PEP_ENGINE_VERSION_PATCH          68
 
 /* PEP_ENGINE_VERSION_RC is not defined: not a Release Candidate. */
 
-#define PEP_ENGINE_VERSION_PLUS           +   /* This is a MODIFIED release */
+/* PEP_ENGINE_VERSION_PLUS not defined: this is an UNmodified release. */
 
 /* PEP_ENGINE_VERSION_BRANCH_SUFFIX not defined. */
 
 /* The main version string for the user. */
-#define PEP_ENGINE_VERSION "2.1.67+"
+#define PEP_ENGINE_VERSION "2.1.68"
 
 #endif /* #ifndef _PEP_ENGINE_VERSION_H_ */
