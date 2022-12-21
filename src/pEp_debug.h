@@ -399,6 +399,32 @@ typedef enum {
     } while (false)
 
 
+/* Utility macros for Boolean conditions.
+ * ***************************************************************** */
+
+/* This macro implements logical implication from the first Boolean expression
+   to the second Boolean expression.
+   The expansion evaluates to
+     A → B  */
+#define PEP_IMPLIES(boolean_expression_a, boolean_expression_b)  \
+    /* A → B  is logically equivalent to  ¬A ∨ B */              \
+    (! (boolean_expression_a) || (boolean_expression_b))
+
+/* This macro implements the logical equivalence of the two given Boolean
+   expressions, which is not a simple equality because of how truth values are
+   handled in C, without a single normal form for the true value.
+   The expansion evaluates to
+     A ≡ B
+   , sometimes written as
+     A ↔ B  */
+#define PEP_IFF(boolean_expression_a, boolean_expression_b)              \
+    /* !X is guaranteed to evaluate to either 0 or 1 in ANSI C, for any  \
+       expression X; we could use !! to normalise each expression to 0   \
+       or 1, but instead of doing that we can just compare the two       \
+       negated values. */                                                \
+    (! (boolean_expression_a) == ! (boolean_expression_b))
+
+
 /* Handling status checks and local failure.  [TENTATIVE]
  * ***************************************************************** */
 
