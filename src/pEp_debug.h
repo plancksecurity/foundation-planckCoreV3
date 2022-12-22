@@ -424,6 +424,18 @@ typedef enum {
        negated values. */                                                \
     (! (boolean_expression_a) == ! (boolean_expression_b))
 
+/* Given an integer expression expand to an expression evaluating to a non-false
+   value iff the integer expression evaluates to an even number.  The integer
+   expression is allowed to evaluate to zero or to a negative number. */
+#define PEP_EVEN(integer_expression)  \
+    ((integer_expression) % 2 == 0)
+
+/* Given an integer expression expand to an expression evaluating to a non-false
+   value iff the integer expression evaluates to an odd number.  The integer
+   expression is allowed to evaluate to zero or to a negative number. */
+#define PEP_ODD(integer_expression)  \
+    ((integer_expression) % 2 != 0) /* == 1  might not be portable. */
+
 
 /* Handling status checks and local failure.  [TENTATIVE]
  * ***************************************************************** */
