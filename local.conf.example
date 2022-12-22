@@ -126,3 +126,21 @@
 # Log to stderr, syslog and the log.db database.
 #
 # LOGDESTINATIONS = '(PEP_LOG_DESTINATION_STDERR|PEP_LOG_DESTINATION_SYSLOG|PEP_LOG_DESTINATION_DATABASE)'
+
+
+# Backward compatibility with xor trustwords
+# #########################################################
+
+# The current pEp protocol uses RIPEMD-160 trustwords, which are unfortunately
+# incompatibile with the older xor trustwords used in protocol versions up to
+# 3.2 included.
+
+# By default we do *not* fall back to xor trustwords for compatibility, in order
+# to prevent downgrade attacks.
+# If the make variable TRUSTWORDSXORCOMPATIBILITY is defined, however, we do
+# fall back to xor trustwords when communicating with communication partners
+# using older protocol versions.
+
+# # Fall back to xor trustwords with communication partners using protocol
+# # version <= 3.2 (default: fail with PEP_TRUSTWORD_NOT_FOUND instead).
+# TRUSTWORDSXORCOMPATIBILITY = yes

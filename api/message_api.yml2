@@ -506,7 +506,41 @@ protocol session {
     }
 
 
-    method get_trustwords_for_fprs doc="get full trustwords string for a pair of fingerprints"
+    method get_xor_trustwords_for_fprs doc="get full trustwords string for a pair of fingerprints combining them with xor"
+    {
+        // parms
+
+        use string fpr1 doc="fingerprint 1";
+
+        use string fpr2 doc="fingerprint 2";
+
+        use ISO639_1 lang doc="string with ISO 639-1 language code";
+
+        create string words 
+        doc="""
+            pointer to string with all trustwords UTF-8 encoded, separated by a blank each. 
+            Empty if language is not supported or trustword wordlist is damaged or unavailable.
+            The caller is responsible to free() it (on Windoze use pEp_free()).
+            """;
+
+        return size_t wsize doc="length of full trustwords string";
+
+        use bool full
+        doc="""
+            if true, generate ALL trustwords for these identities. Else, generate a fixed-size
+            subset. (TODO: fixed-minimum-entropy subset in next version)
+            """;
+
+        // exceptions
+
+        throws out_of_memory doc="out of memory";
+
+        throws illegal_value doc="illegal parameter values";
+
+        throws trustword_not_found doc="at least one trustword not found";
+    }
+
+    method get_ripemd160_trustwords_for_fprs doc="get full trustwords string for a pair of fingerprints combining them with ordered concatenation and then a RIPEMD-160 hash"
     {
         // parms
 

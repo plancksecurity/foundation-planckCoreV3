@@ -22,7 +22,7 @@ extern "C" {
 #include "timestamp.h"
 
 #define PEP_PROTOCOL_VERSION_MAJOR  3 ///< pEp *protocol* version major component
-#define PEP_PROTOCOL_VERSION_MINOR  2 ///< pEp *protocol* version minor component
+#define PEP_PROTOCOL_VERSION_MINOR  3 ///< pEp *protocol* version minor component
 
 /* Expand to the stringification of the macro parameter, itself unexpanded. */
 #define _STRINGIFY_UNEXPANDED(whatever)  \
