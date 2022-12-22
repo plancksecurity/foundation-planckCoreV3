@@ -86,6 +86,10 @@ namespace {
 TEST_F(MediaKeyTest, check_lookup) {
     PEP_STATUS status = PEP_UNKNOWN_ERROR;
 
+#define CHECK_STATUS                       \
+    do {                                   \
+        ASSERT_EQ(status, PEP_STATUS_OK);  \
+    } while (false)
 #define TEST_KEY(ADDRESS, EXPECTED_KEY)                                     \
     do {                                                                    \
         const char *_address = (ADDRESS);                                   \
@@ -111,29 +115,34 @@ TEST_F(MediaKeyTest, check_lookup) {
 
     /* Here instead of using actual key FPR we use human-readable strings which
        are an abbreviated form or description of the domain. */
-    media_key_insert(session, "*@pep.foundation", "AA:PEP");
-    media_key_insert(session, "*@ageinghacker.net", "BB:AGE");
+    status = media_key_insert(session, "*@pep.foundation", "aaaa");
+    CHECK_STATUS;
+    status = media_key_insert(session, "*@ageinghacker.net", "bbbb");
+    CHECK_STATUS;
     /* A pattern like "*@*.ageinghacker.net" would have been more explicit, but
        it is nice to have instead "*ageinghacker.net", which is more general
        than the previous one "*@ageinghacker.net": the media-key map order will
        make (proper) subdomains of ageinghacker.net match "*@ageinghacker.net"
        but not "*ageinghacker.net". */
-    media_key_insert(session, "*ageinghacker.net", "BB:AGE-SUBDOMAIN");
-    media_key_insert(session, "mailto:*@run-for-your.life", "CC:RUN");
-    media_key_insert(session, "?lice@the-world-is-burning.com", "DD:ENJOY");
+    status = media_key_insert(session, "*ageinghacker.net", "bbcc");
+    CHECK_STATUS;
+    status = media_key_insert(session, "mailto:*@run-for-your.life", "cccc");
+    CHECK_STATUS;
+    status = media_key_insert(session, "?lice@the-world-is-burning.com", "dddd");
+    CHECK_STATUS;
 
     /* Do the actual media-key lookups. */
-    TEST_KEY("luca@pep.foundation", "AA:PEP");
-    TEST_KEY("luca-pep@run-for-your.life", "CC:RUN");
-    TEST_KEY("mailto:luca-pep@run-for-your.life", "CC:RUN");
-    TEST_KEY("somebodyelse@run-for-your.life", "CC:RUN");
-    TEST_KEY("lucasaiu-pep@ageinghacker.net", "BB:AGE");
-    TEST_KEY("saiu-pep@ageinghacker.net", "BB:AGE");
-    TEST_KEY("pep-saiu@abelson.ageinghacker.net", "BB:AGE-SUBDOMAIN");
-    TEST_KEY("saiu-pep@sussman.ageinghacker.net", "BB:AGE-SUBDOMAIN");
-    TEST_KEY("alice@the-world-is-burning.com", "DD:ENJOY");
-    TEST_KEY("mailto:alice@the-world-is-burning.com", "DD:ENJOY");
-    TEST_KEY("blice@the-world-is-burning.com", "DD:ENJOY");
+    TEST_KEY("luca@pep.foundation", "AAAA");
+    TEST_KEY("luca-pep@run-for-your.life", "CCCC");
+    TEST_KEY("mailto:luca-pep@run-for-your.life", "CCCC");
+    TEST_KEY("somebodyelse@run-for-your.life", "CCCC");
+    TEST_KEY("lucasaiu-pep@ageinghacker.net", "BBBB");
+    TEST_KEY("saiu-pep@ageinghacker.net", "BBBB");
+    TEST_KEY("pep-saiu@abelson.ageinghacker.net", "BBCC");
+    TEST_KEY("saiu-pep@sussman.ageinghacker.net", "BBCC");
+    TEST_KEY("alice@the-world-is-burning.com", "DDDD");
+    TEST_KEY("mailto:alice@the-world-is-burning.com", "DDDD");
+    TEST_KEY("blice@the-world-is-burning.com", "DDDD");
     TEST_KEY("luca@aaargh.com", NULL);
     TEST_KEY("bob@aaargh.com", NULL);
     TEST_KEY("luca-and-bob@aaargh.com", NULL);
@@ -178,24 +187,24 @@ TEST_F(MediaKeyTest, check_removal) {
 
     CHECK_LOOKUP_FAILURE("foo@foo.bar");
 
-    INSERT("*@foo.bar",    "foo");
-    CHECK_LOOKUP("foo@foo.bar", "FOO");
+    INSERT("*@foo.bar",    "f000");
+    CHECK_LOOKUP("foo@foo.bar", "F000");
     CHECK_LOOKUP_FAILURE("bar@bar.bar");
 
-    INSERT("*@bar.bar",    "bar");
-    INSERT("*@quux.bar",   "quux");
-    INSERT("*@foobar.bar", "foobar");
+    INSERT("*@bar.bar",    "1234");
+    INSERT("*@quux.bar",   "0012");
+    INSERT("*@foobar.bar", "aacd");
 
     CHECK_REMOVE_FAILURE("*@nonexisting.bar");
 
     REMOVE("*@quux.bar");
     CHECK_LOOKUP_FAILURE("quux@quux.bar");
-    CHECK_LOOKUP("foobar@foobar.bar", "FOOBAR");
+    CHECK_LOOKUP("foobar@foobar.bar", "AACD");
     CHECK_LOOKUP_FAILURE("foobar@foooooooooobar.bar");
-    CHECK_LOOKUP("bar@bar.bar", "BAR");
-    CHECK_LOOKUP("foobar@foobar.bar", "FOOBAR");
+    CHECK_LOOKUP("bar@bar.bar", "1234");
+    CHECK_LOOKUP("foobar@foobar.bar", "AACD");
     REMOVE("*@foobar.bar");
-    CHECK_LOOKUP("bar@bar.bar", "BAR");
+    CHECK_LOOKUP("bar@bar.bar", "1234");
     CHECK_LOOKUP_FAILURE("foobar@fooobar.bar");
 
     REMOVE("*@bar.bar");
@@ -205,8 +214,8 @@ TEST_F(MediaKeyTest, check_removal) {
     CHECK_REMOVE_FAILURE("*@nonexisting.bar");
     CHECK_LOOKUP_FAILURE("bar@fooobar.bar");
 
-    INSERT("*@bar.bar",    "bar");
-    CHECK_LOOKUP("bar@bar.bar", "BAR");
+    INSERT("*@bar.bar",    "1234");
+    CHECK_LOOKUP("bar@bar.bar", "1234");
     REMOVE("*@bar.bar");
     CHECK_REMOVE_FAILURE("*@bar.bar");
     CHECK_LOOKUP_FAILURE("bar@bar.bar");

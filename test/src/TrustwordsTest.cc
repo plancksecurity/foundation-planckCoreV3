@@ -349,50 +349,66 @@ TEST_F(TrustwordsTest, check_trustwords) {
 }
 
 TEST_F(TrustwordsTest, check_trustwords_short_trailing_space) {
+    // Horrible kludge: these variables are needed for SET_VERSION, which I
+    // am reusing from another test case above.
+    int outer_iteration_i = 0;
+    PEP_STATUS status = PEP_STATUS_OK;
+
     pEp_identity* identity1  = new_identity(
         "leon.schumacher@digitalekho.com",
         "8BD08954C74D830EEFFB5DEB2682A17F7C87F73D",
         "23",
         "Leon Schumacher");
+    SET_VERSION(identity1);
 
     pEp_identity* identity2 = new_identity(
         "krista@darthmama.org",
         "62D4932086185C15917B72D30571AFBCA5493553",
         "blargh",
         "Krista Bennett");    
+    SET_VERSION(identity2);
         
     char* wordlist = nullptr;
     size_t wsize_full = 0;
 
     get_trustwords(session, identity1, identity2, "en", &wordlist, &wsize_full, false);        
 
+    // These will be for RIPEMD-160, since we explicitly set the protocol version above.
     ASSERT_NE(wsize_full, 0);
     ASSERT_NOTNULL(wordlist);
     ASSERT_NE(wordlist[wsize_full - 1], ' ');
-    ASSERT_STREQ(wordlist, "CAPTIVITY BULIMIC EXEMPT BETTYE NEWTONIAN");
+    ASSERT_STREQ(wordlist, "CHUMASH KIDDER GASEOUS CLASSIFY POLARITY");
 }
 
 
 TEST_F(TrustwordsTest, check_trustwords_long_trailing_space) {
+    // Horrible kludge: these variables are needed for SET_VERSION, which I
+    // am reusing from another test case above.
+    int outer_iteration_i = 0;
+    PEP_STATUS status = PEP_STATUS_OK;
+
     pEp_identity* identity1  = new_identity(
         "leon.schumacher@digitalekho.com",
         "8BD08954C74D830EEFFB5DEB2682A17F7C87F73D",
         "23",
         "Leon Schumacher");
+    SET_VERSION(identity1);
 
     pEp_identity* identity2 = new_identity(
         "krista@darthmama.org",
         "62D4932086185C15917B72D30571AFBCA5493553",
         "blargh",
         "Krista Bennett");    
+    SET_VERSION(identity2);
         
     char* wordlist = nullptr;
     size_t wsize_full = 0;
 
+    // These will be for RIPEMD-160, since we explicitly set the protocol version above.
     get_trustwords(session, identity1, identity2, "en", &wordlist, &wsize_full, true);        
 
     ASSERT_NE(wsize_full, 0);
     ASSERT_NOTNULL(wordlist);
     ASSERT_NE(wordlist[wsize_full - 1], ' ');
-    ASSERT_STREQ(wordlist, "CAPTIVITY BULIMIC EXEMPT BETTYE NEWTONIAN DANDELION CLASSICISM BAGGAGEMAN BABBAGE VERSATILITY");
+    ASSERT_STREQ(wordlist, "CHUMASH KIDDER GASEOUS CLASSIFY POLARITY ENDANGER GENEVRA CUSTARD DECELERATOR BRONNIE");
 }
