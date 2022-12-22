@@ -7074,7 +7074,7 @@ PEP_STATUS normalize_fpr(PEP_SESSION session, char **normalized_fpr,
  end:
     if (status == PEP_STATUS_OK) {
         * normalized_fpr = output;
-#if 1
+#if 0
         LOG_TRACE("\"%s\" -> \"%s\"", input, output);
 #endif
     }
@@ -7542,10 +7542,10 @@ static PEP_STATUS combine_bytes_ripemd160(PEP_SESSION session,
  *  @retval     PEP_OUT_OF_MEMORY   out of memory
  *  @retval     PEP_STATUS_OK
  */
-/*static*/ PEP_STATUS combine_fprs_with_algorithm(PEP_SESSION session,
-                                          char **fprcombined_p,
-                                          const char *fpra, const char *fprb,
-                                          PEP_trustwords_algorithm algorithm)
+static PEP_STATUS combine_fprs_with_algorithm(PEP_SESSION session,
+                                              char **fprcombined_p,
+                                              const char *fpra, const char *fprb,
+                                              PEP_trustwords_algorithm algorithm)
 {
     PEP_REQUIRE(session && fprcombined_p && ! EMPTYSTR(fpra) && ! EMPTYSTR(fprb)
                 && (algorithm == PEP_trustwords_algorithm_xor
@@ -7616,7 +7616,7 @@ static PEP_STATUS combine_bytes_ripemd160(PEP_SESSION session,
                            bytescombined, bytescombined_size);
     FAIL_ON_BAD_STATUS;
 
-#if 1
+#if 0
     {
         char *ta; bytes_to_text(session, &ta, bytesa, bytesab_size);
         char *tb; bytes_to_text(session, &tb, bytesb, bytesab_size);
