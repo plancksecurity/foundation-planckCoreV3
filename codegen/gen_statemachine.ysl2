@@ -976,7 +976,8 @@ tstylesheet {
                             free_message(_m);
                     }
 
-                    status = session->messageToSend(m);
+                    LOG_TRACE("AAAAAAAAAAAAAAAAA temporarily disabling messageToSend");
+                    //status = session->messageToSend(m);
                     m = NULL;
                 }
             ||
