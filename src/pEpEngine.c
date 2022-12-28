@@ -1546,6 +1546,8 @@ PEP_STATUS upgrade_protocol_version_by_user_id(PEP_SESSION session,
 {
     PEP_REQUIRE(session && ident && ! EMPTYSTR(ident->user_id));
 
+    if(! ident->me) LOG_TRACE("qqqqqqqqqqqqq %i -> %i", ident->major_ver, new_ver_major);
+
     sql_reset_and_clear_bindings(session->upgrade_protocol_version_by_user_id);
     sqlite3_bind_int(session->upgrade_protocol_version_by_user_id, 1, new_ver_major);
     sqlite3_bind_int(session->upgrade_protocol_version_by_user_id, 2, new_ver_minor);    
