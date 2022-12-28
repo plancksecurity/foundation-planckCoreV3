@@ -5092,10 +5092,13 @@ static PEP_STATUS _decrypt_message(
             pEp_identity *_copy = identity_dup(_the_from);                      \
             if (_copy == NULL)                                                  \
                 return PEP_OUT_OF_MEMORY;                                       \
-            LOG_TRACE("qqqqqqqqqqqqq %i -> %i (unless %i is older)!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!...", _copy->major_ver, major_ver, major_ver);  \
-            PEP_STATUS _upgrade_version_status                                  \
+            LOG_TRACE("qqqqqqqqqqqqq %i -> %i (unless %i is older) [NOT ACTUALLY DOING IT]!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!...", _copy->major_ver, major_ver, major_ver);  \
+            PEP_STATUS _upgrade_version_status = PEP_STATUS_OK;                 \
+            /* \
+            _upgrade_version_status                                             \
                 = protocol_version_upgrade_or_ignore(session, _copy,            \
                                                      major_ver, minor_ver);     \
+            */ /* FIXME: I disabled this to search where the invalid upgrade happens */ \
             if (_upgrade_version_status != PEP_STATUS_OK) {                     \
                 free_identity(_copy);                                           \
                 return _upgrade_version_status;                                 \
