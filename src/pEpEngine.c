@@ -1482,6 +1482,8 @@ PEP_STATUS update_pEp_user_trust_vals(PEP_SESSION session,
 DYNAMIC_API PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user) {
     PEP_REQUIRE(session && user && ! EMPTYSTR(user->user_id));
 
+    if(! user->me) LOG_TRACE("qqqqqqqqqqqqq %i -> ...", user->major_ver);
+
     PEP_STATUS status = PEP_STATUS_OK;
     
     bool person_exists = false;
@@ -1504,8 +1506,12 @@ DYNAMIC_API PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user) 
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_PERSON;
 
+    if(! user->me) LOG_TRACE("qqqqqqqqqqqqq middle ... %i ...", user->major_ver);
+
     status = update_pEp_user_trust_vals(session, user);
         
+    if(! user->me) LOG_TRACE("qqqqqqqqqqqqq end ... -> %i", user->major_ver);
+
     return status;
 }
 
