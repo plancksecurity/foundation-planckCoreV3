@@ -1189,7 +1189,8 @@ static PEP_STATUS _set_or_update_person(PEP_SESSION session,
                                         pEp_identity* identity,
                                         sqlite3_stmt* set_or_update) {
     PEP_REQUIRE(session && identity && ! EMPTYSTR(identity->user_id)
-                && ! EMPTYSTR(identity->username));
+                && /* not using ! EMPTYSTR, on purpose: a non-NULL empty string
+                      is allowed. */ identity->username);
 
     sql_reset_and_clear_bindings(set_or_update);
     sqlite3_bind_text(set_or_update, 1, identity->user_id, -1,
