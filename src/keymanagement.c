@@ -679,7 +679,7 @@ DYNAMIC_API PEP_STATUS update_identity(
     char* default_own_id = NULL;
     pEp_identity* stored_ident = NULL;
 
-    if (! identity->me) LOG_TRACE("aaaaaaaaaaaaaaaaaaaaaaaaaaaaa early on: %s <%s>: major %i...", identity->username, identity->address, identity->major_ver);
+    if (! identity->me) LOG_TRACE("aaaaaaaaaaaaaaaaaaaaaaaaaaaaa early on: %s <%s>: major %i ...", identity->username, identity->address, identity->major_ver);
 
     status = get_default_own_userid(session, &default_own_id);    
     if (status == PEP_STATUS_OK || status == PEP_CANNOT_FIND_IDENTITY)
@@ -911,7 +911,7 @@ DYNAMIC_API PEP_STATUS update_identity(
     // Update with media key information.
     status = amend_identity_with_media_key_information(session, identity);
 
-    if (! identity->me) LOG_TRACE("zzzzzzzzzzzzzzzzzzzzzzzzzzzzz early on: %s <%s>: major %i...", identity->username, identity->address, identity->major_ver);
+    if (! identity->me) LOG_TRACE("zzzzzzzzzzzzzzzzzzzzzzzzzzzzz end: %s <%s> ... -> %i", identity->username, identity->address, identity->major_ver);
 
     goto pEp_free;
 
