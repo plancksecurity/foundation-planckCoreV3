@@ -497,7 +497,7 @@ pEp_identity *identity_dup(const pEp_identity *src)
         dup->lang[2] = 0;
         dup->flags = src->flags;
         dup->me = src->me;
-        if(! dup->me)fprintf(stderr, "---------- --:--:-- p≡p/Engine ------- fnc pEpEngine.c:%i qqqqqqqqqqqqq replacing %i -> %i\n", __LINE__, dup->major_ver, src->major_ver);
+        if(! dup->me)fprintf(stderr, "---------- --:--:-- p≡p/Engine ------- fnc pEpEngine.c:%i %s qqqqqqqqqqqqq replacing ? -> %i dup\n", __LINE__, __func__, src->major_ver);
         dup->major_ver = src->major_ver;
         dup->minor_ver = src->minor_ver;
         dup->enc_format = src->enc_format;
@@ -889,10 +889,9 @@ PEP_STATUS get_identity_without_trust_check(
             sqlite3_column_int(session->get_identity_without_trust_check, 3);
         _identity->me = (unsigned int)
             sqlite3_column_int(session->get_identity_without_trust_check, 4);
-        if (! _identity->me)LOG_TRACE("qqqqqqqqqqqqq replacing %i...", _identity->major_ver);
         _identity->major_ver =
             sqlite3_column_int(session->get_identity_without_trust_check, 5);
-        if (! _identity->me)LOG_TRACE("qqqqqqqqqqqqq -> %i", _identity->major_ver);
+        if (! _identity->me)LOG_TRACE("qqqqqqqqqqqqq ... -> %i", _identity->major_ver);
         _identity->minor_ver =
             sqlite3_column_int(session->get_identity_without_trust_check, 6);
         _identity->enc_format =    
@@ -1516,7 +1515,7 @@ PEP_STATUS set_protocol_version(PEP_SESSION session, pEp_identity* ident, unsign
                 && ! EMPTYSTR(ident->address));
 
     if (! ident->me
-        && new_ver_major == 3 && new_ver_minor == 3) {
+        && new_ver_major >= 3) {
         LOG_TRACE("suspect: %s <%s> %i.%i", ident->username, ident->address, new_ver_major, new_ver_minor);
         LOG_TRACE("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
     }
