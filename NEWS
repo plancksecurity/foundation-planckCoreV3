@@ -1,3 +1,5 @@
+* bug fix: do not crash when receiving an empty username in certain
+  circumstances.
 
 v3.2.0-RC14
 * Provide a local.conf.example
