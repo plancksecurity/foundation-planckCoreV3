@@ -5085,13 +5085,21 @@ static PEP_STATUS _decrypt_message(
 #define UPGRADE_PROTOCOL_VERSION_IF_NEEDED(message_whose_from_is_relevant)      \
     do {                                                                        \
         pEp_identity *_the_from = (message_whose_from_is_relevant)->from;       \
-        if (_the_from != NULL && ! is_me(session, _the_from)) {                 \
-            LOG_TRACE("qqqqqqqqqqqqq ? -> %i !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!...", major);  \
+        if (_the_from != NULL && ! is_me(session, _the_from)                    \
+            && major_ver > 0) {                                                 \
+            /* Make an updated copy of the identity, as required by             \
+               protocol_version_upgrade_or_ignore. */                           \
+            pEp_identity *_copy = identity_dup(_the_from);                      \
+            if (_copy == NULL)                                                  \
+                return PEP_OUT_OF_MEMORY;                                       \
+            LOG_TRACE("qqqqqqqqqqqqq %i -> %i (unless %i is older)!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!...", _copy->major_ver, major_ver, major_ver);  \
             PEP_STATUS _upgrade_version_status                                  \
-                = protocol_version_upgrade_or_ignore(session, _the_from,        \
+                = protocol_version_upgrade_or_ignore(session, _copy,            \
                                                      major_ver, minor_ver);     \
-            if (_upgrade_version_status != PEP_STATUS_OK)                       \
+            if (_upgrade_version_status != PEP_STATUS_OK) {                     \
+                free_identity(_copy);                                           \
                 return _upgrade_version_status;                                 \
+            }                                                                   \
         }                                                                       \
     } while (false)
 
