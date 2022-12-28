@@ -4253,6 +4253,7 @@ static PEP_STATUS protocol_version_upgrade_or_ignore(
     int ver_compare = compare_versions(major, minor, ident->major_ver, ident->minor_ver);
     if (ver_compare > 0) {
         status = set_protocol_version(session, ident, major, minor);
+        if(! ident->me)LOG_TRACE("qqqqqqqqqqqqq ? -> %i...", major);
         LOG_EVENT("%s <%s> upgrading to protocol version %i.%i: %i 0x%x %s",
                   (ident->username ? ident->username : "NO-USERNAME"),
                   (ident->address ? ident->address : "NO-ADDRESS"),
@@ -5085,6 +5086,7 @@ static PEP_STATUS _decrypt_message(
     do {                                                                        \
         pEp_identity *_the_from = (message_whose_from_is_relevant)->from;       \
         if (_the_from != NULL && ! is_me(session, _the_from)) {                 \
+            LOG_TRACE("qqqqqqqqqqqqq ? -> %i !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!...", major);  \
             PEP_STATUS _upgrade_version_status                                  \
                 = protocol_version_upgrade_or_ignore(session, _the_from,        \
                                                      major_ver, minor_ver);     \

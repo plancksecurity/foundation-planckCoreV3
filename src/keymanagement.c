@@ -597,6 +597,7 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     
     return_id->me = stored_ident->me;
     
+    if(! return_id->me) LOG_TRACE("qqqqqqqqqqqqq %i -> %i", return_id->major_ver, stored_ident->major_ver);
     return_id->major_ver = stored_ident->major_ver;
     return_id->minor_ver = stored_ident->minor_ver;
 
@@ -1217,6 +1218,7 @@ PEP_STATUS _myself(PEP_SESSION session,
         identity->comm_type = PEP_ct_unknown;
     }
 
+    if (! identity->me)LOG_TRACE("qqqqqqqqqqqqq %i -> %i", identity->major_ver, PEP_PROTOCOL_VERSION_MAJOR);
     identity->major_ver = PEP_PROTOCOL_VERSION_MAJOR;
     identity->minor_ver = PEP_PROTOCOL_VERSION_MINOR;
     

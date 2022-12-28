@@ -497,6 +497,7 @@ pEp_identity *identity_dup(const pEp_identity *src)
         dup->lang[2] = 0;
         dup->flags = src->flags;
         dup->me = src->me;
+        if(! dup->me)fprintf(stderr, "---------- --:--:-- p≡p/Engine ------- fnc pEpEngine.c:%i qqqqqqqqqqqqq replacing %i -> %i\n", __LINE__, dup->major_ver, src->major_ver);
         dup->major_ver = src->major_ver;
         dup->minor_ver = src->minor_ver;
         dup->enc_format = src->enc_format;
@@ -665,8 +666,10 @@ DYNAMIC_API PEP_STATUS get_identity(
             sqlite3_column_int(session->get_identity, 4);
         _identity->me = (unsigned int)
             sqlite3_column_int(session->get_identity, 5);
+        if(! _identity->me)LOG_TRACE("qqqqqqqqqqqqq replacing %i...", _identity->major_ver);
         _identity->major_ver =
             sqlite3_column_int(session->get_identity, 6);
+        if(! _identity->me)LOG_TRACE("qqqqqqqqqqqqq -> %i...", _identity->major_ver);
         _identity->minor_ver =
             sqlite3_column_int(session->get_identity, 7);
         _identity->enc_format =    
@@ -742,8 +745,10 @@ PEP_STATUS get_identities_by_userid(
             sqlite3_column_int(session->get_identities_by_userid, 5);
         ident->me = (unsigned int)
             sqlite3_column_int(session->get_identities_by_userid, 6);
+        if(! ident->me)LOG_TRACE("qqqqqqqqqqqqq replacing %i...", ident->major_ver);
         ident->major_ver =
             sqlite3_column_int(session->get_identities_by_userid, 7);
+        if(! ident->me)LOG_TRACE("qqqqqqqqqqqqq -> %i", ident->major_ver);
         ident->minor_ver =
             sqlite3_column_int(session->get_identities_by_userid, 8);
         ident->enc_format =    
@@ -813,8 +818,10 @@ PEP_STATUS get_identities_by_main_key_id(
             sqlite3_column_int(session->get_identities_by_main_key_id, 5);
         ident->me = (unsigned int)
             sqlite3_column_int(session->get_identities_by_main_key_id, 6);
+        if (! ident->me)LOG_TRACE("qqqqqqqqqqqqq replacing %i...", ident->major_ver);
         ident->major_ver =
             sqlite3_column_int(session->get_identities_by_main_key_id, 7);
+        if (! ident->me)LOG_TRACE("qqqqqqqqqqqqq -> %i", ident->major_ver);
         ident->minor_ver =
             sqlite3_column_int(session->get_identities_by_main_key_id, 8);
         ident->enc_format =    
@@ -882,8 +889,10 @@ PEP_STATUS get_identity_without_trust_check(
             sqlite3_column_int(session->get_identity_without_trust_check, 3);
         _identity->me = (unsigned int)
             sqlite3_column_int(session->get_identity_without_trust_check, 4);
+        if (! _identity->me)LOG_TRACE("qqqqqqqqqqqqq replacing %i...", _identity->major_ver);
         _identity->major_ver =
             sqlite3_column_int(session->get_identity_without_trust_check, 5);
+        if (! _identity->me)LOG_TRACE("qqqqqqqqqqqqq -> %i", _identity->major_ver);
         _identity->minor_ver =
             sqlite3_column_int(session->get_identity_without_trust_check, 6);
         _identity->enc_format =    
@@ -946,8 +955,10 @@ PEP_STATUS get_identities_by_address(
             sqlite3_column_int(session->get_identities_by_address, 4);
         ident->me = (unsigned int)
             sqlite3_column_int(session->get_identities_by_address, 5);
+        if (! ident->me)LOG_TRACE("qqqqqqqqqqqqq replacing %i...", ident->major_ver);
         ident->major_ver =
             sqlite3_column_int(session->get_identities_by_address, 6);
+        if (! ident->me)LOG_TRACE("qqqqqqqqqqqqq -> %i", ident->major_ver);
         ident->minor_ver =
             sqlite3_column_int(session->get_identities_by_address, 7);
         ident->enc_format =    
@@ -1503,6 +1514,12 @@ DYNAMIC_API PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user) 
 PEP_STATUS set_protocol_version(PEP_SESSION session, pEp_identity* ident, unsigned int new_ver_major, unsigned int new_ver_minor) {
     PEP_REQUIRE(session && ident && ! EMPTYSTR(ident->user_id)
                 && ! EMPTYSTR(ident->address));
+
+    if (! ident->me
+        && new_ver_major == 3 && new_ver_minor == 3) {
+        LOG_TRACE("suspect: %s <%s> %i.%i", ident->username, ident->address, new_ver_major, new_ver_minor);
+        LOG_TRACE("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+    }
 
     sql_reset_and_clear_bindings(session->set_protocol_version);
     sqlite3_bind_double(session->set_protocol_version, 1, new_ver_major);
