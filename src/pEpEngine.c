@@ -1462,8 +1462,8 @@ PEP_STATUS update_pEp_user_trust_vals(PEP_SESSION session,
 
     PEP_STATUS status
         = upgrade_protocol_version_by_user_id(session, user,
-                                              PEP_PROTOCOL_VERSION_MAJOR,
-                                              PEP_PROTOCOL_VERSION_MINOR);
+                                              PEP_PROTOCOL_MINIMUM_VERSION_MAJOR,
+                                              PEP_PROTOCOL_MINIMUM_VERSION_MINOR);
     return status;
 }
 
