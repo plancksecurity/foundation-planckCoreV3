@@ -5338,7 +5338,7 @@ static PEP_STATUS _decrypt_message(
                         sender_key = _imported_key_list->value;
                 } // Otherwise, too bad.
 
-                if (! src->from->me) LOG_TRACE("before calling _check_and_set_default_key, which might ruin the version: %s <%s> has protocol %i.%i", src->from->username, src->from->address, src->from->major_ver, src->from->minor_ver);
+                if (! src->from->me) LOG_TRACE("wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww before calling _check_and_set_default_key, which might ruin the version: %s <%s> has protocol %i.%i", src->from->username, src->from->address, src->from->major_ver, src->from->minor_ver);
                 status = _check_and_set_default_key(session, src->from, sender_key);
                 free(imported_sender_key_fpr);
                 imported_sender_key_fpr = NULL;
