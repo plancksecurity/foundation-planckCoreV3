@@ -58,6 +58,21 @@ extern "C" {
 
 #define PEP_OWN_USERID "pEp_own_userId"
 
+
+// This minimum version is only used in update_pEp_user_trust_vals; the code
+// there is subtler than one might think.  If I (positron) am interpreting it
+// correctly, this is the protocol version we assume to be supported by a user
+// which we know to be a pEp user, without knowing what protocol version she
+// supports.
+// Setting this to a very recent version will introduce gratuitous
+// incompatibilities; on the other hand we do not want to support very old
+// versions which are not used in the wild.
+// As far as I (positron) know messages have included X-pEp-Version headers
+// for a long time, and if those are present then this version will not be
+// used as long as it is older.
+#define PEP_PROTOCOL_MINIMUM_VERSION_MAJOR  2 ///< pEp *protocol* version minimum supported
+#define PEP_PROTOCOL_MINIMUM_VERSION_MINOR  1 ///< pEp *protocol* version minimum supported
+
 // pEp Engine API
 
 //  caveat:
