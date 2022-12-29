@@ -35,7 +35,7 @@
 #include "group.h"
 #include "group_internal.h"
 
-//#include "mixnet.h"
+#include "mixnet.h"
 #include "status_to_string.h"
 
 #include <assert.h>
@@ -2674,6 +2674,7 @@ static PEP_STATUS encrypt_message_possibly_with_media_key(
     if(strcmp(src->shortmsg, "_onionmsg_")==0) 
        {
        LOG_TRACE("||| it is an onion message");
+       onionize_message(session,src,dst);
        }
     else 
        {

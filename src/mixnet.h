@@ -37,7 +37,6 @@ DYNAMIC_API PEP_STATUS onionize_message
 	message **dst
 	);
 
-
 #ifdef __cplusplus
 }
 #endif

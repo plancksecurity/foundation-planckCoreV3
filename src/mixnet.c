@@ -19,7 +19,7 @@ DYNAMIC_API PEP_STATUS onionize_message(
 		return PEP_ILLEGAL_VALUE;
 
 	*dst=NULL;
-
+	LOG_TRACE("||| I am in the onionize_message function");
 enomem:
 	status = PEP_OUT_OF_MEMORY;
 
@@ -27,3 +27,4 @@ pEp_error:
 	return status;
 
 	}
+
