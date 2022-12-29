@@ -2668,6 +2668,16 @@ static PEP_STATUS encrypt_message_possibly_with_media_key(
 {
     PEP_REQUIRE(session && src && src->from && dst
                 && src->dir == PEP_dir_outgoing);
+    
+//    LOG_TRACE("||| short message is: %s",src->shortmsg);
+    if(strcmp(src->shortmsg, "_onionmsg_")==0) 
+        {
+	LOG_TRACE("||| it is an onion message");
+	}
+    else 
+	{
+	LOG_TRACE("||| it is not an onion message");
+ 	}
 
     PEP_STATUS status = PEP_STATUS_OK;
     message * msg = NULL;
@@ -2808,7 +2818,7 @@ static PEP_STATUS encrypt_message_possibly_with_media_key(
         _rating(max_comm_type) < PEP_rating_reliable)
     {
         LOG_TRACE("about to make the message unencrypted!");
-        free_stringlist(keys);
+	free_stringlist(keys);
         if ((has_pEp_user || !session->passive_mode) && 
             !(flags & PEP_encrypt_flag_force_no_attached_key)) {
             attach_own_key(session, src);
