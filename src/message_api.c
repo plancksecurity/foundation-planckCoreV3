@@ -2657,7 +2657,7 @@ static bool message_is_from_Sync(const message *src)
     return true;
 }
 
-static PEP_STATUS encrypt_message_possibly_with_media_key(
+PEP_STATUS encrypt_message_possibly_with_media_key(
         PEP_SESSION session,
         message *src,
         stringlist_t * extra,
@@ -2972,6 +2972,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     )
 {
     PEP_REQUIRE(session);
+
+
 
     /* First try encrypting the message ignoring the media key. */
     PEP_STATUS status

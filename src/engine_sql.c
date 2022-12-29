@@ -1760,6 +1760,12 @@ PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session) {
                                     (int)strlen(sql_refresh_userid_default_key), &session->refresh_userid_default_key, NULL);
     PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
 
+    int_result = sqlite3_prepare_v2(session->db, sql_get_onion_identities,
+                                    (int)strlen(sql_get_onion_identities),
+                                    &session->get_onion_identities, NULL);
+    LOG_ERROR("sql_get_onion_identities: %s", sqlite3_errmsg(session->db));
+    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+
     int_result = sqlite3_prepare_v2(session->db, sql_replace_identities_fpr,
                                     (int)strlen(sql_replace_identities_fpr),
                                     &session->replace_identities_fpr, NULL);
@@ -2134,6 +2140,7 @@ PEP_STATUS pEp_finalize_sql_stmts(PEP_SESSION session) {
     sqlite3_finalize(session->get_default_own_userid);
     sqlite3_finalize(session->get_userid_alias_default);
     sqlite3_finalize(session->add_userid_alias);
+    sqlite3_finalize(session->get_onion_identities);
     sqlite3_finalize(session->replace_identities_fpr);
     sqlite3_finalize(session->set_default_identity_fpr);
     sqlite3_finalize(session->get_default_identity_fpr);

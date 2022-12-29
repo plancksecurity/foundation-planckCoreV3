@@ -45,7 +45,11 @@ typedef enum _PEP_encrypt_flags {
     
     /// This flag is used to let internal functions know that an encryption 
     /// call is being used as part of a reencryption operation
-    PEP_encrypt_reencrypt = 0x40
+    PEP_encrypt_reencrypt = 0x40,
+
+    /// This flag is used to check if encrypt_message is called inside an onion encryption loop
+    PEP_encrypt_onion = 0x80
+
 } PEP_encrypt_flags; 
 
 typedef unsigned int PEP_encrypt_flags_t;
@@ -62,6 +66,21 @@ typedef enum _message_wrap_type {
     PEP_message_transport,  ///< e.g. for onion layers
     PEP_message_key_reset   ///< for wrapped key reset information
 } message_wrap_type;
+
+
+/**
+ *  <!--       encrypt_message_possibly_with_media_key()       -->
+ *
+ *  @brief Similar to encrypt_message: FIXME: write a good comment.
+ */
+PEP_STATUS encrypt_message_possibly_with_media_key(
+        PEP_SESSION session,
+        message *src,
+        stringlist_t * extra,
+        message **dst,
+        PEP_enc_format enc_format,
+        PEP_encrypt_flags_t flags,
+        const char *media_key_or_NULL);
 
 /**
  *  <!--       encrypt_message()       -->
