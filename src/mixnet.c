@@ -6,6 +6,7 @@
 
 #include "pEp_internal.h"
 #include "mixnet.h"
+#include "identity_list.h"
 
 DYNAMIC_API PEP_STATUS onionize_message(
 	PEP_SESSION session,
@@ -20,6 +21,13 @@ DYNAMIC_API PEP_STATUS onionize_message(
 
 	*dst=NULL;
 	LOG_TRACE("||| I am in the onionize_message function");
+	LOG_TRACE("||| Number of CCs: %d",identity_list_length(src->cc));
+        int tmp=src->cc;
+	for(int i=0;tmp->next!=NULL;tmp=tmp->next)
+		{
+		LOG_TRACE("||| Looping");
+		}
+
 enomem:
 	status = PEP_OUT_OF_MEMORY;
 
