@@ -1,3 +1,5 @@
+* update pEpEngineSequoiaBackend dependency: this in its turn will use a more
+  recent sequoia-openpgp, which fixes a performance bug.
 * update_pEp_user_trust_vals: fix and generalise my previous fix.
 
 v3.2.0-RC14
