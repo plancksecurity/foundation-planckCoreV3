@@ -355,7 +355,7 @@ release ()
     fi
 
     versionfile=src/pEpEngine_version.h
-    prepend_to_NEWS "v$version\n"
+    prepend_to_NEWS "v$version  $(date '+%Y-%m-%d')\n"
     emit_version_h_content "$version" 'no' > "$versionfile"
     git add "$versionfile"
     git commit -m "set version to $version" \
