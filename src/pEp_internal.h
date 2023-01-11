@@ -113,6 +113,7 @@
 #include "key_reset.h"
 
 #include "pEpEngine_internal.h"
+#include "sql_reliability.h"
 #include "key_reset_internal.h"
 #include "group_internal.h"
 #include "keymanagement_internal.h"
