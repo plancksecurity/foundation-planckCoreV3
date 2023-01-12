@@ -66,8 +66,7 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
     session->notifyHandshake = notifyHandshake;
     session->retrieve_next_sync_event = retrieve_next_sync_event;
 
-    // start state machine
-    return Sync_driver(session, Sync_PR_keysync, Init);
+    return PEP_STATUS_OK;
 }
 
 DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session) {
@@ -137,6 +136,10 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
         void *obj
     )
 {
+    PEP_STATUS status = do_sync_protocol_init(session);
+    if (status)
+        return status;
+
     Sync_event_t *event= NULL;
 
     PEP_REQUIRE(session && session->retrieve_next_sync_event);
@@ -157,6 +160,14 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
     PEP_LOG_EVENT("p≡p Engine", "Sync", "sync_protocol thread shutdown");
 
     return PEP_STATUS_OK;
+}
+
+DYNAMIC_API PEP_STATUS do_sync_protocol_init(PEP_SESSION session)
+{
+    PEP_REQUIRE(session);
+
+    // start state machine
+    return Sync_driver(session, Sync_PR_keysync, Init);
 }
 
 DYNAMIC_API PEP_STATUS do_sync_protocol_step(
