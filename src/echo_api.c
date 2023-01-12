@@ -19,14 +19,14 @@
    statements, compiled once and for all from these SQL statements. */
 static const char *echo_get_challenge_text
 = "   SELECT echo_challenge"
-    " FROM Identity I"
-    " WHERE I.address = ?1"
-    " AND I.user_id = ?2;";
+  " FROM Identity I"
+  " WHERE I.address = ?1"
+  " AND I.user_id = ?2;";
 static const char *echo_set_challenge_text
 = "   UPDATE Identity"
-    " SET echo_challenge = ?1"
-    " WHERE address = ?2"
-    " AND user_id = ?3;";
+  " SET echo_challenge = ?1"
+  " WHERE address = ?2"
+  " AND user_id = ?3;";
 
 /* This is a convenient way to check for SQL errors without duplicating code. */
 #define ON_SQL_ERROR_SET_STATUS_AND_GOTO                 \
