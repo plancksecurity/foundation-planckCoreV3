@@ -32,7 +32,7 @@ endif
 build: $(BUILT_IN_MIME) asn1
 ifeq ($(OPENPGP),SEQUOIA)
 	mkdir -p $(CARGO_TARGET_DIR)
-	cd $(SEQUOIA_BACKEND_PATH) && cargo build
+	cd $(SEQUOIA_BACKEND_PATH) && cargo --color=never build
 	PKG_CONFIG_PATH=$(CARGO_TARGET_DIR)/debug${PKG_CONFIG_PATH+:$PKG_CONFIG_PATH} $(MAKE) -C src
 else
 	$(MAKE) -C src
