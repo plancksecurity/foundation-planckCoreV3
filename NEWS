@@ -7,6 +7,10 @@
 * In relation to the change above: new API function do_sync_protocol_init ,
   which initialises the Sync state machinery indepdendently from
   register_sync_callbacks (which now *only* sets callback functions).
+* echo: implement rate limit; this fixes
+  https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/120 .
+  This is a backport from the 3.x series to the 2.x of my change set
+  f47dec90994633e17478a552fd566d440738d295 .
 
 v2.1.69  2023-01-27
 * change the result of key_reset_identity and functions calling it: if a non-own
