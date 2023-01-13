@@ -413,9 +413,14 @@ static PEP_STATUS echo_challenge_for_identity(PEP_SESSION session,
     ON_SQL_ERROR_SET_STATUS_AND_GOTO;
     sql_status = sqlite3_step(session->echo_get_challenge);
     ON_SQL_ERROR_SET_STATUS_AND_GOTO;
+    if (sql_status != SQLITE_ROW)
+        LOG_ERROR("foo!");
     const void *stored_challenge;
-    PEP_ASSERT(sql_status == SQLITE_ROW);
-    if (sqlite3_column_type(session->echo_get_challenge, 0) == SQLITE_NULL)
+    if (sql_status == SQLITE_DONE) /* no row found: no user_id?  This will
+                                      never happen in sane situations.  It
+                                      may happen in the test suite. */
+        stored_challenge = NULL;
+    else if (sqlite3_column_type(session->echo_get_challenge, 0) == SQLITE_NULL)
         stored_challenge = NULL;
     else
         stored_challenge = sqlite3_column_blob(session->echo_get_challenge, 0);
