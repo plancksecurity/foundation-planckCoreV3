@@ -1,3 +1,4 @@
+
 v3.2.0-RC15
 * move state machine initialisation out for callback registering.  This avoids
   that Sync beacon messages are sent at session initialisation (thanks to Volker
