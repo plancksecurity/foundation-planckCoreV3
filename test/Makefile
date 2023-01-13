@@ -108,7 +108,7 @@ endif
 .PHONY: all clean test
 
 all:
-	make $(TARGET)
+	$(MAKE) $(TARGET)
 
 %.d: %.cc
 	$(CXX) -MM $(CXXFLAGS) $(CPPFLAGS) $< \
