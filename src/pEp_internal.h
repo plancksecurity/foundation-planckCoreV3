@@ -197,7 +197,7 @@
     do {                                                                    \
         PEP_STATUS _log_status_the_status = (the_status);                   \
         if (condition(_log_status_the_status))                              \
-            logging_macro("status is 0x%x %i %s\n",                         \
+            logging_macro("status is 0x%x %i %s",                           \
                         (int) _log_status_the_status,                       \
                         (int) _log_status_the_status,                       \
                         pEp_status_to_string(_log_status_the_status));      \
