@@ -455,6 +455,8 @@ struct _pEpSession {
     // Distribution.Echo
     sqlite3_stmt *echo_get_challenge;
     sqlite3_stmt *echo_set_challenge;
+    sqlite3_stmt *echo_get_echo_below_rate_limit;
+    sqlite3_stmt *echo_set_timestamp;
 
     // callbacks
     notifyHandshake_t notifyHandshake;
