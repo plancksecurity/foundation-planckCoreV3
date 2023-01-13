@@ -1,6 +1,9 @@
 * move state machine initialisation out for callback registering.  This avoids
   that Sync beacon messages are sent at session initialisation (thanks to Volker
   Birk).
+* Echo protocol: implement a rate limit on Ping and Pong messages to each
+  destination identity, from each device.  This prevents flooding with Ping or
+  Pong messages.
 * update pEpEngineSequoiaBackend dependency: this in its turn will use a more
   recent sequoia-openpgp, which fixes a performance bug.
 * update_pEp_user_trust_vals: fix and generalise my previous fix.
