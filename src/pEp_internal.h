@@ -132,8 +132,15 @@
  * ***************************************************************** */
 
 /* Define convenient logging macros to be used for every compilation unit,
-   *inside* the Engine. */
-#define _LOG_WITH_MACRO_NAME(name, ...)     \
+   *inside* the Engine.  These macros take either zero arguments or a format
+   string followed by the arguments specified in the format. */
+// This solution worked perfectly well with GCC's and Clang's C preprocessors,
+// but since Alex reported an unintended expansion with the microsoft C
+// preprocessor (some of the variadic parameter grouped together between
+// parentheses when no parentheses are in the definition) I am avoiding such
+// tricks, and switch to the slightly more verbose definition below.
+// --positron, 2023-01
+/*  #define _LOG_WITH_MACRO_NAME(name, ...)     \
     name("p≡p", "Engine", "" __VA_ARGS__)
 #define LOG_CRITICAL(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_CRITICAL, __VA_ARGS__)
 #define LOG_ERROR(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_ERROR, __VA_ARGS__)
@@ -146,7 +153,19 @@
 #define LOG_TRACE(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_TRACE, __VA_ARGS__)
 #define LOG_PRODUCTION(...)_LOG_WITH_MACRO_NAME(PEP_LOG_PRODUCTION, __VA_ARGS__)
 #define LOG_BASIC(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_BASIC, __VA_ARGS__)
-#define LOG_SERVICE(...)   _LOG_WITH_MACRO_NAME(PEP_LOG_SERVICE, __VA_ARGS__)
+#define LOG_SERVICE(...)   _LOG_WITH_MACRO_NAME(PEP_LOG_SERVICE, __VA_ARGS__) */
+#define LOG_CRITICAL(...)   PEP_LOG_CRITICAL("p≡p", "Engine", "" __VA_ARGS__)
+#define LOG_ERROR(...)      PEP_LOG_ERROR("p≡p", "Engine", "" __VA_ARGS__)
+#define LOG_WARNING(...)    PEP_LOG_WARNING("p≡p", "Engine", "" __VA_ARGS__)
+#define LOG_API(...)        PEP_LOG_API("p≡p", "Engine", "" __VA_ARGS__)
+#define LOG_EVENT(...)      PEP_LOG_EVENT("p≡p", "Engine", "" __VA_ARGS__)
+#define LOG_FUNCTION(...)   PEP_LOG_FUNCTION("p≡p", "Engine", "" __VA_ARGS__)
+#define LOG_NONOK(...)      PEP_LOG_NONOK("p≡p", "Engine", "" __VA_ARGS__)
+#define LOG_NOTOK(...)      PEP_LOG_NOTOK("p≡p", "Engine", "" __VA_ARGS__)
+#define LOG_TRACE(...)      PEP_LOG_TRACE("p≡p", "Engine", "" __VA_ARGS__)
+#define LOG_PRODUCTION(...) PEP_LOG_PRODUCTION("p≡p", "Engine", "" __VA_ARGS__)
+#define LOG_BASIC(...)      PEP_LOG_BASIC("p≡p", "Engine", "" __VA_ARGS__)
+#define LOG_SERVICE(...)    PEP_LOG_SERVICE("p≡p", "Engine", "" __VA_ARGS__)
 
 #define LOG_MESSAGE_WITH(literal_string, the_message, macro)            \
     do {                                                                \
