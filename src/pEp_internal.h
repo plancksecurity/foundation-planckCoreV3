@@ -355,8 +355,14 @@ struct _pEpSession {
     sqlite3_stmt *log_insert_prepared_statement;
     sqlite3_stmt *log_delete_oldest_prepared_statement;
 
-    sqlite3_stmt *log; /* This uses the management DB, and is obsolete. */
+    /* This uses the system DB. */
     sqlite3_stmt *trustword;
+
+    /* These use the management DB. */
+    sqlite3_stmt *begin_exclusive_transaction;
+    sqlite3_stmt *commit_transaction;
+    sqlite3_stmt *rollback_transaction;
+    sqlite3_stmt *log; /* This uses the management DB, and is obsolete. */
     sqlite3_stmt *get_identity;
     sqlite3_stmt *get_identity_without_trust_check;
     sqlite3_stmt *get_identities_by_address;

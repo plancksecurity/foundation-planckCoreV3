@@ -32,6 +32,13 @@ static const char *sql_trustword MAYBE_UNUSED =
  * @internal
  * Strings to feed into prepared statements: management database
  */
+static const char *sql_begin_exclusive_transaction MAYBE_UNUSED =
+        "BEGIN EXCLUSIVE TRANSACTION;";
+static const char *sql_commit_transaction MAYBE_UNUSED =
+        "COMMIT TRANSACTION;";
+static const char *sql_rollback_transaction MAYBE_UNUSED =
+        "COMMIT TRANSACTION;";
+
 static const char *sql_log MAYBE_UNUSED =
         "insert into log (title, entity, description, comment)"
         "values (?1, ?2, ?3, ?4);";

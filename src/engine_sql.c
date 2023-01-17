@@ -1652,8 +1652,22 @@ PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session) {
 
     int int_result = SQLITE_OK;
 
+    /* Trustwords / system db. */
     int_result = sqlite3_prepare_v2(session->system_db, sql_trustword,
                                     (int)strlen(sql_trustword), &session->trustword, NULL);
+    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+
+    /* Everything else: management db. */
+    int_result = sqlite3_prepare_v2(session->db, sql_begin_exclusive_transaction,
+                                    (int)strlen(sql_begin_exclusive_transaction), &session->begin_exclusive_transaction, NULL);
+    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+
+    int_result = sqlite3_prepare_v2(session->db, sql_commit_transaction,
+                                    (int)strlen(sql_commit_transaction), &session->commit_transaction, NULL);
+    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+
+    int_result = sqlite3_prepare_v2(session->db, sql_rollback_transaction,
+                                    (int)strlen(sql_rollback_transaction), &session->rollback_transaction, NULL);
     PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
 
     int_result = sqlite3_prepare_v2(session->db, sql_get_identity,
@@ -2098,8 +2112,11 @@ PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session) {
 }
 
 PEP_STATUS pEp_finalize_sql_stmts(PEP_SESSION session) {
-    sqlite3_finalize(session->log);
     sqlite3_finalize(session->trustword);
+    sqlite3_finalize(session->log);
+    sqlite3_finalize(session->begin_exclusive_transaction);
+    sqlite3_finalize(session->commit_transaction);
+    sqlite3_finalize(session->rollback_transaction);
     sqlite3_finalize(session->get_identity);
     sqlite3_finalize(session->get_identity_without_trust_check);
     sqlite3_finalize(session->get_identities_by_address);
