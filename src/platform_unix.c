@@ -1122,3 +1122,24 @@ int pEp_fnmatch(const char *pattern, const char *string)
                       no FNM_NOESCAPE. */
                    0);
 }
+
+void pEp_sleep_ms(unsigned long ms)
+{
+    /* Convert the one-dimentional number of milliseconds into the required
+       struct. */
+    struct timespec sleep_time;
+    sleep_time.tv_sec = (int) (ms / 1000);
+    sleep_time.tv_nsec = (long) (ms % 1000L) * 1000000L;
+
+    /* Wait, using a loop to make sure that if we are interrupted early we do
+       not sleep too little. */
+    int nanosleep_result;
+    struct timespec remaining;
+    do {
+        nanosleep_result = nanosleep(& sleep_time, & remaining);
+        if (nanosleep_result != 0) {
+            assert(errno != EINVAL);
+            sleep_time = remaining;
+        }
+    } while (nanosleep_result != 0);
+}

@@ -24,6 +24,7 @@
 #include <tchar.h>
 #include <sys\stat.h>
 #include <processthreadsapi.h>
+#include <synchapi.h> /* for Sleep */
 
 #include "pEpEngine.h" // just for PEP_STATUS
 
@@ -226,6 +227,10 @@ int pEp_fnmatch(const char* pattern, const char* string) {
             : 1);
 }
 
+void pEp_sleep_ms(unsigned long ms)
+{
+    Sleep((DWORD) ms);
+}
 
 DYNAMIC_API const char *per_user_directory(void)
 {
