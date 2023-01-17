@@ -134,6 +134,7 @@ typedef enum {
 
     /* Debugging. */
     PEP_LOG_LEVEL_NONOK       =  300,
+    PEP_LOG_LEVEL_NOTOK       =  300 /* alias */,
     PEP_LOG_LEVEL_FUNCTION    =  310,
     PEP_LOG_LEVEL_TRACE       =  320,
 
