@@ -1,3 +1,7 @@
+* rewrite some CPP macros working around problems (I indeed suspect a bug:
+  macro expansion contained parentheses not in macro definitions) with
+  microsoft's compiler.  Reported by Alex, who helped testing my proposed
+  redefinitions.  The current code is meant to work on every platform.
 
 v3.2.0-RC15
 * move state machine initialisation out for callback registering.  This avoids
