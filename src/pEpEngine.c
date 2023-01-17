@@ -2956,13 +2956,11 @@ DYNAMIC_API PEP_STATUS import_key_with_fpr_return(
     PEP_REQUIRE(session && key_data && size
                 /* the other fields are allowed to be NULL. */);
 
-    /* When provided initialise private_keys and imported_keys out of
-       defensiveness, to avoid misleading the caller with invalid pointers even
-       in case of failure. */
+    /* When provided initialise private_keys out of defensiveness, to avoid
+       misleading the caller with invalid pointers even in case of failure;
+       do not do the same with imported_keys, which is an inout parameter. */
     if (private_keys != NULL)
         * private_keys = NULL;
-    if (imported_keys != NULL)
-        * imported_keys = NULL;
 
     if (imported_keys && !*imported_keys && changed_public_keys)
         *changed_public_keys = 0;

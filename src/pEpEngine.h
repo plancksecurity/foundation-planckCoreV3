@@ -1213,7 +1213,11 @@ DYNAMIC_API PEP_STATUS delete_keypair(PEP_SESSION session, const char *fpr);
  *  @param[in]     size                   amount of data to handle
  *  @param[out]    private_keys           list of identities containing the
  *                                        private keys that have been imported
- *  @param[out]    imported_keys          if non-NULL, list of actual keys imported
+ *  @param[inout]  imported_keys          if non-NULL, list of actual keys imported
+ *                                        --positron 2023-01: this was marked as an
+ *                                        [out] parameter, but the comment was clearly
+ *                                        wrong: the pointer, when non-NULL, is used
+ *                                        as an input.
  *  @param[out]    changed_public_keys    if non-NULL AND imported_keys is non-NULL:
  *                                        bitvector - corresponds to the first 64 keys
  *                                        imported. If nth bit is set, import changed a
