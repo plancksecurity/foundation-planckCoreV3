@@ -1650,7 +1650,9 @@ PEP_STATUS pEp_sql_init(PEP_SESSION session) {
 // This whole mess really does need to be generated somewhere.
 PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session) {
 
-    int int_result = sqlite3_prepare_v2(session->system_db, sql_trustword,
+    int int_result = SQLITE_OK;
+
+    int_result = sqlite3_prepare_v2(session->system_db, sql_trustword,
                                     (int)strlen(sql_trustword), &session->trustword, NULL);
     PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
 
