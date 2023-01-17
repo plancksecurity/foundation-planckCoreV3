@@ -480,9 +480,6 @@ typedef enum {
 
 #endif // #ifndef PEP_ENGINE_DEBUG_H
 
-//#undef PEP_REQUIRE
-//#define PEP_REQUIRE(X) do { if (! (X)) { fprintf(stderr, "************************************* FAILED PEP_REQUIRE in %s: %s\n", __func__, #X); fflush(stderr); } } while (0)
-
 /*
   Local Variables:
     eval: (setq show-trailing-whitespace t indicate-empty-lines t)
