@@ -1113,7 +1113,8 @@ error:
 /* Library functions
  * ***************************************************************** */
 
-int pEp_fnmatch(const char *pattern, const char *string) {
+int pEp_fnmatch(const char *pattern, const char *string)
+{
     /* The implementation is completely trivial on Unix. */
     return fnmatch(pattern, string,
                    /* No FNM_FILE_NAME;
