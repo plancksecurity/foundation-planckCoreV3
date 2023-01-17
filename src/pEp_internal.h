@@ -350,6 +350,7 @@ struct _pEpSession {
     sqlite3 *system_db;
 
     /* Prepared SQL statements (on log_db) for logging.  See pEp_log.c . */
+    bool log_database_initialised;
     sqlite3_stmt *log_begin_transaction_prepared_statement;
     sqlite3_stmt *log_commit_transaction_prepared_statement;
     sqlite3_stmt *log_insert_prepared_statement;

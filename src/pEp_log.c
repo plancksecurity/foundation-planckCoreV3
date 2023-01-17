@@ -4,18 +4,26 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
+#if 0
 #warning "windows: reimplement syslog using this: https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-openeventloga"
-#warning "android: ask the pEp security people (maybe huss in a friendly way?  ignacio?)"
+#warning "android: ask the pEp security people"
+#endif
 
 #define _EXPORT_PEP_ENGINE_DLL
 #include "pEp_log.h"
 
 #include "pEp_internal.h"
+#include "sql_reliability.h"
 #include "timestamp.h"
 
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
+
+/* In this module we do not use PEP_SQL_BEGIN_LOOP and PEP_SQL_END_LOOP except
+   at initialisation (when logging to database is not enabled yet), in order to
+   avoid database writes as side effects of failed database writes. */
+
 
 /* Using transactions is not terribly important for semantics in this case, but
    here it makes performance better when the oldest row is being deleted, as one
@@ -159,20 +167,50 @@ static const char* _log_level_to_string(PEP_LOG_LEVEL level)
 /* Logging facility: database destination.
  * ***************************************************************** */
 
-/* SQL statements to create the Entries table and its index.  This is executed
-   just once at start up, and does not need to be compiled into a prepared
-   statement. */
-static const char *pEp_log_create_table_text =
-" PRAGMA secure_delete = OFF;\n"
-" PRAGMA page_size = 4096;\n" /* This should be the same as the filesystem
-                                 page size*/
-" VACUUM;\n" /* I have verified with this statement *commented out* that the
-                database file does not grow to an unbounded size. */
-" -- No need for PRAGMA foreign_keys on a single-table database with\n"
-" -- no foreign keys.\n"
-" PRAGMA checkpoint_fullfsync = ON;\n"
+/* A safe wrapper around sqlite3_prepare_v2 , which retries on SQLITE_BUSY and
+   SQLITE_LOCKED. */
+static int _safe_sqlite3_prepare_v2(
+  PEP_SESSION session,
+  sqlite3 *db,            /* Database handle */
+  const char *zSql,       /* SQL statement, UTF-8 encoded */
+  int nByte,              /* Maximum length of zSql in bytes. */
+  sqlite3_stmt **ppStmt,  /* OUT: Statement handle */
+  const char **pzTail     /* OUT: Pointer to unused portion of zSql */
+) {
+    int sqlite_status;
+    PEP_SQL_BEGIN_LOOP(sqlite_status);
+        sqlite_status = sqlite3_prepare_v2(db, zSql, nByte, ppStmt, pzTail);
+        if (sqlite_status == SQLITE_BUSY || sqlite_status == SQLITE_LOCKED)
+            fprintf(stderr, "failed preparing the statement %s: trying again\n",
+                    zSql);
+    PEP_SQL_END_LOOP();
+    assert(sqlite_status == SQLITE_OK);
+    return sqlite_status;
+}
+
+/* These SQL statements create the schema and set the required parameters.  They
+   are only executed at initialisation and do not need prepared statements. */
+
+/* This statement list is executed just once: if it succeeds from one thread at
+   any time it is enough. */
+static const char *pEp_log_initialize_database_once_text =
+" BEGIN EXCLUSIVE TRANSACTION;\n"
+" "
+/* This gives more reliability and seems to make SQL_BUSY less likely for some
+   reason, which however is only releavant until I acutally fix the concurrency
+   issue. */
+//" PRAGMA synchronous = EXTRA;\n"
+/* Changing the auto_vacuum state can only happen when either the database
+   is new (with no tables) or at vacuum time.  Notice that the effect of
+   this pragma is persistent, in the sense that it is stored into the database
+   and loaded when a new connection is started at any later time.
+   Once this statement succeeds, on any thread, it is enough: there is no need
+   to retry it in a loop in case of SQLITE_BUSY. */
 " PRAGMA auto_vacuum = INCREMENTAL;\n"
-" PRAGMA incremental_vacuum = ON;\n"
+/* The page_size setting also takes effect at the next VACUUM, and there is no
+   need to set it from every connection. */
+" PRAGMA page_size = 4096;\n" /* This should be the same as the filesystem
+                                 page size */
 " "
 " CREATE TABLE IF NOT EXISTS Entries ("
 "   -- The id is a good approximation of a timestamp, much more efficient.\n"
@@ -214,10 +252,24 @@ static const char *pEp_log_create_table_text =
 "            ELSE                                E.System || '/' || E.SubSystem END"
 "          END AS System_SubSystem,"
 "          (E.Source_file_name || ':' || CAST(E.Source_file_line AS TEXT)"
-"           || ':' || E.Function_name) AS Location,"
+"           || ' ' || E.Function_name) AS Location,"
 "          E.Entry"
 "   FROM Entries E"
-"   ORDER BY E.id;";
+"   ORDER BY E.id;"
+" "
+" COMMIT TRANSACTION;\n"
+" "
+" VACUUM;\n" /* I have verified with this statement *commented out* that the
+                database file does not grow to an unbounded size. */
+;
+
+/* This statement list is executed from each new session. */
+static const char *pEp_log_initialize_database_at_every_connection_text =
+/* This setting is not persistent. */
+" PRAGMA secure_delete = OFF;\n"
+/* There is no need for PRAGMA foreign_keys on a single-table database with no
+   foreign keys. */
+;
 
 /* Begin a transaction. */
 static const char *pEp_log_begin_transaction_text =
@@ -252,41 +304,54 @@ static PEP_STATUS _pEp_log_prepare_sql_statements(PEP_SESSION session)
     PEP_STATUS status = PEP_STATUS_OK;
     int sqlite_status = SQLITE_OK;
 
-#define CHECK_SQL_STATUS                    \
-    do {                                    \
-        if (sqlite_status != SQLITE_OK) {   \
-            status = PEP_UNKNOWN_DB_ERROR;  \
-            goto end;                       \
-        }                                   \
+#define CHECK_SQL_STATUS                       \
+    do {                                       \
+        if (sqlite_status != SQLITE_OK) {                               \
+            fprintf(stderr, "preparing an SQL statement failed: %s\n",  \
+                    sqlite3_errmsg(session->log_db));                   \
+        }                                                               \
+        if (sqlite_status != SQLITE_OK) {      \
+            status = PEP_INIT_CANNOT_OPEN_DB;  \
+            goto end;                          \
+        }                                      \
     } while (false)
     sqlite_status
-        = sqlite3_prepare_v2(session->log_db,
-                             pEp_log_begin_transaction_text, -1,
-                             & session->log_begin_transaction_prepared_statement,
-                             NULL);
+        = _safe_sqlite3_prepare_v2(session, session->log_db,
+                                   pEp_log_begin_transaction_text, -1,
+                                   & session->log_begin_transaction_prepared_statement,
+                                   NULL);
     CHECK_SQL_STATUS;
     sqlite_status
-        = sqlite3_prepare_v2(session->log_db,
-                             pEp_log_commit_transaction_text, -1,
-                             & session->log_commit_transaction_prepared_statement,
-                             NULL);
+        = _safe_sqlite3_prepare_v2(session, session->log_db,
+                                   pEp_log_commit_transaction_text, -1,
+                                   & session->log_commit_transaction_prepared_statement,
+                                   NULL);
     CHECK_SQL_STATUS;
     sqlite_status
-        = sqlite3_prepare_v2(session->log_db,
-                             pEp_log_insert_text, -1,
-                             & session->log_insert_prepared_statement,
-                             NULL);
+        = _safe_sqlite3_prepare_v2(session, session->log_db,
+                                   pEp_log_delete_oldest_text, -1,
+                                   & session->log_delete_oldest_prepared_statement,
+                                   NULL);
     CHECK_SQL_STATUS;
+    // FIXME: swap these two again.
     sqlite_status
-        = sqlite3_prepare_v2(session->log_db,
-                             pEp_log_delete_oldest_text, -1,
-                             & session->log_delete_oldest_prepared_statement,
-                             NULL);
+        = _safe_sqlite3_prepare_v2(session, session->log_db,
+                                   pEp_log_insert_text, -1,
+                                   & session->log_insert_prepared_statement,
+                                   NULL);
     CHECK_SQL_STATUS;
 
  end:
     return status;
 }
+
+/* This is the same trick as init_count in pEpEngine.c , and relies on the same
+   restriction on concurrency as init:. init calls are *not* concurrent and the
+   first must complete with success before any other is initiated.
+
+   Since the initialisation functions here are called by init we can rely on
+   the same restrictions for free, without affecting the user. */
+static volatile int database_running_clients = 0;
 
 /* Initialise the database subsystem.  Called once at session initialisation. */
 static PEP_STATUS _pEp_log_initialize_database(PEP_SESSION session)
@@ -305,7 +370,12 @@ static PEP_STATUS _pEp_log_initialize_database(PEP_SESSION session)
         goto end;
     }
     sqlite_status = sqlite3_open_v2(database_file_path, & session->log_db,
-                                    SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE
+                                    SQLITE_OPEN_READWRITE
+                                    /*
+                                    | ((database_running_clients == 0)
+                                       ? SQLITE_OPEN_CREATE
+                                       : 0)
+                                    */| SQLITE_OPEN_CREATE
                                     | SQLITE_OPEN_FULLMUTEX,
                                     NULL);
     if (sqlite_status != SQLITE_OK) {
@@ -315,22 +385,43 @@ static PEP_STATUS _pEp_log_initialize_database(PEP_SESSION session)
         goto end;
     }
 
-    /* Create the log database single table.  No need to prepare this statement
-       which is executed only once. */
-    sqlite_status = sqlite3_exec(session->log_db,
-                                 pEp_log_create_table_text, NULL, NULL,
-                                 & error_message);
-    if (sqlite_status != SQLITE_OK) {
-        fprintf(stderr, "Failed creating the log database table: %s\n",
-                error_message);
-        status = PEP_INIT_CANNOT_OPEN_DB;
+    /* Create the schema and change its persistent settings.
+       This must be done only once, in the initial thread; performing the kind
+       of schema and pragma modification we execute here seems to affect
+       prepared statements badly in other threads, sometimes causing SQLITE_BUSY
+       -- let us avoid all of that. */
+    if (database_running_clients == 0) {
+        sqlite_status = sqlite3_exec(session->log_db,
+                                     pEp_log_initialize_database_once_text,
+                                     NULL, NULL, & error_message);
+        if (sqlite_status != SQLITE_OK) {
+            status = PEP_INIT_CANNOT_OPEN_DB;
+            goto end;
+        }
     }
+
+    /* Execute the SQL statements needed for every session, not only for the
+       first. */
+    PEP_SQL_BEGIN_LOOP(sqlite_status);
+        sqlite_status
+            = sqlite3_exec(session->log_db,
+                           pEp_log_initialize_database_at_every_connection_text,
+                           NULL, NULL, & error_message);
+    PEP_SQL_END_LOOP();
 
     /* Prepare SQL statements. */
     status = _pEp_log_prepare_sql_statements(session);
 
  end:
     sqlite3_free(error_message);
+
+    /* Keep track of the number of existing sessions.  After this point there
+       is certainly at least one -- and therefore, crucially, it is no longer
+       necessary to create the schema. */
+    if (status == PEP_STATUS_OK) {
+        database_running_clients ++;
+        session->log_database_initialised = true;
+    }
     return status;
 }
 
@@ -344,13 +435,13 @@ static PEP_STATUS _pEp_log_finalize_database(PEP_SESSION session)
     PEP_STATUS status = PEP_STATUS_OK;
     int sqlite_status = SQLITE_OK;
 #define CHECK_SQL                                                        \
-    do {                                                                 \
+    do                                                                   \
         if (sqlite_status != SQLITE_OK) {                                \
             status = PEP_UNKNOWN_DB_ERROR;                               \
             /* Do not jump.  Recovery from error is difficult here, and  \
                this should not happen anyway. */                         \
         }                                                                \
-    } while (false)
+    while (false)
 
     /* Finialise prepared SQL statements.  Go on even in case of failure. */
     sqlite_status
@@ -373,6 +464,9 @@ static PEP_STATUS _pEp_log_finalize_database(PEP_SESSION session)
     /* Out of defensiveness. */
     session->log_db = NULL;
 
+    /* Keep track of how many sessions there are. */
+    database_running_clients --;
+
     return status;
 #undef CHECK_SQL
 }
@@ -389,7 +483,10 @@ static void _pEp_log_delete_oldest_row_when_too_many(PEP_SESSION session)
                              1, PEP_LOG_DATABASE_ROW_NO_MAXIMUM);
     if (sqlite_status != SQLITE_OK)
         return;
-    sqlite_status = sqlite3_step(session->log_delete_oldest_prepared_statement);
+    do
+        sqlite_status
+            = sqlite3_step(session->log_delete_oldest_prepared_statement);
+    while (sqlite_status == SQLITE_BUSY || sqlite_status == SQLITE_LOCKED);
 
     /* Here sqlite_status will be SQLITE_DONE on success, including the case in
        which no row is deleted. */
@@ -411,6 +508,12 @@ static PEP_STATUS _pEp_log_db(PEP_SESSION session,
                               const char *entry_prefix,
                               const char *entry)
 {
+    /* Do not try to log to the database  if we have not initialised the
+       database yet.  This may happen for logging messages related to the
+       database initialisation itself. */
+    if (! session->log_database_initialised)
+        return PEP_UNKNOWN_DB_ERROR;
+
     assert(session != NULL && session->log_db != NULL);
     if (! (session != NULL && session->log_db != NULL))
         return PEP_ILLEGAL_VALUE;
@@ -418,16 +521,18 @@ static PEP_STATUS _pEp_log_db(PEP_SESSION session,
     PEP_STATUS status = PEP_STATUS_OK;
     int sqlite_status = SQLITE_OK;
 #define CHECK_SQL(expected_sqlite_status)                 \
-    do {                                                  \
+    do                                                    \
         if (sqlite_status != (expected_sqlite_status)) {  \
             status = PEP_UNKNOWN_DB_ERROR;                \
             goto error;                                   \
         }                                                 \
-    } while (false)
+    while (false)
 
 #ifdef TRANSACTIONS
     sql_reset_and_clear_bindings(session->log_begin_transaction_prepared_statement);
-    sqlite_status = sqlite3_step(session->log_begin_transaction_prepared_statement);
+    do
+        sqlite_status = sqlite3_step(session->log_begin_transaction_prepared_statement);
+    while (sqlite_status == SQLITE_BUSY || sqlite_status == SQLITE_LOCKED);
     CHECK_SQL(SQLITE_DONE);
 #endif // #ifdef TRANSACTIONS
 
@@ -464,12 +569,16 @@ static PEP_STATUS _pEp_log_db(PEP_SESSION session,
                                       SQLITE_STATIC);
     CHECK_SQL(SQLITE_OK);
 
-    sqlite_status = sqlite3_step(session->log_insert_prepared_statement);
+    do
+        sqlite_status = sqlite3_step(session->log_insert_prepared_statement);
+    while (sqlite_status == SQLITE_BUSY || sqlite_status == SQLITE_LOCKED);
     CHECK_SQL(SQLITE_DONE);
 
 #ifdef TRANSACTIONS
     sql_reset_and_clear_bindings(session->log_commit_transaction_prepared_statement);
     sqlite_status = sqlite3_step(session->log_commit_transaction_prepared_statement);
+    /* We are in an EXCLUSIVE transaction: */
+    PEP_ASSERT(sqlite_status != SQLITE_BUSY && sqlite_status != SQLITE_LOCKED);
     CHECK_SQL(SQLITE_DONE);
 #endif // #ifdef TRANSACTIONS
 
