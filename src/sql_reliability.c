@@ -42,13 +42,10 @@ PEP_STATUS pEp_backoff_state_finalize(
 
     /* I might want to actually add some statistics in the session, in the
        future. */
-if (s->failure_no == 0)fprintf(stderr, "."); else fprintf(stderr, "%i]", s->failure_no); //else fprintf(stderr, "]");
-/*
     if (s->failure_no > 0)
         LOG_NONOK("SQLite at %s: success after %i failures, total backoff %li ms",
                   s->source_location,
                   (int) s->failure_no, (long) s->total_time_slept_in_ms);
-                  */
     return PEP_STATUS_OK;
 }
 
@@ -82,21 +79,13 @@ static long pEp_backoff_compute_sleep_time(
         = (s->current_upper_limit_in_ms - PEP_MINIMUM_BACKOFF_IN_MS);
     assert(range_width >= 0);
     long random_component = rand() % (range_width + 1);
-    long res = PEP_MINIMUM_BACKOFF_IN_MS + random_component;
-
-    //fprintf(stderr, "decided that we will sleep... [%li, %li] ms:   %li ms\n", (long)PEP_MINIMUM_BACKOFF_IN_MS, (long)s->current_upper_limit_in_ms, res);
-    //LOG_TRACE("decided that we will sleep... [%li, %li] ms:   %li ms\n", (long)PEP_MINIMUM_BACKOFF_IN_MS, (long)s->current_upper_limit_in_ms, res);
-    return res;
+    return PEP_MINIMUM_BACKOFF_IN_MS + random_component;
 }
 
 PEP_STATUS pEp_back_off(PEP_SESSION session,
                         struct pEp_backoff_state *s)
 {
     //PEP_REQUIRE(session && s);
-
-    //if (s->failure_no == 0)
-    //    LOG_NONOK("%s failed: retrying in a loop (not logging every attempt)", s->source_location);
-if (s->failure_no == 0)fprintf(stderr, "["); else fprintf(stderr, "¯");//fprintf(stderr, "⁻");
 
     /* Very easy: sleep, and bump. */
     long sleep_time_in_ms = pEp_backoff_compute_sleep_time(session, s);
