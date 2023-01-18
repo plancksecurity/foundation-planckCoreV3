@@ -1006,28 +1006,6 @@ static inline void _init_globals() {
     _pEp_log2_36 = log2(36);
 }
 
-
-// spinlock implementation
-
-/**
- * @internal
- *
- *  <!--       Sqlite3_step()       -->
- *  
- *  @brief            TODO
- *  
- *  @param[in]  stmt         sqlite3_stmt*
- *  
- */
-static inline int Sqlite3_step(sqlite3_stmt* stmt)
-{
-    int rc;
-    do {
-        rc = sqlite3_step(stmt);
-    } while (rc == SQLITE_BUSY || rc == SQLITE_LOCKED);
-    return rc;
-}
-
 /**
  *  @internal
  *
