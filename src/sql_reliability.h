@@ -263,14 +263,14 @@ local_wait_time += _pEp_sql_backoff_state.total_time_slept_in_ms;*/ \
 #define PEP_SQL_BEGIN_EXCLUSIVE_TRANSACTION()                                   \
     do {                                                                        \
         int _pEp_sql_sqlite_status;                                             \
-        /* Begin the exclusive transaction, inside an SQL loop: this is where   \
-           we spinlock with exponential backoff. */                             \
-        PEP_SQL_BEGIN_LOOP(_pEp_sql_sqlite_status);                             \
         /* Ignore the return value of sqlite3_reset: if the last sqlite3_step   \
            on the statement returned an error, this sqlite3_reset will return   \
            the same error: we certainly do not want to see SQLITE_BUSY here     \
            for no reason. */                                                    \
         sqlite3_reset(session->begin_exclusive_transaction);                    \
+        /* Begin the exclusive transaction, inside an SQL loop: this is where   \
+           we spinlock with exponential backoff. */                             \
+        PEP_SQL_BEGIN_LOOP(_pEp_sql_sqlite_status);                             \
         _pEp_sql_sqlite_status                                                  \
             = sqlite3_step(session->begin_exclusive_transaction);               \
         PEP_SQL_END_LOOP();                                                     \
@@ -301,13 +301,12 @@ local_wait_time += _pEp_sql_backoff_state.total_time_slept_in_ms;*/ \
            even if in this case it should not be an error: see the comment      \
            inside PEP_SQL_BEGIN_EXCLUSIVE_TRANSACTION . */                      \
         sqlite3_reset(_pEp_statement);                                          \
-        /* Execute the statement, once.  Since we are in an exclusive           \
-           transaction this should never fail... */                             \
+        /* Execute the statement.  Surprisingly this can fail with SQLITE_BUSY  \
+           or SQLITE_LOCKED even inside an EXCLUSIVE tranasction. */            \
         int _pEp_sql_sqlite_status = SQLITE_OK;                                 \
+        PEP_SQL_BEGIN_LOOP(_pEp_sql_sqlite_status);                             \
         _pEp_sql_sqlite_status = sqlite3_step(_pEp_statement);                  \
-        /* ...Make sure that what I wrote above is true. */                     \
-        PEP_ASSERT(_pEp_sql_sqlite_status != SQLITE_BUSY);                      \
-        PEP_ASSERT(_pEp_sql_sqlite_status != SQLITE_LOCKED);                    \
+        PEP_SQL_END_LOOP();                                                     \
         if (_pEp_sql_sqlite_status != SQLITE_DONE)                              \
             LOG_ERROR("UNEXPECTED error on %s: %i %s",                          \
                       (_pEp_bool_commit ? "COMMIT" : "ROLLBACK"),               \
