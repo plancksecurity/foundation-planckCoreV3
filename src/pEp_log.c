@@ -4,7 +4,7 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-#if 0
+#if 0 // I am disabling this thing that is getting too distracting
 #warning "windows: reimplement syslog using this: https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-openeventloga"
 #warning "android: ask the pEp security people"
 #endif
