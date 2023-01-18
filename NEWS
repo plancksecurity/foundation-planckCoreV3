@@ -1,3 +1,4 @@
+
 v3.2.0-RC18  2023-01-18
 * Fix https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/90 : it is
   now possible to open multiple concurrent threads with a database logging
