@@ -1,6 +1,14 @@
 * Fix https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/90 : it is
   now possible to open multiple concurrent threads with a database logging
   destination.
+  No user-visible changes, other than more reliability.
+* Make SQL transactions robust by not assuming, incorrectly, that COMMIT
+  TRANSACTION or ROLLBACK TRANSACTION never fail with SQLITE_BUSY or
+  SQLITE_LOCKED inside an EXCLUSIVE tranaction.  This improves
+  https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/104
+  with a fix in the same spirit of
+  https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/90 .
+  Again ao user-visible changes, other than more reliability.
 
 v3.2.0-RC17  2023-01-18
 * general overhaul of concurrent SQL execution, adding loops with exponential
