@@ -373,7 +373,7 @@ release ()
 
 Now go to
   https://gitea.pep.foundation/pEp.foundation/pEpEngine/releases/new
-and mark an Engine release for $version on branch $branchname .
+and mark an Engine release for v${version} on branch $branchname .
 EOF
 }
 
@@ -570,5 +570,5 @@ require_version_number
 if test "$release" != 'no'; then
     release "$theversion"
 else # we take print to be the default
-    echo "$theversion"
+    echo "v${theversion}"
 fi
