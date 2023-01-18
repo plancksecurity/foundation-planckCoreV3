@@ -20,7 +20,7 @@ v3.2.0-RC18  2023-01-18
   https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/104
   with a fix in the same spirit of
   https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/90 .
-  Again ao user-visible changes, other than more reliability.
+  Again no user-visible changes, other than more reliability.
 
 v3.2.0-RC17  2023-01-18
 * general overhaul of concurrent SQL execution, adding loops with exponential
@@ -48,10 +48,10 @@ v3.2.0-RC15  2023-01-13
 * update_pEp_user_trust_vals: fix and generalise my previous fix.
 
 v3.2.0-RC14  2022-12-22
-* Provide a local.conf.example
+* Provide a local.conf.example .
 * In local.conf.example explain how the DEBUG variable has changed behaviour
-  in an incompatible way since Engine 3.2.0-RC13
-* New API function stringpair_list_find_case_insensitive
+  in an incompatible way since Engine 3.2.0-RC13 .
+* New API function stringpair_list_find_case_insensitive .
 * When searching for message headers always compare names case-insensitively.
   This is an incompatibile change, but the previous behaviour was incorrect.
 * bug fix in set_as_pEp_user: do not hardwire the pEp protocol version to 2.1!
