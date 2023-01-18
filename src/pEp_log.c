@@ -576,9 +576,9 @@ static PEP_STATUS _pEp_log_db(PEP_SESSION session,
 
 #ifdef TRANSACTIONS
     sql_reset_and_clear_bindings(session->log_commit_transaction_prepared_statement);
-    sqlite_status = sqlite3_step(session->log_commit_transaction_prepared_statement);
-    /* We are in an EXCLUSIVE transaction: */
-    PEP_ASSERT(sqlite_status != SQLITE_BUSY && sqlite_status != SQLITE_LOCKED);
+    do
+        sqlite_status = sqlite3_step(session->log_commit_transaction_prepared_statement);
+    while (sqlite_status == SQLITE_BUSY || sqlite_status == SQLITE_LOCKED);
     CHECK_SQL(SQLITE_DONE);
 #endif // #ifdef TRANSACTIONS
 
