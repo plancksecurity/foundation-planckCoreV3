@@ -306,7 +306,7 @@ static PEP_STATUS _set_own_status_joined(PEP_SESSION session,
                       SQLITE_STATIC);
     sqlite3_bind_text(session->group_join, 4, as_member->address, -1,
                       SQLITE_STATIC);
-    result = sqlite3_step(session->group_join);
+    result = pEp_sqlite3_step_nonbusy(session, session->group_join);
 
     sql_reset_and_clear_bindings(session->group_join);
 
@@ -338,7 +338,7 @@ static PEP_STATUS _remove_member_from_group(PEP_SESSION session,
                       SQLITE_STATIC);
     sqlite3_bind_text(session->group_delete_member, 4, member->address, -1,
                       SQLITE_STATIC);
-    result = sqlite3_step(session->group_delete_member);
+    result = pEp_sqlite3_step_nonbusy(session, session->group_delete_member);
 
     sql_reset_and_clear_bindings(session->group_delete_member);
 
@@ -369,7 +369,7 @@ static PEP_STATUS _set_leave_group_status(PEP_SESSION session, pEp_identity* gro
     sqlite3_bind_text(session->leave_group, 4, leaver->address, -1,
                       SQLITE_STATIC);
 
-    int result = sqlite3_step(session->leave_group);
+    int result = pEp_sqlite3_step_nonbusy(session, session->leave_group);
 
     sql_reset_and_clear_bindings(session->leave_group);
 
@@ -394,7 +394,7 @@ static PEP_STATUS _set_group_as_disabled(PEP_SESSION session, pEp_identity* grou
                       SQLITE_STATIC);
     sqlite3_bind_text(session->disable_group, 2, group_identity->address, -1,
                       SQLITE_STATIC);
-    result = sqlite3_step(session->disable_group);
+    result = pEp_sqlite3_step_nonbusy(session, session->disable_group);
 
     sql_reset_and_clear_bindings(session->disable_group);
 
@@ -430,7 +430,7 @@ static PEP_STATUS _retrieve_own_membership_info_for_group(PEP_SESSION session, p
     sqlite3_bind_text(session->retrieve_own_membership_info_for_group, 2, group_identity->address, -1,
                       SQLITE_STATIC);
 
-    while ((result = sqlite3_step(session->retrieve_own_membership_info_for_group)) == SQLITE_ROW) {
+    while ((result = pEp_sqlite3_step_nonbusy(session, session->retrieve_own_membership_info_for_group)) == SQLITE_ROW) {
             ident = new_identity((const char *) sqlite3_column_text(session->retrieve_own_membership_info_for_group, 1),
                                NULL,(const char *) sqlite3_column_text(session->retrieve_own_membership_info_for_group, 0),
                                NULL);
@@ -504,6 +504,8 @@ static PEP_STATUS is_invited_group_member(PEP_SESSION session, pEp_identity* gro
     if (!member || EMPTYSTR(member->user_id) || EMPTYSTR(member->address))
         return PEP_ILLEGAL_VALUE;
 
+    sql_reset_and_clear_bindings(session->is_invited_group_member);
+
     sqlite3_bind_text(session->is_invited_group_member, 1, group_identity->user_id, -1,
                       SQLITE_STATIC);
     sqlite3_bind_text(session->is_invited_group_member, 2, group_identity->address, -1,
@@ -513,7 +515,7 @@ static PEP_STATUS is_invited_group_member(PEP_SESSION session, pEp_identity* gro
     sqlite3_bind_text(session->is_invited_group_member, 4, member->address, -1,
                       SQLITE_STATIC);
 
-    int result = sqlite3_step(session->is_invited_group_member);
+    int result = pEp_sqlite3_step_nonbusy(session, session->is_invited_group_member);
 
     if (result != SQLITE_ROW)
         status = PEP_UNKNOWN_DB_ERROR;
@@ -599,7 +601,7 @@ PEP_STATUS set_membership_status(PEP_SESSION session,
                       SQLITE_STATIC);
     sqlite3_bind_text(session->set_group_member_status, 5, as_member->address, -1,
                       SQLITE_STATIC);
-    result = sqlite3_step(session->set_group_member_status);
+    result = pEp_sqlite3_step_nonbusy(session, session->set_group_member_status);
 
     sql_reset_and_clear_bindings(session->set_group_member_status);
 
@@ -628,7 +630,7 @@ PEP_STATUS get_group_manager(PEP_SESSION session,
 
     *manager = NULL;
 
-    int result = sqlite3_step(session->get_group_manager);
+    int result = pEp_sqlite3_step_nonbusy(session, session->get_group_manager);
 
     if (result != SQLITE_ROW)
         status = PEP_GROUP_NOT_FOUND;
@@ -656,7 +658,7 @@ PEP_STATUS is_group_active(PEP_SESSION session, pEp_identity* group_identity, bo
     sqlite3_bind_text(session->is_group_active, 2, group_identity->address, -1,
                       SQLITE_STATIC);
 
-    int result = sqlite3_step(session->is_group_active);
+    int result = pEp_sqlite3_step_nonbusy(session, session->is_group_active);
 
     switch (result) {
         case SQLITE_ROW:
@@ -713,7 +715,7 @@ PEP_STATUS create_group_entry(PEP_SESSION session,
                       SQLITE_STATIC);
     sqlite3_bind_text(session->create_group, 4, manager->address, -1,
                       SQLITE_STATIC);
-    result = sqlite3_step(session->create_group);
+    result = pEp_sqlite3_step_nonbusy(session, session->create_group);
 
     sql_reset_and_clear_bindings(session->create_group);
 
@@ -740,6 +742,8 @@ PEP_STATUS add_own_membership_entry(PEP_SESSION session,
     if (EMPTYSTR(own_identity_recip->user_id) || EMPTYSTR(own_identity_recip->address))
         return PEP_ILLEGAL_VALUE;
 
+    sql_reset_and_clear_bindings(session->add_own_membership_entry);
+
     int result = 0;
 
     sqlite3_bind_text(session->add_own_membership_entry, 1, group_identity->user_id, -1,
@@ -750,7 +754,7 @@ PEP_STATUS add_own_membership_entry(PEP_SESSION session,
                       SQLITE_STATIC);
     sqlite3_bind_text(session->add_own_membership_entry, 4, own_identity_recip->address, -1,
                       SQLITE_STATIC);
-    result = sqlite3_step(session->add_own_membership_entry);
+    result = pEp_sqlite3_step_nonbusy(session, session->add_own_membership_entry);
 
     sql_reset_and_clear_bindings(session->add_own_membership_entry);
 
@@ -776,7 +780,7 @@ PEP_STATUS get_own_membership_status(PEP_SESSION session,
     sqlite3_bind_text(session->get_own_membership_status, 4, own_identity->address, -1,
                       SQLITE_STATIC);
 
-    int result = sqlite3_step(session->get_own_membership_status);
+    int result = pEp_sqlite3_step_nonbusy(session, session->get_own_membership_status);
 
     switch (result) {
         case SQLITE_ROW:
@@ -822,7 +826,7 @@ PEP_STATUS retrieve_own_membership_info_for_group_and_identity(PEP_SESSION sessi
     sqlite3_bind_text(session->retrieve_own_membership_info_for_group_and_ident, 4, own_identity->address, -1,
                       SQLITE_STATIC);
 
-    int result = sqlite3_step(session->retrieve_own_membership_info_for_group_and_ident);
+    int result = pEp_sqlite3_step_nonbusy(session, session->retrieve_own_membership_info_for_group_and_ident);
 
 
     switch (result) {
@@ -906,7 +910,7 @@ PEP_STATUS leave_group(
                       SQLITE_STATIC);
     sqlite3_bind_text(session->leave_group, 4, member_identity->address, -1,
                       SQLITE_STATIC);
-    result = sqlite3_step(session->leave_group);
+    result = pEp_sqlite3_step_nonbusy(session, session->leave_group);
 
     sql_reset_and_clear_bindings(session->leave_group);
 
@@ -936,7 +940,7 @@ PEP_STATUS group_enable(
                       SQLITE_STATIC);
     sqlite3_bind_text(session->enable_group, 2, group_identity->address, -1,
                       SQLITE_STATIC);
-    result = sqlite3_step(session->enable_group);
+    result = pEp_sqlite3_step_nonbusy(session, session->enable_group);
 
     sql_reset_and_clear_bindings(session->enable_group);
 
@@ -960,7 +964,7 @@ PEP_STATUS exists_group(
     sqlite3_bind_text(session->exists_group_entry, 2, group_identity->address, -1,
                       SQLITE_STATIC);
 
-    int result = sqlite3_step(session->exists_group_entry);
+    int result = pEp_sqlite3_step_nonbusy(session, session->exists_group_entry);
 
     switch (result) {
         case SQLITE_ROW: {
@@ -1005,7 +1009,7 @@ PEP_STATUS group_add_member(
                       SQLITE_STATIC);
 
 
-    result = sqlite3_step(session->group_add_member);
+    result = pEp_sqlite3_step_nonbusy(session, session->group_add_member);
 
     sql_reset_and_clear_bindings(session->group_add_member);
 
@@ -1039,7 +1043,7 @@ PEP_STATUS retrieve_full_group_membership(
     member_list* retval = NULL;
     member_list** member_list_next = &retval;
 
-    while ((result = sqlite3_step(session->get_all_members)) == SQLITE_ROW) {
+    while ((result = pEp_sqlite3_step_nonbusy(session, session->get_all_members)) == SQLITE_ROW) {
         pEp_identity *ident = new_identity((const char *) sqlite3_column_text(session->get_all_members, 1),
                                            NULL,(const char *) sqlite3_column_text(session->get_all_members, 0),
                                            NULL);
@@ -1100,7 +1104,7 @@ PEP_STATUS retrieve_active_member_list(
     member_list* retval = NULL;
     member_list** mbr_list_next = &retval;
 
-    while ((result = sqlite3_step(session->get_active_members)) == SQLITE_ROW) {
+    while ((result = pEp_sqlite3_step_nonbusy(session, session->get_active_members)) == SQLITE_ROW) {
         pEp_identity *ident = new_identity((const char *) sqlite3_column_text(session->get_active_members, 1),
                 NULL,(const char *) sqlite3_column_text(session->get_active_members, 0),
                 NULL);
@@ -2427,7 +2431,7 @@ PEP_STATUS is_active_group_member(PEP_SESSION session, pEp_identity* group_ident
     sqlite3_bind_text(session->is_active_group_member, 4, member->address, -1,
                       SQLITE_STATIC);
 
-    int result = sqlite3_step(session->is_active_group_member);
+    int result = pEp_sqlite3_step_nonbusy(session, session->is_active_group_member);
 
     if (result == SQLITE_ROW)
         *is_active = sqlite3_column_int(session->is_active_group_member, 0);

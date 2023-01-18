@@ -405,7 +405,7 @@ PEP_STATUS has_key_reset_been_sent(
             SQLITE_STATIC);        
     sqlite3_bind_text(session->was_id_for_revoke_contacted, 3, user_id, -1,
             SQLITE_STATIC);        
-    int result = sqlite3_step(session->was_id_for_revoke_contacted);
+    int result = pEp_sqlite3_step_nonbusy(session, session->was_id_for_revoke_contacted);
     switch (result) {
         case SQLITE_ROW: {
             *contacted = (sqlite3_column_int(session->was_id_for_revoke_contacted, 0) != 0);
@@ -416,6 +416,8 @@ PEP_STATUS has_key_reset_been_sent(
             free(alias_default);
             return PEP_UNKNOWN_DB_ERROR;
     }
+
+    // positron: is alias_default leaked when we arrive here?  I strongly suspect it is.
 
     sql_reset_and_clear_bindings(session->was_id_for_revoke_contacted);
     return PEP_STATUS_OK;
@@ -442,7 +444,7 @@ PEP_STATUS set_reset_contact_notified(
 
     int result;
     
-    result = sqlite3_step(session->set_revoke_contact_as_notified);
+    result = pEp_sqlite3_step_nonbusy(session, session->set_revoke_contact_as_notified);
     switch (result) {
         case SQLITE_DONE:
             status = PEP_STATUS_OK;

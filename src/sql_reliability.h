@@ -280,13 +280,13 @@ local_wait_time += _pEp_sql_backoff_state.total_time_slept_in_ms;*/ \
         PEP_ASSERT(_pEp_sql_sqlite_status != SQLITE_LOCKED);                    \
         if (_pEp_sql_sqlite_status != SQLITE_DONE)                              \
             LOG_ERROR("UNEXPECTED error on BEGIN EXCLUSIVE TRANSACTION: %i %s", \
-                      _pEp_sql_sqlite_status, sqlite3_errmsg(db));              \
+                      _pEp_sql_sqlite_status, sqlite3_errmsg(session->db));     \
         PEP_ASSERT(_pEp_sql_sqlite_status == SQLITE_DONE);                      \
     } while (false)
 
-/* This macro factors the common logic of PEP_SQL_COMMIT_EXCLUSIVE_TRANSACTION
-   and PEP_SQL_ROLLBACK_EXCLUSIVE_TRANSACTION . */
-#define PEP_SQL_COMMIT_OR_ROLLBACK_EXCLUSIVE_TRANSACTION(commit)                \
+/* This macro factors the common logic of PEP_SQL_COMMIT_TRANSACTION and
+   PEP_SQL_ROLLBACK_TRANSACTION . */
+#define PEP_SQL_COMMIT_OR_ROLLBACK_TRANSACTION(commit)                          \
     do {                                                                        \
         /* Here thre is no need to loop using PEP_SQL_BEGIN_LOOP and            \
            PEP_SQL_END_LOOP: if we first began the transaction with             \
@@ -311,25 +311,25 @@ local_wait_time += _pEp_sql_backoff_state.total_time_slept_in_ms;*/ \
         if (_pEp_sql_sqlite_status != SQLITE_DONE)                              \
             LOG_ERROR("UNEXPECTED error on %s: %i %s",                          \
                       (_pEp_bool_commit ? "COMMIT" : "ROLLBACK"),               \
-                      _pEp_sql_sqlite_status, sqlite3_errmsg(db));              \
+                      _pEp_sql_sqlite_status, sqlite3_errmsg(session->db));     \
         PEP_ASSERT(_pEp_sql_sqlite_status == SQLITE_DONE);                      \
     } while (false)
 
 /**
  *  @internal
- *  <!--       PEP_SQL_COMMIT_EXCLUSIVE_TRANSACTION()       -->
+ *  <!--       PEP_SQL_COMMIT_TRANSACTION()       -->
  *
  *  @brief     Commit the current exclusive transaction.  */
-#define PEP_SQL_COMMIT_EXCLUSIVE_TRANSACTION()              \
-    PEP_SQL_COMMIT_OR_ROLLBACK_EXCLUSIVE_TRANSACTION(true)
+#define PEP_SQL_COMMIT_TRANSACTION()              \
+    PEP_SQL_COMMIT_OR_ROLLBACK_TRANSACTION(true)
 
 /**
  *  @internal
- *  <!--       PEP_SQL_ROLLBACK_EXCLUSIVE_TRANSACTION()       -->
+ *  <!--       PEP_SQL_ROLLBACK_TRANSACTION()       -->
  *
  *  @brief     Rollback the current exclusive transaction.  */
-#define PEP_SQL_ROLLBACK_EXCLUSIVE_TRANSACTION()             \
-    PEP_SQL_COMMIT_OR_ROLLBACK_EXCLUSIVE_TRANSACTION(false)
+#define PEP_SQL_ROLLBACK_TRANSACTION()             \
+    PEP_SQL_COMMIT_OR_ROLLBACK_TRANSACTION(false)
 
 
 /* Convenience wrapper for "automatic" one-statement transactions
@@ -340,6 +340,7 @@ local_wait_time += _pEp_sql_backoff_state.total_time_slept_in_ms;*/ \
    sqlite3_step is at https://www.sqlite.org/capi3ref.html#sqlite3_step . */
 int pEp_sqlite3_step_nonbusy(PEP_SESSION session,
                              sqlite3_stmt *statement);
+
 
 #ifdef __cplusplus
 } /* extern "C" */

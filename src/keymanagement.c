@@ -230,7 +230,7 @@ PEP_STATUS get_all_keys_for_user(PEP_SESSION session,
 
     int result = -1;
     
-    while ((result = sqlite3_step(session->get_all_keys_for_user)) == SQLITE_ROW) {
+    while ((result = pEp_sqlite3_step_nonbusy(session, session->get_all_keys_for_user)) == SQLITE_ROW) {
         const char* keyres = (const char *) sqlite3_column_text(session->get_all_keys_for_user, 0);
         if (keyres) {
             if (_kl)
@@ -267,7 +267,7 @@ PEP_STATUS get_all_keys_for_identity(PEP_SESSION session,
 
     int result = -1;
     
-    while ((result = sqlite3_step(session->get_all_keys_for_identity)) == SQLITE_ROW) {
+    while ((result = pEp_sqlite3_step_nonbusy(session, session->get_all_keys_for_identity)) == SQLITE_ROW) {
         const char* keyres = (const char *) sqlite3_column_text(session->get_all_keys_for_identity, 0);
         if (keyres) {
             if (_kl)
@@ -298,7 +298,7 @@ PEP_STATUS get_user_default_key(PEP_SESSION session, const char* user_id,
     sqlite3_bind_text(session->get_user_default_key, 1, user_id, 
                       -1, SQLITE_STATIC);
     
-    const int result = sqlite3_step(session->get_user_default_key);
+    const int result = pEp_sqlite3_step_nonbusy(session, session->get_user_default_key);
     char* user_fpr = NULL;
     if (result == SQLITE_ROW) {
         const char* u_fpr =
@@ -1590,7 +1590,7 @@ DYNAMIC_API PEP_STATUS own_key_is_listed(
     
     int result;
     
-    result = sqlite3_step(session->own_key_is_listed);
+    result = pEp_sqlite3_step_nonbusy(session, session->own_key_is_listed);
     switch (result) {
         case SQLITE_ROW:
             count = sqlite3_column_int(session->own_key_is_listed, 0);
@@ -1637,7 +1637,7 @@ PEP_STATUS _own_identities_retrieve(
     sqlite3_bind_int(session->own_identities_retrieve, 1, excluded_flags);
 
     do {
-        result = sqlite3_step(session->own_identities_retrieve);
+        result = pEp_sqlite3_step_nonbusy(session, session->own_identities_retrieve);
         switch (result) {
             case SQLITE_ROW:
                 address = (const char *)
@@ -1728,7 +1728,7 @@ PEP_STATUS _own_keys_retrieve(
     sqlite3_bind_int(session->own_keys_retrieve, 1, excluded_flags);
 
     do {        
-        result = sqlite3_step(session->own_keys_retrieve);
+        result = pEp_sqlite3_step_nonbusy(session, session->own_keys_retrieve);
         switch (result) {
             case SQLITE_ROW:
                 _bl = stringlist_add(_bl, (const char *)
@@ -1808,7 +1808,7 @@ PEP_STATUS update_key_sticky_bit_for_user(PEP_SESSION session,
             SQLITE_STATIC);
     sqlite3_bind_text(session->update_key_sticky_bit_for_user, 3, fpr, -1,
             SQLITE_STATIC);
-    int result = sqlite3_step(session->update_key_sticky_bit_for_user);
+    int result = pEp_sqlite3_step_nonbusy(session, session->update_key_sticky_bit_for_user);
     sql_reset_and_clear_bindings(session->update_key_sticky_bit_for_user);
     if (result != SQLITE_DONE) {
         return PEP_CANNOT_SET_TRUST;
@@ -1833,7 +1833,7 @@ PEP_STATUS get_key_sticky_bit_for_user(PEP_SESSION session,
     sqlite3_bind_text(session->is_key_sticky_for_user, 2, fpr, -1,
             SQLITE_STATIC);
 
-    int result = sqlite3_step(session->is_key_sticky_for_user);
+    int result = pEp_sqlite3_step_nonbusy(session, session->is_key_sticky_for_user);
     switch (result) {
     case SQLITE_ROW: {
         *is_sticky = sqlite3_column_int(session->is_key_sticky_for_user, 0);
@@ -1958,7 +1958,7 @@ PEP_STATUS add_mistrusted_key(PEP_SESSION session, const char* fpr)
     sqlite3_bind_text(session->add_mistrusted_key, 1, fpr, -1,
             SQLITE_STATIC);
 
-    result = sqlite3_step(session->add_mistrusted_key);
+    result = pEp_sqlite3_step_nonbusy(session, session->add_mistrusted_key);
     sql_reset_and_clear_bindings(session->add_mistrusted_key);
 
     if (result != SQLITE_DONE)
@@ -1976,7 +1976,7 @@ PEP_STATUS delete_mistrusted_key(PEP_SESSION session, const char* fpr)
     sqlite3_bind_text(session->delete_mistrusted_key, 1, fpr, -1,
             SQLITE_STATIC);
 
-    result = sqlite3_step(session->delete_mistrusted_key);
+    result = pEp_sqlite3_step_nonbusy(session, session->delete_mistrusted_key);
     sql_reset_and_clear_bindings(session->delete_mistrusted_key);
 
     if (result != SQLITE_DONE)
@@ -1998,7 +1998,7 @@ PEP_STATUS is_mistrusted_key(PEP_SESSION session, const char* fpr,
 
     int result;
 
-    result = sqlite3_step(session->is_mistrusted_key);
+    result = pEp_sqlite3_step_nonbusy(session, session->is_mistrusted_key);
     switch (result) {
     case SQLITE_ROW:
         *mistrusted = sqlite3_column_int(session->is_mistrusted_key, 0);

@@ -297,7 +297,9 @@ static PEP_STATUS echo_get_below_rate_limit(PEP_SESSION session,
     ON_SQL_ERROR_SET_STATUS_AND_GOTO;
 
     /* Execute it.  The result must be one row with one column. */
-    sql_status = sqlite3_step(session->echo_get_echo_below_rate_limit);
+    sql_status
+        = pEp_sqlite3_step_nonbusy(session,
+                                   session->echo_get_echo_below_rate_limit);
     ON_SQL_ERROR_SET_STATUS_AND_GOTO;
     PEP_ASSERT(sql_status == SQLITE_ROW);
     PEP_ASSERT(sqlite3_column_count(session->echo_get_echo_below_rate_limit)
@@ -349,7 +351,7 @@ static PEP_STATUS echo_set_last_echo_timestap(PEP_SESSION session,
     ON_SQL_ERROR_SET_STATUS_AND_GOTO;
 
     /* Execute it. */
-    sql_status = sqlite3_step(session->echo_set_timestamp);
+    sql_status = pEp_sqlite3_step_nonbusy(session, session->echo_set_timestamp);
     ON_SQL_ERROR_SET_STATUS_AND_GOTO;
     PEP_ASSERT(sql_status == SQLITE_DONE);
 
@@ -411,7 +413,7 @@ static PEP_STATUS echo_challenge_for_identity(PEP_SESSION session,
     sql_status = sqlite3_bind_text(session->echo_get_challenge,
                                    2, identity->user_id, -1, SQLITE_STATIC);
     ON_SQL_ERROR_SET_STATUS_AND_GOTO;
-    sql_status = sqlite3_step(session->echo_get_challenge);
+    sql_status = pEp_sqlite3_step_nonbusy(session, session->echo_get_challenge);
     ON_SQL_ERROR_SET_STATUS_AND_GOTO;
     if (sql_status != SQLITE_ROW)
         LOG_ERROR("foo!");
@@ -449,7 +451,7 @@ static PEP_STATUS echo_challenge_for_identity(PEP_SESSION session,
         = sqlite3_bind_text(session->echo_set_challenge, 3, identity->user_id,
                             -1, SQLITE_STATIC);
     ON_SQL_ERROR_SET_STATUS_AND_GOTO;
-    sql_status = sqlite3_step(session->echo_set_challenge);
+    sql_status = pEp_sqlite3_step_nonbusy(session, session->echo_set_challenge);
     ON_SQL_ERROR_SET_STATUS_AND_GOTO;
     /* If we arrived here then the SQL UPDATE statement succeeded. */
 

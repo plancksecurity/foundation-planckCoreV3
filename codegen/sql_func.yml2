@@ -29,7 +29,7 @@ function "exec_sql_int" {
     call "init_sql" with "sql", "$sql";
     ||
         int _result = 0;
-        int_result = sqlite3_step(_sql);
+        int_result = pEp_sqlite3_step_nonbusy(session, _sql);
         PEP_ASSERT(int_result == SQLITE_ROW);
         if (int_result == SQLITE_ROW)
             _result = sqlite3_column_int(_sql, 0);
