@@ -3,7 +3,7 @@ v3.2.0-RC17  2023-01-18
 * general overhaul of concurrent SQL execution, adding loops with exponential
   backoff and exclusive transactions.  This should solve many concurrency
   problems (see src/sql_reliability.h ).
-  Even if this is an important change; there is no API change related to this
+  Even if this is an important change there is no API change related to this
   functionality.
 
 v3.2.0-RC16  2023-01-17
@@ -12,7 +12,7 @@ v3.2.0-RC16  2023-01-17
   microsoft's compiler.  Reported by Alex, who helped testing my proposed
   redefinitions.  The current code is meant to work on every platform.
 
-v3.2.0-RC15
+v3.2.0-RC15  2023-01-13
 * move state machine initialisation out for callback registering.  This avoids
   that Sync beacon messages are sent at session initialisation (thanks to Volker
   Birk).
@@ -23,7 +23,7 @@ v3.2.0-RC15
   recent sequoia-openpgp, which fixes a performance bug.
 * update_pEp_user_trust_vals: fix and generalise my previous fix.
 
-v3.2.0-RC14
+v3.2.0-RC14  2022-12-22
 * Provide a local.conf.example
 * In local.conf.example explain how the DEBUG variable has changed behaviour
   in an incompatible way since Engine 3.2.0-RC13
@@ -87,7 +87,7 @@ v3.2.0-RC14
   I believe that this behaviour had always been intended.
 * add a THANKS file
 
-v3.2.0-RC13
+v3.2.0-RC13  (not announced)
 * add NEWS file
 * add release script (for the Engine maintainer): the Engine version is now in a
   machine-generated file src/pEpEngine_version.h
@@ -95,14 +95,14 @@ v3.2.0-RC13
   latest engine (master/v3.2.0-RC11)' (#92) from dirk/pEpEngine:PEMA-41 into
   master
 
-v3.2.0-RC12
+v3.2.0-RC12  2022-11-22
 * handle_pong: fix bug preventing notification from being called, reported by
   Alex Sualdea
 * Merge pull request 'PEMA-103-hotfix' (#88) from
   TSaschabc/pEpEngine:PEMA-103-hotfix into master
 * Update sqlite amalgamation to 3.40.0
 
-v3.2.0-RC11
+v3.2.0-RC11  2022-11-16
 * add the new pEp_log functionality -- notice that some platform code is
   UNTESTED; I am waiting for feedback from platform maintainers;
 * add the new pEp_debug functionality;
@@ -112,17 +112,17 @@ v3.2.0-RC11
   replaced by the new log functionality in src/pEp_log.h; I could re-implement
   the old functions based on the new API if people want that, but using the API
 
-v3.2.0-RC10
+v3.2.0-RC10  2022-10-12
 From this point on we consistently adopt the new naming scheme for tags: we
 start the tag name with "v" instead of "Release_".
 * fix compilation on windows (probably: untested).
 
-Release_3.2.0-RC9
+Release_3.2.0-RC9  2022-10-12
 * BUILD: Fix - Effectively add include and lib dir from local.conf' (#82)
 * unfinished debug / log changes
 * (broken on windows)
 
-v3.2.0-RC8
+v3.2.0-RC8  2022-10-05
 No complete change log for this RC, the first in the 3.x series to be actually
 used.  The most important change from 2.x is Key-Election Removal; the list of
 other changes (but not the changes themselves) is now lost.
