@@ -1,3 +1,8 @@
+* general overhaul of concurrent SQL execution, adding loops with exponential
+  backoff and exclusive transactions.  This should solve many concurrency
+  problems (see src/sql_reliability.h ).
+  Even if this is an important change; there is no API change related to this
+  functionality.
 
 v3.2.0-RC16  2023-01-17
 * rewrite some CPP macros working around problems (I indeed suspect a bug:
