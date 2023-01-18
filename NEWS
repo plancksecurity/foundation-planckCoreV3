@@ -1,3 +1,4 @@
+v3.2.0-RC17  2023-01-18
 * general overhaul of concurrent SQL execution, adding loops with exponential
   backoff and exclusive transactions.  This should solve many concurrency
   problems (see src/sql_reliability.h ).
