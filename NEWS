@@ -24,7 +24,7 @@ v3.2.0-RC18  2023-01-18
 
 v3.2.0-RC17  2023-01-18
 * general overhaul of concurrent SQL execution, adding loops with exponential
-  backoff and exclusive transactions.  This should solve many concurrency
+  backoff and EXCLUSIVE transactions.  This should solve many concurrency
   problems (see src/sql_reliability.h ).
   This fixes https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/104 .
   Even if this is an important change there is no API change related to this
