@@ -460,6 +460,17 @@ DYNAMIC_API void config_enable_echo_in_outgoing_message_rating_preview(
 
 
 /**
+ *  <!--       config_enable_log()      -->
+ *
+ *  @brief Enable the log if the argument is true, disable it if it false.
+ *
+ *  @param[in]   session    session handle to release
+ *  @param[in]   enable     true iff enabled
+ *
+ */
+DYNAMIC_API void config_enable_log(PEP_SESSION session, bool enable);
+
+/**
  *  <!--       config_passive_mode()       -->
  *  
  *  @brief Enable passive mode

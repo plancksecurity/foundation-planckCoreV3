@@ -96,6 +96,11 @@ DYNAMIC_API PEP_STATUS init(
     _session->enable_echo_protocol = true;
     _session->enable_echo_in_outgoing_message_rating_preview = true;
 
+    /* Logging is off by default, unless the environment variable PEP_LOG is
+       defined to any value.  Logging can also be enabled by the configuration
+       call config_enable_log . */
+    _session->enable_log = (getenv("PEP_LOG") != NULL);
+
     status = pEp_log_initialize(_session);
     if (status != PEP_STATUS_OK)
         return status;
@@ -263,6 +268,12 @@ DYNAMIC_API void config_enable_echo_in_outgoing_message_rating_preview(PEP_SESSI
 {
     PEP_REQUIRE_ORELSE(session, { return; });
     session->enable_echo_in_outgoing_message_rating_preview = enable;
+}
+
+DYNAMIC_API void config_enable_log(PEP_SESSION session, bool enable)
+{
+    PEP_REQUIRE_ORELSE(session, { return; });
+    session->enable_log = enable;
 }
 
 DYNAMIC_API void config_passive_mode(PEP_SESSION session, bool enable)

@@ -814,6 +814,10 @@ DYNAMIC_API PEP_STATUS pEp_log(PEP_SESSION session,
     if (level > PEP_LOG_LEVEL_MAXIMUM)
         return PEP_STATUS_OK;
 
+    /* If logging is disabled do nothing. */
+    if (! session->enable_log)
+        return PEP_STATUS_OK;
+
     /* Get the current time. */
     time_t now_in_seconds = time(NULL);
     timestamp* now = new_timestamp(now_in_seconds);

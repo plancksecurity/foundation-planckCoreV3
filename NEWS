@@ -1,3 +1,9 @@
+* The logging facility can now enabled and disabled from a configuration
+  function, the new API function
+    DYNAMIC_API void config_enable_log(PEP_SESSION session, bool enable)
+  .  By default logging is now disabled, unless the environment variable PEP_LOG
+  is defined to any value.
+  This solves https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/100
 * sql_reliability: remove debugging prints, replace with more generally useful
   messages.
 
