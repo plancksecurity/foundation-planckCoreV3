@@ -53,11 +53,8 @@ PEP_STATUS validate_fpr(PEP_SESSION session,
                         pEp_identity* ident,
                         bool own_must_contain_private,
                         bool renew_private) {
-    
+    PEP_REQUIRE(session && ident && ! EMPTYSTR(ident->fpr));
     PEP_STATUS status = PEP_STATUS_OK;
-    
-    if (!session || !ident || !ident->fpr || !ident->fpr[0])
-        return PEP_ILLEGAL_VALUE;    
         
     char* fpr = ident->fpr;
     
@@ -69,15 +66,21 @@ PEP_STATUS validate_fpr(PEP_SESSION session,
         if (status != PEP_STATUS_OK || !has_private)
             return PEP_KEY_UNSUITABLE;
     }
-    else if (status != PEP_STATUS_OK && has_private) // should never happen
+    else if (status != PEP_STATUS_OK && has_private) { // should never happen
         has_private = false;
+    }
     
     ident->comm_type = PEP_ct_unknown;
     
     status = get_trust(session, ident);
-    if (status != PEP_STATUS_OK)
+    if (status == PEP_CANNOT_FIND_IDENTITY) {
+        status = PEP_STATUS_OK;
         ident->comm_type = PEP_ct_unknown;
-            
+    }
+    else if (status != PEP_STATUS_OK) {
+        return status;
+    }
+
     PEP_comm_type ct = ident->comm_type;
 
     if (ct == PEP_ct_unknown) {
