@@ -24,7 +24,7 @@ BUILT_IN_MIME=
 ifdef PEP_MIME
     BUILT_IN_MIME=pepmime
 endif
-    
+
 .PHONY: all $(BUILT_IN_MIME) codegen asn1 build install dbinstall uninstall clean tags test package db doc
 
 build: $(BUILT_IN_MIME) asn1

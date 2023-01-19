@@ -41,7 +41,7 @@ ifdef PEP_MIME
     LDLIBS+= -lpEpMIME
 else
     ifneq ($(BUILD_ON),OS/390)
-        LDLIBS+= -letpan -lpEpEngine -lstdc++
+        LDLIBS+= -lpEpEngine -letpan -lstdc++
     endif
 endif
 
@@ -72,7 +72,13 @@ else ifeq ($(OPENPGP),NETPGP)
     endif
 endif
 
+# Ignore NDEBUG being defined.  The first definition is correct; the others not
+# really, but I am keeping them for compatibility since that was the old style
+# and some people might have overriden CFLAGS or CXXFLAGS with preprocessor
+# options.
+CPPFLAGS:=$(filter-out -DNDEBUG,$(CPPFLAGS))
 CXXFLAGS:=$(filter-out -DNDEBUG,$(CXXFLAGS))
+CFLAGS:=$(filter-out -DNDEBUG,$(CFLAGS))
 
 # FIXME Possibly missing incdirs: ASN1C_INC
 CXXFLAGS+= -I$(GTEST_INC_DIR) -I./src -I../sync $(INC_FLAGS) -Wno-deprecated -Wno-unused-variable

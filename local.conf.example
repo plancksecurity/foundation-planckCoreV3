@@ -15,29 +15,36 @@
 # suit her own configuration.
 
 
+# Debugging symbols
+# #########################################################
+
+# We suggest always compiling the pEp Engine with debugging symbol: the price
+# to pay is just an increase in binary code size, with no impact on execution
+# speed.
+# If the user disagrees with us and wants to compile without debugging symbols
+# she can comment-out the line below.
+
+# # Omit debugging symbols for a smaller (but not faster) binary.
+# COMPILEWITHDEBUGGINGSYMBOLS = yes
+
+
 # Satefy mode.
 # #########################################################
 
 # You may uncomment one of the three DEBUG definitions below.  Any other
 # definition of DEBUG will result in a build-time error.
+#
+# An incompatibility was introduced in pEp Engine 3.2.0-RC21: an empty value
+# for DEBUG no longer means 'release', and is now considered invalid.
+# Providing no definition is still supported, and yields the default safety
+# mode (debug).
 
 # Build the Engine in release mode, with assertions disabled.  In this mode
-# API functions will check their requirements and return PEP_ILLEVAL_VALUE on
+# API functions will check their requirements and return PEP_ILLEGAL_VALUE on
 # failure.
-# Notice that the behaviour of DEBUG has changed in a slightly incompatible way
-# since Engine 3.2.0-RC13 , even if the change is unlikely to actually bother
-# users.  It used to be the case that in order to have a release build the DEBUG
-# variable needed to be *undefined*, as in
-#   undefine DEBUG
-# using the undefine directive from GNU make.  Now it is perfectly equivalent
-# to undefine DEBUG or to define it as empty.
-# An old local.conf file using an *empty* definition of DEBUG will now result
-# in a release build, and not in a debug build.  A debug build can be obtained
-# by changing the definition from 'DEBUG =' to 'DEBUG = debug', as in the
-# alternative shown below.
 #
 # # Build the Engine in release mode.
-# DEBUG =
+# DEBUG = release
 
 # Build the Engine in debug mode.  In this mode API functions check that
 # requirements on their parameters are satisfied, and return PEP_ILLEGAL_VALUE
@@ -51,7 +58,7 @@
 
 # Build the Engine in maintainer mode.  In this mode API functions check that
 # requirements on their parameters are satisfied, weak assertions are enabled
-# and so are internal assetions, only intended for Engine developers; on any
+# and so are internal assertions, only intended for Engine developers; on any
 # check violation the engine aborts in order to make the failure visible.
 #
 # This mode is intended for the few developers of the Engine itself, and not

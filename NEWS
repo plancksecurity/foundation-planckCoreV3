@@ -1,5 +1,18 @@
 * DEPENDENCIES: use the most recent pEpEngineSequoiaBackend , which we made
   nicer to build and install with make.
+* local.conf.example: in order to build the Engine in safety mode 'release' the
+  DEBUG variable must now be defined as 'release', instead of being set to be
+  empty.
+* bug fix: actually keep into account the safety mode to determine the Engine
+  compiler flags, so that optimisation and the presence debugging symbols  can
+  be controlled.
+  Now default to *always* compiling with debugging symbols; however this new
+  behaviour can be overridden...
+* local.conf.example: ...with new user-overridable variable
+  COMPILEWITHDEBUGGINGSYMBOLS , which lets the user decide whether the Engine is
+  compiled with the -g (or equivalent) option.
+* Build system: PER_MACHINE_DIRECTORY: change the default value to use PREFIX.
+  I suspect the previous default was not used much.
 
 v3.2.0-RC20  2023-01-23
 * make register_sync_callbacks really side-effect-free; this fixes
