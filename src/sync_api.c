@@ -53,15 +53,6 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
 
     PEP_REQUIRE(session && notifyHandshake && retrieve_next_sync_event);
 
-    identity_list *own_identities = NULL;
-    PEP_STATUS status = own_identities_retrieve(session, &own_identities);
-    if (status)
-        return status;
-    bool own_identities_available = own_identities && own_identities->ident;
-    free_identity_list(own_identities);
-    if (!own_identities_available)
-        return PEP_SYNC_CANNOT_START;
-
     session->sync_management = management;
     session->notifyHandshake = notifyHandshake;
     session->retrieve_next_sync_event = retrieve_next_sync_event;
@@ -136,13 +127,22 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
         void *obj
     )
 {
-    PEP_STATUS status = do_sync_protocol_init(session);
-    if (status)
+    PEP_REQUIRE(session && session->retrieve_next_sync_event);
+
+    identity_list *own_identities = NULL;
+    PEP_STATUS status = own_identities_retrieve(session, &own_identities);
+    if (status != PEP_STATUS_OK)
+        return status;
+    bool own_identities_available = own_identities && own_identities->ident;
+    free_identity_list(own_identities);
+    if (!own_identities_available)
+        return PEP_SYNC_CANNOT_START;
+
+    status = do_sync_protocol_init(session);
+    if (status != PEP_STATUS_OK)
         return status;
 
     Sync_event_t *event= NULL;
-
-    PEP_REQUIRE(session && session->retrieve_next_sync_event);
 
     PEP_LOG_EVENT("p≡p Engine", "Sync", "sync_protocol thread started");
 
