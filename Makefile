@@ -30,13 +30,13 @@ endif
 .PHONY: all $(BUILT_IN_MIME) codegen asn1 build install dbinstall uninstall clean tags test package db doc
 
 build: $(BUILT_IN_MIME) asn1
-ifeq ($(OPENPGP),SEQUOIA)
-	mkdir -p $(CARGO_TARGET_DIR)
-	cd $(SEQUOIA_BACKEND_PATH) && cargo --color=never build
-	PKG_CONFIG_PATH=$(CARGO_TARGET_DIR)/debug${PKG_CONFIG_PATH+:$PKG_CONFIG_PATH} $(MAKE) -C src
-else
+#ifeq ($(OPENPGP),SEQUOIA)
+#	mkdir -p $(CARGO_TARGET_DIR)
+#	cd $(SEQUOIA_BACKEND_PATH) && cargo --color=never build
+#	PKG_CONFIG_PATH=$(CARGO_TARGET_DIR)/debug${PKG_CONFIG_PATH+:$PKG_CONFIG_PATH} $(MAKE) -C src
+#else
 	$(MAKE) -C src
-endif
+#endif
 
 all: build
 # `make all` is not for tests, that's what `make test` is for
