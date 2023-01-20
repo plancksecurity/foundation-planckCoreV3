@@ -1,6 +1,6 @@
 * make register_sync_callbacks really side-effect-free; this fixes
   https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/116 (Thanks to
-  Heck.)  This should unblock
+  Heck.)  This contributes to unblock
   https://gitea.pep.foundation/pEp.foundation/pEpJNIAdapter/issues/24 .
 
 v3.2.0-RC19  2023-01-18
