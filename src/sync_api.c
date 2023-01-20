@@ -53,14 +53,14 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
 
     PEP_REQUIRE(session && notifyHandshake && retrieve_next_sync_event);
 
-    identity_list *own_identities = NULL;
-    PEP_STATUS status = own_identities_retrieve(session, &own_identities);
-    if (status)
-        return status;
-    bool own_identities_available = own_identities && own_identities->ident;
-    free_identity_list(own_identities);
-    if (!own_identities_available)
-        return PEP_SYNC_CANNOT_START;
+//    identity_list *own_identities = NULL;
+//    PEP_STATUS status = own_identities_retrieve(session, &own_identities);
+//    if (status)
+//        return status;
+//    bool own_identities_available = own_identities && own_identities->ident;
+//    free_identity_list(own_identities);
+//    if (!own_identities_available)
+//        return PEP_SYNC_CANNOT_START;
 
     session->sync_management = management;
     session->notifyHandshake = notifyHandshake;
