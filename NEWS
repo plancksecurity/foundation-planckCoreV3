@@ -2,6 +2,8 @@
   https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/116 (Thanks to
   Heck.)  This contributes to unblock
   https://gitea.pep.foundation/pEp.foundation/pEpJNIAdapter/issues/24 .
+* undo recent Makefile changes related to Sequoia: a cleaner solution is
+  forthcoming.
 
 v3.2.0-RC19  2023-01-18
 * The logging facility can now enabled and disabled from a configuration
