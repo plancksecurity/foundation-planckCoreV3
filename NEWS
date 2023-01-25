@@ -1,3 +1,5 @@
+* DEPENDENCIES: use the most recent pEpEngineSequoiaBackend , which we made
+  nicer to build and install with make.
 
 v3.2.0-RC20  2023-01-23
 * make register_sync_callbacks really side-effect-free; this fixes
