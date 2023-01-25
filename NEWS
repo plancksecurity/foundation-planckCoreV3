@@ -13,6 +13,7 @@
   compiled with the -g (or equivalent) option.
 * Build system: PER_MACHINE_DIRECTORY: change the default value to use PREFIX.
   I suspect the previous default was not used much.
+* Add cute banner shown when invoking make.
 
 v3.2.0-RC20  2023-01-23
 * make register_sync_callbacks really side-effect-free; this fixes
