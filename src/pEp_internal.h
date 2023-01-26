@@ -811,7 +811,7 @@ static inline int _unsigned_signed_strcmp(const unsigned char* bytestr, const ch
  *  
  *  
  */
-static inline char* _pEp_subj_copy() {
+static inline char* _pEp_subj_copy(void) {
 #ifndef WIN32
     unsigned char pEpstr[] = PEP_SUBJ_STRING;
     void* retval = calloc(1, sizeof(unsigned char)*PEP_SUBJ_BYTELEN + 1);
@@ -1016,7 +1016,7 @@ extern double _pEp_log2_36;
  *  Please leave _patch_asn1_codec COMMENTED OUT unless you're working
  *  in a branch or patching the asn1 is a solution
  */
-static inline void _init_globals() {
+static inline void _init_globals(void) {
     _pEp_rand_max_bits = (int) ceil(log2((double) RAND_MAX));
     _pEp_log2_36 = log2(36);
 }

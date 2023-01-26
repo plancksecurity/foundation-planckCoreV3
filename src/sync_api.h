@@ -253,7 +253,7 @@ DYNAMIC_API bool is_sync_thread(PEP_SESSION session);
  *  
  */
 
-DYNAMIC_API SYNC_EVENT new_sync_timeout_event();
+DYNAMIC_API SYNC_EVENT new_sync_timeout_event(void);
 
 
 /**

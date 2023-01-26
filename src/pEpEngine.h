@@ -1773,7 +1773,7 @@ DYNAMIC_API PEP_STATUS get_revoked(
  *  @retval  PEP_ENGINE_VERSION 
  *  
  */
-DYNAMIC_API const char* get_engine_version();
+DYNAMIC_API const char* get_engine_version(void);
 
 /**
  *  <!--       get_protocol_version()       -->
@@ -1784,7 +1784,7 @@ DYNAMIC_API const char* get_engine_version();
  *  
  */
 
-DYNAMIC_API const char *get_protocol_version();
+DYNAMIC_API const char *get_protocol_version(void);
 
 /**
  *  <!--       is_pEp_user()       -->

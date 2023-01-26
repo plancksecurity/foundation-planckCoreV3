@@ -222,7 +222,7 @@ DYNAMIC_API void release(PEP_SESSION session)
         free_Sync_state(session);
 
         // Clear the path cache, releasing a little memory.
-        clear_path_cache ();
+        clear_path_cache();
 
         if (session->db) {
             LOG_EVENT("finalizing database state for session %p", session);
@@ -3651,11 +3651,11 @@ PEP_STATUS find_private_keys(PEP_SESSION session, const char* pattern,
 const char *pEpEngineVersion = PEP_ENGINE_VERSION;
 const char *pEpEngineProtcolVersion = PEP_PROTOCOL_VERSION;
 
-DYNAMIC_API const char* get_engine_version() {
+DYNAMIC_API const char* get_engine_version(void) {
     return PEP_ENGINE_VERSION;
 }
 
-DYNAMIC_API const char* get_protocol_version() {
+DYNAMIC_API const char* get_protocol_version(void) {
     return PEP_PROTOCOL_VERSION;
 }
 

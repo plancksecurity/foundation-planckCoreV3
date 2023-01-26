@@ -193,7 +193,7 @@ DYNAMIC_API bool is_sync_thread(PEP_SESSION session)
     return session->retrieve_next_sync_event != NULL;
 }
 
-DYNAMIC_API SYNC_EVENT new_sync_timeout_event()
+DYNAMIC_API SYNC_EVENT new_sync_timeout_event(void)
 {
     return SYNC_TIMEOUT_EVENT;
 }

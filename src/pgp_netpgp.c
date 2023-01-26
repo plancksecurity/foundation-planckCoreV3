@@ -66,7 +66,7 @@ inline char A(char c)
 netpgp_t *netpgp;
 static pthread_mutex_t netpgp_mutex;
 
-static PEP_STATUS init_netpgp()
+static PEP_STATUS init_netpgp(void)
 {
     TRACE_FUNCS()
     PEP_STATUS status = PEP_STATUS_OK;
@@ -132,7 +132,7 @@ unlock_netpgp:
     return status;
 }
 
-static void release_netpgp()
+static void release_netpgp(void)
 {
     TRACE_FUNCS()
     if(pthread_mutex_lock(&netpgp_mutex)){
