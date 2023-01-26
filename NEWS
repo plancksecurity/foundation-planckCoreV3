@@ -14,6 +14,10 @@
 * Build system: PER_MACHINE_DIRECTORY: change the default value to use PREFIX.
   I suspect the previous default was not used much.
 * Add cute banner shown when invoking make.
+* Fix zero-argument C function prototypes and definitions so as to use (void)
+  rather than ().  This is the correct solution and the fix prevents huge
+  volumes of distracting warnings from some compilers (reported by heck with
+  least apple clang 14).
 
 v3.2.0-RC20  2023-01-23
 * make register_sync_callbacks really side-effect-free; this fixes
