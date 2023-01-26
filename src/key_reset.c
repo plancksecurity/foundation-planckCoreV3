@@ -1131,7 +1131,7 @@ DYNAMIC_API PEP_STATUS key_reset_identity(
     PEP_REQUIRE(session && ident
                 && ! EMPTYSTR(ident->user_id) && ! EMPTYSTR(ident->address));
 
-    return key_reset(session, fpr, ident);    
+    return key_reset(session, fpr, ident);
 }
 
 DYNAMIC_API PEP_STATUS key_reset_user(

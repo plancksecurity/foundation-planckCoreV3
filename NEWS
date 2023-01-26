@@ -19,6 +19,10 @@
   volumes of distracting warnings from some compilers (reported by heck with
   least apple clang 14).
   This fixes https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/113 .
+* Fix https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/118 in 3.x as
+  well by adding a test case documenting the behaviour difference; the
+  unexpected ugly status code was only returned in 2.x, which required a
+  non-trivial fix.
 
 v3.2.0-RC20  2023-01-23
 * make register_sync_callbacks really side-effect-free; this fixes
