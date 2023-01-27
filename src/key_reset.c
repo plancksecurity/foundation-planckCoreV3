@@ -1901,7 +1901,11 @@ PEP_STATUS key_reset(
             //
             // Delete this key from the keyring.
             // FIXME: when key election disappears, so should this!
-            status = delete_keypair(session, fpr_copy);
+            status = delete_keypair(session, fpr_copy); /* positron: I believe the previous comment
+                                                                     is wrong and we should in fact
+                                                                     not delete the key from the
+                                                                     keyring without key election.
+                                                                     Can fdik confirm? */
         }
 
         // REGARDLESS OF WHO OWNS THE KEY, WE NOW NEED TO REMOVE IT AS A DEFAULT.
