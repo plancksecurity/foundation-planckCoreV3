@@ -1700,8 +1700,8 @@ PEP_STATUS key_reset(
         pEp_identity* ident
     )
 {
-    if (!session || (ident && EMPTYSTR(ident->user_id)))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session
+                && (ident == NULL || ! EMPTYSTR(ident->user_id)));
         
     PEP_STATUS status = PEP_STATUS_OK;
         
