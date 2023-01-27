@@ -1,3 +1,8 @@
+* change the result of key_reset_identity and functions calling it: if a non-own
+  identity with no known key is reset the result is now PEP_KEY_NOT_FOUND rather
+  than PEP_ILLEGAL_VALUE .  This fixes
+  https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/118 (for Engine
+  series 2.x).
 
 v2.1.68
 * do not load positron's testing media key associated to the ageinghacker.net

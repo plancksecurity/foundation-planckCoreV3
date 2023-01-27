@@ -918,7 +918,9 @@ PEP_STATUS _key_reset_all_for_non_own_identity(
     PEP_STATUS status = PEP_STATUS_OK;
     stringlist_t *keys = NULL;
     status = get_all_keys_for_identity(session, ident, & keys);
-    if (status != PEP_STATUS_OK)
+    if (status == PEP_KEY_NOT_FOUND)
+        return PEP_KEY_NOT_FOUND;
+    else if (status != PEP_STATUS_OK)
         return PEP_ILLEGAL_VALUE;
 
     /* For every key, reset that key. */
