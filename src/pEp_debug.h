@@ -71,7 +71,12 @@ typedef enum {
 
 /* These constant expressions evaluate to non-false when failed checks should
    cause an abort.
-   These Boolean values express *fatality*. */
+   These Boolean values express *fatality*.
+
+   Notice that abort is never actually called when the environment variable
+   PEP_NOABORT is defined; see the comment for pEp_abort_unless_PEP_NOABORT.
+   PEP_NOABORT is intended for use by the Engine developers in the test
+   suite. */
 #define PEP_ABORT_ON_VIOLATED_REQUIRE  \
     (PEP_SAFETY_MODE == PEP_SAFETY_MODE_MAINTAINER)
 #define PEP_ABORT_ON_VIOLATED_WEAK_ASSERT  \
@@ -133,7 +138,7 @@ typedef enum {
                                     what_as_string " precondition", \
                                     "session != NULL");             \
             if (abort_on_failure)                                   \
-                abort();                                            \
+                pEp_abort_unless_PEP_NOABORT();                     \
             do {                                                    \
                 else_statement;                                     \
             } while (false);                                        \
@@ -143,7 +148,7 @@ typedef enum {
                                     what_as_string,                 \
                                     expression_as_string);          \
             if (abort_on_failure)                                   \
-                abort();                                            \
+                pEp_abort_unless_PEP_NOABORT();                     \
             do {                                                    \
                 else_statement;                                     \
             } while (false);                                        \
@@ -472,6 +477,23 @@ typedef enum {
 
 #define PEP_SET_STATUS_ORELSE_RETURN(expression, else_result, ...)  \
     _PEP_SET_STATUS_ORELSE(expression, {return (else_result);}, __VA_ARGS__)
+
+
+/* Internal functions.
+ * ***************************************************************** */
+
+/**
+ *  <!--       pEp_abort_unless_PEP_NOABORT()       -->
+ *
+ *  @brief Call abort(3), unless the environment variable PEP_NOABORT is
+ *         currently defined, to any value -- in which case do nothing.
+ *         This function is useful to override the current fatality mode
+ *         when running the test suite: when called from test cases pEp
+ *         functions should always return failure codes, and never abort.
+ *
+ */
+DYNAMIC_API void pEp_abort_unless_PEP_NOABORT(void);
+
 
 #ifdef __cplusplus
 

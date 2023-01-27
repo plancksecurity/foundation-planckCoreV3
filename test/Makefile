@@ -134,7 +134,9 @@ $(TARGET): $(OBJS)
 
 test: all
 	$(RM) -rf ./pEp_test_home/*
-	$(TEST_CMD_PFX) $(TEST_DEBUGGER) GTEST_COLOR=no python3 $(GTEST_PL) \
+	$(TEST_CMD_PFX) $(TEST_DEBUGGER) \
+            PEP_NOABORT=noabort GTEST_COLOR=no \
+            python3 $(GTEST_PL) \
 		--gtest_color=no ./$(TARGET)
 
 clean:

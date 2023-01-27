@@ -23,6 +23,11 @@
   well by adding a test case documenting the behaviour difference; the
   unexpected ugly status code was only returned in 2.x, which required a
   non-trivial fix.
+* If the environment variable PEP_NOABORT is defined, to any value, never abort
+  on failure indepdendently from the fatality mode.  This is meant for internal
+  use with the pEp Engine test suite, but users and developers of other pEp
+  components might also find this useful.
+  This solves https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/121 .
 
 v3.2.0-RC20  2023-01-23
 * make register_sync_callbacks really side-effect-free; this fixes
