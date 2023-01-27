@@ -1,3 +1,4 @@
+
 v2.1.69  2023-01-27
 * change the result of key_reset_identity and functions calling it: if a non-own
   identity with no known key is reset the result is now PEP_KEY_NOT_FOUND rather
