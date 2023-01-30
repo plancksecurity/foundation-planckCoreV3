@@ -28,12 +28,17 @@
   use with the pEp Engine test suite, but users and developers of other pEp
   components might also find this useful.
   This solves https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/121 .
+* documentation: mention do_sync_protocol_init , previously forgottem, in the
+  NEWS entry for v3.2.0-RC20 (2023-01-23).
 
 v3.2.0-RC20  2023-01-23
 * make register_sync_callbacks really side-effect-free; this fixes
   https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/116 (Thanks to
   Heck.)  This contributes to unblock
   https://gitea.pep.foundation/pEp.foundation/pEpJNIAdapter/issues/24 .
+* In relation to the change above: new API function do_sync_protocol_init ,
+  which initialises the Sync state machinery indepdendently from
+  register_sync_callbacks (which now *only* sets callback functions).
 * undo recent Makefile changes related to Sequoia: a cleaner solution is
   forthcoming.
 
