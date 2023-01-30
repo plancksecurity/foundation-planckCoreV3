@@ -1,3 +1,12 @@
+* make register_sync_callbacks really side-effect-free; this fixes
+  https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/116 (Thanks to
+  Heck) for the 2.x series as well.  For users of 2.x this should unblock
+  https://gitea.pep.foundation/pEp.foundation/pEpJNIAdapter/issues/24 .
+  This is a backport of changes by Volker Birk and Luca Saiu from the 3.x to the
+  2.x series.
+* In relation to the change above: new API function do_sync_protocol_init ,
+  which initialises the Sync state machinery indepdendently from
+  register_sync_callbacks (which now *only* sets callback functions).
 
 v2.1.69  2023-01-27
 * change the result of key_reset_identity and functions calling it: if a non-own

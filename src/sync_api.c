@@ -19,21 +19,11 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
     if (!(session && notifyHandshake && retrieve_next_sync_event))
         return PEP_ILLEGAL_VALUE;
 
-    identity_list *own_identities = NULL;
-    PEP_STATUS status = own_identities_retrieve(session, &own_identities);
-    if (status)
-        return status;
-    bool own_identities_available = own_identities && own_identities->ident;
-    free_identity_list(own_identities);
-    if (!own_identities_available)
-        return PEP_SYNC_CANNOT_START;
-
     session->sync_management = management;
     session->notifyHandshake = notifyHandshake;
     session->retrieve_next_sync_event = retrieve_next_sync_event;
 
-    // start state machine
-    return Sync_driver(session, Sync_PR_keysync, Init);
+    return PEP_STATUS_OK;
 }
 
 DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session) {
@@ -105,11 +95,28 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
         void *obj
     )
 {
-    Sync_event_t *event= NULL;
-
     assert(session && session->retrieve_next_sync_event);
     if (!(session && session->retrieve_next_sync_event))
         return PEP_ILLEGAL_VALUE;
+
+    PEP_STATUS status = do_sync_protocol_init(session);
+    if (status)
+        return status;
+
+    identity_list *own_identities = NULL;
+    status = own_identities_retrieve(session, &own_identities);
+    if (status)
+        return status;
+    bool own_identities_available = own_identities && own_identities->ident;
+    free_identity_list(own_identities);
+    if (!own_identities_available)
+        return PEP_SYNC_CANNOT_START;
+
+    status = do_sync_protocol_init(session);
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    Sync_event_t *event= NULL;
 
     log_event(session, "sync_protocol thread started", "pEp sync protocol",
             NULL, NULL);
@@ -129,6 +136,16 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
             NULL, NULL);
 
     return PEP_STATUS_OK;
+}
+
+DYNAMIC_API PEP_STATUS do_sync_protocol_init(PEP_SESSION session)
+{
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    // start state machine
+    return Sync_driver(session, Sync_PR_keysync, Init);
 }
 
 DYNAMIC_API PEP_STATUS do_sync_protocol_step(

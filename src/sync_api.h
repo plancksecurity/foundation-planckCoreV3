@@ -173,8 +173,17 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
         void *obj
     );
 
+/**
+ *  <!--       do_sync_protocol_init()       -->
+ *  
+ *  @brief Function for manual implementations
+ *  
+ *  
+ */
 
-// do_sync_protocol_step() - function for single threaded implementations
+DYNAMIC_API PEP_STATUS do_sync_protocol_init(PEP_SESSION session);
+
+// do_sync_protocol_step() - function for manual implementations
 //
 //  parameters:
 //      session                 pEp session to use
