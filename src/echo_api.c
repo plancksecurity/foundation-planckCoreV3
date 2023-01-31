@@ -243,7 +243,7 @@ static PEP_STATUS make_sure_identity_exists(PEP_SESSION session,
 
  end:
     free_identity(identity_copy);
-    LOG_STATUS_TRACE;
+    LOG_NONOK_STATUS_TRACE;
     return status;
 }
 
@@ -310,7 +310,7 @@ static PEP_STATUS echo_get_below_rate_limit(PEP_SESSION session,
  end:
     if (status == PEP_STATUS_OK)
         * below_rate_limit_p = result;
-    LOG_STATUS_TRACE;
+    LOG_NONOK_STATUS_TRACE;
     return status;
 }
 
@@ -358,7 +358,7 @@ static PEP_STATUS echo_set_last_echo_timestap(PEP_SESSION session,
     LOG_TRACE("set last Echo timestamp to now for %s <%s>", (identity->username ? identity->username : "NOUSERNAME"), (identity->address ? identity->address : "NOADDRESS"));
 
  end:
-    LOG_STATUS_TRACE;
+    LOG_NONOK_STATUS_TRACE;
     return status;
 }
 
@@ -614,12 +614,12 @@ static PEP_STATUS send_ping_or_pong(PEP_SESSION session,
     message *m = NULL;
     status = encrypt_message(session, non_encrypted_m, NULL, &m,
                              PEP_enc_PEP, PEP_encrypt_flag_default);
-    LOG_EVENT("preparing %s from %s <%s> to %s <%s>, status after encrypting %i %s", (ping ? "Ping" : "Pong"), from->username, from->address, to->username, to->address, status, pEp_status_to_string(status));
     if (status == PEP_STATUS_OK)
         free_message(non_encrypted_m);
     else if (status == PEP_UNENCRYPTED)
         m = non_encrypted_m;
     else {
+        LOG_EVENT("preparing %s from %s <%s> to %s <%s>, status after encrypting %i %s", (ping ? "Ping" : "Pong"), from->username, from->address, to->username, to->address, status, pEp_status_to_string(status));
         free_message(non_encrypted_m);
         /* Differently from a status of PEP_UNENCRYPTED this is an actual
            unexpected error, to be reported to the caller. */
@@ -629,6 +629,7 @@ static PEP_STATUS send_ping_or_pong(PEP_SESSION session,
     /* Send it. */
     status = session->messageToSend(m);
     if (status != PEP_STATUS_OK) {
+        LOG_NONOK_STATUS_WARNING;
         free_message(m);
         return status;
     }

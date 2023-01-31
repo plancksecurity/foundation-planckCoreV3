@@ -495,6 +495,8 @@ PEP_STATUS media_key_for_outgoing_message(PEP_SESSION session,
  end:
     if (fpr_result != NULL)
         * fpr_result = candidate_key;
-    LOG_TRACE("* The message %s has media key %s", (msg->shortmsg ? msg->shortmsg : "(no subject)"), (candidate_key ? candidate_key : "(no key)"));
+
+    if (candidate_key)
+        LOG_TRACE("[%s] has media key %s", (msg->shortmsg ? msg->shortmsg : "(no subject)"), candidate_key);
     return status;
 }
