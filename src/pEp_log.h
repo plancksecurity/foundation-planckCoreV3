@@ -254,9 +254,14 @@ typedef enum {
 
 /* If this is enabled then requirements at function entry will also log a line
    (level Function) about the function being entered.  Since this can make the
-   logs very noisy I made it possible to disable the feature independently from
-   PEP_LOG_LEVEL_MAXIMUM , by commenting-out this line. */
-#define PEP_LOG_FUNCTION_ENTRY  1
+   logs very noisy I am making it possible to disable the feature independently
+   from PEP_LOG_LEVEL_MAXIMUM , by commenting-out the #define line below.
+
+   It is also possible to disable this feature for specific compilation units by
+   defining PEP_NO_LOG_FUNCTION_ENTRY before including this header. */
+#if ! defined(PEP_NO_LOG_FUNCTION_ENTRY)
+# define PEP_LOG_FUNCTION_ENTRY  1
+#endif
 
 /* If this is enabled then *failed* status checkswill also log a line (level
    NonOK) about the expression, usually a function call, failing.  Since this
