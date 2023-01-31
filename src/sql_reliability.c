@@ -6,6 +6,10 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
+/* For this compilation unit I want to disable function-entry log lines, which
+   would be very frequent and very distracting. */
+#define PEP_NO_LOG_FUNCTION_ENTRY 1
+
 /* #define _EXPORT_PEP_ENGINE_DLL */  /* I should uncomment this in case some
                                          function defined here gets exported. */
 #include "sql_reliability.h"
@@ -20,12 +24,11 @@
 /* Exponential backoff.
  * ***************************************************************** */
 
-PEP_STATUS pEp_backoff_state_initialize(
-   PEP_SESSION session,
-   struct pEp_backoff_state *s,
-   const char *source_location)
+PEP_STATUS pEp_backoff_state_initialize(PEP_SESSION session,
+                                        struct pEp_backoff_state *s,
+                                        const char *source_location)
 {
-    //PEP_REQUIRE(session && s);
+    PEP_REQUIRE(session && s && source_location);
 
     s->failure_no = 0;
     s->total_time_slept_in_ms = 0;
@@ -34,11 +37,10 @@ PEP_STATUS pEp_backoff_state_initialize(
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS pEp_backoff_state_finalize(
-   PEP_SESSION session,
-   const struct pEp_backoff_state *s)
+PEP_STATUS pEp_backoff_state_finalize(PEP_SESSION session,
+                                      const struct pEp_backoff_state *s)
 {
-    //PEP_REQUIRE(session && s);
+    PEP_REQUIRE(session && s);
 
     /* I might want to actually add some statistics in the session, in the
        future. */
@@ -51,9 +53,12 @@ PEP_STATUS pEp_backoff_state_finalize(
 
 /* Increase the backoff length and the failure counter in the pointed state,
    recording that we have just slept for the given amount of time. */
-static void pEp_backoff_bump(struct pEp_backoff_state *s,
+static void pEp_backoff_bump(PEP_SESSION session,
+                             struct pEp_backoff_state *s,
                              long sleep_time_ms)
 {
+    PEP_REQUIRE_ORELSE(session && s, { return; });
+
     /* Record statistics. */
     s->failure_no ++;
     s->total_time_slept_in_ms += sleep_time_ms;
@@ -69,11 +74,10 @@ static void pEp_backoff_bump(struct pEp_backoff_state *s,
 
 /* Return a random sleeping time appropriate for the current state, without
    bumping it. */
-static long pEp_backoff_compute_sleep_time(
-   PEP_SESSION session,
-   const struct pEp_backoff_state *s)
+static long pEp_backoff_compute_sleep_time(PEP_SESSION session,
+                                           const struct pEp_backoff_state *s)
 {
-    //PEP_REQUIRE(session && s);
+    PEP_REQUIRE_ORELSE(session && s, { return 0; });
 
     long range_width
         = (s->current_upper_limit_in_ms - PEP_MINIMUM_BACKOFF_IN_MS);
@@ -85,13 +89,13 @@ static long pEp_backoff_compute_sleep_time(
 PEP_STATUS pEp_back_off(PEP_SESSION session,
                         struct pEp_backoff_state *s)
 {
-    //PEP_REQUIRE(session && s);
+    PEP_REQUIRE(session && s);
 
     /* Very easy: sleep, and bump. */
     long sleep_time_in_ms = pEp_backoff_compute_sleep_time(session, s);
     //LOG_NONOK("backing off for %li ms", sleep_time_in_ms);
     pEp_sleep_ms(sleep_time_in_ms);
-    pEp_backoff_bump(s, sleep_time_in_ms);
+    pEp_backoff_bump(session, s, sleep_time_in_ms);
 
     return PEP_STATUS_OK;
 }
