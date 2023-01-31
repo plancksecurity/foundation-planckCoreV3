@@ -850,10 +850,10 @@ DYNAMIC_API PEP_STATUS update_identity(
                     // above.
                     stored_curr = stored_curr->next;
                 }
-                // Ok, we've checked all of the candidates, and if there's a stored identity, there's a duplicate.
-                // Freeeeeeee...
-                free_identity_list(id_list);
             }
+            // Ok, we've checked all of the candidates, and if there's a stored identity, there's a duplicate.
+            // Freeeeeeee...
+            free_identity_list(id_list);
         }
         // If, by here, there is no user id on the identity, we put one on there.
         // We've found any non-TOFU one we're going to find, so if this is empty,
