@@ -1,5 +1,7 @@
-* DEPENDENCIES: use the most recent pEpEngineSequoiaBackend , which we made
-  nicer to build and install with make.
+* DEPENDENCIES: use the new pEpEngineSequoiaBackend release; this includes some
+  build system improvements to which we Engine people contributed, making
+  pEpEngineSequoiaBackend easy to install with make following the pEp
+  conventions.
 * local.conf.example: in order to build the Engine in safety mode 'release' the
   DEBUG variable must now be defined as 'release', instead of being set to be
   empty.
