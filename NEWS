@@ -1,3 +1,4 @@
+v3.2.0-RC22  2023-02-01
 * New API function PEP_STATUS_is_error.
   Closes https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/111 .
 * Avoid the use of #warning, not supported by the microsoft compiler.
