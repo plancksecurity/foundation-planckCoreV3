@@ -647,6 +647,10 @@ static PEP_STATUS send_ping_or_pong(PEP_SESSION session,
         return status;
     }
 
+    /* Add the auto-consume header to the message -- in case this was encrypted,
+       to the outer message since this is being done after encrypt_message. */
+    _add_auto_consume(m);
+
     /* Send it. */
     status = session->messageToSend(m);
     if (status != PEP_STATUS_OK) {
