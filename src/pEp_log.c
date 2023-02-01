@@ -5,8 +5,9 @@
  */
 
 #if 0 // I am disabling this thing that is getting too distracting
-#warning "windows: reimplement syslog using this: https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-openeventloga"
-#warning "android: ask the pEp security people"
+// #warning not suported by the windows compiler.  FIXME: re-introduce if possible inside another CPP conditional.
+// #warning "windows: reimplement syslog using this: https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-openeventloga"
+// #warning "android: ask the pEp security people"
 #endif
 
 #define _EXPORT_PEP_ENGINE_DLL

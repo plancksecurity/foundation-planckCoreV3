@@ -329,6 +329,10 @@ _pEp_pid_t getpid(void);
    __PRETTY_FUNCTION__ : we will use __func__ instead. */
 /* #undef PEP_HAVE_PRETTY_FUNCTION */
 
+/* On this silly compiler we do not have #warning */
+/* #undef PEP_HAVE_HASH_WARNING */
+
+
 #ifdef __cplusplus
 }
 #endif

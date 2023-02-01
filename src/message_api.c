@@ -50,11 +50,10 @@
 /* See the comment in PEP_trustwords_algorithm .  Falling back to the older xor
    trustwords for compatibility is disabled by default, to prevent downgrade
    attacks. */
-// FIXME: possibly remove the #warning
 #if ! defined (PEP_TRUSTWORDS_XOR_COMPATIBILITY)
-# warning "PEP_TRUSTWORDS_XOR_COMPATIBILITY is not defined: compatibility break"
+// #warning not suported by the windows compiler.  FIXME: re-introduce if possible inside another CPP conditional.
+// # warning "PEP_TRUSTWORDS_XOR_COMPATIBILITY is not defined: compatibility break"
 #endif
-
 
 
 /* All the rest

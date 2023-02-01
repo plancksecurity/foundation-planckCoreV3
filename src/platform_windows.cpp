@@ -488,7 +488,8 @@ _pEp_pid_t getpid(void)
     return GetCurrentProcessId();
 }
 
-#warning "FIXME: remove this ugly thing and use the new log facility instead"
+// #warning not suported by the windows compiler.  FIXME: re-introduce if possible inside another CPP conditional.
+// #warning "FIXME: remove this ugly thing and use the new log facility instead"
 void log_output_debug(const char *title,
                       const char *entity,
                       const char *description,

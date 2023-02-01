@@ -220,6 +220,9 @@ typedef uuid_t pEpUUID;
    and namespaces in C++. */
 #define PEP_HAVE_PRETTY_FUNCTION  1
 
+/* We can use #warning */
+#define PEP_HAVE_HASH_WARNING  1
+
 #ifdef __cplusplus
 }
 #endif
