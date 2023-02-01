@@ -408,6 +408,7 @@ DYNAMIC_API bool PEP_STATUS_is_error(PEP_STATUS status)
     case PEP_VERIFIED_AND_TRUSTED:
     case PEP_PASSPHRASE_REQUIRED:               // questionable
     case PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED:  // questionable
+    case PEP_VERIFY_SIGNER_KEY_REVOKED:
         return false;
 
     case PEP_INIT_CANNOT_LOAD_CRYPTO_LIB:
@@ -444,10 +445,9 @@ DYNAMIC_API bool PEP_STATUS_is_error(PEP_STATUS status)
     case PEP_NO_OWN_USERID_FOUND:
     case PEP_DECRYPT_WRONG_FORMAT:
     case PEP_DECRYPT_NO_KEY:
-    case PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH:
+    case PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH:  /* questionable but I think this should not be ignored */
     case PEP_VERIFY_NO_KEY:
     case PEP_CANNOT_REENCRYPT:
-    case PEP_VERIFY_SIGNER_KEY_REVOKED:
     case PEP_CANNOT_DECRYPT_UNKNOWN:
     case PEP_TRUSTWORD_NOT_FOUND:
     case PEP_TRUSTWORDS_FPR_WRONG_LENGTH:
