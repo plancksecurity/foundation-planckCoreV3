@@ -85,9 +85,14 @@ typedef struct _pEpSession * PEP_SESSION;
 
 /**
  *  @enum    PEP_STATUS
- *  
+ *
  *  @brief   Collection of all status codes Engine API functions might return
- *  
+ *
+ *  @warning Note for the Engine maintainer: whenever I modify this I should
+ *           update:
+ *           - PEP_STATUS_is_valid;
+ *           - PEP_STATUS_is_error;
+ *           - pEp_status_to_string.
  */
 typedef enum {
     PEP_STATUS_OK                                   = 0,
@@ -118,7 +123,7 @@ typedef enum {
 
     PEP_KEY_IMPORTED                                = 0x0220,
     PEP_NO_KEY_IMPORTED                             = 0x0221,
-    PEP_KEY_IMPORT_STATUS_UNKNOWN                   = 0x0222,
+    PEP_KEY_IMPORT_STATUS_UNKNOWN                   = 0x0222, // never used
     PEP_SOME_KEYS_IMPORTED                          = 0x0223,
     
     PEP_CANNOT_FIND_IDENTITY                        = 0x0301,
@@ -126,7 +131,7 @@ typedef enum {
     PEP_CANNOT_SET_PGP_KEYPAIR                      = 0x0382,
     PEP_CANNOT_SET_IDENTITY                         = 0x0383,
     PEP_CANNOT_SET_TRUST                            = 0x0384,
-    PEP_KEY_BLACKLISTED                             = 0x0385,       /// @deprecated
+    PEP_KEY_BLACKLISTED                             = 0x0385, /// @deprecated
     PEP_CANNOT_FIND_PERSON                          = 0x0386,
     PEP_CANNOT_SET_PEP_PROTOCOL_VERSION             = 0X0387,
 #define PEP_CANNOT_SET_PEP_VERSION  PEP_CANNOT_SET_PEP_PROTOCOL_VERSION ///< compatibility alias for PEP_CANNOT_SET_PEP_PROTOCOL_VERSION
@@ -296,6 +301,18 @@ typedef enum _PEP_rating {
     PEP_rating_under_attack = -3 // automated detection of an attack
 } PEP_rating;
 
+/**
+ *  <!--       PEP_STATUS_is_error()       -->
+ *
+ *  @brief Return true iff the given status is an error status.
+ *
+ *  @param[in]   status    a PEP_STATUS value
+ *  @retval true or false.
+ *
+ *  @warning Unspecified behaviour if the status is invalid.
+ *
+ */
+DYNAMIC_API bool PEP_STATUS_is_error(PEP_STATUS status);
 
 /**
  *  <!--       messageToSend()       -->
