@@ -34,6 +34,8 @@
   NEWS entry for v3.2.0-RC20 (2023-01-23).
 * Fix https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/107 : no
   longer prematurely free identity list in update_identity.
+* Echo: add pEp-auto-consume header.
+  Closes https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/96.
 
 v3.2.0-RC20  2023-01-23
 * make register_sync_callbacks really side-effect-free; this fixes
