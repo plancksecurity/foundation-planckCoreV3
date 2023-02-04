@@ -72,25 +72,24 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PEPENGINE_EXPORTS;_CRT_SECURE_NO_WARNINGS;USE_SEQUOIA;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <EnablePREfast>false</EnablePREfast>
-      <AdditionalIncludeDirectories>$(SolutionDir)pEpEngine\asn.1;$(SolutionDir);$(SolutionDir)libetpan\build-windows\include;$(SolutionDir)Tools\asn1c\share\asn1c;$(SolutionDir)sequoia\openpgp-ffi\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)pEpEngine\asn.1;$(SolutionDir);$(SolutionDir)libetpan\build-windows\include;$(SolutionDir)Tools\asn1c\share\asn1c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>Default</CompileAs>
       <DisableSpecificWarnings>4703</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>sequoia_openpgp_ffi.lib;gmp.lib;nettle.lib;hogweed.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Shlwapi.lib; pep_engine_sequoia_backend.dll.lib;gmp.lib;nettle.lib;hogweed.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
-      <AdditionalLibraryDirectories>$(SolutionDir)sequoia\target\debug;C:\msys64\mingw32\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)pEpEngineSequoiaBackend\target\debug;C:\msys64\mingw32\lib</AdditionalLibraryDirectories>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <SuppressStartupBanner>false</SuppressStartupBanner>
     </Link>
     <PreBuildEvent>
-      <Command>PUSHD $(SolutionDir)sequoia &amp;&amp; cargo build &amp;&amp; POPD</Command>
+      <Command>PUSHD $(SolutionDir)pEpEngineSequoiaBackend &amp;&amp; set NETTLE_HAVE_CV448=yes&amp;&amp; cargo build &amp;&amp; POPD </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy "$(SolutionDir)sequoia\target\debug\sequoia_openpgp_ffi.dll" "$(TargetDir)" /Y</Command>
-      <Command>xcopy "$(SolutionDir)sequoia\target\debug\sq.exe" "$(TargetDir)" /Y</Command>
+      <Command>xcopy "$(SolutionDir)pEpEngineSequoiaBackend\target\debug\pep_engine_sequoia_backend.dll" "$(TargetDir)" /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -103,7 +102,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PEPENGINE_EXPORTS;USE_SEQUOIA;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>false</SDLCheck>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)libetpan\build-windows\include;$(SolutionDir)Tools\asn1c\share\asn1c;$(SolutionDir)sequoia\openpgp-ffi\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)libetpan\build-windows\include;$(SolutionDir)Tools\asn1c\share\asn1c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ControlFlowGuard>Guard</ControlFlowGuard>
@@ -115,15 +114,14 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>sequoia_openpgp_ffi.lib;gmp.lib;nettle.lib;hogweed.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)sequoia\target\release;C:\msys64\mingw32\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Shlwapi.lib;pep_engine_sequoia_backend.dll.lib;gmp.lib;nettle.lib;hogweed.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)pEpEngineSequoiaBackend\target\release;C:\msys64\mingw32\lib</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
-      <Command>PUSHD $(SolutionDir)sequoia &amp;&amp; cargo build --release &amp;&amp; POPD</Command>
+      <Command>PUSHD $(SolutionDir)pEpEngineSequoiaBackend &amp;&amp; set NETTLE_HAVE_CV448=yes&amp;&amp; cargo build --release &amp;&amp; POPD </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy "$(SolutionDir)sequoia\target\release\sequoia_openpgp_ffi.dll" "$(TargetDir)" /Y</Command>
-      <Command>xcopy "$(SolutionDir)sequoia\target\release\sq.exe" "$(TargetDir)" /Y</Command>
+      <Command>xcopy "$(SolutionDir)pEpEngineSequoiaBackend\target\release\pep_engine_sequoia_backend.dll" "$(TargetDir)" /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -132,6 +130,7 @@
     <ClCompile Include="..\src\bloblist.c" />
     <ClCompile Include="..\src\cryptotech.c" />
     <ClCompile Include="..\src\distribution_codec.c" />
+    <ClCompile Include="..\src\echo_api.c" />
     <ClCompile Include="..\src\email.c" />
     <ClCompile Include="..\src\engine_sql.c" />
     <ClCompile Include="..\src\etpan_mime.c" />
@@ -146,18 +145,23 @@
     <ClCompile Include="..\src\key_reset.c" />
     <ClCompile Include="..\src\labeled_int_list.c" />
     <ClCompile Include="..\src\map_asn1.c" />
+    <ClCompile Include="..\src\media_key.c" />
     <ClCompile Include="..\src\message.c" />
     <ClCompile Include="..\src\message_api.c" />
     <ClCompile Include="..\src\message_codec.c" />
     <ClCompile Include="..\src\mime.c" />
     <ClCompile Include="..\src\openpgp_compat.c" />
     <ClCompile Include="..\src\pEpEngine.c" />
+    <ClCompile Include="..\src\pEp_log.c" />
+    <ClCompile Include="..\src\pEp_debug.c" />
+    <ClCompile Include="..\src\pEp_rmd160.c" />
     <ClCompile Include="..\src\pEp_string.c" />
     <ClCompile Include="..\src\pgp_sequoia.c" />
     <ClCompile Include="..\src\platform_windows.cpp" />
     <ClCompile Include="..\src\resource_id.c" />
     <ClCompile Include="..\src\security_checks.c" />
     <ClCompile Include="..\src\sqlite3.c" />
+    <ClCompile Include="..\src\sql_reliability.c" />
     <ClCompile Include="..\src\stringlist.c" />
     <ClCompile Include="..\src\stringpair.c" />
     <ClCompile Include="..\src\Sync_actions.c" />
@@ -207,6 +211,8 @@
     <ClInclude Include="..\src\pEpEngine.h" />
     <ClInclude Include="..\src\pEpEngine_internal.h" />
     <ClInclude Include="..\src\pEp_internal.h" />
+    <ClInclude Include="..\src\pEp_log.h" />
+    <ClInclude Include="..\src\pEp_rmd160.h" />
     <ClInclude Include="..\src\pEp_string.h" />
     <ClInclude Include="..\src\pgp_sequoia.h" />
     <ClInclude Include="..\src\pgp_sequoia_internal.h" />
