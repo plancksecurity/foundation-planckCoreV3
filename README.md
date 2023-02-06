@@ -26,7 +26,7 @@ The p≡p Engine is a Free Software library encapsulating implementations of:
 
   The p≡p Engine will sport a growing list of message transports, to support any widespread text-based messaging system such as E-Mail, SMS, XMPP and many more.
 
-The p≡p Engine is written in C99 and is expected to run on any platform that conforms to the SUS/POSIX specification.
+The p≡p Engine is written in C17 and is expected to run on any platform that conforms to the SUS/POSIX specification.
 Selected non-SUS platforms are supported as well (such as Microsoft Windows).
 
 # How can I use the p≡p Engine?
