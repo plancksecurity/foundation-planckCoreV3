@@ -54,8 +54,7 @@ Accompanying documentation is licensed under the terms of the Creative Commons A
 Each file includes a notice near its beginning, that indicates the applicable license.
 If you wish to license the p≡p Engine under different terms, please contact <mailto:council@pep.foundation>.
 
-src/pEp_rmd160.c is adapted from LibTomCrypt by Tom St Denis, which was
-released by its authors into the public domain.
+src/pEp_rmd160.c is adapted from LibTomCrypt by Tom St Denis, which was released by its authors into the public domain.
 
 # Contact
 The p≡p foundation and the developers of the p≡p Engine can be reached as detailed here: <https://pep.foundation/contact-us/index.html>.
