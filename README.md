@@ -30,7 +30,8 @@ The p≡p Engine is written in C99 and is expected to run on any platform that c
 Selected non-SUS platforms are supported as well (such as Microsoft Windows).
 
 # How can I use the p≡p Engine?
-Build instructions can be found in the "doc/" subfolder in this repository.
+The official build instructions can be found at the URL
+  https://dev.pep.foundation/Adapter/Adapter%20Build%20Instructions_Version_3.x_DRAFT
 The p≡p Engine is not meant to be used in application code directly.
 Instead, the p≡p Engine is meant to be used in conjunction with a so-called "adapter".
 An adapter provides an API in a programming language that best accomodates developers in their respective software development ecosystem.
