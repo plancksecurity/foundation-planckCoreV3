@@ -1,4 +1,4 @@
-<!-- Copyright 2015-2017, pEp foundation, Switzerland
+<!-- Copyright 2015-2023, pEp foundation, Switzerland
 This file is part of the pEp Engine
 This file may be used under the terms of the Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0) License
 See CC_BY-SA.txt -->
@@ -47,17 +47,14 @@ This is the only offical way to obtain a copy of the source code.
 First of all, excellent! You can find further information here: <https://contribution.pep.foundation/>
 
 # Legal notes
-The p≡p Engine is Copyright 2015-2020 by p≡p foundation, Switzerland.
+The p≡p Engine is Copyright 2015-2023 by p≡p foundation, Switzerland.
 The source code of the p≡p Engine is licensed under the terms of the GNU General Public License version 3.
 Accompanying documentation is licensed under the terms of the Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0) License.
 Each file includes a notice near its beginning, that indicates the applicable license.
 If you wish to license the p≡p Engine under different terms, please contact <mailto:council@pep.foundation>.
 
-_pEp_reallocarray in pgp_sequoia.c is reallocarray from the OpenBSD source. It is 
-copyright (c) 2008 Otto Moerbeek <otto@drijf.net> with the following permissions: 
-Permission to use, copy, modify, and distribute this software for any
-purpose with or without fee is hereby granted, provided that the above
-copyright notice and this permission notice appear in all copies.
+src/pEp_rmd160.c is adapted from LibTomCrypt by Tom St Denis, which was
+released by its authors into the public domain.
 
 # Contact
 The p≡p foundation and the developers of the p≡p Engine can be reached as detailed here: <https://pep.foundation/contact-us/index.html>.
