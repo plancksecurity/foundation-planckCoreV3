@@ -4881,10 +4881,7 @@ static PEP_STATUS process_Distribution_message(PEP_SESSION session,
         case Distribution_PR_echo:
             switch (dist->choice.echo.present) {
                 case Echo_PR_echoPing:
-                    if (session->enable_echo_protocol)
-                        status = send_pong(session, msg, dist);
-                    else
-                        LOG_EVENT("Echo protocol disabled: not sending Pong in reply to Ping");
+                    status = send_pong(session, msg, dist);
                     break;
                 case Echo_PR_echoPong:
                     LOG_EVENT("Received a Pong from %s <%s>", msg->from->username, msg->from->address);
