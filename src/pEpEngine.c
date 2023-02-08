@@ -3295,8 +3295,13 @@ DYNAMIC_API PEP_STATUS key_expired(
 {
     PEP_REQUIRE(session && ! EMPTYSTR(fpr) && expired);
 
-    return session->cryptotech[PEP_crypt_OpenPGP].key_expired(session, fpr,
-            when, expired);
+    PEP_STATUS status
+        = session->cryptotech[PEP_crypt_OpenPGP].key_expired(session, fpr,
+                                                             when, expired);
+    LOG_NONOK_STATUS_NONOK;
+    if (status == PEP_STATUS_OK && * expired)
+        LOG_NONOK("EXPIRED KEY: %s", fpr);
+    return status;
 }
 
 DYNAMIC_API PEP_STATUS key_revoked(
@@ -3307,8 +3312,13 @@ DYNAMIC_API PEP_STATUS key_revoked(
 {    
     PEP_REQUIRE(session && ! EMPTYSTR(fpr) && revoked);
 
-    return session->cryptotech[PEP_crypt_OpenPGP].key_revoked(session, fpr,
-            revoked);
+    PEP_STATUS status
+        = session->cryptotech[PEP_crypt_OpenPGP].key_revoked(session, fpr,
+                                                             revoked);
+    LOG_NONOK_STATUS_NONOK;
+    if (status == PEP_STATUS_OK && * revoked)
+        LOG_NONOK("REVOKED KEY: %s", fpr);
+    return status;
 }
 
 DYNAMIC_API PEP_STATUS config_cipher_suite(PEP_SESSION session,
@@ -3798,6 +3808,7 @@ DYNAMIC_API PEP_STATUS get_revoked(
 
     sql_reset_and_clear_bindings(session->get_revoked);
 
+    LOG_NONOK_STATUS_NONOK;
     return status;
 }
 
@@ -3840,6 +3851,7 @@ DYNAMIC_API PEP_STATUS get_replacement_fpr(
 
     sql_reset_and_clear_bindings(session->get_replacement_fpr);
 
+    LOG_NONOK_STATUS_NONOK;
     return status;
 }
 
