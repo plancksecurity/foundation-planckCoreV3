@@ -1,4 +1,6 @@
 * some documentation updates: link build instructions from README.md .
+* improve logging, in particular making it very visible when we discover that a
+  key expired or was revoked. 
 
 v3.2.0-RC22  2023-02-01
 * New API function PEP_STATUS_is_error.
