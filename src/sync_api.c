@@ -123,8 +123,7 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
 }
 
 DYNAMIC_API PEP_STATUS do_sync_protocol(
-        PEP_SESSION session,
-        void *obj
+        PEP_SESSION session
     )
 {
     PEP_REQUIRE(session && session->retrieve_next_sync_event);
@@ -153,9 +152,9 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
         if (!event)
             break;
 
-        do_sync_protocol_step(session, obj, event);
+        do_sync_protocol_step(session, event);
     }
-    session->sync_obj = NULL;
+    /* Here we could initialise session-local state, if we had any. */
 
     PEP_LOG_EVENT("p≡p Engine", "Sync", "sync_protocol thread shutdown");
 
@@ -172,7 +171,6 @@ DYNAMIC_API PEP_STATUS do_sync_protocol_init(PEP_SESSION session)
 
 DYNAMIC_API PEP_STATUS do_sync_protocol_step(
         PEP_SESSION session,
-        void *obj,
         SYNC_EVENT event
     )
 {
@@ -180,8 +178,6 @@ DYNAMIC_API PEP_STATUS do_sync_protocol_step(
 
     if (!event)
         return PEP_STATUS_OK;
-
-    session->sync_obj = obj;
 
     PEP_STATUS status = recv_Sync_event(session, event);
     return status == PEP_MESSAGE_IGNORE ? PEP_STATUS_OK : status;

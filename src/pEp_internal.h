@@ -507,7 +507,6 @@ struct _pEpSession {
 
     // pEp Sync
     void *sync_management;
-    void *sync_obj;
     struct Sync_state_s sync_state;
 
 //     void* sync_state_payload;

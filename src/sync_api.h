@@ -198,8 +198,7 @@ DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session);
  */
 
 DYNAMIC_API PEP_STATUS do_sync_protocol(
-        PEP_SESSION session,
-        void *obj
+        PEP_SESSION session
     );
 
 /**
@@ -222,7 +221,6 @@ DYNAMIC_API PEP_STATUS do_sync_protocol_init(PEP_SESSION session);
 
 DYNAMIC_API PEP_STATUS do_sync_protocol_step(
         PEP_SESSION session,
-        void *obj,
         SYNC_EVENT event
     );
 
