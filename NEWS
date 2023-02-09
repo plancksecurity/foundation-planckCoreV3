@@ -1,6 +1,12 @@
 * some documentation updates: link build instructions from README.md .
 * improve logging, in particular making it very visible when we discover that a
   key expired or was revoked.
+* Give the asn en/de-coders a much bigger stack size by patching asn_internal.h
+  .  This is a direct fix (thanks to Dirk) of a problem presumably already
+  solved by rate-limitation; building with santisiers on ios should now be
+  convenient again.
+  Closes https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/97 .
+  Closes https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/98 .
 
 v3.2.0-RC22  2023-02-01
 * New API function PEP_STATUS_is_error.
