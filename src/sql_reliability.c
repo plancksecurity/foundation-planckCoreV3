@@ -10,8 +10,8 @@
    would be very frequent and very distracting. */
 #define PEP_NO_LOG_FUNCTION_ENTRY 1
 
-/* #define _EXPORT_PEP_ENGINE_DLL */  /* I should uncomment this in case some
-                                         function defined here gets exported. */
+#define _EXPORT_PEP_ENGINE_DLL  /* some symbols are used in external compilation
+                                   units, in particular through macros. */
 #include "sql_reliability.h"
 
 #include "pEp_internal.h"
