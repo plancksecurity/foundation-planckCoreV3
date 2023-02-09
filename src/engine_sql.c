@@ -145,7 +145,7 @@ static int db_contains_table(PEP_SESSION session, const char* table_name) {
 
     int retval = 0;
 
-    int rc = sqlite3_step(stmt);
+    int rc = pEp_sqlite3_step_nonbusy(session, stmt);
     if (rc == SQLITE_DONE || rc == SQLITE_OK || rc == SQLITE_ROW) {
         retval = 1;
     }
@@ -208,7 +208,7 @@ static int table_contains_column(PEP_SESSION session, const char* table_name,
 
     int retval = 0;
 
-    int rc = sqlite3_step(stmt);
+    int rc = pEp_sqlite3_step_nonbusy(session, stmt);
     if (rc == SQLITE_DONE || rc == SQLITE_OK || rc == SQLITE_ROW) {
         retval = 1;
     }
@@ -239,7 +239,7 @@ PEP_STATUS repair_altered_tables(PEP_SESSION session) {
     sqlite3_prepare_v2(session->db, sql_query, -1, &stmt, NULL);
     int i = 0;
     int int_result = 0;
-    while ((int_result = sqlite3_step(stmt)) == SQLITE_ROW && i < _PEP_MAX_AFFECTED) {
+    while ((int_result = pEp_sqlite3_step_nonbusy(session, stmt)) == SQLITE_ROW && i < _PEP_MAX_AFFECTED) {
         table_names[i++] = strdup((const char*)(sqlite3_column_text(stmt, 0)));
     }
 
@@ -492,7 +492,7 @@ static PEP_STATUS upgrade_revoc_contact_to_13(PEP_SESSION session) {
             sqlite3_bind_text(update_revoked_w_addr_stmt, 2, curr_key->value, -1,
                               SQLITE_STATIC);
 
-            int_result = sqlite3_step(update_revoked_w_addr_stmt);
+            int_result = pEp_sqlite3_step_nonbusy(session, update_revoked_w_addr_stmt);
             PEP_ASSERT(int_result == SQLITE_DONE);
 
             sql_reset_and_clear_bindings(update_revoked_w_addr_stmt);
@@ -1650,8 +1650,24 @@ PEP_STATUS pEp_sql_init(PEP_SESSION session) {
 // This whole mess really does need to be generated somewhere.
 PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session) {
 
-    int int_result = sqlite3_prepare_v2(session->system_db, sql_trustword,
+    int int_result = SQLITE_OK;
+
+    /* Trustwords / system db. */
+    int_result = sqlite3_prepare_v2(session->system_db, sql_trustword,
                                     (int)strlen(sql_trustword), &session->trustword, NULL);
+    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+
+    /* Everything else: management db. */
+    int_result = sqlite3_prepare_v2(session->db, sql_begin_exclusive_transaction,
+                                    (int)strlen(sql_begin_exclusive_transaction), &session->begin_exclusive_transaction, NULL);
+    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+
+    int_result = sqlite3_prepare_v2(session->db, sql_commit_transaction,
+                                    (int)strlen(sql_commit_transaction), &session->commit_transaction, NULL);
+    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+
+    int_result = sqlite3_prepare_v2(session->db, sql_rollback_transaction,
+                                    (int)strlen(sql_rollback_transaction), &session->rollback_transaction, NULL);
     PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
 
     int_result = sqlite3_prepare_v2(session->db, sql_get_identity,
@@ -2096,8 +2112,11 @@ PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session) {
 }
 
 PEP_STATUS pEp_finalize_sql_stmts(PEP_SESSION session) {
-    sqlite3_finalize(session->log);
     sqlite3_finalize(session->trustword);
+    sqlite3_finalize(session->log);
+    sqlite3_finalize(session->begin_exclusive_transaction);
+    sqlite3_finalize(session->commit_transaction);
+    sqlite3_finalize(session->rollback_transaction);
     sqlite3_finalize(session->get_identity);
     sqlite3_finalize(session->get_identity_without_trust_check);
     sqlite3_finalize(session->get_identities_by_address);

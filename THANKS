@@ -1,0 +1,12 @@
+We p≡p Engine authors wish to thank:
+
+* Tom St Denis and the other authors of the excellent LibTomCrypt, from which we
+  reused the RIPEMD-160 hash implementation.  While we are aware that the
+  library is in the public domain and an acknowledgement is not required we
+  still wish to freely express our gratitude;
+
+* the authors of libetpan;
+
+* the authors of asn1c;
+
+* [likely other people we are forgetting].

@@ -355,7 +355,7 @@ release ()
     fi
 
     versionfile=src/pEpEngine_version.h
-    prepend_to_NEWS "v$version\n"
+    prepend_to_NEWS "v$version  $(date '+%Y-%m-%d')\n"
     emit_version_h_content "$version" 'no' > "$versionfile"
     git add "$versionfile"
     git commit -m "set version to $version" \
@@ -373,7 +373,11 @@ release ()
 
 Now go to
   https://gitea.pep.foundation/pEp.foundation/pEpEngine/releases/new
-and mark an Engine release for $version on branch $branchname .
+and mark an Engine release for v${version} on branch $branchname .  Copy this
+text:
+
+See the [NEWS](https://gitea.pep.foundation/pEp.foundation/pEpEngine/src/tag/v${version}/NEWS) file.
+
 EOF
 }
 
@@ -570,5 +574,5 @@ require_version_number
 if test "$release" != 'no'; then
     release "$theversion"
 else # we take print to be the default
-    echo "$theversion"
+    echo "v${theversion}"
 fi

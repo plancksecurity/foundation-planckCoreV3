@@ -5,51 +5,43 @@
 
 include ../Makefile.conf
 
-ifneq ($(BUILD_ON),OS/390)
-LDFLAGS+= -shared
+ifneq ($(BUILD_FOR),OS/390)
+    LDFLAGS += -shared
 endif
 
 NO_SOURCE=
 
 ifndef PEP_MIME
-ifeq ($(BUILD_ON),OS/390)
-    LDLIBS+= -letpan-no-mt
-else
-    LDLIBS+= -letpan
-endif
+    ifeq ($(BUILD_FOR),OS/390)
+        LDLIBS+= -letpan-no-mt
+    else
+        LDLIBS+= -letpan
+    endif
 else
     LDLIBS+= -lpEpMIME
     NO_SOURCE+= etpan_mime.c
 endif
-    
+
 CFLAGS+= -I../asn.1 $(EXTRA_MACROS)
 CFLAGS+= -I$(PREFIX)/include
 CPPFLAGS+= -DSQLITE_THREADSAFE=1
 
 LDFLAGS+= -L../asn.1
 LDFLAGS+= -L$(PREFIX)/lib
-ifneq ($(BUILD_ON),OS/390)
-LDFLAGS+= -shared
-LDLIBS+= -lc
+ifneq ($(BUILD_FOR),OS/390)
+    LDFLAGS+= -shared
+    LDLIBS+= -lc
 endif
 LDLIBS+= -lasn1
 
-ifeq ($(BUILD_ON),OS/390)
+ifeq ($(BUILD_FOR),OS/390)
     OPENPGP=NETPGP
     LDLIBS+= -lzz
-else ifeq ($(BUILD_ON),Darwin)
-    ifeq ($(BUILD_FOR),Darwin)
-        LDLIBS+= -lz -liconv
-    else
-        $(error I do not know how to make for $(BUILD_FOR) on $(BUILD_ON))
-    endif
-else ifeq ($(BUILD_ON),Linux)
-    ifeq ($(BUILD_FOR),Linux)
-        CPPFLAGS+= -D_GNU_SOURCE
-        LDLIBS+= -ldl -luuid
-    else
-        $(error I do not know how to make for $(BUILD_FOR) on $(BUILD_ON))
-    endif
+else ifeq ($(BUILD_FOR),Darwin)
+    LDLIBS+= -lz -liconv
+else ifeq ($(BUILD_FOR),Linux)
+    CPPFLAGS+= -D_GNU_SOURCE
+    LDLIBS+= -ldl -luuid
 else
     $(error I do not know how to make for $(BUILD_FOR) on $(BUILD_ON))
 endif
@@ -79,7 +71,7 @@ endif
 ALL_SOURCE=$(filter-out $(NO_SOURCE),$(wildcard *.c))
 DEPENDS=$(subst .c,.d,$(ALL_SOURCE))
 ALL_OBJECTS=$(subst .c,.o,$(ALL_SOURCE))
-ifeq ($(BUILD_ON),OS/390)
+ifeq ($(BUILD_FOR),OS/390)
     ALL_OBJECTS+=/usr/lib/GSKCMS64.x
     ALL_OBJECTS+=/usr/lib/CSNPCA64.x
 endif
@@ -102,9 +94,9 @@ ifneq ($(MAKECMDGOALS),clean)
 endif
 
 $(TARGET): libpEpEngine.a
-	$(CC) -o $@ $(CPPFLAGS) $(LDFLAGS) $(CFLAGS) $(ALL_OBJECTS) $(LDLIBS)
+	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(ALL_OBJECTS) $(LDLIBS)
 
-.PHONY: objects clean install_headers install uninstall beinstall doc
+.PHONY: first all objects clean install_headers install uninstall beinstall doc
 
 objects: $(ALL_OBJECTS)
 
@@ -126,7 +118,7 @@ HEADERS_TO_INSTALL = \
   echo_api.h distribution_api.h media_key.h \
   map_asn1.h \
   platform.h platform_unix.h platform_windows.h platform_zos.h \
-  pEp_debug.h pEp_log.h \
+  pEp_debug.h pEp_log.h sql_reliability.h \
   pEpEngine_version.h \
   transport.h growing_buf.h $(wildcard ../asn.1/*.h)
 

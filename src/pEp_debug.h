@@ -71,7 +71,12 @@ typedef enum {
 
 /* These constant expressions evaluate to non-false when failed checks should
    cause an abort.
-   These Boolean values express *fatality*. */
+   These Boolean values express *fatality*.
+
+   Notice that abort is never actually called when the environment variable
+   PEP_NOABORT is defined; see the comment for pEp_abort_unless_PEP_NOABORT.
+   PEP_NOABORT is intended for use by the Engine developers in the test
+   suite. */
 #define PEP_ABORT_ON_VIOLATED_REQUIRE  \
     (PEP_SAFETY_MODE == PEP_SAFETY_MODE_MAINTAINER)
 #define PEP_ABORT_ON_VIOLATED_WEAK_ASSERT  \
@@ -133,7 +138,7 @@ typedef enum {
                                     what_as_string " precondition", \
                                     "session != NULL");             \
             if (abort_on_failure)                                   \
-                abort();                                            \
+                pEp_abort_unless_PEP_NOABORT();                     \
             do {                                                    \
                 else_statement;                                     \
             } while (false);                                        \
@@ -143,7 +148,7 @@ typedef enum {
                                     what_as_string,                 \
                                     expression_as_string);          \
             if (abort_on_failure)                                   \
-                abort();                                            \
+                pEp_abort_unless_PEP_NOABORT();                     \
             do {                                                    \
                 else_statement;                                     \
             } while (false);                                        \
@@ -399,6 +404,44 @@ typedef enum {
     } while (false)
 
 
+/* Utility macros for Boolean conditions.
+ * ***************************************************************** */
+
+/* This macro implements logical implication from the first Boolean expression
+   to the second Boolean expression.
+   The expansion evaluates to
+     A → B  */
+#define PEP_IMPLIES(boolean_expression_a, boolean_expression_b)  \
+    /* A → B  is logically equivalent to  ¬A ∨ B */              \
+    (! (boolean_expression_a) || (boolean_expression_b))
+
+/* This macro implements the logical equivalence of the two given Boolean
+   expressions, which is not a simple equality because of how truth values are
+   handled in C, without a single normal form for the true value.
+   The expansion evaluates to
+     A ≡ B
+   , sometimes written as
+     A ↔ B  */
+#define PEP_IFF(boolean_expression_a, boolean_expression_b)              \
+    /* !X is guaranteed to evaluate to either 0 or 1 in ANSI C, for any  \
+       expression X; we could use !! to normalise each expression to 0   \
+       or 1, but instead of doing that we can just compare the two       \
+       negated values. */                                                \
+    (! (boolean_expression_a) == ! (boolean_expression_b))
+
+/* Given an integer expression expand to an expression evaluating to a non-false
+   value iff the integer expression evaluates to an even number.  The integer
+   expression is allowed to evaluate to zero or to a negative number. */
+#define PEP_EVEN(integer_expression)  \
+    ((integer_expression) % 2 == 0)
+
+/* Given an integer expression expand to an expression evaluating to a non-false
+   value iff the integer expression evaluates to an odd number.  The integer
+   expression is allowed to evaluate to zero or to a negative number. */
+#define PEP_ODD(integer_expression)  \
+    ((integer_expression) % 2 != 0) /* == 1  might not be portable. */
+
+
 /* Handling status checks and local failure.  [TENTATIVE]
  * ***************************************************************** */
 
@@ -434,6 +477,23 @@ typedef enum {
 
 #define PEP_SET_STATUS_ORELSE_RETURN(expression, else_result, ...)  \
     _PEP_SET_STATUS_ORELSE(expression, {return (else_result);}, __VA_ARGS__)
+
+
+/* Internal functions.
+ * ***************************************************************** */
+
+/**
+ *  <!--       pEp_abort_unless_PEP_NOABORT()       -->
+ *
+ *  @brief Call abort(3), unless the environment variable PEP_NOABORT is
+ *         currently defined, to any value -- in which case do nothing.
+ *         This function is useful to override the current fatality mode
+ *         when running the test suite: when called from test cases pEp
+ *         functions should always return failure codes, and never abort.
+ *
+ */
+DYNAMIC_API void pEp_abort_unless_PEP_NOABORT(void);
+
 
 #ifdef __cplusplus
 

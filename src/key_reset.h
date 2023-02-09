@@ -83,7 +83,10 @@ DYNAMIC_API PEP_STATUS key_reset_identity(
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
  *  @retval PEP_OUT_OF_MEMORY   out of memory
- *  @retval any other value on error
+ *  @retval any other value on error.  But notice that, differently from 2.x
+ *          startting from pEp Engine 2.1.69, the 3.x series does not return
+ *          PEP_KEY_NOT_FOUND where there is no key to reset; in that case the
+ *          result will simply be PEP_STATUS_OK.
  */
 
 //

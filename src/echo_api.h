@@ -65,7 +65,9 @@ PEP_STATUS echo_finalize(PEP_SESSION session);
  *  @param[in]   from         sender identity, must be own
  *  @param[in]   to           recipient identity
  *
- *  @retval PEP_STATUS_OK            messageToSend returned with success
+ *  @retval PEP_STATUS_OK            messageToSend returned with success, or
+ *                                   Ping not send because of rate limitation
+ *                                   (not considered an error)
  *  @retval PEP_ILLEGAL_VALUE        session, from, to or messageToSend not
  *                                   defined
  *  @retval PEP_OUT_OF_MEMORY        out of memory
@@ -94,7 +96,9 @@ PEP_STATUS send_ping(PEP_SESSION session,
  *                                the Distribution_t message encoded as one of
  *                                the attechments of ping_message;
  *
- *  @retval PEP_STATUS_OK            messageToSend returned with success
+ *  @retval PEP_STATUS_OK            messageToSend returned with success, or
+ *                                   Pong not send because of rate limitation
+ *                                   (not considered an error)
  *  @retval PEP_ILLEGAL_VALUE        session, ping_message,
  *                                   ping_distribution_message or messageToSend
  *                                   not defined, ping_distribution_message
@@ -189,7 +193,25 @@ PEP_STATUS send_ping_to_unknown_pEp_identities_in_incoming_message(PEP_SESSION s
 PEP_STATUS send_ping_to_unknown_pEp_identities_in_outgoing_message(PEP_SESSION session,
                                                                    const message *msg);
 
-    
+
+/* Tuning parameters.
+ * ***************************************************************** */
+
+/* This macro defines the minimum number of elapsed seconds between Echo
+   messages sent by us (any session, same device) to the same identity.
+
+   We do not distinguish between Ping and Pong messages, since we want to
+   rate-limit both:
+   - We rate-limit Ping messages in order not to send a flood of messages when
+     we are waiting for a response;
+   - We rate-limit Pong messages in order to avoid DoS attacks in which the
+     message rate is amplified, which can happen in mailing lists.
+
+   Of course period = 1 / frequency, and saying "minimum period" is like
+   saying "maximum frequency". */
+#define PEP_MINIMUM_ECHO_MESSAGES_PERIOD_IN_SECONDS  \
+    (60 * 30) /* 30 minutes */
+
 #ifdef __cplusplus
 }
 #endif

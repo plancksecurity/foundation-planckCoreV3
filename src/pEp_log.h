@@ -134,6 +134,7 @@ typedef enum {
 
     /* Debugging. */
     PEP_LOG_LEVEL_NONOK       =  300,
+    PEP_LOG_LEVEL_NOTOK       =  300 /* alias */,
     PEP_LOG_LEVEL_FUNCTION    =  310,
     PEP_LOG_LEVEL_TRACE       =  320,
 
@@ -253,9 +254,14 @@ typedef enum {
 
 /* If this is enabled then requirements at function entry will also log a line
    (level Function) about the function being entered.  Since this can make the
-   logs very noisy I made it possible to disable the feature independently from
-   PEP_LOG_LEVEL_MAXIMUM , by commenting-out this line. */
-#define PEP_LOG_FUNCTION_ENTRY  1
+   logs very noisy I am making it possible to disable the feature independently
+   from PEP_LOG_LEVEL_MAXIMUM , by commenting-out the #define line below.
+
+   It is also possible to disable this feature for specific compilation units by
+   defining PEP_NO_LOG_FUNCTION_ENTRY before including this header. */
+#if ! defined(PEP_NO_LOG_FUNCTION_ENTRY)
+# define PEP_LOG_FUNCTION_ENTRY  1
+#endif
 
 /* If this is enabled then *failed* status checkswill also log a line (level
    NonOK) about the expression, usually a function call, failing.  Since this
@@ -302,50 +308,62 @@ typedef enum {
  *        convenient to define a macro, local to the compilation unit, having
  *        only variadic arguments.  See the comment in the "How to use" section.
  */
-#define PEP_LOG_CRITICAL(first, ...)                                  \
-    PEP_LOG_WITH_LEVEL(PEP_LOG_LEVEL_CRITICAL, (first), __VA_ARGS__)
+/* This style of definition would work, conceptually: but in early 2023 Alex had
+   problems using the microsoft compiler, which emitted some arguments grouped
+   by unwanted parentheses, nowhere to be found in the macro definition; the GCC
+   and Clang C preprocessors do not exhibit this problem.
+   I (positron) suspect that the microsoft preprocessor may be wrong, but this
+   would need to be distilled into a simpler test case.  Anyway I asked Alex to
+   try the alternative below, much more verbose, and he confirmed that this
+   version works as intended with microsoft's compiler as well.
+   --positron, 2023-01  */
+/* #define PEP_LOG_CRITICAL(first, ...)                                  \
+     PEP_LOG_WITH_LEVEL(PEP_LOG_LEVEL_CRITICAL, (first), __VA_ARGS__)  */
+#define PEP_LOG_CRITICAL(system, subsystem, ...)  \
+    PEP_LOG_WITH_SESSION_AND_LEVEL((session), (PEP_LOG_LEVEL_CRITICAL), (system), (subsystem), "" __VA_ARGS__)
 
 /**
  *  <!--       PEP_LOG_ERROR()       -->
  *  @brief Exactly like PEP_LOG_CRITICAL, with a different log level.
  */
-#define PEP_LOG_ERROR(first, ...)                                  \
-    PEP_LOG_WITH_LEVEL(PEP_LOG_LEVEL_ERROR, (first), __VA_ARGS__)
+#define PEP_LOG_ERROR(system, subsystem, ...)  \
+    PEP_LOG_WITH_SESSION_AND_LEVEL((session), (PEP_LOG_LEVEL_ERROR), (system), (subsystem), "" __VA_ARGS__)
 
 /**
  *  <!--       PEP_LOG_WARNING()       -->
  *  @brief Exactly like PEP_LOG_CRITICAL, with a different log level.
  */
-#define PEP_LOG_WARNING(first, ...)                                  \
-    PEP_LOG_WITH_LEVEL(PEP_LOG_LEVEL_WARNING, (first), __VA_ARGS__)
+#define PEP_LOG_WARNING(system, subsystem, ...)  \
+    PEP_LOG_WITH_SESSION_AND_LEVEL((session), (PEP_LOG_LEVEL_WARNING), (system), (subsystem), "" __VA_ARGS__)
 
 /**
  *  <!--       PEP_LOG_EVENT()       -->
  *  @brief Exactly like PEP_LOG_CRITICAL, with a different log level.
  */
-#define PEP_LOG_EVENT(first, ...)                                  \
-    PEP_LOG_WITH_LEVEL(PEP_LOG_LEVEL_EVENT, (first), __VA_ARGS__)
+#define PEP_LOG_EVENT(system, subsystem, ...)  \
+    PEP_LOG_WITH_SESSION_AND_LEVEL((session), (PEP_LOG_LEVEL_EVENT), (system), (subsystem), "" __VA_ARGS__)
 
 /**
  *  <!--       PEP_LOG_API()       -->
  *  @brief Exactly like PEP_LOG_CRITICAL, with a different log level.
  */
-#define PEP_LOG_API(first, ...)                                  \
-    PEP_LOG_WITH_LEVEL(PEP_LOG_LEVEL_API, (first), __VA_ARGS__)
+#define PEP_LOG_API(system, subsystem, ...)  \
+    PEP_LOG_WITH_SESSION_AND_LEVEL((session), (PEP_LOG_LEVEL_API), (system), (subsystem), "" __VA_ARGS__)
 
 /**
  *  <!--       PEP_LOG_FUNCTION()       -->
  *  @brief Exactly like PEP_LOG_CRITICAL, with a different log level.
  */
-#define PEP_LOG_FUNCTION(first, ...)                                  \
-    PEP_LOG_WITH_LEVEL(PEP_LOG_LEVEL_FUNCTION, (first), __VA_ARGS__)
+#define PEP_LOG_FUNCTION(system, subsystem, ...)  \
+    PEP_LOG_WITH_SESSION_AND_LEVEL((session), (PEP_LOG_LEVEL_FUNCTION), (system), (subsystem), "" __VA_ARGS__)
 
 /**
  *  <!--       PEP_LOG_NONOK()       -->
  *  @brief Exactly like PEP_LOG_CRITICAL, with a different log level.
  */
-#define PEP_LOG_NONOK(first, ...)                                  \
-    PEP_LOG_WITH_LEVEL(PEP_LOG_LEVEL_NONOK, (first), __VA_ARGS__)
+#define PEP_LOG_NONOK(system, subsystem, ...)  \
+    PEP_LOG_WITH_SESSION_AND_LEVEL((session), (PEP_LOG_LEVEL_NONOK), (system), (subsystem), "" __VA_ARGS__)
+
 /**
  *  <!--       PEP_LOG_NOTOK()       -->
  *  @brief A convenience alias for PEP_LOG_NONOK.
@@ -356,30 +374,30 @@ typedef enum {
  *  <!--       PEP_LOG_TRACE()       -->
  *  @brief Exactly like PEP_LOG_CRITICAL, with a different log level.
  */
-#define PEP_LOG_TRACE(first, ...)                                      \
-    PEP_LOG_WITH_LEVEL(PEP_LOG_LEVEL_TRACE, (first), __VA_ARGS__)
+#define PEP_LOG_TRACE(system, subsystem, ...)  \
+    PEP_LOG_WITH_SESSION_AND_LEVEL((session), (PEP_LOG_LEVEL_TRACE), (system), (subsystem), "" __VA_ARGS__)
 
 
 /**
  *  <!--       PEP_LOG_PRODUCTION()       -->
  *  @brief Exactly like PEP_LOG_CRITICAL, with a different log level.
  */
-#define PEP_LOG_PRODUCTION(first, ...)                                  \
-    PEP_LOG_WITH_LEVEL(PEP_LOG_LEVEL_PRODUCTION, (first), __VA_ARGS__)
+#define PEP_LOG_PRODUCTION(system, subsystem, ...)  \
+    PEP_LOG_WITH_SESSION_AND_LEVEL((session), (PEP_LOG_LEVEL_PRODUCTION), (system), (subsystem), "" __VA_ARGS__)
 
 /**
  *  <!--       PEP_LOG_BASIC()       -->
  *  @brief Exactly like PEP_LOG_CRITICAL, with a different log level.
  */
-#define PEP_LOG_BASIC(first, ...)                                  \
-    PEP_LOG_WITH_LEVEL(PEP_LOG_LEVEL_BASIC, (first), __VA_ARGS__)
+#define PEP_LOG_BASIC(system, subsystem, ...)  \
+    PEP_LOG_WITH_SESSION_AND_LEVEL((session), (PEP_LOG_LEVEL_BASIC), (system), (subsystem), "" __VA_ARGS__)
 
 /**
  *  <!--       PEP_LOG_SERVICE()       -->
  *  @brief Exactly like PEP_LOG_CRITICAL, with a different log level.
  */
-#define PEP_LOG_SERVICE(first, ...)                                  \
-    PEP_LOG_WITH_LEVEL(PEP_LOG_LEVEL_SERVICE, (first), __VA_ARGS__)
+#define PEP_LOG_SERVICE(system, subsystem, ...)  \
+    PEP_LOG_WITH_SESSION_AND_LEVEL((session), (PEP_LOG_LEVEL_SERVICE), (system), (subsystem), "" __VA_ARGS__)
 
 
 /* Logging facility: internal macros
@@ -396,37 +414,39 @@ typedef enum {
 
 /* The macros here are used internally to implement the user macros above. */
 
-/**
- *  <!--       PEP_LOG_WITH_LEVEL()       -->
- *
- * @brief Exactly like PEP_LOG_CRITICAL, with one more parameter prepended
- *        to the others.
- *        Same caveat about capturing a variable named "session".
- *
- *  @param[in]     level       log level, of type PEP_LOG_LEVEL
- *  @param[in]     ...         the remaining parameters are exactly the same
- *                             as in PEP_LOG_CRITICAL.
- *
- *  @warning       This macro is not the most convenient to use from C; the
- *                 macros defined above such as PEP_LOG_CRITICAL and
- *                 PEP_LOG_EVENT are more natural to write in most
- *                 circumstances.
- */
-#define PEP_LOG_WITH_LEVEL(first, ...)                                        \
-    do {                                                                      \
-       /* Capture the local variable named "session" -- static-scoping        \
-          purists will not like this -- then call a less convenient macro     \
-          doing the actual job.  The first parameter level is not in any way  \
-          special, except for its position: defining a variadic macro with    \
-          *zero* or more arguments in portable C can be annoying, but we can  \
-          entirely avoid the complication here since there will be at least   \
-          one parameter. */                                                   \
-        PEP_SESSION _pEp_log_session = (session);                             \
-                                                                              \
-        /* Do the actual work. */                                             \
-        PEP_LOG_WITH_SESSION_AND_LEVEL(_pEp_log_session, (first),             \
-                                       __VA_ARGS__);                          \
-    } while (false)
+// Disabled in early 2023 since now unused: see the comment above about the
+// microsoft preprocessor.
+/* /\** */
+/*  *  <!--       PEP_LOG_WITH_LEVEL()       --> */
+/*  * */
+/*  * @brief Exactly like PEP_LOG_CRITICAL, with one more parameter prepended */
+/*  *        to the others. */
+/*  *        Same caveat about capturing a variable named "session". */
+/*  * */
+/*  *  @param[in]     level       log level, of type PEP_LOG_LEVEL */
+/*  *  @param[in]     ...         the remaining parameters are exactly the same */
+/*  *                             as in PEP_LOG_CRITICAL. */
+/*  * */
+/*  *  @warning       This macro is not the most convenient to use from C; the */
+/*  *                 macros defined above such as PEP_LOG_CRITICAL and */
+/*  *                 PEP_LOG_EVENT are more natural to write in most */
+/*  *                 circumstances. */
+/*  *\/ */
+/* #define PEP_LOG_WITH_LEVEL(first, ...)                                        \ */
+/*     do {                                                                      \ */
+/*        /\* Capture the local variable named "session" -- static-scoping        \ */
+/*           purists will not like this -- then call a less convenient macro     \ */
+/*           doing the actual job.  The first parameter level is not in any way  \ */
+/*           special, except for its position: defining a variadic macro with    \ */
+/*           *zero* or more arguments in portable C can be annoying, but we can  \ */
+/*           entirely avoid the complication here since there will be at least   \ */
+/*           one parameter. *\/                                                   \ */
+/*         PEP_SESSION _pEp_log_session = (session);                             \ */
+/*                                                                               \ */
+/*         /\* Do the actual work. *\/                                             \ */
+/*         PEP_LOG_WITH_SESSION_AND_LEVEL(_pEp_log_session, (first),             \ */
+/*                                        __VA_ARGS__);                          \ */
+/*     } while (false) */
 
 /**
  *  <!--       PEP_LOG_WITH_SESION_AND_LEVEL()       -->

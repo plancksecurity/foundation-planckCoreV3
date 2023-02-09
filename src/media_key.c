@@ -63,27 +63,30 @@ PEP_STATUS media_key_insert(PEP_SESSION session,
 
     /* Initialise heap-allocated pointers to NULL so that they all have a known
        value in case of allocation failure. */
+    PEP_STATUS status = PEP_STATUS_OK;
     char *normalized_fpr = NULL;
     stringpair_t *new_pair = NULL;
 
+#define FAIL(the_status)        \
+    do {                        \
+        status = (the_status);  \
+        goto error;             \
+    } while (false)
+
     /* Work with a normalised copy of the FPR. */
-    size_t fpr_length = strlen(fpr);
-    normalized_fpr = malloc(fpr_length + 1);
-    if (normalized_fpr == NULL)
-        goto out_of_memory;
-    int i;
-    for (i = 0; i /* <= , to include the trailing '\0' */ <= fpr_length; i ++)
-        normalized_fpr [i] = toupper(fpr [i]);
+    status = normalize_fpr(session, & normalized_fpr, fpr);
+    if (status != PEP_STATUS_OK)
+        FAIL(status);
 
     /* Make the new entry. */
     stringpair_list_t *old_map = session->media_key_map;
     new_pair = new_stringpair(address_pattern, normalized_fpr);
     if (new_pair == NULL)
-        goto out_of_memory;
+        FAIL(PEP_OUT_OF_MEMORY);
     stringpair_list_t *new_last_element
         = stringpair_list_add(old_map, new_pair);
     if (new_last_element == NULL)
-        goto out_of_memory;
+        FAIL(PEP_OUT_OF_MEMORY);
     /* Else the structured ponted by old_map is modified destructively, so we
        have nothing else to do as long as the map was not previously NULL... */
     if (old_map == NULL)
@@ -91,10 +94,11 @@ PEP_STATUS media_key_insert(PEP_SESSION session,
     free(normalized_fpr);
     return PEP_STATUS_OK;
 
- out_of_memory:
+ error:
     free(normalized_fpr);
     free(new_pair);
-    return PEP_OUT_OF_MEMORY;
+    return status;
+#undef FAIL
 }
 
 PEP_STATUS media_key_remove(PEP_SESSION session,
@@ -491,6 +495,8 @@ PEP_STATUS media_key_for_outgoing_message(PEP_SESSION session,
  end:
     if (fpr_result != NULL)
         * fpr_result = candidate_key;
-    LOG_TRACE("* The message %s has media key %s", (msg->shortmsg ? msg->shortmsg : "(no subject)"), (candidate_key ? candidate_key : "(no key)"));
+
+    if (candidate_key)
+        LOG_TRACE("[%s] has media key %s", (msg->shortmsg ? msg->shortmsg : "(no subject)"), candidate_key);
     return status;
 }

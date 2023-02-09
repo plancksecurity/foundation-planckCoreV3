@@ -24,6 +24,7 @@
 #include <tchar.h>
 #include <sys\stat.h>
 #include <processthreadsapi.h>
+#include <synchapi.h> /* for Sleep */
 
 #include "pEpEngine.h" // just for PEP_STATUS
 
@@ -226,6 +227,10 @@ int pEp_fnmatch(const char* pattern, const char* string) {
             : 1);
 }
 
+void pEp_sleep_ms(unsigned long ms)
+{
+    Sleep((DWORD) ms);
+}
 
 DYNAMIC_API const char *per_user_directory(void)
 {
@@ -483,7 +488,8 @@ _pEp_pid_t getpid(void)
     return GetCurrentProcessId();
 }
 
-#warning "FIXME: remove this ugly thing and use the new log facility instead"
+// #warning not suported by the windows compiler.  FIXME: re-introduce if possible inside another CPP conditional.
+// #warning "FIXME: remove this ugly thing and use the new log facility instead"
 void log_output_debug(const char *title,
                       const char *entity,
                       const char *description,

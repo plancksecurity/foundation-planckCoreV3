@@ -26,6 +26,7 @@
 #include "distribution_codec.h"
 #include "echo_api.h"
 #include "media_key.h"
+#include "pEp_rmd160.h"
 
 #include "status_to_string.h" // FIXME: remove
 
@@ -42,6 +43,21 @@
 #include <stdint.h>
 #include <math.h>
 
+
+/* Compile-time configuration
+ * ***************************************************************** */
+
+/* See the comment in PEP_trustwords_algorithm .  Falling back to the older xor
+   trustwords for compatibility is disabled by default, to prevent downgrade
+   attacks. */
+#if ! defined (PEP_TRUSTWORDS_XOR_COMPATIBILITY)
+// #warning not suported by the windows compiler.  FIXME: re-introduce if possible inside another CPP conditional.
+// # warning "PEP_TRUSTWORDS_XOR_COMPATIBILITY is not defined: compatibility break"
+#endif
+
+
+/* All the rest
+ * ***************************************************************** */
 
 // These are globals used in generating message IDs and should only be
 // computed once, as they're either really constants or OS-dependent
@@ -4234,9 +4250,14 @@ static PEP_STATUS protocol_version_upgrade_or_ignore(
 
     PEP_STATUS status = PEP_STATUS_OK;        
     int ver_compare = compare_versions(major, minor, ident->major_ver, ident->minor_ver);
-    if (ver_compare > 0)
-        status = set_protocol_version(session, ident, major, minor);        
-    
+    if (ver_compare > 0) {
+        status = set_protocol_version(session, ident, major, minor);
+        LOG_EVENT("%s <%s> upgrading to protocol version %i.%i: %i 0x%x %s",
+                  (ident->username ? ident->username : "NO-USERNAME"),
+                  (ident->address ? ident->address : "NO-ADDRESS"),
+                  major, minor,
+                  (int) status, (int) status, pEp_status_to_string(status));
+    }
     return status;    
 }
 
@@ -4860,10 +4881,7 @@ static PEP_STATUS process_Distribution_message(PEP_SESSION session,
         case Distribution_PR_echo:
             switch (dist->choice.echo.present) {
                 case Echo_PR_echoPing:
-                    if (session->enable_echo_protocol)
-                        status = send_pong(session, msg, dist);
-                    else
-                        LOG_EVENT("Echo protocol disabled: not sending Pong in reply to Ping");
+                    status = send_pong(session, msg, dist);
                     break;
                 case Echo_PR_echoPong:
                     LOG_EVENT("Received a Pong from %s <%s>", msg->from->username, msg->from->address);
@@ -5068,11 +5086,6 @@ static PEP_STATUS _decrypt_message(
                                                      major_ver, minor_ver);     \
             if (_upgrade_version_status != PEP_STATUS_OK)                       \
                 return _upgrade_version_status;                                 \
-            LOG_TRACE("%s <%s> upgraded to protocol version %i.%i",             \
-                      (_the_from->username ? _the_from->username                \
-                       : "NO-USERNAME"),                                        \
-                      (_the_from->address ? _the_from->address : "NO-ADDRESS"), \
-                      major_ver, minor_ver);                                    \
         }                                                                       \
     } while (false)
 
@@ -6797,124 +6810,156 @@ DYNAMIC_API PEP_color color_from_rating(PEP_rating rating)
     return PEP_color_no_color;
 }
 
-/* [0-9]: 0x30 - 0x39; [A-F] = 0x41 - 0x46; [a-f] = 0x61 - 0x66 */
-/**
- *  @internal
- *
- *  <!--       asciihex_to_num()       -->
- *
- *  @brief            TODO
- *
- *  @param[in]    a        char
- *
- */
-static short asciihex_to_num(char a) {
-    short conv_num = -1;
-    if (a >= 0x30 && a <= 0x39)
-        conv_num = a - 0x30;
-    else {
-        // convert case, subtract offset, get number
-        conv_num = ((a | 0x20) - 0x61) + 10;
-        if (conv_num < 0xa || conv_num > 0xf)
-            conv_num = -1;
+/* The way to compute trustwords.  Notice that the algorithm required by two
+   identities is the minimum of the one required by each. */
+typedef enum _PEP_trustwords_algorithm{
+    /* Never used case, to catch forgotten initialisation. */
+    PEP_trustwords_algorithm_invalid = 0,
+
+    /* The only option for protocol versions strictly older than 3.3; possibly
+       vulnerable to a collision attack and therefore only used for
+       compatibility with a communication partner requiring an older protocol,
+       and still only if PEP_TRUSTWORDS_XOR_COMPATIBILITY is defined (to prevent
+       downgrade attacks). */
+    PEP_trustwords_algorithm_xor = 1,
+
+    /* The preferred option: a RIPEMD-160 hash of the two FPRs concatenated
+       in increasing order. */
+    PEP_trustwords_algorithm_ripemd160 = 2
+} PEP_trustwords_algorithm;
+
+/* A "trustword function" is a function computing trustwords using one specific
+   algorithm. */
+typedef PEP_STATUS (*trustword_function_f)(PEP_SESSION session,
+                                           const char* fpr1, const char* fpr2,
+                                           const char* lang, char **words,
+                                           size_t *wsize, bool full);
+
+/* Return a trustword function given an algorithm. */
+static trustword_function_f PEP_trustwords_algorithm_to_trustword_function(
+                               PEP_SESSION session,
+                               PEP_trustwords_algorithm a)
+{
+    PEP_REQUIRE_ORELSE_RETURN_NULL(session);
+
+    switch (a) {
+    case PEP_trustwords_algorithm_invalid:
+        return NULL;
+    case PEP_trustwords_algorithm_xor:
+        return get_xor_trustwords_for_fprs;
+    case PEP_trustwords_algorithm_ripemd160:
+        return get_ripemd160_trustwords_for_fprs;
+
+    default:
+        PEP_UNEXPECTED_VALUE(a);
+        return NULL;
     }
-    return conv_num;
 }
 
-/**
- *  @internal
- *
- *  <!--       num_to_asciihex()       -->
- *
- *  @brief            TODO
- *
- *  @param[in]    h        short
- *
- */
-static char num_to_asciihex(short h) {
-    if (h < 0 || h > 16)
-        return '\0';
-    if (h < 10)
-        return (char)(h + 0x30);
-    return (char)((h - 10) + 0x41); // for readability
-}
+/* Return a printed representation of an algorithm as a name. */
+static const char* PEP_trustwords_algorithm_to_string(PEP_SESSION session,
+                                                      PEP_trustwords_algorithm a)
+{
+    PEP_REQUIRE_ORELSE_RETURN_NULL(session);
 
-/**
- *  @internal
- *
- *  <!--       xor_hex_chars()       -->
- *
- *  @brief            TODO
- *
- *  @param[in]    a        char
- *  @param[in]    b        char
- *
- */
-static char xor_hex_chars(char a, char b) {
-    short a_num = asciihex_to_num(a);
-    short b_num = asciihex_to_num(b);
-    if (a_num < 0 || b_num < 0)
-        return '\0';
-    short xor_num = a_num^b_num;
-    return num_to_asciihex(xor_num);
-}
+    switch (a) {
+    case PEP_trustwords_algorithm_invalid:
+        return "invalid";
+    case PEP_trustwords_algorithm_xor:
+        return "xor";
+    case PEP_trustwords_algorithm_ripemd160:
+        return "ripemd160";
 
-/**
- *  @internal
- *
- *  <!--       skip_separators()       -->
- *
- *  @brief            TODO
- *
- *  @param[in]    *current        const char
- *  @param[in]    *begin        const char
- *
- */
-static const char* skip_separators(const char* current, const char* begin) {
-    while (current >= begin) {
-        /* .:,;-_ ' ' - [2c-2e] [3a-3b] [20] [5f] */
-        char check_char = *current;
-        switch (check_char) {
-            case '.':
-            case ':':
-            case ',':
-            case ';':
-            case '-':
-            case '_':
-            case ' ':
-                current--;
-                continue;
-            default:
-                break;
-        }
-        break;
+    default:
+        PEP_UNEXPECTED_VALUE(a);
+        return "<unexpected PEP_trustwords_algorithm>";
     }
-    return current;
 }
 
-/**
- *  @internal
- *
- *  <!--       check_for_zero_fpr()       -->
- *
- *  @brief            TODO
- *
- *  @param[in]    *fpr        char
- *
- */
-PEP_STATUS check_for_zero_fpr(char* fpr) {
-    PEP_STATUS status = PEP_TRUSTWORDS_DUPLICATE_FPR;
-    
-    while (*fpr) {
-        if (*fpr != '0') {
-            status = PEP_STATUS_OK;
-            break;
-        }
-        fpr++;    
+/* Set the algorithm to the one we should use with the given communication
+   partner.  If xor would be needed but we are breaking compatibility return a
+   PEP_TRUSTWORD_NOT_FOUND status. */
+static PEP_STATUS get_trustwords_algorithm_for(
+                     PEP_SESSION session,
+                     const pEp_identity *partner,
+                     PEP_trustwords_algorithm *algorithm_p)
+{
+//    * algorithm_p = PEP_trustwords_algorithm_ripemd160; return PEP_STATUS_OK; //////////////////////////////////////////////////
+//    * algorithm_p = PEP_trustwords_algorithm_xor; return PEP_STATUS_OK; //////////////////////////////////////////////////
+    PEP_REQUIRE(session
+                && partner && ! EMPTYSTR(partner->fpr)
+                && algorithm_p);
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    /* Compute the result, ignoring whether we support xor-compatibility or not.
+       It will be useful to know whether compatbility *would* be used, for
+       reporting errors and logging. */
+    * algorithm_p = /* For defensiveness. */ PEP_trustwords_algorithm_invalid;
+    PEP_trustwords_algorithm ideal_algorithm
+        = /* We use xor iff the partner uses a protocol version strictly older
+             than 3.3 , which is the protocol version where we introduced
+             RIPEMD-160 trustwords. */
+          ((compare_versions(partner->major_ver, partner->minor_ver,
+                             3, 3)
+            < 0)
+           ? PEP_trustwords_algorithm_xor
+           : PEP_trustwords_algorithm_ripemd160);
+
+    /* Set the result, unless we do not really want that when we are breaking
+       compatibility (this protects from a downgrade attack). */
+#if ! defined PEP_TRUSTWORDS_XOR_COMPATIBILITY
+    if (ideal_algorithm == PEP_trustwords_algorithm_xor) {
+        LOG_CRITICAL("refusing to use xor trustwords for %s <%s> even if it would be required for compatibility (prevent downgrade attacks)",
+                     (partner->username ? partner->username : "no-username"),
+                     (partner->address ? partner->address : "no-address"));
+        status = PEP_TRUSTWORD_NOT_FOUND;
     }
-    
+    else
+#endif
+        * algorithm_p = ideal_algorithm;
     return status;
-    
+}
+
+/* Like fall_back_to_xor_trustwords_for, but using two identities: if either
+   needs xor fallback (and xor-fallback is enabled), then use xor. */
+static PEP_STATUS get_trustwords_algorithm_for_either(
+                     PEP_SESSION session,
+                     const pEp_identity *one,
+                     const pEp_identity *other,
+                     PEP_trustwords_algorithm *algorithm_p)
+{
+    PEP_REQUIRE(session && one && other && algorithm_p);
+
+    /* For defensiveness's sake initialise with an invalid result. */
+    * algorithm_p = PEP_trustwords_algorithm_invalid;
+
+    /* Compute the algorithm needed for each identity. */
+    PEP_STATUS status = PEP_STATUS_OK;
+    PEP_trustwords_algorithm algorithm_one;
+    status = get_trustwords_algorithm_for(session, one, & algorithm_one);
+    if (status != PEP_STATUS_OK) goto end;
+    PEP_trustwords_algorithm algorithm_other;
+    status = get_trustwords_algorithm_for(session, other, & algorithm_other);
+    if (status != PEP_STATUS_OK) goto end;
+
+    /* If we did not fail yet compute the actual result, which is be the mininum
+       of the two algorithms above following the order of the enum cases. */
+    PEP_trustwords_algorithm algorithm_both = algorithm_one;
+    if (algorithm_other < algorithm_both)
+        algorithm_both = algorithm_other;
+
+    /* Set the result. */
+    * algorithm_p = algorithm_both;
+    LOG_TRACE("the result for %s <%s> and %s <%s> is %s",
+              (one->username ? one->username : "NO-USERNAME"),
+              (one->address ? one->address : "NO-ADDRESS"),
+              (other->username ? other->username : "NO-USERNAME"),
+              (other->address ? other->address : "NO-ADDRESS"),
+              PEP_trustwords_algorithm_to_string(session, * algorithm_p));
+
+ end:
+    LOG_STATUS_TRACE;
+    return status;
 }
 
 DYNAMIC_API PEP_STATUS get_trustwords(
@@ -6926,48 +6971,689 @@ DYNAMIC_API PEP_STATUS get_trustwords(
                 && ! EMPTYSTR(id2->fpr) && ! EMPTYSTR(lang) && words &&
                 wsize);
 
-    return get_trustwords_for_fprs(session, id1->fpr, id2->fpr, lang, words,
-            wsize, full);
+    PEP_STATUS status = PEP_STATUS_OK;
+    PEP_trustwords_algorithm algorithm;
+
+    /* Check which trustword algorithm we should use. */
+    status = get_trustwords_algorithm_for_either(session, id1, id2, & algorithm);
+    if (status != PEP_STATUS_OK) goto end;
+    trustword_function_f function
+        = PEP_trustwords_algorithm_to_trustword_function(session, algorithm);
+    if (function == NULL) {
+        status = PEP_TRUSTWORD_NOT_FOUND;
+        goto end;
+    }
+
+    /* If we have not failed yet use it. */
+    status = function(session, id1->fpr, id2->fpr, lang, words, wsize, full);
+
+ end:
+    return status;
 }
 
-/**
+PEP_STATUS normalize_fpr(PEP_SESSION session, char **normalized_fpr,
+                         const char *input)
+{
+    PEP_REQUIRE(session
+                && normalized_fpr
+                && ! EMPTYSTR(input));
+
+    /* Set the output variable to a known value, for defensiveness's sake. */
+    * normalized_fpr = NULL;
+
+    PEP_STATUS status = PEP_STATUS_OK;
+#define FAIL(the_status)        \
+    do {                        \
+        status = (the_status);  \
+        goto end;               \
+    } while (false)
+
+    /* Allocate a buffer which is definitely long enough, but might be
+       longer. */
+    size_t input_length = strlen(input);
+    char *output = malloc(input_length + /* '\0' */ 1);
+    if (output == NULL)
+        FAIL(PEP_OUT_OF_MEMORY);
+
+    /* Copy and normalise useful characters, ignoring trash characters. */
+    int output_i = 0;
+    int input_i;
+    bool at_least_one_nonzero_digit = false;
+    for (input_i = 0; input_i < input_length; input_i ++) {
+        char c = input [input_i];
+        switch (c) {
+        case '0': case '1': case '2': case '3': case '4': case '5':
+        case '6': case '7': case '8': case '9':
+        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
+            /* No need to alter c. */
+            break;
+        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
+            /* Make c uppercase. */
+            c = toupper(c);
+            break;
+        case '.': case ':': case ',': case ';': case '-': case '_': case ' ':
+            /* Do not copy this trash character. */
+            continue;
+        default:
+            /* This is worse than trash: it is invalid. */
+            FAIL(PEP_ILLEGAL_VALUE);
+        }
+        if (c != '0')
+            at_least_one_nonzero_digit = true;
+        output [output_i] = c;
+        output_i ++;
+    }
+    output [output_i] = '\0';
+
+    /* Now we can also validate the input: we want to fail if the FPR was
+       entirely made of zero digits... */
+    if (! at_least_one_nonzero_digit)
+        FAIL(PEP_TRUSTWORDS_DUPLICATE_FPR);
+
+    /* ...If the number of no-trash digits is odd instead we do not fail: we
+       just prepend a '0' digit.  */
+    bool prepend_0_digit = PEP_ODD(output_i);
+
+    /* Now make the output buffer as small as possible. */
+    size_t output_allocated_size
+        = (/*   initial '0' */ (prepend_0_digit ? 1 : 0)
+           + /* non-trash characters */ output_i
+           + /* trailing '\0' */ 1);
+    char *output_copy = malloc(output_allocated_size);
+    if (output_copy == NULL)
+        FAIL(PEP_OUT_OF_MEMORY);
+    output_copy [0] = '0';
+    strcpy(output_copy + (prepend_0_digit ? 1 : 0), output);
+    free(output);
+    output = output_copy;
+
+ end:
+    if (status == PEP_STATUS_OK) {
+        * normalized_fpr = output;
+#if 0
+        LOG_TRACE("\"%s\" -> \"%s\"", input, output);
+#endif
+    }
+    else
+        free(output);
+    return status;
+#undef FAIL
+}
+
+/*
  *  @internal
+ *  <!--        text_to_bytes()       -->
  *
- *  <!--       remove_separators()       -->
+ *  @brief      Decodea '\0'-terminated string of hexadecimal digits into a
+ *              fresh array of bytes along with its size.
  *
- *  @brief            TODO
+ *  @param[in]  session             session handle
+ *  @param[out] bytes               bytes
+ *  @param[out] size                number of bytes of the output array
+ *                                  by the caller
+ *  @param[in]  text                '\0'-terminated string of hexadecimal digits
  *
- *  @param[in]    *str1        const char
- *  @param[in]    *str2        char
- *  @param[in]    str1len        int
- *
+ *  @retval     PEP_ILLEGAL_VALUE   illegal digits, any NULL argument,
+ *                                  text size not an even number, empty text
+ *  @retval     PEP_OUT_OF_MEMORY   out of memory
+ *  @retval     PEP_STATUS_OK       success
  */
-static void remove_separators(const char* str1, char* str2, int str1len) {
-    int i = 0;
-    char* curr_write = str2;
-    for ( ; i < str1len; i++) {
-        switch (str1[i]) {
-            case ' ':
-            case '\t':
-            case '\r':
-            case '\n':
-            case '\0':
-                continue;
-            default:
-                *curr_write = str1[i];
-                curr_write++;
+static PEP_STATUS text_to_bytes(PEP_SESSION session,
+                                unsigned char **bytes, size_t *bytes_size,
+                                const char *non_normalized_text)
+{
+    PEP_REQUIRE(session
+                && bytes && bytes_size
+                && ! EMPTYSTR(non_normalized_text));
+
+    /* Initialise the output for defensiveness's sake. */
+    * bytes = NULL;
+    * bytes_size = 0;
+
+#define FAIL(the_status)        \
+    do {                        \
+        status = (the_status);  \
+        goto end;               \
+    } while (false)
+
+    /* Work on a normalised input, ignoring separator or case silliness. */
+    PEP_STATUS status = PEP_STATUS_OK;
+    char *text;
+    unsigned char *result = NULL;
+    status = normalize_fpr(session, & text, non_normalized_text);
+    if (status != PEP_STATUS_OK)
+        FAIL(status);
+    /* Only now we can check that the size is even, as we require. */
+    if (! PEP_EVEN(strlen(text)))
+        FAIL(PEP_ILLEGAL_VALUE);
+
+    /* Allocate the result. */
+    int hex_digit_no = strlen(text);
+    size_t byte_no = hex_digit_no / 2;
+    result = calloc(byte_no, 1);
+    if (result == NULL)
+        FAIL(PEP_OUT_OF_MEMORY);
+
+    int text_i;
+    for (text_i = hex_digit_no - 1; text_i >= 0; text_i --) {
+        char text_nybble = text [text_i];
+        unsigned char nybble;
+        switch (text_nybble) {
+        case '0': case '1': case '2': case '3': case '4': case '5':
+        case '6': case '7': case '8': case '9':
+            nybble = text_nybble - '0'; break;
+        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
+            nybble = text_nybble - 'A' + 10; break;
+        default:
+            FAIL(PEP_ILLEGAL_VALUE);
+        }
+        bool less_significant_nybble = PEP_ODD(text_i);
+        int bytes_i = text_i / 2;
+        if (less_significant_nybble)
+            result [bytes_i] |= nybble;
+        else
+            result [bytes_i] |= nybble << 4;
+    }
+ end:
+    free(text);
+    if (status == PEP_STATUS_OK) {
+        * bytes = result;
+        * bytes_size = byte_no;
+    }
+    else {
+        free(result);
+    }
+    return status;
+#undef FAIL
+}
+
+/*
+ *  @internal
+ *  <!--        bytes_to_text()       -->
+ *
+ *  @brief      The converse of text_to_bytes: encode an array of bytes (along
+ *              with its size) into a '\0'-terminated string of hexadecimal
+ *              digits.
+ *
+ *  @param[in]  session             session handle
+ *  @param[out] text               '\0'-terminated string of hexadecimal digits
+ *  @param[in]  bytes               bytes
+ *  @param[in]  size                size of the bytes array, in bytes
+ *
+ *  @retval     PEP_ILLEGAL_VALUE   any NULL argument unless with zero size,
+ *                                  size not an even number
+ *  @retval     PEP_OUT_OF_MEMORY   out of memory
+ *  @retval     PEP_STATUS_OK       success
+ */
+static PEP_STATUS bytes_to_text(PEP_SESSION session,
+                                char **text,
+                                const unsigned char *bytes, size_t bytes_size)
+{
+    PEP_REQUIRE(session
+                && text
+                && PEP_IMPLIES(bytes_size > 0, bytes != NULL)
+                && PEP_EVEN(bytes_size));
+    /* Set the output variable to a known value for defensiveness's sake. */
+    * text = NULL;
+
+    /* Allocate the result. */
+    size_t text_char_no = bytes_size * 2;
+    char *result = calloc(text_char_no + /* '\0' */ 1, 1);
+    if (result == NULL)
+        return PEP_OUT_OF_MEMORY;
+
+    /* Set up the machinery to emit one hex digit. */
+    static const char hex_digits [] = "0123456789ABCDEF";
+    int text_next_unused = 0;
+#define EMIT(nybble)                                      \
+    do {                                                  \
+        result [text_next_unused] = hex_digits [nybble];  \
+        text_next_unused ++;                              \
+    } while (false)
+
+    /* Loop on bytes: for each one byte emit two hex digits.  */
+    int bytes_i;
+    for (bytes_i = 0; bytes_i < bytes_size; bytes_i ++) {
+        unsigned char byte = bytes [bytes_i];
+        EMIT(byte >> 4);    /* high nybble */
+        EMIT(byte & 0x0f);  /* low nybble */
+    }
+
+    * text = result;
+    return PEP_STATUS_OK;
+#undef EMIT
+}
+
+/*
+ *  @internal
+ *  <!--        pad_bytes()       -->
+ *
+ *  @brief      Build a copy of a given byte array, right-padded to the given
+ *              size, which must be not smaller than the unpadded size, with
+ *              0-valued bytes on the left.
+ *
+ *  @param[in]  session            session handle
+ *  @param[out] padded             the result
+ *  @param[in]  padded_size        the desired size for the result
+ *  @param[in]  source             the input byte array
+ *  @param[in]  source_size        the inpyt byte array size
+ *
+ *  @retval     PEP_STATUS_OK      success
+ *  @retval     PEP_ILLEGAL_VALUE  wrong parameters
+ *  @retval     PEP_OUT_OF_MEMORY  out of memory
+*/
+static PEP_STATUS pad_bytes(PEP_SESSION session,
+                            unsigned char **padded,
+                            size_t padded_size,
+                            const unsigned char *source,
+                            size_t source_size)
+{
+    PEP_REQUIRE(session
+                && padded
+                && padded_size > 0
+                && source
+                && source_size > 0
+                && padded_size >= source_size);
+
+    /* Set the output variable to a known value for defensiveness's sake. */
+    * padded = NULL;
+
+    unsigned char *result = calloc(padded_size, 1);
+    if (result == NULL)
+        return PEP_OUT_OF_MEMORY;
+    memcpy(result + padded_size - source_size, source, source_size);
+
+    * padded = result;
+    return PEP_STATUS_OK;
+}
+
+/*
+ *  <!--        bytes_compare()       -->
+ *
+ *  @brief      Compute (respecitvely) a negative result, zero, a positive
+ *              result if the first array is (respectively) numerically
+ *              smaller, equal, numerically larger than the second array.
+ *
+ *  @param[in]  session            session handle
+ *  @param[out] result             the comparison result, valid on PEP_STATUS_OK
+ *  @param[in]  bytesa             first byte array
+ *  @param[in]  bytesa_size        first byte array size in bytes
+ *  @param[in]  bytesb             second byte array
+ *  @param[in]  bytesb_size        second byte array size in bytes
+ *
+ *  @retval     PEP_STATUS_OK      success
+ *  @retval     PEP_ILLEGAL_VALUE  wrong parameter
+ *  @retval     PEP_OUT_OF_MEMORY  out of memory
+*/
+static PEP_STATUS bytes_compare(PEP_SESSION session,
+                                int *result,
+                                const unsigned char *bytesa,
+                                size_t bytesa_size,
+                                const unsigned char *bytesb,
+                                size_t bytesb_size)
+{
+    PEP_REQUIRE(session
+                && result
+                && PEP_IMPLIES(bytesa_size > 0, bytesa != NULL)
+                && PEP_IMPLIES(bytesb_size > 0, bytesb != NULL));
+
+    /* Work on two right-justified copies padded with 0 byte on the left.  This
+       could certainly be accomplished without copying, but it would be
+       error-prone.  */
+    size_t maximum_size = bytesa_size;
+    if (maximum_size < bytesb_size)
+        maximum_size = bytesb_size;
+    unsigned char *aligned_bytesa = NULL;
+    unsigned char *aligned_bytesb = NULL;
+#define FAIL_ON_ERROR                 \
+    do {                              \
+        if (status != PEP_STATUS_OK)  \
+            goto end;                 \
+    } while (false)
+    PEP_STATUS status = PEP_STATUS_OK;
+    status = pad_bytes(session, & aligned_bytesa, maximum_size,
+                       bytesa, bytesa_size);
+    FAIL_ON_ERROR;
+    status = pad_bytes(session, & aligned_bytesb, maximum_size,
+                       bytesb, bytesb_size);
+    FAIL_ON_ERROR;
+
+    /* Compare bytes left-to-right, which means MSB-to-LSB: the first different
+       byte determines the result. */
+    int i;
+    for (i = 0; i < maximum_size; i ++) {
+        unsigned char a = aligned_bytesa [i];
+        unsigned char b = aligned_bytesb [i];
+        if (a < b) {
+            * result = -1;
+            goto end;
+        }
+        else if (a > b) {
+            * result = 1;
+            goto end;
         }
     }
-    *curr_write = '\0';
+    * result = 0;
+
+ end:
+    free(aligned_bytesa);
+    free(aligned_bytesb);
+    return status;
+#undef FAIL_ON_ERROR
 }
 
-DYNAMIC_API PEP_STATUS get_trustwords_for_fprs(
+/*
+ *  <!--     combine_bytes_f       -->
+ *
+ *  @brief   A byte-combiner function type, used to convert two fprs as byte
+ *           arrays into a new fpr as a byte array, ready to be converted into
+ *           trustwords.
+ */
+typedef PEP_STATUS (*combine_bytes_f)(PEP_SESSION session,
+                                      unsigned char **combined,
+                                      size_t *combined_size,
+                                      const unsigned char *bytesa,
+                                      const unsigned char *bytesb,
+                                      size_t bytesab_size /* same size for both */);
+
+/*
+ *  <!--        combine_bytes_xor()       -->
+ *
+ *  @brief      Combine two byte arrays into one byte array by xor-ing them
+ *              together.
+ *              This function has type combine_bytes_f.
+ *
+ *  @param[in]  session            session handle
+ *  @param[out] combined           the combined bytes to be written
+ *  @param[out] combined_size      size of the combined array in bytes
+ *  @param[in]  bytesa             first byte array
+ *  @param[in]  bytesb             second byte array
+ *  @param[in]  bytesab_size       size for both bytesa and bytesb (must be the
+ *                                 same)
+ *
+ *  @retval     PEP_ILLEGAL_VALUE   illegal parameter value: any NULL argument,
+ *                                  zero sizes
+ *  @retval     PEP_OUT_OF_MEMORY   out of memory
+ *  @retval     PEP_STATUS_OK
+ */
+static PEP_STATUS combine_bytes_xor(PEP_SESSION session,
+                                    unsigned char **combined,
+                                    size_t *combined_size,
+                                    const unsigned char *bytesa,
+                                    const unsigned char *bytesb,
+                                    size_t bytesab_size)
+{
+    PEP_REQUIRE(session
+                && combined && combined_size
+                && bytesa && bytesb && bytesab_size > 0);
+
+    /* Set output variables to known values for defensiveness's sake. */
+    * combined = NULL;
+    * combined_size = 0;
+
+    /* Allocate the result.  If this succeeds no other failure is possible at
+       this point. */
+    unsigned char *result = malloc(bytesab_size);
+    if (result == NULL)
+        return PEP_OUT_OF_MEMORY;
+
+    /* This is an incompatible change [A_XOR_A].
+       Before my 2022-12 rewrite and refactoring there was a special case not at
+       all obvious from the source but actively tested in the test suite, forcing
+       two equal arrays to return a copy of one of the arrays themselves as their
+       xor.  In other words we had that
+         for every A
+           A xor A == A
+       Since that was wrong from every point of view and also esthetically
+       offensive I am keeping that alternative disabled, switching to the
+       correct version: now we have that
+         for every A
+           A xor A == 0
+       , which in fact would require no special case whatsoever.  --positron */
+#define A_XOR_A_EQUALS_A  false
+    PEP_STATUS status = PEP_STATUS_OK;
+    int comparison;
+    status = bytes_compare(session, & comparison,
+                           bytesa, bytesab_size, bytesb, bytesab_size);
+    if (status != PEP_STATUS_OK) {
+        free(result);
+        return status;
+    }
+    if (A_XOR_A_EQUALS_A /* This is only possible if we are adopting the wrong
+                            definition of xor: see the comment above. */
+        && comparison == 0)
+        memcpy(result, bytesa, bytesab_size);
+    else { /* The only correct definition of xor */
+        /* xor each pair of bytes at the same position from the two arrays into a
+           byte of the result. */
+        int i;
+        for (i = 0; i < bytesab_size; i ++)
+            result [i] = bytesa [i] ^ bytesb [i];
+    }
+    * combined = result;
+    * combined_size = bytesab_size;
+    return PEP_STATUS_OK;
+}
+
+/*
+ *  <!--        combine_bytes_rimpemd160()       -->
+ *
+ *  @brief      Combine two byte arrays into one byte array using ripemd160
+ *              over their concatenation, lexicographically-smaller first.
+ *              This function has type combine_bytes_f.
+ *
+ *  @param[in]  session            session handle
+ *  @param[out] combined           the combined bytes to be written
+ *  @param[out] combined_size      size of the combined array in bytes
+ *  @param[in]  bytesa             first byte array
+ *  @param[in]  bytesb             second byte array
+ *  @param[in]  bytesab_size       size for both bytesa and bytesb (must be the
+ *                                 same)
+ *
+ *  @retval     PEP_ILLEGAL_VALUE   illegal parameter value: any NULL argument
+ *                                  unless with zero size
+ *  @retval     PEP_OUT_OF_MEMORY   out of memory
+ *  @retval     PEP_STATUS_OK
+ */
+static PEP_STATUS combine_bytes_ripemd160(PEP_SESSION session,
+                                          unsigned char **combined,
+                                          size_t *combined_size,
+                                          const unsigned char *bytesa,
+                                          const unsigned char *bytesb,
+                                          size_t bytesab_size)
+{
+    PEP_REQUIRE(session
+                && combined && combined_size
+                && bytesa && bytesb && bytesab_size > 0);
+
+    /* Set output variables to known values for defensiveness's sake. */
+    * combined = NULL;
+    * combined_size = 0;
+
+#define FAIL(the_status)        \
+    do {                        \
+        status = (the_status);  \
+        goto end;               \
+    } while (false)
+#define FAIL_ON_NULL(expression)     \
+    do {                             \
+        if ((expression) == NULL)    \
+           FAIL(PEP_OUT_OF_MEMORY);  \
+    } while (false)
+    /* Concatenate the two bytes array, numerically-smaller first. */
+    PEP_STATUS status = PEP_STATUS_OK;
+    unsigned char *bytes = NULL;
+    unsigned char *result = NULL;
+    int comparison;
+    status = bytes_compare(session, & comparison,
+                           bytesa, bytesab_size, bytesb, bytesab_size);
+    if (status != PEP_STATUS_OK)
+        FAIL(status);
+    size_t bytes_size = bytesab_size * 2;
+    bytes = malloc(bytes_size);
+    FAIL_ON_NULL(bytes);
+    if (comparison < 0) {
+        memcpy(bytes, bytesa, bytesab_size);
+        memcpy(bytes + bytesab_size, bytesb, bytesab_size);
+    }
+    else {
+        memcpy(bytes, bytesb, bytesab_size);
+        memcpy(bytes + bytesab_size, bytesa, bytesab_size);
+    }
+
+    /* Use the actual hash. */
+    size_t result_size = /* 160 bits == 20 bytes */ 20;
+    result = malloc(result_size);
+    FAIL_ON_NULL(result);
+    pEp_rmd160(result, bytes, bytes_size);
+
+ end:
+    free(bytes);
+    if (status == PEP_STATUS_OK) {
+        * combined = result;
+        * combined_size = result_size;
+    }
+    else {
+        free(result);
+    }
+    return status;
+#undef FAIL
+#undef FAIL_ON_NULL
+}
+
+/*
+ *  <!--        combine_fprs_with_algorithm()       -->
+ *
+ *  @brief   Combine the two given FPRs (in text form) into one FPR (still in
+ *           text form), using the given algorithm.
+ *
+ *  @param[in]  session            session handle
+ *  @param[out] fprcombined_p      the result of the algorithm over the two fprs
+ *  @param[in]  fpra               the first fpr
+ *  @param[in]  fprb               the second fpr
+ *  @param[in]  algorithm          the algorithm
+ *
+ *  @retval     PEP_ILLEGAL_VALUE   illegal parameter value: any NULL argument,
+ *                                  invalid algorithm, ill-formed FPRs
+ *  @retval     PEP_OUT_OF_MEMORY   out of memory
+ *  @retval     PEP_STATUS_OK
+ */
+static PEP_STATUS combine_fprs_with_algorithm(PEP_SESSION session,
+                                              char **fprcombined_p,
+                                              const char *fpra, const char *fprb,
+                                              PEP_trustwords_algorithm algorithm)
+{
+    PEP_REQUIRE(session && fprcombined_p && ! EMPTYSTR(fpra) && ! EMPTYSTR(fprb)
+                && (algorithm == PEP_trustwords_algorithm_xor
+                    || algorithm == PEP_trustwords_algorithm_ripemd160));
+
+    /* Set the output parameter to a known value for defensivenss's sake. */
+    * fprcombined_p = NULL;
+
+    PEP_STATUS status = PEP_STATUS_OK;
+    char *fprcombined = NULL;
+    unsigned char *bytesa_nonextended = NULL;
+    size_t bytesa_nonextended_size;
+    unsigned char *bytesb_nonextended = NULL;
+    size_t bytesb_nonextended_size;
+    size_t bytesab_size;
+    unsigned char *bytesa = NULL;
+    unsigned char *bytesb = NULL;
+    unsigned char *bytescombined = NULL;
+    size_t bytescombined_size;
+
+    /* Find which function we need to call to actually combine the two byte
+       arrays. */
+    combine_bytes_f combine = NULL;
+    switch (algorithm) {
+    case PEP_trustwords_algorithm_xor:
+        combine = combine_bytes_xor;
+        break;
+    case PEP_trustwords_algorithm_ripemd160:
+        combine = combine_bytes_ripemd160;
+        break;
+    default:
+        PEP_UNEXPECTED_VALUE(algorithm);
+    }
+
+#define FAIL_ON_BAD_STATUS            \
+    do {                              \
+        if (status != PEP_STATUS_OK)  \
+            goto end;                 \
+    } while (false)
+    /* Convert text to byte arrays. */
+    status = text_to_bytes(session, & bytesa_nonextended,
+                           & bytesa_nonextended_size, fpra);
+    FAIL_ON_BAD_STATUS;
+    status = text_to_bytes(session, & bytesb_nonextended,
+                           & bytesb_nonextended_size, fprb);
+    FAIL_ON_BAD_STATUS;
+
+    /* Pad byte arrays so that they have the same size. */
+    bytesab_size = bytesa_nonextended_size;
+    if (bytesb_nonextended_size > bytesab_size)
+        bytesab_size = bytesb_nonextended_size;
+    status = pad_bytes(session, & bytesa, bytesab_size,
+                       bytesa_nonextended, bytesa_nonextended_size);
+    FAIL_ON_BAD_STATUS;
+    status = pad_bytes(session, & bytesb, bytesab_size,
+                       bytesb_nonextended, bytesb_nonextended_size);
+    FAIL_ON_BAD_STATUS;
+
+    /* Combine the two byte arrays into a new byte array. */
+    status = combine(session,
+                     & bytescombined, & bytescombined_size,
+                     bytesa, bytesb, bytesab_size);
+    FAIL_ON_BAD_STATUS;
+
+    /* Convert the result from a byte array into text, because that is what the
+       caller wants. */
+    status = bytes_to_text(session, & fprcombined,
+                           bytescombined, bytescombined_size);
+    FAIL_ON_BAD_STATUS;
+
+#if 0
+    {
+        char *ta; bytes_to_text(session, &ta, bytesa, bytesab_size);
+        char *tb; bytes_to_text(session, &tb, bytesb, bytesab_size);
+        char *tr; bytes_to_text(session, &tr, bytescombined, bytescombined_size);
+        LOG_TRACE("               a = %s", ta);
+        LOG_TRACE("               b = %s", tb);
+        LOG_TRACE("%10s(a, b) = %s (%3iB) ", PEP_trustwords_algorithm_to_string(session, algorithm), tr, (int) bytescombined_size);
+        LOG_TRACE();
+        free(ta); free(tb); free(tr);
+    }
+#endif
+
+ end:
+    free(bytesa);
+    free(bytesb);
+    free(bytesa_nonextended);
+    free(bytesb_nonextended);
+    free(bytescombined);
+    if (status != PEP_STATUS_OK) {
+        free(fprcombined);
+
+        * fprcombined_p = NULL;
+    }
+    else
+        * fprcombined_p = fprcombined;
+    return status;
+}
+
+/* This function factors the common logic of get_xor_trustwords_for_fprs and
+   get_ripemd160_trustwords_for_fprs .  In case we need more algorithms in the
+   future it will make sense to further extend this. */
+static PEP_STATUS get_trustwords_for_fprs_with_algorithm(
         PEP_SESSION session, const char* fpr1, const char* fpr2,
-        const char* lang, char **words, size_t *wsize, bool full
+        const char* lang, char **words, size_t *wsize, bool full,
+        PEP_trustwords_algorithm algorithm
     )
 {
     PEP_REQUIRE(session && ! EMPTYSTR(fpr1) && ! EMPTYSTR(fpr2) && words
-                && wsize);
+                && wsize
+                && (algorithm == PEP_trustwords_algorithm_xor
+                    || algorithm == PEP_trustwords_algorithm_ripemd160));
 
     const int SHORT_NUM_TWORDS = 5; 
     PEP_STATUS status = PEP_STATUS_OK;
@@ -6975,88 +7661,18 @@ DYNAMIC_API PEP_STATUS get_trustwords_for_fprs(
     *words = NULL;    
     *wsize = 0;
 
-    int fpr1_len = strlen(fpr1);
-    int fpr2_len = strlen(fpr2);
-        
-    int max_len = (fpr1_len > fpr2_len ? fpr1_len : fpr2_len);
-    
-    char* XORed_fpr = (char*)(calloc(max_len + 1, 1));
-    *(XORed_fpr + max_len) = '\0';
-    char* result_curr = XORed_fpr + max_len - 1;
-    const char* fpr1_curr = fpr1 + fpr1_len - 1;
-    const char* fpr2_curr = fpr2 + fpr2_len - 1;
-
-    while (fpr1 <= fpr1_curr && fpr2 <= fpr2_curr) {
-        fpr1_curr = skip_separators(fpr1_curr, fpr1);
-        fpr2_curr = skip_separators(fpr2_curr, fpr2);
-        
-        if (fpr1_curr < fpr1 || fpr2_curr < fpr2)
-            break;
-            
-        char xor_hex = xor_hex_chars(*fpr1_curr, *fpr2_curr);
-        if (xor_hex == '\0') {
-            status = PEP_ILLEGAL_VALUE;
-            goto error_release;
-        }
-        
-        *result_curr = xor_hex;
-        result_curr--; fpr1_curr--; fpr2_curr--;
-    }
-
-    const char* remainder_start = NULL;
-    const char* remainder_curr = NULL;
-    
-    if (fpr1 <= fpr1_curr) {
-        remainder_start = fpr1;
-        remainder_curr = fpr1_curr;
-    }
-    else if (fpr2 <= fpr2_curr) {
-        remainder_start = fpr2;
-        remainder_curr = fpr2_curr;
-    }
-    if (remainder_curr) {
-        while (remainder_start <= remainder_curr) {
-            remainder_curr = skip_separators(remainder_curr, remainder_start);
-            
-            if (remainder_curr < remainder_start)
-                break;
-            
-            char the_char = *remainder_curr;
-            
-            if (asciihex_to_num(the_char) < 0) {
-                status = PEP_ILLEGAL_VALUE;
-                goto error_release;
-            }
-            
-            *result_curr = the_char;                
-            result_curr--;
-            remainder_curr--;
-        }
-    }
-    
-    result_curr++;
-
-    if (result_curr > XORed_fpr) {
-        char* tempstr = strdup(result_curr);
-        free(XORed_fpr);
-        XORed_fpr = tempstr;
-    }
-    
-    status = check_for_zero_fpr(XORed_fpr);
-    
-    if (status == PEP_TRUSTWORDS_DUPLICATE_FPR) {
-        remove_separators(fpr1, XORed_fpr, fpr1_len);
-        status = PEP_STATUS_OK;
-    }
+    char *combined_bytes = NULL;
+    status = combine_fprs_with_algorithm(session, & combined_bytes, fpr1, fpr2,
+                                         algorithm);
     if (status != PEP_STATUS_OK)
         goto error_release;
-    
+
     size_t max_words_per_id = (full ? 0 : SHORT_NUM_TWORDS);
 
     char* the_words = NULL;
     size_t the_size = 0;
 
-    status = trustwords(session, XORed_fpr, lang, &the_words, &the_size, max_words_per_id);
+    status = trustwords(session, combined_bytes, lang, &the_words, &the_size, max_words_per_id);
     if (status != PEP_STATUS_OK)
         goto error_release;
 
@@ -7068,10 +7684,34 @@ DYNAMIC_API PEP_STATUS get_trustwords_for_fprs(
     goto the_end;
 
     error_release:
-        free (XORed_fpr);
+        free (combined_bytes);
         
     the_end:
     return status;
+}
+
+DYNAMIC_API PEP_STATUS get_xor_trustwords_for_fprs(
+        PEP_SESSION session, const char* fpr1, const char* fpr2,
+        const char* lang, char **words, size_t *wsize, bool full
+    )
+{
+    PEP_REQUIRE(session && ! EMPTYSTR(fpr1) && ! EMPTYSTR(fpr2) && words
+                && wsize);
+    return get_trustwords_for_fprs_with_algorithm(session, fpr1, fpr2,
+                                                  lang, words, wsize, full,
+                                                  PEP_trustwords_algorithm_xor);
+}
+
+DYNAMIC_API PEP_STATUS get_ripemd160_trustwords_for_fprs(
+        PEP_SESSION session, const char* fpr1, const char* fpr2,
+        const char* lang, char **words, size_t *wsize, bool full
+    )
+{
+    PEP_REQUIRE(session && ! EMPTYSTR(fpr1) && ! EMPTYSTR(fpr2) && words
+                && wsize);
+    return get_trustwords_for_fprs_with_algorithm(session, fpr1, fpr2,
+                                                  lang, words, wsize, full,
+                                                  PEP_trustwords_algorithm_ripemd160);
 }
 
 DYNAMIC_API PEP_STATUS get_message_trustwords(

@@ -22,7 +22,7 @@ extern "C" {
 #include "timestamp.h"
 
 #define PEP_PROTOCOL_VERSION_MAJOR  3 ///< pEp *protocol* version major component
-#define PEP_PROTOCOL_VERSION_MINOR  2 ///< pEp *protocol* version minor component
+#define PEP_PROTOCOL_VERSION_MINOR  3 ///< pEp *protocol* version minor component
 
 /* Expand to the stringification of the macro parameter, itself unexpanded. */
 #define _STRINGIFY_UNEXPANDED(whatever)  \
@@ -58,6 +58,21 @@ extern "C" {
 
 #define PEP_OWN_USERID "pEp_own_userId"
 
+
+// This minimum version is only used in update_pEp_user_trust_vals; the code
+// there is subtler than one might think.  If I (positron) am interpreting it
+// correctly, this is the protocol version we assume to be supported by a user
+// which we know to be a pEp user, without knowing what protocol version she
+// supports.
+// Setting this to a very recent version will introduce gratuitous
+// incompatibilities; on the other hand we do not want to support very old
+// versions which are not used in the wild.
+// As far as I (positron) know messages have included X-pEp-Version headers
+// for a long time, and if those are present then this version will not be
+// used as long as it is older.
+#define PEP_PROTOCOL_MINIMUM_VERSION_MAJOR  2 ///< pEp *protocol* version minimum supported
+#define PEP_PROTOCOL_MINIMUM_VERSION_MINOR  1 ///< pEp *protocol* version minimum supported
+
 // pEp Engine API
 
 //  caveat:
@@ -70,9 +85,14 @@ typedef struct _pEpSession * PEP_SESSION;
 
 /**
  *  @enum    PEP_STATUS
- *  
+ *
  *  @brief   Collection of all status codes Engine API functions might return
- *  
+ *
+ *  @warning Note for the Engine maintainer: whenever I modify this I should
+ *           update:
+ *           - PEP_STATUS_is_valid;
+ *           - PEP_STATUS_is_error;
+ *           - pEp_status_to_string.
  */
 typedef enum {
     PEP_STATUS_OK                                   = 0,
@@ -103,7 +123,7 @@ typedef enum {
 
     PEP_KEY_IMPORTED                                = 0x0220,
     PEP_NO_KEY_IMPORTED                             = 0x0221,
-    PEP_KEY_IMPORT_STATUS_UNKNOWN                   = 0x0222,
+    PEP_KEY_IMPORT_STATUS_UNKNOWN                   = 0x0222, // never used
     PEP_SOME_KEYS_IMPORTED                          = 0x0223,
     
     PEP_CANNOT_FIND_IDENTITY                        = 0x0301,
@@ -111,7 +131,7 @@ typedef enum {
     PEP_CANNOT_SET_PGP_KEYPAIR                      = 0x0382,
     PEP_CANNOT_SET_IDENTITY                         = 0x0383,
     PEP_CANNOT_SET_TRUST                            = 0x0384,
-    PEP_KEY_BLACKLISTED                             = 0x0385,       /// @deprecated
+    PEP_KEY_BLACKLISTED                             = 0x0385, /// @deprecated
     PEP_CANNOT_FIND_PERSON                          = 0x0386,
     PEP_CANNOT_SET_PEP_PROTOCOL_VERSION             = 0X0387,
 #define PEP_CANNOT_SET_PEP_VERSION  PEP_CANNOT_SET_PEP_PROTOCOL_VERSION ///< compatibility alias for PEP_CANNOT_SET_PEP_PROTOCOL_VERSION
@@ -281,6 +301,18 @@ typedef enum _PEP_rating {
     PEP_rating_under_attack = -3 // automated detection of an attack
 } PEP_rating;
 
+/**
+ *  <!--       PEP_STATUS_is_error()       -->
+ *
+ *  @brief Return true iff the given status is an error status.
+ *
+ *  @param[in]   status    a PEP_STATUS value
+ *  @retval true or false.
+ *
+ *  @warning Unspecified behaviour if the status is invalid.
+ *
+ */
+DYNAMIC_API bool PEP_STATUS_is_error(PEP_STATUS status);
 
 /**
  *  <!--       messageToSend()       -->
@@ -443,6 +475,17 @@ DYNAMIC_API void config_enable_echo_protocol(PEP_SESSION session, bool enable);
 DYNAMIC_API void config_enable_echo_in_outgoing_message_rating_preview(
    PEP_SESSION session, bool enable);
 
+
+/**
+ *  <!--       config_enable_log()      -->
+ *
+ *  @brief Enable the log if the argument is true, disable it if it false.
+ *
+ *  @param[in]   session    session handle to release
+ *  @param[in]   enable     true iff enabled
+ *
+ */
+DYNAMIC_API void config_enable_log(PEP_SESSION session, bool enable);
 
 /**
  *  <!--       config_passive_mode()       -->
@@ -1198,7 +1241,11 @@ DYNAMIC_API PEP_STATUS delete_keypair(PEP_SESSION session, const char *fpr);
  *  @param[in]     size                   amount of data to handle
  *  @param[out]    private_keys           list of identities containing the
  *                                        private keys that have been imported
- *  @param[out]    imported_keys          if non-NULL, list of actual keys imported
+ *  @param[inout]  imported_keys          if non-NULL, list of actual keys imported
+ *                                        --positron 2023-01: this was marked as an
+ *                                        [out] parameter, but the comment was clearly
+ *                                        wrong: the pointer, when non-NULL, is used
+ *                                        as an input.
  *  @param[out]    changed_public_keys    if non-NULL AND imported_keys is non-NULL:
  *                                        bitvector - corresponds to the first 64 keys
  *                                        imported. If nth bit is set, import changed a
@@ -1743,7 +1790,7 @@ DYNAMIC_API PEP_STATUS get_revoked(
  *  @retval  PEP_ENGINE_VERSION 
  *  
  */
-DYNAMIC_API const char* get_engine_version();
+DYNAMIC_API const char* get_engine_version(void);
 
 /**
  *  <!--       get_protocol_version()       -->
@@ -1754,7 +1801,7 @@ DYNAMIC_API const char* get_engine_version();
  *  
  */
 
-DYNAMIC_API const char *get_protocol_version();
+DYNAMIC_API const char *get_protocol_version(void);
 
 /**
  *  <!--       is_pEp_user()       -->

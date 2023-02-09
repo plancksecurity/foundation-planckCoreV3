@@ -22,15 +22,26 @@ PEP_STATUS pEp_finalize_sql_stmts(PEP_SESSION session);
 
 /**  
  * @internal
- * Strings to feed into prepared statements
+ * Strings to feed into prepared statements: system database
  */
-static const char *sql_log MAYBE_UNUSED =
-        "insert into log (title, entity, description, comment)"
-        "values (?1, ?2, ?3, ?4);";
-
 static const char *sql_trustword MAYBE_UNUSED =
         "select id, word from wordlist where lang = lower(?1) "
         "and id = ?2 ;";
+
+/**  
+ * @internal
+ * Strings to feed into prepared statements: management database
+ */
+static const char *sql_begin_exclusive_transaction MAYBE_UNUSED =
+        "BEGIN EXCLUSIVE TRANSACTION;";
+static const char *sql_commit_transaction MAYBE_UNUSED =
+        "COMMIT TRANSACTION;";
+static const char *sql_rollback_transaction MAYBE_UNUSED =
+        "COMMIT TRANSACTION;";
+
+static const char *sql_log MAYBE_UNUSED =
+        "insert into log (title, entity, description, comment)"
+        "values (?1, ?2, ?3, ?4);";
 
 // FIXME?: problems if we don't have a key for the user - we get nothing
 // Also: we've never used pgp_keypair.flags before now, but it seems to me that

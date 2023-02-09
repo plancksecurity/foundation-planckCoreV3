@@ -521,7 +521,10 @@ DYNAMIC_API PEP_STATUS get_trustwords(
 /**
  *  <!--       get_message_trustwords()       -->
  *
- *  @brief Get full trustwords string for message sender and reciever identities
+ *  @brief Get full trustwords string for message sender and reciever identities.
+ *         This will use either get_ripemd160_trustwords_for_fprs or (if
+ *         trustword-xor-compatibility mode is enabled and the communication
+ *         partner requires an old protocol) get_ripemd160_trustwords_for_fprs.
  *
  *  @param[in]   session        session handle
  *  @param[in]   msg            message to get sender identity from
@@ -557,9 +560,10 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
     );
 
 /**
- *  <!--       get_trustwords_for_fprs()       -->
+ *  <!--       get_xor_trustwords_for_fprs()       -->
  *
- *  @brief Get full trustwords string for a pair of fingerprints
+ *  @brief Get full trustwords string for a pair of fingerprints, combinind the
+ *         two FPRs with a xor operation.
  *
  *  @param[in]   session    session handle
  *  @param[in]   fpr1       fingerprint 1
@@ -583,7 +587,19 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
  *           the caller is responsible to free() it (on Windoze use pEp_free())
  *
  */
-DYNAMIC_API PEP_STATUS get_trustwords_for_fprs(
+DYNAMIC_API PEP_STATUS get_xor_trustwords_for_fprs(
+        PEP_SESSION session, const char* fpr1, const char* fpr2,
+        const char* lang, char **words, size_t *wsize, bool full
+    );
+
+/**
+ *  <!--       get_ripemd160_trustwords_for_fprs()       -->
+ *
+ *  @brief Exactly like get_xor_trustwords_for_fprs, but instead of combining
+ *         with xor combine with ordered concatenation and then the RIPEMD-160
+ *         hash.
+ */
+DYNAMIC_API PEP_STATUS get_ripemd160_trustwords_for_fprs(
         PEP_SESSION session, const char* fpr1, const char* fpr2,
         const char* lang, char **words, size_t *wsize, bool full
     );
@@ -663,6 +679,27 @@ DYNAMIC_API PEP_STATUS get_key_rating_for_user(
 
 DYNAMIC_API PEP_rating rating_from_comm_type(PEP_comm_type ct);
 
+
+/* Utility functions.
+ * ***************************************************************** */
+
+/*
+ *  <!--        normalize_fpr()       -->
+ *
+ *  @brief      Given an fpr compute its normalised version.  A normalised fpr
+ *              has no separators and only upper-case hex digits.  This function
+ *              should fail in every case where an fpr is invalid.
+ *
+ *  @param[in]  session             session handle
+ *  @param[out] normalize_fpr       a normalised copy of fpr
+ *  @param[in]  fpr                 the input fpr
+ *
+ *  @retval     PEP_ILLEGAL_VALUE   invalid fpr, NULL arguments
+ *  @retval     PEP_OUT_OF_MEMORY   out of memory
+ *  @retval     PEP_STATUS_OK       success
+ */
+PEP_STATUS normalize_fpr(PEP_SESSION session, char **normalized_fpr,
+                         const char *input);
 
 
 #ifdef __cplusplus

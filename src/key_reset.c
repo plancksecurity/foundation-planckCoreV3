@@ -228,7 +228,7 @@ PEP_STATUS generate_own_commandlist_msg(PEP_SESSION session,
         return PEP_STATUS_OK;
     }
 
-    status = key_reset_commands_to_PER(kr_commands, &payload, &size);
+    status = key_reset_commands_to_PER(session, kr_commands, &payload, &size);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
         
@@ -305,12 +305,9 @@ static PEP_STATUS _generate_keyreset_command_message(PEP_SESSION session,
                                                      const char* new_fpr,
                                                      bool is_private,
                                                      message** dst) {
-                                                                                                                  
-    if (!session || !from_ident || !old_fpr || !new_fpr || !dst)
-        return PEP_ILLEGAL_VALUE;
-
-    if (!is_me(session, from_ident))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && from_ident && ! EMPTYSTR(old_fpr)
+                && ! EMPTYSTR(new_fpr) && dst
+                && is_me(session, from_ident));
 
     PEP_STATUS status = PEP_STATUS_OK;
         
@@ -349,7 +346,7 @@ static PEP_STATUS _generate_keyreset_command_message(PEP_SESSION session,
         
     char* payload = NULL;
     size_t size = 0;
-    status = key_reset_commands_to_PER(kr_list, &payload, &size);
+    status = key_reset_commands_to_PER(session, kr_list, &payload, &size);
     if (status != PEP_STATUS_OK)
         return status;
         
@@ -405,7 +402,7 @@ PEP_STATUS has_key_reset_been_sent(
             SQLITE_STATIC);        
     sqlite3_bind_text(session->was_id_for_revoke_contacted, 3, user_id, -1,
             SQLITE_STATIC);        
-    int result = sqlite3_step(session->was_id_for_revoke_contacted);
+    int result = pEp_sqlite3_step_nonbusy(session, session->was_id_for_revoke_contacted);
     switch (result) {
         case SQLITE_ROW: {
             *contacted = (sqlite3_column_int(session->was_id_for_revoke_contacted, 0) != 0);
@@ -416,6 +413,8 @@ PEP_STATUS has_key_reset_been_sent(
             free(alias_default);
             return PEP_UNKNOWN_DB_ERROR;
     }
+
+    // positron: is alias_default leaked when we arrive here?  I strongly suspect it is.
 
     sql_reset_and_clear_bindings(session->was_id_for_revoke_contacted);
     return PEP_STATUS_OK;
@@ -442,7 +441,7 @@ PEP_STATUS set_reset_contact_notified(
 
     int result;
     
-    result = sqlite3_step(session->set_revoke_contact_as_notified);
+    result = pEp_sqlite3_step_nonbusy(session, session->set_revoke_contact_as_notified);
     switch (result) {
         case SQLITE_DONE:
             status = PEP_STATUS_OK;
@@ -564,7 +563,7 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         
     keyreset_command_list* resets = NULL; 
     
-    status = PER_to_key_reset_commands(payload, size, &resets);
+    status = PER_to_key_reset_commands(session, payload, size, &resets);
 
     if (status != PEP_STATUS_OK)
         return status;
@@ -854,15 +853,11 @@ PEP_STATUS create_standalone_key_reset_message(PEP_SESSION session,
                                                pEp_identity* recip,
                                                const char* old_fpr,
                                                const char* new_fpr) {
-                                                   
-    if (!dst || !own_identity || EMPTYSTR(own_identity->address) 
-             || !recip || EMPTYSTR(recip->user_id) 
-             || EMPTYSTR(recip->address))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && dst
+                && own_identity && ! EMPTYSTR(own_identity->address)
+                && recip && ! EMPTYSTR(recip->address)
+                && ! EMPTYSTR(old_fpr) && ! EMPTYSTR(new_fpr));
 
-    if (EMPTYSTR(old_fpr) || EMPTYSTR(new_fpr))
-        return PEP_ILLEGAL_VALUE;
-        
     *dst = NULL;
     
     message* reset_msg = NULL;
@@ -1133,10 +1128,10 @@ DYNAMIC_API PEP_STATUS key_reset_identity(
         const char* fpr        
     )
 {
-    if (!session || !ident || (ident && (EMPTYSTR(ident->user_id) || EMPTYSTR(ident->address))))
-        return PEP_ILLEGAL_VALUE;
-    
-    return key_reset(session, fpr, ident);    
+    PEP_REQUIRE(session && ident
+                && ! EMPTYSTR(ident->user_id) && ! EMPTYSTR(ident->address));
+
+    return key_reset(session, fpr, ident);
 }
 
 DYNAMIC_API PEP_STATUS key_reset_user(
@@ -1145,8 +1140,7 @@ DYNAMIC_API PEP_STATUS key_reset_user(
         const char* fpr        
     )
 {
-    if (!session || EMPTYSTR(user_id))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE (session && ! EMPTYSTR(user_id));
 
     pEp_identity* input_ident = new_identity(NULL, NULL, user_id, NULL);
     if (!input_ident)
@@ -1698,8 +1692,8 @@ PEP_STATUS key_reset(
         pEp_identity* ident
     )
 {
-    if (!session || (ident && EMPTYSTR(ident->user_id)))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session
+                && (ident == NULL || ! EMPTYSTR(ident->user_id)));
         
     PEP_STATUS status = PEP_STATUS_OK;
         
@@ -1899,7 +1893,11 @@ PEP_STATUS key_reset(
             //
             // Delete this key from the keyring.
             // FIXME: when key election disappears, so should this!
-            status = delete_keypair(session, fpr_copy);
+            status = delete_keypair(session, fpr_copy); /* positron: I believe the previous comment
+                                                                     is wrong and we should in fact
+                                                                     not delete the key from the
+                                                                     keyring without key election.
+                                                                     Can fdik confirm? */
         }
 
         // REGARDLESS OF WHO OWNS THE KEY, WE NOW NEED TO REMOVE IT AS A DEFAULT.
@@ -2005,13 +2003,11 @@ enomem:
 }
 
 
-PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, char **cmds, size_t *size)
+PEP_STATUS key_reset_commands_to_PER(PEP_SESSION session, const keyreset_command_list *command_list, char **cmds, size_t *size)
 {
-    PEP_STATUS status = PEP_STATUS_OK;
+    PEP_REQUIRE(session && command_list && cmds && size);
 
-    assert(command_list && cmds);
-    if (!(command_list && cmds))
-        return PEP_ILLEGAL_VALUE;
+    PEP_STATUS status = PEP_STATUS_OK;
 
     *cmds = NULL;
     *size = 0;
@@ -2101,11 +2097,9 @@ enomem:
     return NULL;
 }
 
-PEP_STATUS PER_to_key_reset_commands(const char *cmds, size_t size, keyreset_command_list **command_list)
+PEP_STATUS PER_to_key_reset_commands(PEP_SESSION session, const char *cmds, size_t size, keyreset_command_list **command_list)
 {
-    assert(command_list && cmds);
-    if (!(command_list && cmds))
-        return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(session && command_list && cmds);
 
     *command_list = NULL;
 

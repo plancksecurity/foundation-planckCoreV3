@@ -194,6 +194,7 @@ PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
  *
  *  @brief            TODO
  *
+ *  @param[in]  session         session
  *  @param[in]  command_list    const keyreset_command_list*
  *  @param[in]  cmds            char**
  *  @param[in]  size            size_t*
@@ -202,7 +203,7 @@ PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
  *  @retval any other value on error
  */
-PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, char **cmds, size_t *size);
+PEP_STATUS key_reset_commands_to_PER(PEP_SESSION session, const keyreset_command_list *command_list, char **cmds, size_t *size);
 
 /**
  * @internal
@@ -210,6 +211,7 @@ PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, 
  *
  *  @brief            TODO
  *
+ *  @param[in]  session          session
  *  @param[in]  cmds             const char*
  *  @param[in]  size             size_t
  *  @param[in]  command_list     keyreset_command_list**
@@ -218,7 +220,7 @@ PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, 
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
  *  @retval any other value on error
  */
-PEP_STATUS PER_to_key_reset_commands(const char *cmds, size_t size, keyreset_command_list **command_list);
+PEP_STATUS PER_to_key_reset_commands(PEP_SESSION session, const char *cmds, size_t size, keyreset_command_list **command_list);
 
 PEP_STATUS key_reset_managed_group(PEP_SESSION session,
                                    pEp_identity* group_identity,

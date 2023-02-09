@@ -738,7 +738,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own) {
         message* keyreset_msg = NULL;
         status = mime_decode_message(key_reset_payload->value, key_reset_payload->size, &keyreset_msg, NULL);
         keyreset_command_list* cl = NULL;
-        status = PER_to_key_reset_commands(keyreset_msg->attachments->value, keyreset_msg->attachments->size, &cl);                                             
+        status = PER_to_key_reset_commands(session, keyreset_msg->attachments->value, keyreset_msg->attachments->size, &cl);                                             
         ASSERT_NOTNULL(cl);
         ASSERT_STREQ(cl->command->ident->address, "pep.test.alice@pep-project.org");
         ASSERT_STREQ(cl->command->ident->fpr, alice_fpr);        
@@ -3389,7 +3389,7 @@ TEST_F(KeyResetMessageTest, codec_test) {
 
     char *cmds = nullptr;
     size_t size = 0;
-    PEP_STATUS status = key_reset_commands_to_PER(il, &cmds, &size);
+    PEP_STATUS status = key_reset_commands_to_PER(session, il, &cmds, &size);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(cmds);
     ASSERT_NE(size, 0);
@@ -3397,7 +3397,7 @@ TEST_F(KeyResetMessageTest, codec_test) {
     // decode
 
     keyreset_command_list *ol = nullptr;
-    status = PER_to_key_reset_commands(cmds, size, &ol);
+    status = PER_to_key_reset_commands(session, cmds, size, &ol);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(ol);
 

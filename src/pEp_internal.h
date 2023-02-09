@@ -113,6 +113,7 @@
 #include "key_reset.h"
 
 #include "pEpEngine_internal.h"
+#include "sql_reliability.h"
 #include "key_reset_internal.h"
 #include "group_internal.h"
 #include "keymanagement_internal.h"
@@ -132,8 +133,15 @@
  * ***************************************************************** */
 
 /* Define convenient logging macros to be used for every compilation unit,
-   *inside* the Engine. */
-#define _LOG_WITH_MACRO_NAME(name, ...)     \
+   *inside* the Engine.  These macros take either zero arguments or a format
+   string followed by the arguments specified in the format. */
+// This solution worked perfectly well with GCC's and Clang's C preprocessors,
+// but since Alex reported an unintended expansion with the microsoft C
+// preprocessor (some of the variadic parameter grouped together between
+// parentheses when no parentheses are in the definition) I am avoiding such
+// tricks, and switch to the slightly more verbose definition below.
+// --positron, 2023-01
+/*  #define _LOG_WITH_MACRO_NAME(name, ...)     \
     name("p≡p", "Engine", "" __VA_ARGS__)
 #define LOG_CRITICAL(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_CRITICAL, __VA_ARGS__)
 #define LOG_ERROR(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_ERROR, __VA_ARGS__)
@@ -141,10 +149,24 @@
 #define LOG_API(...)       _LOG_WITH_MACRO_NAME(PEP_LOG_API, __VA_ARGS__)
 #define LOG_EVENT(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_EVENT, __VA_ARGS__)
 #define LOG_FUNCTION(...)  _LOG_WITH_MACRO_NAME(PEP_LOG_FUNCTION, __VA_ARGS__)
+#define LOG_NONOK(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_NONOK, __VA_ARGS__)
+#define LOG_NOTOK(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_NOTOK, __VA_ARGS__)
 #define LOG_TRACE(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_TRACE, __VA_ARGS__)
 #define LOG_PRODUCTION(...)_LOG_WITH_MACRO_NAME(PEP_LOG_PRODUCTION, __VA_ARGS__)
 #define LOG_BASIC(...)     _LOG_WITH_MACRO_NAME(PEP_LOG_BASIC, __VA_ARGS__)
-#define LOG_SERVICE(...)   _LOG_WITH_MACRO_NAME(PEP_LOG_SERVICE, __VA_ARGS__)
+#define LOG_SERVICE(...)   _LOG_WITH_MACRO_NAME(PEP_LOG_SERVICE, __VA_ARGS__) */
+#define LOG_CRITICAL(...)   PEP_LOG_CRITICAL("p≡p", "Engine", "" __VA_ARGS__)
+#define LOG_ERROR(...)      PEP_LOG_ERROR("p≡p", "Engine", "" __VA_ARGS__)
+#define LOG_WARNING(...)    PEP_LOG_WARNING("p≡p", "Engine", "" __VA_ARGS__)
+#define LOG_API(...)        PEP_LOG_API("p≡p", "Engine", "" __VA_ARGS__)
+#define LOG_EVENT(...)      PEP_LOG_EVENT("p≡p", "Engine", "" __VA_ARGS__)
+#define LOG_FUNCTION(...)   PEP_LOG_FUNCTION("p≡p", "Engine", "" __VA_ARGS__)
+#define LOG_NONOK(...)      PEP_LOG_NONOK("p≡p", "Engine", "" __VA_ARGS__)
+#define LOG_NOTOK(...)      PEP_LOG_NOTOK("p≡p", "Engine", "" __VA_ARGS__)
+#define LOG_TRACE(...)      PEP_LOG_TRACE("p≡p", "Engine", "" __VA_ARGS__)
+#define LOG_PRODUCTION(...) PEP_LOG_PRODUCTION("p≡p", "Engine", "" __VA_ARGS__)
+#define LOG_BASIC(...)      PEP_LOG_BASIC("p≡p", "Engine", "" __VA_ARGS__)
+#define LOG_SERVICE(...)    PEP_LOG_SERVICE("p≡p", "Engine", "" __VA_ARGS__)
 
 #define LOG_MESSAGE_WITH(literal_string, the_message, macro)            \
     do {                                                                \
@@ -196,7 +218,7 @@
     do {                                                                    \
         PEP_STATUS _log_status_the_status = (the_status);                   \
         if (condition(_log_status_the_status))                              \
-            logging_macro("status is 0x%x %i %s\n",                         \
+            logging_macro("status is 0x%x %i %s",                           \
                         (int) _log_status_the_status,                       \
                         (int) _log_status_the_status,                       \
                         pEp_status_to_string(_log_status_the_status));      \
@@ -239,6 +261,12 @@
 #define LOG_STATUS_FUNCTION LOG_STATUS_WITH(LOG_FUNCTION)
 #define LOG_NONOK_STATUS_FUNCTION LOG_NONOK_STATUS_WITH(LOG_FUNCTION)
 #define LOG_STATUS_WHEN_FUNCTION(condition) LOG_NONOK_STATUS_WITH(condition, LOG_FUNCTION)
+#define LOG_STATUS_NONOK LOG_STATUS_WITH(LOG_NONOK)
+#define LOG_NONOK_STATUS_NONOK LOG_NONOK_STATUS_WITH(LOG_NONOK)
+#define LOG_STATUS_WHEN_NONOK(condition) LOG_NONOK_STATUS_WITH(condition, LOG_NONOK)
+#define LOG_STATUS_NOTOK       LOG_STATUS_NONOK
+#define LOG_NOTOK_STATUS_NOTOK LOG_NONOK_STATUS_NONOK
+#define LOG_STATUS_WHEN_NOTOK  LOG_STATUS_WHEN_NONOK
 #define LOG_STATUS_TRACE LOG_STATUS_WITH(LOG_TRACE)
 #define LOG_NONOK_STATUS_TRACE LOG_NONOK_STATUS_WITH(LOG_TRACE)
 #define LOG_STATUS_WHEN_TRACE(condition) LOG_NONOK_STATUS_WITH(condition, LOG_TRACE)
@@ -328,14 +356,28 @@ struct _pEpSession {
     sqlite3 *log_db;
     sqlite3 *system_db;
 
+    /* Do not log on the logging database (but keep allowing any other
+       destination) unless this field is true.  This makes it easy to log even
+       at initialisation. */
+    bool log_database_initialised;
+
+    /* When this field is false do not log, to any destination. */
+    bool enable_log;
+
     /* Prepared SQL statements (on log_db) for logging.  See pEp_log.c . */
     sqlite3_stmt *log_begin_transaction_prepared_statement;
     sqlite3_stmt *log_commit_transaction_prepared_statement;
     sqlite3_stmt *log_insert_prepared_statement;
     sqlite3_stmt *log_delete_oldest_prepared_statement;
 
-    sqlite3_stmt *log; /* This uses the management DB, and is obsolete. */
+    /* This uses the system DB. */
     sqlite3_stmt *trustword;
+
+    /* These use the management DB. */
+    sqlite3_stmt *begin_exclusive_transaction;
+    sqlite3_stmt *commit_transaction;
+    sqlite3_stmt *rollback_transaction;
+    sqlite3_stmt *log; /* This uses the management DB, and is obsolete. */
     sqlite3_stmt *get_identity;
     sqlite3_stmt *get_identity_without_trust_check;
     sqlite3_stmt *get_identities_by_address;
@@ -454,6 +496,8 @@ struct _pEpSession {
     // Distribution.Echo
     sqlite3_stmt *echo_get_challenge;
     sqlite3_stmt *echo_set_challenge;
+    sqlite3_stmt *echo_get_echo_below_rate_limit;
+    sqlite3_stmt *echo_set_timestamp;
 
     // callbacks
     notifyHandshake_t notifyHandshake;
@@ -773,7 +817,7 @@ static inline int _unsigned_signed_strcmp(const unsigned char* bytestr, const ch
  *  
  *  
  */
-static inline char* _pEp_subj_copy() {
+static inline char* _pEp_subj_copy(void) {
 #ifndef WIN32
     unsigned char pEpstr[] = PEP_SUBJ_STRING;
     void* retval = calloc(1, sizeof(unsigned char)*PEP_SUBJ_BYTELEN + 1);
@@ -978,31 +1022,9 @@ extern double _pEp_log2_36;
  *  Please leave _patch_asn1_codec COMMENTED OUT unless you're working
  *  in a branch or patching the asn1 is a solution
  */
-static inline void _init_globals() {
+static inline void _init_globals(void) {
     _pEp_rand_max_bits = (int) ceil(log2((double) RAND_MAX));
     _pEp_log2_36 = log2(36);
-}
-
-
-// spinlock implementation
-
-/**
- * @internal
- *
- *  <!--       Sqlite3_step()       -->
- *  
- *  @brief            TODO
- *  
- *  @param[in]  stmt         sqlite3_stmt*
- *  
- */
-static inline int Sqlite3_step(sqlite3_stmt* stmt)
-{
-    int rc;
-    do {
-        rc = sqlite3_step(stmt);
-    } while (rc == SQLITE_BUSY || rc == SQLITE_LOCKED);
-    return rc;
 }
 
 /**

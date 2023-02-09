@@ -1,7 +1,117 @@
-* Provide a local.conf.example
+* some documentation updates: link build instructions from README.md .
+* improve logging, in particular making it very visible when we discover that a
+  key expired or was revoked.
+
+v3.2.0-RC22  2023-02-01
+* New API function PEP_STATUS_is_error.
+  Closes https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/111 .
+* Avoid the use of #warning, not supported by the microsoft compiler.
+  Closes https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/122 .
+
+v3.2.0-RC21  2023-02-01
+* DEPENDENCIES: use the new pEpEngineSequoiaBackend release; this includes some
+  build system improvements to which we Engine people contributed, making
+  pEpEngineSequoiaBackend easy to install with make following the pEp
+  conventions.
+* local.conf.example: in order to build the Engine in safety mode 'release' the
+  DEBUG variable must now be defined as 'release', instead of being set to be
+  empty.
+* bug fix: actually keep into account the safety mode to determine the Engine
+  compiler flags, so that optimisation and the presence debugging symbols  can
+  be controlled.
+  Now default to *always* compiling with debugging symbols; however this new
+  behaviour can be overridden...
+* local.conf.example: ...with new user-overridable variable
+  COMPILEWITHDEBUGGINGSYMBOLS , which lets the user decide whether the Engine is
+  compiled with the -g (or equivalent) option.
+* Build system: PER_MACHINE_DIRECTORY: change the default value to use PREFIX.
+  I suspect the previous default was not used much.
+* Add cute banner shown when invoking make.
+* Fix zero-argument C function prototypes and definitions so as to use (void)
+  rather than ().  This is the correct solution and the fix prevents huge
+  volumes of distracting warnings from some compilers (reported by heck with
+  least apple clang 14).
+  This fixes https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/113 .
+* Fix https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/118 in 3.x as
+  well by adding a test case documenting the behaviour difference; the
+  unexpected ugly status code was only returned in 2.x, which required a
+  non-trivial fix.
+* If the environment variable PEP_NOABORT is defined, to any value, never abort
+  on failure indepdendently from the fatality mode.  This is meant for internal
+  use with the pEp Engine test suite, but users and developers of other pEp
+  components might also find this useful.
+  This solves https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/121 .
+* documentation: mention do_sync_protocol_init , previously forgottem, in the
+  NEWS entry for v3.2.0-RC20 (2023-01-23).
+* Fix https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/107 : no
+  longer prematurely free identity list in update_identity.
+* Echo: add pEp-auto-consume header.
+  Closes https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/96.
+
+v3.2.0-RC20  2023-01-23
+* make register_sync_callbacks really side-effect-free; this fixes
+  https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/116 (Thanks to
+  Heck.)  This contributes to unblock
+  https://gitea.pep.foundation/pEp.foundation/pEpJNIAdapter/issues/24 .
+* In relation to the change above: new API function do_sync_protocol_init ,
+  which initialises the Sync state machinery indepdendently from
+  register_sync_callbacks (which now *only* sets callback functions).
+* undo recent Makefile changes related to Sequoia: a cleaner solution is
+  forthcoming.
+
+v3.2.0-RC19  2023-01-18
+* The logging facility can now enabled and disabled from a configuration
+  function, the new API function
+    DYNAMIC_API void config_enable_log(PEP_SESSION session, bool enable)
+  .  By default logging is now disabled, unless the environment variable PEP_LOG
+  is defined to any value.
+  This solves https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/100
+* sql_reliability: remove debugging prints, replace with more generally useful
+  messages.
+
+v3.2.0-RC18  2023-01-18
+* Fix https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/90 : it is
+  now possible to open multiple concurrent threads with a database logging
+  destination.
+  No user-visible changes, other than more reliability.
+* Make SQL transactions robust by not assuming, incorrectly, that COMMIT
+  TRANSACTION or ROLLBACK TRANSACTION never fail with SQLITE_BUSY or
+  SQLITE_LOCKED inside an EXCLUSIVE tranaction.  This improves
+  https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/104
+  with a fix in the same spirit of
+  https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/90 .
+  Again no user-visible changes, other than more reliability.
+
+v3.2.0-RC17  2023-01-18
+* general overhaul of concurrent SQL execution, adding loops with exponential
+  backoff and EXCLUSIVE transactions.  This should solve many concurrency
+  problems (see src/sql_reliability.h ).
+  This fixes https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/104 .
+  Even if this is an important change there is no API change related to this
+  functionality.
+
+v3.2.0-RC16  2023-01-17
+* rewrite some CPP macros working around problems (I indeed suspect a bug:
+  macro expansion contained parentheses not in macro definitions) with
+  microsoft's compiler.  Reported by Alex, who helped testing my proposed
+  redefinitions.  The current code is meant to work on every platform.
+
+v3.2.0-RC15  2023-01-13
+* move state machine initialisation out for callback registering.  This avoids
+  that Sync beacon messages are sent at session initialisation (thanks to Volker
+  Birk).
+* Echo protocol: implement a rate limit on Ping and Pong messages to each
+  destination identity, from each device.  This prevents flooding with Ping or
+  Pong messages.
+* update pEpEngineSequoiaBackend dependency: this in its turn will use a more
+  recent sequoia-openpgp, which fixes a performance bug.
+* update_pEp_user_trust_vals: fix and generalise my previous fix.
+
+v3.2.0-RC14  2022-12-22
+* Provide a local.conf.example .
 * In local.conf.example explain how the DEBUG variable has changed behaviour
-  in an incompatible way since Engine 3.2.0-RC13
-* New API function stringpair_list_find_case_insensitive
+  in an incompatible way since Engine 3.2.0-RC13 .
+* New API function stringpair_list_find_case_insensitive .
 * When searching for message headers always compare names case-insensitively.
   This is an incompatibile change, but the previous behaviour was incorrect.
 * bug fix in set_as_pEp_user: do not hardwire the pEp protocol version to 2.1!
@@ -18,8 +128,50 @@
 * fix windows compilation problem releated to strcasecmp; problem reported by
   Alex.  This fixes
   https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/109 .
+* New protocol version 3.3.
+  The only difference is the new handling of trustwords with RIPEMD-160.
+* Unfortunately we have to disable backward compatibility by default to prevent
+  downgrade attacks.
+  Compatibility with older protocols requiring xor trustwords is kept if the
+  Engine is built with the CPP macro
+  PEP_TRUSTWORDS_XOR_COMPATIBILITY defined.  This can be accomplished by adding
+    -DPEP_TRUSTWORDS_XOR_COMPATIBILITY=1
+  to the command line, or (when using our Makefile) by building with the make
+  variable TRUSTWORDSXORCOMPATIBILITY defined.
+  Explicitly calling get_xor_trustwords_for_fprs will always yield xor
+  trustwords.
+* A further incompatible change in xor trustwords, "[A_XOR_A]": combining an fpr
+  with itself no longer returns the same fpr as the result.  In other words we
+  no longer have a special case to force
+    for every A  A xor A == A
+  .  Instead I am switching to the correct alternative: now
+    for every A  A xor A == 0
+  .  The test suite used to explicitly check this case; I changed the test suite
+  to agree with Mathematics.
+  I significantly factored, rewrote and and cleand up the old trustword code in
+  src/message_api.c .
+* local.conf.example: document TRUSTWORDSXORCOMPATIBILITY.
+* PUBLIC_API get_trustwords_for_fprs ranamed to
+  get_xor_trustwords_for_fprs : this implements the old, weaker FPR combination
+  which might be vulnerable to a collision attack
+  (It is not possible to write a higher-level backwards-compatible function
+  get_trustwords_for_fprs which decides the best algorithm: the two FPRs are
+  not enough to decide which algorithm is needed)
+* New PUBLIC_API:
+  get_ripemd_trustwords_for_fprs : this implement the new, stronger FPR
+  combination
+* The following PUBLIC_API functions have a new behaviour but the same API:
+  * get_trustwords (taking identity arguments)
+  * get_message_trustwords (taking a message and a recipient identity)
+  In case xor-trustwords-compatibility is disabled these function now return
+  PEP_TRUSTWORD_NOT_FOUND (instead of mismatching trustwords) when refusing to
+  downgrade.
+* Bug fix: update the pEp protocol version supported by a communication partner
+  on successful decrpyption of a message from her (including on PEP_UNENCRYPTED);
+  I believe that this behaviour had always been intended.
+* add a THANKS file
 
-v3.2.0-RC13
+v3.2.0-RC13  (not announced)
 * add NEWS file
 * add release script (for the Engine maintainer): the Engine version is now in a
   machine-generated file src/pEpEngine_version.h
@@ -27,14 +179,14 @@ v3.2.0-RC13
   latest engine (master/v3.2.0-RC11)' (#92) from dirk/pEpEngine:PEMA-41 into
   master
 
-v3.2.0-RC12
+v3.2.0-RC12  2022-11-22
 * handle_pong: fix bug preventing notification from being called, reported by
   Alex Sualdea
 * Merge pull request 'PEMA-103-hotfix' (#88) from
   TSaschabc/pEpEngine:PEMA-103-hotfix into master
 * Update sqlite amalgamation to 3.40.0
 
-v3.2.0-RC11
+v3.2.0-RC11  2022-11-16
 * add the new pEp_log functionality -- notice that some platform code is
   UNTESTED; I am waiting for feedback from platform maintainers;
 * add the new pEp_debug functionality;
@@ -44,17 +196,17 @@ v3.2.0-RC11
   replaced by the new log functionality in src/pEp_log.h; I could re-implement
   the old functions based on the new API if people want that, but using the API
 
-v3.2.0-RC10
+v3.2.0-RC10  2022-10-12
 From this point on we consistently adopt the new naming scheme for tags: we
 start the tag name with "v" instead of "Release_".
 * fix compilation on windows (probably: untested).
 
-Release_3.2.0-RC9
+Release_3.2.0-RC9  2022-10-12
 * BUILD: Fix - Effectively add include and lib dir from local.conf' (#82)
 * unfinished debug / log changes
 * (broken on windows)
 
-v3.2.0-RC8
+v3.2.0-RC8  2022-10-05
 No complete change log for this RC, the first in the 3.x series to be actually
 used.  The most important change from 2.x is Key-Election Removal; the list of
 other changes (but not the changes themselves) is now lost.

@@ -7,24 +7,12 @@ HERE_REL := $(notdir $(CURDIR))
 
 include Makefile.conf
 
-ifneq ($(wildcard local.conf),)
-    $(info ================================================)
-    $(info Overrides in `local.conf` are used.)
-    $(info ================================================)
-endif
-
-ifdef BUILD_CONFIG
-    $(info ================================================)
-    $(info Overrides in `$(BUILD_CONFIG)` are used.)
-    $(info ================================================)
-endif
-
 BUILT_IN_MIME=
 
 ifdef PEP_MIME
     BUILT_IN_MIME=pepmime
 endif
-    
+
 .PHONY: all $(BUILT_IN_MIME) codegen asn1 build install dbinstall uninstall clean tags test package db doc
 
 build: $(BUILT_IN_MIME) asn1

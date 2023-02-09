@@ -28,6 +28,10 @@ extern "C" {
 # include "platform_unix.h"
 #endif
 
+
+/* Functions implemented in a different way according to the platform
+ * ***************************************************************** */
+
 /**
  *  <!--       pEp_fnmatch()       -->
  *
@@ -46,6 +50,17 @@ extern "C" {
  *
  */
 int pEp_fnmatch(const char *pattern, const char *string);
+
+/**
+ *  <!--       pEp_sleep_ms()       -->
+ *
+ *  @brief Sleep for the given number of milliseconds.  If interrupted by a
+ *         signal continue sleeping until the given total sleep time is
+ *         reached.
+ *
+ *  @param[in]   ms           The number of milliseconds to sleep.
+ */
+void pEp_sleep_ms(unsigned long ms);
 
 
 /* Feature macros
