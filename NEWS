@@ -1,3 +1,4 @@
+v3.2.0-RC23  2023-02-09
 * some documentation updates: link build instructions from README.md .
 * improve logging, in particular making it very visible when we discover that a
   key expired or was revoked.
