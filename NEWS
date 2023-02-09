@@ -10,6 +10,10 @@
 * Build system fixes to compile on Windows, contributed by Alex Sualdea and Jörg
   Knobloch.
   Closes https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/123 .
+* Incompatible API change: remove unused obj parameters from API functions
+  do_sync_protocol and do_sync_protocol_step ; this change is easy to adjust to
+  but will break every adapter.
+  Closes https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/126 .
 
 v3.2.0-RC22  2023-02-01
 * New API function PEP_STATUS_is_error.
