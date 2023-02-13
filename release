@@ -373,7 +373,11 @@ release ()
 
 Now go to
   https://gitea.pep.foundation/pEp.foundation/pEpEngine/releases/new
-and mark an Engine release for v${version} on branch $branchname .
+and mark an Engine release for v${version} on branch $branchname .  Copy this
+text:
+
+See the [NEWS](https://gitea.pep.foundation/pEp.foundation/pEpEngine/src/tag/v${version}/NEWS) file.
+
 EOF
 }
 
