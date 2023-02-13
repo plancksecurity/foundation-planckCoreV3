@@ -649,7 +649,12 @@ static PEP_STATUS send_ping_or_pong(PEP_SESSION session,
 
     /* Add the auto-consume header to the message -- in case this was encrypted,
        to the outer message since this is being done after encrypt_message. */
-    _add_auto_consume(m);
+    add_opt_field(m, "pEp-auto-consume", "yes");
+    m->in_reply_to = stringlist_add(m->in_reply_to, "pEp-auto-consume@pEp.foundation");
+    if (m->in_reply_to == NULL) {
+        free_message(m);
+        return PEP_OUT_OF_MEMORY;
+    }
 
     /* Send it. */
     status = session->messageToSend(m);
