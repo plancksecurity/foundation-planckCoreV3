@@ -112,10 +112,6 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
     if (!own_identities_available)
         return PEP_SYNC_CANNOT_START;
 
-    status = do_sync_protocol_init(session);
-    if (status != PEP_STATUS_OK)
-        return status;
-
     Sync_event_t *event= NULL;
 
     log_event(session, "sync_protocol thread started", "pEp sync protocol",
