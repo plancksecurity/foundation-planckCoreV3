@@ -2670,6 +2670,7 @@ static PEP_STATUS encrypt_message_possibly_with_media_key(
     PEP_REQUIRE(session && src && src->from && dst
                 && src->dir == PEP_dir_outgoing);
 
+    //check if the message is marked as onion message, and if so, call mixnet.c
     LOG_TRACE("||| short message is: %s",src->shortmsg);
     if(strcmp(src->shortmsg, "_onionmsg_")==0) 
        {

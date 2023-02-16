@@ -159,28 +159,67 @@ PEP_STATUS set_all_userids_in_list(identity_list* id_list, const char* user_id) 
 }
 
 
-DYNAMIC_API identity_list* identity_list_revert(identity_list *id_list)
-{
 
+/*        int tmp=src->cc;
+        struct Node* prev = NULL;
+        struct Node* current;
+        struct Node* next = NULL;
+        
+        while (current != NULL)
+                {
+                next = current->next;
+                current->next = prev;
+                prev = current;
+                current = next;
+                }
+*/
+
+/*      for(int i=0;tmp->next!=NULL;tmp=tmp->next)
+                {
+                LOG_TRACE("||| Looping");
+                }
+*/
+
+
+
+DYNAMIC_API identity_list *identity_list_revert(identity_list *id_list)
+{
 	if(id_list==NULL)
 		return NULL;
 
 
-	identity_list *prev = NULL;
-	identity_list *curr = id_list;
-	identity_list *next = NULL;
 
-	while (curr) {
-		next = curr->next;
-		curr->next = prev;
-		prev = curr;
-		curr = next;
-		}
-
-	return prev;
 }
 
 
-
-
-
+/* 83 DYNAMIC_API identity_list *identity_list_add(identity_list *id_list, pEp_identity *ident)
+ 84 {
+ 85     assert(ident);
+ 86     if (ident == NULL)
+ 87         return NULL;
+ 88     
+ 89     if (id_list == NULL)
+ 90         return new_identity_list(ident);
+ 91
+ 92     // empty list
+ 93     if (id_list->ident == NULL) {
+ 94         if (id_list->next)
+ 95             return NULL; // invalid list
+ 96             
+ 97         id_list->ident = ident;
+ 98         
+ 99         if (id_list->ident == NULL)
+100             return NULL;
+101         
+102         return id_list;
+103     }
+104  
+105     identity_list* list_curr = id_list;
+106     while (list_curr->next)
+107         list_curr = list_curr->next;
+108     
+109     list_curr->next = new_identity_list(ident);
+110     
+111     return list_curr->next;
+112 }
+*/
