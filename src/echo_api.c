@@ -416,7 +416,7 @@ static PEP_STATUS echo_challenge_for_identity(PEP_SESSION session,
     sql_status = pEp_sqlite3_step_nonbusy(session, session->echo_get_challenge);
     ON_SQL_ERROR_SET_STATUS_AND_GOTO;
     if (sql_status != SQLITE_ROW)
-        LOG_ERROR("foo!");
+        LOG_NONOK("did not find echo challenge for %s <%s>: sql_status %i", (identity->username ? identity->username : "NOUSERNAME"), (identity->address ? identity->address : "NOADDRESS"), sql_status);
     const void *stored_challenge;
     if (sql_status == SQLITE_DONE) /* no row found: no user_id?  This will
                                       never happen in sane situations.  It
