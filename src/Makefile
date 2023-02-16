@@ -18,7 +18,8 @@ ifndef PEP_MIME
         LDLIBS+= -letpan
     endif
 else
-    LDLIBS+= -lpEpMIME
+    # LDLIBS+= -lpEpMIME
+    LDLIBS += ../pEpMIME/libpEpMIME.a
     NO_SOURCE+= etpan_mime.c
 endif
 

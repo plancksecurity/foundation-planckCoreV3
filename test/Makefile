@@ -25,7 +25,8 @@ endif
 
 #endif
 
-LDFLAGS+= -L../asn.1 -L../src $(ETPAN_LIB) $(GTEST_LDFLAGS)
+# LDFLAGS+= -L../asn.1 -L../src $(ETPAN_LIB) $(GTEST_LDFLAGS)
+LDFLAGS+= -L../asn.1 -L../src $(GTEST_LDFLAGS)
 
 TARGET:=EngineTests
 
@@ -38,9 +39,11 @@ endif
 CPPFLAGS+= -DGTEST_SUITE_SYM=$(GTEST_SUITE_SYM)
 
 ifdef PEP_MIME
-    LDLIBS+= -lpEpMIME
+#    LDLIBS+= -lpEpEngine -lstdc++ -lpEpMIME
+    LDLIBS+= -lpEpEngine -lstdc++ ../pEpMIME/libpEpMIME.a
 else
     ifneq ($(BUILD_ON),OS/390)
+#        LDLIBS+= -lpEpEngine -letpan -lstdc++
         LDLIBS+= -lpEpEngine -letpan -lstdc++
     endif
 endif
