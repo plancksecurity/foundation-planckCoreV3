@@ -84,10 +84,10 @@ CXXFLAGS:=$(filter-out -DNDEBUG,$(CXXFLAGS))
 CFLAGS:=$(filter-out -DNDEBUG,$(CFLAGS))
 
 # FIXME Possibly missing incdirs: ASN1C_INC
-CXXFLAGS+= -I$(GTEST_INC_DIR) -I./src -I../sync $(INC_FLAGS) -Wno-deprecated -Wno-unused-variable
-
-CXXFLAGS+= -I./src -I../src -I ../asn.1 -I../sync $(INC_FLAGS)
+CPPFLAGS+= -I$(GTEST_INC_DIR) -I./src -I../sync $(INC_FLAGS) 
+CPPFLAGS+= -I./src -I../src -I ../asn.1 -I../sync $(INC_FLAGS)
 CXXFLAGS+= -Wno-deprecated -Wno-unused-variable
+CXXFLAGS+= -g
 
 EXTRA_LIB_PATHS=.:../src:
 ifndef PEP_MIME

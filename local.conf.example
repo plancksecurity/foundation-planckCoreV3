@@ -15,6 +15,24 @@
 # suit her own configuration.
 
 
+# Dependencies
+# #########################################################
+
+# The pEp Engine needs to encode and decode email messages using MIME.  The pEp
+# Engine supports two different MIME backends: one is pEpMIME, which comes with
+# the Engine itself; the other lis libetpan, an external library.
+
+# You can uncomment one of these two options.
+
+# # Use libetpan, which must be installed as a dependency.
+# MIME = libetpan
+
+# # Use pEpMIME, which comes with the Engine itself. This is the default.
+# MIME = pEpMIME
+
+MIME = wrong  # This should fail, on purpose
+
+
 # Debugging symbols
 # #########################################################
 

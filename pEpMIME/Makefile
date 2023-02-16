@@ -1,18 +1,14 @@
 # This file is under GNU General Public License 3.0
 # see LICENSE.txt
 
-##################################################################################
-# This is a modified Makefile based on that in the libpEpMIME repository.
-# THEY ARE NOT INTERCHANGEABLE. This is SPECIFICALLY for the pEp engine and
-# is only for the built-in variant of the compiler.
-#
-# Note that this is the only supported way of including pEpMIME within the engine.
-#
-# If additional object files are added to the repository object requirements, they
-# will have to be included here specifically.
-##################################################################################
+# The Engine build system in this directory used to copy pEpMIME source files
+# from their source directory here, patch them, and compile them.  The process
+# was complicated by a circular dependency: pEpMIME required the pEp Engine
+# header.
+# In order to avoid this complexity we now maintain pEpMIME directly in this
+# directrory, as part of the pEp Engine.
 
-.PHONY: mimesrc lib all clean install test
+.PHONY: lib all clean install test
 
 include ../Makefile.conf
 
@@ -25,39 +21,34 @@ BUILD_FOR=$(BUILD_ON)
 # Cross-compiling is currently not supported.
 # Maybe you can hack something with `local.conf`.
 ifneq ($(BUILD_ON),$(BUILD_FOR))
-    $(error I don't know how to build for $(BUILD_FOR) on $(BUILD_ON).)
+    $(error "I don't know how to build for $(BUILD_FOR) on $(BUILD_ON).")
 endif
 
-SED=
 # MacOS needs -liconv, Linix don't.
 ifeq ($(BUILD_FOR),Darwin)
     LDLIBS+= -liconv
-    SED=sed -i ''
-else
-    SED=sed -i	
 endif
 
-######################################################################
-#
-# libpEpMIME can be built as a separate library in its own repository.
-#
-# However, it is dependent on the engine, which obviously does not
-# work within the engine, as the engine is dependent upon IT.
-# Because header files within the engine are local and not defined
-# to exist in some installed library under pEp/header_file.h, we simply
-# copy them into this directory and build/modify them as needed.
-#
-######################################################################
-# Repo source
-PEPMIME_SRC_FILES:= $(wildcard $(PEP_MIME_SRC)/*.cc) $(wildcard $(PEP_MIME_SRC)/*.hh) $(wildcard $(PEP_MIME_SRC)/*.hxx)
-# Stripped filenames
-LOCAL_PEPMIME_SRC:= $(subst $(PEP_MIME_SRC)/,,$(PEPMIME_SRC_FILES))
+# Source file names
+## This is useful to update: (cd pEpMIME; \ls -1 *.{cc,cxx,hh,hxx} 2> /dev/null)
+LOCAL_PEPMIME_SRC:= \
+  attachment.cc attachment.hh base64.cc base64.hh base64.hxx \
+  bodygenerator.cc bodygenerator.hh bodyparser.cc bodyparser.hh fuzz.cc \
+  header_generator.cc header_generator.hh headerparser.cc headerparser.hh \
+  message.cc message.hh mime_headers.cc mime_headers.hh nfc.cc nfc.hh \
+  nfc_sets.cc nfc_sets.hh nulllogger.cc nulllogger.hh parse_address.cc \
+  parse_address.hh parse_timestamp.cc parse_timestamp.hh pEpEngine_mime.cc \
+  pEpMIME.cc pEpMIME.hh pEpMIME_internal.cc pEpMIME_internal.hh \
+  print_message.cc print_message.hh quoted_printable.cc quoted_printable.hh \
+  quoted_printable.hxx rules.cc rules.hh string_case.hh to_utf8.cc to_utf8.hh
+LOCAL_PEPMIME_TEST_SRC:= \
+  unittest_address.cc unittest_base64.cc unittest_mime-12.cc unittest_mime.cc \
+  unittest_nfc.cc unittest_qp.cc unittest_rule.cc unittest_stringcase.cc \
+  unittest_subject.cc unittest_timestamp.cc unittest_toutf8.cc
 
 all: lib
 
-lib: mimesrc libpEpMIME.a
-
-mimesrc: ${LOCAL_PEPMIME_SRC}
+lib: libpEpMIME.a
 
 # Copy the files to the local directory and change their engine header references to quoted references
 %.hh : $(PEP_MIME_SRC)/%.hh
@@ -81,11 +72,14 @@ LIB_OBJ=pEpMIME.o pEpMIME_internal.o rules.o bodyparser.o \
 libpEpMIME.a: $(LIB_OBJ)
 	${AR} rcs $@ $^
 
+#%.o : %.cc %.hh
+#	${CXX} ${CXXFLAGS} ${CPPFLAGS} -I${PREFIX}/include -o $@ -c $<
+#%.o : %.cc
+#	${CXX} ${CXXFLAGS} ${CPPFLAGS} -I${PREFIX}/include -o $@ -c $<
 %.o : %.cc %.hh
-	${CXX} ${CXXFLAGS} ${CPPFLAGS} -I${PREFIX}/include -o $@ -c $<
-
-%.o : %.cc
-	${CXX} ${CXXFLAGS} ${CPPFLAGS} -I${PREFIX}/include -o $@ -c $<
+	${CXX} ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
+#%.o : %.cc
+#	${CXX} ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 
 clean:
 	rm -vf *.o *.a
@@ -93,10 +87,10 @@ clean:
 srcclean:
 	rm *.cc *.hh *.hxx
 
-install: lib 
-	mkdir -p "$(DESTDIR)$(PREFIX)/lib/"
-	cp -v libpEpMIME.a $(DESTDIR)$(PREFIX)/lib
+#install: lib
+#	mkdir -p "$(DESTDIR)$(PREFIX)/lib/"
+#	cp -v libpEpMIME.a $(DESTDIR)$(PREFIX)/lib
 
-uninstall:
-	rm $(DESTDIR)$(PREFIX)/lib/libpEpMIME.a
+#uninstall:
+#	rm $(DESTDIR)$(PREFIX)/lib/libpEpMIME.a
 
