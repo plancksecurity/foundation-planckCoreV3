@@ -58,9 +58,41 @@ int pEp_fnmatch(const char *pattern, const char *string);
  *         signal continue sleeping until the given total sleep time is
  *         reached.
  *
- *  @param[in]   ms           The number of milliseconds to sleep.
+ *  @param[in]   ms           The number of milliseconds to sleep for.
  */
 void pEp_sleep_ms(unsigned long ms);
+
+/**
+ *  <!--       pEp_pid_and_tid()       -->
+ *
+ *  @brief A struct containing a thread id and a process Id.  See the comment
+ *         before pEp_get_pid_and_tid
+ */
+struct pEp_pid_and_tid {
+    /* A process identifier as an integer number: this might be larger than
+       needed, but will always be possible to print. */
+    int64_t pid;
+
+    /* A thread identifier.  See above.*/
+    int64_t tid;
+};
+
+/**
+ *  <!--       pEp_set_pid_and_tid()       -->
+ *
+ *  @brief Fill the pointed struct setting the current process id and thread id.
+ *         This could have been done differently, providing emulation of POSIX
+ *         functions where missed; still this solution is more general, and
+ *         allows for wider identifiers, with the same size on every platform.
+ *         It is not really necessary that these identifiers are consistent
+ *         with system APIs: they just need to be consistent with themselves
+ *         when used as part of logging.
+ *         This function always succeeeds.
+ *
+ *  @param[in]   pid_and_tid      a pointer to the struct to be filled.
+ *
+ */
+void pEp_set_pid_and_tid(struct pEp_pid_and_tid *pid_and_tid);
 
 
 /* Feature macros

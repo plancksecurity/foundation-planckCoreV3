@@ -1603,14 +1603,13 @@ DYNAMIC_API PEP_STATUS set_identity(
     
     bool has_fpr = (!EMPTYSTR(identity->fpr));
     
-    PEP_SQL_BEGIN_EXCLUSIVE_TRANSACTION();
-
     if (identity->lang[0]) {
         PEP_ASSERT(identity->lang[0] >= 'a' && identity->lang[0] <= 'z');
         PEP_ASSERT(identity->lang[1] >= 'a' && identity->lang[1] <= 'z');
         PEP_ASSERT(identity->lang[2] == 0);
     }
 
+    PEP_SQL_BEGIN_EXCLUSIVE_TRANSACTION();
     if (has_fpr) {
         sql_reset_and_clear_bindings(session->set_pgp_keypair);
         sqlite3_bind_text(session->set_pgp_keypair, 1, identity->fpr, -1,

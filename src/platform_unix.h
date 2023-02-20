@@ -14,6 +14,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <strings.h>
+#include <stdint.h>
 #include <sys/select.h>
 #ifndef __MVS__
 #include <sys/param.h>

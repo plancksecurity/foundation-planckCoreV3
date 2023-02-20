@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <assert.h>
+#include <inttypes.h> /* For PRId64 */
 #include <string.h>
 
 /* In this module we do not use PEP_SQL_BEGIN_LOOP and PEP_SQL_END_LOOP except
@@ -151,14 +152,14 @@ static const char* _log_level_to_string(PEP_LOG_LEVEL level)
    different fields. */
 #define PEP_LOG_PRINTF_FORMAT_NO_DATE                         \
     "%s%s%s"                        /* system, subsystem */   \
-    " %li"                          /* pid */                 \
+    " %" PRId64 ",%" PRId64         /* pid, tid */            \
     " %s"                           /* log level */           \
     " %s:%i%s%s"                    /* source location */     \
     "%s%s"                          /* entry */
 #define PEP_LOG_PRINTF_ACTUALS_NO_DATE                            \
     system, system_subsystem_separator,  \
         subsystem,                                                \
-    (long) pid,                                                   \
+    pid_and_tid.pid, pid_and_tid.tid,                             \
     _log_level_to_string(level),                                  \
     source_file_name, source_file_line, function_prefix,          \
         function_name,                                            \
@@ -167,6 +168,19 @@ static const char* _log_level_to_string(PEP_LOG_LEVEL level)
 
 /* Logging facility: database destination.
  * ***************************************************************** */
+
+/* This compilation unit is defensive to a degree that appears unreasonable;
+   yet its defensiveness has allowed me to find subtle bugs with ease, time
+   and time again. */
+#define WARN_ON_ERROR                                                       \
+    do {                                                                    \
+        if (session->service_log                                            \
+            && sqlite_status != SQLITE_OK                                   \
+            && sqlite_status != SQLITE_DONE)                                \
+            fprintf(stderr, "ERROR %s:%i %s: sql_error %i: %s\n",           \
+                    __FILE__, (int) __LINE__, __func__,                     \
+                    (int) sqlite_status, sqlite3_errmsg(session->log_db));  \
+    } while (false)
 
 /* A safe wrapper around sqlite3_prepare_v2 , which retries on SQLITE_BUSY and
    SQLITE_LOCKED. */
@@ -179,13 +193,20 @@ static int _safe_sqlite3_prepare_v2(
   const char **pzTail     /* OUT: Pointer to unused portion of zSql */
 ) {
     int sqlite_status;
+    int failure_no = 0;
     PEP_SQL_BEGIN_LOOP(sqlite_status);
         sqlite_status = sqlite3_prepare_v2(db, zSql, nByte, ppStmt, pzTail);
-        if (sqlite_status == SQLITE_BUSY || sqlite_status == SQLITE_LOCKED)
+        if (sqlite_status == SQLITE_BUSY || sqlite_status == SQLITE_LOCKED) {
             fprintf(stderr, "failed preparing the statement %s: trying again\n",
                     zSql);
+            failure_no ++;
+        }
+    WARN_ON_ERROR;
     PEP_SQL_END_LOOP();
     assert(sqlite_status == SQLITE_OK);
+    if (failure_no > 0)
+        fprintf(stderr, "succeeded preparing the statement %s after %i failures\n",
+                zSql, failure_no);
     return sqlite_status;
 }
 
@@ -219,6 +240,7 @@ static const char *pEp_log_initialize_database_once_text =
 "   Level            INTEGER  NOT NULL,"
 "   Timestamp        TEXT     NOT NULL     DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')),"
 "   Pid              INTEGER  NOT NULL,"
+"   Tid              INTEGER  NOT NULL,"
 "   System           TEXT,"
 "   Subsystem        TEXT,"
 "   Source_file_name TEXT     NOT NULL,"
@@ -230,8 +252,21 @@ static const char *pEp_log_initialize_database_once_text =
 " -- This makes aggregate functions such as MIN fast.\n"
 " CREATE UNIQUE INDEX IF NOT EXISTS idx_Entries_Id on Entries (id);"
 " "
+" COMMIT TRANSACTION;\n"
+" "
+" VACUUM;\n" /* I have verified with this statement *commented out* that the
+                database file does not grow to an unbounded size. */
+;
+
+static const char *pEp_log_upgrade_database_1_once_text =
+" ALTER TABLE Entries ADD Column Tid              INTEGER  NOT NULL DEFAULT -1;\n"
+;
+
+static const char *pEp_log_create_view_once_text =
+" BEGIN EXCLUSIVE TRANSACTION;\n"
 " -- This is very convenient for interactive use.\n"
-" CREATE VIEW IF NOT EXISTS UserEntries AS"
+" DROP VIEW IF EXISTS UserEntries;"
+" CREATE VIEW UserEntries AS"
 "   SELECT E.id,"
 "          CASE E.Level WHEN  10 THEN 'CRT'"
 "                       WHEN  20 THEN 'ERR'"
@@ -239,12 +274,12 @@ static const char *pEp_log_initialize_database_once_text =
 "                       WHEN 200 THEN 'evt'"
 "                       WHEN 210 THEN 'api'"
 "                       WHEN 300 THEN 'nok'"
-"                       WHEN 310 THEN 'fcn'"
+"                       WHEN 310 THEN 'fnc'"
 "                       WHEN 320 THEN 'trc'"
 "                                ELSE CAST(E.Level AS TEXT)"
 "          END AS Lvl,"
 "          E.Timestamp,"
-"          E.Pid,"
+"          (CAST(E.Pid AS TEXT) || '/' || CAST(E.Tid AS TEXT)) AS PidTid,"
 "          CASE WHEN E.System is NULL THEN"
 "            CASE WHEN E.SubSystem is NULL THEN  NULL"
 "            ELSE                                '/' || E.SubSystem END"
@@ -257,11 +292,7 @@ static const char *pEp_log_initialize_database_once_text =
 "          E.Entry"
 "   FROM Entries E"
 "   ORDER BY E.id;"
-" "
 " COMMIT TRANSACTION;\n"
-" "
-" VACUUM;\n" /* I have verified with this statement *commented out* that the
-                database file does not grow to an unbounded size. */
 ;
 
 /* This statement list is executed from each new session. */
@@ -274,7 +305,7 @@ static const char *pEp_log_initialize_database_at_every_connection_text =
 
 /* Begin a transaction. */
 static const char *pEp_log_begin_transaction_text =
-"  BEGIN TRANSACTION;";
+"  BEGIN EXCLUSIVE TRANSACTION;";
 
 /* Commit the current transaction. */
 static const char *pEp_log_commit_transaction_text =
@@ -283,10 +314,10 @@ static const char *pEp_log_commit_transaction_text =
 /* Insert a new row. */
 static const char *pEp_log_insert_text =
 " INSERT INTO Entries"
-"   (Level, Pid, System, Subsystem, Source_file_name, Source_file_line,"
+"   (Level, Pid, Tid, System, Subsystem, Source_file_name, Source_file_line,"
 "    Function_name, Entry)"
 " VALUES"
-"   (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8);";
+"   (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9);";
 
 /* Delete the oldest row, if the total number of rows is large enough. */
 static const char *pEp_log_delete_oldest_text =
@@ -312,6 +343,7 @@ static PEP_STATUS _pEp_log_prepare_sql_statements(PEP_SESSION session)
                     sqlite3_errmsg(session->log_db));                   \
         }                                                               \
         if (sqlite_status != SQLITE_OK) {      \
+            WARN_ON_ERROR;                     \
             status = PEP_INIT_CANNOT_OPEN_DB;  \
             goto end;                          \
         }                                      \
@@ -362,7 +394,6 @@ static PEP_STATUS _pEp_log_initialize_database(PEP_SESSION session)
         return PEP_ILLEGAL_VALUE;
     PEP_STATUS status = PEP_STATUS_OK;
     int sqlite_status = SQLITE_OK;
-    char *error_message = NULL;
 
     /* Open (creating it as needed) the log database. */
     const char *database_file_path = LOG_DB;
@@ -394,7 +425,33 @@ static PEP_STATUS _pEp_log_initialize_database(PEP_SESSION session)
     if (database_running_clients == 0) {
         sqlite_status = sqlite3_exec(session->log_db,
                                      pEp_log_initialize_database_once_text,
-                                     NULL, NULL, & error_message);
+                                     NULL, NULL, NULL);
+        if (sqlite_status != SQLITE_OK) {
+            status = PEP_INIT_CANNOT_OPEN_DB;
+            goto end;
+        }
+
+        /* Execute upgrade commands that only need to run once.  These are used
+           for adding columns which did not exist in older versions.  It is
+           difficult to handle every possible error correctly here, and there
+           is not ADD COLUMM IF NOT EXISTS. */
+        sqlite_status = sqlite3_exec(session->log_db,
+                                     pEp_log_upgrade_database_1_once_text,
+                                     NULL, NULL, NULL);
+        /* This line will be convenient for debugging.  Notice that
+           "duplicate column name: Tid" is expected here. */
+#if 0
+        fprintf(stderr, "OK-A 1100 sqlite_status is %i %s\n", sqlite_status, sqlite3_errmsg(session->log_db));
+#endif
+        if (sqlite_status == SQLITE_BUSY || sqlite_status == SQLITE_LOCKED) {
+            status = PEP_INIT_CANNOT_OPEN_DB;
+            goto end;
+        }
+
+        /* (Drop any old version of it and) create the view. */
+        sqlite_status = sqlite3_exec(session->log_db,
+                                     pEp_log_create_view_once_text,
+                                     NULL, NULL, NULL);
         if (sqlite_status != SQLITE_OK) {
             status = PEP_INIT_CANNOT_OPEN_DB;
             goto end;
@@ -407,15 +464,13 @@ static PEP_STATUS _pEp_log_initialize_database(PEP_SESSION session)
         sqlite_status
             = sqlite3_exec(session->log_db,
                            pEp_log_initialize_database_at_every_connection_text,
-                           NULL, NULL, & error_message);
+                           NULL, NULL, NULL);
     PEP_SQL_END_LOOP();
 
     /* Prepare SQL statements. */
     status = _pEp_log_prepare_sql_statements(session);
 
  end:
-    sqlite3_free(error_message);
-
     /* Keep track of the number of existing sessions.  After this point there
        is certainly at least one -- and therefore, crucially, it is no longer
        necessary to create the schema. */
@@ -423,6 +478,10 @@ static PEP_STATUS _pEp_log_initialize_database(PEP_SESSION session)
         database_running_clients ++;
         session->log_database_initialised = true;
     }
+    else
+        fprintf(stderr, "failed initialising the log database: "
+                "sqlite_status %i, %s\n",
+                sqlite_status, sqlite3_errmsg(session->log_db));
     return status;
 }
 
@@ -436,13 +495,14 @@ static PEP_STATUS _pEp_log_finalize_database(PEP_SESSION session)
     PEP_STATUS status = PEP_STATUS_OK;
     int sqlite_status = SQLITE_OK;
 #define CHECK_SQL                                                        \
-    do                                                                   \
+    do {                                                                 \
+        WARN_ON_ERROR;                                                   \
         if (sqlite_status != SQLITE_OK) {                                \
             status = PEP_UNKNOWN_DB_ERROR;                               \
             /* Do not jump.  Recovery from error is difficult here, and  \
                this should not happen anyway. */                         \
         }                                                                \
-    while (false)
+    } while (false)
 
     /* Finialise prepared SQL statements.  Go on even in case of failure. */
     sqlite_status
@@ -484,10 +544,11 @@ static void _pEp_log_delete_oldest_row_when_too_many(PEP_SESSION session)
                              1, PEP_LOG_DATABASE_ROW_NO_MAXIMUM);
     if (sqlite_status != SQLITE_OK)
         return;
-    do
+    do {
         sqlite_status
             = sqlite3_step(session->log_delete_oldest_prepared_statement);
-    while (sqlite_status == SQLITE_BUSY || sqlite_status == SQLITE_LOCKED);
+        WARN_ON_ERROR;
+    } while (sqlite_status == SQLITE_BUSY || sqlite_status == SQLITE_LOCKED);
 
     /* Here sqlite_status will be SQLITE_DONE on success, including the case in
        which no row is deleted. */
@@ -497,7 +558,7 @@ static void _pEp_log_delete_oldest_row_when_too_many(PEP_SESSION session)
 static PEP_STATUS _pEp_log_db(PEP_SESSION session,
                               PEP_LOG_LEVEL level,
                               const timestamp *time,
-                              pid_t pid,
+                              const struct pEp_pid_and_tid pid_and_tid,
                               const char *system_subsystem_prefix,
                               const char *system,
                               const char *system_subsystem_separator,
@@ -524,6 +585,7 @@ static PEP_STATUS _pEp_log_db(PEP_SESSION session,
 #define CHECK_SQL(expected_sqlite_status)                 \
     do                                                    \
         if (sqlite_status != (expected_sqlite_status)) {  \
+            WARN_ON_ERROR;                                \
             status = PEP_UNKNOWN_DB_ERROR;                \
             goto error;                                   \
         }                                                 \
@@ -546,26 +608,29 @@ static PEP_STATUS _pEp_log_db(PEP_SESSION session,
     sqlite_status = sqlite3_bind_int(session->log_insert_prepared_statement,
                                      1, level);
     CHECK_SQL(SQLITE_OK);
+    sqlite_status = sqlite3_bind_int64(session->log_insert_prepared_statement,
+                                     2, pid_and_tid.pid);
+    CHECK_SQL(SQLITE_OK);
+    sqlite_status = sqlite3_bind_int64(session->log_insert_prepared_statement,
+                                     3, pid_and_tid.tid);
+    CHECK_SQL(SQLITE_OK);
+    sqlite_status = sqlite3_bind_text(session->log_insert_prepared_statement,
+                                      4, system, -1, SQLITE_STATIC);
+    CHECK_SQL(SQLITE_OK);
+    sqlite_status = sqlite3_bind_text(session->log_insert_prepared_statement,
+                                      5, subsystem, -1, SQLITE_STATIC);
+    CHECK_SQL(SQLITE_OK);
+    sqlite_status = sqlite3_bind_text(session->log_insert_prepared_statement,
+                                      6, source_file_name, -1, SQLITE_STATIC);
+    CHECK_SQL(SQLITE_OK);
     sqlite_status = sqlite3_bind_int(session->log_insert_prepared_statement,
-                                     2, pid);
+                                     7, source_file_line);
     CHECK_SQL(SQLITE_OK);
     sqlite_status = sqlite3_bind_text(session->log_insert_prepared_statement,
-                                      3, system, -1, SQLITE_STATIC);
+                                      8, function_name, -1, SQLITE_STATIC);
     CHECK_SQL(SQLITE_OK);
     sqlite_status = sqlite3_bind_text(session->log_insert_prepared_statement,
-                                      4, subsystem, -1, SQLITE_STATIC);
-    CHECK_SQL(SQLITE_OK);
-    sqlite_status = sqlite3_bind_text(session->log_insert_prepared_statement,
-                                      5, source_file_name, -1, SQLITE_STATIC);
-    CHECK_SQL(SQLITE_OK);
-    sqlite_status = sqlite3_bind_int(session->log_insert_prepared_statement,
-                                     6, source_file_line);
-    CHECK_SQL(SQLITE_OK);
-    sqlite_status = sqlite3_bind_text(session->log_insert_prepared_statement,
-                                      7, function_name, -1, SQLITE_STATIC);
-    CHECK_SQL(SQLITE_OK);
-    sqlite_status = sqlite3_bind_text(session->log_insert_prepared_statement,
-                                      8,
+                                      9,
                                       (EMPTYSTR(entry) ? NULL : entry), -1,
                                       SQLITE_STATIC);
     CHECK_SQL(SQLITE_OK);
@@ -597,7 +662,7 @@ static PEP_STATUS _pEp_log_file_star(FILE* file_star,
                                      PEP_SESSION session,
                                      PEP_LOG_LEVEL level,
                                      const timestamp *time,
-                                     pid_t pid,
+                                     const struct pEp_pid_and_tid pid_and_tid,
                                      const char *system_subsystem_prefix,
                                      const char *system,
                                      const char *system_subsystem_separator,
@@ -660,7 +725,7 @@ static int _log_level_to_syslog_facility_priority(PEP_LOG_LEVEL level)
 static PEP_STATUS _pEp_log_syslog(PEP_SESSION session,
                                   PEP_LOG_LEVEL level,
                                   const timestamp *time,
-                                  pid_t pid,
+                                  const struct pEp_pid_and_tid pid_and_tid,
                                   const char *system_subsystem_prefix,
                                   const char *system,
                                   const char *system_subsystem_separator,
@@ -729,7 +794,7 @@ static enum android_LogPriority _log_level_to_android_logpriority(
 static PEP_STATUS _pEp_log_android_log(PEP_SESSION session,
                                        PEP_LOG_LEVEL level,
                                        const timestamp *time,
-                                       pid_t pid,
+                                       const struct pEp_pid_and_tid pid_and_tid,
                                        const char *system_subsystem_prefix,
                                        const char *system,
                                        const char *system_subsystem_separator,
@@ -765,7 +830,7 @@ static PEP_STATUS _pEp_log_android_log(PEP_SESSION session,
 static PEP_STATUS _pEp_log_windows_log(PEP_SESSION session,
                                        PEP_LOG_LEVEL level,
                                        const timestamp *time,
-                                       pid_t pid,
+                                       const struct pEp_pid_and_tid pid_and_tid,
                                        const char *system_subsystem_prefix,
                                        const char *system,
                                        const char *system_subsystem_separator,
@@ -825,8 +890,9 @@ DYNAMIC_API PEP_STATUS pEp_log(PEP_SESSION session,
     if (now == NULL)
         return PEP_OUT_OF_MEMORY;
 
-    /* Get the current pid. */
-    pid_t pid = getpid();
+    /* Get the current pid and tid. */
+    struct pEp_pid_and_tid pid_and_tid;
+    pEp_set_pid_and_tid(& pid_and_tid);
 
     /* Normalise system/subsystem strings and compute cosmetic parameters. */
     const char *system_subsystem_prefix = " ";
@@ -865,7 +931,7 @@ DYNAMIC_API PEP_STATUS pEp_log(PEP_SESSION session,
 #define ACTUALS                                                              \
     session, level,                                                          \
     now,                                                                     \
-    pid,                                                                     \
+    pid_and_tid,                                                             \
     system_subsystem_prefix, system, system_subsystem_separator, subsystem,  \
     source_file_name, source_file_line, function_prefix, function_name,      \
     entry_prefix, entry

@@ -21,7 +21,10 @@
 #include <assert.h>
 #include <stdio.h>
 #include <glob.h>
+#include <unistd.h>
+#include <pthread.h>
 #include <errno.h>
+
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -29,6 +32,7 @@
 #include <regex.h>
 
 #include "pEpEngine.h" /* For PEP_STATUS */
+#include "platform.h"  /* Atl east for struct pEp_pid_and_tid */
 #include "platform_unix.h"
 #include "dynamic_api.h"
 
@@ -1142,4 +1146,28 @@ void pEp_sleep_ms(unsigned long ms)
             sleep_time = remaining;
         }
     } while (nanosleep_result != 0);
+}
+
+void pEp_set_pid_and_tid(struct pEp_pid_and_tid *pid_and_tid)
+{
+    assert(pid_and_tid != NULL);
+
+    /* This is easy enough: we can cast from an integer to a possibly wider
+       integer with a possibly different sign. */
+    pid_and_tid->pid = (int64_t) getpid();
+
+#if defined(GNULINUX) || defined(ANDROID)
+    /* The Linux-specific call is nice: on single-threaded applications the tid
+       is equal to the pid. */
+    pid_and_tid->tid = (int64_t) gettid();
+#elif defined(__APPLE__) /*  macOS, iOS */
+    pthread_t thread = pthread_self();
+    uint64_t thread_id;
+    int success = pthread_threadid_np(thread, &thread_id);
+    assert(success == 0);
+    pid_and_tid->tid = (int64_t) thread_id;
+#else /* Fall back to a generic POSIX solution. */
+    /* Slightly less obvious, as this may be either a pointer or an integer. */
+    pid_and_tid->tid = (int64_t) (intptr_t) pthread_self();
+#endif
 }

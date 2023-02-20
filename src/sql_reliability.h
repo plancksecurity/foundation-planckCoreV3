@@ -53,6 +53,9 @@ extern "C" {
    PEP_MINIMUM_BACKOFF_IN_MS .*/
 #define PEP_BACKOFF_UPPER_LIMIT_GROWTH_FACTOR  (1 + 1.0)  /* 100 % increase */
 
+/* After this number of consecutive backoffs log one message. */
+#define PEP_BACKOFF_TIMES_BEFORE_LOGGING       10
+
 
 /* This is the local state of a block using exponential backoff.  The struct is
    used internally and its fields should be treated as opaque. */

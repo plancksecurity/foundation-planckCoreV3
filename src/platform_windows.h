@@ -34,6 +34,7 @@
 #include <io.h>
 #include <basetsd.h>
 #include <time.h>
+#include <stdint.h>
 #include "timestamp.h"
 
 // pEp files and directories

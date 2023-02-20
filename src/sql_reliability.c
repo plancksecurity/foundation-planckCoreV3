@@ -63,6 +63,10 @@ static void pEp_backoff_bump(PEP_SESSION session,
     s->failure_no ++;
     s->total_time_slept_in_ms += sleep_time_ms;
 
+    if ((s->failure_no % PEP_BACKOFF_TIMES_BEFORE_LOGGING) == 0)
+        LOG_CRITICAL("backing off from %s (%i times already!)",
+                     s->source_location, (int) s->failure_no);
+
     /* Raise the sleep time upper limit. */
     double unclamped_upper_limit
         = (s->current_upper_limit_in_ms * PEP_BACKOFF_UPPER_LIMIT_GROWTH_FACTOR);
@@ -93,7 +97,6 @@ PEP_STATUS pEp_back_off(PEP_SESSION session,
 
     /* Very easy: sleep, and bump. */
     long sleep_time_in_ms = pEp_backoff_compute_sleep_time(session, s);
-    //LOG_NONOK("backing off for %li ms", sleep_time_in_ms);
     pEp_sleep_ms(sleep_time_in_ms);
     pEp_backoff_bump(session, s, sleep_time_in_ms);
 
