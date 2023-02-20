@@ -5858,6 +5858,7 @@ static PEP_STATUS _decrypt_message(
                             
                         }
                         else { // should never happen
+                            LOG_ERROR("THIS MUST NOT HAPPEN -- but I have seen it happen in the Engine test suite with pEpMIME aaofghjfgkh");
                             status = PEP_UNKNOWN_ERROR;
                             free_message(inner_message);
                             goto pEp_error;
