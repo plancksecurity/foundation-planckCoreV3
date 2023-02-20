@@ -27,6 +27,7 @@
 #include <synchapi.h> /* for Sleep */
 
 #include "pEpEngine.h" // just for PEP_STATUS
+#include "platform.h"  /* Atl east for struct pEp_pid_and_tid */
 
 #define LOCAL_DB_FILENAME "management.db"
 #define LOG_DB_FILENAME "log.db"
@@ -512,6 +513,14 @@ DYNAMIC_API PEP_STATUS reset_path_cache(void)
 DYNAMIC_API void clear_path_cache (void)
 {
     /* Like reset_path_cache, do nothing. */
+}
+
+void pEp_set_pid_and_tid(struct pEp_pid_and_tid *pid_and_tid)
+{
+    assert(pid_and_tid != NULL);
+
+    pid_and_tid->pid = (int64_t) GetCurrentProcessId();
+    pid_and_tid->tid = (int64_t) GetCurrentThreadId();
 }
 
 } // "C"
