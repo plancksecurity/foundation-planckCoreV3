@@ -1,3 +1,5 @@
+* Merge https://gitea.pep.foundation/pEp.foundation/pEpEngine/pulls/138 (build
+  fixes for ios, thanks to Dirk).
 
 v3.2.0-RC24  2023-02-20
 * log the current thread id along with the current process id.  When stuck on
