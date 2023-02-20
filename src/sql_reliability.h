@@ -337,9 +337,10 @@ local_wait_time += _pEp_sql_backoff_state.total_time_slept_in_ms;*/ \
 /* Convenience wrapper for "automatic" one-statement transactions
  * ***************************************************************** */
 
-/* This provides the same API as sqlite3_step, making use to avoid SQLITE_BUSY
-   and SQLITE_LOCK through the funcionality above.  The actual documentation of
-   sqlite3_step is at https://www.sqlite.org/capi3ref.html#sqlite3_step . */
+/* This provides the same API as sqlite3_step, making use of the functionality
+   above which executes SQL statements in a loop to avoid a result of
+   SQLITE_BUSY or SQLITE_LOCK.  The actual documentation of sqlite3_step is at
+   https://www.sqlite.org/capi3ref.html#sqlite3_step . */
 int pEp_sqlite3_step_nonbusy(PEP_SESSION session,
                              sqlite3_stmt *statement);
 
