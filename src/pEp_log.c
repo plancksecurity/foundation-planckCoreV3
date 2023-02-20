@@ -174,7 +174,8 @@ static const char* _log_level_to_string(PEP_LOG_LEVEL level)
    and time again. */
 #define WARN_ON_ERROR                                                       \
     do {                                                                    \
-        if (sqlite_status != SQLITE_OK                                      \
+        if (session->service_log                                            \
+            && sqlite_status != SQLITE_OK                                   \
             && sqlite_status != SQLITE_DONE)                                \
             fprintf(stderr, "ERROR %s:%i %s: sql_error %i: %s\n",           \
                     __FILE__, (int) __LINE__, __func__,                     \
