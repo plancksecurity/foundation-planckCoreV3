@@ -266,6 +266,20 @@
 		43B2AD612923EE2500D8C6F8 /* libpep_engine_sequoia_backend.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 43B2AD422923EE2500D8C6F8 /* libpep_engine_sequoia_backend.a */; };
 		43B2AD8C2923EF0000D8C6F8 /* libnettle.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1585EF4126A08A9800B822E1 /* libnettle.a */; };
 		43B2AD8D2923F05300D8C6F8 /* libhogweed.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1585EF4226A08A9800B822E1 /* libhogweed.a */; };
+		43C1FB1A29952A1200336111 /* sql_reliability.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C1FAF829952A1200336111 /* sql_reliability.h */; };
+		43C1FB1B29952A1200336111 /* sql_reliability.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C1FAF829952A1200336111 /* sql_reliability.h */; };
+		43C1FB1C29952A1200336111 /* pEp_rmd160.c in Sources */ = {isa = PBXBuildFile; fileRef = 43C1FB1729952A1200336111 /* pEp_rmd160.c */; };
+		43C1FB1D29952A1200336111 /* pEp_rmd160.c in Sources */ = {isa = PBXBuildFile; fileRef = 43C1FB1729952A1200336111 /* pEp_rmd160.c */; };
+		43C1FB1E29952A1200336111 /* sql_reliability.c in Sources */ = {isa = PBXBuildFile; fileRef = 43C1FB1829952A1200336111 /* sql_reliability.c */; };
+		43C1FB1F29952A1200336111 /* sql_reliability.c in Sources */ = {isa = PBXBuildFile; fileRef = 43C1FB1829952A1200336111 /* sql_reliability.c */; };
+		43C1FB2029952A1200336111 /* pEp_rmd160.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C1FB1929952A1200336111 /* pEp_rmd160.h */; };
+		43C1FB2129952A1200336111 /* pEp_rmd160.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C1FB1929952A1200336111 /* pEp_rmd160.h */; };
+		43C1FB2629952A4500336111 /* media_key.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C1FB2229952A4500336111 /* media_key.h */; };
+		43C1FB2729952A4500336111 /* media_key.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C1FB2229952A4500336111 /* media_key.h */; };
+		43C1FB2A29952A4500336111 /* pEp_log.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C1FB2429952A4500336111 /* pEp_log.h */; };
+		43C1FB2B29952A4500336111 /* pEp_log.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C1FB2429952A4500336111 /* pEp_log.h */; };
+		43C1FB2C29952A4500336111 /* echo_api.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C1FB2529952A4500336111 /* echo_api.h */; };
+		43C1FB2D29952A4500336111 /* echo_api.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C1FB2529952A4500336111 /* echo_api.h */; };
 		6400FB8B1B8CA1CF005221E3 /* libetpan-ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64289E371B8B630200FC617B /* libetpan-ios.a */; };
 		644297C51BE11CE0002BC73B /* system.db in Resources */ = {isa = PBXBuildFile; fileRef = 64951A1B1BE0FCD800B10E71 /* system.db */; };
 /* End PBXBuildFile section */
@@ -557,6 +571,13 @@
 		4322103C2924C94A00AE872F /* echo_api.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = echo_api.c; path = ../src/echo_api.c; sourceTree = "<group>"; };
 		4322103F2924C97E00AE872F /* pEp_log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pEp_log.c; path = ../src/pEp_log.c; sourceTree = "<group>"; };
 		43B2AD422923EE2500D8C6F8 /* libpep_engine_sequoia_backend.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpep_engine_sequoia_backend.a; path = "../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libpep_engine_sequoia_backend.a"; sourceTree = "<group>"; };
+		43C1FAF829952A1200336111 /* sql_reliability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sql_reliability.h; path = ../src/sql_reliability.h; sourceTree = "<group>"; };
+		43C1FB1729952A1200336111 /* pEp_rmd160.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pEp_rmd160.c; path = ../src/pEp_rmd160.c; sourceTree = "<group>"; };
+		43C1FB1829952A1200336111 /* sql_reliability.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sql_reliability.c; path = ../src/sql_reliability.c; sourceTree = "<group>"; };
+		43C1FB1929952A1200336111 /* pEp_rmd160.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pEp_rmd160.h; path = ../src/pEp_rmd160.h; sourceTree = "<group>"; };
+		43C1FB2229952A4500336111 /* media_key.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = media_key.h; path = ../src/media_key.h; sourceTree = "<group>"; };
+		43C1FB2429952A4500336111 /* pEp_log.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pEp_log.h; path = ../src/pEp_log.h; sourceTree = "<group>"; };
+		43C1FB2529952A4500336111 /* echo_api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = echo_api.h; path = ../src/echo_api.h; sourceTree = "<group>"; };
 		644297BF1BE11C65002BC73B /* pEpTrustWords.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = pEpTrustWords.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		644297C11BE11C65002BC73B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		64796A3F1B455AA5004B1C24 /* libpEpEngine.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpEpEngine.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -703,9 +724,16 @@
 		64A8264B1B455C5600EECAF0 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				43C1FB1729952A1200336111 /* pEp_rmd160.c */,
+				43C1FB1929952A1200336111 /* pEp_rmd160.h */,
+				43C1FB1829952A1200336111 /* sql_reliability.c */,
+				43C1FAF829952A1200336111 /* sql_reliability.h */,
 				4322103F2924C97E00AE872F /* pEp_log.c */,
+				43C1FB2429952A4500336111 /* pEp_log.h */,
 				4322103C2924C94A00AE872F /* echo_api.c */,
+				43C1FB2529952A4500336111 /* echo_api.h */,
 				432210332924C65A00AE872F /* media_key.c */,
+				43C1FB2229952A4500336111 /* media_key.h */,
 				1515837326CE4FB7003D8685 /* baseprotocol.c */,
 				1515838126CE4FB7003D8685 /* cryptotech.c */,
 				1515837026CE4FB7003D8685 /* distribution_codec.c */,
@@ -853,6 +881,7 @@
 				151585D526CE5397003D8685 /* group_internal.h in Headers */,
 				151585C526CE5397003D8685 /* cryptotech.h in Headers */,
 				151585CC26CE5397003D8685 /* wrappers.h in Headers */,
+				43C1FB2729952A4500336111 /* media_key.h in Headers */,
 				151585C026CE5397003D8685 /* timestamp.h in Headers */,
 				151585B526CE5397003D8685 /* message.h in Headers */,
 				151585E126CE5397003D8685 /* mime.h in Headers */,
@@ -860,6 +889,7 @@
 				151585B826CE5397003D8685 /* growing_buf.h in Headers */,
 				151585E526CE5397003D8685 /* storage_codec.h in Headers */,
 				151585D926CE5397003D8685 /* identity_list.h in Headers */,
+				43C1FB2129952A1200336111 /* pEp_rmd160.h in Headers */,
 				151585C226CE5397003D8685 /* openpgp_compat.h in Headers */,
 				151585B226CE5397003D8685 /* keymanagement.h in Headers */,
 				151585D626CE5397003D8685 /* KeySync_fsm.h in Headers */,
@@ -871,9 +901,11 @@
 				151585C826CE5397003D8685 /* message_codec.h in Headers */,
 				151585E826CE5397003D8685 /* key_reset.h in Headers */,
 				151585C626CE5397003D8685 /* security_checks.h in Headers */,
+				43C1FB2D29952A4500336111 /* echo_api.h in Headers */,
 				151585C126CE5397003D8685 /* Sync_impl.h in Headers */,
 				1552DB142577D4F100A92F71 /* pEpEngine_macOS.h in Headers */,
 				151585D226CE5397003D8685 /* GroupSync_fsm.h in Headers */,
+				43C1FB1B29952A1200336111 /* sql_reliability.h in Headers */,
 				151585BE26CE5397003D8685 /* labeled_int_list.h in Headers */,
 				151585B726CE5397003D8685 /* sync_codec.h in Headers */,
 				151585E726CE5397003D8685 /* platform_unix.h in Headers */,
@@ -889,6 +921,7 @@
 				151585C326CE5397003D8685 /* base64.h in Headers */,
 				151585D826CE5397003D8685 /* trans_auto.h in Headers */,
 				151585E226CE5397003D8685 /* TrustSync_fsm.h in Headers */,
+				43C1FB2B29952A4500336111 /* pEp_log.h in Headers */,
 				151585E426CE5397003D8685 /* bloblist.h in Headers */,
 				151585DC26CE5397003D8685 /* map_asn1.h in Headers */,
 				151585D026CE5397003D8685 /* group.h in Headers */,
@@ -901,6 +934,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1515834A26CE4F82003D8685 /* fsm_common.h in Headers */,
+				43C1FB2629952A4500336111 /* media_key.h in Headers */,
 				1515832426CE4F81003D8685 /* keyreset_command.h in Headers */,
 				1515836426CE4F82003D8685 /* labeled_int_list.h in Headers */,
 				1515832E26CE4F81003D8685 /* pEpEngine_internal.h in Headers */,
@@ -923,11 +957,13 @@
 				1515834526CE4F81003D8685 /* pgp_sequoia_internal.h in Headers */,
 				1515831726CE4F81003D8685 /* pEp_internal.h in Headers */,
 				1515834226CE4F81003D8685 /* baseprotocol.h in Headers */,
+				43C1FB2C29952A4500336111 /* echo_api.h in Headers */,
 				1515831526CE4F81003D8685 /* KeySync_fsm.h in Headers */,
 				1515832C26CE4F81003D8685 /* etpan_mime.h in Headers */,
 				1515832026CE4F81003D8685 /* group.h in Headers */,
 				1515835526CE4F82003D8685 /* timestamp.h in Headers */,
 				1515833D26CE4F81003D8685 /* resource_id.h in Headers */,
+				43C1FB2A29952A4500336111 /* pEp_log.h in Headers */,
 				1515831026CE4F81003D8685 /* sqlite3.h in Headers */,
 				1515834E26CE4F82003D8685 /* pgp_sequoia.h in Headers */,
 				1515831D26CE4F81003D8685 /* internal_format.h in Headers */,
@@ -938,6 +974,7 @@
 				1515834026CE4F81003D8685 /* cryptotech.h in Headers */,
 				151583A326CE4FB8003D8685 /* keymanagement.h in Headers */,
 				1515833E26CE4F81003D8685 /* message_codec.h in Headers */,
+				43C1FB1A29952A1200336111 /* sql_reliability.h in Headers */,
 				1515832526CE4F81003D8685 /* storage_codec.h in Headers */,
 				1515831C26CE4F81003D8685 /* sync_codec.h in Headers */,
 				1515834B26CE4F82003D8685 /* keymanagement_internal.h in Headers */,
@@ -951,6 +988,7 @@
 				1515836926CE4F82003D8685 /* security_checks.h in Headers */,
 				1515834626CE4F81003D8685 /* resource.h in Headers */,
 				1515834D26CE4F82003D8685 /* identity_list.h in Headers */,
+				43C1FB2029952A1200336111 /* pEp_rmd160.h in Headers */,
 				1515835F26CE4F82003D8685 /* mime.h in Headers */,
 				1515836626CE4F82003D8685 /* platform_unix.h in Headers */,
 				1515831926CE4F81003D8685 /* status_to_string.h in Headers */,
@@ -1265,6 +1303,7 @@
 				1515853026CE536A003D8685 /* key_reset.c in Sources */,
 				4322103E2924C94A00AE872F /* echo_api.c in Sources */,
 				1515852426CE536A003D8685 /* pgp_sequoia.c in Sources */,
+				43C1FB1F29952A1200336111 /* sql_reliability.c in Sources */,
 				1515854826CE536B003D8685 /* resource_id.c in Sources */,
 				1515853E26CE536A003D8685 /* timestamp.c in Sources */,
 				1515853F26CE536A003D8685 /* identity_list.c in Sources */,
@@ -1272,6 +1311,7 @@
 				1515854726CE536B003D8685 /* Sync_actions.c in Sources */,
 				1515853A26CE536A003D8685 /* engine_sql.c in Sources */,
 				1515853526CE536A003D8685 /* keyreset_command.c in Sources */,
+				43C1FB1D29952A1200336111 /* pEp_rmd160.c in Sources */,
 				1515854426CE536B003D8685 /* platform_unix.c in Sources */,
 				1515853126CE536A003D8685 /* labeled_int_list.c in Sources */,
 				1515854626CE536B003D8685 /* distribution_codec.c in Sources */,
@@ -1339,6 +1379,7 @@
 				1515836026CE4F82003D8685 /* trans_auto.c in Sources */,
 				1515839826CE4FB8003D8685 /* trans_auto.c in Sources */,
 				1515831A26CE4F81003D8685 /* identity_list.c in Sources */,
+				43C1FB1E29952A1200336111 /* sql_reliability.c in Sources */,
 				1515839426CE4FB8003D8685 /* keyreset_command.c in Sources */,
 				1515839626CE4FB8003D8685 /* sync_codec.c in Sources */,
 				1515831426CE4F81003D8685 /* bloblist.c in Sources */,
@@ -1351,6 +1392,7 @@
 				1515838F26CE4FB8003D8685 /* map_asn1.c in Sources */,
 				151583A526CE4FB8003D8685 /* labeled_int_list.c in Sources */,
 				1515832226CE4F81003D8685 /* security_checks.c in Sources */,
+				43C1FB1C29952A1200336111 /* pEp_rmd160.c in Sources */,
 				1515833C26CE4F81003D8685 /* stringlist.c in Sources */,
 				1515833326CE4F81003D8685 /* keymanagement.c in Sources */,
 				1515839126CE4FB8003D8685 /* baseprotocol.c in Sources */,
