@@ -101,6 +101,10 @@ DYNAMIC_API PEP_STATUS init(
        call config_enable_log . */
     _session->enable_log = (getenv("PEP_LOG") != NULL);
 
+    /* Database-logging is synchronous by default, unless the environment
+       variable PEP_LOG_ASYNC is defined, to any value. */
+    config_enable_log_synchronous(_session, (getenv("PEP_LOG_ASYNC") == NULL));
+
     status = pEp_log_initialize(_session);
     if (status != PEP_STATUS_OK)
         return status;
@@ -533,6 +537,21 @@ DYNAMIC_API void config_enable_log(PEP_SESSION session, bool enable)
 {
     PEP_REQUIRE_ORELSE(session, { return; });
     session->enable_log = enable;
+}
+
+DYNAMIC_API void config_enable_log_synchronous(PEP_SESSION session, bool enable)
+{
+    PEP_REQUIRE_ORELSE(session, { return; });
+    session->enable_log_synchronous = enable;
+
+    /* The actual functionality is implemented in the logging compilation
+       unit, which of course uses SQL. */
+    PEP_STATUS status = pEp_log_set_synchronous_database(session, enable);
+    if (status != PEP_STATUS_OK)
+        LOG_ERROR("pEp_log_set_synchronous_database failed");
+    else
+        LOG_EVENT("database-destination logging is now %s",
+                  (enable ? "SYNCHRONOUS" : "Asynchronous"));
 }
 
 DYNAMIC_API void config_passive_mode(PEP_SESSION session, bool enable)

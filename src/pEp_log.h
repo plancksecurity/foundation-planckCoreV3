@@ -570,6 +570,30 @@ PEP_STATUS pEp_log_initialize(PEP_SESSION session);
 PEP_STATUS pEp_log_finalize(PEP_SESSION session);
 
 
+/* Set up
+ * ***************************************************************** */
+
+/* These are not API functions; they are called internally by configuration
+   functions. */
+
+/**
+ *  <!--       pEp_log_set_synchronous_database()       -->
+ *
+ *  @brief Set database-destination logging to be synchronous or asynchronous,
+ *         as demanded.  This does nothing if database is not among the
+ *         destinations.
+ *
+ *  @param[in]   session          session
+ *  @param[in]   synchronous      true iff database logging should be
+ *                                synchronous.
+ *
+ *  @retval PEP_STATUS_OK         success
+ *          any other value       failure to set -- should not happen
+ */
+PEP_STATUS pEp_log_set_synchronous_database(PEP_SESSION session,
+                                            bool synchronous);
+
+
 /* GNU/BSD formatted output emulation
  * ***************************************************************** */
 

@@ -488,6 +488,31 @@ DYNAMIC_API void config_enable_echo_in_outgoing_message_rating_preview(
 DYNAMIC_API void config_enable_log(PEP_SESSION session, bool enable);
 
 /**
+ *  <!--       config_enable_log_synchronoyus()      -->
+ *
+ *  @brief Enable synchronous logging to the database iff the argument is true;
+ *         make logging asynchronous (less reliable but much faster) if the
+ *         argument is false.
+ *
+ *  @param[in]   session    session handle to release
+ *  @param[in]   enable     true iff synchronous
+ *
+ */
+DYNAMIC_API void config_enable_log_synchronous(PEP_SESSION session, bool enable);
+
+/**
+ *  <!--       config_enable_log_synchronous()      -->
+ *
+ *  @brief Make database-destination log synchronous iff enable is true.  No
+ *         effect if database is not among log destinations.
+ *
+ *  @param[in]   session    session handle to release
+ *  @param[in]   enable     true iff enabled
+ *
+ */
+DYNAMIC_API void config_enable_log_synchronous(PEP_SESSION session, bool enable);
+
+/**
  *  <!--       config_passive_mode()       -->
  *  
  *  @brief Enable passive mode

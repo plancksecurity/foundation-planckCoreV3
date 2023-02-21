@@ -218,10 +218,6 @@ static int _safe_sqlite3_prepare_v2(
 static const char *pEp_log_initialize_database_once_text =
 " BEGIN EXCLUSIVE TRANSACTION;\n"
 " "
-/* This gives more reliability and seems to make SQL_BUSY less likely for some
-   reason, which however is only releavant until I acutally fix the concurrency
-   issue. */
-//" PRAGMA synchronous = EXTRA;\n"
 /* Changing the auto_vacuum state can only happen when either the database
    is new (with no tables) or at vacuum time.  Notice that the effect of
    this pragma is persistent, in the sense that it is stored into the database
@@ -256,6 +252,16 @@ static const char *pEp_log_initialize_database_once_text =
 " "
 " VACUUM;\n" /* I have verified with this statement *commented out* that the
                 database file does not grow to an unbounded size. */
+;
+
+/* Notice that SQLite forbids setting PRAGMA synchronous inside a transaction. */
+static const char *pEp_log_set_synchronous_text =
+" PRAGMA synchronous = FULL;\n" /* This is forbidden inside a transaction. */
+" VACUUM;\n"
+;
+static const char *pEp_log_set_asynchronous_text =
+" PRAGMA synchronous = OFF;\n" /* This is forbidden inside a transaction. */
+" VACUUM;\n"
 ;
 
 static const char *pEp_log_upgrade_database_1_once_text =
@@ -386,6 +392,35 @@ static PEP_STATUS _pEp_log_prepare_sql_statements(PEP_SESSION session)
    the same restrictions for free, without affecting the user. */
 static volatile int database_running_clients = 0;
 
+PEP_STATUS pEp_log_set_synchronous_database(PEP_SESSION session,
+                                            bool synchronous)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    int sqlite_status = SQLITE_OK;
+
+    const char *sql_statement_text
+        = (synchronous
+           ? pEp_log_set_synchronous_text
+           : pEp_log_set_asynchronous_text);
+    PEP_SQL_BEGIN_LOOP(sqlite_status);
+        sqlite_status = sqlite3_exec(session->log_db,
+                                     sql_statement_text,
+                                     NULL, NULL, NULL);
+#if 0
+        fprintf(stderr, "OK-A 2100 sqlite_status is %i %s\n", sqlite_status, sqlite3_errmsg(session->log_db));
+#endif
+    PEP_SQL_END_LOOP();
+
+    if (sqlite_status == SQLITE_BUSY || sqlite_status == SQLITE_LOCKED) {
+        status = PEP_INIT_CANNOT_OPEN_DB;
+        fprintf(stderr, "failed initialising the log database: "
+                "sqlite_status %i, %s\n",
+                sqlite_status, sqlite3_errmsg(session->log_db));
+    }
+    return status;
+}
+
+
 /* Initialise the database subsystem.  Called once at session initialisation. */
 static PEP_STATUS _pEp_log_initialize_database(PEP_SESSION session)
 {
@@ -469,6 +504,10 @@ static PEP_STATUS _pEp_log_initialize_database(PEP_SESSION session)
 
     /* Prepare SQL statements. */
     status = _pEp_log_prepare_sql_statements(session);
+
+    /* Set synchronous versus asynchronoys log according to the session
+       state. */
+    pEp_log_set_synchronous_database(session, session->enable_log_synchronous);
 
  end:
     /* Keep track of the number of existing sessions.  After this point there

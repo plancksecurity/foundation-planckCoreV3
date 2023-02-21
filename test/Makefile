@@ -135,7 +135,7 @@ $(TARGET): $(OBJS)
 test: all
 	$(RM) -rf ./pEp_test_home/*
 	$(TEST_CMD_PFX) \
-            PEP_NOABORT=noabort GTEST_COLOR=no \
+            PEP_NOABORT=noabort PEP_LOG=yes PEP_LOG_ASYNC=yes GTEST_COLOR=no \
             faketime '2021-07-07' \
             $(TEST_DEBUGGER) \
             python3 $(GTEST_PL) \

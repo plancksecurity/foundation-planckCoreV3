@@ -1,5 +1,11 @@
 * Merge https://gitea.pep.foundation/pEp.foundation/pEpEngine/pulls/138 (build
   fixes for ios, thanks to Dirk).
+* New environment variable PEP_LOG_ASYNC: when defined (to any value) make
+  database-destination logging asynchronous, which is less reliable in case of
+  crashes but faster by several orders of magnitide.
+  New API function to control the same feature at configuration level, per
+  session:
+  DYNAMIC_API void config_enable_log_synchronous(PEP_SESSION session, bool enable);
 
 v3.2.0-RC24  2023-02-20
 * log the current thread id along with the current process id.  When stuck on

@@ -364,6 +364,10 @@ struct _pEpSession {
     /* When this field is false do not log, to any destination. */
     bool enable_log;
 
+    /* Iff this field is true log synchronously to database destinations; that
+       is reliable but slow. */
+    bool enable_log_synchronous;
+
     /* Prepared SQL statements (on log_db) for logging.  See pEp_log.c . */
     sqlite3_stmt *log_begin_transaction_prepared_statement;
     sqlite3_stmt *log_commit_transaction_prepared_statement;
