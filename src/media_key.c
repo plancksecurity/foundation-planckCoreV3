@@ -1,3 +1,9 @@
+/**
+ * @file    media_key.h
+ * @brief   Media key support: implementation
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
+
 #define _EXPORT_PEP_ENGINE_DLL
 #include "media_key.h"
 

@@ -1,3 +1,9 @@
+/**
+ * @file    echo_api.h
+ * @brief   echo API implementation
+ * @license GNU General Public License 3.0 - see LICENSE.txt
+ */
+
 #include "echo_api.h"
 
 #include "pEp_internal.h"
