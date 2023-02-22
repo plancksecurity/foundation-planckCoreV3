@@ -336,6 +336,20 @@ static const char *pEp_log_delete_oldest_text =
 "                     END)"
 "             FROM Entries);";
 
+/* Return the latest rows from the view. */
+static const char *pEp_log_crashdump_text =
+" SELECT REPLACE(U.Timestamp || ' ' || U.PidTid || ' ' || U.Lvl, '\"', '\"\"')"
+"            AS title,"
+"        REPLACE(U.System_SubSystem, '\"', '\"\"') AS Entity,"
+"        REPLACE(U.Location, '\"', '\"\"') AS Description,"
+"        REPLACE(U.Entry, '\"', '\"\"') As Comment"
+/*" ,        U.Id"*/ /* for debugging*/
+" FROM UserEntries U"
+" ORDER BY U.id"
+" DESC"
+" LIMIT ?1;";
+
+
 /* Pepare the SQL statements worth preparing. */
 static PEP_STATUS _pEp_log_prepare_sql_statements(PEP_SESSION session)
 {
@@ -372,11 +386,16 @@ static PEP_STATUS _pEp_log_prepare_sql_statements(PEP_SESSION session)
                                    & session->log_delete_oldest_prepared_statement,
                                    NULL);
     CHECK_SQL_STATUS;
-    // FIXME: swap these two again.
     sqlite_status
         = _safe_sqlite3_prepare_v2(session, session->log_db,
                                    pEp_log_insert_text, -1,
                                    & session->log_insert_prepared_statement,
+                                   NULL);
+    CHECK_SQL_STATUS;
+    sqlite_status
+        = _safe_sqlite3_prepare_v2(session, session->log_db,
+                                   pEp_log_crashdump_text, -1,
+                                   & session->log_crashdump_prepared_statement,
                                    NULL);
     CHECK_SQL_STATUS;
 
@@ -551,10 +570,13 @@ static PEP_STATUS _pEp_log_finalize_database(PEP_SESSION session)
         = sqlite3_finalize(session->log_commit_transaction_prepared_statement);
     CHECK_SQL;
     sqlite_status
+        = sqlite3_finalize(session->log_delete_oldest_prepared_statement);
+    CHECK_SQL;
+    sqlite_status
         = sqlite3_finalize(session->log_insert_prepared_statement);
     CHECK_SQL;
     sqlite_status
-        = sqlite3_finalize(session->log_delete_oldest_prepared_statement);
+        = sqlite3_finalize(session->log_crashdump_prepared_statement);
     CHECK_SQL;
 
     /* Close the database. */

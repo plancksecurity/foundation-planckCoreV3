@@ -1936,10 +1936,6 @@ PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session) {
                                     NULL);
     PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
 
-    int_result = sqlite3_prepare_v2(session->db, sql_crashdump,
-                                    (int)strlen(sql_crashdump), &session->crashdump, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
-
     int_result = sqlite3_prepare_v2(session->system_db, sql_languagelist,
                                     (int)strlen(sql_languagelist), &session->languagelist, NULL);
     PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
@@ -2168,7 +2164,6 @@ PEP_STATUS pEp_finalize_sql_stmts(PEP_SESSION session) {
     sqlite3_finalize(session->update_key_sticky_bit_for_user);
     sqlite3_finalize(session->is_key_sticky_for_user);
     sqlite3_finalize(session->mark_compromised);
-    sqlite3_finalize(session->crashdump);
     sqlite3_finalize(session->languagelist);
     sqlite3_finalize(session->i18n_token);
     sqlite3_finalize(session->replace_userid);

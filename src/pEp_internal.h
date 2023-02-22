@@ -371,8 +371,9 @@ struct _pEpSession {
     /* Prepared SQL statements (on log_db) for logging.  See pEp_log.c . */
     sqlite3_stmt *log_begin_transaction_prepared_statement;
     sqlite3_stmt *log_commit_transaction_prepared_statement;
-    sqlite3_stmt *log_insert_prepared_statement;
     sqlite3_stmt *log_delete_oldest_prepared_statement;
+    sqlite3_stmt *log_insert_prepared_statement;
+    sqlite3_stmt *log_crashdump_prepared_statement;
 
     /* This uses the system DB. */
     sqlite3_stmt *trustword;
@@ -437,7 +438,6 @@ struct _pEpSession {
     sqlite3_stmt *is_key_sticky_for_user;
     sqlite3_stmt *mark_compromised;
     sqlite3_stmt *reset_trust;
-    sqlite3_stmt *crashdump;
     sqlite3_stmt *languagelist;
     sqlite3_stmt *i18n_token;
     sqlite3_stmt *replace_userid;

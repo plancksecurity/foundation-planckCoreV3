@@ -43,6 +43,7 @@ static const char *sql_log MAYBE_UNUSED =
         "insert into log (title, entity, description, comment)"
         "values (?1, ?2, ?3, ?4);";
 
+
 // FIXME?: problems if we don't have a key for the user - we get nothing
 // Also: we've never used pgp_keypair.flags before now, but it seems to me that
 // having combination of those flags is a road to ruin. Changing this for now.
@@ -417,10 +418,6 @@ static const char *sql_is_key_sticky_for_user MAYBE_UNUSED =
 static const char *sql_mark_as_compromised MAYBE_UNUSED =
         "update trust not indexed set comm_type = 15"
         " where pgp_keypair_fpr = upper(replace(?1,' ','')) ;";
-
-static const char *sql_crashdump MAYBE_UNUSED =
-        "select timestamp, title, entity, description, comment"
-        " from log order by timestamp desc limit ?1 ;";
 
 static const char *sql_languagelist MAYBE_UNUSED =
         "select i18n_language.lang, name, phrase"

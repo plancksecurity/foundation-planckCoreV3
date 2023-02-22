@@ -14,6 +14,7 @@
 #include "engine_sql.h"
 #include "pEp_log.h"
 #include "status_to_string.h"
+#include "string_utilities.h"
 
 #include <time.h>
 #include <stdlib.h>
@@ -3350,28 +3351,6 @@ DYNAMIC_API PEP_STATUS config_cipher_suite(PEP_SESSION session,
 /**
  *  @internal
  *
- *  <!--       _clean_log_value()       -->
- *
- *  @brief            TODO
- *
- *  @param[in]    *text        char
- *
- */
-static void _clean_log_value(char *text)
-{
-    if (text) {
-        for (char *c = text; *c; c++) {
-            if (*c < 32 && *c != '\n')
-                *c = 32;
-            else if (*c == '"')
-                *c = '\'';
-        }
-    }
-}
-
-/**
- *  @internal
- *
  *  <!--       _concat_string()       -->
  *
  *  @brief            TODO
@@ -3403,97 +3382,127 @@ static char *_concat_string(char *str1, const char *str2, char delim)
     return result;
 }
 
+/* A helper function for get_crashdump_log . */
+static PEP_STATUS get_crashdump_log_combine(PEP_SESSION session,
+                                            char **logdata_p,
+                                            size_t *used_size_p,
+                                            size_t *allocated_size_p,
+                                            const char *field,
+                                            bool end_of_the_line)
+{
+    if (false) // too distracting
+    PEP_REQUIRE(session && logdata_p
+                && used_size_p && allocated_size_p
+                /* the new field is allowed to be an empty string or even NULL. */);
+
+    /* We quote if there is any '"' or ',' character inside the field.  '"'
+       characters are already escaped as double "\"\"" two-character sequences
+       when they come as result of this SQL query; there is no need to escape
+       ','. */
+    bool need_quotes = (! EMPTYSTR(field)
+                        && (strchr(field, '"') != NULL
+                            || strchr(field, ',') != NULL));
+#define GO(string)                                               \
+    do {                                                         \
+        status = append_string(session, logdata_p, used_size_p,  \
+                               allocated_size_p, (string));      \
+        if (status != PEP_STATUS_OK)                             \
+            goto end;                                            \
+    } while (false)
+
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    if (need_quotes) GO("\"");
+    GO(field);
+    if (need_quotes) GO("\"");
+    if (end_of_the_line) GO("\r\n"); else GO(",");
+
+#undef GO
+end:
+    return status;
+}
+
 DYNAMIC_API PEP_STATUS get_crashdump_log(
         PEP_SESSION session,
         int maxlines,
-        char **logdata
+        char **logdata_p
     )
 {
-    PEP_REQUIRE(session && logdata
+    PEP_REQUIRE(session && logdata_p
                 && maxlines >= 0 && maxlines <= CRASHDUMP_MAX_LINES);
 
+    /* Be defensive: start by making the output reasonable. */
+    * logdata_p = NULL;
+
+    char *logdata = NULL;
+    size_t logdata_used_size = 0;
+    size_t logdata_allocated_size = 0;
     PEP_STATUS status = PEP_STATUS_OK;
-    char *_logdata= NULL;
-    *logdata = NULL;
 
-    int limit = maxlines ? maxlines : CRASHDUMP_DEFAULT_LINES;
-    const char *timestamp = NULL;
-    const char *title = NULL;
-    const char *entity = NULL;
-    const char *desc = NULL;
-    const char *comment = NULL;
-
-    sql_reset_and_clear_bindings(session->crashdump);
-    sqlite3_bind_int(session->crashdump, 1, limit);
-
-    int result;
-
-    do {
-        result = pEp_sqlite3_step_nonbusy(session, session->crashdump);
-        switch (result) {
-        case SQLITE_ROW:
-            timestamp = (const char *) sqlite3_column_text(session->crashdump,
-                    0);
-            title   = (const char *) sqlite3_column_text(session->crashdump,
-                    1);
-            entity  = (const char *) sqlite3_column_text(session->crashdump,
-                    2);
-            desc    = (const char *) sqlite3_column_text(session->crashdump,
-                    3);
-            comment = (const char *) sqlite3_column_text(session->crashdump,
-                    4);
-
-            _logdata = _concat_string(_logdata, timestamp, ',');
-            if (_logdata == NULL)
-                goto enomem;
-
-            _logdata = _concat_string(_logdata, title, ',');
-            if (_logdata == NULL)
-                goto enomem;
-
-            _logdata = _concat_string(_logdata, entity, ',');
-            if (_logdata == NULL)
-                goto enomem;
-
-            _logdata = _concat_string(_logdata, desc, ',');
-            if (_logdata == NULL)
-                goto enomem;
-
-            _logdata = _concat_string(_logdata, comment, '\n');
-            if (_logdata == NULL)
-                goto enomem;
-
-            _clean_log_value(_logdata);
-            break;
-
-        case SQLITE_DONE:
-            break;
-
-        default:
-            status = PEP_UNKNOWN_ERROR;
-            result = SQLITE_DONE;
-        }
-    } while (result != SQLITE_DONE);
-
-    sql_reset_and_clear_bindings(session->crashdump);
-    if (status == PEP_STATUS_OK) {
-        if (_logdata) {
-            *logdata = _logdata;
-        }
-        else {
-            *logdata = strdup("");
-            if (!*logdata)
-                goto enomem;
-        }
+    /* Fail immediately if we did not initialise prepared statements for the
+       database log destination. */
+    if (session->log_crashdump_prepared_statement == NULL) {
+        status = PEP_RECORD_NOT_FOUND;
+        goto end;
     }
 
-    goto the_end;
+    int limit = maxlines ? maxlines : CRASHDUMP_DEFAULT_LINES;
 
-enomem:
-    status = PEP_OUT_OF_MEMORY;
+#define APPEND_FIELD(index, end_of_the_line)                                          \
+            do {                                                                      \
+                const char *_field                                                    \
+                    = ((const char *)                                                 \
+                       sqlite3_column_text(session->log_crashdump_prepared_statement, \
+                                           (index)));                                 \
+                status = get_crashdump_log_combine(session, & logdata,          \
+                                                   & logdata_used_size,         \
+                                                   & logdata_allocated_size,    \
+                                                   _field,                      \
+                                                   (end_of_the_line));          \
+                if (status != PEP_STATUS_OK)                                    \
+                    goto end;                                                   \
+            } while (false)
 
-the_end:
+    /* Run the SQL prepared statement. */
+    sql_reset_and_clear_bindings(session->log_crashdump_prepared_statement);
+    sqlite3_bind_int(session->log_crashdump_prepared_statement, 1, limit);
+
+    /* The prepared statement will return each column from the rows to be
+       combined, in reverse row order. */
+    int sqlite_status = SQLITE_OK;
+    do {
+        sqlite_status
+            = pEp_sqlite3_step_nonbusy(session,
+                                       session->log_crashdump_prepared_statement);
+        switch (sqlite_status) {
+        case SQLITE_DONE:
+            /* Do nothing. */
+            break;
+        case SQLITE_ROW: {
+            /* Combine this row to the logdata we already have. */
+            APPEND_FIELD(0, false);
+            APPEND_FIELD(1, false);
+            APPEND_FIELD(2, false);
+            APPEND_FIELD(3, true);
+            break;
+        }
+        default:
+            status = PEP_UNKNOWN_DB_ERROR;
+            goto end;
+        }
+    } while (sqlite_status != SQLITE_DONE);
+
+end:
+    /* Only if everything succeeded make the concatenated string accessible to
+       the caller. */
+    LOG_NONOK_STATUS_NONOK;
+    if (status == PEP_STATUS_OK)
+        * logdata_p = logdata;
+    else
+        free(logdata);
     return status;
+
+#undef APPEND_FIELD
 }
 
 DYNAMIC_API PEP_STATUS get_languagelist(
