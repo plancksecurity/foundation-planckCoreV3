@@ -2946,6 +2946,7 @@ LOG_TRACE("Z: replacing subject: AFTER:   %s", msg->shortmsg);
     // Do similar for extra key list...
     _cleanup_src(src, added_key_to_real_src);
 
+    LOG_NONOK_STATUS_NONOK;
     return status;
 
 enomem:
@@ -2959,6 +2960,7 @@ pEp_error:
 
     _cleanup_src(src, added_key_to_real_src);
 
+    LOG_NONOK_STATUS_NONOK;
     return status;
 }
 
@@ -3015,6 +3017,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                 }
             }
             free(media_key_fpr);
+            LOG_NONOK_STATUS_NONOK;
             return status;
         }
     }
@@ -3022,6 +3025,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     default:
         /* The first encryption attempt failed with an actual error,
            independently from the media key. */
+        LOG_NONOK_STATUS_NONOK;
         return status;
     }
 }
@@ -3207,6 +3211,7 @@ pEp_free:
     free(priv_key_data);
     free_identity(own_identity);
     free_stringlist(keys);
+    LOG_NONOK_STATUS_NONOK;
     return status;
 }
 
@@ -3369,6 +3374,7 @@ pEp_error:
     if (src != _src)
         free_message(_src);
 
+    LOG_NONOK_STATUS_NONOK;
     return status;
 }
 
@@ -8135,5 +8141,6 @@ PEP_STATUS try_encrypt_message(
         }
     } while (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE);
 
+    LOG_NONOK_STATUS_NONOK;
     return status;
 }
