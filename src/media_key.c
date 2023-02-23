@@ -256,6 +256,11 @@ PEP_STATUS media_key_has_identity_a_media_key(PEP_SESSION session,
            that an identity has *no* media key. */
         * has_media_key = false;
     }
+
+    LOG_NONOK_STATUS_WARNING;
+    if (status == PEP_STATUS_OK)
+        LOG_TRACE("%s <%s>: %s", (identity->username ? identity->username : "NO-USERNAME"), (identity->address ? identity->address : "NO-ADDRESS"), ((* has_media_key) ? "yes" : "no"));
+
     return status;
 }
 
