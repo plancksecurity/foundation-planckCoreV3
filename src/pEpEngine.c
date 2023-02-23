@@ -3879,6 +3879,8 @@ DYNAMIC_API PEP_STATUS get_replacement_fpr(
     sql_reset_and_clear_bindings(session->get_replacement_fpr);
 
     LOG_NONOK_STATUS_NONOK;
+    if (status != PEP_STATUS_OK)
+        LOG_NONOK("this is about %s: revoked_fpr %s", fpr, (* revoked_fpr ? * revoked_fpr : "NONE"));
     return status;
 }
 
