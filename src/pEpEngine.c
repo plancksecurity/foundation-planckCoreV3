@@ -3836,7 +3836,7 @@ DYNAMIC_API PEP_STATUS get_revoked(
     sql_reset_and_clear_bindings(session->get_revoked);
 
     LOG_NONOK_STATUS_NONOK;
-    LOG_NONOK("this is about %s: revoked_fpr %s", fpr, (* revoked_fpr ? * revoked_fpr : "NONE"));
+    LOG_NONOK("this is about %s: revoked_fpr %s, return code %i %s", fpr, (* revoked_fpr ? * revoked_fpr : "NONE"), (int) status, pEp_status_to_string(status));
     return status;
 }
 
