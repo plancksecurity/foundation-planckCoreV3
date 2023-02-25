@@ -10,68 +10,68 @@ stages:
 
 # Debian
 
-debian10:deps:
+debian11:deps:
   extends: .make_in_docker
   stage: deps
   variables:
     MAKE_TARGET: "deps"
-    CI_DISTRO_TARGET: "debian10"
+    CI_DISTRO_TARGET: "debian11"
     DEBIAN_FRONTEND: "noninteractive"
   rules:
     - changes:
         - DEPENDENCIES
-        - scripts/ci/debian10/deps.pEpEngine.debian10.Dockerfile
+        - scripts/ci/debian11/deps.pEpEngine.debian11.Dockerfile
         - scripts/ci/common/build_pEpEngine_deps.sh
 
-debian10:build:
+debian11:build:
   tags:
     - linux
   stage: build
-  image: ${DOCKER_REGISTRY_HOST}/pep-debian10-engine-deps:latest
+  image: ${DOCKER_REGISTRY_HOST}/pep-debian11-engine-deps:latest
   script:
     - cd scripts/ci/${CI_DISTRO_TARGET}
     - make ${MAKE_TARGET}
   variables:
     MAKE_TARGET: "build"
-    CI_DISTRO_TARGET: "debian10"
+    CI_DISTRO_TARGET: "debian11"
     DEBIAN_FRONTEND: "noninteractive"
   rules:
     - if: '$CI_COMMIT_TAG  !~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
 
-debian10:tagged-build:
+debian11:tagged-build:
   tags:
     - linux
   stage: build
-  image: ${DOCKER_REGISTRY_HOST}/pep-debian10-engine-deps:latest
+  image: ${DOCKER_REGISTRY_HOST}/pep-debian11-engine-deps:latest
   script:
     - cd scripts/ci/${CI_DISTRO_TARGET}
     - make ${MAKE_TARGET}
   variables:
     MAKE_TARGET: "build"
-    CI_DISTRO_TARGET: "debian10"
+    CI_DISTRO_TARGET: "debian11"
     DEBIAN_FRONTEND: "noninteractive"
     TAGGED_BUILD: "true"
   rules:
     - if: '$CI_COMMIT_TAG  =~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
 
-debian10:build-docker:
+debian11:build-docker:
   extends: .make_in_docker
   stage: build-docker
-  needs: ["debian10:build"]
+  needs: ["debian11:build"]
   variables:
     MAKE_TARGET: "build-docker"
-    CI_DISTRO_TARGET: "debian10"
+    CI_DISTRO_TARGET: "debian11"
     DEBIAN_FRONTEND: "noninteractive"
   rules:
     - if: '$CI_COMMIT_TAG  !~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
 
-debian10:tagged-build-docker:
+debian11:tagged-build-docker:
   extends: .make_in_docker
   stage: build-docker
-  needs: ["debian10:tagged-build"]
+  needs: ["debian11:tagged-build"]
   variables:
     MAKE_TARGET: "build-docker"
-    CI_DISTRO_TARGET: "debian10"
+    CI_DISTRO_TARGET: "debian11"
     DEBIAN_FRONTEND: "noninteractive"
     TAGGED_BUILD: "true"
   rules:
