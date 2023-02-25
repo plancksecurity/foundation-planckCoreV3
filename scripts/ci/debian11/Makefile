@@ -3,7 +3,7 @@ export
 PEP_MACHINE_DIR= $(PKG_INSTALL_PATH)/share/pEp
 PEPTRANSPORT_VERSION=${libpEpTransport}
 YML2_VERSION=${yml2}
-SEQUOIA_VERSION=$(shell echo ${sequoia} | sed 's/\//-/')
+SEQUOIA_VERSION=$(shell echo ${pEpEngineSequoiaBackend} | sed 's/\//-/')
 CURRENT_DISTRO=$(shell basename $(shell pwd))
 IMAGE_NAME=${DOCKER_REGISTRY_HOST}/pep-$(CURRENT_DISTRO)-engine
 DOCKERFILE=pEpEngine.$(CURRENT_DISTRO).Dockerfile
@@ -26,6 +26,9 @@ deps:
 		      --build-arg YML2_VERSION=$(YML2_VERSION) \
 		      --build-arg PEPTRANSPORT_VERSION=$(PEPTRANSPORT_VERSION) \
 		      --build-arg PEP_MACHINE_DIR=$(PEP_MACHINE_DIR) \
+		      --build-arg BUILD=$(BUILD) \
+		      --build-arg CARGO_HOME=$(CARGO_HOME) \
+		      --build-arg CARGO_TARGET_DIR=$(CARGO_TARGET_DIR) \
 		      --cache-from $(IMAGE_NAME):latest \
 		      --tag=$(IMAGE_NAME)-deps:$(SEQUOIA_VERSION)-$(YML2_VERSION) \
 		      --tag=$(IMAGE_NAME)-deps:latest \
