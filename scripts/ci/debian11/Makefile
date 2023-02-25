@@ -30,8 +30,8 @@ deps:
 		      --tag=$(IMAGE_NAME)-deps:$(SEQUOIA_VERSION)-$(YML2_VERSION) \
 		      --tag=$(IMAGE_NAME)-deps:latest \
 		      -f scripts/ci/${CURRENT_DISTRO}/deps.$(DOCKERFILE) .
-	docker push --quiet $(IMAGE_NAME)-deps:$(SEQUOIA_VERSION)-$(YML2_VERSION)
-	docker push --quiet $(IMAGE_NAME)-deps:latest
+	docker push $(IMAGE_NAME)-deps:$(SEQUOIA_VERSION)-$(YML2_VERSION)
+	docker push $(IMAGE_NAME)-deps:latest
 
 build:
 	cd ../../../ && /bin/sh ./scripts/ci/common/build_pEpEngine.sh
@@ -48,5 +48,5 @@ build-docker:
 		      --tag=$(IMAGE_NAME):$(PEPENGINE_VERSION) \
 		      --tag=$(IMAGE_NAME):latest \
 		      -f scripts/ci/common/build.pEpEngine.Dockerfile .
-	docker push --quiet $(IMAGE_NAME):$(PEPENGINE_VERSION)
-	docker push --quiet $(IMAGE_NAME):latest
+	docker push $(IMAGE_NAME):$(PEPENGINE_VERSION)
+	docker push $(IMAGE_NAME):latest
