@@ -1,6 +1,13 @@
 #!/usr/bin/env sh
 set -exo
 
+### sequoia
+echo SEQUOIA_VERSION=${SEQUOIA_VERSION}
+git clone --depth=1 https://gitea.pep.foundation/pEp.foundation/pEpEngineSequoiaBackend -b ${SEQUOIA_VERSION} $BUILDROOT/pEpEngineSequoiaBackend
+cd $BUILDROOT/pEpEngineSequoiaBackend
+make build
+make install
+
 ### YML2
 cd $INSTPREFIX
 curl -O "https://gitea.pep.foundation/fdik/yml2/archive/${YML2_VERSION}.tar.gz"

@@ -17,6 +17,9 @@ debian11:deps:
     MAKE_TARGET: "deps"
     CI_DISTRO_TARGET: "debian11"
     DEBIAN_FRONTEND: "noninteractive"
+    BUILD: /build
+    CARGO_HOME: /cargo
+    CARGO_TARGET_DIR:
   rules:
     - changes:
         - DEPENDENCIES
