@@ -1937,12 +1937,14 @@ DYNAMIC_API PEP_STATUS is_pEp_user(PEP_SESSION session, pEp_identity *identity, 
         default:
             sql_reset_and_clear_bindings(session->is_pEp_user);
             free(alias_default);
+            LOG_NONOK("PEP_CANNOT_FIND_PERSON");
             return PEP_CANNOT_FIND_PERSON;
     }
 
     sql_reset_and_clear_bindings(session->is_pEp_user);
     
     free(alias_default);
+    LOG_EVENT("is_pEp %s", (* is_pEp ? "yes" : "no"));
     return PEP_STATUS_OK;
 }
 
