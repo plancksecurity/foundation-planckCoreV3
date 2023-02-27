@@ -1870,6 +1870,8 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity,
     else
         free(alias_default);
             
+    LOG_NONOK_STATUS_NONOK;
+    LOG_EVENT("found? %s", (* exists ? "yes" : "no"));
     return status;
 }
 
