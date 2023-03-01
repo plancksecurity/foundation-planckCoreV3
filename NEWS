@@ -11,6 +11,9 @@
   different from PEP_STATUS_OK.
   Closes https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/91 .
 * Update YML2 dependency (reported by Dvn).
+* Release builds of the Engine are now compiled (on platforms using make)
+  without debugging symbols, in order to work around
+  https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/115 .
 
 v3.2.0-RC24  2023-02-20
 * log the current thread id along with the current process id.  When stuck on
