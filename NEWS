@@ -10,6 +10,7 @@
   logging is enabled with a database destination; otherwise, return a status
   different from PEP_STATUS_OK.
   Closes https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/91 .
+* Update YML2 dependency (reported by Dvn).
 
 v3.2.0-RC24  2023-02-20
 * log the current thread id along with the current process id.  When stuck on
