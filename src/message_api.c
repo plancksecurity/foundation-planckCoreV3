@@ -6600,15 +6600,19 @@ static void _max_comm_type_from_identity_list(
     PEP_REQUIRE_ORELSE(session && max_comm_type && comm_type_determined,
                        { return; });
 
+PEP_comm_type initial_comm_type = * max_comm_type;
+int checked_identity_no = 0;
     identity_list * il;
     for (il = identities; il != NULL; il = il->next)
     {
         if (il->ident)
         {   
+checked_identity_no ++;
             PEP_STATUS status = PEP_STATUS_OK;
             *max_comm_type = _get_comm_type(session, *max_comm_type,
                 il->ident);            
             *comm_type_determined = true;
+            LOG_TRACE("* checked %s <%s>: max_comm_type is now %s", (il->ident->username ? il->ident->username : "NOUSERNAME"), (il->ident->address ? il->ident->address : "NOADDRESS"), pEp_comm_type_to_string(*max_comm_type));
 
             // check for the return statuses which might not a representative
             // value in the comm_type
@@ -6623,6 +6627,7 @@ static void _max_comm_type_from_identity_list(
             }
         }
     }
+LOG_TRACE("] checked %i identities for turning the initial %s into %s: did we actually determine it? %s", checked_identity_no, pEp_comm_type_to_string(initial_comm_type), pEp_comm_type_to_string(*max_comm_type), (comm_type_determined ? "yes" : "no"));
 }
 
 /**
