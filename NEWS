@@ -1,3 +1,4 @@
+v3.2.0-RC25  2023-03-01
 * Merge https://gitea.pep.foundation/pEp.foundation/pEpEngine/pulls/138 (build
   fixes for ios, thanks to Dirk).
 * New environment variable PEP_LOG_ASYNC: when defined (to any value) make
