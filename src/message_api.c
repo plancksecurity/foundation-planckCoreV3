@@ -6614,6 +6614,7 @@ static void _max_comm_type_from_identity_list(
             // value in the comm_type
             if (status == PEP_ILLEGAL_VALUE || status == PEP_CANNOT_SET_PERSON ||
                 status == PEP_CANNOT_FIND_IDENTITY) {
+                LOG_NONOK_STATUS_NONOK;
                 // PEP_CANNOT_FIND_IDENTITY only comes back when we've really
                 // got nothing from update_identity after applying the whole
                 // heuristic
