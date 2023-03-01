@@ -6682,12 +6682,17 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
 
     _max_comm_type_from_identity_list(msg->to, session,
                                       &max_comm_type, &comm_type_determined);
+    if (comm_type_determined) LOG_TRACE("A comm_type %s", pEp_comm_type_to_string(max_comm_type)); else LOG_TRACE("A comm_type not determined");
 
     _max_comm_type_from_identity_list(msg->cc, session,
                                       &max_comm_type, &comm_type_determined);
+    if (comm_type_determined) LOG_TRACE("B comm_type %s", pEp_comm_type_to_string(max_comm_type)); else LOG_TRACE("B comm_type not determined");
 
     _max_comm_type_from_identity_list(msg->bcc, session,
                                       &max_comm_type, &comm_type_determined);
+    if (comm_type_determined) LOG_TRACE("C comm_type %s", pEp_comm_type_to_string(max_comm_type)); else LOG_TRACE("C comm_type not determined");
+
+LOG_TRACE("} total recipient no (To + Cc + Bcc) was %i", stringlist_length((const stringlist_t *)msg->to) + stringlist_length((const stringlist_t *)msg->cc) + stringlist_length((const stringlist_t *)msg->bcc));
 
     if (comm_type_determined == false) {
         // likely means there was a massive screwup with no sender or recipient
@@ -6697,6 +6702,7 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
     else
         *rating = _MAX(_rating(max_comm_type), PEP_rating_unencrypted);
 
+    LOG_TRACE("rating %s", rating_to_string(* rating));
     /* We might be able to improve the rating by receving Pong replies from
        identities which are unknown but are known to use pEp before the message
        is actually sent. */
@@ -6724,8 +6730,10 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating_preview(
 
     _max_comm_type_from_identity_list_preview(msg->bcc, session,
             &max_comm_type);
+    LOG_TRACE("comm_type %s", pEp_comm_type_to_string(max_comm_type));
 
     *rating = _MAX(_rating(max_comm_type), PEP_rating_unencrypted);
+    LOG_TRACE("rating %s", rating_to_string(* rating));
 
     /* We might be able to improve the rating by receving Pong replies from
        identities which are unknown but are known to use pEp before the message
