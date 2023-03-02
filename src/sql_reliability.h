@@ -274,8 +274,11 @@ local_wait_time += _pEp_sql_backoff_state.total_time_slept_in_ms;*/ \
         /* Begin the exclusive transaction, inside an SQL loop: this is where   \
            we spinlock with exponential backoff. */                             \
         PEP_SQL_BEGIN_LOOP(_pEp_sql_sqlite_status);                             \
-        _pEp_sql_sqlite_status                                                  \
-            = sqlite3_step(session->begin_exclusive_transaction);               \
+            LOG_TRACE("in PEP_SQL_BEGIN_EXCLUSIVE_TRANSACTION loop, early");    \
+            _pEp_sql_sqlite_status                                              \
+                = sqlite3_step(session->begin_exclusive_transaction);           \
+            LOG_TRACE("in PEP_SQL_BEGIN_EXCLUSIVE_TRANSACTION loop with "       \
+                      "sqlite status %i", _pEp_sql_sqlite_status);              \
         PEP_SQL_END_LOOP();                                                     \
         /* After this point we must have opened the transaction with success.   \
            Make sure something unexpected has not happened. */                  \
