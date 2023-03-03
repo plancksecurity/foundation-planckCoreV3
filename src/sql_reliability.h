@@ -266,16 +266,24 @@ local_wait_time += _pEp_sql_backoff_state.total_time_slept_in_ms;*/ \
 #define PEP_SQL_BEGIN_EXCLUSIVE_TRANSACTION()                                   \
     do {                                                                        \
         int _pEp_sql_sqlite_status;                                             \
-        /* Ignore the return value of sqlite3_reset: if the last sqlite3_step   \
-           on the statement returned an error, this sqlite3_reset will return   \
-           the same error: we certainly do not want to see SQLITE_BUSY here     \
-           for no reason. */                                                    \
-        sqlite3_reset(session->begin_exclusive_transaction);                    \
         /* Begin the exclusive transaction, inside an SQL loop: this is where   \
            we spinlock with exponential backoff. */                             \
         PEP_SQL_BEGIN_LOOP(_pEp_sql_sqlite_status);                             \
-        _pEp_sql_sqlite_status                                                  \
-            = sqlite3_step(session->begin_exclusive_transaction);               \
+            LOG_TRACE("in PEP_SQL_BEGIN_EXCLUSIVE_TRANSACTION loop, early");    \
+            /* Ignore the return value of sqlite3_reset: if the last            \
+               sqlite3_step on the statement returned an error, this            \
+               sqlite3_reset will return the same error: we certainly do not    \
+               want to see SQLITE_BUSY here for no reason.                      \
+               I am in fact not at all sure that we need to reset inside this   \
+               loop.  I am being very defensive here, in the hope of solving    \
+               the particularly difficult to reproduce problem in               \
+               https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/133 \
+               . */                                                             \
+            sqlite3_reset(session->begin_exclusive_transaction);                \
+            _pEp_sql_sqlite_status                                              \
+                = sqlite3_step(session->begin_exclusive_transaction);           \
+            LOG_TRACE("in PEP_SQL_BEGIN_EXCLUSIVE_TRANSACTION loop with "       \
+                      "sqlite status %i", _pEp_sql_sqlite_status);              \
         PEP_SQL_END_LOOP();                                                     \
         /* After this point we must have opened the transaction with success.   \
            Make sure something unexpected has not happened. */                  \
