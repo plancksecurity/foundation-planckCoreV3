@@ -280,6 +280,10 @@
 		43C1FB2B29952A4500336111 /* pEp_log.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C1FB2429952A4500336111 /* pEp_log.h */; };
 		43C1FB2C29952A4500336111 /* echo_api.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C1FB2529952A4500336111 /* echo_api.h */; };
 		43C1FB2D29952A4500336111 /* echo_api.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C1FB2529952A4500336111 /* echo_api.h */; };
+		43F2D1C829A7681A000572FA /* string_utilities.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F2D1A829A7681A000572FA /* string_utilities.c */; };
+		43F2D1C929A7681A000572FA /* string_utilities.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F2D1A829A7681A000572FA /* string_utilities.c */; };
+		43F2D1CA29A7681A000572FA /* string_utilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 43F2D1C729A7681A000572FA /* string_utilities.h */; };
+		43F2D1CB29A7681A000572FA /* string_utilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 43F2D1C729A7681A000572FA /* string_utilities.h */; };
 		6400FB8B1B8CA1CF005221E3 /* libetpan-ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64289E371B8B630200FC617B /* libetpan-ios.a */; };
 		644297C51BE11CE0002BC73B /* system.db in Resources */ = {isa = PBXBuildFile; fileRef = 64951A1B1BE0FCD800B10E71 /* system.db */; };
 /* End PBXBuildFile section */
@@ -578,6 +582,8 @@
 		43C1FB2229952A4500336111 /* media_key.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = media_key.h; path = ../src/media_key.h; sourceTree = "<group>"; };
 		43C1FB2429952A4500336111 /* pEp_log.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pEp_log.h; path = ../src/pEp_log.h; sourceTree = "<group>"; };
 		43C1FB2529952A4500336111 /* echo_api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = echo_api.h; path = ../src/echo_api.h; sourceTree = "<group>"; };
+		43F2D1A829A7681A000572FA /* string_utilities.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = string_utilities.c; path = ../src/string_utilities.c; sourceTree = "<group>"; };
+		43F2D1C729A7681A000572FA /* string_utilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = string_utilities.h; path = ../src/string_utilities.h; sourceTree = "<group>"; };
 		644297BF1BE11C65002BC73B /* pEpTrustWords.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = pEpTrustWords.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		644297C11BE11C65002BC73B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		64796A3F1B455AA5004B1C24 /* libpEpEngine.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpEpEngine.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -724,6 +730,8 @@
 		64A8264B1B455C5600EECAF0 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				43F2D1A829A7681A000572FA /* string_utilities.c */,
+				43F2D1C729A7681A000572FA /* string_utilities.h */,
 				43C1FB1729952A1200336111 /* pEp_rmd160.c */,
 				43C1FB1929952A1200336111 /* pEp_rmd160.h */,
 				43C1FB1829952A1200336111 /* sql_reliability.c */,
@@ -892,6 +900,7 @@
 				43C1FB2129952A1200336111 /* pEp_rmd160.h in Headers */,
 				151585C226CE5397003D8685 /* openpgp_compat.h in Headers */,
 				151585B226CE5397003D8685 /* keymanagement.h in Headers */,
+				43F2D1CB29A7681A000572FA /* string_utilities.h in Headers */,
 				151585D626CE5397003D8685 /* KeySync_fsm.h in Headers */,
 				151585E926CE5397003D8685 /* keymanagement_internal.h in Headers */,
 				151585D426CE5397003D8685 /* baseprotocol.h in Headers */,
@@ -991,6 +1000,7 @@
 				43C1FB2029952A1200336111 /* pEp_rmd160.h in Headers */,
 				1515835F26CE4F82003D8685 /* mime.h in Headers */,
 				1515836626CE4F82003D8685 /* platform_unix.h in Headers */,
+				43F2D1CA29A7681A000572FA /* string_utilities.h in Headers */,
 				1515831926CE4F81003D8685 /* status_to_string.h in Headers */,
 				1515833226CE4F81003D8685 /* wrappers.h in Headers */,
 				1515833726CE4F81003D8685 /* key_reset_internal.h in Headers */,
@@ -1320,6 +1330,7 @@
 				1515853B26CE536A003D8685 /* message_api.c in Sources */,
 				1515852226CE536A003D8685 /* group.c in Sources */,
 				1515854226CE536A003D8685 /* message_codec.c in Sources */,
+				43F2D1C929A7681A000572FA /* string_utilities.c in Sources */,
 				1515853D26CE536A003D8685 /* stringlist.c in Sources */,
 				1515852626CE536A003D8685 /* growing_buf.c in Sources */,
 				1515852E26CE536A003D8685 /* sync_codec.c in Sources */,
@@ -1355,6 +1366,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1515835026CE4F82003D8685 /* email.c in Sources */,
+				43F2D1C829A7681A000572FA /* string_utilities.c in Sources */,
 				151583A026CE4FB8003D8685 /* pEp_string.c in Sources */,
 				1515838926CE4FB8003D8685 /* email.c in Sources */,
 				1515839D26CE4FB8003D8685 /* Sync_func.c in Sources */,
