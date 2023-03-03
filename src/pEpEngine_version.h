@@ -12,13 +12,13 @@
 #define PEP_ENGINE_VERSION_MINOR          2
 #define PEP_ENGINE_VERSION_PATCH          0
 
-#define PEP_ENGINE_VERSION_RC             25  /* This is a Release Candidate. */
+#define PEP_ENGINE_VERSION_RC             26  /* This is a Release Candidate. */
 
-#define PEP_ENGINE_VERSION_PLUS           +   /* This is a MODIFIED Release Candidate */
+/* PEP_ENGINE_VERSION_PLUS not defined: this is an UNmodified Release Candidate. */
 
 /* PEP_ENGINE_VERSION_BRANCH_SUFFIX not defined. */
 
 /* The main version string for the user. */
-#define PEP_ENGINE_VERSION "3.2.0-RC25+"
+#define PEP_ENGINE_VERSION "3.2.0-RC26"
 
 #endif /* #ifndef _PEP_ENGINE_VERSION_H_ */
