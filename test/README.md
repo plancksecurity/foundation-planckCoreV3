@@ -19,6 +19,7 @@ In addition to the engine requirements, you will need:
   * `python3`
   * `git` (for getting the `gtest-parallel` repository, unless you grab the
   tarball from somewhere)
+  * `faketime`
 
 ## Building the prerequisites
 

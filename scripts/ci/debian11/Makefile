@@ -18,7 +18,6 @@ endif
 all: deps build
 
 deps:
-	-docker pull --quiet $(IMAGE_NAME)-deps:latest
 	cd ../../../ && docker build --build-arg CURRENT_DISTRO=$(CURRENT_DISTRO) \
 		      --build-arg DOCKER_REGISTRY_HOST=${DOCKER_REGISTRY_HOST} \
 		      --build-arg PEPENGINE_VERSION=$(PEPENGINE_VERSION) \
@@ -29,7 +28,6 @@ deps:
 		      --build-arg BUILD=$(BUILD) \
 		      --build-arg CARGO_HOME=$(CARGO_HOME) \
 		      --build-arg CARGO_TARGET_DIR=$(CARGO_TARGET_DIR) \
-		      --cache-from $(IMAGE_NAME):latest \
 		      --tag=$(IMAGE_NAME)-deps:$(SEQUOIA_VERSION)-$(YML2_VERSION) \
 		      --tag=$(IMAGE_NAME)-deps:latest \
 		      -f scripts/ci/${CURRENT_DISTRO}/deps.$(DOCKERFILE) .
