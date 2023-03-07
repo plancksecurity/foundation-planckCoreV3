@@ -1,12 +1,16 @@
 include:
   - '.gitlab-ci-files/common-prepare.yml'
 
+# Pipeline-wide variables; Applies to all jobs.
+variables:
+  PEP_MACHINE_DIR: "/install/share/pEp"
+  CARGO_HOME: /cargo
+  CARGO_TARGET_DIR:
+
 stages:
   - deps
   - build
-  - build-docker
-  - packages
-
+  - test
 
 # Debian
 
@@ -18,8 +22,6 @@ debian11:deps:
     CI_DISTRO_TARGET: "debian11"
     DEBIAN_FRONTEND: "noninteractive"
     BUILD: /build
-    CARGO_HOME: /cargo
-    CARGO_TARGET_DIR:
   rules:
     - changes:
         - DEPENDENCIES
@@ -30,12 +32,16 @@ debian11:build:
   tags:
     - linux
   stage: build
-  image: ${DOCKER_REGISTRY_HOST}/pep-debian11-engine-deps:latest
+  image: ${DOCKER_REGISTRY_HOST}/pep-debian11-engine-deps:${CI_COMMIT_REF_SLUG}
   script:
-    - cd scripts/ci/${CI_DISTRO_TARGET}
-    - make ${MAKE_TARGET}
+    - ./scripts/ci/common/prep_build.sh
+    - make all
+    - make db
+    - make install
   variables:
-    MAKE_TARGET: "build"
+    DEBUG: "maintainer"
+    PKG_CONFIG_PATH: "$INSTPREFIX/share/pkgconfig/"
+    LC_ALL: "en_US.UTF-8"
     CI_DISTRO_TARGET: "debian11"
     DEBIAN_FRONTEND: "noninteractive"
   rules:
@@ -45,37 +51,35 @@ debian11:tagged-build:
   tags:
     - linux
   stage: build
-  image: ${DOCKER_REGISTRY_HOST}/pep-debian11-engine-deps:latest
+  image: ${DOCKER_REGISTRY_HOST}/pep-debian11-engine-deps:${CI_COMMIT_REF_SLUG}
   script:
-    - cd scripts/ci/${CI_DISTRO_TARGET}
-    - make ${MAKE_TARGET}
+    - ./scripts/ci/common/prep_build.sh
+    - make all
+    - make db
+    - make install
   variables:
-    MAKE_TARGET: "build"
+    DEBUG: "release"
+    PKG_CONFIG_PATH: "$INSTPREFIX/share/pkgconfig/"
+    LC_ALL: "en_US.UTF-8"
     CI_DISTRO_TARGET: "debian11"
     DEBIAN_FRONTEND: "noninteractive"
-    TAGGED_BUILD: "true"
   rules:
     - if: '$CI_COMMIT_TAG  =~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
 
-debian11:build-docker:
-  extends: .make_in_docker
-  stage: build-docker
-  needs: ["debian11:build"]
+debian11:test:
+  tags:
+    - linux
+  image: ${DOCKER_REGISTRY_HOST}/pep-debian11-engine-deps:${CI_COMMIT_REF_SLUG}
+  stage: test
+  script:
+    - ./scripts/ci/common/prep_build.sh
+    - make dbinstall
+    - LD_LIBRARY_PATH=/install/lib:$LD_LIBARY_PATH make test
+  after_script:
+    - cat local.conf
   variables:
-    MAKE_TARGET: "build-docker"
+    DEBUG: "maintainer"
+    PKG_CONFIG_PATH: "$INSTPREFIX/share/pkgconfig/"
+    LC_ALL: "en_US.UTF-8"
     CI_DISTRO_TARGET: "debian11"
     DEBIAN_FRONTEND: "noninteractive"
-  rules:
-    - if: '$CI_COMMIT_TAG  !~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
-
-debian11:tagged-build-docker:
-  extends: .make_in_docker
-  stage: build-docker
-  needs: ["debian11:tagged-build"]
-  variables:
-    MAKE_TARGET: "build-docker"
-    CI_DISTRO_TARGET: "debian11"
-    DEBIAN_FRONTEND: "noninteractive"
-    TAGGED_BUILD: "true"
-  rules:
-    - if: '$CI_COMMIT_TAG  =~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'

@@ -1,6 +1,9 @@
 #!/usr/bin/env sh
 set -exo
 
+### Test Deps
+git clone https://github.com/google/gtest-parallel.git $BUILDROOT/gtest-parallel
+
 ### sequoia
 echo SEQUOIA_VERSION=${SEQUOIA_VERSION}
 git clone --depth=1 https://gitea.pep.foundation/pEp.foundation/pEpEngineSequoiaBackend -b ${SEQUOIA_VERSION} $BUILDROOT/pEpEngineSequoiaBackend

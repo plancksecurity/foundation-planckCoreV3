@@ -1,8 +1,6 @@
 #!/usr/bin/env sh
 set -exo
 
-export LC_ALL=en_US.UTF-8
-
 cat >local.conf <<__LOCAL__
 PREFIX=${INSTPREFIX}
 SQLITE3_FROM_OS=""
@@ -14,12 +12,13 @@ ETPAN_INC=-I${INSTPREFIX}/libetpan/include
 ASN1C=${INSTPREFIX}/asn1c/bin/asn1c
 ASN1C_INC=-I${INSTPREFIX}/asn1c/share/asn1c
 OPENPGP=SEQUOIA
-SEQUOIA_LIB=-L${INSTPREFIX}/lib
+SEQUOIA_LDFLAGS=-L${INSTPREFIX}/lib
 SEQUOIA_INC=-I${INSTPREFIX}/include
-LDFLAGS  += -L${INSTPREFIX}/lib -L${INSTPREFIX}/libetpan/lib -L${INSTPREFIX}/pep/lib -nostartfiles
+LDFLAGS += -L${INSTPREFIX}/lib -L${INSTPREFIX}/libetpan/lib -L${INSTPREFIX}/pep/lib
+GTEST_SRC_DIR=/usr/src/gtest
+GTEST_PL=${BUILDROOT}/gtest-parallel/gtest_parallel.py
+MAXLOGLEVEL=EVERYTHING
+LOGDESTINATIONS=PEP_LOG_DESTINATION_STDOUT
 __LOCAL__
 
 cat local.conf
-
-export PKG_CONFIG_PATH=$INSTPREFIX/share/pkgconfig/
-make all && make db && make install

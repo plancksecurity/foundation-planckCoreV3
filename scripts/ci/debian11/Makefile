@@ -31,9 +31,11 @@ deps:
 		      --build-arg CARGO_TARGET_DIR=$(CARGO_TARGET_DIR) \
 		      --cache-from $(IMAGE_NAME)-deps:latest \
 		      --tag=$(IMAGE_NAME)-deps:$(SEQUOIA_VERSION)-$(YML2_VERSION) \
+		      --tag=$(IMAGE_NAME)-deps:${CI_COMMIT_REF_SLUG} \
 		      --tag=$(IMAGE_NAME)-deps:latest \
 		      -f scripts/ci/${CURRENT_DISTRO}/deps.$(DOCKERFILE) .
 	docker push $(IMAGE_NAME)-deps:$(SEQUOIA_VERSION)-$(YML2_VERSION)
+	docker push $(IMAGE_NAME)-deps:${CI_COMMIT_REF_SLUG}
 	docker push $(IMAGE_NAME)-deps:latest
 
 build:
