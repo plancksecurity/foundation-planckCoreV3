@@ -2670,17 +2670,29 @@ static PEP_STATUS encrypt_message_possibly_with_media_key(
     PEP_REQUIRE(session && src && src->from && dst
                 && src->dir == PEP_dir_outgoing);
 
+
     //check if the message is marked as onion message, and if so, call mixnet.c
+    //except we are inside an onion loop, in that case continue
     LOG_TRACE("||| short message is: %s",src->shortmsg);
+
     if(strcmp(src->shortmsg, "_onionmsg_")==0) 
        {
-       LOG_TRACE("||| it is an onion message");
-       onionize_message(session,src,dst);
+       if(!(flags & PEP_encrypt_onion))
+          {
+          LOG_TRACE("||| it is an onion message, and I am NOT inside an onion encryption loop");
+          onionize_message(session,src,dst,flags);
+	  }
+       else
+	  {
+	  LOG_TRACE("||| It is an onion message, and I am inside an onion encryption loop.");
+          }
        }
-    else 
+    else
        {
        LOG_TRACE("||| it is not an onion message");
        }
+
+
 
     PEP_STATUS status = PEP_STATUS_OK;
     message * msg = NULL;

@@ -21,6 +21,7 @@ extern "C" {
   *
   * @param[in]		session		session handle
   * @param[in]		src		message to onionize
+  * qparam[in]		flags		flags to set special encryption features
   * @param[out]		dst		pointer to the onionized message
   *					or NULL if no encryption could take place
   * @retval PEP_STATUS_OK		on success
@@ -34,7 +35,8 @@ DYNAMIC_API PEP_STATUS onionize_message
 	(
 	PEP_SESSION session,
 	message *src,
-	message **dst
+	message **dst,
+        PEP_encrypt_flags_t flags
 	);
 
 #ifdef __cplusplus
