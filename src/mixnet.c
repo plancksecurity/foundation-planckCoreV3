@@ -134,26 +134,26 @@ DYNAMIC_API PEP_STATUS onionize_message(
         status = reverse_and_update(session, & rev, src->cc);
 
 	//loop through the reverted linked list
-	identity_list * temp;
-	pEp_identity * temp_ident;
-	int i=0;
-	while (rev)
- 		{
-			LOG_TRACE("||| looping... %d",i);
-        		i++;
-			temp = rev;
-			if (rev->next)
-				{
-				rev=rev->next;
-				}
-			else
-				{
-				rev=NULL;
-				}
-			temp_ident=temp->ident;
-			LOG_TRACE("||| encrypting for identity: %s", temp_ident->username);
-			//TODO: call the encrypt function the right way
-		}
+        identity_list * temp;
+        pEp_identity * temp_ident;
+        int i=0;
+        while (rev)
+                {
+                        LOG_TRACE("||| looping... %d",i);
+                        i++;
+                        temp = rev;
+                        if (rev->next)
+                                {
+                                rev=rev->next;
+                                }
+                        else
+                                {
+                                rev=NULL;
+                                }
+                        temp_ident=temp->ident;
+                        LOG_TRACE("||| encrypting for identity: %s", temp_ident->username);
+                        //TODO: call the encrypt function the right way
+                }
 	LOG_TRACE("||| Encryption loop finished");
         free_identity_list(rev);
 	return status;
