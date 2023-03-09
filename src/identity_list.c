@@ -157,30 +157,3 @@ PEP_STATUS set_all_userids_in_list(identity_list* id_list, const char* user_id) 
     }
     return PEP_STATUS_OK;
 }
-
-
-DYNAMIC_API identity_list* identity_list_revert(identity_list *id_list)
-{
-
-	if(id_list==NULL)
-		return NULL;
-
-
-	identity_list *prev = NULL;
-	identity_list *curr = id_list;
-	identity_list *next = NULL;
-
-	while (curr) {
-		next = curr->next;
-		curr->next = prev;
-		prev = curr;
-		curr = next;
-		}
-
-	return prev;
-}
-
-
-
-
-

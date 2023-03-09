@@ -123,21 +123,6 @@ DYNAMIC_API int identity_list_length(const identity_list *id_list);
 PEP_STATUS set_all_userids_in_list(identity_list* id_list, const char* user_id);
 
 
-/**
-*  <!--       identity_list_revert()       -->
-*  
-*  @brief Revert the pointers of an identity list, so it can be read backwards.
-*  
-*  @param[in]   id_list        identity list to revert
-*  
-*  @retval pointer to the HEAD of the reverted list, or NULL if the list is empty.
-*  
-*  
-*/
-
-DYNAMIC_API identity_list *identity_list_revert(identity_list *id_list);
-
-
 #ifdef __cplusplus
 }
 #endif
