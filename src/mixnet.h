@@ -35,7 +35,9 @@ DYNAMIC_API PEP_STATUS onionize_message
 	(
 	PEP_SESSION session,
 	message *src,
+	stringlist_t * extra,
 	message **dst,
+	PEP_enc_format enc_format,
         PEP_encrypt_flags_t flags
 	);
 

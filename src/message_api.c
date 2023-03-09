@@ -2680,7 +2680,7 @@ PEP_STATUS encrypt_message_possibly_with_media_key(
        if(!(flags & PEP_encrypt_onion))
           {
           LOG_TRACE("||| it is an onion message, and I am NOT inside an onion encryption loop");
-          onionize_message(session,src,dst,flags);
+          onionize_message(session, src, extra, dst, enc_format, flags);
 	  }
        else
 	  {

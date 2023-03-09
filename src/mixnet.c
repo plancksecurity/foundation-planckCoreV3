@@ -19,7 +19,9 @@
 DYNAMIC_API PEP_STATUS onionize_message(
 	PEP_SESSION session,
 	message *src,
+        stringlist_t * extra,
 	message **dst,
+	PEP_enc_format enc_format,
         PEP_encrypt_flags_t flags
 	)
 	{
@@ -36,18 +38,20 @@ DYNAMIC_API PEP_STATUS onionize_message(
 
 
 	//set the flag for onion message
-	flags = flags | PEP_encrypt_onion;
+        PEP_encrypt_flags_t onion_flags = flags | PEP_encrypt_onion;
 
 	//encrypt the message for the final recipient.
-/*	encrypt_message_possibly_with_media_key
+	status = encrypt_message_possibly_with_media_key
                  (
                  session,
-                 0, 
-                 **dst,
-                 0,
-                 flags,
-                 0);
-*/
+                 src,
+		 extra,
+                 dst,
+                 enc_format,
+                 onion_flags,
+                 NULL);
+
+	LOG_TRACE("||| Status: %d", (int) status);
 
 
 	//check if there are at least 3 CCs
