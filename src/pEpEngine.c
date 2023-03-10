@@ -3994,6 +3994,119 @@ PEP_STATUS set_all_userids_to_own(PEP_SESSION session, identity_list* id_list) {
 }
 
 
+/* Onion routing
+ * ***************************************************************** */
+
+PEP_STATUS get_onion_identities(
+        PEP_SESSION session,
+        size_t trusted_identity_no,
+        size_t total_identity_no,
+        identity_list **identities)
+{
+    PEP_REQUIRE(session && identities
+                && trusted_identity_no <= total_identity_no);
+
+#define FAIL(pepstatus)        \
+    do {                       \
+        status = (pepstatus);  \
+        goto end;              \
+    } while (false)
+#define CHECK_SQL_STATUS                                          \
+    do {                                                          \
+        if (sql_status != SQLITE_OK && sql_status != SQLITE_DONE  \
+            && sql_status != SQLITE_ROW) {                        \
+            FAIL(PEP_UNKNOWN_DB_ERROR);                           \
+        }                                                         \
+    } while (false)
+
+    /* Defensiveness: initialise the output to a sensible value before doing
+       anything, and work with automatic variables instead of affecting the
+       caller's memory. */
+    PEP_STATUS status = PEP_STATUS_OK;
+    * identities = NULL;
+    identity_list *res = NULL;
+    size_t found_identity_no = 0;
+
+    /* Run the complicated SQL query returning our identities. */
+    int sql_status = SQLITE_OK;
+    sql_reset_and_clear_bindings(session->get_onion_identities);
+    sqlite3_bind_int(session->get_onion_identities, 1, trusted_identity_no);
+    sqlite3_bind_int(session->get_onion_identities, 2, total_identity_no);
+    sqlite3_bind_int(session->get_onion_identities, 3, 0/*PEP_ct_pEp_unconfirmed*/);
+
+    /* Keep reading one more line as long as we have not enough rows. */
+    while (found_identity_no < total_identity_no) {
+        /* Step. */
+        sql_status = pEp_sqlite3_step_nonbusy(session, session->get_onion_identities);
+        CHECK_SQL_STATUS;
+        if (sql_status == SQLITE_DONE)
+            FAIL(PEP_CANNOT_FIND_IDENTITY); /* Not enough rows. */
+
+        /* Bind columns into local variables.  These char* variables are only
+           bound here, and their memory is handled here.  It is difficult to
+           unconditionally free at the end of the function because of sharing:
+           strings are shared with the identity, which is shared with the
+           list. */
+        char *user_id
+            = strdup((char *)
+                     sqlite3_column_text(session->get_onion_identities, 0));
+        if (user_id == NULL)
+            FAIL(PEP_OUT_OF_MEMORY);
+        char *address
+            = strdup((char *)
+                     sqlite3_column_text(session->get_onion_identities, 1));;
+        if (address == NULL) {
+            free(user_id);
+            FAIL(PEP_OUT_OF_MEMORY);
+        }
+        bool trusted;
+        trusted = sqlite3_column_int(session->get_onion_identities, 2);
+        LOG_TRACE("# found %s %s", user_id,
+                  (trusted ? "TRUSTED" : "NOT as trusted (even if it may be)"));
+
+        /* Make an identity data structure, and update it to fill in whatever
+           field this query did not fill. */
+        pEp_identity *identity = new_identity(address, NULL, user_id, NULL);
+        if (identity == NULL) {
+            free(user_id);
+            free(address);
+            FAIL(PEP_OUT_OF_MEMORY);
+        }
+        status = update_identity(session, identity);
+        if (status != PEP_STATUS_OK) {
+            free_identity(identity);
+            goto end;
+        }
+
+        /* Attach the identity to the list.  Notice that the identity is
+           shared with the list. */
+        identity_list *new_last = identity_list_add(res, identity);
+        if (new_last == NULL) {
+            free_identity(identity);
+            FAIL(PEP_OUT_OF_MEMORY);
+        }
+        if (res == NULL)
+            res = new_last;
+
+        /* End of the iteration: we have found an identity. */
+        found_identity_no ++;
+    }
+
+ end:
+    LOG_TRACE("found %i identities", (int) found_identity_no);
+    sql_reset_and_clear_bindings(session->get_onion_identities);
+    if (status != PEP_STATUS_OK) {
+        free_identity_list(res);
+    }
+    else
+        * identities = res; /* Make the result visible to the caller. */
+    LOG_NONOK_STATUS_NONOK;
+    return status;
+#undef CHECK_SQL_STATUS
+#undef FAIL
+}
+
+
 /* Temporary compatibility definitions
  * ***************************************************************** */
 DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color)

@@ -22,7 +22,7 @@ extern "C" {
 #include "timestamp.h"
 
 #define PEP_PROTOCOL_VERSION_MAJOR  3 ///< pEp *protocol* version major component
-#define PEP_PROTOCOL_VERSION_MINOR  3 ///< pEp *protocol* version minor component
+#define PEP_PROTOCOL_VERSION_MINOR  4 ///< pEp *protocol* version minor component
 
 /* Expand to the stringification of the macro parameter, itself unexpanded. */
 #define _STRINGIFY_UNEXPANDED(whatever)  \
@@ -877,8 +877,8 @@ typedef enum _identity_flags {
     PEP_idf_devicegroup = 0x0100,     // identity of a device group member
     PEP_idf_org_ident = 0x0200,       // identity is associated with an org (i.e. NOT a private account - could be company email)
     PEP_idf_group_ident = 0x0400,     // identity is a group identity (e.g. mailing list) - N.B. not related to device group!
-    PEP_idf_transport_mandatory = 0x0800
-                                      // for this identity stick with transport referenced by address
+    PEP_idf_transport_mandatory = 0x0800, // for this identity stick with transport referenced by address
+    PEP_supports_onion_routing = 0x01000 // identity supports onion routing
 } identity_flags;
 
 typedef unsigned int identity_flags_t;
@@ -2105,6 +2105,44 @@ DYNAMIC_API PEP_STATUS reset_path_cache(void);
  *
  */
 DYNAMIC_API void clear_path_cache(void);
+
+
+/* Onion routing
+ * ***************************************************************** */
+
+/**
+ *  <!--       get_onion_identities()       -->
+ *
+ *  @brief      Pick random known identities suitable to be used for onion
+ *              routing, and provide them to the caller as a list.
+ *
+ *  @param[in]  session             session handle
+ *  @param[in]  trusted_identity_no how many identities are required to be
+ *                                  trusted
+ *  @param[in]  total_identity_no   the total number of identities, which must
+ *                                  be at least as large as trusted_identity_no
+ *  @param[out] identities          the result list.  If the return status is
+ *                                  PEP_STATUS_OK this is guaranteed to contain
+ *                                  total_identity_no elements, all distinct, of
+ *                                  which trusted_identity_no are trusted.
+ *
+ *  @retval     PEP_STATUS_OK             success
+ *  @retval     PEP_CANNOT_FIND_IDENTITY  it is impossible to satisfy the
+ *                                        request using only the identities we
+ *                                        know
+ *  @retval     PEP_ILLEGAL_VALUE         NULL session or list pointer, trusted
+ *                                        identity number larger than total
+ *                                        identity number
+ *  @retval     PEP_OUT_OF_MEMORY         out of memory
+ *  @retval     PEP_UNKNOWN_DB_ERROR      database error
+ *
+ */
+PEP_STATUS get_onion_identities(
+        PEP_SESSION session,
+        size_t trusted_identity_no,
+        size_t total_identity_no,
+        identity_list **identities
+    );
 
 
 /* Temporary compatibility definitions
