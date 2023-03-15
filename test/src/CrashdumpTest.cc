@@ -86,6 +86,11 @@ TEST_F(CrashdumpTest, check_crashdump) {
     // MODULE test code
     char *text;
     PEP_STATUS status2 = get_crashdump_log(session, 0, &text);
-    ASSERT_EQ(status2 , PEP_STATUS_OK);
+
+    ASSERT_TRUE(status2 == PEP_STATUS_OK
+                /* This is normal and expected when logging destinations do not
+                   include PEP_LOG_DESTINATION_DATABASE -- see
+                   local.conf.example . */
+                || status2 == PEP_RECORD_NOT_FOUND);
     output_stream << text;
 }
