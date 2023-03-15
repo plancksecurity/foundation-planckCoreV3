@@ -170,10 +170,9 @@ static int db_contains_table(PEP_SESSION session, const char* table_name) {
  */
 static int table_contains_column(PEP_SESSION session, const char* table_name,
                                  const char* col_name) {
-
-
-    if (!session || !table_name || !col_name)
-        return -1;
+    PEP_REQUIRE_ORELSE_RETURN(session
+                              && ! EMPTYSTR(table_name) && ! EMPTYSTR(col_name),
+                              -1);
 
     // Table names can't be SQL parameters, so we do it this way.
 
