@@ -201,13 +201,21 @@ static int table_contains_column(PEP_SESSION session, const char* table_name,
     strlcat(sql_buf, table_name, max_q_len);
     strlcat(sql_buf, q3, max_q_len);
 
-    sqlite3_stmt *stmt;
+    sqlite3_stmt *stmt = NULL;
 
-    sqlite3_prepare_v2(session->db, sql_buf, -1, &stmt, NULL);
+    int rc = SQLITE_OK;
+    rc = sqlite3_prepare_v2(session->db, sql_buf, -1, &stmt, NULL);
+    PEP_ASSERT(rc == SQLITE_OK
+               /* expected when the column does not exist. */
+               || rc == SQLITE_ERROR);
 
     int retval = 0;
 
-    int rc = pEp_sqlite3_step_nonbusy(session, stmt);
+    /* We cannot use pEp_sqlite3_step_nonbusy because this is used early on, at
+       initialisation time. */
+    do {
+        rc = sqlite3_step(stmt);
+    } while (rc == SQLITE_BUSY || rc == SQLITE_LOCKED);
     if (rc == SQLITE_DONE || rc == SQLITE_OK || rc == SQLITE_ROW) {
         retval = 1;
     }
@@ -455,17 +463,20 @@ static PEP_STATUS upgrade_revoc_contact_to_13(PEP_SESSION session) {
     identity_list* id_list = NULL;
 
     sqlite3_stmt* tmp_own_id_retrieve = NULL;
-    sqlite3_prepare_v2(session->db, sql_own_identities_retrieve, -1, &tmp_own_id_retrieve, NULL);
-
-    // Kludgey - put the stmt in temporarily, and then remove again, so less code dup.
-    // FIXME LATER: refactor if possible, but... chicken and egg, and thiis case rarely happens.
-    session->own_identities_retrieve = tmp_own_id_retrieve;
-    status = own_identities_retrieve(session, &id_list);
-    sqlite3_finalize(tmp_own_id_retrieve);
-    session->own_identities_retrieve = NULL;
-
-    if (!status || !id_list)
-        return PEP_STATUS_OK; // it's empty AFAIK (FIXME)
+    int sqlite_status = sqlite3_prepare_v2(session->db, sql_own_identities_retrieve, -1, &tmp_own_id_retrieve, NULL);
+    PEP_ASSERT(sqlite_status == SQLITE_OK
+               || /* Expected when Identity.Username does not exist. */
+               sqlite_status == SQLITE_ERROR);
+    if (sqlite_status == SQLITE_OK) {
+        // Kludgey - put the stmt in temporarily, and then remove again, so less code dup.
+        // FIXME LATER: refactor if possible, but... chicken and egg, and thiis case rarely happens.
+        session->own_identities_retrieve = tmp_own_id_retrieve;
+        status = own_identities_retrieve(session, &id_list);
+        sqlite3_finalize(tmp_own_id_retrieve);
+        session->own_identities_retrieve = NULL;
+        if (!status || !id_list)
+            return PEP_STATUS_OK; // it's empty AFAIK (FIXME)
+    }
 
     identity_list* curr_own = id_list;
 
