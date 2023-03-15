@@ -17,6 +17,14 @@ SEQUOIA_INC=-I${INSTPREFIX}/include
 LDFLAGS  += -L${INSTPREFIX}/lib -L${INSTPREFIX}/libetpan/lib -L${INSTPREFIX}/pep/lib
 GTEST_SRC_DIR=/usr/src/gtest
 GTEST_PL=${BUILDROOT}/gtest-parallel/gtest_parallel.py
+
+# Not sure if we want this: it should be considered.
+# TRUSTWORDSXORCOMPATIBILITY = yes
+
+# mostly for positron who wants to see what is failing on the CI machines and
+# not on his system
+LOGDESTINATIONS = PEP_LOG_DESTINATION_STDOUT
+MAXLOGLEVEL = EVERYTHING
 __LOCAL__
 
 cat local.conf
