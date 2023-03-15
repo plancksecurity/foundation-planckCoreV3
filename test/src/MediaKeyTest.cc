@@ -262,7 +262,7 @@ TEST_F(MediaKeyTest, check_rating_no_media_key) {
     MAKE_IDENTITY(keyed_alice, "Alice in the wonderland of keys", "keyed-alice",
                   "keyed-alice@key-wonderland.net",
                   "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97",
-                  "/home/luca/pep-src/pep-engine/test/test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc",
+                  "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc",
                   false);
     MAKE_IDENTITY(keyless_bob, "Keyless Bob", "keyless-bob",
                   "bob@nokey.net",
