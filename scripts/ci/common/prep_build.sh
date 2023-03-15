@@ -25,6 +25,7 @@ GTEST_PL=${BUILDROOT}/gtest-parallel/gtest_parallel.py
 # not on his system
 LOGDESTINATIONS = PEP_LOG_DESTINATION_STDOUT
 MAXLOGLEVEL = EVERYTHING
+DEBUG = maintainer
 __LOCAL__
 
 cat local.conf
