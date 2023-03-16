@@ -111,7 +111,7 @@ ifeq ($(TEST_CMD_PFX),)
     TEST_CMD_PFX=
 endif
 
-.PHONY: all clean test
+.PHONY: all clean test prepare-test-data
 
 all:
 	$(MAKE) $(TARGET)
@@ -132,7 +132,7 @@ LDLIBS+=-lz
 $(TARGET): $(OBJS)
 	${CXX} ${LDFLAGS} -L${PREFIX}/lib -o $@ $^ $(LDLIBS)
 
-test: all
+test: all prepare-test-data
 	$(RM) -rf ./pEp_test_home/*
 	$(TEST_CMD_PFX) \
             PEP_NOABORT=noabort PEP_LOG=yes PEP_LOG_ASYNC=yes GTEST_COLOR=no \
@@ -140,6 +140,11 @@ test: all
             $(TEST_DEBUGGER) \
             python3 $(GTEST_PL) \
 		--gtest_color=no ./$(TARGET)
+
+prepare-test-data:
+	cp \
+          test_mails/ENGINE-654_bob_mail.eml-orig \
+          test_mails/ENGINE-654_bob_mail.eml
 
 clean:
 	$(RM) $(TARGET) $(TARGET).o $(TARGET).d $(OBJS) \
