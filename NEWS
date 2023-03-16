@@ -1,3 +1,4 @@
+v3.2.0-RC27  2023-03-16
 * Fix management database upgrading from versions older than 13; no API changes.
 * Fix benign test suite failures: we are back to zero expected failures.
 
