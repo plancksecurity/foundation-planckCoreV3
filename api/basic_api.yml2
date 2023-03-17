@@ -196,6 +196,12 @@ protocol session {
         use bool enable doc="flag if enabled or disabled";
     }
 
+    method config_enable_log_synchronous doc="make logging to database destination synchronous or asynchronous"
+    {
+        // params
+
+        use bool enable doc="make logging synchronous iff this is true";
+    }
 
     method config_cipher_suite doc="cipher suite being used when encrypting"
     {
