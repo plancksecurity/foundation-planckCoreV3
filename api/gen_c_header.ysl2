@@ -20,7 +20,7 @@ tstylesheet {
     template "/package"
         apply "package", 0;
 
-    template "package" document "{@name}_{@type}.h", "text" {
+    template "package" document "generated/{@name}_{@type}.h", "text" {
         const 'filename', "concat(@name,'_',@type,'.h')";
     ||
     // «../@name» «$version»
