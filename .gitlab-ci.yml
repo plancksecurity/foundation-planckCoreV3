@@ -1,165 +1,85 @@
 include:
   - '.gitlab-ci-files/common-prepare.yml'
 
+# Pipeline-wide variables; Applies to all jobs.
+variables:
+  PEP_MACHINE_DIR: "/install/share/pEp"
+  CARGO_HOME: /cargo
+  CARGO_TARGET_DIR:
+
 stages:
   - deps
   - build
-  - build-docker
-  - packages
-
+  - test
 
 # Debian
 
-debian10:deps:
+debian11:deps:
   extends: .make_in_docker
   stage: deps
   variables:
     MAKE_TARGET: "deps"
-    CI_DISTRO_TARGET: "debian10"
+    CI_DISTRO_TARGET: "debian11"
     DEBIAN_FRONTEND: "noninteractive"
+    BUILD: /build
   rules:
     - changes:
         - DEPENDENCIES
-        - scripts/debian10/deps.pEpEngine.debian10.Dockerfile
-        - scripts/common/build_pEpEngine_deps.sh
+        - scripts/ci/debian11/deps.pEpEngine.debian11.Dockerfile
+        - scripts/ci/common/build_pEpEngine_deps.sh
 
-debian10:build:
+debian11:build:
   tags:
     - linux
   stage: build
-  image: ${DOCKER_REGISTRY_HOST}/pep-debian10-engine-deps:latest
+  image: ${DOCKER_REGISTRY_HOST}/pep-debian11-engine-deps:${CI_COMMIT_REF_SLUG}
   script:
-    - cd scripts/${CI_DISTRO_TARGET}
-    - make ${MAKE_TARGET}
+    - ./scripts/ci/common/prep_build.sh
+    - make all
+    - make db
+    - make install
   variables:
-    MAKE_TARGET: "build"
-    CI_DISTRO_TARGET: "debian10"
+    DEBUG: "maintainer"
+    PKG_CONFIG_PATH: "$INSTPREFIX/share/pkgconfig/"
+    LC_ALL: "en_US.UTF-8"
+    CI_DISTRO_TARGET: "debian11"
     DEBIAN_FRONTEND: "noninteractive"
   rules:
     - if: '$CI_COMMIT_TAG  !~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
 
-debian10:tagged-build:
+debian11:tagged-build:
   tags:
     - linux
   stage: build
-  image: ${DOCKER_REGISTRY_HOST}/pep-debian10-engine-deps:latest
+  image: ${DOCKER_REGISTRY_HOST}/pep-debian11-engine-deps:${CI_COMMIT_REF_SLUG}
   script:
-    - cd scripts/${CI_DISTRO_TARGET}
-    - make ${MAKE_TARGET}
+    - ./scripts/ci/common/prep_build.sh
+    - make all
+    - make db
+    - make install
   variables:
-    MAKE_TARGET: "build"
-    CI_DISTRO_TARGET: "debian10"
+    DEBUG: "release"
+    PKG_CONFIG_PATH: "$INSTPREFIX/share/pkgconfig/"
+    LC_ALL: "en_US.UTF-8"
+    CI_DISTRO_TARGET: "debian11"
     DEBIAN_FRONTEND: "noninteractive"
-    TAGGED_BUILD: "true"
   rules:
     - if: '$CI_COMMIT_TAG  =~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
 
-debian10:build-docker:
-  extends: .make_in_docker
-  stage: build-docker
-  needs: ["debian10:build"]
-  variables:
-    MAKE_TARGET: "build-docker"
-    CI_DISTRO_TARGET: "debian10"
-    DEBIAN_FRONTEND: "noninteractive"
-  rules:
-    - if: '$CI_COMMIT_TAG  !~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
-
-debian10:tagged-build-docker:
-  extends: .make_in_docker
-  stage: build-docker
-  needs: ["debian10:tagged-build"]
-  variables:
-    MAKE_TARGET: "build-docker"
-    CI_DISTRO_TARGET: "debian10"
-    DEBIAN_FRONTEND: "noninteractive"
-    TAGGED_BUILD: "true"
-  rules:
-    - if: '$CI_COMMIT_TAG  =~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
-
-# CentOS
-
-centos8:deps:
-  extends: .make_in_docker
-  stage: deps
-  variables:
-    MAKE_TARGET: "deps"
-    CI_DISTRO_TARGET: "centos8"
-  rules:
-    - changes:
-        - DEPENDENCIES
-        - scripts/centos8/deps.pEpEngine.centos8.Dockerfile
-        - scripts/common/build_pEpEngine_deps.sh
-
-
-centos8:build:
+debian11:test:
   tags:
     - linux
-  stage: build
-  image: ${DOCKER_REGISTRY_HOST}/pep-centos8-engine-deps:latest
+  image: ${DOCKER_REGISTRY_HOST}/pep-debian11-engine-deps:${CI_COMMIT_REF_SLUG}
+  stage: test
   script:
-    - cd scripts/${CI_DISTRO_TARGET}
-    - make ${MAKE_TARGET}
+    - ./scripts/ci/common/prep_build.sh
+    - make dbinstall
+    - LD_LIBRARY_PATH=/install/lib:$LD_LIBARY_PATH make test
+  after_script:
+    - cat local.conf
   variables:
-    MAKE_TARGET: "build"
-    CI_DISTRO_TARGET: "centos8"
-  rules:
-    - if: '$CI_COMMIT_TAG  !~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
-
-centos8:tagged-build:
-  tags:
-    - linux
-  stage: build
-  image: ${DOCKER_REGISTRY_HOST}/pep-centos8-engine-deps:latest
-  script:
-    - cd scripts/${CI_DISTRO_TARGET}
-    - make ${MAKE_TARGET}
-  variables:
-    MAKE_TARGET: "build"
-    CI_DISTRO_TARGET: "centos8"
-    TAGGED_BUILD: "true"
-  rules:
-    - if: '$CI_COMMIT_TAG  =~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
-
-centos8:build-docker:
-  extends: .make_in_docker
-  stage: build-docker
-  needs: ["centos8:build"]
-  variables:
-    MAKE_TARGET: "build-docker"
-    CI_DISTRO_TARGET: "centos8"
-  rules:
-    - if: '$CI_COMMIT_TAG  !~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
-
-centos8:tagged-build-docker:
-  extends: .make_in_docker
-  stage: build-docker
-  needs: ["centos8:tagged-build"]
-  variables:
-    MAKE_TARGET: "build-docker"
-    CI_DISTRO_TARGET: "centos8"
-    TAGGED_BUILD: "true"
-  rules:
-    - if: '$CI_COMMIT_TAG  =~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
-
-centos8:rpm:
-  extends: .make_in_docker
-  stage: packages
-  needs: ["centos8:build-docker"]
-  variables:
-    MAKE_TARGET: "rpm"
-    CI_DISTRO_TARGET: "centos8"
-  rules:
-    - if: '$CI_COMMIT_TAG  !~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
-
-
-centos8:rpm:tagged-build:
-  extends: .upload_pkg
-  stage: packages
-  needs: ["centos8:tagged-build-docker"]
-  variables:
-    MAKE_TARGET: "rpm"
-    CI_DISTRO_TARGET: "centos8"
-    TAGGED_BUILD: "true"
-  rules:
-    - if: '$CI_COMMIT_TAG  =~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
+    DEBUG: "maintainer"
+    PKG_CONFIG_PATH: "$INSTPREFIX/share/pkgconfig/"
+    LC_ALL: "en_US.UTF-8"
+    CI_DISTRO_TARGET: "debian11"
+    DEBIAN_FRONTEND: "noninteractive"

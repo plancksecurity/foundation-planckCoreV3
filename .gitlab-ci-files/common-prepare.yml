@@ -21,15 +21,20 @@
   - chmod 644 ~/.ssh/known_hosts
 
 .standard_job:
-  tags: [kvm]
+  tags:
+    - docker
   before_script:
     - *ensure_docker
 
 .make_in_docker:
   extends: .standard_job
+  image: docker:stable
+  services:
+    - docker:dind
   script:
     - docker login -u ${DOCKER_REGISTRY_USER} -p ${DOCKER_REGISTRY_PASS} ${DOCKER_REGISTRY_HOST}
-    - cd scripts/${CI_DISTRO_TARGET}
+    - apk add -U make git
+    - cd scripts/ci/${CI_DISTRO_TARGET}
     - make ${MAKE_TARGET}
 
 .upload_pkg:
@@ -40,7 +45,7 @@
     - *verify_ssh_host_keys
   script:
     - docker login -u ${DOCKER_REGISTRY_USER} -p ${DOCKER_REGISTRY_PASS} ${DOCKER_REGISTRY_HOST}
-    - cd scripts/${CI_DISTRO_TARGET}
+    - cd scripts/ci/${CI_DISTRO_TARGET}
     - make ${MAKE_TARGET}
     - pwd
     - cd out
