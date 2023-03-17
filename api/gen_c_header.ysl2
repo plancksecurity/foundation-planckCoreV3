@@ -71,6 +71,7 @@ tstylesheet {
     }
 
     template "field|internal" {
+        if "position()>1 and @doc" |
         apply "@doc", 0;
         | «func:c-type(@type)» «@name»;
     }
@@ -94,12 +95,13 @@ tstylesheet {
     }
 
     template "doc|@doc" {
-        > \n
+        if "position()>1" |
         for "str:split(., '\n')"
             | // «.»
     }
 
     template "item" {
+        if "position()>1 and @doc" |
         apply "@doc", 0;
         choose {
             when "@output='hex'"
