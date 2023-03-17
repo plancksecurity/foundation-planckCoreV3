@@ -1,0 +1,9 @@
+// p≡p Basic API
+
+// Copyleft (c) 2023, p≡p foundation
+// this file is under GNU General Public License 3.0
+// see LICENSE.txt
+
+
+protocol session {
+}

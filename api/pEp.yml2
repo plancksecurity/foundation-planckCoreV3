@@ -67,5 +67,6 @@ package pEp {
     api message include ./message_api.yml2
     api keymanagement include ./keymanagement_api.yml2
     api basic include ./basic_api.yml2
+    api sync include ./sync_api.yml2
 }
 
