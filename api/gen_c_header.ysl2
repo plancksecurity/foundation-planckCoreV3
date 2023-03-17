@@ -21,14 +21,17 @@ tstylesheet {
         apply "package", 0;
 
     template "package" document "{@name}_{@type}.h", "text" {
+        const 'filename', "concat(@name,'_',@type,'.h')";
     ||
     // «../@name» «$version»
-    // «@name»_«@type».h
+    // «$filename»
 
     // «$copyleft»
 
 
-    #pragma once
+    #ifndef «yml:ucase($filename)»
+    #define «yml:ucase($filename)»
+
 
     #ifdef __cplusplus
     extern "C" {
@@ -44,6 +47,8 @@ tstylesheet {
     } // extern "C"
     #endif
 
+
+    #endif // «yml:ucase($filename)»
     ||
     }
 
