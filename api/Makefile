@@ -1,4 +1,4 @@
-all: basic_api.h
+all: generated/basic_api.h
 
 YML2=$(wildcard *.yml2)
 YSL2=$(wildcard *.ysl2)
