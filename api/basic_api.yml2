@@ -487,3 +487,18 @@ protocol session {
         throws NULL doc="on failure";
     }
 }
+
+
+/* FIXME: the following API functions do not take a session and/or do not return
+   a PEP_STATUS result.  They will need to be defined here in some different way.
+
+DYNAMIC_API bool PEP_STATUS_is_error(PEP_STATUS status);
+
+DYNAMIC_API void config_enable_log(PEP_SESSION session, bool enable);
+method config_enable_log
+    {
+        // parms
+
+        use bool enable doc="enable logging iff this is true; by default logging is off unless the environment variable PEP_LOG is defined, with any value";
+    }
+*/
