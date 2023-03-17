@@ -22,11 +22,16 @@ enum direction {
 
 enum enc_format {
     item none 0 doc='message is not encrypted';
-    item pieces 1 doc='inline PGP + PGP extensions';
+    item pieces 1 doc='inline PGP + PGP extensions (removed)';
+    item inline 1 doc='old PGP inline (only written)';
     item S_MIME 2 doc='RFC5751';
     item PGP_MIME 3 doc='RFC3156';
+    item PEP_message_v1 3 doc='alias';
     item PEP 4 doc='pEp encryption format';
+    item PEP_message_v2 4 doc='alias';
     item PGP_MIME_Outlook1 5 doc='Message B0rken by Outlook type 1';
+    item inline_EA 6 doc='crypto text in the longmsg field, with initial byte mark welling if content is attachment';
+    item auto 255 doc='figure out automatically where possible';
 }
 
 
