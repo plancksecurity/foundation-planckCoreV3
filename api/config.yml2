@@ -1,2 +1,4 @@
-version = "version 2.0"
-copyleft = "Copyleft (c) 2019-2020, pEp foundation"
+// generated files will be marked with this
+
+version = "version 3.2"
+copyleft = "Copyleft (c) 2019-2023, pEp foundation"
