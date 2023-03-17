@@ -40,7 +40,7 @@ tstylesheet {
     #include <pEp/basic_types.h>
 
     ||
-    apply "doc|type|enum|struct", 0;
+    apply "doc|type|enum|struct|func", 0;
     ||
 
     #ifdef __cplusplus
@@ -67,7 +67,11 @@ tstylesheet {
     ||
     } «@name»;
 
-    // create new «@name»
+    /**
+        <!-- new_«@name»() -->
+
+        @brief create new «@name»
+    **/
     ||
     indent(0); > «@name» *new_«@name»(
     apply "new", 0;
@@ -102,7 +106,7 @@ tstylesheet {
     template "doc|@doc" {
         if "position()>1" |
         for "str:split(., '\n')"
-            | // «.»
+            | /// «.»
     }
 
     template "item" {
@@ -118,5 +122,22 @@ tstylesheet {
 
     template "new"
         > «name(parm/*[1])» «name(parm/*[2])»
+
+    template "func|method", mode=doc
+    ||
+    /**
+     *  <!-- «@name»() -->
+     *
+     *  @brief «@doc»
+    **/
+    ||
+
+    template "func|method"
+    {
+        apply ".", 0, mode=doc;
+    ||
+
+    ||
+    }
 }
 

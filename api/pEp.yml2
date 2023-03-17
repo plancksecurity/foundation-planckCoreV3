@@ -20,6 +20,7 @@ decl hex is item (output=hex);
 decl flag @name;
 decl protocol @name;
 decl method @name;
+decl func @name;
 decl new;
 
 // readonly in parm, ownership remains with caller
