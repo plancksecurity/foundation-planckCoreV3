@@ -93,7 +93,7 @@ struct message {
     field string_pair_list opt_fields doc='optional fields';
     field enc_format format doc='format of encrypted data';
 
-    new (msg_direction dir);
+    new (direction dir);
 }
 
 

@@ -60,36 +60,41 @@ tstylesheet {
 
     template "struct" {
     ||
-    typedef struct _«func:name()» {
+    typedef struct _«@name» {
     ||
     apply "field|internal|doc";
     apply "field[@function='free']", mode=free;
     ||
-    } «func:name()»;
+    } «@name»;
 
+    // create new «@name»
     ||
+    indent(0); > «@name» *new_«@name»(
+    apply "new", 0;
+    > );\n
+    |
     }
 
     template "field|internal" {
         if "position()>1 and @doc" |
         apply "@doc", 0;
-        | «func:c-type(@type)» «@name»;
+        | «@type» «@name»;
     }
 
     template "field", mode=free
     ||
     
     // free function for «@name»
-    void (*release_«@name»)(«func:c-type(@type)» «@name»);
+    void (*release_«@name»)(«@type» «@name»);
     ||
 
     template "enum" {
     ||
-    typedef enum _«func:name()» {
+    typedef enum _«@name» {
     ||
     apply "item|doc";
     ||
-    } «func:name()»;
+    } «@name»;
 
     ||
     }
@@ -105,10 +110,13 @@ tstylesheet {
         apply "@doc", 0;
         choose {
             when "@output='hex'"
-                | «func:name()»`if "text()" { " = 0x" value "yml:dec2hex(., 2)" }``if "position()!=last()" > ,`
+                | «@name»`if "text()" { " = 0x" value "yml:dec2hex(., 2)" }``if "position()!=last()" > ,`
             otherwise
-                | «func:name()»`if "text()" { " = " value "." }``if "position()!=last()" > ,`
+                | «@name»`if "text()" { " = " value "." }``if "position()!=last()" > ,`
         }
     }
+
+    template "new"
+        > «name(parm/*[1])» «name(parm/*[2])»
 }
 

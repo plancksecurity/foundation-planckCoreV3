@@ -20,7 +20,7 @@ decl hex is item (output=hex);
 decl flag @name;
 decl protocol @name;
 decl method @name;
-decl construct, new is construct;
+decl new;
 
 // readonly in parm, ownership remains with caller
 decl use @type @name (mode=use) alias parm;
