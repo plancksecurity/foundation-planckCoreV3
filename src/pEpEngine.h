@@ -1664,6 +1664,9 @@ DYNAMIC_API PEP_STATUS key_revoked(
  *                             column4 is comment
  *  
  *  @retval PEP_STATUS_OK
+ *  @retval PEP_RECORD_NOT_FOUND    could not access the log (normally because
+ *                                  database destinations do not include the
+ *                                  database)
  *  @retval PEP_OUT_OF_MEMORY       out of memory
  *  @retval PEP_ILLEGAL_VALUE       illegal parameter value
  *  @retval PEP_UNKNOWN_ERROR   
