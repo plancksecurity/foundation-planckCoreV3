@@ -196,13 +196,6 @@ protocol session {
         use bool enable doc="flag if enabled or disabled";
     }
 
-    method config_enable_log_synchronous doc="make logging to database destination synchronous or asynchronous"
-    {
-        // params
-
-        use bool enable doc="make logging synchronous iff this is true";
-    }
-
     method config_cipher_suite doc="cipher suite being used when encrypting"
     {
         // parms
@@ -219,6 +212,23 @@ protocol session {
             """;
             
        throws illegal_value doc="illegal parameter values";
+    }
+
+
+    method config_media_keys
+    doc = """
+          set media keys for the given instance, replacing any current
+          media key map with the given one
+          """
+    {
+        use string_pair_list new_map doc="""
+        a list of pairs <pattern, media key FPR>, to be searched for in order
+        with the first match winning.  Pairs must not be NULL, and no key or
+        value must be NULL; however the entire list is allowed to be empty.
+        Address patterns may contain the Unix-style
+        wildcards '?' and '*', and an optional "mailto:"
+        prefix.
+        """
     }
 
 
@@ -494,11 +504,25 @@ protocol session {
 
 DYNAMIC_API bool PEP_STATUS_is_error(PEP_STATUS status);
 
-DYNAMIC_API void config_enable_log(PEP_SESSION session, bool enable);
-method config_enable_log
+// These all return void.
+    method config_enable_echo_protocol
+    doc="actually send Echo.Ping messages"
     {
-        // parms
-
+        use bool enable doc="enable iff this is true";
+    }
+    method config_enable_echo_in_outgoing_message_rating_preview
+    doc="send Echo.Ping messages (unless the Echo protocol is disabled) when computing message_rating_preview, making it slower but increasing the chance of making the outgoing message protected"
+    {
+        use bool enable doc="enable iff this is true";
+    }
+    method config_enable_log
+    doc="enable or disable logging"
+    {
         use bool enable doc="enable logging iff this is true; by default logging is off unless the environment variable PEP_LOG is defined, with any value";
+    }
+    method config_enable_log_synchronous
+    doc="make logging to database destination synchronous (reliable in case of crashes) or asynchronous (fast)"
+    {
+        use bool enable doc="make logging synchronous iff this is true";
     }
 */
