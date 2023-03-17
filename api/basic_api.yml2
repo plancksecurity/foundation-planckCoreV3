@@ -197,14 +197,6 @@ protocol session {
     }
 
 
-    method config_service_log doc="log more for service purposes"
-    {
-        // parms
-
-        use bool enable doc="flag if enabled or disabled";
-    }
-
-
     method config_cipher_suite doc="cipher suite being used when encrypting"
     {
         // parms
