@@ -376,6 +376,8 @@ protocol session {
         // exceptions
 
         throws out_of_memory doc="out of memory";
+
+        throws record_not_found doc="not logging on database";
         
         throws illegal_value doc="illegal parameter value";
         
