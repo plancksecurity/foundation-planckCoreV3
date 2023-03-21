@@ -39,7 +39,7 @@ v3.2.0-RC23  2023-02-09
   key expired or was revoked.
 * Give the asn en/de-coders a much bigger stack size by patching asn_internal.h
   .  This is a direct fix (thanks to Dirk) of a problem presumably already
-  solved by rate-limitation; building with santisiers on ios should now be
+  solved by rate-limitation; building with sanitisers on ios should now be
   convenient again.
   Closes https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/97 .
   Closes https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/98 .
@@ -103,7 +103,7 @@ v3.2.0-RC20  2023-01-23
   Heck.)  This contributes to unblock
   https://gitea.pep.foundation/pEp.foundation/pEpJNIAdapter/issues/24 .
 * In relation to the change above: new API function do_sync_protocol_init ,
-  which initialises the Sync state machinery indepdendently from
+  which initialises the Sync state machinery independently from
   register_sync_callbacks (which now *only* sets callback functions).
 * undo recent Makefile changes related to Sequoia: a cleaner solution is
   forthcoming.
