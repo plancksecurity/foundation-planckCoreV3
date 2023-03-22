@@ -9,6 +9,7 @@
 #include <iostream>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <pthread.h>
 
 #include <string>
 #include <vector>
@@ -26,6 +27,26 @@
 
 using namespace std;
 
+// #define DEBUG_PATH_CACHE
+
+#if defined(DEBUG_PATH_CACHE)
+# define LOG(...)                 \
+    do {                          \
+        FILE *f = stdout;         \
+        fprintf(f, __VA_ARGS__);  \
+        fflush(f);                \
+    } while (false)
+#else
+# define LOG(...) do {} while (false)
+#endif
+
+pthread_mutex_t the_mutex
+#if defined(GNULINUX)
+= PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+#else
+= PTHREAD_RECURSIVE_MUTEX_INITIALIZER;
+#endif
+
 // Constructor
 Engine::Engine(string engine_home_dir) {
     // FIXME: deal with base
@@ -35,6 +56,27 @@ Engine::Engine(string engine_home_dir) {
     cached_messageToSend = NULL;
     cached_inject_sync_event = NULL;
     cached_ensure_passphrase = NULL;
+
+    /* Make sure we correctly initialise the path cache.  This is needed so that
+       we can avoid concurrency problems between the global path cache and
+       Engine initialisation.
+       This ugly trick is not necessary in applications and adapters which
+       initialise the Engine correctly, by first calling init in a single
+       thread; but this test suite does not respect such conventions. */
+    pthread_mutex_lock(& the_mutex);
+    LOG("Initialise path cache: begin\n");
+    const char *useless __attribute__((unused));
+    useless = per_user_relative_directory();
+    useless = per_user_directory();
+    useless = per_machine_directory();
+#ifdef ANDROID
+    useless = android_system_db();
+#endif
+    useless = unix_system_db();
+    useless = unix_local_db();
+    useless = unix_log_db();
+    LOG("Initialise path cache: end\n");
+    pthread_mutex_unlock(& the_mutex);
 }
 
 Engine::~Engine() {}
