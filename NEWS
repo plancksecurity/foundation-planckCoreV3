@@ -1,5 +1,8 @@
 * CI fixes, thanks to dvn:
   Closes https://gitea.pep.foundation/pEp.foundation/pEpEngine/pulls/147 .
+* Update the API specification in api/ so that we can machine-generate more
+  code.  Not finished yet, but this might help concurrent development such as
+  https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/149 .
 * Solve a benign but distracting intermittent test suite failure, that happens
   on the CI machine but not on positron's laptop.
   Closes https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/150 .
