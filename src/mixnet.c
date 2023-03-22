@@ -53,7 +53,7 @@ static PEP_STATUS reverse_and_update(PEP_SESSION session,
     }
     return status;
 
- error:
+ error: {
     /* Free the out list, which we did not manage to complte. */
     identity_list *rest_of_out = * out;
     while (rest_of_out != NULL) {
@@ -77,6 +77,7 @@ static PEP_STATUS reverse_and_update(PEP_SESSION session,
  out_of_memory:
     status = PEP_OUT_OF_MEMORY;
     goto error;
+} /* block started after the error label. */
 }
 
 /* This is the onionize function.
