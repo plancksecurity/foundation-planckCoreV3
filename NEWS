@@ -1,5 +1,8 @@
 * CI fixes, thanks to dvn:
   Closes https://gitea.pep.foundation/pEp.foundation/pEpEngine/pulls/147 .
+* Solve a benign but distracting intermittent test suite failure, that happens
+  on the CI machine but not on positron's laptop.
+  Closes https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/150 .
 
 v3.2.0-RC27  2023-03-16
 * Fix management database upgrading from versions older than 13; no API changes.
