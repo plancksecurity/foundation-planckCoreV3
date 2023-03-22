@@ -928,6 +928,10 @@ DEFINE_CACHED_PATH (per_machine_directory)
 DEFINE_CACHED_PATH (unix_system_db)
 DEFINE_CACHED_PATH (unix_local_db)
 DEFINE_CACHED_PATH (unix_log_db)
+/* Note for the maintainer: after changing this I need to update:
+   - clear_path_cache , here in this file;
+   - reset_path_cache , here in this file;
+   - the critical section at the end of Engine::Engine in test/src/Engine.cc . */
 
 /* Free every cache variable and re-initialise it to NULL: this
    re-initialisation is important when this function is used here,
