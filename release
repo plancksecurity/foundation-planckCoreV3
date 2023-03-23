@@ -340,7 +340,10 @@ release ()
 {
     version="$1"
 
-    confirm "Releasing version $version on branch $branchname"
+    if test "$remote" = 'no'; then
+        remotesuffix=' (without pushing to origin)'
+    fi
+    confirm "Releasing version $version on branch $branchname$remotesuffix"
 
     # Decide if the current version being released is an RC.
     isanrc='no'
@@ -361,6 +364,15 @@ release ()
     if test "$gitrepositoryclean" == 'no'; then
         fatal "git repository not clean"
     fi
+
+    # If this is an official release (and this behaviour is not disabled) then
+    # copy changes from the master branch to the release branch, right before
+    # releasing.
+    if test "$isanrc" = 'no' \
+       && test "$copymastertorelease" = 'yes'; then
+        git pull --rebase . master
+    fi
+
     firstlineinNEWS=$(echo $(head --lines=1 NEWS))
     if test "$firstlineinNEWS" == ''; then
         fatal 'The first line in NEWS is empty: it should not be, since we are about to prepend the version number to a list of changes'
@@ -380,7 +392,11 @@ release ()
     prepend_to_NEWS "\n"
     git commit -m "add trailing \"+\" sign to version after $version, prepend an empty line to NEWS" \
         "$versionfile" NEWS
-    git push --tags origin HEAD:"$branchname"
+    if test "$remote" = 'yes'; then
+        git push --tags origin HEAD:"$branchname"
+    else
+        echo "WARNING: not pushing --tags to $branchname (as requested via --no-remote)"
+    fi
     cat <<EOF
 
 Now go to
@@ -391,7 +407,20 @@ text:
 See the [NEWS](https://gitea.pep.foundation/pEp.foundation/pEpEngine/src/tag/v${version}/NEWS) file.
 
 EOF
+
+    # If this is an official release (and this behaviour is not disabled) then
+    # copy changes from the release branch to the master branch right after
+    # releasing.
+    if test "$isanrc" = 'no' \
+       && test "$copyreleasetomaster" = 'yes'; then
+        git checkout master
+        git pull --rebase . "$branchname"
+        git checkout "$branchname"
+    fi
+
+    echo "All good.  Remember that you are in the $branchname branch."
 }
+
 
 # Global variable definitions
 # #####################################################
@@ -469,6 +498,16 @@ Version numbers
    --next-minor-rc        Deal with the next minor RC's version number
    --next-patch-rc        Deal with the next patch RC's version number
 
+Behaviour
+   --no-remote            Do not push changes to the git remote.  This is useful
+                          for testing this script
+   --no-release-to-master Avoid rebasing the content of the master branch to
+                          the release branch before releasing (default: rebase;
+                          ignored on RCs)
+   --no-master-to-release Avoid rebasing the content of the release branch to
+                          the master branch after releasing (default: rebase;
+                          ignored on RCs)
+
 Actions
    --release              Make a release
    --print                Just show a release number (default)
@@ -540,6 +579,9 @@ release='no'
 print='no'
 anyversionspecified='no'
 theversion=''
+remote='yes'
+copymastertorelease='yes'
+copyreleasetomaster='yes'
 for arg in "$@"; do
     case "$arg" in
         # Common.
@@ -563,6 +605,14 @@ for arg in "$@"; do
             handle_version_number $(next_minor_rc "$latestversion");;
         '--next-patch-rc' )
             handle_version_number $(next_patch_rc "$latestversion");;
+
+        # Behaviour
+        '--no-remote' )
+            remote='no';;
+        '--no-master-to-release' )
+            copymastertorelease='no';;
+        '--no-release-to-master' )
+            copyreleasetomaster='no';;
 
         # Actions
         '--release' )
