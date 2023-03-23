@@ -394,8 +394,6 @@ release ()
         "$versionfile" NEWS
     if test "$remote" = 'yes'; then
         git push --tags origin HEAD:"$branchname"
-    else
-        echo "WARNING: not pushing --tags to $branchname (as requested via --no-remote)"
     fi
     cat <<EOF
 
@@ -415,10 +413,16 @@ EOF
        && test "$copyreleasetomaster" = 'yes'; then
         git checkout master
         git pull --rebase . "$branchname"
+        if test "$remote" = 'yes'; then
+            git push --tags origin HEAD:master
+        fi
         git checkout "$branchname"
     fi
 
     echo "All good.  Remember that you are in the $branchname branch."
+    if test "$remote" = 'no'; then
+        echo 'WARNING: did not push (--tags) to origin on any branch as requested via --no-remote'
+    fi
 }
 
 
