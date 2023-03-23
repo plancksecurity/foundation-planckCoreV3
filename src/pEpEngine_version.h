@@ -14,11 +14,11 @@
 
 /* PEP_ENGINE_VERSION_RC is not defined: not a Release Candidate. */
 
-/* PEP_ENGINE_VERSION_PLUS not defined: this is an UNmodified release. */
+#define PEP_ENGINE_VERSION_PLUS           +   /* This is a MODIFIED release */
 
 /* PEP_ENGINE_VERSION_BRANCH_SUFFIX not defined. */
 
 /* The main version string for the user. */
-#define PEP_ENGINE_VERSION "3.2.0"
+#define PEP_ENGINE_VERSION "3.2.0+"
 
 #endif /* #ifndef _PEP_ENGINE_VERSION_H_ */
