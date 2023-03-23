@@ -342,11 +342,21 @@ release ()
 
     confirm "Releasing version $version on branch $branchname"
 
+    # Decide if the current version being released is an RC.
+    isanrc='no'
+    if echo "$version" | grep -q 'RC'; then
+        isanrc='yes'
+    fi
+
     # There used to be another alternative here, with releases being allowed to
-    # come from master.  But since the first official 3.x release (3.2.0) we
-    # no longer do that.
-    if ! echo "$branchname" | grep -q '^Release_'; then
-        fatal "branch \"$branchname\" does not look like a release branch name.  Please release from a branch whose name starts with \"Release_\""
+    # come from master; but since the first official 3.x release (3.2.0) we
+    # no longer do that for official releases.
+    if test "$isanrc" = 'no' \
+       && ! echo "$branchname" | grep -q '^Release_'; then
+        fatal "\"$branchname\" does not look like a release branch name.  When making an official releases please do it from a branch whose name starts with \"Release_\""
+    elif test "$isanrc" = 'yes' \
+         && echo "$branchname" | grep -q '^Release_'; then
+        fatal "\"$branchname\" looks like a release branch name.  When making an RC please do it from a non-release branch"
     fi
     if test "$gitrepositoryclean" == 'no'; then
         fatal "git repository not clean"
