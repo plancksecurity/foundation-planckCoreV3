@@ -342,9 +342,11 @@ release ()
 
     confirm "Releasing version $version on branch $branchname"
 
-    if ! echo "$branchname" | grep -q '^Release_' \
-       && test "$branchname" != 'master'; then
-        fatal "branch \"$branchname\" does not look like a release branch name"
+    # There used to be another alternative here, with releases being allowed to
+    # come from master.  But since the first official 3.x release (3.2.0) we
+    # no longer do that.
+    if ! echo "$branchname" | grep -q '^Release_'; then
+        fatal "branch \"$branchname\" does not look like a release branch name.  Please release from a branch whose name starts with \"Release_\""
     fi
     if test "$gitrepositoryclean" == 'no'; then
         fatal "git repository not clean"
