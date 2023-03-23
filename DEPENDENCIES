@@ -4,7 +4,7 @@
 #   https://gitea.pep.foundation/pEp.foundation/pEpEngineSequoiaBackend.git
 pEpEngineSequoiaBackend=v1.0.0
 yml2=v2.7.5
-libpEpTransport=03b63f6d4fa83416215504a6ca5a6810db7daa8b
+libpEpTransport=v1.0.0
 
 # sqlite3 is technically an optional dependency: the engine can also be built
 # with the copy of sqlite3 which is distributed along with its sources.
