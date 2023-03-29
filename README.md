@@ -17,7 +17,7 @@ The p≡p Engine is a Free Software library encapsulating implementations of:
 
   The p≡p Engine sports a two phase trust rating system for messages:
   In phase one a rating is derived based on channel, crypto and key security.
-  This is named "comm\_types".
+  This is named "comm_types".
   In phase two these ratings are mapped to user-representable values mimicking the semantics of a traffic light.
 
 - Abstract Crypto API
@@ -43,7 +43,7 @@ Various adapters are also available at the link provided for the p≡p Engine's 
 # What is the current state of the project?
 The p≡p Engine is production-ready.
 It is under active development by several full-time employees of the p≡p foundation and its partner organizations.
-The most recent version of the source code can be obtained here: <https://pep.foundation/dev/repos>.
+The most recent version of the source code can be obtained here: <https://gitea.pep.foundation/pEp.foundation/>.
 This is the only offical way to obtain a copy of the source code.
 
 # I would like to contribute to the p≡p Engine or a related project, where do I start?
@@ -56,7 +56,7 @@ Accompanying documentation is licensed under the terms of the Creative Commons A
 Each file includes a notice near its beginning, that indicates the applicable license.
 If you wish to license the p≡p Engine under different terms, please contact <mailto:council@pep.foundation>.
 
-src/pEp_rmd160.c is adapted from LibTomCrypt by Tom St Denis, which was released by its authors into the public domain.
+src/pEp_rmd160.c is adapted from LibTomCrypt by Tom St Denis and contributors, which was released by its authors into the public domain.
 
 # Contact
 The p≡p foundation and the developers of the p≡p Engine can be reached as detailed here: <https://pep.foundation/contact-us/index.html>.
