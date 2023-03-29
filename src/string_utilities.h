@@ -22,8 +22,8 @@ extern "C" {
  *         as both used and allocated size.
  *
  *  @param[in]    session          session
- *  @param[inout] big_buffer_p     a pointer to a malloc-allocated string or a
- *                                 pointer to NULL
+ *  @param[inout] big_buffer_p     a pointer to a malloc-allocated string or (in
+ *                                 the input only) pointer to NULL
  *  @param[inout] big_buffer_used_size_p  pointer to the currently used size
  *                                        for the big buffer, in bytes, not
  *                                        counting the final '\0' character.
