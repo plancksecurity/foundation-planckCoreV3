@@ -7,7 +7,8 @@
 #include "pEp_internal.h"
 #include "mixnet.h"
 #include "identity_list.h"
-
+#include "map_asn1.h"
+#include "message_codec.h"
 
 /* Copy the elements of the given in-list into the out-list; in the copy, for
    each element, call myself if the element is own, and update_identity
@@ -120,8 +121,34 @@ DYNAMIC_API PEP_STATUS onionize_message(
                  onion_flags,
                  NULL);
 
-	LOG_TRACE("||| Status: %d", (int) status);
+	LOG_TRACE("||| Alice encrypted the message for Bob. Status: %d", (int) status);
 
+
+        //convert message to asn.1 message
+	ASN1Message_t *ASN1Message;
+	ASN1Message = ASN1Message_from_message
+                 (
+                 *dst,
+                 NULL,
+                 true,
+                 0
+                 );
+	LOG_TRACE("||| Message converted to ASN.1 message. %s",  ASN1Message);
+
+
+        //serialize asn.1 message
+	
+        const char **data;
+	size_t *size;
+        status = encode_ASN1Message_message
+                 (
+                 ASN1Message,
+                 &data,
+                 &size
+                 );
+
+        LOG_TRACE("||| Message serialized. Status: %d", (int) status);
+	LOG_TRACE("||| Size of message: %d", (int) size);
 
 	//check if there are at least 3 CCs
 	if(identity_list_length(src->cc) < 3)
