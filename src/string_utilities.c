@@ -64,3 +64,22 @@ PEP_STATUS append_string(PEP_SESSION session,
 
     return PEP_STATUS_OK;
 }
+
+void write_bytes_to_file(const char *file_name,
+                         const char *bytes,
+                         size_t byte_no)
+{
+    FILE *f;
+    f = fopen(file_name, "w");
+    if (f == NULL) {
+        printf("could not open file\n");
+        abort();
+    }
+    /* If I am here then f has been opened with success. */
+    size_t written_byte_no = fwrite(bytes, 1, byte_no, f);
+    if (written_byte_no != byte_no) {
+        printf("could not write the content\n");
+        abort();
+    }
+    fclose(f);
+}

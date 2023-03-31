@@ -43,6 +43,13 @@ PEP_STATUS append_string(PEP_SESSION session,
                          size_t *big_buffer_allocated_size_p,
                          const char *new_part);
 
+/* Write the content of the pointed memory to the file with the given name,
+   entirely replacing the file content.  Fail fatally on any error. */
+void write_bytes_to_file(const char *file_name,
+                         const char *bytes,
+                         size_t byte_no);
+
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

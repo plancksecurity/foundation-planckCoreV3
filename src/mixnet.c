@@ -9,6 +9,7 @@
 #include "identity_list.h"
 #include "map_asn1.h"
 #include "message_codec.h"
+#include "string_utilities.h"
 
 /* Copy the elements of the given in-list into the out-list; in the copy, for
    each element, call myself if the element is own, and update_identity
@@ -121,6 +122,8 @@ DYNAMIC_API PEP_STATUS onionize_message(
                  onion_flags,
                  NULL);
 
+
+        //dst=&src;
 	LOG_TRACE("||| Alice encrypted the message for Bob. Status: %d", (int) status);
 
 
@@ -138,8 +141,8 @@ DYNAMIC_API PEP_STATUS onionize_message(
 
         //serialize asn.1 message
 	
-        const char **data;
-	size_t *size;
+        char *data;
+	size_t size;
         status = encode_ASN1Message_message
                  (
                  ASN1Message,
@@ -149,6 +152,10 @@ DYNAMIC_API PEP_STATUS onionize_message(
 
         LOG_TRACE("||| Message serialized. Status: %d", (int) status);
 	LOG_TRACE("||| Size of message: %d", (int) size);
+
+	//write the content of serialized data to file
+	write_bytes_to_file("/home/nkls/moulinex/tinker/serialised.hex", (const char*) data, size);
+
 
 	//check if there are at least 3 CCs
 	if(identity_list_length(src->cc) < 3)
