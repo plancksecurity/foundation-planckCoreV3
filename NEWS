@@ -1,3 +1,8 @@
+* Make string lists and identity lists nicer to use, with new non-destructive
+  functions.  These functions are all declared as API functions in order for
+  them to be accessible to the adaptors as well.
+  New API functions stringlist_cons, stringlist_reversed, identity_list_cons,
+  identity_list_cons_copy, identity_list_reversed .
 
 v3.2.1  2023-03-23
 * DEPENDENCIES: require an official release of libpEpTransport.
