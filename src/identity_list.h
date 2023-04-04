@@ -15,6 +15,51 @@ extern "C" {
 
 
 /**
+ *  <!--       identity_list_cons()       -->
+ *
+ *  @brief Given an element and a list return a new list starting with the
+ *         element and having the old list as tail.
+ *         If the element is null just return the old list as-is.
+ *         This function is non-destructive: the old list remains usable and
+ *         unchanged.
+ *
+ *  @param[in]   element    new element
+ *  @param[in]   old_list   old list
+ *
+ *  @retval      new list; NULL if out of memory
+ *
+ *  @warning     element is being moved if the function succeeds: the caller
+ *               loses its ownership
+ *
+ */
+DYNAMIC_API identity_list *identity_list_cons(pEp_identity *element,
+                                              identity_list *old_list);
+
+/**
+ *  <!--       identity_list_cons_copy()       -->
+ *
+ *  @brief Exactly like identity_list_cons, but copy the given identity (when
+ *         non-null) instead of losing it.  The list is *not* copied.
+ */
+DYNAMIC_API identity_list *identity_list_cons_copy(pEp_identity *element,
+                                                   identity_list *old_list);
+
+/**
+ *  <!--       identity_list_reversed()       -->
+ *
+ *  @brief Return a copy if the given list with copies of the elements in
+ *         reversed order, and no null values.  This function is
+ *         non-destructive: the old list remains usable and unchanged.
+ *         Identities are copied.
+ *
+ *  @param[in]   old_list  old list
+ *
+ *  @retval      new list.  NULL if out of memory
+ *
+ */
+DYNAMIC_API identity_list *identity_list_reversed(identity_list *old_list);
+
+/**
  *  <!--       new_identity_list()       -->
  *  
  *  @brief Allocate a new identity list

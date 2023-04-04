@@ -12,6 +12,72 @@
 #include "pEpEngine.h"
 #include "identity_list.h"
 
+DYNAMIC_API identity_list *identity_list_cons(pEp_identity *element,
+                                              identity_list *old_list)
+{
+    /* Handle the special NULL case: */
+    if (element == NULL)
+        return old_list;
+
+    identity_list *cons = calloc(1, sizeof(identity_list));
+    assert(cons != NULL);
+    if (cons == NULL)
+        return NULL;
+
+    cons->ident = element;
+    cons->next = old_list;
+    return cons;
+}
+
+DYNAMIC_API identity_list *identity_list_cons_copy(pEp_identity *element,
+                                                   identity_list *old_list)
+{
+    /* Handle the special NULL case: */
+    if (element == NULL)
+        return old_list;
+
+    /* From now on we can assume that element is not null. */
+    identity_list *result = NULL;
+    pEp_identity *element_copy = identity_dup(element);
+    if (element_copy == NULL)
+        goto out_of_memory;
+    result = identity_list_cons(element_copy, old_list);
+    if (result == NULL)
+        goto out_of_memory;
+    return result;
+
+ out_of_memory:
+    free_identity(element_copy);
+    free_identity_list(result);
+    return NULL;
+}
+
+DYNAMIC_API identity_list *identity_list_reversed(identity_list *old_list)
+{
+    /* Scan the old list starting from the first element; prepend any non-NULL
+       element we find to a new list, and return the new list at the end.
+          A B C
+       will be copied into
+          C B A .  */
+    identity_list *result = NULL;
+    identity_list *rest;
+    for (rest = old_list; rest != NULL; rest = rest->next) {
+        pEp_identity *old_identity = rest->ident;
+        /* If we find a silly NULL element just skip it. */
+        if (old_identity == NULL)
+            continue;
+        identity_list *new_result = identity_list_cons_copy(old_identity,
+                                                            result);
+        if (new_result == NULL) {
+            free_identity_list(result);
+            return NULL;
+        }
+        else
+            result = new_result;
+    }
+    return result;
+}
+
 DYNAMIC_API identity_list *new_identity_list(pEp_identity *ident)
 {
     identity_list *id_list = calloc(1, sizeof(identity_list));
