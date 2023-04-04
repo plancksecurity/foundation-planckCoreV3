@@ -20,6 +20,57 @@
 #include "stringlist.h"
 
 
+DYNAMIC_API stringlist_t *stringlist_cons(const char *element,
+                                          stringlist_t *old_list)
+{
+    /* Handle the annoying NULL case first, so that we can forget it. */
+    if (element == NULL)
+        element = "";
+
+    /* Copy the element, or fail cleanly. */
+    stringlist_t *cons = NULL;
+    char *element_copy = strdup(element);
+    if (element_copy == NULL)
+        goto out_of_memory;
+
+    /* Make a cons, or fail cleanly. */
+    cons = calloc(1, sizeof(stringlist_t));
+    if (cons == NULL)
+        goto out_of_memory;
+
+    /* No failure if we reached this point. */
+    cons->value = element_copy;
+    cons->next = old_list;
+    return cons;
+
+ out_of_memory:
+    free(element_copy);
+    free(cons);
+    return NULL;
+}
+
+DYNAMIC_API stringlist_t *stringlist_reversed(stringlist_t *old_list)
+{
+    /* Scan the old list starting from the first element; prepend any non-NULL
+       element we find to a new list, and return the new list at the end.
+          A B C
+       will be copied into
+          C B A .  */
+    stringlist_t *result = NULL;
+    stringlist_t *rest;
+    for (rest = old_list; rest != NULL; rest = rest->next) {
+        const char *old_element = rest->value;
+        stringlist_t *new_result = stringlist_cons(old_element, result);
+        if (new_result == NULL) {
+            free_stringlist(result);
+            return NULL;
+        }
+        else
+            result = new_result;
+    }
+    return result;
+}
+
 DYNAMIC_API stringlist_t *new_stringlist(const char *value)
 {
     stringlist_t *result = calloc(1, sizeof(stringlist_t));

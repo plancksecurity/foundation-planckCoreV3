@@ -27,6 +27,38 @@ typedef struct _stringlist_t {
 
 
 /**
+ *  <!--       stringlist_cons()       -->
+ *
+ *  @brief Given an element and a list return a new list starting with the
+ *         element and having the old list as tail.
+ *         This function is non-destructive: the old list remains usable and
+ *         unchanged.  The element is copied.
+ *
+ *  @param[in]   element    new element
+ *  @param[in]   old_list   old list
+ *
+ *  @retval      new list; NULL if out of memory
+ *
+ */
+DYNAMIC_API stringlist_t *stringlist_cons(const char *element,
+                                          stringlist_t *old_list);
+
+/**
+ *  <!--       stringlist_reversed()       -->
+ *
+ *  @brief Return a copy if the given list with copies of the elements in
+ *         reversed order.  This function is non-destructive: the old list
+ *         remains usable and unchanged.
+ *         Elements are copied.
+ *
+ *  @param[in]   old_list  old list
+ *
+ *  @retval      new list.  NULL if out of memory
+ *
+ */
+DYNAMIC_API stringlist_t *stringlist_reversed(stringlist_t *old_list);
+
+/**
  *  <!--       new_stringlist()       -->
  *  
  *  @brief Allocate a new stringlist
