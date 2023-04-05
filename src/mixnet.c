@@ -97,6 +97,7 @@ DYNAMIC_API PEP_STATUS onionize_message(
 	PEP_enc_format enc_format,
         PEP_encrypt_flags_t flags
 	)
+
 {
         PEP_REQUIRE(session && src && src->from && dst);
 
@@ -136,7 +137,7 @@ DYNAMIC_API PEP_STATUS onionize_message(
                  true,
                  0
                  );
-	LOG_TRACE("||| Message converted to ASN.1 message. %s",  ASN1Message);
+	LOG_TRACE("||| Message converted to ASN.1 message. %s");
 
 
         //serialize asn.1 message
