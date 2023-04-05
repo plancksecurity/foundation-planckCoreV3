@@ -1160,7 +1160,7 @@ void pEp_set_pid_and_tid(struct pEp_pid_and_tid *pid_and_tid)
        integer with a possibly different sign. */
     pid_and_tid->pid = (int64_t) getpid();
 
-#if defined(GNULINUX) || defined(ANDROID)
+#if defined(ANDROID)
     /* The Linux-specific call is nice: on single-threaded applications the tid
        is equal to the pid. */
     pid_and_tid->tid = (int64_t) gettid();
