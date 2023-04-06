@@ -532,11 +532,26 @@ handle_incoming_onion_routed_message(PEP_SESSION session,
     LOG_TRACE("🧅BEGINNING🧅");
 
     PEP_STATUS status = PEP_STATUS_OK;
+    pEp_identity *own_identity = NULL;
     const char *attachment = NULL;
     size_t attachment_size;
     message *message_to_relay = NULL;
     message *decrypted_msg = NULL;
     message *the_interesting_msg = NULL; /* Equal to one of the previous */
+
+    /* Make a copy of the identity the message was addressed to; this is an own
+       identity, and we will use the same as the sender when relaying. */
+    if(msg->to == NULL || msg->to->ident == NULL
+       || ! msg->to->ident->me) {
+        LOG_WARNING("invalid To");
+        status = PEP_PEPMESSAGE_ILLEGAL_MESSAGE;
+        goto end;
+    }
+    own_identity = identity_dup(msg->to->ident);
+    if (own_identity == NULL) {
+        status = PEP_OUT_OF_MEMORY;
+        goto end;
+    }
 
     /* Decrypt the message. */
     // FIXME: aggressively check for correctness here: we do not want to be in
@@ -591,19 +606,19 @@ handle_incoming_onion_routed_message(PEP_SESSION session,
               ((message_to_relay->dir == PEP_dir_incoming) ? "incoming" : "outgoing"));
     message_to_relay->dir = PEP_dir_outgoing;
 
+    /* Replace the From identity in the message. */
+    free_identity(message_to_relay->from);
+    message_to_relay->from = own_identity;
+    own_identity = NULL; /* do not free this at the end. */
+
     /* Send the message.  messageToSend consumes the message, so we should not
        destroy it ourselves if we arrive here. */
     session->messageToSend(message_to_relay);
-    /*
-    LOG_TRACE("🧅🧅🧅 SUCCESS! message relayed from %s <%s> to %s <%s>",
-              message_to_relay->from->username, message_to_relay->from->address,
-              message_to_relay->to->ident->username, message_to_relay->to->ident->address
-              );
-              */
     LOG_MESSAGE_TRACE("🧅🧅🧅 SUCCESS! message relayed", message_to_relay);
     message_to_relay = NULL; /* Do not destroy it twice. */
 
  end:
+    free_identity(own_identity);
     free_message(decrypted_msg);
     free_message(message_to_relay);
     /* We must not free the_interesting_msg, which is equal to one of the
