@@ -541,8 +541,10 @@ handle_incoming_onion_routed_message(PEP_SESSION session,
     /* Decrypt the message. */
     status = decrypt_message(session, msg, & decrypted_msg, NULL,
                              NULL, NULL);
-    if (status == PEP_UNENCRYPTED)
+    if (status == PEP_UNENCRYPTED) {
+        LOG_WARNING("the attachment is an unencrypted message");
         the_interesting_msg = msg;
+    }
     else if (status != PEP_STATUS_OK) {
         LOG_WARNING("could not decrypt message");
         goto end;
