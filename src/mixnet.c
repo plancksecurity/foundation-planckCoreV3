@@ -536,7 +536,7 @@ handle_incoming_onion_routed_message(PEP_SESSION session,
     size_t attachment_size;
     message *message_to_relay = NULL;
     message *decrypted_msg = NULL;
-    message *the_interesting_msg = NULL;
+    message *the_interesting_msg = NULL; /* Equal to one of the previous */
 
     /* Decrypt the message. */
     stringlist_t *keylist = NULL;
@@ -568,7 +568,7 @@ handle_incoming_onion_routed_message(PEP_SESSION session,
         }
     }
     if (attachment == NULL) {
-        LOG_WARNING("could not find an attachment with MIME type %s",
+        LOG_WARNING("🧅 could not find an attachment with MIME type %s",
                     PEP_ONION_MESSAGE_MIME_TYPE);
         status = PEP_PEPMESSAGE_ILLEGAL_MESSAGE;
         goto end;
@@ -579,7 +579,7 @@ handle_incoming_onion_routed_message(PEP_SESSION session,
                                        & message_to_relay);
     if (status != PEP_STATUS_OK) {
         status = PEP_PEPMESSAGE_ILLEGAL_MESSAGE;
-        LOG_TRACE("failed deserialising message to relay");
+        LOG_TRACE("🧅 failed deserialising message to relay");
         goto end;
     }
 
@@ -587,10 +587,13 @@ handle_incoming_onion_routed_message(PEP_SESSION session,
        destroy it ourselves if we arrive here. */
     session->messageToSend(message_to_relay);
     message_to_relay = NULL; /* Do not destroy it twice. */
+    LOG_TRACE("🧅 failed deserialising message to relay");
 
  end:
     free_message(decrypted_msg);
     free_message(message_to_relay);
+    /* We must not free the_interesting_msg, which is equal to one of the
+       pointers we have handled already. */
     LOG_NONOK_STATUS_NONOK;
     return status;
 }
