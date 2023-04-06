@@ -538,7 +538,8 @@ handle_incoming_onion_routed_message(PEP_SESSION session,
 
     /* Search for an attachment that looks like the relayed message. */
     bloblist_t *rest;
-    for (rest = msg->attachments; rest != NULL ; rest = rest->next) {
+    for (rest = msg->attachments; rest != NULL; rest = rest->next) {
+        LOG_TRACE("🧅 %s", rest->mime_type);
         if (rest->mime_type != NULL
             && ! strcasecmp(rest->mime_type, PEP_ONION_MESSAGE_MIME_TYPE)) {
             attachment = rest->value;
