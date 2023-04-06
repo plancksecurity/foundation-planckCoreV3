@@ -315,7 +315,7 @@ static PEP_STATUS _onion_add_layer(PEP_SESSION session,
         own_from_copy = identity_dup(own_from);
         relay_from_copy = identity_dup(relay_from);
         relay_tos_copy = identity_list_cons_copy(relay_to, NULL);
-        shortmsg = strdup("🧅");
+        shortmsg = strdup("🧅 p≡p 🧅");
         longmsg = strdup("This is an onion-routed message.\n"
                          "Please decode the attachment and pass it along.\n");
         res = new_message(PEP_dir_outgoing);
@@ -329,7 +329,7 @@ static PEP_STATUS _onion_add_layer(PEP_SESSION session,
         /* Fill message fields, and set the local variables holding copies of
            message heap-allocated fields to NULL, so that we can free the local
            variables unconditionally at the end.  */
-        add_opt_field(res, "X-pEp-onion", "yes");
+        add_opt_field(res, PEP_THIS_IS_AN_ONION_MESSAGE_FIELD_NAME, "yes");
         res->from = own_from_copy;
         res->to = relay_tos_copy;
         res->shortmsg = shortmsg;
@@ -413,7 +413,9 @@ end:
 }
 
 DYNAMIC_API PEP_STATUS onionize(PEP_SESSION session,
-                                message *in, message **out_p,
+                                message *in,
+                                stringlist_t *extra,
+                                message **out_p,
                                 PEP_enc_format enc_format,
                                 PEP_encrypt_flags_t flags,
                                 identity_list *relays_as_list)

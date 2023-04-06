@@ -18,6 +18,11 @@ extern "C" {
 /* Onion routing.
  * ***************************************************************** */
 
+/* The name of a message optional field.  If this field is present then the
+   message is an onion-routed message, whose attachment needs to be relayed, to
+   either another relay or to the final recipient (it should be impossible to
+   tell which). */
+#define PEP_THIS_IS_AN_ONION_MESSAGE_FIELD_NAME "X-pEp-onion"
 
 /**
  *  <!--       get_onion_identities()       -->
@@ -59,6 +64,8 @@ DYNAMIC_API PEP_STATUS get_onion_identities(PEP_SESSION session,
  *  @param[in]   session    session
  *  @param[in]   in         the message to be onionised; it must be outgoing
  *                          and unencrypted
+ *  @param[in]   extra      extra keys, to be used only for the innermost
+ *                          message
  *  @param[out]  out        the resulting encrypted and onionised message
  *  @param[in]   enc_format requested format for the outgoing message.  It
  *                          must be a recent format.
@@ -72,7 +79,9 @@ DYNAMIC_API PEP_STATUS get_onion_identities(PEP_SESSION session,
  *  @retval      any other value means failure (and in remains valid)
  */
 DYNAMIC_API PEP_STATUS onionize(PEP_SESSION session,
-                                message *in, message **out_p,
+                                message *in,
+                                stringlist_t *extra,
+                                message **out_p,
                                 PEP_enc_format enc_format,
                                 PEP_encrypt_flags_t flags,
                                 identity_list *relays_as_list);
