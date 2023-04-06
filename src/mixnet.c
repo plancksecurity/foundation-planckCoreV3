@@ -587,7 +587,7 @@ handle_incoming_onion_routed_message(PEP_SESSION session,
        destroy it ourselves if we arrive here. */
     session->messageToSend(message_to_relay);
     message_to_relay = NULL; /* Do not destroy it twice. */
-    LOG_TRACE("🧅 failed deserialising message to relay");
+    LOG_TRACE("🧅🧅🧅 SUCCESS! message relayed");
 
  end:
     free_message(decrypted_msg);
