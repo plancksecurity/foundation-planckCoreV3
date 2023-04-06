@@ -535,10 +535,24 @@ handle_incoming_onion_routed_message(PEP_SESSION session,
     const char *attachment = NULL;
     size_t attachment_size;
     message *message_to_relay = NULL;
+    message *decrypted_msg = NULL;
+    message *the_interesting_msg = NULL;
+
+    /* Decrypt the message. */
+    status = decrypt_message(session, msg, & decrypted_msg, NULL,
+                             NULL, NULL);
+    if (status == PEP_UNENCRYPTED)
+        the_interesting_msg = msg;
+    else if (status != PEP_STATUS_OK) {
+        LOG_WARNING("could not decrypt message");
+        goto end;
+    }
+    else
+        the_interesting_msg = decrypted_msg;
 
     /* Search for an attachment that looks like the relayed message. */
     bloblist_t *rest;
-    for (rest = msg->attachments; rest != NULL; rest = rest->next) {
+    for (rest = the_interesting_msg->attachments; rest != NULL; rest = rest->next) {
         LOG_TRACE("🧅 %s", rest->mime_type);
         if (rest->mime_type != NULL
             && ! strcasecmp(rest->mime_type, PEP_ONION_MESSAGE_MIME_TYPE)) {
@@ -569,6 +583,7 @@ handle_incoming_onion_routed_message(PEP_SESSION session,
     message_to_relay = NULL; /* Do not destroy it twice. */
 
  end:
+    free_message(decrypted_msg);
     free_message(message_to_relay);
     LOG_NONOK_STATUS_NONOK;
     return status;
