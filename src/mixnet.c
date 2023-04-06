@@ -586,6 +586,11 @@ handle_incoming_onion_routed_message(PEP_SESSION session,
         goto end;
     }
 
+    /* Make sure that the message direction is what I want. */
+    LOG_TRACE("🧅🧅🧅 the message direction was %s ; making it sure it becomes outgoing",
+              ((message_to_relay->dir == PEP_dir_incoming) ? "incoming" : "outgoing"));
+    message_to_relay->dir = PEP_dir_outgoing;
+
     /* Send the message.  messageToSend consumes the message, so we should not
        destroy it ourselves if we arrive here. */
     session->messageToSend(message_to_relay);
