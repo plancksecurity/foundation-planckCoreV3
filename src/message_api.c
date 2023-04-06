@@ -34,6 +34,7 @@
 
 #include "group.h"
 #include "group_internal.h"
+#include "mixnet.h"
 
 #include "status_to_string.h"
 
@@ -6409,6 +6410,14 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
 /*     HANDLE_IDENTITY(msg->from); */
 /* } */
 /////// END: "react" HACK
+    // Check for Onion-routed messages.
+    {
+        bool is_onion_routed = stringpair_list_find_case_insensitive(
+                                  msg->opt_fields,
+                                  PEP_THIS_IS_AN_ONION_MESSAGE_FIELD_NAME);
+        if (is_onion_routed)
+            LOG_TRACE("🧅🧅🧅🧅🧅🧅🧅🧅🧅🧅🧅🧅🧅🧅🧅🧅🧅🧅🧅🧅🧅🧅");
+    }
     // Check for Distribution messages.
     {
         /*

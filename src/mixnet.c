@@ -15,8 +15,10 @@
 #include "message_codec.h"
 
 
-#define ONION_DEBUG_SERIALIZE_TO_XER  1
-//#define ONION_DEBUG_ENCRYPT           1
+//#define ONION_DEBUG_SERIALIZE_TO_XER  1
+// #define ONION_DEBUG_LOG_XER           1
+//#define ONION_DEBUG_TEST_DESERIALIZE  1
+//#define ONION_DEBUG_NO_ENCRYPT        1
 
 
 /* Message serialisation and deserialisation.
@@ -64,7 +66,9 @@ PEP_STATUS onion_serialize_message(PEP_SESSION session,
     free(encoded_per);
     encoded = encoded_xer;
     encoded_size_in_bytes = strlen(encoded_xer);
+#   if defined(ONION_DEBUG_LOG_XER)
     LOG_TRACE("encoded message as XML: %s", encoded);
+#   endif
 #endif
 
  end:
@@ -296,17 +300,17 @@ static PEP_STATUS _onion_add_layer(PEP_SESSION session,
     size_t encoded_message_length = 0;
 
     if (innermost) {
+#if defined(ONION_DEBUG_NO_ENCRYPT)
+        res = message_dup(in);
+#else
         /* This is just an ordinary message. */
-        /*
-        status
-            = encrypt_message_possibly_with_media_key(session, in, extra, &res,
-                                                      enc_format, flags, NULL);
+        status = encrypt_message_possibly_with_media_key(session, in, extra,
+                                                         &res, enc_format,
+                                                         flags, NULL);
         LOG_NONOK_STATUS_NONOK;
         if (status != PEP_STATUS_OK)
             goto end;
-            */
-        // FIXME: a test.  Of course I want it encrypted.
-        res = message_dup(in);
+#endif
     }
     else {
         /* Allocate message components, then the message itself.  In case of
@@ -317,7 +321,9 @@ static PEP_STATUS _onion_add_layer(PEP_SESSION session,
         relay_tos_copy = identity_list_cons_copy(relay_to, NULL);
         shortmsg = strdup("🧅 p≡p 🧅");
         longmsg = strdup("This is an onion-routed message.\n"
-                         "Please decode the attachment and pass it along.\n");
+                         "Humans should not normally see this; a p≡p system\n"
+                         "receiving this message should decode its attachment\n"
+                         "and pass it along.\n");
         res = new_message(PEP_dir_outgoing);
         if (own_from_copy == NULL
             || relay_from_copy == NULL || relay_tos_copy == NULL
@@ -346,7 +352,8 @@ static PEP_STATUS _onion_add_layer(PEP_SESSION session,
             status = PEP_OUT_OF_MEMORY;
             goto end;
         }
-        //// // FIXME: delete this test.
+#if defined(ONION_DEBUG_TEST_DESERIALIZE)
+        LOG_TRACE("testing deserialisation of something we have just serialised...");
         {
             message *another = NULL;
             status = onion_deserialize_message(session, encoded_message,
@@ -355,10 +362,12 @@ static PEP_STATUS _onion_add_layer(PEP_SESSION session,
             PEP_ASSERT(status == PEP_STATUS_OK);
             free_message(another);
         }
-        ////
+        LOG_TRACE("... done testing deserialisation.");
+#endif
         bloblist_t *added_bloblist = new_bloblist(encoded_message,
                                                   encoded_message_length,
-                                                  "x-pEp/message", NULL);
+                                                  PEP_ONION_MESSAGE_MIME_TYPE,
+                                                  /* no file name */NULL);
         if (added_bloblist == NULL) {
             status = PEP_OUT_OF_MEMORY;
             goto end;
@@ -367,7 +376,7 @@ static PEP_STATUS _onion_add_layer(PEP_SESSION session,
         res->attachments = added_bloblist;
         encoded_message = NULL; /* do not free this twice */
 
-#if defined(ONION_DEBUG_ENCRYPT)
+#if ! defined(ONION_DEBUG_NO_ENCRYPT)
         /* Replace res with an encrypted version of itself. */
         message *res_encrypted = NULL;
         status

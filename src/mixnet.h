@@ -24,6 +24,10 @@ extern "C" {
    tell which). */
 #define PEP_THIS_IS_AN_ONION_MESSAGE_FIELD_NAME "X-pEp-onion"
 
+/* The MIME type we use for onion messages (that appear as attachments, always
+   inside encrypted messages). */
+#define PEP_ONION_MESSAGE_MIME_TYPE "x-pEp/onion-message"
+
 /**
  *  <!--       get_onion_identities()       -->
  *
