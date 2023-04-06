@@ -6353,7 +6353,10 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
 
     if (!(*flags & PEP_decrypt_flag_untrusted_server))
         *keylist = NULL;
-        
+
+    /* Remember if the caller asked that we ignore onion routing. */
+    bool ignore_onion_routing = (* flags) & PEP_decrypt_flag_ignore_onion;
+
     // Reset the message rating before doing anything.  We will compute a new
     // value, that _decrypt_message sets as an output parameter.
     src->rating = PEP_rating_undefined;
@@ -6415,7 +6418,7 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
         bool is_onion_routed = stringpair_list_find_case_insensitive(
                                   msg->opt_fields,
                                   PEP_THIS_IS_AN_ONION_MESSAGE_FIELD_NAME);
-        if (is_onion_routed) {
+        if (! ignore_onion_routing && is_onion_routed) {
             PEP_STATUS onion_status
                 = handle_incoming_onion_routed_message(session, msg);
             if (onion_status != PEP_STATUS_OK)

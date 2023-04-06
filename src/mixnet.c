@@ -540,7 +540,7 @@ handle_incoming_onion_routed_message(PEP_SESSION session,
 
     /* Decrypt the message. */
     stringlist_t *keylist = NULL;
-    PEP_decrypt_flags_t flags = 0;
+    PEP_decrypt_flags_t flags = PEP_decrypt_flag_ignore_onion;
     status = decrypt_message_2(session, msg, & decrypted_msg,
                                & keylist, & flags);
     free_stringlist(keylist);

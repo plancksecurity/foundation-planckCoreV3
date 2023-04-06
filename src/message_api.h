@@ -252,7 +252,8 @@ typedef enum _PEP_decrypt_flags {
 
     // input flags    
     PEP_decrypt_flag_untrusted_server = 0x100,
-    PEP_decrypt_flag_dont_trigger_sync = 0x200
+    PEP_decrypt_flag_dont_trigger_sync = 0x200,
+    PEP_decrypt_flag_ignore_onion = 0x400
 } PEP_decrypt_flags; 
 
 typedef unsigned int PEP_decrypt_flags_t;
@@ -293,6 +294,10 @@ typedef unsigned int PEP_decrypt_flags_t;
  *  PEP_decrypt_flag_untrusted_server     | used to signal that decrypt function should engage   |
  *                                        | in behaviour specified for when the server storing   |
  *                                        | the source is untrusted.                             |
+ *  PEP_decrypt_flag_dont_trigger_sync    | [FIXME]                                              |
+ *  PEP_decrypt_flag_ignore_onion         | Do not relay the message even if we find an onion-   |
+ *                                        | routing optional field: otherwise a suitably crafted |
+ *                                        | message could make decryption recurse infinitely     |
  *  ---------------------------------------------------------------------------------------------|
  *  Outgoing flags                                                                               |
  *  ---------------------------------------------------------------------------------------------|
