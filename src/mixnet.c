@@ -493,13 +493,8 @@ DYNAMIC_API PEP_STATUS onionize(PEP_SESSION session,
 LOG_TRACE("Layer %i:  from %s  to  %s", i, layer_from->username, layer_to->username);
         /* Wrap the current "out" message into a new layer. */
         message *new_out = NULL;
-        status = _onion_add_layer(session, out,
-                                  /* FIXME: extra keys? */ NULL,
-                                  & new_out,
-                                  enc_format,
-                                  flags | (innermost
-                                           ? 0
-                                           : PEP_encrypt_onion),
+        status = _onion_add_layer(session, out, extra, & new_out, enc_format,
+                                  flags | (innermost ? 0 : PEP_encrypt_onion),
                                   original_from, layer_from, layer_to,
                                   innermost);
         if (status == PEP_STATUS_OK) {
