@@ -184,10 +184,10 @@
                 _from_address = _log_message_m->from->address;          \
             if (_log_message_m->to && _log_message_m->to->ident         \
                 && _log_message_m->to->ident->username)                 \
-                _from_username = _log_message_m->to->ident->username;   \
+                _to_username = _log_message_m->to->ident->username;   \
             if (_log_message_m->to && _log_message_m->to->ident         \
                 && _log_message_m->to->ident->address)                  \
-                _from_address = _log_message_m->to->ident->address;     \
+                _to_address = _log_message_m->to->ident->address;     \
             macro(literal_string ": [%s %s, recv_by %s, %s (%s <%s> -> %s <%s>)]", \
                   (_log_message_m->id ? _log_message_m->id : "NO-ID"),  \
                   (_log_message_m->shortmsg                             \
