@@ -304,6 +304,7 @@ static PEP_STATUS _onion_add_layer(PEP_SESSION session,
         res = message_dup(in);
 #else
         /* This is just an ordinary message. */
+        LOG_TRACE("ZZZZZZZZZ encrypting the innermost layer with enc_format %i", (int) enc_format);
         status = encrypt_message_possibly_with_media_key(session, in, extra,
                                                          &res, enc_format,
                                                          flags, NULL);
