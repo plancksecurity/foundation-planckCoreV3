@@ -1694,7 +1694,7 @@
 				LIBRARY_SEARCH_PATHS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib";
 				New_Setting = "";
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -1933,7 +1933,7 @@
 				LIBRARY_SEARCH_PATHS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib";
 				New_Setting = "";
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -1956,7 +1956,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = "${inherited}";
 				LIBRARY_SEARCH_PATHS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib";
 				New_Setting = "";
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
