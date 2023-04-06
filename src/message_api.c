@@ -6415,8 +6415,15 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
         bool is_onion_routed = stringpair_list_find_case_insensitive(
                                   msg->opt_fields,
                                   PEP_THIS_IS_AN_ONION_MESSAGE_FIELD_NAME);
-        if (is_onion_routed)
-            LOG_TRACE("🧅🧅🧅🧅🧅🧅🧅🧅🧅🧅🧅🧅🧅🧅🧅🧅🧅🧅🧅🧅🧅🧅");
+        if (is_onion_routed) {
+            PEP_STATUS onion_status
+                = handle_incoming_onion_routed_message(session, msg);
+            if (onion_status != PEP_STATUS_OK)
+                LOG_NONOK("failed handling onion-routed message: %i 0x%x %s",
+                          (int) onion_status, (int) onion_status,
+                          pEp_status_to_string(onion_status));
+            LOG_TRACE("🧅END🧅");
+        }
     }
     // Check for Distribution messages.
     {

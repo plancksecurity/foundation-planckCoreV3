@@ -522,3 +522,53 @@ LOG_TRACE("Layer %i:  from %s  to  %s", i, layer_from->username, layer_to->usern
     LOG_NONOK_STATUS_NONOK;
     return status;
 }
+
+PEP_STATUS
+handle_incoming_onion_routed_message(PEP_SESSION session,
+                                     message *msg)
+{
+    PEP_REQUIRE(session && msg
+                && session->messageToSend);
+    LOG_TRACE("🧅BEGINNING🧅");
+
+    PEP_STATUS status = PEP_STATUS_OK;
+    const char *attachment = NULL;
+    size_t attachment_size;
+    message *message_to_relay = NULL;
+
+    /* Search for an attachment that looks like the relayed message. */
+    bloblist_t *rest;
+    for (rest = msg->attachments; rest != NULL ; rest = rest->next) {
+        if (rest->mime_type != NULL
+            && ! strcasecmp(rest->mime_type, PEP_ONION_MESSAGE_MIME_TYPE)) {
+            attachment = rest->value;
+            attachment_size = rest->size;
+            break;
+        }
+    }
+    if (attachment == NULL) {
+        LOG_WARNING("could not find an attachment with MIME type %s",
+                    PEP_ONION_MESSAGE_MIME_TYPE);
+        status = PEP_PEPMESSAGE_ILLEGAL_MESSAGE;
+        goto end;
+    }
+
+    /* Decode the message. */
+    status = onion_deserialize_message(session, attachment, attachment_size,
+                                       & message_to_relay);
+    if (status != PEP_STATUS_OK) {
+        status = PEP_PEPMESSAGE_ILLEGAL_MESSAGE;
+        LOG_TRACE("failed deserialising message to relay");
+        goto end;
+    }
+
+    /* Send the message.  messageToSend consumes the message, so we should not
+       destroy it ourselves if we arrive here. */
+    session->messageToSend(message_to_relay);
+    message_to_relay = NULL; /* Do not destroy it twice. */
+
+ end:
+    free_message(message_to_relay);
+    LOG_NONOK_STATUS_NONOK;
+    return status;
+}

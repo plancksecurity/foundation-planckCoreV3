@@ -139,6 +139,11 @@ PEP_STATUS onion_deserialize_message(PEP_SESSION session,
                                      size_t encoded_size_in_bytes,
                                      message **out_p);
 
+// FIXME: comment
+PEP_STATUS
+handle_incoming_onion_routed_message(PEP_SESSION session,
+                                     message *msg);
+
 
 #ifdef __cplusplus
 }
