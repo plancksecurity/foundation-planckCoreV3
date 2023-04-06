@@ -26,7 +26,7 @@ extern "C" {
 
 /* The MIME type we use for onion messages (that appear as attachments, always
    inside encrypted messages). */
-#define PEP_ONION_MESSAGE_MIME_TYPE "x-pEp/onion-message"
+#define PEP_ONION_MESSAGE_MIME_TYPE "application/pEp.onion"
 
 /**
  *  <!--       get_onion_identities()       -->

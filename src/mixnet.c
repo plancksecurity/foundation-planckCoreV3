@@ -549,7 +549,7 @@ handle_incoming_onion_routed_message(PEP_SESSION session,
         the_interesting_msg = msg;
     }
     else if (status != PEP_STATUS_OK) {
-        LOG_WARNING("could not decrypt message");
+        LOG_ERROR("could not decrypt message");
         goto end;
     }
     else
@@ -558,9 +558,10 @@ handle_incoming_onion_routed_message(PEP_SESSION session,
     /* Search for an attachment that looks like the relayed message. */
     bloblist_t *rest;
     for (rest = the_interesting_msg->attachments; rest != NULL; rest = rest->next) {
-        LOG_TRACE("🧅 %s", rest->mime_type);
+        LOG_TRACE("🧅 %s: does this match %s ?", rest->mime_type, PEP_ONION_MESSAGE_MIME_TYPE);
         if (rest->mime_type != NULL
             && ! strcasecmp(rest->mime_type, PEP_ONION_MESSAGE_MIME_TYPE)) {
+            LOG_TRACE("  🧅 YES", rest->mime_type, PEP_ONION_MESSAGE_MIME_TYPE);
             attachment = rest->value;
             attachment_size = rest->size;
             break;
