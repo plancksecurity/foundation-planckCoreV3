@@ -16,7 +16,7 @@
 
 
 #define ONION_DEBUG_SERIALIZE_TO_XER  1
-#define ONION_DEBUG_ENCRYPT           1
+//#define ONION_DEBUG_ENCRYPT           1
 
 
 /* Message serialisation and deserialisation.
@@ -264,14 +264,21 @@ static PEP_STATUS _onion_add_layer(PEP_SESSION session,
                                    message **out_p,
                                    PEP_enc_format enc_format,
                                    PEP_encrypt_flags_t flags,
-                                   pEp_identity *from, pEp_identity *to,
+                                   pEp_identity *own_from,
+                                   pEp_identity *relay_from,
+                                   pEp_identity *relay_to,
                                    bool innermost)
 {
     PEP_REQUIRE(session && in && in->dir == PEP_dir_outgoing && out_p
-                && from && to);
+                && own_from && ! EMPTYSTR(own_from->username)
+                && ! EMPTYSTR(own_from->address)
+                && relay_from && ! EMPTYSTR(relay_from->username)
+                && ! EMPTYSTR(relay_from->address)
+                && relay_to && ! EMPTYSTR(relay_to->username)
+                && ! EMPTYSTR(relay_to->address));
     PEP_STATUS status = PEP_STATUS_OK;
 
-    LOG_TRACE("* innermost: %s.  %s <%s>  ->  %s <%s>", (innermost ? "yes" : "no"), from->username, from->address, to->username, to->address);
+    LOG_TRACE("* innermost: %s.  %s <%s>  ->  %s <%s>", (innermost ? "yes" : "no"), relay_from->username, relay_from->address, relay_to->username, relay_to->address);
 
     /* Initialise the output parameter, for defensiveness's sake.  We will only
        set the actual pointer to a non-NULL value at the end, on success. */
@@ -280,8 +287,9 @@ static PEP_STATUS _onion_add_layer(PEP_SESSION session,
     /* Initialise each local variable so that in case of error we can free them
        all. */
     message *res = NULL;
-    pEp_identity *from_copy = NULL;
-    identity_list *tos_copy = NULL;
+    pEp_identity *own_from_copy = NULL;
+    pEp_identity *relay_from_copy = NULL;
+    identity_list *relay_tos_copy = NULL;
     char *shortmsg = NULL;
     char *longmsg = NULL;
     char *encoded_message = NULL;
@@ -304,14 +312,16 @@ static PEP_STATUS _onion_add_layer(PEP_SESSION session,
         /* Allocate message components, then the message itself.  In case of
            any allocation error go to the end, where we free every non-NULL
            thing unconditionally. */
-        from_copy = identity_dup(from);
-        tos_copy = identity_list_cons_copy(to, NULL);
+        own_from_copy = identity_dup(own_from);
+        relay_from_copy = identity_dup(relay_from);
+        relay_tos_copy = identity_list_cons_copy(relay_to, NULL);
         shortmsg = strdup("🧅");
         longmsg = strdup("This is an onion-routed message.\n"
                          "Please decode the attachment and pass it along.\n");
         res = new_message(PEP_dir_outgoing);
-        if (from_copy == NULL || tos_copy == NULL || shortmsg == NULL
-            || longmsg == NULL
+        if (own_from_copy == NULL
+            || relay_from_copy == NULL || relay_tos_copy == NULL
+            || shortmsg == NULL || longmsg == NULL
             || res == NULL) {
             status = PEP_OUT_OF_MEMORY;
             goto end;
@@ -320,12 +330,12 @@ static PEP_STATUS _onion_add_layer(PEP_SESSION session,
            message heap-allocated fields to NULL, so that we can free the local
            variables unconditionally at the end.  */
         add_opt_field(res, "X-pEp-onion", "yes");
-        res->from = from_copy;
-        res->to = tos_copy;
+        res->from = own_from_copy;
+        res->to = relay_tos_copy;
         res->shortmsg = shortmsg;
         res->longmsg = longmsg;
-        from_copy = NULL;
-        tos_copy = NULL;
+        own_from_copy = NULL;
+        relay_tos_copy = NULL;
         shortmsg = NULL;
         longmsg = NULL;
 
@@ -357,29 +367,41 @@ static PEP_STATUS _onion_add_layer(PEP_SESSION session,
         res->attachments = added_bloblist;
         encoded_message = NULL; /* do not free this twice */
 
-        /* Replace res with an encrypted version of itself. */
 #if defined(ONION_DEBUG_ENCRYPT)
+        /* Replace res with an encrypted version of itself. */
         message *res_encrypted = NULL;
         status
-            = encrypt_message_possibly_with_media_key(session, res, extra,
-                                                      & res_encrypted,
-                                                      enc_format, flags, NULL);
+            = encrypt_message_possibly_with_media_key(
+                 session, res,
+                 /* By design we ignore extra keys in every layer except the
+                    innermost */ NULL,
+                 & res_encrypted,
+                 enc_format, flags, NULL);
         LOG_NONOK_STATUS_NONOK;
         if (status != PEP_STATUS_OK)
             goto end;
         free_message(res);
         res = res_encrypted;
 #endif
+        /* Make a slight change in the outer message: we used our own identity
+           as From when encrypting, so that that we could sign; but after
+           encrypting we should replace the outer-message From to be the sending
+           relay, so that the message looks like an ordinary PGP-encrypted
+           message from relay_from to relay_to. */
+        free_identity(res->from);
+        res->from = relay_from_copy;
+        relay_from_copy = NULL;
     }
 
 end:
     /* Free the temporary data we need to dispose of in either case, success or
-       error. */
+       error.  The ones that we must not free have been set to NULL already. */
     free(encoded_message);
     free(shortmsg);
     free(longmsg);
-    free_identity(from_copy);
-    free_identity_list(tos_copy);
+    free_identity(own_from_copy);
+    free_identity(relay_from_copy);
+    free_identity_list(relay_tos_copy);
 
     if (status == PEP_STATUS_OK)
         * out_p = res;
@@ -430,7 +452,10 @@ DYNAMIC_API PEP_STATUS onionize(PEP_SESSION session,
     for (rest = relays_as_list; rest != NULL; rest = rest->next) {
         if (rest->ident == NULL) continue; /* Ignore silly NULL identities. */
         pEp_identity *identity = rest->ident;
-        if (identity->me) {
+        /* This is also a convenient place to perform some sanity checks on
+           relays. */
+        if (identity->me || EMPTYSTR(identity->username)
+            || EMPTYSTR(identity->address)) {
             status = PEP_ILLEGAL_VALUE;
             goto end;
         }
@@ -445,16 +470,15 @@ DYNAMIC_API PEP_STATUS onionize(PEP_SESSION session,
     for (i = 0; i < layer_no; i ++) {
         /* Decide who From and To are. */
         bool innermost = (i == 0);
-        //bool outermost = (i == layer_no - 1);
-        layer_from = original_from;
+        bool outermost = (i == layer_no - 1);
         if (innermost)
             layer_to = original_to;
         else
             layer_to = relay_array [relay_no - i];
-        //if (outermost)
-        //    layer_from = original_from;
-        //else
-        //    layer_from = relay_array [relay_no - i - 1];
+        if (outermost)
+            layer_from = original_from;
+        else
+            layer_from = relay_array [relay_no - i - 1];
 LOG_TRACE("Layer %i:  from %s  to  %s", i, layer_from->username, layer_to->username);
         /* Wrap the current "out" message into a new layer. */
         message *new_out = NULL;
@@ -465,7 +489,7 @@ LOG_TRACE("Layer %i:  from %s  to  %s", i, layer_from->username, layer_to->usern
                                   flags | (innermost
                                            ? 0
                                            : PEP_encrypt_onion),
-                                  layer_from, layer_to,
+                                  original_from, layer_from, layer_to,
                                   innermost);
         if (status == PEP_STATUS_OK) {
             free_message(out);
