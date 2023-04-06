@@ -539,6 +539,9 @@ handle_incoming_onion_routed_message(PEP_SESSION session,
     message *the_interesting_msg = NULL; /* Equal to one of the previous */
 
     /* Decrypt the message. */
+    // FIXME: aggressively check for correctness here: we do not want to be in
+    // a situation where decrypt_message crashes because we do not satisfy its
+    // requirements.
     stringlist_t *keylist = NULL;
     PEP_decrypt_flags_t flags = PEP_decrypt_flag_ignore_onion;
     status = decrypt_message_2(session, msg, & decrypted_msg,
