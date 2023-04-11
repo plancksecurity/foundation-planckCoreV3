@@ -29,7 +29,7 @@ extern "C" {
 #define PEP_ONION_MESSAGE_MIME_TYPE "application/pEp.onion"
 
 /**
- *  <!--       get_onion_identities()       -->
+ *  <!--       onion_identities()       -->
  *
  *  @brief      Pick random known identities suitable to be used for onion
  *              routing, and provide them to the caller as a list.
@@ -55,10 +55,10 @@ extern "C" {
  *  @retval     PEP_UNKNOWN_DB_ERROR      database error
  *
  */
-DYNAMIC_API PEP_STATUS get_onion_identities(PEP_SESSION session,
-                                            size_t trusted_identity_no,
-                                            size_t total_identity_no,
-                                            identity_list **identities);
+DYNAMIC_API PEP_STATUS onion_identities(PEP_SESSION session,
+                                        size_t trusted_identity_no,
+                                        size_t total_identity_no,
+                                        identity_list **identities);
 
 /**
  *  <!--       onionize()       -->

@@ -149,7 +149,7 @@ PEP_STATUS onion_deserialize_message(PEP_SESSION session,
 /* The implementation of this is in fact completely separate from the rest of
    onion-routing: this is an SQL exercise. */
 
-DYNAMIC_API PEP_STATUS get_onion_identities(
+DYNAMIC_API PEP_STATUS onion_identities(
         PEP_SESSION session,
         size_t trusted_identity_no,
         size_t total_identity_no,
