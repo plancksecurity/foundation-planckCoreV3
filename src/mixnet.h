@@ -103,6 +103,8 @@ DYNAMIC_API PEP_STATUS onionize(PEP_SESSION session,
  *
  *  @brief  encode the given message into a byte array, using an ASN.1
  *          representation.
+ *          The message must be in a state suitable to be sent, with all of
+ *          its mandatory information present.
  *
  *  @param[in]   session    session
  *  @param[in]   in         the message to be encoded.
@@ -110,13 +112,16 @@ DYNAMIC_API PEP_STATUS onionize(PEP_SESSION session,
  *  @param[out]  encoded_size_in_bytes_p
  *                          the encoding length in bytes
  *
- *  @retval      PEP_STATUS_OK  success
- *  @retval      any other value means failure
+ *  @retval      PEP_ILLEGAL_VALUE
+ *                               invalid message, with some mandatory field
+ *                               NULL
+ *  @retval      PEP_STATUS_OK   success
+ *  @retval                      any other value means failure.
  */
-PEP_STATUS onion_serialize_message(PEP_SESSION session,
-                                   message *in,
-                                   char **encoded_p,
-                                   size_t *encoded_size_in_bytes_p);
+DYNAMIC_API PEP_STATUS onion_serialize_message(PEP_SESSION session,
+                                               message *in,
+                                               char **encoded_p,
+                                               size_t *encoded_size_in_bytes_p);
 
 /**
  *  <!--       onion_deserialize_message()       -->
@@ -131,15 +136,38 @@ PEP_STATUS onion_serialize_message(PEP_SESSION session,
  *                          the input byte array length
  *  @param[out]  out_p      the resulting message
  *
- *  @retval      PEP_STATUS_OK  success
+ *  @retval      PEP_STATUS_OK      Success
+ *  @retval      PEP_PEPMESSAGE_ILLEGAL_MESSAGE
+ *                                  Invalid serialised data
+ *  @retval      PEP_OUT_OF_MEMORY  Out of memory.
  *  @retval      any other value means failure
+ *               It may not always be possible to distinguish the error
+ *               condition of PEP_OUT_OF_MEMORY from the error condition of
+ *               PEP_PEPMESSAGE_ILLEGAL_MESSAGE.
  */
-PEP_STATUS onion_deserialize_message(PEP_SESSION session,
-                                     const char *encoded,
-                                     size_t encoded_size_in_bytes,
-                                     message **out_p);
+DYNAMIC_API PEP_STATUS onion_deserialize_message(PEP_SESSION session,
+                                                 const char *encoded,
+                                                 size_t encoded_size_in_bytes,
+                                                 message **out_p);
 
-// FIXME: comment
+/**
+ *  <!--       handle_incoming_onion_routed_message()       -->
+ *
+ *  @brief  Handle an incoming onion-routed message, which has just been
+ *          decrypted and recognised as onion-routed by its outer-message
+ *          header.
+ *          This functions is called by decrypt_message.
+ *
+ *  @param[in]   session    session
+ *  @param[in]   msg        the received message
+ *
+ *  @retval      PEP_STATUS_OK                   success
+ *  @retval      PEP_PEPMESSAGE_ILLEGAL_MESSAGE  ill-formed message
+ *  @retval      any other value means failure
+ *               It may not always be possible to distinguish the error
+ *               condition of PEP_OUT_OF_MEMORY from the error condition of
+ *               PEP_PEPMESSAGE_ILLEGAL_MESSAGE.
+ */
 PEP_STATUS
 handle_incoming_onion_routed_message(PEP_SESSION session,
                                      message *msg);

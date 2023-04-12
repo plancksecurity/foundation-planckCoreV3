@@ -16,7 +16,7 @@
 
 
 //#define ONION_DEBUG_SERIALIZE_TO_XER  1
-// #define ONION_DEBUG_LOG_XER           1
+//#define ONION_DEBUG_LOG_XER           1  // Only used if ONION_DEBUG_SERIALIZE_TO_XER is defined
 //#define ONION_DEBUG_TEST_DESERIALIZE  1
 //#define ONION_DEBUG_NO_ENCRYPT        1
 
@@ -25,10 +25,10 @@
  * ***************************************************************** */
 
 /* Turn the given message into a compact in-memory representation using ASN.1. */
-PEP_STATUS onion_serialize_message(PEP_SESSION session,
-                                   message *in,
-                                   char **encoded_p,
-                                   size_t *encoded_size_in_bytes_p)
+DYNAMIC_API PEP_STATUS onion_serialize_message(PEP_SESSION session,
+                                               message *in,
+                                               char **encoded_p,
+                                               size_t *encoded_size_in_bytes_p)
 {
     PEP_REQUIRE(session && in && encoded_p && encoded_size_in_bytes_p);
 
@@ -46,7 +46,7 @@ PEP_STATUS onion_serialize_message(PEP_SESSION session,
        to the ASN.1 struct in memory, and from that to PER. */
     in_as_ASN1Message_t = ASN1Message_from_message(in, NULL, true, 0);
     if (in_as_ASN1Message_t == NULL) {
-        status = PEP_OUT_OF_MEMORY;
+        status = PEP_ILLEGAL_VALUE;
         goto end;
     }
     status = encode_ASN1Message_message(in_as_ASN1Message_t, & encoded, & encoded_size_in_bytes);
@@ -87,10 +87,10 @@ PEP_STATUS onion_serialize_message(PEP_SESSION session,
 }
 
 /* Turn the given in-memory ASN.1 object into a pEp message. */
-PEP_STATUS onion_deserialize_message(PEP_SESSION session,
-                                     const char *encoded,
-                                     size_t encoded_size_in_bytes,
-                                     message **out_p)
+DYNAMIC_API PEP_STATUS onion_deserialize_message(PEP_SESSION session,
+                                                 const char *encoded,
+                                                 size_t encoded_size_in_bytes,
+                                                 message **out_p)
 {
     PEP_REQUIRE(session && encoded && encoded_size_in_bytes > 0
                 && out_p);
