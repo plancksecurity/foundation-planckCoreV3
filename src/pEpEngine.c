@@ -1630,68 +1630,70 @@ DYNAMIC_API PEP_STATUS set_identity(
 
     int result;
     PEP_STATUS status = PEP_STATUS_OK;
-    
     bool has_fpr = (!EMPTYSTR(identity->fpr));
-    
+
     if (identity->lang[0]) {
         PEP_ASSERT(identity->lang[0] >= 'a' && identity->lang[0] <= 'z');
         PEP_ASSERT(identity->lang[1] >= 'a' && identity->lang[1] <= 'z');
         PEP_ASSERT(identity->lang[2] == 0);
     }
 
+#define FAIL(_status)            \
+    do {                         \
+        status = (_status);      \
+        LOG_NONOK_STATUS_NONOK;  \
+        goto end;                \
+    } while (false)
+#define FAIL_IF_NEEDED                \
+    do {                              \
+        if (status != PEP_STATUS_OK)  \
+            FAIL(status);             \
+    } while (false)
+
+    sql_reset_and_clear_bindings(session->set_pgp_keypair);
     PEP_SQL_BEGIN_EXCLUSIVE_TRANSACTION();
     if (has_fpr) {
-        sql_reset_and_clear_bindings(session->set_pgp_keypair);
         sqlite3_bind_text(session->set_pgp_keypair, 1, identity->fpr, -1,
-                SQLITE_STATIC);
+                          SQLITE_STATIC);
         result = sqlite3_step(session->set_pgp_keypair);
         PEP_ASSERT(result != SQLITE_BUSY && result != SQLITE_LOCKED); // we are inside an EXCLUSIVE transaction
-        sql_reset_and_clear_bindings(session->set_pgp_keypair);
-        if (result != SQLITE_DONE) {
-            PEP_SQL_ROLLBACK_TRANSACTION();
-            return PEP_CANNOT_SET_PGP_KEYPAIR;
-        }
+        if (result != SQLITE_DONE)
+            FAIL(PEP_CANNOT_SET_PGP_KEYPAIR);
     }
 
     // We do this because there are checks in set_person for
     // aliases, which modify the identity object on return.
     pEp_identity* ident_copy = identity_dup(identity); 
     if (!ident_copy)
-        return PEP_OUT_OF_MEMORY;
+        FAIL(PEP_OUT_OF_MEMORY);
 
     // For now, we ALWAYS set the person.username.
     status = set_person(session, ident_copy, false);
-    if (status != PEP_STATUS_OK) {
-        PEP_SQL_ROLLBACK_TRANSACTION();
-        goto pEp_free;
-    }
+    FAIL_IF_NEEDED;
 
     status = set_identity_entry(session, ident_copy, false);
-    if (status != PEP_STATUS_OK) {
-        PEP_SQL_ROLLBACK_TRANSACTION();
-        goto pEp_free;
-    }
+    FAIL_IF_NEEDED;
 
     if (has_fpr) {
         status = _set_trust_internal(session, ident_copy, false);
-        if (status != PEP_STATUS_OK) {
-            PEP_SQL_ROLLBACK_TRANSACTION();
-            goto pEp_free;
-        }
+        FAIL_IF_NEEDED;
     }
-    
-    status = set_protocol_version(session, ident_copy, ident_copy->major_ver, ident_copy->minor_ver);
-    if (status != PEP_STATUS_OK) {
-        PEP_SQL_ROLLBACK_TRANSACTION();
-        goto pEp_free;            
-    }
-    
-    PEP_SQL_COMMIT_TRANSACTION();
-    status = PEP_STATUS_OK;
 
-pEp_free:
+    status = set_protocol_version(session, ident_copy, ident_copy->major_ver, ident_copy->minor_ver);
+    FAIL_IF_NEEDED;
+
+end:
     free_identity(ident_copy);
+    sql_reset_and_clear_bindings(session->set_pgp_keypair);
+    LOG_NONOK_STATUS_NONOK;
+    if (status == PEP_STATUS_OK)
+        PEP_SQL_COMMIT_TRANSACTION();
+    else
+        PEP_SQL_ROLLBACK_TRANSACTION();
+
     return status;
+#undef FAIL
+#undef FAIL_IF_NEEDED
 }
 
 //static const char* sql_force_set_identity_username =
