@@ -156,7 +156,7 @@ PEP_STATUS pEp_backoff_state_finalize(
    The user should write her C code containing SQLite statements to be repeated
    within a single scope delimited by a call to PEP_SQL_BEGIN_LOOP and a call to
    PEP_SQL_END_LOOP .  For example:
-      int sqlite_status = SQLITE_OK;
+      int sqlite_status;
       PEP_SQL_BEGIN_LOOP(sqlite_status);
       sqlite_status = sqlite3_exec(db, "INSERT INTO Foo (foo) VALUES (42);",
                                    NULL, NULL, NULL);
@@ -192,6 +192,7 @@ PEP_STATUS pEp_backoff_state_finalize(
                                      _pEp_sql_begin_location);                  \
         int *_pEp_sql_sqlite_status_address = & (sqlite_status_lvalue);         \
         bool _pEp_sql_run_the_inner_loop_body_once_more = true;                 \
+        * _pEp_sql_sqlite_status_address = SQLITE_OK;                           \
         do { /* Inner loop beginning... */                                      \
             /* After the expansion of this macro comes the user C code to be    \
                tried multiple times.  Looking at macroexpanded the user C code  \
