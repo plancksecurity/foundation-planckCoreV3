@@ -7,6 +7,9 @@
   https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/133 ; I was able
   to see that problem again after upgrading to the latest Thunderbird, but not
   even that should be solved.
+* Add the pEp-engine-print-log script, useful to print database-destination logs
+  in a compact textual format.  This simple bash script is useful for developers
+  and possibly service people.
 
 v3.2.1  2023-03-23
 * DEPENDENCIES: require an official release of libpEpTransport.

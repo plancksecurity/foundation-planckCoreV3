@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Copyright 2023  pEp foundation, Switzerland
+# This file is part of the pEp Engine
+# This file is released under the terms of the GNU GPLv3
+
+# This is a simple script intended for developers and service people printing
+# p≡p Engine log from the log database, either in the current directory if a
+# suitable filename exists, or in the current user's log database.
+
+limit='-1'
+
+if test -e log.db; then
+    pathname=log.db
+else
+    pathname=$HOME/dot-pep-v3/log.db
+fi
+
+echo "SELECT PidTid, Timestamp, Lvl, Location, Entry FROM UserEntries LIMIT $limit;" \
+    | sqlite3 -readonly -noheader -list -separator ' ' \
+              "$pathname" \
+    | sed 's/\t /g/'
+
