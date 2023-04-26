@@ -10,6 +10,7 @@
 * Add the pEp-engine-print-log script, useful to print database-destination logs
   in a compact textual format.  This simple bash script is useful for developers
   and possibly service people.
+* Be consistently case-insensitive when handling header names and MIME types.
 
 v3.2.1  2023-03-23
 * DEPENDENCIES: require an official release of libpEpTransport.
