@@ -118,6 +118,7 @@ DYNAMIC_API PEP_STATUS init(
         PEP_SESSION session = _session;         \
         name("p≡p", "Engine", "" __VA_ARGS__);  \
     } while (false)
+#define _LOG_CRITICAL(...) _INTERNAL_LOG_WITH_MACRO_NAME(PEP_LOG_CRITICAL, __VA_ARGS__)
 #define _LOG_ERROR(...)  _INTERNAL_LOG_WITH_MACRO_NAME(PEP_LOG_ERROR, __VA_ARGS__)
 #define _LOG_EVENT(...)  _INTERNAL_LOG_WITH_MACRO_NAME(PEP_LOG_EVENT, __VA_ARGS__)
 #define _LOG_API(...)    _INTERNAL_LOG_WITH_MACRO_NAME(PEP_LOG_API, __VA_ARGS__)
@@ -152,7 +153,16 @@ DYNAMIC_API PEP_STATUS init(
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
-    _LOG_EVENT("p≡p Engine version %s   protocol version %s", PEP_ENGINE_VERSION, PEP_PROTOCOL_VERSION);
+    // Make sure that we have been consistent in linking a version SQLite3
+    // maching its headers.
+    if (sqlite3_libversion_number() == SQLITE_VERSION_NUMBER) {
+        _LOG_CRITICAL("inconsistent SQLite: library %li headers %li",
+                      (long) sqlite3_libversion_number(), (long) SQLITE_VERSION_NUMBER);
+        assert(false);
+    }
+    _LOG_EVENT("p≡p Engine %s   protocol %s   SQLite %s",
+               PEP_ENGINE_VERSION, PEP_PROTOCOL_VERSION,
+               sqlite3_libversion());
     _LOG_API("initialise session %p", _session);
 
     // runtime config
