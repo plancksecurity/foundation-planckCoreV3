@@ -275,15 +275,6 @@ local_wait_time += _pEp_sql_backoff_state.total_time_slept_in_ms;*/ \
         /* Begin the exclusive transaction, inside an SQL loop: this is where   \
            we spinlock with exponential backoff. */                             \
         PEP_SQL_BEGIN_LOOP(_pEp_sql_sqlite_status);                             \
-            /* Ignore the return value of sqlite3_reset: if the last            \
-               sqlite3_step on the statement returned an error, this            \
-               sqlite3_reset will return the same error: we certainly do not    \
-               want to see SQLITE_BUSY here for no reason.                      \
-               I am in fact not at all sure that we need to reset inside this   \
-               loop.  I am being very defensive here, in the hope of solving    \
-               the particularly difficult to reproduce problem in               \
-               https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/133 \
-               . */                                                             \
             _pEp_sql_sqlite_status                                              \
                 = sqlite3_step(session->begin_exclusive_transaction);           \
             if (_pEp_sql_sqlite_status != SQLITE_DONE)                          \
