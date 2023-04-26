@@ -155,7 +155,7 @@ DYNAMIC_API PEP_STATUS init(
 
     // Make sure that we have been consistent in linking a version SQLite3
     // maching its headers.
-    if (sqlite3_libversion_number() == SQLITE_VERSION_NUMBER) {
+    if (sqlite3_libversion_number() != SQLITE_VERSION_NUMBER) {
         _LOG_CRITICAL("inconsistent SQLite: library %li headers %li",
                       (long) sqlite3_libversion_number(), (long) SQLITE_VERSION_NUMBER);
         assert(false);
