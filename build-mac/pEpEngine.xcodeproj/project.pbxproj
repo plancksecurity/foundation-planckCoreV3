@@ -256,16 +256,14 @@
 		156AFEB82672089100AF0039 /* libetpan.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64289E351B8B630200FC617B /* libetpan.a */; };
 		15A3233E260E0D2A009D07EB /* libpEpASN1_iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15A322F7260E0B75009D07EB /* libpEpASN1_iOS.a */; };
 		15A32429260E1873009D07EB /* libpEpASN1_macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15A322F5260E0B75009D07EB /* libpEpASN1_macOS.a */; };
-		432210142924C58600AE872F /* libgmp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1585EF4026A08A9800B822E1 /* libgmp.a */; };
 		432210342924C65A00AE872F /* media_key.c in Sources */ = {isa = PBXBuildFile; fileRef = 432210332924C65A00AE872F /* media_key.c */; };
 		432210352924C65A00AE872F /* media_key.c in Sources */ = {isa = PBXBuildFile; fileRef = 432210332924C65A00AE872F /* media_key.c */; };
 		4322103D2924C94A00AE872F /* echo_api.c in Sources */ = {isa = PBXBuildFile; fileRef = 4322103C2924C94A00AE872F /* echo_api.c */; };
 		4322103E2924C94A00AE872F /* echo_api.c in Sources */ = {isa = PBXBuildFile; fileRef = 4322103C2924C94A00AE872F /* echo_api.c */; };
 		432210402924C97E00AE872F /* pEp_log.c in Sources */ = {isa = PBXBuildFile; fileRef = 4322103F2924C97E00AE872F /* pEp_log.c */; };
 		432210412924C97E00AE872F /* pEp_log.c in Sources */ = {isa = PBXBuildFile; fileRef = 4322103F2924C97E00AE872F /* pEp_log.c */; };
+		43A7D64629DD9BA10031FECB /* libbotan-2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 43A7D64529DD9BA10031FECB /* libbotan-2.a */; };
 		43B2AD612923EE2500D8C6F8 /* libpep_engine_sequoia_backend.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 43B2AD422923EE2500D8C6F8 /* libpep_engine_sequoia_backend.a */; };
-		43B2AD8C2923EF0000D8C6F8 /* libnettle.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1585EF4126A08A9800B822E1 /* libnettle.a */; };
-		43B2AD8D2923F05300D8C6F8 /* libhogweed.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1585EF4226A08A9800B822E1 /* libhogweed.a */; };
 		43C1FB1A29952A1200336111 /* sql_reliability.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C1FAF829952A1200336111 /* sql_reliability.h */; };
 		43C1FB1B29952A1200336111 /* sql_reliability.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C1FAF829952A1200336111 /* sql_reliability.h */; };
 		43C1FB1C29952A1200336111 /* pEp_rmd160.c in Sources */ = {isa = PBXBuildFile; fileRef = 43C1FB1729952A1200336111 /* pEp_rmd160.c */; };
@@ -574,6 +572,9 @@
 		432210332924C65A00AE872F /* media_key.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = media_key.c; path = ../src/media_key.c; sourceTree = "<group>"; };
 		4322103C2924C94A00AE872F /* echo_api.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = echo_api.c; path = ../src/echo_api.c; sourceTree = "<group>"; };
 		4322103F2924C97E00AE872F /* pEp_log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pEp_log.c; path = ../src/pEp_log.c; sourceTree = "<group>"; };
+		43A7D64529DD9BA10031FECB /* libbotan-2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libbotan-2.a"; path = "../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libbotan-2.a"; sourceTree = "<group>"; };
+		43A7D64729DD9C1D0031FECB /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
+		43A7D64929DD9CAB0031FECB /* libc++.1.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.1.tbd"; path = "usr/lib/libc++.1.tbd"; sourceTree = SDKROOT; };
 		43B2AD422923EE2500D8C6F8 /* libpep_engine_sequoia_backend.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpep_engine_sequoia_backend.a; path = "../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libpep_engine_sequoia_backend.a"; sourceTree = "<group>"; };
 		43C1FAF829952A1200336111 /* sql_reliability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sql_reliability.h; path = ../src/sql_reliability.h; sourceTree = "<group>"; };
 		43C1FB1729952A1200336111 /* pEp_rmd160.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pEp_rmd160.c; path = ../src/pEp_rmd160.c; sourceTree = "<group>"; };
@@ -615,9 +616,7 @@
 				15A3233E260E0D2A009D07EB /* libpEpASN1_iOS.a in Frameworks */,
 				6400FB8B1B8CA1CF005221E3 /* libetpan-ios.a in Frameworks */,
 				43B2AD612923EE2500D8C6F8 /* libpep_engine_sequoia_backend.a in Frameworks */,
-				432210142924C58600AE872F /* libgmp.a in Frameworks */,
-				43B2AD8C2923EF0000D8C6F8 /* libnettle.a in Frameworks */,
-				43B2AD8D2923F05300D8C6F8 /* libhogweed.a in Frameworks */,
+				43A7D64629DD9BA10031FECB /* libbotan-2.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -627,6 +626,9 @@
 		154917EB22B926080091B6D6 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				43A7D64929DD9CAB0031FECB /* libc++.1.tbd */,
+				43A7D64729DD9C1D0031FECB /* libc++.tbd */,
+				43A7D64529DD9BA10031FECB /* libbotan-2.a */,
 				43B2AD422923EE2500D8C6F8 /* libpep_engine_sequoia_backend.a */,
 				1585EF4026A08A9800B822E1 /* libgmp.a */,
 				1585EF4226A08A9800B822E1 /* libhogweed.a */,
@@ -1692,7 +1694,7 @@
 				LIBRARY_SEARCH_PATHS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib";
 				New_Setting = "";
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -1931,7 +1933,7 @@
 				LIBRARY_SEARCH_PATHS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib";
 				New_Setting = "";
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -1954,7 +1956,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = "${inherited}";
 				LIBRARY_SEARCH_PATHS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib";
 				New_Setting = "";
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
