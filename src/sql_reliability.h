@@ -156,7 +156,7 @@ PEP_STATUS pEp_backoff_state_finalize(
    The user should write her C code containing SQLite statements to be repeated
    within a single scope delimited by a call to PEP_SQL_BEGIN_LOOP and a call to
    PEP_SQL_END_LOOP .  For example:
-      int sqlite_status = SQLITE_OK;
+      int sqlite_status;
       PEP_SQL_BEGIN_LOOP(sqlite_status);
       sqlite_status = sqlite3_exec(db, "INSERT INTO Foo (foo) VALUES (42);",
                                    NULL, NULL, NULL);
@@ -192,6 +192,7 @@ PEP_STATUS pEp_backoff_state_finalize(
                                      _pEp_sql_begin_location);                  \
         int *_pEp_sql_sqlite_status_address = & (sqlite_status_lvalue);         \
         bool _pEp_sql_run_the_inner_loop_body_once_more = true;                 \
+        * _pEp_sql_sqlite_status_address = SQLITE_OK;                           \
         do { /* Inner loop beginning... */                                      \
             /* After the expansion of this macro comes the user C code to be    \
                tried multiple times.  Looking at macroexpanded the user C code  \
@@ -266,24 +267,20 @@ local_wait_time += _pEp_sql_backoff_state.total_time_slept_in_ms;*/ \
 #define PEP_SQL_BEGIN_EXCLUSIVE_TRANSACTION()                                   \
     do {                                                                        \
         int _pEp_sql_sqlite_status;                                             \
+        /* First reset the statement; we can and in fact should ignore the      \
+           return value of this, which may be an error or even SQLITE_BUSY,     \
+           referred to the previous execution.  The reset operation itself      \
+           cannot fail. */                                                      \
+        sqlite3_reset(session->begin_exclusive_transaction);                    \
+        LOG_TRACE("PEP_SQL_BEGIN_EXCLUSIVE_TRANSACTION: trying...");            \
         /* Begin the exclusive transaction, inside an SQL loop: this is where   \
            we spinlock with exponential backoff. */                             \
         PEP_SQL_BEGIN_LOOP(_pEp_sql_sqlite_status);                             \
-            LOG_TRACE("in PEP_SQL_BEGIN_EXCLUSIVE_TRANSACTION loop, early");    \
-            /* Ignore the return value of sqlite3_reset: if the last            \
-               sqlite3_step on the statement returned an error, this            \
-               sqlite3_reset will return the same error: we certainly do not    \
-               want to see SQLITE_BUSY here for no reason.                      \
-               I am in fact not at all sure that we need to reset inside this   \
-               loop.  I am being very defensive here, in the hope of solving    \
-               the particularly difficult to reproduce problem in               \
-               https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/133 \
-               . */                                                             \
-            sqlite3_reset(session->begin_exclusive_transaction);                \
             _pEp_sql_sqlite_status                                              \
                 = sqlite3_step(session->begin_exclusive_transaction);           \
-            LOG_TRACE("in PEP_SQL_BEGIN_EXCLUSIVE_TRANSACTION loop with "       \
-                      "sqlite status %i", _pEp_sql_sqlite_status);              \
+            if (_pEp_sql_sqlite_status != SQLITE_DONE)                          \
+                LOG_TRACE("PEP_SQL_BEGIN_EXCLUSIVE_TRANSACTION: loop with "     \
+                          "sqlite status %i", _pEp_sql_sqlite_status);          \
         PEP_SQL_END_LOOP();                                                     \
         /* After this point we must have opened the transaction with success.   \
            Make sure something unexpected has not happened. */                  \
@@ -293,6 +290,7 @@ local_wait_time += _pEp_sql_backoff_state.total_time_slept_in_ms;*/ \
             LOG_ERROR("UNEXPECTED error on BEGIN EXCLUSIVE TRANSACTION: %i %s", \
                       _pEp_sql_sqlite_status, sqlite3_errmsg(session->db));     \
         PEP_ASSERT(_pEp_sql_sqlite_status == SQLITE_DONE);                      \
+        LOG_TRACE("PEP_SQL_BEGIN_EXCLUSIVE_TRANSACTION: ...success");           \
     } while (false)
 
 /* This macro factors the common logic of PEP_SQL_COMMIT_TRANSACTION and
@@ -323,6 +321,8 @@ local_wait_time += _pEp_sql_backoff_state.total_time_slept_in_ms;*/ \
                       (_pEp_bool_commit ? "COMMIT" : "ROLLBACK"),               \
                       _pEp_sql_sqlite_status, sqlite3_errmsg(session->db));     \
         PEP_ASSERT(_pEp_sql_sqlite_status == SQLITE_DONE);                      \
+        LOG_TRACE("PEP_SQL_%s_TRANSACTION: success",                            \
+                  (_pEp_bool_commit ? "COMMIT" : "ROLLBACK"));                  \
     } while (false)
 
 /**
