@@ -37,7 +37,7 @@ static const char *sql_begin_exclusive_transaction MAYBE_UNUSED =
 static const char *sql_commit_transaction MAYBE_UNUSED =
         "COMMIT TRANSACTION;";
 static const char *sql_rollback_transaction MAYBE_UNUSED =
-        "COMMIT TRANSACTION;";
+        "ROLLBACK TRANSACTION;";
 
 static const char *sql_log MAYBE_UNUSED =
         "insert into log (title, entity, description, comment)"
