@@ -994,6 +994,12 @@ static inline void set_max_version(unsigned int first_maj, unsigned int first_mi
 #define EMPTYSTR(STR) ((STR) == NULL || (STR)[0] == '\0')
 #endif
 
+/* Return either the argument or a pointer to a statically-allocated empty
+   string.  The expansion never allocates memory with malloc. */
+#ifndef ASNONEMPTYSTR
+#define ASNONEMPTYSTR(str) (EMPTYSTR(str) ? "" : (str))
+#endif
+
 #ifndef PASS_ERROR
 #define PASS_ERROR(ST) (ST == PEP_PASSPHRASE_REQUIRED || ST == PEP_WRONG_PASSPHRASE || ST == PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED)
 #endif
