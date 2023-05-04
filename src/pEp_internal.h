@@ -1001,10 +1001,12 @@ static inline void set_max_version(unsigned int first_maj, unsigned int first_mi
 #define EMPTYSTR(STR) ((STR) == NULL || (STR)[0] == '\0')
 #endif
 
-/* Return either the argument or a pointer to a statically-allocated empty
-   string.  The expansion never allocates memory with malloc. */
-#ifndef ASNONEMPTYSTR
-#define ASNONEMPTYSTR(str) (EMPTYSTR(str) ? "" : (str))
+/* Expand to an expression evaluating to the argument if non-NULL, and to a
+   pointer to a statically-allocated empty string otherwise.  The expansion
+   never allocates memory with malloc.  The expansion may evaluate the macro
+   argument more than once. */
+#ifndef ASNONNULLSTR
+#define ASNONNULLSTR(str) ((str == NULL) ? "" : (str))
 #endif
 
 #ifndef PASS_ERROR

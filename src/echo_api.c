@@ -249,7 +249,7 @@ static PEP_STATUS make_sure_identity_exists(PEP_SESSION session,
         goto end;
     /* ...If we arrived here we can be sure that the identity exists in the
        database.  */
-    LOG_TRACE("we made sure that %s <%s> exists, but...", ASNONEMPTYSTR(identity->username), ASNONEMPTYSTR(identity->address));
+    LOG_TRACE("we made sure that %s <%s> exists, but...", ASNONNULLSTR(identity->username), ASNONNULLSTR(identity->address));
     LOG_TRACE("...FIXME: I am not sure this actually writes what it should.");
 
  end:
@@ -312,7 +312,7 @@ static PEP_STATUS echo_get_below_rate_limit(PEP_SESSION session,
         = pEp_sqlite3_step_nonbusy(session,
                                    session->echo_get_echo_below_rate_limit);
     ON_SQL_ERROR_SET_STATUS_AND_GOTO;
-    LOG_TRACE("speaking about %s <%s>: sql_status is %i %s", ASNONEMPTYSTR(identity->username), ASNONEMPTYSTR(identity->address), sql_status, sqlite3_errmsg(session->db));
+    LOG_TRACE("speaking about %s <%s>: sql_status is %i %s", ASNONNULLSTRING(identity->username), ASNONNULLSTRING(identity->address), sql_status, sqlite3_errmsg(session->db));
     PEP_ASSERT(   (/* one-row result */
                    sql_status == SQLITE_ROW)
                || (/* no-row result: identity unknown: this should not happen
