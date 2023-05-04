@@ -22,10 +22,6 @@
 #include <inttypes.h> /* For PRId64 */
 #include <string.h>
 
-/* In this module we do not use PEP_SQL_BEGIN_LOOP and PEP_SQL_END_LOOP except
-   at initialisation (when logging to database is not enabled yet), in order to
-   avoid database writes as side effects of failed database writes. */
-
 
 /* Using transactions is not terribly important for semantics in this case, but
    here it makes performance better when the oldest row is being deleted, as one
@@ -169,21 +165,41 @@ static const char* _log_level_to_string(PEP_LOG_LEVEL level)
 /* Logging facility: database destination.
  * ***************************************************************** */
 
+/* In this module we do not use PEP_SQL_BEGIN_LOOP and PEP_SQL_END_LOOP as
+   defined elsewhere, in order to avoid database writes as side effects of
+   failed database writes.
+   Define a simplified version here. */
+#undef PEP_SQL_BEGIN_LOOP
+#undef PEP_SQL_END_LOOP
+#define PEP_SQL_BEGIN_LOOP  \
+    do {
+#define PEP_SQL_END_LOOP                    \
+        do {                                \
+            WARN_ON_SQLITE_ERROR;           \
+        } while (false);                    \
+    } while (sqlite_status == SQLITE_BUSY)
+
 /* This compilation unit is defensive to a degree that appears unreasonable;
    yet its defensiveness has allowed me to find subtle bugs with ease, time
    and time again. */
-#define WARN_ON_ERROR                                                       \
+#define WARN_ON_SQLITE_ERROR                                                \
     do {                                                                    \
         if (session->service_log                                            \
             && sqlite_status != SQLITE_OK                                   \
-            && sqlite_status != SQLITE_DONE)                                \
-            fprintf(stderr, "ERROR %s:%i %s: sql_error %i: %s\n",           \
-                    __FILE__, (int) __LINE__, __func__,                     \
+            && sqlite_status != SQLITE_DONE) {                              \
+            struct pEp_pid_and_tid _warning_pid_and_tid;                    \
+            pEp_set_pid_and_tid(& _warning_pid_and_tid);                    \
+            fprintf(stderr, "%li,%li %s:%i %s sql_error is %i (%s)\n",      \
+                    (long) _warning_pid_and_tid.pid,                        \
+                    (long) _warning_pid_and_tid.tid,                        \
+                    __FILE__, __LINE__, __func__,                           \
                     (int) sqlite_status, sqlite3_errmsg(session->log_db));  \
+            fflush(stderr);                                                 \
+            PEP_ASSERT(sqlite_status != SQLITE_LOCKED);                     \
+        }                                                                   \
     } while (false)
 
-/* A safe wrapper around sqlite3_prepare_v2 , which retries on SQLITE_BUSY and
-   SQLITE_LOCKED. */
+/* A safe wrapper around sqlite3_prepare_v2 , which retries on SQLITE_BUSY. */
 static int _safe_sqlite3_prepare_v2(
   PEP_SESSION session,
   sqlite3 *db,            /* Database handle */
@@ -194,15 +210,16 @@ static int _safe_sqlite3_prepare_v2(
 ) {
     int sqlite_status;
     int failure_no = 0;
-    PEP_SQL_BEGIN_LOOP(sqlite_status);
+    PEP_SQL_BEGIN_LOOP;
         sqlite_status = sqlite3_prepare_v2(db, zSql, nByte, ppStmt, pzTail);
-        if (sqlite_status == SQLITE_BUSY || sqlite_status == SQLITE_LOCKED) {
+        assert(sqlite_status != SQLITE_LOCKED);
+        if (sqlite_status == SQLITE_BUSY) {
             fprintf(stderr, "failed preparing the statement %s: trying again\n",
                     zSql);
             failure_no ++;
         }
-    WARN_ON_ERROR;
-    PEP_SQL_END_LOOP();
+        WARN_ON_SQLITE_ERROR;
+    PEP_SQL_END_LOOP;
     assert(sqlite_status == SQLITE_OK);
     if (failure_no > 0)
         fprintf(stderr, "succeeded preparing the statement %s after %i failures\n",
@@ -307,6 +324,9 @@ static const char *pEp_log_initialize_database_at_every_connection_text =
 " PRAGMA secure_delete = OFF;\n"
 /* There is no need for PRAGMA foreign_keys on a single-table database with no
    foreign keys. */
+
+" PRAGMA locking_mode=NORMAL;\n"
+" PRAGMA journal_mode=WAL;\n"
 ;
 
 /* Begin a transaction. */
@@ -363,7 +383,7 @@ static PEP_STATUS _pEp_log_prepare_sql_statements(PEP_SESSION session)
                     sqlite3_errmsg(session->log_db));                   \
         }                                                               \
         if (sqlite_status != SQLITE_OK) {      \
-            WARN_ON_ERROR;                     \
+            WARN_ON_SQLITE_ERROR;              \
             status = PEP_INIT_CANNOT_OPEN_DB;  \
             goto end;                          \
         }                                      \
@@ -421,16 +441,17 @@ PEP_STATUS pEp_log_set_synchronous_database(PEP_SESSION session,
         = (synchronous
            ? pEp_log_set_synchronous_text
            : pEp_log_set_asynchronous_text);
-    PEP_SQL_BEGIN_LOOP(sqlite_status);
+    PEP_SQL_BEGIN_LOOP;
         sqlite_status = sqlite3_exec(session->log_db,
                                      sql_statement_text,
                                      NULL, NULL, NULL);
 #if 0
         fprintf(stderr, "OK-A 2100 sqlite_status is %i %s\n", sqlite_status, sqlite3_errmsg(session->log_db));
 #endif
-    PEP_SQL_END_LOOP();
+    PEP_SQL_END_LOOP;
 
-    if (sqlite_status == SQLITE_BUSY || sqlite_status == SQLITE_LOCKED) {
+    assert(sqlite_status != SQLITE_LOCKED);
+    if (sqlite_status == SQLITE_BUSY) {
         status = PEP_INIT_CANNOT_OPEN_DB;
         fprintf(stderr, "failed initialising the log database: "
                 "sqlite_status %i, %s\n",
@@ -497,7 +518,8 @@ static PEP_STATUS _pEp_log_initialize_database(PEP_SESSION session)
 #if 0
         fprintf(stderr, "OK-A 1100 sqlite_status is %i %s\n", sqlite_status, sqlite3_errmsg(session->log_db));
 #endif
-        if (sqlite_status == SQLITE_BUSY || sqlite_status == SQLITE_LOCKED) {
+        assert(sqlite_status != SQLITE_LOCKED);
+        if (sqlite_status == SQLITE_BUSY) {
             status = PEP_INIT_CANNOT_OPEN_DB;
             goto end;
         }
@@ -514,12 +536,12 @@ static PEP_STATUS _pEp_log_initialize_database(PEP_SESSION session)
 
     /* Execute the SQL statements needed for every session, not only for the
        first. */
-    PEP_SQL_BEGIN_LOOP(sqlite_status);
+    PEP_SQL_BEGIN_LOOP;
         sqlite_status
             = sqlite3_exec(session->log_db,
                            pEp_log_initialize_database_at_every_connection_text,
                            NULL, NULL, NULL);
-    PEP_SQL_END_LOOP();
+    PEP_SQL_END_LOOP;
 
     /* Prepare SQL statements. */
     status = _pEp_log_prepare_sql_statements(session);
@@ -554,7 +576,7 @@ static PEP_STATUS _pEp_log_finalize_database(PEP_SESSION session)
     int sqlite_status = SQLITE_OK;
 #define CHECK_SQL                                                        \
     do {                                                                 \
-        WARN_ON_ERROR;                                                   \
+        WARN_ON_SQLITE_ERROR;                                            \
         if (sqlite_status != SQLITE_OK) {                                \
             status = PEP_UNKNOWN_DB_ERROR;                               \
             /* Do not jump.  Recovery from error is difficult here, and  \
@@ -605,11 +627,11 @@ static void _pEp_log_delete_oldest_row_when_too_many(PEP_SESSION session)
                              1, PEP_LOG_DATABASE_ROW_NO_MAXIMUM);
     if (sqlite_status != SQLITE_OK)
         return;
-    do {
+    PEP_SQL_BEGIN_LOOP;
         sqlite_status
             = sqlite3_step(session->log_delete_oldest_prepared_statement);
-        WARN_ON_ERROR;
-    } while (sqlite_status == SQLITE_BUSY || sqlite_status == SQLITE_LOCKED);
+    PEP_SQL_END_LOOP;
+    sqlite3_reset(session->log_delete_oldest_prepared_statement);
 
     /* Here sqlite_status will be SQLITE_DONE on success, including the case in
        which no row is deleted. */
@@ -631,22 +653,25 @@ static PEP_STATUS _pEp_log_db(PEP_SESSION session,
                               const char *entry_prefix,
                               const char *entry)
 {
+    /* We cannot use PEP_REQUIRE here without risking an infinite loop. */
+    assert(session != NULL && PEP_IMPLIES(session->log_database_initialised,
+                                          session->log_db != NULL));
+    if (! (session != NULL && PEP_IMPLIES(session->log_database_initialised,
+                                          session->log_db != NULL)))
+        return PEP_ILLEGAL_VALUE;
+
     /* Do not try to log to the database  if we have not initialised the
        database yet.  This may happen for logging messages related to the
        database initialisation itself. */
     if (! session->log_database_initialised)
         return PEP_UNKNOWN_DB_ERROR;
 
-    assert(session != NULL && session->log_db != NULL);
-    if (! (session != NULL && session->log_db != NULL))
-        return PEP_ILLEGAL_VALUE;
-
     PEP_STATUS status = PEP_STATUS_OK;
     int sqlite_status = SQLITE_OK;
 #define CHECK_SQL(expected_sqlite_status)                 \
     do                                                    \
         if (sqlite_status != (expected_sqlite_status)) {  \
-            WARN_ON_ERROR;                                \
+            WARN_ON_SQLITE_ERROR;                         \
             status = PEP_UNKNOWN_DB_ERROR;                \
             goto error;                                   \
         }                                                 \
@@ -654,9 +679,10 @@ static PEP_STATUS _pEp_log_db(PEP_SESSION session,
 
 #ifdef TRANSACTIONS
     sql_reset_and_clear_bindings(session->log_begin_transaction_prepared_statement);
-    do
+    PEP_SQL_BEGIN_LOOP;
         sqlite_status = sqlite3_step(session->log_begin_transaction_prepared_statement);
-    while (sqlite_status == SQLITE_BUSY || sqlite_status == SQLITE_LOCKED);
+    PEP_SQL_END_LOOP;
+    sqlite3_reset(session->log_begin_transaction_prepared_statement);
     CHECK_SQL(SQLITE_DONE);
 #endif // #ifdef TRANSACTIONS
 
@@ -696,17 +722,19 @@ static PEP_STATUS _pEp_log_db(PEP_SESSION session,
                                       SQLITE_STATIC);
     CHECK_SQL(SQLITE_OK);
 
-    do
+    PEP_SQL_BEGIN_LOOP;
         sqlite_status = sqlite3_step(session->log_insert_prepared_statement);
-    while (sqlite_status == SQLITE_BUSY || sqlite_status == SQLITE_LOCKED);
+    PEP_SQL_END_LOOP;
     CHECK_SQL(SQLITE_DONE);
+    sqlite3_reset(session->log_insert_prepared_statement);
 
 #ifdef TRANSACTIONS
     sql_reset_and_clear_bindings(session->log_commit_transaction_prepared_statement);
-    do
+    PEP_SQL_BEGIN_LOOP;
         sqlite_status = sqlite3_step(session->log_commit_transaction_prepared_statement);
-    while (sqlite_status == SQLITE_BUSY || sqlite_status == SQLITE_LOCKED);
+    PEP_SQL_END_LOOP;
     CHECK_SQL(SQLITE_DONE);
+    sqlite3_reset(session->log_commit_transaction_prepared_statement);
 #endif // #ifdef TRANSACTIONS
 
  error:
@@ -738,6 +766,7 @@ static PEP_STATUS _pEp_log_file_star(FILE* file_star,
     int fprintf_result = fprintf(file_star,
                                  PEP_LOG_PRINTF_FORMAT "\n",
                                  PEP_LOG_PRINTF_ACTUALS);
+    fflush(file_star);
     if (fprintf_result < 0)
         return PEP_UNKNOWN_ERROR;
     else
