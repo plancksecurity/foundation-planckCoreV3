@@ -20,9 +20,6 @@
 // XML parameters string
 #define PARMS_MAX 32768
 
-// maximum busy wait time in ms
-#define BUSY_WAIT_TIME 5000
-
 // default keyserver
 #ifndef DEFAULT_KEYSERVER
 #define DEFAULT_KEYSERVER "hkps://keys.openpgp.org"
