@@ -275,7 +275,7 @@ typedef enum {
    Just as a rule of thumb:
    - 10000 entries take 1MB
    - 1 entry takes ~100B   */
-#define PEP_LOG_DATABASE_ROW_NO_MAXIMUM 10000
+#define PEP_LOG_DATABASE_ROW_NO_MAXIMUM 100000
 
 
 /* Logging an entry: user macros
