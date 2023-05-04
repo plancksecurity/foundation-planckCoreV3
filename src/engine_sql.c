@@ -1665,324 +1665,333 @@ PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session) {
 
     int int_result = SQLITE_OK;
 
+#define CHECK_FOR_FAILURE                                                   \
+    do {                                                                    \
+        if (int_result != SQLITE_OK) {                                      \
+            LOG_CRITICAL("cannot initialise SQL statement");                \
+            LOG_CRITICAL("SQLite error: %s", sqlite3_errmsg(session->db));  \
+            return PEP_UNKNOWN_DB_ERROR;                                    \
+        }                                                                   \
+    } while (false)
+
     /* Trustwords / system db. */
     int_result = sqlite3_prepare_v2(session->system_db, sql_trustword,
                                     (int)strlen(sql_trustword), &session->trustword, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     /* Everything else: management db. */
     int_result = sqlite3_prepare_v2(session->db, sql_begin_exclusive_transaction,
                                     (int)strlen(sql_begin_exclusive_transaction), &session->begin_exclusive_transaction, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_commit_transaction,
                                     (int)strlen(sql_commit_transaction), &session->commit_transaction, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_rollback_transaction,
                                     (int)strlen(sql_rollback_transaction), &session->rollback_transaction, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_get_identity,
                                     (int)strlen(sql_get_identity), &session->get_identity, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_get_identity_without_trust_check,
                                     (int)strlen(sql_get_identity_without_trust_check),
                                     &session->get_identity_without_trust_check, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_get_identities_by_address,
                                     (int)strlen(sql_get_identities_by_address),
                                     &session->get_identities_by_address, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_get_identities_by_userid,
                                     (int)strlen(sql_get_identities_by_userid),
                                     &session->get_identities_by_userid, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_get_identities_by_main_key_id,
                                     (int)strlen(sql_get_identities_by_main_key_id),
                                     &session->get_identities_by_main_key_id, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_set_default_identity_fpr,
                                     (int)strlen(sql_set_default_identity_fpr), &session->set_default_identity_fpr, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_get_default_identity_fpr,
                                     (int)strlen(sql_get_default_identity_fpr), &session->get_default_identity_fpr, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_get_user_default_key,
                                     (int)strlen(sql_get_user_default_key), &session->get_user_default_key, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_get_all_keys_for_user,
                                     (int)strlen(sql_get_all_keys_for_user), &session->get_all_keys_for_user, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_get_all_keys_for_identity,
                                     (int)strlen(sql_get_all_keys_for_identity), &session->get_all_keys_for_identity, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_get_default_own_userid,
                                     (int)strlen(sql_get_default_own_userid), &session->get_default_own_userid, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_get_userid_alias_default,
                                     (int)strlen(sql_get_userid_alias_default), &session->get_userid_alias_default, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_add_userid_alias,
                                     (int)strlen(sql_add_userid_alias), &session->add_userid_alias, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_replace_userid,
                                     (int)strlen(sql_replace_userid), &session->replace_userid, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_delete_key,
                                     (int)strlen(sql_delete_key), &session->delete_key, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_replace_main_user_fpr,
                                     (int)strlen(sql_replace_main_user_fpr), &session->replace_main_user_fpr, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_replace_main_user_fpr_if_equal,
                                     (int)strlen(sql_replace_main_user_fpr_if_equal), &session->replace_main_user_fpr_if_equal, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_get_main_user_fpr,
                                     (int)strlen(sql_get_main_user_fpr), &session->get_main_user_fpr, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_refresh_userid_default_key,
                                     (int)strlen(sql_refresh_userid_default_key), &session->refresh_userid_default_key, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_replace_identities_fpr,
                                     (int)strlen(sql_replace_identities_fpr),
                                     &session->replace_identities_fpr, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_remove_fpr_as_identity_default,
                                     (int)strlen(sql_remove_fpr_as_identity_default),
                                     &session->remove_fpr_as_identity_default, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_remove_fpr_as_user_default,
                                     (int)strlen(sql_remove_fpr_as_user_default),
                                     &session->remove_fpr_as_user_default, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_set_person,
                                     (int)strlen(sql_set_person), &session->set_person, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_update_person,
                                     (int)strlen(sql_update_person), &session->update_person, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_delete_person,
                                     (int)strlen(sql_delete_person), &session->delete_person, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_exists_person,
                                     (int)strlen(sql_exists_person), &session->exists_person, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_set_as_pEp_user,
                                     (int)strlen(sql_set_as_pEp_user), &session->set_as_pEp_user, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_is_pEp_user,
                                     (int)strlen(sql_is_pEp_user), &session->is_pEp_user, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_add_into_social_graph,
                                     (int)strlen(sql_add_into_social_graph), &session->add_into_social_graph, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db,
                                     sql_get_own_address_binding_from_contact,
                                     (int)strlen(sql_get_own_address_binding_from_contact),
                                     &session->get_own_address_binding_from_contact, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db,
                                     sql_set_revoke_contact_as_notified,
                                     (int)strlen(sql_set_revoke_contact_as_notified),
                                     &session->set_revoke_contact_as_notified, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db,
                                     sql_get_contacted_ids_from_revoke_fpr,
                                     (int)strlen(sql_get_contacted_ids_from_revoke_fpr),
                                     &session->get_contacted_ids_from_revoke_fpr, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db,
                                     sql_was_id_for_revoke_contacted,
                                     (int)strlen(sql_was_id_for_revoke_contacted),
                                     &session->was_id_for_revoke_contacted, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db,
                                     sql_has_id_contacted_address,
                                     (int)strlen(sql_has_id_contacted_address),
                                     &session->has_id_contacted_address, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db,
                                     sql_get_last_contacted,
                                     (int)strlen(sql_get_last_contacted),
                                     &session->get_last_contacted, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_set_pgp_keypair,
                                     (int)strlen(sql_set_pgp_keypair), &session->set_pgp_keypair,
                                     NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_set_pgp_keypair_flags,
                                     (int)strlen(sql_set_pgp_keypair_flags), &session->set_pgp_keypair_flags,
                                     NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_unset_pgp_keypair_flags,
                                     (int)strlen(sql_unset_pgp_keypair_flags), &session->unset_pgp_keypair_flags,
                                     NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_set_identity_entry,
                                     (int)strlen(sql_set_identity_entry), &session->set_identity_entry, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_update_identity_entry,
                                     (int)strlen(sql_update_identity_entry), &session->update_identity_entry, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_exists_identity_entry,
                                     (int)strlen(sql_exists_identity_entry), &session->exists_identity_entry, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_force_set_identity_username,
                                     (int)strlen(sql_force_set_identity_username), &session->force_set_identity_username, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_set_identity_flags,
                                     (int)strlen(sql_set_identity_flags), &session->set_identity_flags,
                                     NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_unset_identity_flags,
                                     (int)strlen(sql_unset_identity_flags), &session->unset_identity_flags,
                                     NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_set_ident_enc_format,
                                     (int)strlen(sql_set_ident_enc_format), &session->set_ident_enc_format,
                                     NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_set_protocol_version,
                                     (int)strlen(sql_set_protocol_version), &session->set_protocol_version,
                                     NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_upgrade_protocol_version_by_user_id,
                                     (int)strlen(sql_upgrade_protocol_version_by_user_id), &session->upgrade_protocol_version_by_user_id,
                                     NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_clear_trust_info,
                                     (int)strlen(sql_clear_trust_info), &session->clear_trust_info, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_set_trust,
                                     (int)strlen(sql_set_trust), &session->set_trust, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_update_trust,
                                     (int)strlen(sql_update_trust), &session->update_trust, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_update_trust_to_pEp,
                                     (int)strlen(sql_update_trust_to_pEp), &session->update_trust_to_pEp, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_exists_trust_entry,
                                     (int)strlen(sql_exists_trust_entry), &session->exists_trust_entry, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_update_trust_for_fpr,
                                     (int)strlen(sql_update_trust_for_fpr), &session->update_trust_for_fpr, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_get_trust,
                                     (int)strlen(sql_get_trust), &session->get_trust, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_get_trust_by_userid,
                                     (int)strlen(sql_get_trust_by_userid), &session->get_trust_by_userid, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_least_trust,
                                     (int)strlen(sql_least_trust), &session->least_trust, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_update_key_sticky_bit_for_user,
                                     (int)strlen(sql_update_key_sticky_bit_for_user),
                                     &session->update_key_sticky_bit_for_user, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_is_key_sticky_for_user,
                                     (int)strlen(sql_is_key_sticky_for_user),
                                     &session->is_key_sticky_for_user, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_mark_as_compromised,
                                     (int)strlen(sql_mark_as_compromised), &session->mark_compromised,
                                     NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->system_db, sql_languagelist,
                                     (int)strlen(sql_languagelist), &session->languagelist, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->system_db, sql_i18n_token,
                                     (int)strlen(sql_i18n_token), &session->i18n_token, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     // Own keys
 
     int_result = sqlite3_prepare_v2(session->db, sql_own_key_is_listed,
                                     (int)strlen(sql_own_key_is_listed), &session->own_key_is_listed,
                                     NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_is_own_address,
                                     (int)strlen(sql_is_own_address), &session->is_own_address,
                                     NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_own_identities_retrieve,
                                     (int)strlen(sql_own_identities_retrieve),
                                     &session->own_identities_retrieve, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_own_keys_retrieve,
                                     (int)strlen(sql_own_keys_retrieve),
                                     &session->own_keys_retrieve, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     // int_result = sqlite3_prepare_v2(session->db, sql_set_own_key,
     //         (int)strlen(sql_set_own_key),
     //         &session->set_own_key, NULL);
-    // PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    // CHECK_FOR_FAILURE;
 
 
     // Sequence
@@ -1990,134 +1999,135 @@ PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session) {
     int_result = sqlite3_prepare_v2(session->db, sql_sequence_value1,
                                     (int)strlen(sql_sequence_value1), &session->sequence_value1,
                                     NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_sequence_value2,
                                     (int)strlen(sql_sequence_value2), &session->sequence_value2,
                                     NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     // Revocation tracking
 
     int_result = sqlite3_prepare_v2(session->db, sql_set_revoked,
                                     (int)strlen(sql_set_revoked), &session->set_revoked, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_get_revoked,
                                     (int)strlen(sql_get_revoked), &session->get_revoked, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_get_replacement_fpr,
                                     (int)strlen(sql_get_replacement_fpr), &session->get_replacement_fpr, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_add_mistrusted_key,
                                     (int)strlen(sql_add_mistrusted_key), &session->add_mistrusted_key, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_delete_mistrusted_key,
                                     (int)strlen(sql_delete_mistrusted_key), &session->delete_mistrusted_key, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_is_mistrusted_key,
                                     (int)strlen(sql_is_mistrusted_key), &session->is_mistrusted_key, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     /* Groups */
     int_result = sqlite3_prepare_v2(session->db, sql_create_group,
                                     (int)strlen(sql_create_group), &session->create_group, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_enable_group,
                                     (int)strlen(sql_enable_group), &session->enable_group, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_disable_group,
                                     (int)strlen(sql_disable_group), &session->disable_group, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_exists_group_entry,
                                     (int)strlen(sql_exists_group_entry), &session->exists_group_entry, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_group_add_member,
                                     (int)strlen(sql_group_add_member), &session->group_add_member, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_group_delete_member,
                                     (int)strlen(sql_group_delete_member), &session->group_delete_member, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_set_group_member_status,
                                     (int)strlen(sql_set_group_member_status), &session->set_group_member_status, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_group_join,
                                     (int)strlen(sql_group_join), &session->group_join, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_leave_group,
                                     (int)strlen(sql_leave_group), &session->leave_group, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_get_all_members,
                                     (int)strlen(sql_get_all_members), &session->get_all_members, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_get_active_members,
                                     (int)strlen(sql_get_active_members), &session->get_active_members, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_get_all_groups,
                                     (int)strlen(sql_get_all_groups), &session->get_all_groups, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_get_active_groups,
                                     (int)strlen(sql_get_active_groups), &session->get_active_groups, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_add_own_membership_entry,
                                     (int)strlen(sql_add_own_membership_entry), &session->add_own_membership_entry, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_get_own_membership_status,
                                     (int)strlen(sql_get_own_membership_status), &session->get_own_membership_status, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_retrieve_own_membership_info_for_group_and_ident,
                                     (int)strlen(sql_retrieve_own_membership_info_for_group_and_ident), &session->retrieve_own_membership_info_for_group_and_ident, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_retrieve_own_membership_info_for_group,
                                     (int)strlen(sql_retrieve_own_membership_info_for_group), &session->retrieve_own_membership_info_for_group, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_get_group_manager,
                                     (int)strlen(sql_get_group_manager), &session->get_group_manager, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_is_invited_group_member,
                                     (int)strlen(sql_is_invited_group_member), &session->is_invited_group_member, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_is_active_group_member,
                                     (int)strlen(sql_is_active_group_member), &session->is_active_group_member, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_is_group_active,
                                     (int)strlen(sql_is_group_active), &session->is_group_active, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+    CHECK_FOR_FAILURE;
 
 //    int_result = sqlite3_prepare_v2(session->db, sql_group_invite_exists,
 //                                    (int)strlen(sql_group_invite_exists), &session->group_invite_exists, NULL);
-//    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
+//    CHECK_FOR_FAILURE;
 
     int_result = sqlite3_prepare_v2(session->db, sql_log,
                                     (int)strlen(sql_log), &session->log, NULL);
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
-
+    CHECK_FOR_FAILURE;
     /* End groups */
+
     return PEP_STATUS_OK;
+#undef CHECK_FOR_FAILURE
 }
 
 PEP_STATUS pEp_finalize_sql_stmts(PEP_SESSION session) {
