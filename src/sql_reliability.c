@@ -69,31 +69,35 @@ static void pEp_backoff_bump(PEP_SESSION session,
 
     /* This is a quite desperate solution to try and avoid starvation.
        Currently not used. */
-    #define CHECKPOINT(kind) \
-        do {                                                                    \
-            LOG_NONOK("trying to checkpoint (%s)...", #kind);                   \
-            int int_result                                                      \
-                = sqlite3_wal_checkpoint_v2(session->db, NULL, kind,            \
-                                            NULL, NULL);               \
-            LOG_NONOK("...the result of checkpointing (%s) was %i %s", \
-                      #kind, int_result, sqlite3_errmsg(session->db)); \
+#define CHECKPOINT(kind)                                            \
+    do {                                                            \
+        LOG_NONOK("trying to checkpoint (%s)...", #kind);           \
+        int int_result                                              \
+            = sqlite3_wal_checkpoint_v2(session->db, NULL, kind,    \
+                                        NULL, NULL);                \
+        LOG_NONOK("...the result of checkpointing (%s) was %i %s",  \
+                  #kind, int_result, sqlite3_errmsg(session->db));  \
+    } while (false)
+
+#define CHECKPOINT_ALL                                                    \
+        do {                                                              \
+            LOG_NONOK("checkpointing after backing off from %s %i times"  \
+                      "(checkpointing once every %i times)",              \
+                      s->source_location, (int) s->failure_no,            \
+                      (int) PEP_BACKOFF_TIMES_BEFORE_CHECKPOINTING);      \
+            CHECKPOINT(SQLITE_CHECKPOINT_PASSIVE);                        \
+            CHECKPOINT(SQLITE_CHECKPOINT_FULL);                           \
+            CHECKPOINT(SQLITE_CHECKPOINT_RESTART);                        \
+            LOG_NONOK("...done checkpointing");                           \
         } while (false)
 
+    if ((s->failure_no % PEP_BACKOFF_TIMES_BEFORE_CHECKPOINTING) == 0)
+        CHECKPOINT_ALL;
     if ((s->failure_no % PEP_BACKOFF_TIMES_BEFORE_LOGGING) == 0)
         LOG_NONOK("backing off from %s (%i times already; logging once"
                   " every %i times)",
                   s->source_location, (int) s->failure_no,
                   (int) PEP_BACKOFF_TIMES_BEFORE_LOGGING);
-    if ((s->failure_no % PEP_BACKOFF_TIMES_BEFORE_CHECKPOINTING) == 0) {
-        LOG_NONOK("checkpointing after backing off from %s %i times"
-                  "(checkpointing once every %i times)",
-                  s->source_location, (int) s->failure_no,
-                  (int) PEP_BACKOFF_TIMES_BEFORE_CHECKPOINTING);
-        CHECKPOINT(SQLITE_CHECKPOINT_PASSIVE);
-        CHECKPOINT(SQLITE_CHECKPOINT_FULL);
-        CHECKPOINT(SQLITE_CHECKPOINT_RESTART);
-        LOG_NONOK("...done checkpointing");
-    }
 
     /* Raise the sleep time upper limit. */
     double unclamped_upper_limit
