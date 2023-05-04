@@ -607,7 +607,11 @@ PEP_STATUS init_databases(PEP_SESSION session) {
             NULL
     );
 
-    sqlite3_busy_timeout(session->db, BUSY_WAIT_TIME);
+    /* positron: before 2023-05-04 there was a call to sqlite3_busy_timeout
+       here, setting the busy wait time to 5 seconds.  I removed it.  We are now
+       handling SQLITE_BUSY through the functionality in sql_reliabiliy.h and
+       sql_reliabiliy.c . */
+    sqlite3_busy_timeout(session->db, 0);
 
 #ifdef _PEP_SQLITE_DEBUG
     sqlite3_trace_v2(session->db, 
@@ -629,7 +633,6 @@ PEP_STATUS init_databases(PEP_SESSION session) {
     if (int_result != SQLITE_OK)
         return PEP_INIT_CANNOT_OPEN_SYSTEM_DB;
 
-    sqlite3_busy_timeout(session->system_db, 1000);
     return PEP_STATUS_OK;    
 }
 
