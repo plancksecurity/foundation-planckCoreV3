@@ -244,8 +244,13 @@ static PEP_STATUS make_sure_identity_exists(PEP_SESSION session,
     status = update_identity(session, identity_copy);
     if (status != PEP_STATUS_OK)
         goto end;
-    /* ...If we arrived here the identity has been set, so we can be sure that
-       it exists in the database.  */
+    status = set_identity(session, identity_copy);
+    if (status != PEP_STATUS_OK)
+        goto end;
+    /* ...If we arrived here we can be sure that the identity exists in the
+       database.  */
+    LOG_TRACE("we made sure that %s <%s> exists, but...", ASNONEMPTYSTR(identity->username), ASNONEMPTYSTR(identity->address));
+    LOG_TRACE("...FIXME: I am not sure this actually writes what it should.");
 
  end:
     free_identity(identity_copy);
@@ -307,11 +312,24 @@ static PEP_STATUS echo_get_below_rate_limit(PEP_SESSION session,
         = pEp_sqlite3_step_nonbusy(session,
                                    session->echo_get_echo_below_rate_limit);
     ON_SQL_ERROR_SET_STATUS_AND_GOTO;
-    PEP_ASSERT(sql_status == SQLITE_ROW);
-    PEP_ASSERT(sqlite3_column_count(session->echo_get_echo_below_rate_limit)
-               == 1);
-
-    result = sqlite3_column_int(session->echo_get_echo_below_rate_limit, 0);
+    LOG_TRACE("speaking about %s <%s>: sql_status is %i %s", ASNONEMPTYSTR(identity->username), ASNONEMPTYSTR(identity->address), sql_status, sqlite3_errmsg(session->db));
+    PEP_ASSERT(   (/* one-row result */
+                   sql_status == SQLITE_ROW)
+               || (/* no-row result: identity unknown: this should not happen
+                      (see the comment inside make_sure_identity_exists (FIXME:
+                      change this after fixing it)) */
+                   sql_status == SQLITE_DONE));
+    if (sql_status == SQLITE_ROW) {
+        /* We found one row, containing the Boolean result. */
+        PEP_ASSERT(sqlite3_column_count(session->echo_get_echo_below_rate_limit)
+                   == 1);
+        result = sqlite3_column_int(session->echo_get_echo_below_rate_limit, 0);
+    }
+    else {
+        /* The identity is unknown, so we certainly are not over-rate.  On the
+           other hand, this should not happen: see the FIXME above. */
+        result = true;
+    }
 
  end:
     if (status == PEP_STATUS_OK)
