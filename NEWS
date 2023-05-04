@@ -13,6 +13,8 @@
 * Be consistently case-insensitive when handling header names and MIME types.
 * Merge dirk's two xcode build-system commits from
   https://gitea.pep.foundation/pEp.foundation/pEpEngine/pulls/159 .
+* Actually fix https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/133 ,
+  thanks to a major SQL concurrency overhaul.  No external API change.
 
 v3.2.1  2023-03-23
 * DEPENDENCIES: require an official release of libpEpTransport.
