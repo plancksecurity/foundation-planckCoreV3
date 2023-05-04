@@ -312,7 +312,7 @@ static PEP_STATUS echo_get_below_rate_limit(PEP_SESSION session,
         = pEp_sqlite3_step_nonbusy(session,
                                    session->echo_get_echo_below_rate_limit);
     ON_SQL_ERROR_SET_STATUS_AND_GOTO;
-    LOG_TRACE("speaking about %s <%s>: sql_status is %i %s", ASNONNULLSTRING(identity->username), ASNONNULLSTRING(identity->address), sql_status, sqlite3_errmsg(session->db));
+    LOG_TRACE("speaking about %s <%s>: sql_status is %i %s", ASNONNULLSTR(identity->username), ASNONNULLSTR(identity->address), sql_status, sqlite3_errmsg(session->db));
     PEP_ASSERT(   (/* one-row result */
                    sql_status == SQLITE_ROW)
                || (/* no-row result: identity unknown: this should not happen
