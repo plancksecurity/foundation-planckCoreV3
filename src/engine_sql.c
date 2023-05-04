@@ -215,7 +215,8 @@ static int table_contains_column(PEP_SESSION session, const char* table_name,
        initialisation time. */
     do {
         rc = sqlite3_step(stmt);
-    } while (rc == SQLITE_BUSY || rc == SQLITE_LOCKED);
+        PEP_ASSERT(rc != SQLITE_LOCKED);
+    } while (rc == SQLITE_BUSY);
     if (rc == SQLITE_DONE || rc == SQLITE_OK || rc == SQLITE_ROW) {
         retval = 1;
     }

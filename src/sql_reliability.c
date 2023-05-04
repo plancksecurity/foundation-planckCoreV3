@@ -57,15 +57,43 @@ static void pEp_backoff_bump(PEP_SESSION session,
                              struct pEp_backoff_state *s,
                              long sleep_time_ms)
 {
-    PEP_REQUIRE_ORELSE(session && s, { return; });
+    PEP_REQUIRE_ORELSE(session
+                       && /* Useful to check in case this is invoked early
+                             at initialisation time, for example from the
+                             logging subsystem. */ session->db
+                       && s , { return; });
 
     /* Record statistics. */
     s->failure_no ++;
     s->total_time_slept_in_ms += sleep_time_ms;
 
+    /* This is a quite desperate solution to try and avoid starvation.
+       Currently not used. */
+    #define CHECKPOINT(kind) \
+        do {                                                                    \
+            LOG_NONOK("trying to checkpoint (%s)...", #kind);                   \
+            int int_result                                                      \
+                = sqlite3_wal_checkpoint_v2(session->db, NULL, kind,            \
+                                            NULL, NULL);               \
+            LOG_NONOK("...the result of checkpointing (%s) was %i %s", \
+                      #kind, int_result, sqlite3_errmsg(session->db)); \
+        } while (false)
+
     if ((s->failure_no % PEP_BACKOFF_TIMES_BEFORE_LOGGING) == 0)
-        LOG_CRITICAL("backing off from %s (%i times already!)",
-                     s->source_location, (int) s->failure_no);
+        LOG_NONOK("backing off from %s (%i times already; logging once"
+                  " every %i times)",
+                  s->source_location, (int) s->failure_no,
+                  (int) PEP_BACKOFF_TIMES_BEFORE_LOGGING);
+    if ((s->failure_no % PEP_BACKOFF_TIMES_BEFORE_CHECKPOINTING) == 0) {
+        LOG_NONOK("checkpointing after backing off from %s %i times"
+                  "(checkpointing once every %i times)",
+                  s->source_location, (int) s->failure_no,
+                  (int) PEP_BACKOFF_TIMES_BEFORE_CHECKPOINTING);
+        CHECKPOINT(SQLITE_CHECKPOINT_PASSIVE);
+        CHECKPOINT(SQLITE_CHECKPOINT_FULL);
+        CHECKPOINT(SQLITE_CHECKPOINT_RESTART);
+        LOG_NONOK("...done checkpointing");
+    }
 
     /* Raise the sleep time upper limit. */
     double unclamped_upper_limit
@@ -115,9 +143,21 @@ int pEp_sqlite3_step_nonbusy(PEP_SESSION session,
                                  except for internal bugs */ SQLITE_ERROR);
     int sqlite_status;
 
-    PEP_SQL_BEGIN_LOOP(sqlite_status);
+    bool transaction_in_progress_at_entry
+        = session->transaction_in_progress_no > 0;
+    if (! transaction_in_progress_at_entry)
+        PEP_SQL_BEGIN_EXCLUSIVE_TRANSACTION();
     sqlite_status = sqlite3_step(prepared_statement);
-    PEP_SQL_END_LOOP();
+    if (sqlite_status != SQLITE_OK && sqlite_status != SQLITE_ROW
+        && sqlite_status != SQLITE_DONE)
+        LOG_TRACE("sqlite_status is %i (%s)", sqlite_status,
+                  sqlite3_errmsg(session->db));
+    PEP_ASSERT(sqlite_status != SQLITE_LOCKED); /* LOCKED should never happen. */
+    if (! transaction_in_progress_at_entry) {
+        PEP_ASSERT(sqlite_status != SQLITE_BUSY); /* BUSY should not happen in an
+                                                     exclusive transaction. */
+        PEP_SQL_COMMIT_TRANSACTION();
+    }
 
     return sqlite_status;
 }

@@ -106,6 +106,9 @@ DYNAMIC_API PEP_STATUS init(
        variable PEP_LOG_ASYNC is defined, to any value. */
     config_enable_log_synchronous(_session, (getenv("PEP_LOG_ASYNC") == NULL));
 
+    /* There are no nested SQL transactions in progress yet. */
+    _session->transaction_in_progress_no = 0;
+
     status = pEp_log_initialize(_session);
     if (status != PEP_STATUS_OK)
         return status;
@@ -226,6 +229,11 @@ DYNAMIC_API void release(PEP_SESSION session)
     
     if ((_count < -1) || !session)
         return;
+
+    if (session->transaction_in_progress_no != 0)
+        LOG_CRITICAL("at least an SQL transaction was not closed: there are"
+                     " %i nested transactions in progress at finalisation time",
+                     (int) session->transaction_in_progress_no);
 
     // a small race condition but still a race condition
     // mitigated by calling caveat (see documentation)
@@ -906,7 +914,8 @@ DYNAMIC_API PEP_STATUS set_userid_alias (
             SQLITE_STATIC);
         
     result = sqlite3_step(session->add_userid_alias);
-    PEP_ASSERT(result != SQLITE_BUSY && result != SQLITE_LOCKED); // we are inside an EXCLUSIVE transaction
+    PEP_ASSERT(result != SQLITE_LOCKED);
+    PEP_ASSERT(result != SQLITE_BUSY); // we are inside an EXCLUSIVE transaction
 
     sql_reset_and_clear_bindings(session->add_userid_alias);
     if (result != SQLITE_DONE) {
@@ -1656,7 +1665,8 @@ DYNAMIC_API PEP_STATUS set_identity(
         sqlite3_bind_text(session->set_pgp_keypair, 1, identity->fpr, -1,
                           SQLITE_STATIC);
         result = sqlite3_step(session->set_pgp_keypair);
-        PEP_ASSERT(result != SQLITE_BUSY && result != SQLITE_LOCKED); // we are inside an EXCLUSIVE transaction
+        PEP_ASSERT(result != SQLITE_LOCKED);
+        PEP_ASSERT(result != SQLITE_BUSY); // we are inside an EXCLUSIVE transaction
         if (result != SQLITE_DONE)
             FAIL(PEP_CANNOT_SET_PGP_KEYPAIR);
     }

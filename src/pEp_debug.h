@@ -387,7 +387,6 @@ typedef enum {
 #define PEP_IMPOSSIBLE  \
     _PEP_ASSERT_VARIANT("this is supposed to be impossible")
 
-
 /**
  *  <!--       PEP_UNEXPECTED_VALUE()       -->
  *

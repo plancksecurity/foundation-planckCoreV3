@@ -524,7 +524,17 @@ struct _pEpSession {
     bool passive_mode;
     bool unencrypted_subject;
     bool service_log;
-    
+
+    /* An integer counting the number of SQL transactions currently in progress
+       within the dynamic extent of this session: transactions can be (properly)
+       nested in this C abstraction and pEp_sqlite3_step_nonbusy is defined so
+       as not to nest a new SQL transaction when one is already in progress;
+       however ROLLBACK is only possible at the outermost nesting level.
+       This field is altered by PEP_SQL_BEGIN_EXCLUSIVE_TRANSACTION,
+       PEP_SQL_COMMIT_TRANSACTION and PEP_SQL_COMMIT_TRANSACTION as defined in
+       sql_reliability.h . */
+    int transaction_in_progress_no;
+
 #ifndef NDEBUG
     int debug_color;
 #endif
