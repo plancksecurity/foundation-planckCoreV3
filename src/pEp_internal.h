@@ -165,41 +165,48 @@
 #define LOG_BASIC(...)      PEP_LOG_BASIC("p≡p", "Engine", "" __VA_ARGS__)
 #define LOG_SERVICE(...)    PEP_LOG_SERVICE("p≡p", "Engine", "" __VA_ARGS__)
 
-#define LOG_MESSAGE_WITH(literal_string, the_message, macro)            \
-    do {                                                                \
-        const message *_log_message_m = (the_message);                  \
-        if (the_message == NULL)                                        \
-            macro(literal_string ": NULL");                             \
-        else {                                                          \
-            const char *_from_username = "NONAME";                      \
-            const char *_from_address = "NOADDR";                       \
-            const char *_to_username = "NONAME";                        \
-            const char *_to_address = "NOADDR";                         \
-            if (_log_message_m->from                                    \
-                && ! EMPTYSTR(_log_message_m->from->username))          \
-                _from_username = _log_message_m->from->username;        \
-            if (_log_message_m->from                                    \
-                && ! EMPTYSTR(_log_message_m->from->address))           \
-                _from_address = _log_message_m->from->address;          \
-            if (_log_message_m->to                                      \
-                && _log_message_m->to->ident                            \
-                && ! EMPTYSTR(_log_message_m->to->ident->username))     \
-                _to_username = _log_message_m->to->ident->username;     \
-            if (_log_message_m->to                                      \
-                && _log_message_m->to->ident                            \
-                && ! EMPTYSTR(_log_message_m->to->ident->address))      \
-                _to_address = _log_message_m->to->ident->address;       \
-            macro(literal_string ": [%s %s, recv_by %s, %s (%s <%s> -> %s <%s>)]", \
-                  (_log_message_m->id ? _log_message_m->id : "NO-ID"),  \
-                  (_log_message_m->shortmsg                             \
-                   ? _log_message_m->shortmsg                           \
-                   : "NO-SHORTMSG"),                                    \
-                  ((_log_message_m->recv_by                             \
-                    && ! EMPTYSTR(_log_message_m->recv_by->address))    \
-                   ? _log_message_m->recv_by->address                   \
-                   : "NO-RECV_BY-ADDRESS"),                             \
-                  ((_log_message_m->dir == PEP_dir_incoming)            \
-                   ? "incoming" : "outgoing"));                         \
+#define LOG_MESSAGE_WITH(literal_string, the_message, macro)             \
+    do {                                                                 \
+        const message *_log_message_m = (the_message);                   \
+        if (the_message == NULL)                                         \
+            macro(literal_string ": NULL message");                      \
+        else {                                                           \
+            const char *_msg_id = "NOID";                                \
+            const char *_msg_shortmsg = "NOSHORTMSG";                    \
+            const char *_msg_recvby_address = "NOADDR";                  \
+            const char *_msg_from_username = "NONAME";                   \
+            const char *_msg_from_address = "NOADDR";                    \
+            const char *_msg_to_username = "NONAME";                     \
+            const char *_msg_to_address = "NOADDR";                      \
+            const char *_msg_direction                                   \
+                = ((_log_message_m->dir == PEP_dir_incoming)             \
+                   ? "incoming" : "outgoing");                           \
+            if (! EMPTYSTR(_log_message_m->id))                          \
+                _msg_id = _log_message_m->id;                            \
+            if (! EMPTYSTR(_log_message_m->shortmsg))                    \
+                _msg_shortmsg = _log_message_m->shortmsg;                \
+            if (_log_message_m->recv_by                                  \
+                && ! EMPTYSTR(_log_message_m->recv_by->address))         \
+                _msg_recvby_address = _log_message_m->recv_by->address;  \
+            if (_log_message_m->from                                     \
+                && ! EMPTYSTR(_log_message_m->from->username))           \
+                _msg_from_username = _log_message_m->from->username;     \
+            if (_log_message_m->from                                     \
+                && ! EMPTYSTR(_log_message_m->from->address))            \
+                _msg_from_address = _log_message_m->from->address;       \
+            if (_log_message_m->to && _log_message_m->to->ident          \
+                && ! EMPTYSTR(_log_message_m->to->ident->username))      \
+                _msg_to_username = _log_message_m->to->ident->username;  \
+            if (_log_message_m->to && _log_message_m->to->ident          \
+                && ! EMPTYSTR(_log_message_m->to->ident->address))       \
+                _msg_to_address = _log_message_m->to->ident->address;    \
+            macro(literal_string " [%s %s, recv_by %s, %s"               \
+                  " (%s <%s> -> %s <%s>)]",                              \
+                  _msg_id, _msg_shortmsg, _msg_recvby_address,           \
+                  _msg_direction,                                        \
+                  _msg_from_username, _msg_from_address,                 \
+                  _msg_to_username, _msg_to_address);                    \
+        }                                                                \
     } while (false)
 
 /* Log the given literal string and the given message at the level specified in
