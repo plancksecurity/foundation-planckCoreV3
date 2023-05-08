@@ -259,7 +259,7 @@ PEP_STATUS media_key_has_identity_a_media_key(PEP_SESSION session,
 
     LOG_NONOK_STATUS_WARNING;
     if (status == PEP_STATUS_OK)
-        LOG_TRACE("%s <%s>: %s", (identity->username ? identity->username : "NO-USERNAME"), (identity->address ? identity->address : "NO-ADDRESS"), ((* has_media_key) ? "yes" : "no"));
+        LOG_TRACE("%s <%s>: %s", ASNONNULLSTR(identity->username), ASNONNULLSTR(identity->address), ((* has_media_key) ? "yes" : "no"));
 
     return status;
 }
@@ -350,7 +350,7 @@ PEP_STATUS amend_identity_with_media_key_information(PEP_SESSION session,
 
     /* If we arrived here there is a media key.  Amend the identity so that it
        is recognised as using a recent pEp version. */
-    LOG_TRACE("%s <%s>: amending because of a media key...", identity->username, identity->address);
+    LOG_TRACE("%s <%s>: amending because of a media key...", ASNONNULLSTR(identity->username), ASNONNULLSTR(identity->address));
     DUMP;
     if (identity->enc_format == PEP_enc_auto
         || identity->enc_format < PEP_enc_PEP)

@@ -379,7 +379,7 @@ static PEP_STATUS echo_set_last_echo_timestap(PEP_SESSION session,
     ON_SQL_ERROR_SET_STATUS_AND_GOTO;
     PEP_ASSERT(sql_status == SQLITE_DONE);
 
-    LOG_TRACE("set last Echo timestamp to now for %s <%s>", (identity->username ? identity->username : "NOUSERNAME"), (identity->address ? identity->address : "NOADDRESS"));
+    LOG_TRACE("set last Echo timestamp to now for %s <%s>", ASNONNULLSTR(identity->username), ASNONNULLSTR(identity->address));
 
  end:
     LOG_NONOK_STATUS_TRACE;
@@ -440,7 +440,7 @@ static PEP_STATUS echo_challenge_for_identity(PEP_SESSION session,
     sql_status = pEp_sqlite3_step_nonbusy(session, session->echo_get_challenge);
     ON_SQL_ERROR_SET_STATUS_AND_GOTO;
     if (sql_status != SQLITE_ROW)
-        LOG_NONOK("did not find echo challenge for %s <%s>: sql_status %i", (identity->username ? identity->username : "NOUSERNAME"), (identity->address ? identity->address : "NOADDRESS"), sql_status);
+        LOG_NONOK("did not find echo challenge for %s <%s>: sql_status %i", ASNONNULLSTR(identity->username), ASNONNULLSTR(identity->address), sql_status);
     const void *stored_challenge;
     if (sql_status == SQLITE_DONE) /* no row found: no user_id?  This will
                                       never happen in sane situations.  It
@@ -589,7 +589,7 @@ static PEP_STATUS send_ping_or_pong(PEP_SESSION session,
 
     /* Do nothing, and succeed, if the Echo protocol is disabled. */
     if (! session->enable_echo_protocol) {
-        LOG_EVENT("Echo protocol disabled: not sending a %s to %s <%s>", (ping ? "Ping" : "Pong"), (to->username ? to->username : "<no username>"), (to->address ? to->address : "<no address>"));
+        LOG_EVENT("Echo protocol disabled: not sending a %s to %s <%s>", (ping ? "Ping" : "Pong"), ASNONNULLSTR(to->username), ASNONNULLSTR(to->address));
         return PEP_STATUS_OK;
     }
 
@@ -601,11 +601,11 @@ static PEP_STATUS send_ping_or_pong(PEP_SESSION session,
     bool below_rate_limit;
     status = echo_get_below_rate_limit(session, to, & below_rate_limit);
     if (status != PEP_STATUS_OK) {
-        LOG_ERROR("echo_get_below_rate_limit failed with status %i on %s <%s>", (int) status, (to->username ? to->username : "<no username>"), (to->address ? to->address : "<no address>"));
+        LOG_ERROR("echo_get_below_rate_limit failed with status %i on %s <%s>", (int) status, ASNONNULLSTR(to->username), ASNONNULLSTR(to->address));
         return status;
     }
     if (! below_rate_limit) {
-        LOG_EVENT("rate limit exceeded: not sending a %s to %s <%s>", (ping ? "Ping" : "Pong"), (to->username ? to->username : "<no username>"), (to->address ? to->address : "<no address>"));
+        LOG_EVENT("rate limit exceeded: not sending a %s to %s <%s>", (ping ? "Ping" : "Pong"), ASNONNULLSTR(to->username), ASNONNULLSTR(to->address));
         return PEP_STATUS_OK;
     }
 
@@ -643,7 +643,7 @@ static PEP_STATUS send_ping_or_pong(PEP_SESSION session,
     else if (status == PEP_UNENCRYPTED)
         m = non_encrypted_m;
     else {
-        LOG_EVENT("preparing %s from %s <%s> to %s <%s>, status after encrypting %i %s", (ping ? "Ping" : "Pong"), from->username, from->address, to->username, to->address, status, pEp_status_to_string(status));
+        LOG_EVENT("preparing %s from %s <%s> to %s <%s>, status after encrypting %i %s", (ping ? "Ping" : "Pong"), ASNONNULLSTR(from->username), ASNONNULLSTR(from->address), ASNONNULLSTR(to->username), ASNONNULLSTR(to->address), status, pEp_status_to_string(status));
         free_message(non_encrypted_m);
         /* Differently from a status of PEP_UNENCRYPTED this is an actual
            unexpected error, to be reported to the caller. */
@@ -662,7 +662,7 @@ static PEP_STATUS send_ping_or_pong(PEP_SESSION session,
         return status;
     }
 
-    LOG_EVENT("sent %s from %s <%s> to %s <%s>", (ping ? "Ping" : "Pong"), from->username, from->address, to->username, to->address);
+    LOG_EVENT("sent %s from %s <%s> to %s <%s>", (ping ? "Ping" : "Pong"), ASNONNULLSTR(from->username), ASNONNULLSTR(from->address), ASNONNULLSTR(to->username), ASNONNULLSTR(to->address));
 
     /* If we arrived here then we actually sent a message with success.  Let us
        remember this time for use in rate limitation. */
@@ -785,7 +785,7 @@ static void send_ping_if_unknown(PEP_SESSION session,
 {
     PEP_REQUIRE_ORELSE(session && from_identity, { return; });
     if (! from_identity->me) {
-        LOG_WARNING("send_ping_if_unknown: trying to send from non-own identity %s <%s>", from_identity->username, from_identity->address);
+        LOG_WARNING("send_ping_if_unknown: trying to send from non-own identity %s <%s>", ASNONNULLSTR(from_identity->username), ASNONNULLSTR(from_identity->address));
         return;
     }
 

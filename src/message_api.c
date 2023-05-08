@@ -4253,8 +4253,7 @@ static PEP_STATUS protocol_version_upgrade_or_ignore(
     if (ver_compare > 0) {
         status = set_protocol_version(session, ident, major, minor);
         LOG_EVENT("%s <%s> upgrading to protocol version %i.%i: %i 0x%x %s",
-                  (ident->username ? ident->username : "NO-USERNAME"),
-                  (ident->address ? ident->address : "NO-ADDRESS"),
+                  ASNONNULLSTR(ident->username), ASNONNULLSTR(ident->address),
                   major, minor,
                   (int) status, (int) status, pEp_status_to_string(status));
     }
@@ -4884,14 +4883,14 @@ static PEP_STATUS process_Distribution_message(PEP_SESSION session,
                     status = send_pong(session, msg, dist);
                     break;
                 case Echo_PR_echoPong:
-                    LOG_EVENT("Received a Pong from %s <%s>", msg->from->username, msg->from->address);
+                    LOG_EVENT("Received a Pong from %s <%s>", ASNONNULLSTR(msg->from->username), ASNONNULLSTR(msg->from->address));
                     status = handle_pong(session, msg->recv_by, msg->from, dist);
                     if (status == PEP_STATUS_OK)
                         LOG_EVENT("Good");
                     else if (status == PEP_DISTRIBUTION_ILLEGAL_MESSAGE) {
                         /* If the challenge is wrong there is not much we can do
                            other than detecting a possible forged message. */
-                        LOG_WARNING("Received a Pong from %s <%s> with status %i %s: FORGED?", msg->from->username, msg->from->address, (int) status, pEp_status_to_string(status));
+                        LOG_WARNING("Received a Pong from %s <%s> with status %i %s: FORGED?", ASNONNULLSTR(msg->from->username), ASNONNULLSTR(msg->from->address), (int) status, pEp_status_to_string(status));
                     }
                     else
                         LOG_ERROR("Error: 0x%x %i %s", (int) status, (int) status, pEp_status_to_string(status));
@@ -6911,8 +6910,8 @@ static PEP_STATUS get_trustwords_algorithm_for(
 #if ! defined PEP_TRUSTWORDS_XOR_COMPATIBILITY
     if (ideal_algorithm == PEP_trustwords_algorithm_xor) {
         LOG_CRITICAL("refusing to use xor trustwords for %s <%s> even if it would be required for compatibility (prevent downgrade attacks)",
-                     (partner->username ? partner->username : "no-username"),
-                     (partner->address ? partner->address : "no-address"));
+                     ASNONNULLSTR(partner->username),
+                     ASNONNULLSTR(partner->address));
         status = PEP_TRUSTWORD_NOT_FOUND;
     }
     else
@@ -6952,10 +6951,8 @@ static PEP_STATUS get_trustwords_algorithm_for_either(
     /* Set the result. */
     * algorithm_p = algorithm_both;
     LOG_TRACE("the result for %s <%s> and %s <%s> is %s",
-              (one->username ? one->username : "NO-USERNAME"),
-              (one->address ? one->address : "NO-ADDRESS"),
-              (other->username ? other->username : "NO-USERNAME"),
-              (other->address ? other->address : "NO-ADDRESS"),
+              ASNONNULLSTR(one->username), ASNONNULLSTR(one->address),
+              ASNONNULLSTR(other->username), ASNONNULLSTR(other->address),
               PEP_trustwords_algorithm_to_string(session, * algorithm_p));
 
  end:

@@ -738,7 +738,7 @@ PEP_STATUS pgp_generate_keypair(
     }
 
     if(snprintf(newid, sizeof(newid),
-        "%s <%s>", identity->username, identity->address) >= sizeof(newid)){
+        "%s <%s>", ASNONNULLSTR(identity->username), ASNONNULLSTR(identity->address)) >= sizeof(newid)){
         result =  PEP_BUFFER_TOO_SMALL;
         goto unlock_netpgp;
     }
