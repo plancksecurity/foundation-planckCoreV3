@@ -7,6 +7,13 @@
 #include "pEp_internal.h"
 #include "engine_sql.h"
 
+/* Prevent people from using obsolete feature macros thinking that they still
+   work. */
+#if defined(_PEP_SQLITE_DEBUG)
+# error "Support for the _PEP_SQLITE_DEBUG macro has been remove.  Please do"
+# error "not #define it."
+#endif
+
 // sql overloaded functions - modified from sqlite3.c
 /**
  *  @internal
@@ -586,9 +593,9 @@ static int user_version(void *_version, int count, char **text, char **name)
 PEP_STATUS init_databases(PEP_SESSION session) {
     PEP_REQUIRE_ORELSE_RETURN(LOCAL_DB, PEP_INIT_CANNOT_OPEN_DB);
 
-#ifdef _PEP_SQLITE_DEBUG
+//#ifdef _PEP_SQLITE_DEBUG
     sqlite3_config(SQLITE_CONFIG_LOG, errorLogCallback, NULL);
-#endif
+//#endif
 
     int int_result = sqlite3_open_v2(
             LOCAL_DB,
