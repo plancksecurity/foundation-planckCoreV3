@@ -204,6 +204,8 @@ PEP_STATUS media_key_lookup_address(PEP_SESSION session,
        for all, out of the loop.  Notice that the address patterns being tested
        in the loop are already normalised. */
     address = normalize_address(address);
+    PEP_ASSERT(address != NULL);
+    PEP_ASSERT(! EMPTYSTR(address));
 
     /* Perform a trivial linear search on the list, with the first match
        winning. */
@@ -225,6 +227,7 @@ PEP_STATUS media_key_lookup_address(PEP_SESSION session,
     /* If we arrived here there is no match.  Set the output parameter as well,
        just for defensiveness' sake. */
     *fpr_result = NULL;
+    LOG_TRACE("<%s>: NO media key", address);
     return PEP_KEY_NOT_FOUND;
 }
 
