@@ -1762,8 +1762,6 @@ PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session) {
     PREPARE(db, update_key_sticky_bit_for_user);
     PREPARE(db, is_key_sticky_for_user);
     PREPARE(db, mark_compromised);
-    PREPARE(db, languagelist);
-    PREPARE(db, i18n_token);
 
     // Own keys
     PREPARE(db, own_key_is_listed);
