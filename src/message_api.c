@@ -266,7 +266,7 @@ void replace_opt_field(message *msg,
         if (opt_fields) {
             while (opt_fields) {
                 pair = opt_fields->value;
-                if (pair && (strcmp(name, pair->key) == 0))
+                if (pair && (strcasecmp(name, pair->key) == 0))
                     break;
                     
                 pair = NULL;
@@ -465,7 +465,7 @@ static char* _get_resource_ptr_noown(char* uri) {
  *
  *  <!--       string_equality()       -->
  *
- *  @brief            TODO
+ *  @brief      Return true on case-insensitive equality, false otherwise.
  *
  *  @param[in]    *s1        const char
  *  @param[in]    *s2        const char
@@ -479,7 +479,7 @@ static bool string_equality(const char *s1, const char *s2)
 
     assert(s1 && s2);
 
-    return strcmp(s1, s2) == 0;
+    return strcasecmp(s1, s2) == 0;
 }
 
 /**
