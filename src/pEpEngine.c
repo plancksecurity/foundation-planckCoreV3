@@ -3898,7 +3898,8 @@ DYNAMIC_API PEP_STATUS get_replacement_fpr(
 
     sql_reset_and_clear_bindings(session->get_replacement_fpr);
 
-    LOG_NONOK_STATUS_NONOK;
+    if (status != PEP_CANNOT_FIND_IDENTITY) /* this is not an error, here */
+        LOG_NONOK_STATUS_NONOK;
     return status;
 }
 
