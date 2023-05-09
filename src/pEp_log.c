@@ -445,9 +445,6 @@ PEP_STATUS pEp_log_set_synchronous_database(PEP_SESSION session,
         sqlite_status = sqlite3_exec(session->log_db,
                                      sql_statement_text,
                                      NULL, NULL, NULL);
-#if 0
-        fprintf(stderr, "OK-A 2100 sqlite_status is %i %s\n", sqlite_status, sqlite3_errmsg(session->log_db));
-#endif
     PEP_SQL_END_LOOP;
 
     assert(sqlite_status != SQLITE_LOCKED);
@@ -515,9 +512,6 @@ static PEP_STATUS _pEp_log_initialize_database(PEP_SESSION session)
                                      NULL, NULL, NULL);
         /* This line will be convenient for debugging.  Notice that
            "duplicate column name: Tid" is expected here. */
-#if 0
-        fprintf(stderr, "OK-A 1100 sqlite_status is %i %s\n", sqlite_status, sqlite3_errmsg(session->log_db));
-#endif
         assert(sqlite_status != SQLITE_LOCKED);
         if (sqlite_status == SQLITE_BUSY) {
             status = PEP_INIT_CANNOT_OPEN_DB;
