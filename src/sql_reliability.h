@@ -31,7 +31,7 @@ extern "C" {
    platform- and even machine-specific ways.  Here the intent is simply
    sustaining a moderate amount of threads, in the order of a few tens, all
    concurrently writing to the same database.
-   The pEp Engine appears to be unusual in database applications for its high
+   The pEp Engine appears to be unusual among database applications for its high
    number of write operations; the reason might be update_identity. */
 
 /* The minimum wait in milliseconds; no wait is ever shorter than this value.
@@ -57,10 +57,10 @@ extern "C" {
 
 /* Once every this number of consecutive backoffs refresh database connections.
    See the pEp_refresh_database_connections comment in pEp_sql.h . */
-#define PEP_BACKOFF_TIMES_BEFORE_REFRESHING_DB                            \
-    ((PEP_SAFETY_MODE == PEP_SAFETY_MODE_RELEASE)                         \
-     ? 20     /* only refresh when we are in an infinite-looking loop */  \
-     : (PEP_SAFETY_MODE == PEP_SAFETY_MODE_DEBUG                          \
+#define PEP_BACKOFF_TIMES_BEFORE_REFRESHING_DB                             \
+    ((PEP_SAFETY_MODE == PEP_SAFETY_MODE_RELEASE)                          \
+     ? 20      /* only refresh when we are in an infinite-looking loop */  \
+     : (PEP_SAFETY_MODE == PEP_SAFETY_MODE_DEBUG                           \
         ? 10   /* make it easy enough to trigger on purpose */             \
         : 6))  /* make it very easy to trigger even with normal use */
 
