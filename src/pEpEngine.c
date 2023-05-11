@@ -98,16 +98,17 @@ DYNAMIC_API PEP_STATUS init(
        call config_enable_log . */
     _session->enable_log = (getenv("PEP_LOG") != NULL);
 
-    /* Database-logging is synchronous by default, unless the environment
-       variable PEP_LOG_ASYNC is defined, to any value. */
-    config_enable_log_synchronous(_session, (getenv("PEP_LOG_ASYNC") == NULL));
-
     /* There are no nested SQL transactions in progress yet. */
     _session->transaction_in_progress_no = 0;
 
     status = pEp_log_initialize(_session);
     if (status != PEP_STATUS_OK)
         return status;
+
+    /* Database-logging is synchronous by default, unless the environment
+       variable PEP_LOG_ASYNC is defined, to any value.  We should set this
+       after the logging subsystem has been initialised already. */
+    config_enable_log_synchronous(_session, (getenv("PEP_LOG_ASYNC") == NULL));
 
     /* Since here there is no variable named "session" to capture we cannot use
        the ordinary PEP_LOG_* macros.  But it is very easy to define an

@@ -1,3 +1,7 @@
+* Make PEP_LOG_ASYNC actually take effect, but calling
+  config_enable_log_synchronous *after* the log subsystem has been initialised.
+  No visible API change, but when defining PEP_LOG_ASYNC and with the database
+  log destination configured in the user should feel the Engine to be faster.
 
 v3.3.0-RC1  2023-05-11
 * Make string lists and identity lists nicer to use, with new non-destructive
