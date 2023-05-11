@@ -437,6 +437,11 @@ PEP_STATUS pEp_log_set_synchronous_database(PEP_SESSION session,
     PEP_STATUS status = PEP_STATUS_OK;
     int sqlite_status = SQLITE_OK;
 
+    if (! session->log_database_initialised)
+        /* Nothing useful to do: there is no database connection to
+           configure. */
+        return status;
+
     const char *sql_statement_text
         = (synchronous
            ? pEp_log_set_synchronous_text
