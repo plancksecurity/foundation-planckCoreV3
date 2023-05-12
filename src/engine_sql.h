@@ -7,13 +7,51 @@
 
 #include "pEp_internal.h"
 
+/* Initialisation and finalisation
+ * ***************************************************************** */
+
+PEP_STATUS pEp_sql_init(PEP_SESSION session);
+PEP_STATUS pEp_sql_finalize(PEP_SESSION session,
+                            bool is_this_the_last_session);
+
+/* In order to guarantee that concurrent accesses to the management database,
+   possibly from multiple threads, happen correctly and without having failures
+   inside transactions, we surround SQL statements with
+     BEGIN EXCLUSIVE TRANSACTION;
+     ...
+     COMMIT TRANSACTION or ROLLBACK TRANSACTION;
+   The execution of BEGIN EXCLUSIVE TRANSACTION in C always happens in a loop
+   that automatically retries until the lock is acquired.  This feature is
+   implemented in sql_reliability.h .
+   Acquiring the lock at the beginning of the exclusive transaction becomes the
+   main contention point between threads.  Unfortunately there are cases in
+   which acquiring the lock seems to loop forever, even if no other threads are
+   racing.  As a last resort, after PEP_BACKOFF_TIMES_BEFORE_REFRESHING_DB
+   consecutive failures to begin an exclusive transaction, we close and reopen
+   the database connection, re-preparing every SQL statement.  After this
+   "refresh" it becomes possible to begin an exclusive transaction again.
+   This function implements refreshing.
+   Notice that refreshing is only legitimate while the SQL statement we are
+   failing to execute is BEGIN EXCLUSIVE TRANSACTION. */
+PEP_STATUS pEp_refresh_database_connections(PEP_SESSION session);
+
+
+/* Debugging
+ * ***************************************************************** */
+
+/* Return a written representation of the current SQL state for the management
+   db in the pointed session, suitable for logging or printing.  The returned
+   memory is session-local, and will remain valid until the next call to this
+   same function with the same session.
+   In case of any error this still returns a valid non-empty string. */
+const char *pEp_sql_status_text(PEP_SESSION session);
+
+
+/* Literal strings with queries, for SQL prepared statements
+ * ***************************************************************** */
+
 // increment this when patching DDL
 #define _DDL_USER_VERSION "19"
-
-PEP_STATUS init_databases(PEP_SESSION session);
-PEP_STATUS pEp_sql_init(PEP_SESSION session);
-PEP_STATUS pEp_prepare_sql_stmts(PEP_SESSION session);
-PEP_STATUS pEp_finalize_sql_stmts(PEP_SESSION session);
 
 /* The strings below are not always all used in a C file, so it is normal that
    a lot of these variables are unused: we do not want warnings, nor complicated
@@ -37,7 +75,7 @@ static const char *sql_begin_exclusive_transaction MAYBE_UNUSED =
 static const char *sql_commit_transaction MAYBE_UNUSED =
         "COMMIT TRANSACTION;";
 static const char *sql_rollback_transaction MAYBE_UNUSED =
-        "COMMIT TRANSACTION;";
+        "ROLLBACK TRANSACTION;";
 
 static const char *sql_log MAYBE_UNUSED =
         "insert into log (title, entity, description, comment)"
@@ -415,7 +453,7 @@ static const char *sql_is_key_sticky_for_user MAYBE_UNUSED =
         "select sticky from trust "
         "    where user_id = ?1 and pgp_keypair_fpr = upper(replace(?2,' ','')) ; ";
 
-static const char *sql_mark_as_compromised MAYBE_UNUSED =
+static const char *sql_mark_compromised MAYBE_UNUSED =
         "update trust not indexed set comm_type = 15"
         " where pgp_keypair_fpr = upper(replace(?1,' ','')) ;";
 

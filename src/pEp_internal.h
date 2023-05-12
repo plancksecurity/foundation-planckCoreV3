@@ -20,9 +20,6 @@
 // XML parameters string
 #define PARMS_MAX 32768
 
-// maximum busy wait time in ms
-#define BUSY_WAIT_TIME 5000
-
 // default keyserver
 #ifndef DEFAULT_KEYSERVER
 #define DEFAULT_KEYSERVER "hkps://keys.openpgp.org"
@@ -168,23 +165,48 @@
 #define LOG_BASIC(...)      PEP_LOG_BASIC("p≡p", "Engine", "" __VA_ARGS__)
 #define LOG_SERVICE(...)    PEP_LOG_SERVICE("p≡p", "Engine", "" __VA_ARGS__)
 
-#define LOG_MESSAGE_WITH(literal_string, the_message, macro)            \
-    do {                                                                \
-        const message *_log_message_m = (the_message);                  \
-        if (the_message == NULL)                                        \
-            macro(literal_string ": NULL");                             \
-        else                                                            \
-            macro(literal_string ": [%s %s, recv_by %s, %s]",           \
-                  (_log_message_m->id ? _log_message_m->id : "NO-ID"),  \
-                  (_log_message_m->shortmsg                             \
-                   ? _log_message_m->shortmsg                           \
-                   : "NO-SHORTMSG"),                                    \
-                  ((_log_message_m->recv_by                             \
-                    && ! EMPTYSTR(_log_message_m->recv_by->address))    \
-                   ? _log_message_m->recv_by->address                   \
-                   : "NO-RECV_BY-ADDRESS"),                             \
-                  ((_log_message_m->dir == PEP_dir_incoming)            \
-                   ? "incoming" : "outgoing"));                         \
+#define LOG_MESSAGE_WITH(literal_string, the_message, macro)             \
+    do {                                                                 \
+        const message *_log_message_m = (the_message);                   \
+        if (the_message == NULL)                                         \
+            macro(literal_string ": NULL message");                      \
+        else {                                                           \
+            const char *_msg_id = "NOID";                                \
+            const char *_msg_shortmsg = "NOSHORTMSG";                    \
+            const char *_msg_recvby_address = "NOADDR";                  \
+            const char *_msg_from_username = "NONAME";                   \
+            const char *_msg_from_address = "NOADDR";                    \
+            const char *_msg_to_username = "NONAME";                     \
+            const char *_msg_to_address = "NOADDR";                      \
+            const char *_msg_direction                                   \
+                = ((_log_message_m->dir == PEP_dir_incoming)             \
+                   ? "incoming" : "outgoing");                           \
+            if (! EMPTYSTR(_log_message_m->id))                          \
+                _msg_id = _log_message_m->id;                            \
+            if (! EMPTYSTR(_log_message_m->shortmsg))                    \
+                _msg_shortmsg = _log_message_m->shortmsg;                \
+            if (_log_message_m->recv_by                                  \
+                && ! EMPTYSTR(_log_message_m->recv_by->address))         \
+                _msg_recvby_address = _log_message_m->recv_by->address;  \
+            if (_log_message_m->from                                     \
+                && ! EMPTYSTR(_log_message_m->from->username))           \
+                _msg_from_username = _log_message_m->from->username;     \
+            if (_log_message_m->from                                     \
+                && ! EMPTYSTR(_log_message_m->from->address))            \
+                _msg_from_address = _log_message_m->from->address;       \
+            if (_log_message_m->to && _log_message_m->to->ident          \
+                && ! EMPTYSTR(_log_message_m->to->ident->username))      \
+                _msg_to_username = _log_message_m->to->ident->username;  \
+            if (_log_message_m->to && _log_message_m->to->ident          \
+                && ! EMPTYSTR(_log_message_m->to->ident->address))       \
+                _msg_to_address = _log_message_m->to->ident->address;    \
+            macro(literal_string " [%s %s, recv_by %s, %s"               \
+                  " (%s <%s> -> %s <%s>)]",                              \
+                  _msg_id, _msg_shortmsg, _msg_recvby_address,           \
+                  _msg_direction,                                        \
+                  _msg_from_username, _msg_from_address,                 \
+                  _msg_to_username, _msg_to_address);                    \
+        }                                                                \
     } while (false)
 
 /* Log the given literal string and the given message at the level specified in
@@ -527,7 +549,33 @@ struct _pEpSession {
     bool passive_mode;
     bool unencrypted_subject;
     bool service_log;
-    
+
+    /* An integer counting the number of SQL transactions currently in progress
+       within the dynamic extent of this session: transactions can be (properly)
+       nested in this C abstraction and pEp_sqlite3_step_nonbusy is defined so
+       as not to nest a new SQL transaction when one is already in progress;
+       however ROLLBACK is only possible at the outermost nesting level.
+       This field is altered by PEP_SQL_BEGIN_EXCLUSIVE_TRANSACTION,
+       PEP_SQL_COMMIT_TRANSACTION and PEP_SQL_COMMIT_TRANSACTION as defined in
+       sql_reliability.h . */
+    int transaction_in_progress_no;
+
+    // Session-local internal data
+    /* True iff this session is the first one on which init was called.  This is
+       useful to avoid performing some redundant initialisation (in particular
+       on the management database) on sessions different from the first. */
+    bool first_session_at_init_time;
+
+    /* A malloc-allocated string holding the result of the latest call to
+       sql_status_text , or NULL. */
+    char *sql_status_text;
+
+    /* True iff it is possible to reset database connections for the current
+       session.  Resetting database connections is used as a last resort in case
+       of concurrency problems.  See the comment for
+       pEp_refresh_database_connections in engine_sql.h */
+    bool can_refresh_database_connections;
+
 #ifndef NDEBUG
     int debug_color;
 #endif
@@ -569,8 +617,9 @@ void release_transport_system(PEP_SESSION session, bool out_last);
  *
  *
  */
-void
-sql_reset_and_clear_bindings(sqlite3_stmt *s);
+// temporarily replaced with a macro definition
+//void
+//sql_reset_and_clear_bindings(sqlite3_stmt *s);
 
 /**
  *  @internal
@@ -992,6 +1041,14 @@ static inline void set_max_version(unsigned int first_maj, unsigned int first_mi
 
 #ifndef EMPTYSTR
 #define EMPTYSTR(STR) ((STR) == NULL || (STR)[0] == '\0')
+#endif
+
+/* Expand to an expression evaluating to the argument if non-NULL, and to a
+   pointer to a statically-allocated empty string otherwise.  The expansion
+   never allocates memory with malloc.  The expansion may evaluate the macro
+   argument more than once. */
+#ifndef ASNONNULLSTR
+#define ASNONNULLSTR(str) ((str == NULL) ? "" : (str))
 #endif
 
 #ifndef PASS_ERROR

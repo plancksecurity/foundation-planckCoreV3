@@ -134,9 +134,10 @@ typedef enum {
 
     /* Debugging. */
     PEP_LOG_LEVEL_NONOK       =  300,
-    PEP_LOG_LEVEL_NOTOK       =  300 /* alias */,
+    PEP_LOG_LEVEL_NOTOK       =  300  /* alias */,
     PEP_LOG_LEVEL_FUNCTION    =  310,
-    PEP_LOG_LEVEL_TRACE       =  320,
+    PEP_LOG_LEVEL_TRACE       =  320, /* this is annoyingly verbose, and mostly
+                                         intended for the Engine maintainer. */
 
     /* Aliases or sensible PEP_LOG_LEVEL_MAXIMUM values for practical use. */
     PEP_LOG_LEVEL_PRODUCTION  =  PEP_LOG_LEVEL_CRITICAL /* Never log less. */,
@@ -275,7 +276,7 @@ typedef enum {
    Just as a rule of thumb:
    - 10000 entries take 1MB
    - 1 entry takes ~100B   */
-#define PEP_LOG_DATABASE_ROW_NO_MAXIMUM 10000
+#define PEP_LOG_DATABASE_ROW_NO_MAXIMUM 100000
 
 
 /* Logging an entry: user macros

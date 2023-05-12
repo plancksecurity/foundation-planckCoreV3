@@ -1,3 +1,9 @@
+* Make PEP_LOG_ASYNC actually take effect, but calling
+  config_enable_log_synchronous *after* the log subsystem has been initialised.
+  No visible API change, but when defining PEP_LOG_ASYNC and with the database
+  log destination configured in the user should feel the Engine to be faster.
+
+v3.3.0-RC1  2023-05-11
 * Make string lists and identity lists nicer to use, with new non-destructive
   functions.  These functions are all declared as API functions in order for
   them to be accessible to the adaptors as well.
@@ -5,14 +11,18 @@
   identity_list_cons_copy, identity_list_reversed .
 * Improve SQL concurrency.  The current change should be a proper fix to
   https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/133 ; I was able
-  to see that problem again after upgrading to the latest Thunderbird, but not
-  even that should be solved.
+  to see that problem again after upgrading to the latest Thunderbird, but now
+  even that is solved.
+  Solving this required a trick which is conceptually dirty, even if not complex
+  in terms of code size.  No external API change.
 * Add the pEp-engine-print-log script, useful to print database-destination logs
   in a compact textual format.  This simple bash script is useful for developers
   and possibly service people.
 * Be consistently case-insensitive when handling header names and MIME types.
 * Merge dirk's two xcode build-system commits from
   https://gitea.pep.foundation/pEp.foundation/pEpEngine/pulls/159 .
+* Remove support for _PEP_SQLITE_DEBUG; fail cleanly at compilation time if a
+  user tries to build with it.
 
 v3.2.1  2023-03-23
 * DEPENDENCIES: require an official release of libpEpTransport.

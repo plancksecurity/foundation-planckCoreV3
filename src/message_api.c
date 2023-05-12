@@ -1592,13 +1592,13 @@ static PEP_STATUS encrypt_PGP_MIME(
     char *mimetext = NULL;
     size_t csize;
     dst->enc_format = PEP_enc_PGP_MIME;
-
+    message *_src = NULL;
     if (src->shortmsg) {
         dst->shortmsg = strdup(src->shortmsg);
         PEP_WEAK_ASSERT_ORELSE_GOTO(dst->shortmsg, enomem);
     }
 
-    message *_src = calloc(1, sizeof(message));
+    _src = calloc(1, sizeof(message));
     PEP_WEAK_ASSERT_ORELSE_GOTO(_src, enomem);
 //    _src->longmsg = ptext;
     _src->longmsg = src->longmsg;
@@ -4251,12 +4251,11 @@ static PEP_STATUS protocol_version_upgrade_or_ignore(
     PEP_STATUS status = PEP_STATUS_OK;        
     int ver_compare = compare_versions(major, minor, ident->major_ver, ident->minor_ver);
     if (ver_compare > 0) {
-        status = set_protocol_version(session, ident, major, minor);
-        LOG_EVENT("%s <%s> upgrading to protocol version %i.%i: %i 0x%x %s",
-                  (ident->username ? ident->username : "NO-USERNAME"),
-                  (ident->address ? ident->address : "NO-ADDRESS"),
-                  major, minor,
+        LOG_EVENT("%s <%s> upgrading protocol version from %i.%i to %i.%i: %i 0x%x %s",
+                  ASNONNULLSTR(ident->username), ASNONNULLSTR(ident->address),
+                  ident->major_ver, ident->minor_ver, major, minor,
                   (int) status, (int) status, pEp_status_to_string(status));
+        status = set_protocol_version(session, ident, major, minor);
     }
     return status;    
 }
@@ -4884,14 +4883,14 @@ static PEP_STATUS process_Distribution_message(PEP_SESSION session,
                     status = send_pong(session, msg, dist);
                     break;
                 case Echo_PR_echoPong:
-                    LOG_EVENT("Received a Pong from %s <%s>", msg->from->username, msg->from->address);
+                    LOG_EVENT("Received a Pong from %s <%s>", ASNONNULLSTR(msg->from->username), ASNONNULLSTR(msg->from->address));
                     status = handle_pong(session, msg->recv_by, msg->from, dist);
                     if (status == PEP_STATUS_OK)
                         LOG_EVENT("Good");
                     else if (status == PEP_DISTRIBUTION_ILLEGAL_MESSAGE) {
                         /* If the challenge is wrong there is not much we can do
                            other than detecting a possible forged message. */
-                        LOG_WARNING("Received a Pong from %s <%s> with status %i %s: FORGED?", msg->from->username, msg->from->address, (int) status, pEp_status_to_string(status));
+                        LOG_WARNING("Received a Pong from %s <%s> with status %i %s: FORGED?", ASNONNULLSTR(msg->from->username), ASNONNULLSTR(msg->from->address), (int) status, pEp_status_to_string(status));
                     }
                     else
                         LOG_ERROR("Error: 0x%x %i %s", (int) status, (int) status, pEp_status_to_string(status));
@@ -6515,8 +6514,6 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     PEP_REQUIRE(session && src && dst && keylist && flags && rating);
     * rating = PEP_rating_undefined;
 
-    LOG_MESSAGE_TRACE("src is ", src);
-
     /* Do the actual work. */
     PEP_STATUS res = decrypt_message_2(session, src, dst, keylist, flags);
 
@@ -6911,8 +6908,8 @@ static PEP_STATUS get_trustwords_algorithm_for(
 #if ! defined PEP_TRUSTWORDS_XOR_COMPATIBILITY
     if (ideal_algorithm == PEP_trustwords_algorithm_xor) {
         LOG_CRITICAL("refusing to use xor trustwords for %s <%s> even if it would be required for compatibility (prevent downgrade attacks)",
-                     (partner->username ? partner->username : "no-username"),
-                     (partner->address ? partner->address : "no-address"));
+                     ASNONNULLSTR(partner->username),
+                     ASNONNULLSTR(partner->address));
         status = PEP_TRUSTWORD_NOT_FOUND;
     }
     else
@@ -6952,10 +6949,8 @@ static PEP_STATUS get_trustwords_algorithm_for_either(
     /* Set the result. */
     * algorithm_p = algorithm_both;
     LOG_TRACE("the result for %s <%s> and %s <%s> is %s",
-              (one->username ? one->username : "NO-USERNAME"),
-              (one->address ? one->address : "NO-ADDRESS"),
-              (other->username ? other->username : "NO-USERNAME"),
-              (other->address ? other->address : "NO-ADDRESS"),
+              ASNONNULLSTR(one->username), ASNONNULLSTR(one->address),
+              ASNONNULLSTR(other->username), ASNONNULLSTR(other->address),
               PEP_trustwords_algorithm_to_string(session, * algorithm_p));
 
  end:
@@ -7085,7 +7080,7 @@ PEP_STATUS normalize_fpr(PEP_SESSION session, char **normalized_fpr,
  *  @internal
  *  <!--        text_to_bytes()       -->
  *
- *  @brief      Decodea '\0'-terminated string of hexadecimal digits into a
+ *  @brief      Decode a '\0'-terminated string of hexadecimal digits into a
  *              fresh array of bytes along with its size.
  *
  *  @param[in]  session             session handle
@@ -7121,6 +7116,7 @@ static PEP_STATUS text_to_bytes(PEP_SESSION session,
     PEP_STATUS status = PEP_STATUS_OK;
     char *text;
     unsigned char *result = NULL;
+    size_t byte_no = /* initialising only to silence a spurious GCC warning */ 0;
     status = normalize_fpr(session, & text, non_normalized_text);
     if (status != PEP_STATUS_OK)
         FAIL(status);
@@ -7130,7 +7126,7 @@ static PEP_STATUS text_to_bytes(PEP_SESSION session,
 
     /* Allocate the result. */
     int hex_digit_no = strlen(text);
-    size_t byte_no = hex_digit_no / 2;
+    byte_no = hex_digit_no / 2;
     result = calloc(byte_no, 1);
     if (result == NULL)
         FAIL(PEP_OUT_OF_MEMORY);
