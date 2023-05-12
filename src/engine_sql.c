@@ -4,6 +4,11 @@
  * @brief functions to prepare SQL statements
  */
 
+/* The functions defined in this compilation unit on are only used internally
+   and should not pollute the log with frequent and uninteresting entries every
+   time one of them is called.  */
+#define PEP_NO_LOG_FUNCTION_ENTRY  1
+
 #include "pEp_internal.h"
 #include "engine_sql.h"
 #include "echo_api.h"  /* for echo_finalize and echo_initialize ,
@@ -2293,11 +2298,6 @@ static const char *pEp_sqlite3_errname(int sqlite_error_code)
     }
 #undef HANDLE
 }
-
-/* The functions defined from now in this compilation unit on are only used
-   internally and should not pollute the log with frequent and uninteresting
-   entries every time one of them is called.  */
-#define PEP_NO_LOG_FUNCTION_ENTRY  1
 
 const char *pEp_sql_status_text_for_database(PEP_SESSION session, sqlite3 *db)
 {
