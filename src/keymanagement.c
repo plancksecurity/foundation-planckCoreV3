@@ -1260,6 +1260,7 @@ pEp_free:
 
 DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
 {
+    PEP_REQUIRE(session && identity && ! EMPTYSTR(identity->address));
     return _myself(session, identity, true, true, false, false);
 }
 
