@@ -195,6 +195,49 @@
 #define LOG_BASIC(...)      PEP_LOG_BASIC("p≡p", "Engine", "" __VA_ARGS__)
 #define LOG_SERVICE(...)    PEP_LOG_SERVICE("p≡p", "Engine", "" __VA_ARGS__)
 
+#define LOG_IDENTITY_WITH(literal_string, the_identity, macro)           \
+    do {                                                                 \
+            const pEp_identity *_liw_identity = (the_identity);          \
+            if (_liw_identity == NULL)                                   \
+                macro(literal_string " is NULL");                        \
+            else                                                         \
+                macro(literal_string " is %s %s <%s>",                   \
+                      (_liw_identity->user_id ? _liw_identity->user_id   \
+                       : "NULL-user-id"),                                \
+                      (_liw_identity->username ? _liw_identity->username \
+                       : "NULL-username"),                               \
+                      (_liw_identity->address ? _liw_identity->address   \
+                       : "NULL-address"));                               \
+    } while (false)
+/* Log the given literal string and the given identity at the level specified in
+   the macro name.
+   Example:
+     LOG_IDENTITY_WARNING("from identity", msg->from);  */
+#define LOG_IDENTITY_CRITICAL(literal_string, the_identity)  \
+    LOG_IDENTITY_WITH(literal_string, (the_identity), LOG_CRITICAL)
+#define LOG_IDENTITY_ERROR(literal_string, the_identity)  \
+    LOG_IDENTITY_WITH(literal_string, (the_identity), LOG_ERROR)
+#define LOG_IDENTITY_WARNING(literal_string, the_identity)  \
+    LOG_IDENTITY_WITH(literal_string, (the_identity), LOG_WARNING)
+#define LOG_IDENTITY_EVENT(literal_string, the_identity)  \
+    LOG_IDENTITY_WITH(literal_string, (the_identity), LOG_EVENT)
+#define LOG_IDENTITY_API(literal_string, the_identity)  \
+    LOG_IDENTITY_WITH(literal_string, (the_identity), LOG_API)
+#define LOG_IDENTITY_NONOK(literal_string, the_identity)  \
+    LOG_IDENTITY_WITH(literal_string, (the_identity), LOG_NONOK)
+#define LOG_IDENTITY_NOTOK(literal_string, the_identity)  \
+    LOG_IDENTITY_WITH(literal_string, (the_identity), LOG_NOTOK)
+#define LOG_IDENTITY_FUNCTION(literal_string, the_identity)  \
+    LOG_IDENTITY_WITH(literal_string, (the_identity), LOG_FUNCTION)
+#define LOG_IDENTITY_TRACE(literal_string, the_identity)  \
+    LOG_IDENTITY_WITH(literal_string, (the_identity), LOG_TRACE)
+#define LOG_IDENTITY_PRODUCTION(literal_string, the_identity)  \
+    LOG_IDENTITY_WITH(literal_string, (the_identity), LOG_PRODUCTION)
+#define LOG_IDENTITY_BASIC(literal_string, the_identity)  \
+    LOG_IDENTITY_WITH(literal_string, (the_identity), LOG_BASIC)
+#define LOG_IDENTITY_SERVICE(literal_string, the_identity)  \
+    LOG_IDENTITY_WITH(literal_string, (the_identity), LOG_SERVICE)
+
 #define LOG_MESSAGE_WITH(literal_string, the_message, macro)             \
     do {                                                                 \
         const message *_log_message_m = (the_message);                   \
@@ -249,10 +292,14 @@
     LOG_MESSAGE_WITH(literal_string, (the_message), LOG_ERROR)
 #define LOG_MESSAGE_WARNING(literal_string, the_message)  \
     LOG_MESSAGE_WITH(literal_string, (the_message), LOG_WARNING)
-#define LOG_MESSAGE_API(literal_string, the_message)  \
-    LOG_MESSAGE_WITH(literal_string, (the_message), LOG_API)
 #define LOG_MESSAGE_EVENT(literal_string, the_message)  \
     LOG_MESSAGE_WITH(literal_string, (the_message), LOG_EVENT)
+#define LOG_MESSAGE_API(literal_string, the_message)  \
+    LOG_MESSAGE_WITH(literal_string, (the_message), LOG_API)
+#define LOG_MESSAGE_NONOK(literal_string, the_message)  \
+    LOG_MESSAGE_WITH(literal_string, (the_message), LOG_NONOK)
+#define LOG_MESSAGE_NOTOK(literal_string, the_message)  \
+    LOG_MESSAGE_WITH(literal_string, (the_message), LOG_NOTOK)
 #define LOG_MESSAGE_FUNCTION(literal_string, the_message)  \
     LOG_MESSAGE_WITH(literal_string, (the_message), LOG_FUNCTION)
 #define LOG_MESSAGE_TRACE(literal_string, the_message)  \
