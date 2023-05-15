@@ -914,6 +914,7 @@ DYNAMIC_API PEP_STATUS get_identity(
     )
 {
     PEP_REQUIRE(session && address && address[0] && identity);
+    LOG_TRACE("address <%s>, user_id %s", ASNONNULLSTR(address), ASNONNULLSTR(user_id));
 
     PEP_STATUS status = PEP_STATUS_OK;
     pEp_identity *_identity = NULL;
