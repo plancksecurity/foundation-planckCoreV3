@@ -140,8 +140,8 @@
 #   define PEP_ENGINE_COMMIT "unknown-commit"
 #endif
 #if ! defined (PEP_ENGINE_COMMIT_DATE)
-#   pragma message "WARNING: You should define the CPP macro PEP_ENGINE_COMMIT as the latest Engine git commit date (ex.\: \"Wed May 10 16:46:10 2023 +0200\") from the compiler command line"
-#   define PEP_ENGINE_COMMIT "unknown-commit-date"
+#   pragma message "WARNING: You should define the CPP macro PEP_ENGINE_COMMIT_DATE as the latest Engine git commit date (ex.\: \"Wed May 10 16:46:10 2023 +0200\") from the compiler command line"
+#   define PEP_ENGINE_COMMIT_DATE "unknown-commit-date"
 #endif
 
 /* This version string, a literal string constant, is useful for bug reporters
