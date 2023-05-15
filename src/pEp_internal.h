@@ -201,7 +201,7 @@
             if (_liw_identity == NULL)                                   \
                 macro(literal_string " is NULL");                        \
             else                                                         \
-                macro(literal_string " is %s %s <%s>",                   \
+                macro(literal_string " is %s \"%s\" <%s>",               \
                       (_liw_identity->user_id ? _liw_identity->user_id   \
                        : "NULL-user-id"),                                \
                       (_liw_identity->username ? _liw_identity->username \
