@@ -934,8 +934,8 @@ DYNAMIC_API PEP_STATUS get_identity(
                 (const char *) sqlite3_column_text(session->get_identity, 1)
                 );
         PEP_WEAK_ASSERT_ORELSE(_identity, {
-            sql_reset_and_clear_bindings(session->get_identity);
-            return PEP_OUT_OF_MEMORY;
+            status = PEP_OUT_OF_MEMORY;
+            goto end;
         });
 
         _identity->comm_type = (PEP_comm_type)
@@ -963,11 +963,11 @@ DYNAMIC_API PEP_STATUS get_identity(
         *identity = _identity;
         break;
     default:
-        sql_reset_and_clear_bindings(session->get_identity);
         status = PEP_CANNOT_FIND_IDENTITY;
         *identity = NULL;
     }
 
+ end:
     sql_reset_and_clear_bindings(session->get_identity);
 
     LOG_NONOK_STATUS_NONOK;
