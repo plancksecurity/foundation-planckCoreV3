@@ -1985,9 +1985,11 @@ DYNAMIC_API PEP_STATUS is_pEp_user(PEP_SESSION session, pEp_identity *identity, 
 PEP_STATUS is_own_address(PEP_SESSION session, const char* address, bool* is_own_addr)
 {
     PEP_REQUIRE(session && is_own_addr && ! EMPTYSTR(address));
+    LOG_TRACE("address, <%s>", ASNONNULLSTR(address));
 
     *is_own_addr = false;
 
+    PEP_STATUS status = PEP_STATUS_OK;
     sql_reset_and_clear_bindings(session->is_own_address);
     sqlite3_bind_text(session->is_own_address, 1, address, -1,
             SQLITE_STATIC);
@@ -1999,13 +2001,14 @@ PEP_STATUS is_own_address(PEP_SESSION session, const char* address, bool* is_own
             break;
         }
         default:
-            sql_reset_and_clear_bindings(session->is_own_address);
-            return PEP_RECORD_NOT_FOUND;
+            status = PEP_RECORD_NOT_FOUND;
+            goto end;
     }
 
+ end:
     sql_reset_and_clear_bindings(session->is_own_address);
-    
-    return PEP_STATUS_OK;
+    LOG_NONOK_STATUS_NONOK;
+    return status;
 }
 
 PEP_STATUS bind_own_ident_with_contact_ident(PEP_SESSION session,
