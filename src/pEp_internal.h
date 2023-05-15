@@ -1081,6 +1081,10 @@ static inline void set_max_version(unsigned int first_maj, unsigned int first_mi
 #define ASNONNULLSTR(str) ((str == NULL) ? "" : (str))
 #endif
 
+#ifndef BOOLTOSTR
+#define BOOLTOSTR(b) ((b) ? "true" : "false")
+#endif
+
 #ifndef PASS_ERROR
 #define PASS_ERROR(ST) (ST == PEP_PASSPHRASE_REQUIRED || ST == PEP_WRONG_PASSPHRASE || ST == PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED)
 #endif
