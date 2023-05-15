@@ -275,13 +275,20 @@ PEP_STATUS identity_known_to_use_pEp(PEP_SESSION session,
                                      const pEp_identity *identity,
                                      bool *known_to_use_pEp)
 {
-    // TEMPORARY: begin
-    PEP_ASSERT(session && identity && known_to_use_pEp);
-    PEP_ASSERT(! EMPTYSTR(identity->address));
-    PEP_ASSERT(! EMPTYSTR(identity->user_id));
+    // TEMPORARY, to make sure that https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/162 is actually solved.
+    PEP_REQUIRE(session && identity && known_to_use_pEp
+                && ! EMPTYSTR(identity->address)
+                /*&& // Temporarily disabled, to work around https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/162
+                  ! EMPTYSTR(identity->user_id) */
+                );
+    if (EMPTYSTR(identity->user_id)) {
+        LOG_CRITICAL("WRONG WRONG WRONG WRONG: This is https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/162 ");
+        LOG_IDENTITY_CRITICAL("This identity has no user id.  This is very wrong!  Please send a detailed log to positron.  (Working aroud the issue for now.)", identity);
+        // TEMPORARY: work around the issue and go on, instead of failing on a broken requirement
+    }
     // TEMPORARY: end
     /* Sanity checks. */
-    PEP_REQUIRE(session && identity && known_to_use_pEp
+    PEP_ASSERT(session && identity && known_to_use_pEp
                 && ! EMPTYSTR(identity->address)
                 && ! EMPTYSTR(identity->user_id));
 
