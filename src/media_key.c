@@ -327,6 +327,7 @@ PEP_STATUS amend_identity_with_media_key_information(PEP_SESSION session,
 {
     /* Sanity checks. */
     PEP_REQUIRE(session && identity);
+    LOG_IDENTITY_TRACE("working on", identity);
 
 #define DUMP                                                                \
     do {                                                                    \
@@ -345,11 +346,11 @@ PEP_STATUS amend_identity_with_media_key_information(PEP_SESSION session,
 
     /* On error relay the error and do nothing else. */
     if (status != PEP_STATUS_OK)
-        return status;
+        goto end;
 
     /* If there is no media key, do nothing. */
     if (! has_media_key)
-        return PEP_STATUS_OK;
+        goto end;
 
     /* If we arrived here there is a media key.  Amend the identity so that it
        is recognised as using a recent pEp version. */
@@ -374,7 +375,10 @@ PEP_STATUS amend_identity_with_media_key_information(PEP_SESSION session,
     }
     LOG_TRACE("  ->");
     DUMP;
-    return PEP_STATUS_OK;
+
+ end:
+    LOG_STATUS_TRACE;
+    return status;
 }
 
 

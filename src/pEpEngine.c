@@ -925,6 +925,7 @@ DYNAMIC_API PEP_STATUS get_identity(
     sqlite3_bind_text(session->get_identity, 2, user_id, -1, SQLITE_STATIC);
 
     const int result = pEp_sqlite3_step_nonbusy(session, session->get_identity);
+    LOG_TRACE("sqlstatus is %s", pEp_sql_status_text(session));
     switch (result) {
     case SQLITE_ROW:
         _identity = new_identity(
@@ -970,7 +971,7 @@ DYNAMIC_API PEP_STATUS get_identity(
  end:
     sql_reset_and_clear_bindings(session->get_identity);
 
-    LOG_NONOK_STATUS_NONOK;
+    LOG_STATUS_TRACE;
     if (status == PEP_STATUS_OK)
         LOG_IDENTITY_TRACE("the result is", * identity);
     return status;
@@ -1054,7 +1055,7 @@ PEP_STATUS get_identities_by_userid(
     }
             
     sql_reset_and_clear_bindings(session->get_identities_by_userid);
-
+    LOG_STATUS_TRACE;
     return status;
 }
 
@@ -1124,7 +1125,7 @@ PEP_STATUS get_identities_by_main_key_id(
     }
             
     sql_reset_and_clear_bindings(session->get_identities_by_main_key_id);
-
+    LOG_STATUS_TRACE;
     return status;
 }
 
@@ -1190,6 +1191,7 @@ PEP_STATUS get_identity_without_trust_check(
     }
 
     sql_reset_and_clear_bindings(session->get_identity_without_trust_check);
+    LOG_STATUS_TRACE;
     return status;
 }
 
@@ -1201,6 +1203,7 @@ PEP_STATUS get_identities_by_address(
     )
 {
     PEP_REQUIRE(session && ! EMPTYSTR(address) && id_list);
+    LOG_TRACE("address is %s", ASNONNULLSTR(address));
 
     *id_list = NULL;
     identity_list* ident_list = NULL;
@@ -1255,11 +1258,12 @@ PEP_STATUS get_identities_by_address(
     sql_reset_and_clear_bindings(session->get_identities_by_address);
     
     *id_list = ident_list;
-    
+
+    PEP_STATUS status = PEP_STATUS_OK;
     if (!ident_list)
-        return PEP_CANNOT_FIND_IDENTITY;
-    
-    return PEP_STATUS_OK;
+        status = PEP_CANNOT_FIND_IDENTITY;
+    LOG_STATUS_TRACE;
+    return status;
 }
 
 /**
@@ -1307,6 +1311,9 @@ PEP_STATUS exists_identity_entry(PEP_SESSION session, pEp_identity* identity,
     }
 
     sql_reset_and_clear_bindings(session->exists_identity_entry);
+    LOG_STATUS_TRACE;
+    if (status == PEP_STATUS_OK)
+        LOG_TRACE("result is %s", BOOLTOSTR(* exists));
     return status;
 }
 
@@ -1338,6 +1345,9 @@ PEP_STATUS exists_trust_entry(PEP_SESSION session, pEp_identity* identity,
     }
     
     sql_reset_and_clear_bindings(session->exists_trust_entry);
+    LOG_STATUS_TRACE;
+    if (status == PEP_STATUS_OK)
+        LOG_TRACE("result is %s", BOOLTOSTR(* exists));
     return status;
 }
 
@@ -1351,11 +1361,12 @@ PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr) {
             SQLITE_STATIC);
     result = pEp_sqlite3_step_nonbusy(session, session->set_pgp_keypair);
     sql_reset_and_clear_bindings(session->set_pgp_keypair);
-    if (result != SQLITE_DONE) {
-        return PEP_CANNOT_SET_PGP_KEYPAIR;
-    }
-    
-    return PEP_STATUS_OK;
+
+    PEP_STATUS status = PEP_STATUS_OK;
+    if (result != SQLITE_DONE)
+        status = PEP_CANNOT_SET_PGP_KEYPAIR;
+    LOG_STATUS_TRACE;
+    return status;
 }
 
 PEP_STATUS clear_trust_info(PEP_SESSION session,
@@ -1372,11 +1383,12 @@ PEP_STATUS clear_trust_info(PEP_SESSION session,
             SQLITE_STATIC);
     result = pEp_sqlite3_step_nonbusy(session, session->clear_trust_info);
     sql_reset_and_clear_bindings(session->clear_trust_info);
-    if (result != SQLITE_DONE) {
-        return PEP_UNKNOWN_ERROR;
-    }
-    
-    return PEP_STATUS_OK;
+
+    PEP_STATUS status = PEP_STATUS_OK;
+    if (result != SQLITE_DONE)
+        status = PEP_UNKNOWN_ERROR;
+    LOG_STATUS_TRACE;
+    return status;
 }
 
 /**
@@ -1464,7 +1476,7 @@ static PEP_STATUS _set_or_update_identity_entry(PEP_SESSION session,
     PEP_STATUS status = PEP_STATUS_OK;
     if (result != SQLITE_DONE)
         status = PEP_CANNOT_SET_IDENTITY;
-    LOG_NONOK_STATUS_NONOK;
+    LOG_STATUS_TRACE;
     return status;
 }
 
@@ -1700,7 +1712,7 @@ end:
         PEP_SQL_COMMIT_TRANSACTION();
     else
         PEP_SQL_ROLLBACK_TRANSACTION();
-
+    LOG_STATUS_TRACE;
     return status;
 #undef FAIL
 #undef FAIL_IF_NEEDED
@@ -1792,10 +1804,12 @@ DYNAMIC_API PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user) 
     bool person_exists = false;
     
     status = exists_person(session, user, &person_exists);
-    
-    if (status != PEP_STATUS_OK)
+    if (status != PEP_STATUS_OK) {
+        LOG_NONOK_STATUS_NONOK;
         return status;
-        
+    }
+    LOG_TRACE("does the person exist?  %s", BOOLTOSTR(person_exists));
+
     if (!person_exists)
         status = set_person(session, user, true);
         
@@ -1810,7 +1824,7 @@ DYNAMIC_API PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user) 
         status = PEP_CANNOT_SET_PERSON;
     else
         status = update_pEp_user_trust_vals(session, user);
-    LOG_NONOK_STATUS_NONOK;
+    LOG_STATUS_TRACE;
     return status;
 }
 
@@ -1891,6 +1905,7 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity,
             }
             default:
                 sql_reset_and_clear_bindings(session->exists_person);
+                LOG_ERROR("sqlstatus is %s", pEp_sql_status_text(session));
                 return PEP_UNKNOWN_DB_ERROR;
         }
         sql_reset_and_clear_bindings(session->exists_person);
@@ -1904,7 +1919,9 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity,
     else
         free(alias_default);
 
-    LOG_NONOK_STATUS_NONOK;
+    LOG_STATUS_TRACE;
+    if (status == PEP_STATUS_OK)
+        LOG_TRACE("does the person exist?  %s", BOOLTOSTR(* exists));
     return status;
 }
 
@@ -1933,10 +1950,10 @@ PEP_STATUS delete_person(PEP_SESSION session, const char* user_id) {
                       
     int result = pEp_sqlite3_step_nonbusy(session, session->delete_person);
     
+    sql_reset_and_clear_bindings(session->delete_person);
     if (result != SQLITE_DONE)
         status = PEP_UNKNOWN_ERROR;
-        
-    sql_reset_and_clear_bindings(session->delete_person);
+    LOG_STATUS_TRACE;
     return status;
 }
 
@@ -1978,7 +1995,7 @@ DYNAMIC_API PEP_STATUS is_pEp_user(PEP_SESSION session, pEp_identity *identity, 
  end:
     sql_reset_and_clear_bindings(session->is_pEp_user);
     free(alias_default);
-    LOG_NONOK_STATUS_NONOK;
+    LOG_STATUS_TRACE;
     return status;
 }
 
@@ -2035,7 +2052,7 @@ PEP_STATUS bind_own_ident_with_contact_ident(PEP_SESSION session,
     PEP_STATUS status = PEP_STATUS_OK;
     if (result != SQLITE_DONE)
         status = PEP_CANNOT_SET_PERSON;
-    LOG_NONOK_STATUS_NONOK;
+    LOG_STATUS_TRACE;
     return status;
 }
 
@@ -3393,6 +3410,8 @@ DYNAMIC_API PEP_STATUS key_expired(
     LOG_NONOK_STATUS_NONOK;
     if (status == PEP_STATUS_OK && * expired)
         LOG_NONOK("EXPIRED KEY: %s", fpr);
+    if (status == PEP_STATUS_OK)
+        LOG_TRACE("expired?  %s", BOOLTOSTR(* expired));
     return status;
 }
 
@@ -3410,6 +3429,8 @@ DYNAMIC_API PEP_STATUS key_revoked(
     LOG_NONOK_STATUS_NONOK;
     if (status == PEP_STATUS_OK && * revoked)
         LOG_NONOK("REVOKED KEY: %s", fpr);
+    if (status == PEP_STATUS_OK)
+        LOG_TRACE("revoked?  %s", BOOLTOSTR(* revoked));
     return status;
 }
 
