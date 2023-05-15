@@ -86,7 +86,7 @@ DYNAMIC_API PEP_STATUS init(
        initialising subsystems. */
     _session->first_session_at_init_time = in_first;
 
-    _session->version = PEP_ENGINE_VERSION;
+    _session->version = PEP_ENGINE_VERSION_LONG;
     _session->messageToSend = messageToSend;
     _session->inject_sync_event = inject_sync_event;
     _session->ensure_passphrase = ensure_passphrase;
@@ -157,7 +157,7 @@ DYNAMIC_API PEP_STATUS init(
         // assert(false);
     }
     _LOG_EVENT("p≡p Engine %s   protocol %s   SQLite %s",
-               PEP_ENGINE_VERSION, PEP_PROTOCOL_VERSION,
+               PEP_ENGINE_VERSION_LONG, PEP_PROTOCOL_VERSION,
                sqlite3_libversion());
     _LOG_API("initialise session %p", _session);
 
@@ -3952,7 +3952,7 @@ const char *pEpEngineVersion = PEP_ENGINE_VERSION;
 const char *pEpEngineProtcolVersion = PEP_PROTOCOL_VERSION;
 
 DYNAMIC_API const char* get_engine_version(void) {
-    return PEP_ENGINE_VERSION;
+    return PEP_ENGINE_VERSION_LONG;
 }
 
 DYNAMIC_API const char* get_protocol_version(void) {

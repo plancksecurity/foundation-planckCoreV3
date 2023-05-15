@@ -2,6 +2,16 @@
   config_enable_log_synchronous *after* the log subsystem has been initialised.
   No visible API change, but when defining PEP_LOG_ASYNC and with the database
   log destination configured in the user should feel the Engine to be faster.
+* pEp_abort_unless_PEP_NOABORT: add a session parameter (as the only parameter);
+  this is important in case the function is called by adapters.
+* build system improvements: add the CPP macros
+  * PEP_ENGINE_BRANCH
+  * PEP_ENGINE_COMMIT
+  * PEP_ENGINE_COMMIT_DATE
+  defined by the makefile directly on the compiler command line, as string
+  literals.  Platforms not using make to build the Engine should supply these.
+* in case of assertion or requirement failure print the expansion of the macros
+  above, to help people reporting bugs.  No API change.
 
 v3.3.0-RC1  2023-05-11
 * Make string lists and identity lists nicer to use, with new non-destructive

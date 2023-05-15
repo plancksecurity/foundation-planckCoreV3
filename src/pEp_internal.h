@@ -126,6 +126,36 @@
 #include "Sync_func.h"
 
 
+/* Detailed versioning.
+ * ***************************************************************** */
+
+/* Provide fallback definitions for platforms not supplying definitions for
+   the component macros used in PEP_ENGINE_VERSION_LONG macros. */
+#if ! defined (PEP_ENGINE_BRANCH)
+#   pragma message "WARNING: You should define the CPP macro PEP_ENGINE_BRANCH as the Engine git branch (ex.: \"Release_3.3\") from the compiler command line")
+#   define PEP_ENGINE_BRANCH "unknown-branch"
+#endif
+#if ! defined (PEP_ENGINE_COMMIT)
+#   pragma message "WARNING: You should define the CPP macro PEP_ENGINE_COMMIT as the latest Engine git commit (ex.: \"dfdba9da6139441a338433a6227039a67996265f\") from the compiler command line"
+#   define PEP_ENGINE_COMMIT "unknown-commit"
+#endif
+#if ! defined (PEP_ENGINE_COMMIT_DATE)
+#   pragma message "WARNING: You should define the CPP macro PEP_ENGINE_COMMIT as the latest Engine git commit date (ex.\: \"Wed May 10 16:46:10 2023 +0200\") from the compiler command line"
+#   define PEP_ENGINE_COMMIT "unknown-commit-date"
+#endif
+
+/* This version string, a literal string constant, is useful for bug reporters
+   as it contains (where available) precise information about the build commit
+   that was used to build th Engine.
+   This macro is only to be used internally; the actual definitions for the
+   component strings used in the definition come from the pEp Engine
+   makefile and will not survive installation. */
+#define PEP_ENGINE_VERSION_LONG                                             \
+    PEP_ENGINE_VERSION                                                      \
+    /* These are defined in the compiler command line. */                   \
+    " " PEP_ENGINE_BRANCH " " PEP_ENGINE_COMMIT " " PEP_ENGINE_COMMIT_DATE
+
+
 /* Logging.
  * ***************************************************************** */
 
