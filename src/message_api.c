@@ -2362,8 +2362,8 @@ PEP_STATUS _attach_key(PEP_SESSION session, const char* fpr, message *msg, const
 
 void attach_own_key(PEP_SESSION session, message *msg)
 {
-    PEP_REQUIRE_ORELSE(session && msg, { return; });
-    PEP_REQUIRE_ORELSE(msg->from && ! EMPTYSTR(msg->from->fpr), { return; });
+    PEP_REQUIRE_ORELSE(session && msg && msg->from && ! EMPTYSTR(msg->from->fpr),
+                       { return; });
     if (msg->dir == PEP_dir_incoming)
         return;
 

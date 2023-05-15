@@ -3391,10 +3391,11 @@ static PEP_STATUS get_crashdump_log_combine(PEP_SESSION session,
                                             const char *field,
                                             bool end_of_the_line)
 {
-    if (false) // too distracting
+#if 0 /* the log output is too distracting. */
     PEP_REQUIRE(session && logdata_p
                 && used_size_p && allocated_size_p
                 /* the new field is allowed to be an empty string or even NULL. */);
+#endif
 
     /* We quote if there is any '"' or ',' character inside the field.  '"'
        characters are already escaped as double "\"\"" two-character sequences
