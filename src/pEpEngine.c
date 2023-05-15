@@ -2024,6 +2024,8 @@ PEP_STATUS is_own_address(PEP_SESSION session, const char* address, bool* is_own
 
  end:
     sql_reset_and_clear_bindings(session->is_own_address);
+    if (status == PEP_STATUS_OK)
+        LOG_TRACE("the result is %s", BOOLTOSTR(* is_own_addr));
     LOG_NONOK_STATUS_NONOK;
     return status;
 }
