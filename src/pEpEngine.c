@@ -2002,7 +2002,7 @@ DYNAMIC_API PEP_STATUS is_pEp_user(PEP_SESSION session, pEp_identity *identity, 
 PEP_STATUS is_own_address(PEP_SESSION session, const char* address, bool* is_own_addr)
 {
     PEP_REQUIRE(session && is_own_addr && ! EMPTYSTR(address));
-    LOG_TRACE("address, <%s>", ASNONNULLSTR(address));
+    LOG_TRACE("address is <%s>", ASNONNULLSTR(address));
 
     *is_own_addr = false;
 
