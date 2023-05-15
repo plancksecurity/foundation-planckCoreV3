@@ -968,6 +968,10 @@ DYNAMIC_API PEP_STATUS get_identity(
     }
 
     sql_reset_and_clear_bindings(session->get_identity);
+
+    LOG_NONOK_STATUS_NONOK;
+    if (status == PEP_STATUS_OK)
+        LOG_IDENTITY_TRACE("the result is", * identity);
     return status;
 }
 
@@ -1277,6 +1281,7 @@ PEP_STATUS exists_identity_entry(PEP_SESSION session, pEp_identity* identity,
                                  bool* exists) {
     PEP_REQUIRE(session && identity && exists && ! EMPTYSTR(identity->user_id)
                 && ! EMPTYSTR(identity->address));
+    LOG_IDENTITY_TRACE("working on", identity);
     
     *exists = false;
     
@@ -1308,6 +1313,7 @@ PEP_STATUS exists_trust_entry(PEP_SESSION session, pEp_identity* identity,
                               bool* exists) {
     PEP_REQUIRE(session && exists && identity
                 && ! EMPTYSTR(identity->user_id) && ! EMPTYSTR(identity->fpr));
+    LOG_IDENTITY_TRACE("working on", identity);
     
     *exists = false;
     
@@ -1393,6 +1399,7 @@ static PEP_STATUS _set_or_update_trust(PEP_SESSION session,
                                        sqlite3_stmt* set_or_update) {
     PEP_REQUIRE(session && identity && ! EMPTYSTR(identity->user_id)
                 && ! EMPTYSTR(identity->fpr));
+    LOG_IDENTITY_TRACE("working on", identity);
 
     PEP_STATUS status = set_pgp_keypair(session, identity->fpr);
     if (status != PEP_STATUS_OK)
@@ -1434,6 +1441,7 @@ static PEP_STATUS _set_or_update_identity_entry(PEP_SESSION session,
                                                 sqlite3_stmt* set_or_update) {
     PEP_REQUIRE(session && identity && ! EMPTYSTR(identity->user_id)
                 && ! EMPTYSTR(identity->address));
+    LOG_IDENTITY_TRACE("working on", identity);
 
     sql_reset_and_clear_bindings(set_or_update);
     sqlite3_bind_text(set_or_update, 1, identity->address, -1,
@@ -1451,10 +1459,12 @@ static PEP_STATUS _set_or_update_identity_entry(PEP_SESSION session,
         
     int result = pEp_sqlite3_step_nonbusy(session, set_or_update);
     sql_reset_and_clear_bindings(set_or_update);
+
+    PEP_STATUS status = PEP_STATUS_OK;
     if (result != SQLITE_DONE)
-        return PEP_CANNOT_SET_IDENTITY;
-    
-    return PEP_STATUS_OK;
+        status = PEP_CANNOT_SET_IDENTITY;
+    LOG_NONOK_STATUS_NONOK;
+    return status;
 }
 
 /**
@@ -1478,6 +1488,7 @@ static PEP_STATUS _set_or_update_person(PEP_SESSION session,
                                         sqlite3_stmt* set_or_update) {
     PEP_REQUIRE(session && identity && ! EMPTYSTR(identity->user_id)
                 && ! EMPTYSTR(identity->username));
+    LOG_IDENTITY_TRACE("working on", identity);
 
     sql_reset_and_clear_bindings(set_or_update);
     sqlite3_bind_text(set_or_update, 1, identity->user_id, -1,
@@ -1493,11 +1504,12 @@ static PEP_STATUS _set_or_update_person(PEP_SESSION session,
                       SQLITE_STATIC);
     int result = pEp_sqlite3_step_nonbusy(session, set_or_update);
     sql_reset_and_clear_bindings(set_or_update);
-    
+
+    PEP_STATUS status = PEP_STATUS_OK;
     if (result != SQLITE_DONE)
-        return PEP_CANNOT_SET_PERSON;
-    
-    return PEP_STATUS_OK;                                         
+        status = PEP_CANNOT_SET_PERSON;
+    LOG_NONOK_STATUS_NONOK;
+    return status;
 }
 
 PEP_STATUS set_or_update_with_identity(PEP_SESSION session,
@@ -1508,6 +1520,7 @@ PEP_STATUS set_or_update_with_identity(PEP_SESSION session,
                                        sqlite3_stmt* set_query,
                                        bool guard_transaction) {
     PEP_REQUIRE(session && identity && set_function && exists_function);
+    LOG_IDENTITY_TRACE("working on", identity);
 
     if (guard_transaction)
         PEP_SQL_BEGIN_EXCLUSIVE_TRANSACTION();
@@ -1528,6 +1541,7 @@ PEP_STATUS set_or_update_with_identity(PEP_SESSION session,
         else
             PEP_SQL_COMMIT_TRANSACTION();
     }                      
+    LOG_NONOK_STATUS_NONOK;
     return status;
 }
 
@@ -1546,6 +1560,7 @@ PEP_STATUS set_or_update_with_identity(PEP_SESSION session,
 PEP_STATUS _set_trust_internal(PEP_SESSION session, pEp_identity* identity,
                                bool guard_transaction) {
     PEP_REQUIRE(session && identity);
+    LOG_IDENTITY_TRACE("working on", identity);
 
     return set_or_update_with_identity(session, identity,
                                        _set_or_update_trust,
@@ -1559,6 +1574,7 @@ PEP_STATUS _set_trust_internal(PEP_SESSION session, pEp_identity* identity,
 // you can't use this one.
 PEP_STATUS set_trust(PEP_SESSION session, pEp_identity* identity) {
     PEP_REQUIRE(session && identity);
+    LOG_IDENTITY_TRACE("working on", identity);
 
     PEP_STATUS status = PEP_STATUS_OK;
     status = _set_trust_internal(session, identity, true);
@@ -1566,12 +1582,14 @@ PEP_STATUS set_trust(PEP_SESSION session, pEp_identity* identity) {
         if ((identity->comm_type | PEP_ct_confirmed) == PEP_ct_pEp)
             status = set_as_pEp_user(session, identity);
     }
+    LOG_NONOK_STATUS_NONOK;
     return status;
 }
 
 PEP_STATUS set_person(PEP_SESSION session, pEp_identity* identity,
                       bool guard_transaction) {
     PEP_REQUIRE(session && identity);
+    LOG_IDENTITY_TRACE("working on", identity);
 
     return set_or_update_with_identity(session, identity,
                                        _set_or_update_person,
@@ -1596,6 +1614,7 @@ PEP_STATUS set_person(PEP_SESSION session, pEp_identity* identity,
 PEP_STATUS set_identity_entry(PEP_SESSION session, pEp_identity* identity,
                               bool guard_transaction) {
     PEP_REQUIRE(session && identity);
+    LOG_IDENTITY_TRACE("working on", identity);
 
     return set_or_update_with_identity(session, identity,
                                        _set_or_update_identity_entry,
@@ -1614,6 +1633,7 @@ DYNAMIC_API PEP_STATUS set_identity(
     PEP_REQUIRE(session && identity && ! EMPTYSTR(identity->address)
                 && ! EMPTYSTR(identity->user_id)
                 && ! EMPTYSTR(identity->username));
+    LOG_IDENTITY_TRACE("working on", identity);
 
     int result;
     PEP_STATUS status = PEP_STATUS_OK;
@@ -1699,6 +1719,8 @@ PEP_STATUS force_set_identity_username(PEP_SESSION session, pEp_identity* ident,
     PEP_REQUIRE(session && ident && ! EMPTYSTR(ident->address)
                 && ! EMPTYSTR(ident->user_id)
                 /* username is allowed to be NULL. */);
+    LOG_IDENTITY_TRACE("working on", ident);
+    LOG_TRACE("username is %s", ASNONNULLSTR(username));
 
     // If username is NULL, it's fine. This defaults to sqlite3_bind_null() and clears the username, which
     // might be intended. The caller should decide that before calling this. This is really the force-bludgeon.
@@ -1716,10 +1738,11 @@ PEP_STATUS force_set_identity_username(PEP_SESSION session, pEp_identity* ident,
 
     sql_reset_and_clear_bindings(session->force_set_identity_username);
 
+    PEP_STATUS status = PEP_STATUS_OK;
     if (result != SQLITE_DONE)
-        return PEP_CANNOT_SET_IDENTITY;
-
-    return PEP_STATUS_OK;
+        status = PEP_CANNOT_SET_IDENTITY;
+    LOG_NONOK_STATUS_NONOK;
+    return status;
 }
 
 /**
