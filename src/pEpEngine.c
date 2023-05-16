@@ -936,7 +936,8 @@ DYNAMIC_API PEP_STATUS get_identity(
     sqlite3_bind_text(session->get_identity, 2, user_id, -1, SQLITE_STATIC);
 
     const int result = pEp_sqlite3_step_nonbusy(session, session->get_identity);
-    LOG_TRACE("sqlstatus is %s", pEp_sql_status_text(session));
+    LOG_TRACE("sqlstatus is %s",
+              pEp_sql_status_to_status_text(session, result));
     switch (result) {
     case SQLITE_ROW:
         _identity = new_identity(
@@ -1916,7 +1917,8 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity,
             }
             default:
                 sql_reset_and_clear_bindings(session->exists_person);
-                LOG_ERROR("sqlstatus is %s", pEp_sql_status_text(session));
+                LOG_ERROR("sqlstatus is %s",
+                          pEp_sql_status_to_status_text(session, result));
                 return PEP_UNKNOWN_DB_ERROR;
         }
         sql_reset_and_clear_bindings(session->exists_person);

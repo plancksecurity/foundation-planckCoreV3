@@ -1787,7 +1787,8 @@ PEP_STATUS pEp_sql_init(PEP_SESSION session) {
         PEP_SQL_END_LOOP();
         if (int_result != SQLITE_OK) {
             LOG_NONOK("failed executing early first-session SQLite"
-                      " statements: %s", pEp_sql_status_text(session));
+                      " statements: %s",
+                      pEp_sql_status_to_status_text(session, int_result));
             FAIL(PEP_UNKNOWN_DB_ERROR);
         }
     }
@@ -1808,7 +1809,7 @@ PEP_STATUS pEp_sql_init(PEP_SESSION session) {
            NULL, NULL, NULL);
         if (int_result != SQLITE_OK) {
             LOG_NONOK("failed executing early SQLite statements: %s",
-                      pEp_sql_status_text(session));
+                      pEp_sql_status_to_status_text(session, int_result));
         }
     PEP_SQL_END_LOOP();
     if (int_result != SQLITE_OK)
@@ -1835,7 +1836,7 @@ PEP_STATUS pEp_sql_init(PEP_SESSION session) {
  end:
     LOG_NONOK_STATUS_CRITICAL;
     if (status != PEP_STATUS_OK)
-        LOG_CRITICAL("SQLite code is %s", pEp_sql_status_text(session));
+        LOG_CRITICAL("failed to prepare SQL statements");
 
     return status;
 #undef FAIL
@@ -1846,23 +1847,25 @@ static PEP_STATUS _prepare_sql_stmts(PEP_SESSION session) {
     PEP_REQUIRE(session);
     int int_result = SQLITE_OK;
 
-#define PREPARE(db_field_name, session_field_name)                          \
-    do {                                                                    \
-        /* LOG_TRACE("preparing %s (%s)",                                   \
-                  # session_field_name, # db_field_name); */                \
-        int_result = pEp_sqlite3_prepare_v2_nonbusy_nonlocked(              \
-                        session,                                            \
-                        session->db_field_name,                             \
-                        sql_ ## session_field_name,                         \
-                        (int) strlen(sql_ ## session_field_name),           \
-                        & session->session_field_name,                      \
-                        NULL);                                              \
-        if (int_result != SQLITE_OK) {                                      \
-            LOG_CRITICAL("failed to initialise SQL statement: %s",          \
-                         sql_ ## session_field_name );                      \
-            LOG_CRITICAL("SQLite error: %s", pEp_sql_status_text(session)); \
-            return PEP_UNKNOWN_DB_ERROR;                                    \
-        }                                                                   \
+#define PREPARE(db_field_name, session_field_name)                    \
+    do {                                                              \
+        /* LOG_TRACE("preparing %s (%s)",                             \
+                  # session_field_name, # db_field_name); */          \
+        int_result = pEp_sqlite3_prepare_v2_nonbusy_nonlocked(        \
+                        session,                                      \
+                        session->db_field_name,                       \
+                        sql_ ## session_field_name,                   \
+                        (int) strlen(sql_ ## session_field_name),     \
+                        & session->session_field_name,                \
+                        NULL);                                        \
+        if (int_result != SQLITE_OK) {                                \
+            LOG_CRITICAL("failed to initialise SQL statement: %s",    \
+                         sql_ ## session_field_name );                \
+            LOG_CRITICAL("SQLite error: %s",                          \
+                         pEp_sql_status_to_status_text(session,       \
+                                                       int_result));  \
+            return PEP_UNKNOWN_DB_ERROR;                              \
+        }                                                             \
     } while (false)
 
     /* Trustwords / system db. */
@@ -2299,9 +2302,10 @@ static const char *pEp_sqlite3_errname(int sqlite_error_code)
 #undef HANDLE
 }
 
-const char *pEp_sql_status_text_for_database(PEP_SESSION session, sqlite3 *db)
+const char *pEp_sql_status_to_status_text(PEP_SESSION session,
+                                          int sqlite_status)
 {
-    PEP_REQUIRE_ORELSE_RETURN(session && db, "<wrong arguments>");
+    PEP_REQUIRE_ORELSE_RETURN(session, "<wrong arguments>");
 
     /* First, delete any old data. */
     if (session->sql_status_text != NULL) {
@@ -2309,13 +2313,11 @@ const char *pEp_sql_status_text_for_database(PEP_SESSION session, sqlite3 *db)
         session->sql_status_text = NULL;
     }
 
-    /* Obtain the error code. */
-    int sqlite_error_code = sqlite3_extended_errcode(db);
+    /* Look up the human-readable text for the given status, which is allowed to
+       be extended or even invalid. */
+    const char *status_name = pEp_sqlite3_errname(sqlite_status);
 
-    /* Compute the required length.  The longest SQLite status name is currently
-       SQLITE_NOTICE_RECOVER_ROLLBACK. */
-    const char *status_name = pEp_sqlite3_errname(sqlite_error_code);
-
+    /* Compute the required length. */
     size_t number_length = 10; /* Safe bound: SQLite statuses are 32-bit */
     size_t string_size = (number_length
                           + strlen(status_name)
@@ -2329,15 +2331,28 @@ const char *pEp_sql_status_text_for_database(PEP_SESSION session, sqlite3 *db)
        session->sql_status_text. */
     session->sql_status_text = malloc(string_size);
     if (session->sql_status_text == NULL)
-        return "pEp_sql_status_text: could not allocate. ";
+        return "pEp_sql_status_to_status_text: could not allocate. ";
     sprintf(session->sql_status_text, "(%li) %s",
-            (long) sqlite_error_code, status_name);
+            (long) sqlite_status, status_name);
 
     return session->sql_status_text;
 }
 
-const char *pEp_sql_status_text(PEP_SESSION session)
+static const char *_pEp_database_to_sql_status_text(PEP_SESSION session,
+                                                    sqlite3 *db)
+{
+    PEP_REQUIRE_ORELSE_RETURN(session && db, "<wrong arguments>");
+
+    /* Obtain the error code; in the more detailed extended version, since it
+       costs nothing and it is still quite clear and explicit. */
+    int sqlite_error_code = sqlite3_extended_errcode(db);
+
+    /* Obtain text from the status code. */
+    return pEp_sql_status_to_status_text(session, sqlite_error_code);
+}
+
+const char *pEp_sql_current_status_text(PEP_SESSION session)
 {
     PEP_REQUIRE_ORELSE_RETURN(session, "<wrong argument>");
-    return pEp_sql_status_text_for_database(session, session->db);
+    return _pEp_database_to_sql_status_text(session, session->db);
 }

@@ -39,12 +39,19 @@ PEP_STATUS pEp_refresh_database_connections(PEP_SESSION session);
 /* Debugging
  * ***************************************************************** */
 
-/* Return a written representation of the current SQL state for the management
+/* Return a written representation of the given SQL status for the management
    db in the pointed session, suitable for logging or printing.  The returned
    memory is session-local, and will remain valid until the next call to this
    same function with the same session.
-   In case of any error this still returns a valid non-empty string. */
-const char *pEp_sql_status_text(PEP_SESSION session);
+   In case of any error this still returns a valid non-empty string.
+
+   There are multiple functions each extracting the SQL status from a different
+   place:
+   - directly a parameter
+   - the current state of the management database connection in the session. */
+const char *pEp_sql_status_to_status_text(PEP_SESSION session,
+                                          int sqlite_status);
+const char *pEp_sql_current_status_text(PEP_SESSION session);
 
 
 /* Literal strings with queries, for SQL prepared statements

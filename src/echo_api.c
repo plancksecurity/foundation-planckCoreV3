@@ -57,20 +57,21 @@ static const char *echo_set_timestamp_text
 */
 
 /* This is a convenient way to check for SQL errors without duplicating code. */
-#define ON_SQL_ERROR_SET_STATUS_AND_GOTO                 \
-    do {                                                 \
-        if (sql_status != SQLITE_OK                      \
-            && sql_status != SQLITE_DONE                 \
-            && sql_status != SQLITE_ROW) {               \
-            status = PEP_UNKNOWN_DB_ERROR;               \
-            /* This should not happen in production,     \
-               so I can afford a debug print when        \
-               something unexpected happens. */          \
-            if (sql_status == SQLITE_ERROR)              \
-                LOG_ERROR("SQL ERROR %s",                \
-                          pEp_sql_status_text(session)); \
-            goto end;                                    \
-        }                                                \
+#define ON_SQL_ERROR_SET_STATUS_AND_GOTO                               \
+    do {                                                               \
+        if (sql_status != SQLITE_OK                                    \
+            && sql_status != SQLITE_DONE                               \
+            && sql_status != SQLITE_ROW) {                             \
+            status = PEP_UNKNOWN_DB_ERROR;                             \
+            /* This should not happen in production,                   \
+               so I can afford a debug print when                      \
+               something unexpected happens. */                        \
+            if (sql_status == SQLITE_ERROR)                            \
+                LOG_ERROR("SQL ERROR %s",                              \
+                          pEp_sql_status_to_status_text(session,       \
+                                                        sql_status));  \
+            goto end;                                                  \
+        }                                                              \
     } while (false)
 
 

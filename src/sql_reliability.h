@@ -220,7 +220,8 @@ PEP_STATUS pEp_backoff_state_finalize(
                 && * _pEp_sql_sqlite_status_address != SQLITE_ROW               \
                 && * _pEp_sql_sqlite_status_address != SQLITE_BUSY)             \
                 LOG_NONOK("PEP_SQL_{BEGIN,END}_LOOP: got %s",                   \
-                          pEp_sql_status_text(session));                        \
+                          pEp_sql_status_to_status_text(                        \
+                             session, * _pEp_sql_sqlite_status_address));       \
            if (* _pEp_sql_sqlite_status_address == SQLITE_BUSY) {               \
                 /* Only for defensiveness's sake: */                            \
                 * _pEp_sql_sqlite_status_address = SQLITE_OK;                   \
@@ -259,11 +260,14 @@ PEP_STATUS pEp_backoff_state_finalize(
 
 /* Perform an explicit checkpoint operation, of one of the kinds supported by
    SQLite.  This is a helper for PEP_SQL_CHECKPOINT. */
-#define PEP_SQL_CHECKPOINT_ONE_KIND(kind)                                \
-    do {                                                                 \
-        sqlite3_wal_checkpoint_v2(session->db, NULL, kind, NULL, NULL);  \
-        LOG_NONOK("tried to checkpoint (%s): the result was %s",         \
-                  # kind, pEp_sql_status_text(session));                 \
+#define PEP_SQL_CHECKPOINT_ONE_KIND(kind)                                      \
+    do {                                                                       \
+        int _pEp_sql_checkpoint_result                                         \
+            = sqlite3_wal_checkpoint_v2(session->db, NULL, kind, NULL, NULL);  \
+        LOG_NONOK("tried to checkpoint (%s): the result was %s",               \
+                  # kind,                                                      \
+                  pEp_sql_status_to_status_text(session,                       \
+                                                _pEp_sql_checkpoint_result));  \
     } while (false)
 
 /* Perform explicit checkpointing operation, of the appropriate kind or
@@ -340,7 +344,8 @@ PEP_STATUS pEp_backoff_state_finalize(
             if (_pEp_sql_sqlite_begin_status != SQLITE_DONE)                    \
                 LOG_WARNING("PEP_SQL_BEGIN_EXCLUSIVE_TRANSACTION: loop with "   \
                             "sqlite status %s (attempt %i)",                    \
-                            pEp_sql_status_text(session),                       \
+                            pEp_sql_status_to_status_text(                      \
+                               session, _pEp_sql_sqlite_begin_status),          \
                             _pEp_sql_backoff_state.failure_no + 1);             \
         PEP_SQL_END_LOOP();                                                     \
         /* After this point we must have opened the transaction with success.   \
@@ -349,7 +354,8 @@ PEP_STATUS pEp_backoff_state_finalize(
         PEP_ASSERT(_pEp_sql_sqlite_begin_status != SQLITE_LOCKED);              \
         if (_pEp_sql_sqlite_begin_status != SQLITE_DONE)                        \
             LOG_ERROR("UNEXPECTED error on BEGIN EXCLUSIVE TRANSACTION: %s",    \
-                      pEp_sql_status_text(session));                            \
+                      pEp_sql_status_to_status_text(                            \
+                         session, _pEp_sql_sqlite_begin_status));               \
         PEP_ASSERT(_pEp_sql_sqlite_begin_status == SQLITE_DONE);                \
         sqlite3_reset(session->begin_exclusive_transaction);                    \
         /* We are now in a transaction.  This will change the behaviour of      \
@@ -412,7 +418,8 @@ PEP_STATUS pEp_backoff_state_finalize(
         PEP_SQL_END_LOOP();                                                     \
         if (_pEp_sql_sqlite_end_status != SQLITE_DONE)                          \
             LOG_ERROR("UNEXPECTED error on %s: %s", _pEp_action_name,           \
-                      pEp_sql_status_text(session));                            \
+                      pEp_sql_status_to_status_text(                            \
+                         session, _pEp_sql_sqlite_end_status));                 \
         PEP_ASSERT(_pEp_sql_sqlite_end_status == SQLITE_DONE);                  \
         LOG_TRACE("PEP_SQL_%s_TRANSACTION (innermost, success)",                \
                   _pEp_action_name);                                            \

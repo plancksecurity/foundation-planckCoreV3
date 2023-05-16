@@ -144,7 +144,7 @@ int _pEp_sqlite3_step_nonbusy(PEP_SESSION session,
     if (sqlite_status != SQLITE_OK && sqlite_status != SQLITE_ROW
         && sqlite_status != SQLITE_DONE)
         LOG_NONOK("sqlite_status is %s from executing %s",
-                  pEp_sql_status_text(session),
+                  pEp_sql_status_to_status_text(session, sqlite_status),
                   sqlite3_expanded_sql(* prepared_statement_p));
     PEP_ASSERT(sqlite_status != SQLITE_LOCKED); /* LOCKED should never happen. */
     if (! transaction_in_progress_at_entry) {
