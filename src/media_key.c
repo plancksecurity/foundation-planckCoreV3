@@ -293,7 +293,7 @@ PEP_STATUS identity_known_to_use_pEp(PEP_SESSION session,
         result = true;
         goto end;
     }
-        
+
     /* Check the database for major_ver; in case we do not know the identity
        yet, check whether the identity has a known media key: any identity with
        a media kay is also a pEp-using identity. */
@@ -318,6 +318,9 @@ PEP_STATUS identity_known_to_use_pEp(PEP_SESSION session,
 
  end:
     * known_to_use_pEp = result;
+    LOG_STATUS_TRACE;
+    if (status == PEP_STATUS_OK)
+        LOG_TRACE("the result is %s", BOOLTOSTR(* known_to_use_pEp));
     free_identity (identity_copy);
     return status;
 }
@@ -427,6 +430,7 @@ PEP_STATUS media_key_is_there_a_media_key_in(PEP_SESSION session,
             break;
         }
     }
+    LOG_TRACE("the result is %s", BOOLTOSTR(* found));
     return PEP_STATUS_OK;
 }
 

@@ -824,10 +824,10 @@ static void send_ping_if_unknown(PEP_SESSION session,
                 send_ping(session, from_identity, to_identity);
             else {
                 bool known_to_use_pEp;
-                PEP_STATUS status = identity_known_to_use_pEp (session, to_identity,
-                                                               & known_to_use_pEp);
+                PEP_STATUS status = identity_known_to_use_pEp(session, to_identity,
+                                                              & known_to_use_pEp);
                 if (status != PEP_STATUS_OK) {
-                    LOG_WARNING("send_ping_if_unknown: %s -> %s FAILED: status 0x%x %i %s", from_identity->address, to_identity->address, (int) status, (int) status, pEp_status_to_string(status));
+                    LOG_WARNING("send_ping_if_unknown: %s -> %s FAILED: status 0x%x %i %s", ASNONNULLSTR(from_identity->address), ASNONNULLSTR(to_identity->address), (int) status, (int) status, pEp_status_to_string(status));
                     return;
                 }
                 if (known_to_use_pEp)

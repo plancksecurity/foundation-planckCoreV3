@@ -1996,6 +1996,8 @@ DYNAMIC_API PEP_STATUS is_pEp_user(PEP_SESSION session, pEp_identity *identity, 
     sql_reset_and_clear_bindings(session->is_pEp_user);
     free(alias_default);
     LOG_STATUS_TRACE;
+    if (status == PEP_STATUS_OK)
+        LOG_TRACE("result  %s", BOOLTOSTR(* is_pEp));
     return status;
 }
 
@@ -2564,6 +2566,7 @@ void reconcile_language(pEp_identity* old_ident,
 PEP_STATUS merge_records(PEP_SESSION session, const char* old_uid,
                          const char* new_uid) {
     PEP_REQUIRE(session && ! EMPTYSTR(old_uid) && ! EMPTYSTR(new_uid));
+    LOG_TRACE("merging %s into %s", old_uid, new_uid);
 
     PEP_STATUS status = PEP_STATUS_OK;
     pEp_identity* new_ident = NULL;
@@ -2718,6 +2721,7 @@ pEp_free:
     free_labeled_int_list(trust_list);
     free_stringlist(touched_keys);
     free(main_user_fpr);
+    LOG_STATUS_TRACE;
     return status;
 }
 
