@@ -120,6 +120,7 @@ DYNAMIC_API PEP_STATUS init(
     } while (false)
 #define _LOG_CRITICAL(...) _INTERNAL_LOG_WITH_MACRO_NAME(PEP_LOG_CRITICAL, __VA_ARGS__)
 #define _LOG_ERROR(...)  _INTERNAL_LOG_WITH_MACRO_NAME(PEP_LOG_ERROR, __VA_ARGS__)
+#define _LOG_WARNING(...)_INTERNAL_LOG_WITH_MACRO_NAME(PEP_LOG_WARNING, __VA_ARGS__)
 #define _LOG_EVENT(...)  _INTERNAL_LOG_WITH_MACRO_NAME(PEP_LOG_EVENT, __VA_ARGS__)
 #define _LOG_API(...)    _INTERNAL_LOG_WITH_MACRO_NAME(PEP_LOG_API, __VA_ARGS__)
 #define _LOG_TRACE(...)  _INTERNAL_LOG_WITH_MACRO_NAME(PEP_LOG_TRACE, __VA_ARGS__)
@@ -150,11 +151,21 @@ DYNAMIC_API PEP_STATUS init(
     // Make sure that we have been consistent in linking a version SQLite3
     // maching its headers.
     if (sqlite3_libversion_number() != SQLITE_VERSION_NUMBER) {
-        _LOG_CRITICAL("inconsistent SQLite versions: library %li headers %li",
-                      (long) sqlite3_libversion_number(), (long) SQLITE_VERSION_NUMBER);
-        // Failing would be the right thing here, but many configurations seem
-        // this problem; disabling it for the time being.
-        // assert(false);
+        _LOG_WARNING("inconsistent SQLite versions: library %li (%s)  vs."
+                     "  headers %li (%s)",
+                     (long) sqlite3_libversion_number(), sqlite3_libversion(),
+                     (long) SQLITE_VERSION_NUMBER, SQLITE_VERSION);
+        /* Having an assert(false) here would be counterproductive.
+           Unfortunately it is very difficult to force the correct library to be
+           used, since SQLite3 is a dependency of both libpEpEngine.so and,
+           indirectly, of libpep_engine_sequoia_backend.so .  On both moore
+           (positron's GNU/Linux laptop as of early 2023) and the CI machine the
+           copy of libsqlite3.so being linked at run time seems to be the one
+           that comes with libpep_engine_sequoia_backend , possibly because of
+           library linking order.
+
+           Notice that this mismatch between headers and library versions has
+           never caused problems in practice, even if it does look dangerous. */
     }
     _LOG_EVENT("p≡p Engine %s   protocol %s   SQLite %s",
                PEP_ENGINE_VERSION_LONG, PEP_PROTOCOL_VERSION,
