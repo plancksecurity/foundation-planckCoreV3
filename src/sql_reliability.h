@@ -488,7 +488,7 @@ int pEp_sqlite3_prepare_v3_nonbusy_nonlocked(PEP_SESSION session,
    and not a macro; but this alternative definition of it is useful for the
    Engine developers to catch parameters as expressions, and the exact call
    sites.  Not meant for Engine users. */
-#define sql_reset_and_clear_bindings(statement_p)           \
+#define sql_reset_and_clear_bindings_as_macro(statement_p)  \
     do {                                                    \
         sqlite3_stmt *_sql_racb_statement = (statement_p);  \
         FILE *_sql_racb_f = stdout;                         \
@@ -506,6 +506,7 @@ int pEp_sqlite3_prepare_v3_nonbusy_nonlocked(PEP_SESSION session,
         sqlite3_reset(_sql_racb_statement);                 \
         sqlite3_clear_bindings(_sql_racb_statement);        \
     } while (false)
+// #define sql_reset_and_clear_bindings sql_reset_and_clear_bindings_as_macro
 
 
 #ifdef __cplusplus

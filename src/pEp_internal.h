@@ -694,9 +694,10 @@ void release_transport_system(PEP_SESSION session, bool out_last);
  *
  *
  */
-// temporarily replaced with a macro definition
-//void
-//sql_reset_and_clear_bindings(sqlite3_stmt *s);
+void
+sql_reset_and_clear_bindings(sqlite3_stmt *s);
+/* Also see the alternative definition of this functionality as a macro, for
+   debugging, in sql_reliability.h . */
 
 /**
  *  @internal
