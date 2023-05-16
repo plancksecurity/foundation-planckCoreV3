@@ -12,6 +12,8 @@
   literals.  Platforms not using make to build the Engine should supply these.
 * in case of assertion or requirement failure print the expansion of the macros
   above, to help people reporting bugs.  No API change.
+* minor internals overhaul: build system, logging entries, whitespace, some
+  minor factoring.
 
 v3.3.0-RC1  2023-05-11
 * Make string lists and identity lists nicer to use, with new non-destructive
