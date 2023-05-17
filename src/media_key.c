@@ -357,7 +357,7 @@ PEP_STATUS amend_identity_with_media_key_information(PEP_SESSION session,
 
     /* If we arrived here there is a media key.  Amend the identity so that it
        is recognised as using a recent pEp version. */
-    LOG_TRACE("%s <%s>: amending because of a media key...", ASNONNULLSTR(identity->username), ASNONNULLSTR(identity->address));
+    LOG_IDENTITY_TRACE("amending because of a media key", identity);
     DUMP;
     if (identity->enc_format == PEP_enc_auto
         || identity->enc_format < PEP_enc_PEP)
@@ -521,4 +521,5 @@ PEP_STATUS media_key_for_outgoing_message(PEP_SESSION session,
     if (candidate_key)
         LOG_TRACE("[%s] has media key %s", (msg->shortmsg ? msg->shortmsg : "(no subject)"), candidate_key);
     return status;
+#undef ADD_IDENTITIES
 }
