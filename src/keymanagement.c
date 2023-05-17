@@ -729,6 +729,7 @@ DYNAMIC_API PEP_STATUS update_identity(
         // Otherwise, we don't even HAVE an own user yet, so we're ok.
     }    
     if (is_own_user) {
+        LOG_IDENTITY_ERROR("called on known-own identity", identity);
         free(default_own_id);
         return PEP_ILLEGAL_VALUE;
     }
