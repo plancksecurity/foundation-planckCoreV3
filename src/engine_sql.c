@@ -1799,7 +1799,7 @@ PEP_STATUS pEp_sql_init(PEP_SESSION session) {
     PEP_SQL_BEGIN_LOOP(int_result);
         int_result = sqlite3_exec(
            session->db,
- "PRAGMA foreign_key=ON;\n"
+ "PRAGMA foreign_keys=ON;\n"
  "PRAGMA synchronous=NORMAL;\n" // not persistent!
  "PRAGMA secure_delete = OFF;\n"
 // "PRAGMA SQLITE_DEFAULT_WAL_AUTOCHECKPOINT = 1;\n" /* checkpoint very often. */
