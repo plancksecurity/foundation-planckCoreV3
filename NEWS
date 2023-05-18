@@ -1,3 +1,4 @@
+* fix NEWS
 
 v3.3.0-RC2  2023-05-18
 * Make PEP_LOG_ASYNC actually take effect, but calling
