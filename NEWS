@@ -16,6 +16,15 @@ v3.3.0-RC2  2023-05-18
   above, to help people reporting bugs.  No API change.
 * minor internals overhaul: build system, logging entries, whitespace, some
   minor factoring.
+* When initialising database connection run the correct pragma:
+    PRAGMA foreign_keys=ON;
+  with an "s".  The incorrect PRAGMA name I had written before, omitting the
+  trailing "s", was silently ignored; some SQL statements in the Engine rely on
+  CASCADE constraints being enforced, and the missing constraint caused very
+  subtle inconsistencies and changes of behaviour, for example breaking
+  replace_userid..
+  Closes https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/166 (this
+  bug probably did not affect any released version).
 
 v3.3.0-RC1  2023-05-11
 * Make string lists and identity lists nicer to use, with new non-destructive
@@ -37,15 +46,6 @@ v3.3.0-RC1  2023-05-11
   https://gitea.pep.foundation/pEp.foundation/pEpEngine/pulls/159 .
 * Remove support for _PEP_SQLITE_DEBUG; fail cleanly at compilation time if a
   user tries to build with it.
-* When initialising database connection run the correct pragma:
-    PRAGMA foreign_keys=ON;
-  with an "s".  The incorrect PRAGMA name I had written before, omitting the
-  trailing "s", was silently ignored; some SQL statements in the Engine rely on
-  CASCADE constraints being enforced, and the missing constraint caused very
-  subtle inconsistencies and changes of behaviour, for example breaking
-  replace_userid..
-  Closes https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/166 (this
-  bug probably did not affect any released version).
 
 v3.2.1  2023-03-23
 * DEPENDENCIES: require an official release of libpEpTransport.
