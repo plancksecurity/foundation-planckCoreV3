@@ -10,7 +10,7 @@ The p≡p Engine is a Free Software library encapsulating implementations of:
 
 - Key Management
 
-  The p≡p Engine automatically manages keys using a pluggable crypto backend.  The currently implemented backend is based on [Sequoia PGP](https://sequoia-pgp.org), and stores keys in an OpenPGP-compatible format.
+  The p≡p Engine automatically manages keys using a pluggable crypto backend.  The currently implemented backend is based on [Sequoia PGP](https://sequoia-pgp.org), and uses OpenPGP-format keys.
 
   p≡p for Email is interoperable with OpenPGP.
 
