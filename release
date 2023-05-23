@@ -501,6 +501,7 @@ Version numbers
    --next-major-rc        Deal with the next major RC's version number
    --next-minor-rc        Deal with the next minor RC's version number
    --next-patch-rc        Deal with the next patch RC's version number
+   --user-version VERSION Deal with the version as specified by the user.
 
 Behaviour
    --no-remote            Do not push changes to the git remote.  This is useful
@@ -586,7 +587,9 @@ theversion=''
 remote='yes'
 copymastertorelease='yes'
 copyreleasetomaster='yes'
-for arg in "$@"; do
+while test "$#" != "0"; do
+    arg="$1"
+    shift
     case "$arg" in
         # Common.
         '--help' )
@@ -609,6 +612,11 @@ for arg in "$@"; do
             handle_version_number $(next_minor_rc "$latestversion");;
         '--next-patch-rc' )
             handle_version_number $(next_patch_rc "$latestversion");;
+        '--user-version' )
+            userversion="$1"; shift
+            # Fail fatally if $userversion is invalid: print nothing otherwise.
+            validate_version "$userversion"
+            handle_version_number "$userversion";;
 
         # Behaviour
         '--no-remote' )

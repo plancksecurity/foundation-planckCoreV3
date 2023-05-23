@@ -231,7 +231,7 @@ PEP_STATUS base_extract_message(
        not terribly important: this engine branch will not live long, and
        v3 does not need this same hack. */
     char *_fpr = NULL;
-    bool _require_signature;
+    bool _require_signature = false;
     switch (type) {
     case BASE_SYNC:
         _require_signature = true;
@@ -270,7 +270,7 @@ PEP_STATUS base_extract_message(
     if (_require_signature && _sign) {
         status = verify_text(session, _payload, _payload_size, _sign, _sign_size, &keylist);
         if (!(status == PEP_VERIFIED || status == PEP_VERIFIED_AND_TRUSTED) || !keylist || !keylist->value) {
-fprintf(stderr,"Q %s: SIGNATURE MISMATCH: THIS IS NOT NORMAL.\n", (msg->shortmsg ? msg->shortmsg : "<NO SUBJECT>"));
+            LOG_MESSAGE_WARNING("signature mismatch", msg);
             // signature invalid or does not match; ignore message
             status = PEP_STATUS_OK;
             goto the_end;

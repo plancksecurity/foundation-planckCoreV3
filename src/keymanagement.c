@@ -729,6 +729,7 @@ DYNAMIC_API PEP_STATUS update_identity(
         // Otherwise, we don't even HAVE an own user yet, so we're ok.
     }    
     if (is_own_user) {
+        LOG_IDENTITY_ERROR("called on known-own identity", identity);
         free(default_own_id);
         return PEP_ILLEGAL_VALUE;
     }
@@ -890,6 +891,7 @@ DYNAMIC_API PEP_STATUS update_identity(
                                           stored_ident, true);
     }
     else { // No stored ident. We're done.
+        LOG_NONOK_STATUS_NONOK;
         // If we needed TOFU, we've taken care of the ID above.
         if (EMPTYSTR(identity->username)) { // currently, not after messing around
             free(identity->username);
@@ -907,9 +909,14 @@ DYNAMIC_API PEP_STATUS update_identity(
         if (identity->comm_type == PEP_ct_unknown)
             identity->comm_type = PEP_ct_key_not_found;
     }
+    if (status != PEP_STATUS_OK)
+        goto pEp_free;
 
     // Update with media key information.
     status = amend_identity_with_media_key_information(session, identity);
+    if (status != PEP_STATUS_OK)
+        goto pEp_free;
+
 
     goto pEp_free;
 
@@ -919,6 +926,7 @@ enomem:
 pEp_free:
     free(default_own_id);
     free_identity(stored_ident);
+    LOG_NONOK_STATUS_NONOK;
     return status;
 }
 
@@ -1253,6 +1261,7 @@ pEp_free:
 
 DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
 {
+    PEP_REQUIRE(session && identity && ! EMPTYSTR(identity->address));
     return _myself(session, identity, true, true, false, false);
 }
 

@@ -20,9 +20,6 @@
 // XML parameters string
 #define PARMS_MAX 32768
 
-// maximum busy wait time in ms
-#define BUSY_WAIT_TIME 5000
-
 // default keyserver
 #ifndef DEFAULT_KEYSERVER
 #define DEFAULT_KEYSERVER "hkps://keys.openpgp.org"
@@ -129,6 +126,36 @@
 #include "Sync_func.h"
 
 
+/* Detailed versioning.
+ * ***************************************************************** */
+
+/* Provide fallback definitions for platforms not supplying definitions for
+   the component macros used in PEP_ENGINE_VERSION_LONG macros. */
+#if ! defined (PEP_ENGINE_BRANCH)
+#   pragma message "WARNING: You should define the CPP macro PEP_ENGINE_BRANCH as the Engine git branch (ex.: \"Release_3.3\") from the compiler command line")
+#   define PEP_ENGINE_BRANCH "unknown-branch"
+#endif
+#if ! defined (PEP_ENGINE_COMMIT)
+#   pragma message "WARNING: You should define the CPP macro PEP_ENGINE_COMMIT as the latest Engine git commit (ex.: \"dfdba9da6139441a338433a6227039a67996265f\") from the compiler command line"
+#   define PEP_ENGINE_COMMIT "unknown-commit"
+#endif
+#if ! defined (PEP_ENGINE_COMMIT_DATE)
+#   pragma message "WARNING: You should define the CPP macro PEP_ENGINE_COMMIT_DATE as the latest Engine git commit date (ex.\: \"Wed May 10 16:46:10 2023 +0200\") from the compiler command line"
+#   define PEP_ENGINE_COMMIT_DATE "unknown-commit-date"
+#endif
+
+/* This version string, a literal string constant, is useful for bug reporters
+   as it contains (where available) precise information about the build commit
+   that was used to build th Engine.
+   This macro is only to be used internally; the actual definitions for the
+   component strings used in the definition come from the pEp Engine
+   makefile and will not survive installation. */
+#define PEP_ENGINE_VERSION_LONG                                             \
+    PEP_ENGINE_VERSION                                                      \
+    /* These are defined in the compiler command line. */                   \
+    " " PEP_ENGINE_BRANCH " " PEP_ENGINE_COMMIT " " PEP_ENGINE_COMMIT_DATE
+
+
 /* Logging.
  * ***************************************************************** */
 
@@ -168,23 +195,91 @@
 #define LOG_BASIC(...)      PEP_LOG_BASIC("p≡p", "Engine", "" __VA_ARGS__)
 #define LOG_SERVICE(...)    PEP_LOG_SERVICE("p≡p", "Engine", "" __VA_ARGS__)
 
-#define LOG_MESSAGE_WITH(literal_string, the_message, macro)            \
-    do {                                                                \
-        const message *_log_message_m = (the_message);                  \
-        if (the_message == NULL)                                        \
-            macro(literal_string ": NULL");                             \
-        else                                                            \
-            macro(literal_string ": [%s %s, recv_by %s, %s]",           \
-                  (_log_message_m->id ? _log_message_m->id : "NO-ID"),  \
-                  (_log_message_m->shortmsg                             \
-                   ? _log_message_m->shortmsg                           \
-                   : "NO-SHORTMSG"),                                    \
-                  ((_log_message_m->recv_by                             \
-                    && ! EMPTYSTR(_log_message_m->recv_by->address))    \
-                   ? _log_message_m->recv_by->address                   \
-                   : "NO-RECV_BY-ADDRESS"),                             \
-                  ((_log_message_m->dir == PEP_dir_incoming)            \
-                   ? "incoming" : "outgoing"));                         \
+#define LOG_IDENTITY_WITH(literal_string, the_identity, macro)           \
+    do {                                                                 \
+            const pEp_identity *_liw_identity = (the_identity);          \
+            if (_liw_identity == NULL)                                   \
+                macro(literal_string " is NULL");                        \
+            else                                                         \
+                macro(literal_string " is %s \"%s\" <%s>",               \
+                      (_liw_identity->user_id ? _liw_identity->user_id   \
+                       : "NULL-user-id"),                                \
+                      (_liw_identity->username ? _liw_identity->username \
+                       : "NULL-username"),                               \
+                      (_liw_identity->address ? _liw_identity->address   \
+                       : "NULL-address"));                               \
+    } while (false)
+/* Log the given literal string and the given identity at the level specified in
+   the macro name.
+   Example:
+     LOG_IDENTITY_WARNING("from identity", msg->from);  */
+#define LOG_IDENTITY_CRITICAL(literal_string, the_identity)  \
+    LOG_IDENTITY_WITH(literal_string, (the_identity), LOG_CRITICAL)
+#define LOG_IDENTITY_ERROR(literal_string, the_identity)  \
+    LOG_IDENTITY_WITH(literal_string, (the_identity), LOG_ERROR)
+#define LOG_IDENTITY_WARNING(literal_string, the_identity)  \
+    LOG_IDENTITY_WITH(literal_string, (the_identity), LOG_WARNING)
+#define LOG_IDENTITY_EVENT(literal_string, the_identity)  \
+    LOG_IDENTITY_WITH(literal_string, (the_identity), LOG_EVENT)
+#define LOG_IDENTITY_API(literal_string, the_identity)  \
+    LOG_IDENTITY_WITH(literal_string, (the_identity), LOG_API)
+#define LOG_IDENTITY_NONOK(literal_string, the_identity)  \
+    LOG_IDENTITY_WITH(literal_string, (the_identity), LOG_NONOK)
+#define LOG_IDENTITY_NOTOK(literal_string, the_identity)  \
+    LOG_IDENTITY_WITH(literal_string, (the_identity), LOG_NOTOK)
+#define LOG_IDENTITY_FUNCTION(literal_string, the_identity)  \
+    LOG_IDENTITY_WITH(literal_string, (the_identity), LOG_FUNCTION)
+#define LOG_IDENTITY_TRACE(literal_string, the_identity)  \
+    LOG_IDENTITY_WITH(literal_string, (the_identity), LOG_TRACE)
+#define LOG_IDENTITY_PRODUCTION(literal_string, the_identity)  \
+    LOG_IDENTITY_WITH(literal_string, (the_identity), LOG_PRODUCTION)
+#define LOG_IDENTITY_BASIC(literal_string, the_identity)  \
+    LOG_IDENTITY_WITH(literal_string, (the_identity), LOG_BASIC)
+#define LOG_IDENTITY_SERVICE(literal_string, the_identity)  \
+    LOG_IDENTITY_WITH(literal_string, (the_identity), LOG_SERVICE)
+
+#define LOG_MESSAGE_WITH(literal_string, the_message, macro)             \
+    do {                                                                 \
+        const message *_log_message_m = (the_message);                   \
+        if (the_message == NULL)                                         \
+            macro(literal_string ": NULL message");                      \
+        else {                                                           \
+            const char *_msg_id = "NOID";                                \
+            const char *_msg_shortmsg = "NOSHORTMSG";                    \
+            const char *_msg_recvby_address = "NOADDR";                  \
+            const char *_msg_from_username = "NONAME";                   \
+            const char *_msg_from_address = "NOADDR";                    \
+            const char *_msg_to_username = "NONAME";                     \
+            const char *_msg_to_address = "NOADDR";                      \
+            const char *_msg_direction                                   \
+                = ((_log_message_m->dir == PEP_dir_incoming)             \
+                   ? "incoming" : "outgoing");                           \
+            if (! EMPTYSTR(_log_message_m->id))                          \
+                _msg_id = _log_message_m->id;                            \
+            if (! EMPTYSTR(_log_message_m->shortmsg))                    \
+                _msg_shortmsg = _log_message_m->shortmsg;                \
+            if (_log_message_m->recv_by                                  \
+                && ! EMPTYSTR(_log_message_m->recv_by->address))         \
+                _msg_recvby_address = _log_message_m->recv_by->address;  \
+            if (_log_message_m->from                                     \
+                && ! EMPTYSTR(_log_message_m->from->username))           \
+                _msg_from_username = _log_message_m->from->username;     \
+            if (_log_message_m->from                                     \
+                && ! EMPTYSTR(_log_message_m->from->address))            \
+                _msg_from_address = _log_message_m->from->address;       \
+            if (_log_message_m->to && _log_message_m->to->ident          \
+                && ! EMPTYSTR(_log_message_m->to->ident->username))      \
+                _msg_to_username = _log_message_m->to->ident->username;  \
+            if (_log_message_m->to && _log_message_m->to->ident          \
+                && ! EMPTYSTR(_log_message_m->to->ident->address))       \
+                _msg_to_address = _log_message_m->to->ident->address;    \
+            macro(literal_string " [%s %s, recv_by %s, %s"               \
+                  " (%s <%s> -> %s <%s>)]",                              \
+                  _msg_id, _msg_shortmsg, _msg_recvby_address,           \
+                  _msg_direction,                                        \
+                  _msg_from_username, _msg_from_address,                 \
+                  _msg_to_username, _msg_to_address);                    \
+        }                                                                \
     } while (false)
 
 /* Log the given literal string and the given message at the level specified in
@@ -197,10 +292,14 @@
     LOG_MESSAGE_WITH(literal_string, (the_message), LOG_ERROR)
 #define LOG_MESSAGE_WARNING(literal_string, the_message)  \
     LOG_MESSAGE_WITH(literal_string, (the_message), LOG_WARNING)
-#define LOG_MESSAGE_API(literal_string, the_message)  \
-    LOG_MESSAGE_WITH(literal_string, (the_message), LOG_API)
 #define LOG_MESSAGE_EVENT(literal_string, the_message)  \
     LOG_MESSAGE_WITH(literal_string, (the_message), LOG_EVENT)
+#define LOG_MESSAGE_API(literal_string, the_message)  \
+    LOG_MESSAGE_WITH(literal_string, (the_message), LOG_API)
+#define LOG_MESSAGE_NONOK(literal_string, the_message)  \
+    LOG_MESSAGE_WITH(literal_string, (the_message), LOG_NONOK)
+#define LOG_MESSAGE_NOTOK(literal_string, the_message)  \
+    LOG_MESSAGE_WITH(literal_string, (the_message), LOG_NOTOK)
 #define LOG_MESSAGE_FUNCTION(literal_string, the_message)  \
     LOG_MESSAGE_WITH(literal_string, (the_message), LOG_FUNCTION)
 #define LOG_MESSAGE_TRACE(literal_string, the_message)  \
@@ -527,7 +626,33 @@ struct _pEpSession {
     bool passive_mode;
     bool unencrypted_subject;
     bool service_log;
-    
+
+    /* An integer counting the number of SQL transactions currently in progress
+       within the dynamic extent of this session: transactions can be (properly)
+       nested in this C abstraction and pEp_sqlite3_step_nonbusy is defined so
+       as not to nest a new SQL transaction when one is already in progress;
+       however ROLLBACK is only possible at the outermost nesting level.
+       This field is altered by PEP_SQL_BEGIN_EXCLUSIVE_TRANSACTION,
+       PEP_SQL_COMMIT_TRANSACTION and PEP_SQL_COMMIT_TRANSACTION as defined in
+       sql_reliability.h . */
+    int transaction_in_progress_no;
+
+    // Session-local internal data
+    /* True iff this session is the first one on which init was called.  This is
+       useful to avoid performing some redundant initialisation (in particular
+       on the management database) on sessions different from the first. */
+    bool first_session_at_init_time;
+
+    /* A malloc-allocated string holding the result of the latest call to
+       sql_status_text , or NULL. */
+    char *sql_status_text;
+
+    /* True iff it is possible to reset database connections for the current
+       session.  Resetting database connections is used as a last resort in case
+       of concurrency problems.  See the comment for
+       pEp_refresh_database_connections in engine_sql.h */
+    bool can_refresh_database_connections;
+
 #ifndef NDEBUG
     int debug_color;
 #endif
@@ -571,6 +696,8 @@ void release_transport_system(PEP_SESSION session, bool out_last);
  */
 void
 sql_reset_and_clear_bindings(sqlite3_stmt *s);
+/* Also see the alternative definition of this functionality as a macro, for
+   debugging, in sql_reliability.h . */
 
 /**
  *  @internal
@@ -992,6 +1119,18 @@ static inline void set_max_version(unsigned int first_maj, unsigned int first_mi
 
 #ifndef EMPTYSTR
 #define EMPTYSTR(STR) ((STR) == NULL || (STR)[0] == '\0')
+#endif
+
+/* Expand to an expression evaluating to the argument if non-NULL, and to a
+   pointer to a statically-allocated empty string otherwise.  The expansion
+   never allocates memory with malloc.  The expansion may evaluate the macro
+   argument more than once. */
+#ifndef ASNONNULLSTR
+#define ASNONNULLSTR(str) ((str == NULL) ? "" : (str))
+#endif
+
+#ifndef BOOLTOSTR
+#define BOOLTOSTR(b) ((b) ? "true" : "false")
 #endif
 
 #ifndef PASS_ERROR

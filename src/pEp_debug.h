@@ -138,7 +138,7 @@ typedef enum {
                                     what_as_string " precondition", \
                                     "session != NULL");             \
             if (abort_on_failure)                                   \
-                pEp_abort_unless_PEP_NOABORT();                     \
+                pEp_abort_unless_PEP_NOABORT(session);              \
             do {                                                    \
                 else_statement;                                     \
             } while (false);                                        \
@@ -148,7 +148,7 @@ typedef enum {
                                     what_as_string,                 \
                                     expression_as_string);          \
             if (abort_on_failure)                                   \
-                pEp_abort_unless_PEP_NOABORT();                     \
+                pEp_abort_unless_PEP_NOABORT(session);              \
             do {                                                    \
                 else_statement;                                     \
             } while (false);                                        \
@@ -387,7 +387,6 @@ typedef enum {
 #define PEP_IMPOSSIBLE  \
     _PEP_ASSERT_VARIANT("this is supposed to be impossible")
 
-
 /**
  *  <!--       PEP_UNEXPECTED_VALUE()       -->
  *
@@ -491,8 +490,10 @@ typedef enum {
  *         when running the test suite: when called from test cases pEp
  *         functions should always return failure codes, and never abort.
  *
+ *         In order to help debugging this function even accepts a NULL
+ *         session; when it receives no session this prints to stderr.
  */
-DYNAMIC_API void pEp_abort_unless_PEP_NOABORT(void);
+DYNAMIC_API void pEp_abort_unless_PEP_NOABORT(PEP_SESSION session);
 
 
 #ifdef __cplusplus

@@ -15,6 +15,7 @@
 #include "sql_reliability.h"
 
 #include "pEp_internal.h"
+#include "engine_sql.h"
 
 #include "pEpEngine.h"
 
@@ -45,9 +46,9 @@ PEP_STATUS pEp_backoff_state_finalize(PEP_SESSION session,
     /* I might want to actually add some statistics in the session, in the
        future. */
     if (s->failure_no > 0)
-        LOG_NONOK("SQLite at %s: success after %i failures, total backoff %li ms",
-                  s->source_location,
-                  (int) s->failure_no, (long) s->total_time_slept_in_ms);
+        LOG_WARNING("SQLite at %s: success after %i failures, total backoff %li ms",
+                    s->source_location,
+                    (int) s->failure_no, (long) s->total_time_slept_in_ms);
     return PEP_STATUS_OK;
 }
 
@@ -57,15 +58,15 @@ static void pEp_backoff_bump(PEP_SESSION session,
                              struct pEp_backoff_state *s,
                              long sleep_time_ms)
 {
-    PEP_REQUIRE_ORELSE(session && s, { return; });
+    PEP_REQUIRE_ORELSE(session
+                       && /* Useful to check in case this is invoked early
+                             at initialisation time, for example from the
+                             logging subsystem. */ session->db
+                       && s , { return; });
 
     /* Record statistics. */
     s->failure_no ++;
     s->total_time_slept_in_ms += sleep_time_ms;
-
-    if ((s->failure_no % PEP_BACKOFF_TIMES_BEFORE_LOGGING) == 0)
-        LOG_CRITICAL("backing off from %s (%i times already!)",
-                     s->source_location, (int) s->failure_no);
 
     /* Raise the sleep time upper limit. */
     double unclamped_upper_limit
@@ -97,8 +98,27 @@ PEP_STATUS pEp_back_off(PEP_SESSION session,
 
     /* Very easy: sleep, and bump. */
     long sleep_time_in_ms = pEp_backoff_compute_sleep_time(session, s);
-    pEp_sleep_ms(sleep_time_in_ms);
+    if (sleep_time_in_ms != 0)
+        pEp_sleep_ms(sleep_time_in_ms);
     pEp_backoff_bump(session, s, sleep_time_in_ms);
+
+#if 0
+    if ((s->failure_no % PEP_BACKOFF_TIMES_BEFORE_CHECKPOINTING) == 0)
+        PEP_SQL_CHECKPOINT;
+#endif
+    if ((s->failure_no % PEP_BACKOFF_TIMES_BEFORE_REFRESHING_DB) == 0
+        && session->can_refresh_database_connections) {
+        LOG_NONOK("backed off from %s %i times already: about to refresh"
+                  " database connections",
+                  s->source_location, (int) s->failure_no);
+        PEP_STATUS status = pEp_refresh_database_connections(session);
+        LOG_NONOK_STATUS_CRITICAL;
+    }
+    else if ((s->failure_no % PEP_BACKOFF_TIMES_BEFORE_LOGGING) == 0)
+        LOG_NONOK("backing off from %s (%i times already; logging once"
+                  " every %i times)",
+                  s->source_location, (int) s->failure_no,
+                  (int) PEP_BACKOFF_TIMES_BEFORE_LOGGING);
 
     return PEP_STATUS_OK;
 }
@@ -107,17 +127,72 @@ PEP_STATUS pEp_back_off(PEP_SESSION session,
 /* Convenience wrapper for "automatic" one-statement transactions
  * ***************************************************************** */
 
-int pEp_sqlite3_step_nonbusy(PEP_SESSION session,
-                             sqlite3_stmt *prepared_statement)
+int _pEp_sqlite3_step_nonbusy(PEP_SESSION session,
+                              sqlite3_stmt **prepared_statement_p)
 {
-    PEP_REQUIRE_ORELSE_RETURN(session && prepared_statement,
-                              /* Something generic: this will not happen anyway
-                                 except for internal bugs */ SQLITE_ERROR);
+    PEP_REQUIRE_ORELSE_RETURN(session && prepared_statement_p
+                              && * prepared_statement_p,
+                              /* Something generic is acceptable: this will only
+                                 happen because of Engine bugs */ SQLITE_ERROR);
     int sqlite_status;
 
+    bool transaction_in_progress_at_entry
+        = session->transaction_in_progress_no > 0;
+    if (! transaction_in_progress_at_entry)
+        PEP_SQL_BEGIN_EXCLUSIVE_TRANSACTION();
+    sqlite_status = sqlite3_step(* prepared_statement_p);
+    if (sqlite_status != SQLITE_OK && sqlite_status != SQLITE_ROW
+        && sqlite_status != SQLITE_DONE)
+        LOG_NONOK("sqlite_status is %s from executing %s",
+                  pEp_sql_status_to_status_text(session, sqlite_status),
+                  sqlite3_expanded_sql(* prepared_statement_p));
+    PEP_ASSERT(sqlite_status != SQLITE_LOCKED); /* LOCKED should never happen. */
+    if (! transaction_in_progress_at_entry) {
+        PEP_ASSERT(sqlite_status != SQLITE_BUSY); /* BUSY should not happen in an
+                                                     exclusive transaction. */
+        PEP_SQL_COMMIT_TRANSACTION();
+    }
+
+    return sqlite_status;
+}
+
+int pEp_sqlite3_prepare_v3_nonbusy_nonlocked(PEP_SESSION session,
+                                             sqlite3 *db,
+                                             const char *zSql,
+                                             int nByte,
+                                             unsigned int prepFlags,
+                                             sqlite3_stmt **ppStmt,
+                                             const char **pzTail)
+{
+    PEP_REQUIRE_ORELSE_RETURN(session && db && ppStmt,
+                              /* Something generic: this will not happen anyway
+                                 except for internal bugs */ SQLITE_ERROR);
+    int sqlite_status = SQLITE_OK;
     PEP_SQL_BEGIN_LOOP(sqlite_status);
-    sqlite_status = sqlite3_step(prepared_statement);
+        sqlite_status
+            = sqlite3_prepare_v3(db, zSql, nByte, prepFlags, ppStmt, pzTail);
+        if (sqlite_status == SQLITE_LOCKED) {
+            /* This can actually happen when preparing statements, but such a
+               status is not supported by PEP_SQL_END_LOOP which is mostly used
+               for stepping.  We can log a warning and work as if this were
+               SQLITE_BUSY. */
+            LOG_NONOK("get SQLITE_LOCKED when preparing the statement %s --"
+                      " trying again.", zSql);
+            sqlite_status = SQLITE_BUSY;
+        }
     PEP_SQL_END_LOOP();
 
     return sqlite_status;
+}
+
+int pEp_sqlite3_prepare_v2_nonbusy_nonlocked(PEP_SESSION session,
+                                             sqlite3 *db,
+                                             const char *zSql,
+                                             int nByte,
+                                             sqlite3_stmt **ppStmt,
+                                             const char **pzTail)
+{
+    return pEp_sqlite3_prepare_v3_nonbusy_nonlocked(session, db, zSql, nByte,
+                                                    /* the missing argument */ 0,
+                                                    ppStmt, pzTail);
 }

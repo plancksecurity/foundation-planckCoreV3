@@ -76,18 +76,18 @@ condition fromGroupMember
 
 condition keyElectionWon
 ||
-    PEP_REQUIRE(session);
+    PEP_WEAK_ASSERT_ORELSE_ILLEGAL_VALUE(session);
     pEp_identity *from = session->sync_state.transport.from;
     char *sender_fpr = session->sync_state.comm_partner.sender_fpr;
 
-    PEP_REQUIRE(from && from->address && from->address[0] && from->user_id &&
-                from->user_id[0]);
+    PEP_WEAK_ASSERT_ORELSE_ILLEGAL_VALUE(from && ! EMPTYSTR(from->address)
+                                         && ! EMPTYSTR(from->user_id));
 
     pEp_identity *me = NULL;
     PEP_STATUS status = get_identity(session, from->address, from->user_id, &me);
     PEP_WEAK_ASSERT_ORELSE_RETURN(status == PEP_STATUS_OK, status);
 
-    PEP_WEAK_ASSERT_ORELSE(me->fpr && me->fpr[0], {
+    PEP_WEAK_ASSERT_ORELSE(! EMPTYSTR(me->fpr), {
         free_identity(me);
         return PEP_ILLEGAL_VALUE;
     });
@@ -260,21 +260,22 @@ action storeNegotiation {
 function "show_handshake" {
     param "type";
     ||
-        PEP_REQUIRE_ORELSE_RETURN(session->notifyHandshake,
-                                  PEP_SYNC_NO_NOTIFY_CALLBACK);
+        PEP_WEAK_ASSERT_ORELSE_RETURN(session->notifyHandshake,
+                                      PEP_SYNC_NO_NOTIFY_CALLBACK);
 
     ||
     choose {
     when "$type = 'SYNC_NOTIFY_INIT_ADD_OUR_DEVICE' or $type = 'SYNC_NOTIFY_INIT_ADD_OTHER_DEVICE' or $type = 'SYNC_NOTIFY_INIT_FORM_GROUP'"
     ||
-        PEP_REQUIRE(session->sync_state.transport.from);
+        PEP_WEAK_ASSERT_ORELSE_RETURN(session->sync_state.transport.from,
+                                      PEP_ILLEGAL_VALUE);
 
         pEp_identity *from = session->sync_state.transport.from;
         pEp_identity *me = NULL;
         PEP_STATUS status = get_identity(session, from->address, from->user_id, &me);
         PEP_WEAK_ASSERT_ORELSE_RETURN(status == PEP_STATUS_OK, status);
 
-        PEP_WEAK_ASSERT_ORELSE(me->fpr && me->fpr[0], {
+        PEP_WEAK_ASSERT_ORELSE(! EMPTYSTR(me->fpr), {
             free_identity(me);
             return PEP_ILLEGAL_VALUE;
         });
@@ -503,7 +504,7 @@ action receivedKeysAreDefaultKeys
 
 action useThisKey
 ||
-    PEP_REQUIRE(session->sync_state.comm_partner.sender_fpr);
+    PEP_WEAK_ASSERT_ORELSE_ILLEGAL_VALUE(session->sync_state.comm_partner.sender_fpr);
 
     const char *fpr = session->sync_state.comm_partner.sender_fpr;
     OCTET_STRING_fromBuf(&session->sync_state.keysync.key, fpr, strlen(fpr));
@@ -511,7 +512,7 @@ action useThisKey
 
 action storeThisKey
 ||
-    PEP_REQUIRE(session->sync_state.keysync.key.size);
+    PEP_WEAK_ASSERT_ORELSE_ILLEGAL_VALUE(session->sync_state.keysync.key.size);
 
     char *fpr = strndup((const char *) session->sync_state.keysync.key.buf, session->sync_state.keysync.key.size);
     PEP_WEAK_ASSERT_ORELSE_RETURN(fpr, PEP_OUT_OF_MEMORY);
@@ -522,7 +523,8 @@ action storeThisKey
 
 action trustThisKey
 ||
-    PEP_REQUIRE(session->sync_state.transport.from && session->sync_state.comm_partner.sender_fpr);
+    PEP_WEAK_ASSERT_ORELSE_ILLEGAL_VALUE(session->sync_state.transport.from
+                                         && ! EMPTYSTR(session->sync_state.comm_partner.sender_fpr));
 
     pEp_identity *ident = identity_dup(session->sync_state.transport.from);
     if (!ident)
@@ -546,7 +548,8 @@ action trustThisKey
 
 action untrustThisKey
 ||
-    PEP_REQUIRE(session->sync_state.transport.from && session->sync_state.comm_partner.sender_fpr);
+    PEP_WEAK_ASSERT_ORELSE_ILLEGAL_VALUE(session->sync_state.transport.from
+                                         && ! EMPTYSTR(session->sync_state.comm_partner.sender_fpr));
 
     pEp_identity *ident = session->sync_state.transport.from;
     free(ident->fpr);

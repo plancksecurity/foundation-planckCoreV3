@@ -204,6 +204,8 @@ PEP_STATUS media_key_lookup_address(PEP_SESSION session,
        for all, out of the loop.  Notice that the address patterns being tested
        in the loop are already normalised. */
     address = normalize_address(address);
+    PEP_ASSERT(address != NULL);
+    PEP_ASSERT(! EMPTYSTR(address));
 
     /* Perform a trivial linear search on the list, with the first match
        winning. */
@@ -225,6 +227,7 @@ PEP_STATUS media_key_lookup_address(PEP_SESSION session,
     /* If we arrived here there is no match.  Set the output parameter as well,
        just for defensiveness' sake. */
     *fpr_result = NULL;
+    LOG_TRACE("<%s>: NO media key", address);
     return PEP_KEY_NOT_FOUND;
 }
 
@@ -259,7 +262,7 @@ PEP_STATUS media_key_has_identity_a_media_key(PEP_SESSION session,
 
     LOG_NONOK_STATUS_WARNING;
     if (status == PEP_STATUS_OK)
-        LOG_TRACE("%s <%s>: %s", (identity->username ? identity->username : "NO-USERNAME"), (identity->address ? identity->address : "NO-ADDRESS"), ((* has_media_key) ? "yes" : "no"));
+        LOG_TRACE("%s <%s>: %s", ASNONNULLSTR(identity->username), ASNONNULLSTR(identity->address), ((* has_media_key) ? "yes" : "no"));
 
     return status;
 }
@@ -272,13 +275,23 @@ PEP_STATUS identity_known_to_use_pEp(PEP_SESSION session,
                                      const pEp_identity *identity,
                                      bool *known_to_use_pEp)
 {
-    // TEMPORARY: begin
-    PEP_REQUIRE(session && identity && known_to_use_pEp);
-    PEP_REQUIRE(! EMPTYSTR(identity->address));
-    PEP_REQUIRE(! EMPTYSTR(identity->user_id));
+    // TEMPORARY, to make sure that https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/162 is actually solved.
+    PEP_REQUIRE(session && identity && known_to_use_pEp
+                && ! EMPTYSTR(identity->address)
+                /*&& // Temporarily disabled, to work around https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/162
+                  ! EMPTYSTR(identity->user_id) */
+                );
+    if (EMPTYSTR(identity->user_id)) {
+        LOG_CRITICAL("WRONG WRONG WRONG WRONG: This is https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/162 ");
+        LOG_IDENTITY_CRITICAL("This identity has no user id.  This is very wrong!  Please send a detailed log to positron.  (Working aroud the issue for now.)", identity);
+        // TEMPORARY: work around the issue and go on, instead of failing on a broken requirement. BEGIN
+        * known_to_use_pEp = false;
+        return PEP_STATUS_OK;
+        // TEMPORARY: work around the issue and go on, instead of failing on a broken requirement. END
+    }
     // TEMPORARY: end
     /* Sanity checks. */
-    PEP_REQUIRE(session && identity && known_to_use_pEp
+    PEP_ASSERT(session && identity && known_to_use_pEp
                 && ! EMPTYSTR(identity->address)
                 && ! EMPTYSTR(identity->user_id));
 
@@ -290,7 +303,7 @@ PEP_STATUS identity_known_to_use_pEp(PEP_SESSION session,
         result = true;
         goto end;
     }
-        
+
     /* Check the database for major_ver; in case we do not know the identity
        yet, check whether the identity has a known media key: any identity with
        a media kay is also a pEp-using identity. */
@@ -315,6 +328,9 @@ PEP_STATUS identity_known_to_use_pEp(PEP_SESSION session,
 
  end:
     * known_to_use_pEp = result;
+    LOG_STATUS_TRACE;
+    if (status == PEP_STATUS_OK)
+        LOG_TRACE("the result is %s", BOOLTOSTR(* known_to_use_pEp));
     free_identity (identity_copy);
     return status;
 }
@@ -324,6 +340,7 @@ PEP_STATUS amend_identity_with_media_key_information(PEP_SESSION session,
 {
     /* Sanity checks. */
     PEP_REQUIRE(session && identity);
+    LOG_IDENTITY_TRACE("working on", identity);
 
 #define DUMP                                                                \
     do {                                                                    \
@@ -342,15 +359,15 @@ PEP_STATUS amend_identity_with_media_key_information(PEP_SESSION session,
 
     /* On error relay the error and do nothing else. */
     if (status != PEP_STATUS_OK)
-        return status;
+        goto end;
 
     /* If there is no media key, do nothing. */
     if (! has_media_key)
-        return PEP_STATUS_OK;
+        goto end;
 
     /* If we arrived here there is a media key.  Amend the identity so that it
        is recognised as using a recent pEp version. */
-    LOG_TRACE("%s <%s>: amending because of a media key...", identity->username, identity->address);
+    LOG_IDENTITY_TRACE("amending because of a media key", identity);
     DUMP;
     if (identity->enc_format == PEP_enc_auto
         || identity->enc_format < PEP_enc_PEP)
@@ -371,7 +388,10 @@ PEP_STATUS amend_identity_with_media_key_information(PEP_SESSION session,
     }
     LOG_TRACE("  ->");
     DUMP;
-    return PEP_STATUS_OK;
+
+ end:
+    LOG_STATUS_TRACE;
+    return status;
 }
 
 
@@ -420,6 +440,7 @@ PEP_STATUS media_key_is_there_a_media_key_in(PEP_SESSION session,
             break;
         }
     }
+    LOG_TRACE("the result is %s", BOOLTOSTR(* found));
     return PEP_STATUS_OK;
 }
 
@@ -510,4 +531,5 @@ PEP_STATUS media_key_for_outgoing_message(PEP_SESSION session,
     if (candidate_key)
         LOG_TRACE("[%s] has media key %s", (msg->shortmsg ? msg->shortmsg : "(no subject)"), candidate_key);
     return status;
+#undef ADD_IDENTITIES
 }

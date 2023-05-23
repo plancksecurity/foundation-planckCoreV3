@@ -7,6 +7,7 @@
 #include "echo_api.h"
 
 #include "pEp_internal.h"
+#include "engine_sql.h"
 #include "baseprotocol.h"
 #include "distribution_codec.h"
 #include "sync_api.h" // for notifyHandshake, currently defined in this header
@@ -56,21 +57,21 @@ static const char *echo_set_timestamp_text
 */
 
 /* This is a convenient way to check for SQL errors without duplicating code. */
-#define ON_SQL_ERROR_SET_STATUS_AND_GOTO                 \
-    do {                                                 \
-        if (sql_status != SQLITE_OK                      \
-            && sql_status != SQLITE_DONE                 \
-            && sql_status != SQLITE_ROW) {               \
-            status = PEP_UNKNOWN_DB_ERROR;               \
-            /* This should not happen in production,     \
-               so I can afford a debug print when        \
-               something unexpected happens. */          \
-            if (sql_status == SQLITE_ERROR)              \
-                LOG_ERROR("SQL ERROR %i: %s",            \
-                          sql_status,                    \
-                          sqlite3_errmsg(session->db));  \
-            goto end;                                    \
-        }                                                \
+#define ON_SQL_ERROR_SET_STATUS_AND_GOTO                               \
+    do {                                                               \
+        if (sql_status != SQLITE_OK                                    \
+            && sql_status != SQLITE_DONE                               \
+            && sql_status != SQLITE_ROW) {                             \
+            status = PEP_UNKNOWN_DB_ERROR;                             \
+            /* This should not happen in production,                   \
+               so I can afford a debug print when                      \
+               something unexpected happens. */                        \
+            if (sql_status == SQLITE_ERROR)                            \
+                LOG_ERROR("SQL ERROR %s",                              \
+                          pEp_sql_status_to_status_text(session,       \
+                                                        sql_status));  \
+            goto end;                                                  \
+        }                                                              \
     } while (false)
 
 
@@ -95,11 +96,13 @@ static PEP_STATUS upgrade_add_echo_challange_field(PEP_SESSION session) {
 
     /* Alter the table.  This is executed only once at initialisation time,
        so keeping the SQL statement prepared would be counter-productive. */
-    int sql_status
-        = sqlite3_exec(session->db,
-                       " ALTER TABLE Identity"
-                       " ADD COLUMN echo_challenge BLOB;"
-                       , NULL, NULL, NULL);
+    int sql_status = SQLITE_OK;
+    PEP_SQL_BEGIN_LOOP(sql_status);
+    sql_status = sqlite3_exec(session->db,
+                              " ALTER TABLE Identity"
+                              " ADD COLUMN echo_challenge BLOB;"
+                              , NULL, NULL, NULL);
+    PEP_SQL_END_LOOP();
     switch (sql_status) {
     case SQLITE_OK:
         /* Upgrading was successful. */
@@ -128,11 +131,14 @@ static PEP_STATUS upgrade_add_echo_last_echo_timestamp_field(
 
     /* Alter the table.  This is executed only once at initialisation time,
        so keeping the SQL statement prepared would be counter-productive. */
-    int sql_status
+    int sql_status = SQLITE_OK;
+    PEP_SQL_BEGIN_LOOP(sql_status);
+    sql_status
         = sqlite3_exec(session->db,
                        " ALTER TABLE Identity"
                        " ADD COLUMN last_echo_timestamp INTEGER DEFAULT NULL;"
                        , NULL, NULL, NULL);
+    PEP_SQL_END_LOOP();
     switch (sql_status) {
     case SQLITE_OK:
         /* Upgrading was successful. */
@@ -160,31 +166,40 @@ PEP_STATUS echo_initialize(PEP_SESSION session)
        *before* prepraring statements using the new columns that are created by
        this upgrade. */
     PEP_STATUS status = PEP_STATUS_OK;
-    status = upgrade_add_echo_challange_field(session);
-    if (status != PEP_STATUS_OK)
-        goto end;
-    status = upgrade_add_echo_last_echo_timestamp_field(session);
-    if (status != PEP_STATUS_OK)
-        goto end;
+    if (session->first_session_at_init_time) {
+        LOG_NONOK("do not worry if there are two SQLITE_ERROR statuses in the"
+                  " upgrading function calls here: ALTER TABLE ADD COLUMN fails"
+                  " when the database format is alredy the most recent one");
+        status = upgrade_add_echo_challange_field(session);
+        if (status != PEP_STATUS_OK)
+            goto end;
+        status = upgrade_add_echo_last_echo_timestamp_field(session);
+        if (status != PEP_STATUS_OK)
+            goto end;
+    }
 
     /* Prepare SQL statements, so that we only do it once and for all.  This
        will be important in the future for embedded platforms with limited
        resources. */
     int sql_status;
-    sql_status = sqlite3_prepare_v2(session->db, echo_get_challenge_text,
+    sql_status = pEp_sqlite3_prepare_v2_nonbusy_nonlocked(session,
+                                    session->db, echo_get_challenge_text,
                                     -1, &session->echo_get_challenge,
                                     NULL);
     ON_SQL_ERROR_SET_STATUS_AND_GOTO;
-    sql_status = sqlite3_prepare_v2(session->db, echo_set_challenge_text,
+    sql_status = pEp_sqlite3_prepare_v2_nonbusy_nonlocked(session,
+                                    session->db, echo_set_challenge_text,
                                     -1, &session->echo_set_challenge,
                                     NULL);
     ON_SQL_ERROR_SET_STATUS_AND_GOTO;
-    sql_status = sqlite3_prepare_v2(session->db,
+    sql_status = pEp_sqlite3_prepare_v2_nonbusy_nonlocked(session,
+                                    session->db,
                                     echo_get_echo_below_rate_limit_text, -1,
                                     &session->echo_get_echo_below_rate_limit,
                                     NULL);
     ON_SQL_ERROR_SET_STATUS_AND_GOTO;
-    sql_status = sqlite3_prepare_v2(session->db, echo_set_timestamp_text,
+    sql_status = pEp_sqlite3_prepare_v2_nonbusy_nonlocked(session,
+                                    session->db, echo_set_timestamp_text,
                                     -1, &session->echo_set_timestamp,
                                     NULL);
     ON_SQL_ERROR_SET_STATUS_AND_GOTO;
@@ -226,6 +241,8 @@ static PEP_STATUS make_sure_identity_exists(PEP_SESSION session,
                                             const pEp_identity *identity)
 {
     PEP_REQUIRE(session && identity);
+    LOG_WARNING("on %s <%s>: this function is conceptually wrong, and I am disabling it.  It now does nothing and assumes that the identity indeed exists.", ASNONNULLSTR(identity->username), ASNONNULLSTR(identity->address));
+    return PEP_STATUS_OK;
 
     PEP_STATUS status = PEP_STATUS_OK;
     pEp_identity *identity_copy = NULL;
@@ -244,8 +261,13 @@ static PEP_STATUS make_sure_identity_exists(PEP_SESSION session,
     status = update_identity(session, identity_copy);
     if (status != PEP_STATUS_OK)
         goto end;
-    /* ...If we arrived here the identity has been set, so we can be sure that
-       it exists in the database.  */
+    status = set_identity(session, identity_copy);
+    if (status != PEP_STATUS_OK)
+        goto end;
+    /* ...If we arrived here we can be sure that the identity exists in the
+       database.  */
+    LOG_TRACE("we made sure that %s <%s> exists, but...", ASNONNULLSTR(identity->username), ASNONNULLSTR(identity->address));
+    LOG_TRACE("...FIXME: I am not sure this actually writes what it should.");
 
  end:
     free_identity(identity_copy);
@@ -307,11 +329,30 @@ static PEP_STATUS echo_get_below_rate_limit(PEP_SESSION session,
         = pEp_sqlite3_step_nonbusy(session,
                                    session->echo_get_echo_below_rate_limit);
     ON_SQL_ERROR_SET_STATUS_AND_GOTO;
-    PEP_ASSERT(sql_status == SQLITE_ROW);
-    PEP_ASSERT(sqlite3_column_count(session->echo_get_echo_below_rate_limit)
-               == 1);
 
-    result = sqlite3_column_int(session->echo_get_echo_below_rate_limit, 0);
+    // I have seen a crash here I cannot reproduce any more: to be investigated.
+    LOG_TRACE("* speaking about %s", ASNONNULLSTR(identity->username));
+    LOG_TRACE("  speaking about %s <%s>", ASNONNULLSTR(identity->username), ASNONNULLSTR(identity->address));
+    LOG_TRACE("  speaking about sql_status is %i", sql_status);
+    LOG_TRACE("  speaking about sql_status is %i (%s)", sql_status, sqlite3_errmsg(session->db));
+    LOG_TRACE("  speaking about %s <%s>: sql_status is %i (%s)", ASNONNULLSTR(identity->username), ASNONNULLSTR(identity->address), sql_status, sqlite3_errmsg(session->db));
+    PEP_ASSERT(   (/* one-row result */
+                   sql_status == SQLITE_ROW)
+               || (/* no-row result: identity unknown: this should not happen
+                      (see the comment inside make_sure_identity_exists (FIXME:
+                      change this after fixing it)) */
+                   sql_status == SQLITE_DONE));
+    if (sql_status == SQLITE_ROW) {
+        /* We found one row, containing the Boolean result. */
+        PEP_ASSERT(sqlite3_column_count(session->echo_get_echo_below_rate_limit)
+                   == 1);
+        result = sqlite3_column_int(session->echo_get_echo_below_rate_limit, 0);
+    }
+    else {
+        /* The identity is unknown, so we certainly are not over-rate.  On the
+           other hand, this should not happen: see the FIXME above. */
+        result = true;
+    }
 
  end:
     if (status == PEP_STATUS_OK)
@@ -361,7 +402,7 @@ static PEP_STATUS echo_set_last_echo_timestap(PEP_SESSION session,
     ON_SQL_ERROR_SET_STATUS_AND_GOTO;
     PEP_ASSERT(sql_status == SQLITE_DONE);
 
-    LOG_TRACE("set last Echo timestamp to now for %s <%s>", (identity->username ? identity->username : "NOUSERNAME"), (identity->address ? identity->address : "NOADDRESS"));
+    LOG_TRACE("set last Echo timestamp to now for %s <%s>", ASNONNULLSTR(identity->username), ASNONNULLSTR(identity->address));
 
  end:
     LOG_NONOK_STATUS_TRACE;
@@ -422,7 +463,7 @@ static PEP_STATUS echo_challenge_for_identity(PEP_SESSION session,
     sql_status = pEp_sqlite3_step_nonbusy(session, session->echo_get_challenge);
     ON_SQL_ERROR_SET_STATUS_AND_GOTO;
     if (sql_status != SQLITE_ROW)
-        LOG_NONOK("did not find echo challenge for %s <%s>: sql_status %i", (identity->username ? identity->username : "NOUSERNAME"), (identity->address ? identity->address : "NOADDRESS"), sql_status);
+        LOG_NONOK("did not find echo challenge for %s <%s>: sql_status %i", ASNONNULLSTR(identity->username), ASNONNULLSTR(identity->address), sql_status);
     const void *stored_challenge;
     if (sql_status == SQLITE_DONE) /* no row found: no user_id?  This will
                                       never happen in sane situations.  It
@@ -571,7 +612,7 @@ static PEP_STATUS send_ping_or_pong(PEP_SESSION session,
 
     /* Do nothing, and succeed, if the Echo protocol is disabled. */
     if (! session->enable_echo_protocol) {
-        LOG_EVENT("Echo protocol disabled: not sending a %s to %s <%s>", (ping ? "Ping" : "Pong"), (to->username ? to->username : "<no username>"), (to->address ? to->address : "<no address>"));
+        LOG_EVENT("Echo protocol disabled: not sending a %s to %s <%s>", (ping ? "Ping" : "Pong"), ASNONNULLSTR(to->username), ASNONNULLSTR(to->address));
         return PEP_STATUS_OK;
     }
 
@@ -583,11 +624,11 @@ static PEP_STATUS send_ping_or_pong(PEP_SESSION session,
     bool below_rate_limit;
     status = echo_get_below_rate_limit(session, to, & below_rate_limit);
     if (status != PEP_STATUS_OK) {
-        LOG_ERROR("echo_get_below_rate_limit failed with status %i on %s <%s>", (int) status, (to->username ? to->username : "<no username>"), (to->address ? to->address : "<no address>"));
+        LOG_ERROR("echo_get_below_rate_limit failed with status %i on %s <%s>", (int) status, ASNONNULLSTR(to->username), ASNONNULLSTR(to->address));
         return status;
     }
     if (! below_rate_limit) {
-        LOG_EVENT("rate limit exceeded: not sending a %s to %s <%s>", (ping ? "Ping" : "Pong"), (to->username ? to->username : "<no username>"), (to->address ? to->address : "<no address>"));
+        LOG_EVENT("rate limit exceeded: not sending a %s to %s <%s>", (ping ? "Ping" : "Pong"), ASNONNULLSTR(to->username), ASNONNULLSTR(to->address));
         return PEP_STATUS_OK;
     }
 
@@ -625,7 +666,7 @@ static PEP_STATUS send_ping_or_pong(PEP_SESSION session,
     else if (status == PEP_UNENCRYPTED)
         m = non_encrypted_m;
     else {
-        LOG_EVENT("preparing %s from %s <%s> to %s <%s>, status after encrypting %i %s", (ping ? "Ping" : "Pong"), from->username, from->address, to->username, to->address, status, pEp_status_to_string(status));
+        LOG_EVENT("preparing %s from %s <%s> to %s <%s>, status after encrypting %i %s", (ping ? "Ping" : "Pong"), ASNONNULLSTR(from->username), ASNONNULLSTR(from->address), ASNONNULLSTR(to->username), ASNONNULLSTR(to->address), status, pEp_status_to_string(status));
         free_message(non_encrypted_m);
         /* Differently from a status of PEP_UNENCRYPTED this is an actual
            unexpected error, to be reported to the caller. */
@@ -644,7 +685,7 @@ static PEP_STATUS send_ping_or_pong(PEP_SESSION session,
         return status;
     }
 
-    LOG_EVENT("sent %s from %s <%s> to %s <%s>", (ping ? "Ping" : "Pong"), from->username, from->address, to->username, to->address);
+    LOG_EVENT("sent %s from %s <%s> to %s <%s>", (ping ? "Ping" : "Pong"), ASNONNULLSTR(from->username), ASNONNULLSTR(from->address), ASNONNULLSTR(to->username), ASNONNULLSTR(to->address));
 
     /* If we arrived here then we actually sent a message with success.  Let us
        remember this time for use in rate limitation. */
@@ -767,7 +808,7 @@ static void send_ping_if_unknown(PEP_SESSION session,
 {
     PEP_REQUIRE_ORELSE(session && from_identity, { return; });
     if (! from_identity->me) {
-        LOG_WARNING("send_ping_if_unknown: trying to send from non-own identity %s <%s>", from_identity->username, from_identity->address);
+        LOG_WARNING("send_ping_if_unknown: trying to send from non-own identity %s <%s>", ASNONNULLSTR(from_identity->username), ASNONNULLSTR(from_identity->address));
         return;
     }
 
@@ -784,10 +825,10 @@ static void send_ping_if_unknown(PEP_SESSION session,
                 send_ping(session, from_identity, to_identity);
             else {
                 bool known_to_use_pEp;
-                PEP_STATUS status = identity_known_to_use_pEp (session, to_identity,
-                                                               & known_to_use_pEp);
+                PEP_STATUS status = identity_known_to_use_pEp(session, to_identity,
+                                                              & known_to_use_pEp);
                 if (status != PEP_STATUS_OK) {
-                    LOG_WARNING("send_ping_if_unknown: %s -> %s FAILED: status 0x%x %i %s", from_identity->address, to_identity->address, (int) status, (int) status, pEp_status_to_string(status));
+                    LOG_WARNING("send_ping_if_unknown: %s -> %s FAILED: status 0x%x %i %s", ASNONNULLSTR(from_identity->address), ASNONNULLSTR(to_identity->address), (int) status, (int) status, pEp_status_to_string(status));
                     return;
                 }
                 if (known_to_use_pEp)

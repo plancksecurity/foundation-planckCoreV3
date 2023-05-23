@@ -19,5 +19,5 @@ fi
 echo "SELECT PidTid, Timestamp, Lvl, Location, Entry FROM UserEntries LIMIT $limit;" \
     | sqlite3 -readonly -noheader -list -separator ' ' \
               "$pathname" \
-    | sed 's/\t /g/'
+    | sed 's/\t /g/;s/ \+$//'
 
