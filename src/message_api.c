@@ -5044,6 +5044,93 @@ static const char* process_key_claim(message* src,
     return sender_key;
 }
 
+#define GOTO_END_ON_FAILURE             \
+    do {                                \
+        if (status != PEP_STATUS_OK) {  \
+            LOG_NONOK_STATUS_NONOK;     \
+            goto end;                   \
+        }                               \
+    } while (false)
+
+/* Call update_identity or myself (as appropriate) on the given identity, if
+   non-NULL; and return the result status.  The identity is allowed to be
+   NULL. */
+static PEP_STATUS _update_or_myself_identity(PEP_SESSION session,
+                                             pEp_identity *identity)
+{
+    PEP_REQUIRE(session
+                /* identity is allowed to be NULL. */);
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    if (identity == NULL)
+        /* Do nothing. */;
+    else if (is_me(session, identity))
+        status = myself(session, identity);
+    else
+        status = update_identity(session, identity);
+
+    /* Ignore PEP_NO_MEMBERSHIP_STATUS_FOUND, which is not really relevant here:
+       we can consider this a success. */
+    if (status == PEP_NO_MEMBERSHIP_STATUS_FOUND)
+        status = PEP_STATUS_OK;
+
+    LOG_NONOK_STATUS_NONOK;
+    return status;
+}
+
+/* Call update_identity or myself (as appropriate) on each of the given
+   identities, and return the result status.  Stop at the first error. */
+static PEP_STATUS _update_or_myself_identity_list(PEP_SESSION session,
+                                                  identity_list *identities)
+{
+    PEP_REQUIRE(session
+                /* identities is allowed to be NULL. */);
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    identity_list *rest;
+    for (rest = identities; rest != NULL; rest = rest->next) {
+        status = _update_or_myself_identity(session, rest->ident);
+        GOTO_END_ON_FAILURE;
+    }
+
+ end:
+    LOG_NONOK_STATUS_NONOK;
+    return status;
+}
+
+/* Call update_identity or myself (as appropriate) on each identity involved in
+   the message, and return the result status.  Stop at the first error. */
+static PEP_STATUS _update_or_myself_message(PEP_SESSION session,
+                                            message *msg)
+{
+    PEP_REQUIRE(session && msg);
+    PEP_STATUS status = PEP_STATUS_OK;
+
+#define HANDLE_ONE(the_identity)                            \
+    do {                                                    \
+        _update_or_myself_identity(session, the_identity);  \
+        GOTO_END_ON_FAILURE;                                \
+    } while (false)
+#define HANDLE_LIST(the_list)                                \
+    do {                                                     \
+        _update_or_myself_identity_list(session, the_list);  \
+        GOTO_END_ON_FAILURE;                                 \
+    } while (false)
+
+    HANDLE_ONE(msg->recv_by);
+    HANDLE_ONE(msg->from);
+    HANDLE_LIST(msg->to);
+    HANDLE_LIST(msg->cc);
+    HANDLE_LIST(msg->bcc);
+    HANDLE_LIST(msg->reply_to);
+
+end:
+    return status;
+#undef HANDLE_ONE
+#undef HANDLE_LISt
+}
+#undef GOTO_END_ON_FAILURE
+
 /** @internal
  *  Rule for this function, since it is one of the three most complicated functions in this whole damned
  *  business:
@@ -5195,6 +5282,12 @@ static PEP_STATUS _decrypt_message(
         status = PEP_STATUS_OK;
     }
     /*** End caching and setup information from non-me from identities ***/
+
+    /* /\* Update every identity own or not, referenced in the message; this was */
+    /*    (surprisingly) missing: https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/168 . *\/ */
+    /* status = _update_or_myself_message(session, src); */
+    /* if (status != PEP_STATUS_OK) */
+    /*     goto pEp_error; */
 
     // NOTE:
     // We really need key used in signing to do anything further on the pEp comm_type.
@@ -5349,6 +5442,14 @@ static PEP_STATUS _decrypt_message(
         if (status == PEP_STATUS_OK) {
             status = PEP_UNENCRYPTED;
             UPGRADE_PROTOCOL_VERSION_IF_NEEDED(src);
+
+            /* Update every identity, own or not, referenced in the message;
+               this was (surprisingly) missing:
+               https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/168
+               .  Since the control flow of this function is so ridiculously
+               complicated I prefer duplicating this fix, rather than unifying
+               the multiple return points. */
+            _update_or_myself_message(session, src); /* Ignore status. */
         }
         return status;
     }
@@ -6312,6 +6413,13 @@ static PEP_STATUS _decrypt_message(
         input_from_username = NULL;
     }
     free(input_from_username); // This was set to NULL in both places ownership could be legitimately grabbed.
+
+    /* Update every identity, own or not, referenced in the message; this was
+       (surprisingly) missing:
+       https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/168 . */
+    status = _update_or_myself_message(session, src);
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
 
     if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
         UPGRADE_PROTOCOL_VERSION_IF_NEEDED(msg);
