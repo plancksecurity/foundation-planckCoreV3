@@ -132,7 +132,7 @@
 /* Provide fallback definitions for platforms not supplying definitions for
    the component macros used in PEP_ENGINE_VERSION_LONG macros. */
 #if ! defined (PEP_ENGINE_BRANCH)
-#   pragma message "WARNING: You should define the CPP macro PEP_ENGINE_BRANCH as the Engine git branch (ex.: \"Release_3.3\") from the compiler command line")
+#   pragma message "WARNING: You should define the CPP macro PEP_ENGINE_BRANCH as the Engine git branch (ex.: \"Release_3.3\") from the compiler command line"
 #   define PEP_ENGINE_BRANCH "unknown-branch"
 #endif
 #if ! defined (PEP_ENGINE_COMMIT)
