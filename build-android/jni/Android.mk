@@ -53,4 +53,4 @@ include $(BUILD_STATIC_LIBRARY)
 
 $(call import-add-path,$(SRC_PATH))
 $(warning ==== PEPENGINE android.mk CALLING import-module LIBPEPTRANSPORT)
-$(call import-module, libpEpTransport/build-android/jni/)
+$(call import-module, libPlanckTransport/build-android/jni/)
