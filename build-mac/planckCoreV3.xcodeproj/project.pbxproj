@@ -283,7 +283,6 @@
 		43F2D1CA29A7681A000572FA /* string_utilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 43F2D1C729A7681A000572FA /* string_utilities.h */; };
 		43F2D1CB29A7681A000572FA /* string_utilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 43F2D1C729A7681A000572FA /* string_utilities.h */; };
 		6400FB8B1B8CA1CF005221E3 /* libetpan-ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64289E371B8B630200FC617B /* libetpan-ios.a */; };
-		644297C51BE11CE0002BC73B /* system.db in Resources */ = {isa = PBXBuildFile; fileRef = 64951A1B1BE0FCD800B10E71 /* system.db */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -357,40 +356,33 @@
 			remoteGlobalIDString = 150845DE25F13CE700D46DA6;
 			remoteInfo = generate_code;
 		};
-		437D471727DF9933006CB916 /* PBXContainerItemProxy */ = {
+		43733F8D2A09282A001F3D8B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 4309FF0327315E560055C6C9 /* pEpTransport.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 43C24DE327A15C81000E90FF;
-			remoteInfo = pEpTransportTests;
-		};
-		4399C9E32747C70700F52599 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 4309FF0327315E560055C6C9 /* pEpTransport.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 43B26350272AA95000EE82BC;
-			remoteInfo = pEpTransport_macOS;
-		};
-		4399C9E52747C70700F52599 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 4309FF0327315E560055C6C9 /* pEpTransport.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 43B263CF272AC13400EE82BC;
-			remoteInfo = pEpTransport_iOS;
-		};
-		4399CA022747DA8200F52599 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 4309FF0327315E560055C6C9 /* pEpTransport.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 43B2634F272AA95000EE82BC;
-			remoteInfo = pEpTransport_macOS;
-		};
-		4399CA222747DA8A00F52599 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 4309FF0327315E560055C6C9 /* pEpTransport.xcodeproj */;
+			containerPortal = 4309FF0327315E560055C6C9 /* planckTransport.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 43B263C6272AC13400EE82BC;
-			remoteInfo = pEpTransport_iOS;
+			remoteInfo = planckTransport_iOS;
+		};
+		43C77CCA2A0393CF000A70A8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4309FF0327315E560055C6C9 /* planckTransport.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43B26350272AA95000EE82BC;
+			remoteInfo = planckTransport_macOS;
+		};
+		43C77CCC2A0393CF000A70A8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4309FF0327315E560055C6C9 /* planckTransport.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43B263CF272AC13400EE82BC;
+			remoteInfo = planckTransport_iOS;
+		};
+		43C77CCE2A0393CF000A70A8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4309FF0327315E560055C6C9 /* planckTransport.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43C24DE327A15C81000E90FF;
+			remoteInfo = planckTransportTests;
 		};
 		43D47AA0225CC82400E97C5B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -559,7 +551,7 @@
 		154917FA22B926700091B6D6 /* libsequoia_openpgp_ffi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsequoia_openpgp_ffi.a; path = ../../sequoia4ios/build/lib/libsequoia_openpgp_ffi.a; sourceTree = "<group>"; };
 		154917FB22B926700091B6D6 /* libhogweed.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libhogweed.a; path = ../../sequoia4ios/build/lib/libhogweed.a; sourceTree = "<group>"; };
 		154917FC22B926700091B6D6 /* libgmp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgmp.a; path = ../../sequoia4ios/build/lib/libgmp.a; sourceTree = "<group>"; };
-		1552DB112577D4F100A92F71 /* libpEpEngine_macOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpEpEngine_macOS.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		1552DB112577D4F100A92F71 /* libplanckCoreV3_macOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libplanckCoreV3_macOS.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		1552DB132577D4F100A92F71 /* pEpEngine_macOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pEpEngine_macOS.h; sourceTree = "<group>"; };
 		1552DB152577D4F100A92F71 /* pEpEngine_macOS.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = pEpEngine_macOS.m; sourceTree = "<group>"; };
 		1585EF4026A08A9800B822E1 /* libgmp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgmp.a; path = "../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libgmp.a"; sourceTree = "<group>"; };
@@ -568,7 +560,7 @@
 		1585EF4326A08A9800B822E1 /* libsequoia_openpgp_ffi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsequoia_openpgp_ffi.a; path = "../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libsequoia_openpgp_ffi.a"; sourceTree = "<group>"; };
 		1585EF5A26A08B2000B822E1 /* CommonPEPDependencies.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = CommonPEPDependencies.xcodeproj; path = "../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/CommonPEPDependencies.xcodeproj"; sourceTree = "<group>"; };
 		15A3203B260E030B009D07EB /* pEpASN1.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = pEpASN1.xcodeproj; path = Subprojects/pEpASN1/pEpASN1.xcodeproj; sourceTree = "<group>"; };
-		4309FF0327315E560055C6C9 /* pEpTransport.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = pEpTransport.xcodeproj; path = "../../libpEpTransport/build-mac/pEpTransport.xcodeproj"; sourceTree = "<group>"; };
+		4309FF0327315E560055C6C9 /* planckTransport.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = planckTransport.xcodeproj; path = "../../libPlanckTransport/build-mac/planckTransport.xcodeproj"; sourceTree = "<group>"; };
 		432210332924C65A00AE872F /* media_key.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = media_key.c; path = ../src/media_key.c; sourceTree = "<group>"; };
 		4322103C2924C94A00AE872F /* echo_api.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = echo_api.c; path = ../src/echo_api.c; sourceTree = "<group>"; };
 		4322103F2924C97E00AE872F /* pEp_log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pEp_log.c; path = ../src/pEp_log.c; sourceTree = "<group>"; };
@@ -587,8 +579,7 @@
 		43F2D1C729A7681A000572FA /* string_utilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = string_utilities.h; path = ../src/string_utilities.h; sourceTree = "<group>"; };
 		644297BF1BE11C65002BC73B /* pEpTrustWords.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = pEpTrustWords.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		644297C11BE11C65002BC73B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		64796A3F1B455AA5004B1C24 /* libpEpEngine.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpEpEngine.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		64951A1B1BE0FCD800B10E71 /* system.db */ = {isa = PBXFileReference; lastKnownFileType = text; name = system.db; path = ../db/system.db; sourceTree = "<group>"; };
+		64796A3F1B455AA5004B1C24 /* libplanckCoreV3.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libplanckCoreV3.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libetpan.xcodeproj; path = "../../libetpan/build-mac/libetpan.xcodeproj"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -676,12 +667,12 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		4399C9C32747C70700F52599 /* Products */ = {
+		43C77CA82A0393CF000A70A8 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				4399C9E42747C70700F52599 /* libpEpTransport_macOS.a */,
-				4399C9E62747C70700F52599 /* libpEpTransport_iOS.a */,
-				437D471827DF9933006CB916 /* pEpTransportTests.xctest */,
+				43C77CCB2A0393CF000A70A8 /* libplanckTransport_macOS.a */,
+				43C77CCD2A0393CF000A70A8 /* libplanckTransport_iOS.a */,
+				43C77CCF2A0393CF000A70A8 /* planckTransportTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -708,8 +699,7 @@
 			children = (
 				1585EF5A26A08B2000B822E1 /* CommonPEPDependencies.xcodeproj */,
 				15A3203B260E030B009D07EB /* pEpASN1.xcodeproj */,
-				4309FF0327315E560055C6C9 /* pEpTransport.xcodeproj */,
-				64951A1B1BE0FCD800B10E71 /* system.db */,
+				4309FF0327315E560055C6C9 /* planckTransport.xcodeproj */,
 				64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */,
 				64A8264B1B455C5600EECAF0 /* src */,
 				644297C01BE11C65002BC73B /* pEpTrustWords */,
@@ -722,9 +712,9 @@
 		64796A401B455AA5004B1C24 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				64796A3F1B455AA5004B1C24 /* libpEpEngine.a */,
+				64796A3F1B455AA5004B1C24 /* libplanckCoreV3.a */,
 				644297BF1BE11C65002BC73B /* pEpTrustWords.bundle */,
-				1552DB112577D4F100A92F71 /* libpEpEngine_macOS.a */,
+				1552DB112577D4F100A92F71 /* libplanckCoreV3_macOS.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1014,9 +1004,9 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		1552DB102577D4F100A92F71 /* pEpEngine_macOS */ = {
+		1552DB102577D4F100A92F71 /* planckCoreV3_macOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1552DB192577D4F100A92F71 /* Build configuration list for PBXNativeTarget "pEpEngine_macOS" */;
+			buildConfigurationList = 1552DB192577D4F100A92F71 /* Build configuration list for PBXNativeTarget "planckCoreV3_macOS" */;
 			buildPhases = (
 				1552DB0D2577D4F100A92F71 /* Headers */,
 				1552DB0E2577D4F100A92F71 /* Sources */,
@@ -1026,16 +1016,15 @@
 			buildRules = (
 			);
 			dependencies = (
-				4399CA032747DA8200F52599 /* PBXTargetDependency */,
 				1585EF6D26A08B2E00B822E1 /* PBXTargetDependency */,
 				156AFE832670E6D800AF0039 /* PBXTargetDependency */,
 				151585FA26CE6A78003D8685 /* PBXTargetDependency */,
 				1508460725F24D1100D46DA6 /* PBXTargetDependency */,
 				15A32305260E0C6F009D07EB /* PBXTargetDependency */,
 			);
-			name = pEpEngine_macOS;
+			name = planckCoreV3_macOS;
 			productName = pEpEngine_macOS;
-			productReference = 1552DB112577D4F100A92F71 /* libpEpEngine_macOS.a */;
+			productReference = 1552DB112577D4F100A92F71 /* libplanckCoreV3_macOS.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 		644297BE1BE11C65002BC73B /* pEpTrustWords */ = {
@@ -1056,9 +1045,9 @@
 			productReference = 644297BF1BE11C65002BC73B /* pEpTrustWords.bundle */;
 			productType = "com.apple.product-type.bundle";
 		};
-		64796A3E1B455AA5004B1C24 /* pEpEngine */ = {
+		64796A3E1B455AA5004B1C24 /* planckCoreV3 */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 64796A531B455AA5004B1C24 /* Build configuration list for PBXNativeTarget "pEpEngine" */;
+			buildConfigurationList = 64796A531B455AA5004B1C24 /* Build configuration list for PBXNativeTarget "planckCoreV3" */;
 			buildPhases = (
 				64796A3B1B455AA5004B1C24 /* Sources */,
 				64796A3C1B455AA5004B1C24 /* Frameworks */,
@@ -1069,16 +1058,16 @@
 			buildRules = (
 			);
 			dependencies = (
-				4399CA232747DA8A00F52599 /* PBXTargetDependency */,
+				43733F8E2A09282A001F3D8B /* PBXTargetDependency */,
 				1585EF6F26A08B3A00B822E1 /* PBXTargetDependency */,
 				15B21C3625FB8DD10097927A /* PBXTargetDependency */,
 				43D47AA1225CC82400E97C5B /* PBXTargetDependency */,
 				64289E3F1B8B638800FC617B /* PBXTargetDependency */,
 				15A323EE260E167D009D07EB /* PBXTargetDependency */,
 			);
-			name = pEpEngine;
+			name = planckCoreV3;
 			productName = pEpEngine;
-			productReference = 64796A3F1B455AA5004B1C24 /* libpEpEngine.a */;
+			productReference = 64796A3F1B455AA5004B1C24 /* libplanckCoreV3.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
@@ -1104,7 +1093,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 64796A3A1B455AA5004B1C24 /* Build configuration list for PBXProject "pEpEngine" */;
+			buildConfigurationList = 64796A3A1B455AA5004B1C24 /* Build configuration list for PBXProject "planckCoreV3" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -1129,14 +1118,14 @@
 					ProjectRef = 15A3203B260E030B009D07EB /* pEpASN1.xcodeproj */;
 				},
 				{
-					ProductGroup = 4399C9C32747C70700F52599 /* Products */;
-					ProjectRef = 4309FF0327315E560055C6C9 /* pEpTransport.xcodeproj */;
+					ProductGroup = 43C77CA82A0393CF000A70A8 /* Products */;
+					ProjectRef = 4309FF0327315E560055C6C9 /* planckTransport.xcodeproj */;
 				},
 			);
 			projectRoot = "";
 			targets = (
-				64796A3E1B455AA5004B1C24 /* pEpEngine */,
-				1552DB102577D4F100A92F71 /* pEpEngine_macOS */,
+				64796A3E1B455AA5004B1C24 /* planckCoreV3 */,
+				1552DB102577D4F100A92F71 /* planckCoreV3_macOS */,
 				644297BE1BE11C65002BC73B /* pEpTrustWords */,
 				150845DE25F13CE700D46DA6 /* generate_code */,
 				151585F326CE6A58003D8685 /* generate_macOS */,
@@ -1159,25 +1148,25 @@
 			remoteRef = 15A322F6260E0B75009D07EB /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		437D471827DF9933006CB916 /* pEpTransportTests.xctest */ = {
+		43C77CCB2A0393CF000A70A8 /* libplanckTransport_macOS.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libplanckTransport_macOS.a;
+			remoteRef = 43C77CCA2A0393CF000A70A8 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C77CCD2A0393CF000A70A8 /* libplanckTransport_iOS.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libplanckTransport_iOS.a;
+			remoteRef = 43C77CCC2A0393CF000A70A8 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C77CCF2A0393CF000A70A8 /* planckTransportTests.xctest */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.cfbundle;
-			path = pEpTransportTests.xctest;
-			remoteRef = 437D471727DF9933006CB916 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		4399C9E42747C70700F52599 /* libpEpTransport_macOS.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libpEpTransport_macOS.a;
-			remoteRef = 4399C9E32747C70700F52599 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		4399C9E62747C70700F52599 /* libpEpTransport_iOS.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libpEpTransport_iOS.a;
-			remoteRef = 4399C9E52747C70700F52599 /* PBXContainerItemProxy */;
+			path = planckTransportTests.xctest;
+			remoteRef = 43C77CCE2A0393CF000A70A8 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		64289E351B8B630200FC617B /* libetpan.a */ = {
@@ -1201,7 +1190,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				644297C51BE11CE0002BC73B /* system.db in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1483,15 +1471,10 @@
 			target = 150845DE25F13CE700D46DA6 /* generate_code */;
 			targetProxy = 15B21C3525FB8DD10097927A /* PBXContainerItemProxy */;
 		};
-		4399CA032747DA8200F52599 /* PBXTargetDependency */ = {
+		43733F8E2A09282A001F3D8B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			name = pEpTransport_macOS;
-			targetProxy = 4399CA022747DA8200F52599 /* PBXContainerItemProxy */;
-		};
-		4399CA232747DA8A00F52599 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = pEpTransport_iOS;
-			targetProxy = 4399CA222747DA8A00F52599 /* PBXContainerItemProxy */;
+			name = planckTransport_iOS;
+			targetProxy = 43733F8D2A09282A001F3D8B /* PBXContainerItemProxy */;
 		};
 		43D47AA1225CC82400E97C5B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -1665,7 +1648,7 @@
 					"$(PROJECT_DIR)/Subprojects/pEpASN1/build/include",
 					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
 					"${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/include",
-					"${PROJECT_DIR}/../../libpEpTransport/build-mac/build/include",
+					"${PROJECT_DIR}/../../libPlanckTransport/build-mac/build/include",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
@@ -1839,7 +1822,7 @@
 					"$(PROJECT_DIR)/Subprojects/pEpASN1/build/include",
 					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
 					"${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/include",
-					"${PROJECT_DIR}/../../libpEpTransport/build-mac/build/include",
+					"${PROJECT_DIR}/../../libPlanckTransport/build-mac/build/include",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
@@ -1903,7 +1886,7 @@
 					"$(PROJECT_DIR)/Subprojects/pEpASN1/build/include",
 					"$(PROJECT_DIR)/Subprojects/PEPSQLITE3/build/include",
 					"${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/include",
-					"${PROJECT_DIR}/../../libpEpTransport/build-mac/build/include",
+					"${PROJECT_DIR}/../../libPlanckTransport/build-mac/build/include",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
@@ -1987,7 +1970,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1552DB192577D4F100A92F71 /* Build configuration list for PBXNativeTarget "pEpEngine_macOS" */ = {
+		1552DB192577D4F100A92F71 /* Build configuration list for PBXNativeTarget "planckCoreV3_macOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1552DB172577D4F100A92F71 /* Debug */,
@@ -2007,7 +1990,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		64796A3A1B455AA5004B1C24 /* Build configuration list for PBXProject "pEpEngine" */ = {
+		64796A3A1B455AA5004B1C24 /* Build configuration list for PBXProject "planckCoreV3" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				64796A511B455AA5004B1C24 /* Debug */,
@@ -2017,7 +2000,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		64796A531B455AA5004B1C24 /* Build configuration list for PBXNativeTarget "pEpEngine" */ = {
+		64796A531B455AA5004B1C24 /* Build configuration list for PBXNativeTarget "planckCoreV3" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				64796A541B455AA5004B1C24 /* Debug */,
