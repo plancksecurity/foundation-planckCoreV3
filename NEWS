@@ -1,3 +1,4 @@
+v3.3.0-RC4  2023-05-26
 * Dependencies: use the latest YML, 2.7.6.
 * Fix https://gitea.pep.foundation/pEp.foundation/pEpEngine/issues/168 , cleanly.
   Remove the temporary kludge hiding the known violated requirement.
