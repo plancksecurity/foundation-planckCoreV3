@@ -484,10 +484,6 @@ void uuid_unparse_upper(pEpUUID uu, uuid_string_t out)
 /* Unix system emulation
  * ***************************************************************** */
 
-_pEp_pid_t getpid(void)
-{
-    return GetCurrentProcessId();
-}
 
 // #warning not suported by the windows compiler.  FIXME: re-introduce if possible inside another CPP conditional.
 // #warning "FIXME: remove this ugly thing and use the new log facility instead"
@@ -502,6 +498,23 @@ void log_output_debug(const char *title,
     snprintf(str, size, "*** %s %s %s %s\n", title, entity, description, comment);
     OutputDebugStringA(str);
 }
+
+
+int setenv(const char* name, const char* value, int overwrite)
+{
+    if (!overwrite && getenv(name) != NULL)
+        return true;
+    else
+        return SetEnvironmentVariableA(name, value);
+}
+
+int unsetenv(const char* name)
+{
+    return SetEnvironmentVariableA(name, NULL);
+}
+
+
+
 
 DYNAMIC_API PEP_STATUS reset_path_cache(void)
 {

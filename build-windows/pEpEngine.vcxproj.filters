@@ -156,6 +156,15 @@
     <ClCompile Include="..\src\pEp_rmd160.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\sql_reliability.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\pEp_debug.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\string_utilities.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\keymanagement.h">
@@ -345,6 +354,12 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="..\src\pEp_rmd160.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\pEp_debug.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\string_utilities.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

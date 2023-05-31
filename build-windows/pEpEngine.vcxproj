@@ -72,24 +72,26 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PEPENGINE_EXPORTS;_CRT_SECURE_NO_WARNINGS;USE_SEQUOIA;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <EnablePREfast>false</EnablePREfast>
-      <AdditionalIncludeDirectories>$(SolutionDir)pEpEngine\asn.1;$(SolutionDir);$(SolutionDir)libetpan\build-windows\include;$(SolutionDir)Tools\asn1c\share\asn1c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)PlanckCoreV3\asn.1;$(SolutionDir);$(SolutionDir)libetpan\build-windows\include;$(SolutionDir)Tools\asn1c\share\asn1c;$(SolutionDir)sequoia\openpgp-ffi\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>Default</CompileAs>
       <DisableSpecificWarnings>4703</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Shlwapi.lib; pep_engine_sequoia_backend.dll.lib;gmp.lib;nettle.lib;hogweed.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Shlwapi.lib; pep_engine_sequoia_backend.dll.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
-      <AdditionalLibraryDirectories>$(SolutionDir)pEpEngineSequoiaBackend\target\debug;C:\msys64\mingw32\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)PlanckCoreSequoiaBackend\target\$(ConfigurationName);C:\msys64\mingw32\lib</AdditionalLibraryDirectories>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <SuppressStartupBanner>false</SuppressStartupBanner>
     </Link>
     <PreBuildEvent>
-      <Command>PUSHD $(SolutionDir)pEpEngineSequoiaBackend &amp;&amp; set NETTLE_HAVE_CV448=yes&amp;&amp; cargo build &amp;&amp; POPD </Command>
+      <Command>set NETTLE_HAVE_CV448=yes &amp;&amp; PUSHD $(SolutionDir)\PlanckCoreSequoiaBackend &amp;&amp; cargo rustc -- -L $(SolutionDir)botan  &amp;&amp; copy $(SolutionDir)botan\botan.dll $(SolutionDir)$(Configuration) &amp;&amp; copy target\$(Configuration)\deps\pep_engine_sequoia_backend.dll* $(SolutionDir)$(Configuration) &amp;&amp; POPD </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy "$(SolutionDir)pEpEngineSequoiaBackend\target\debug\pep_engine_sequoia_backend.dll" "$(TargetDir)" /Y</Command>
+      <Command>xcopy "$(SolutionDir)sequoia\target\debug\sequoia_openpgp_ffi.dll" "$(TargetDir)" /Y</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -102,7 +104,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PEPENGINE_EXPORTS;USE_SEQUOIA;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>false</SDLCheck>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)libetpan\build-windows\include;$(SolutionDir)Tools\asn1c\share\asn1c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)PlanckCoreV3\asn.1;$(SolutionDir);$(SolutionDir)libetpan\build-windows\include;$(SolutionDir)Tools\asn1c\share\asn1c;$(SolutionDir)sequoia\openpgp-ffi\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ControlFlowGuard>Guard</ControlFlowGuard>
@@ -114,14 +116,16 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Shlwapi.lib;pep_engine_sequoia_backend.dll.lib;gmp.lib;nettle.lib;hogweed.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)pEpEngineSequoiaBackend\target\release;C:\msys64\mingw32\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Shlwapi.lib;pep_engine_sequoia_backend.dll.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)pEpEngineSequoiaBackend\target\$(ConfigurationName);C:\msys64\mingw32\lib</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
-      <Command>PUSHD $(SolutionDir)pEpEngineSequoiaBackend &amp;&amp; set NETTLE_HAVE_CV448=yes&amp;&amp; cargo build --release &amp;&amp; POPD </Command>
+      <Command>set NETTLE_HAVE_CV448=yes &amp;&amp; PUSHD $(SolutionDir)\pEpEngineSequoiaBackend &amp;&amp; cargo rustc --release -- -L $(SolutionDir)botan &amp;&amp; copy $(SolutionDir)botan\botan.dll $(SolutionDir)$(Configuration)&amp;&amp; copy target\$(Configuration)\deps\pep_engine_sequoia_backend.dll* $(SolutionDir)$(Configuration) &amp;&amp; POPD </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy "$(SolutionDir)pEpEngineSequoiaBackend\target\release\pep_engine_sequoia_backend.dll" "$(TargetDir)" /Y</Command>
+      <Command>xcopy "$(SolutionDir)sequoia\target\release\sequoia_openpgp_ffi.dll" "$(TargetDir)" /Y</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -152,8 +156,8 @@
     <ClCompile Include="..\src\mime.c" />
     <ClCompile Include="..\src\openpgp_compat.c" />
     <ClCompile Include="..\src\pEpEngine.c" />
-    <ClCompile Include="..\src\pEp_log.c" />
     <ClCompile Include="..\src\pEp_debug.c" />
+    <ClCompile Include="..\src\pEp_log.c" />
     <ClCompile Include="..\src\pEp_rmd160.c" />
     <ClCompile Include="..\src\pEp_string.c" />
     <ClCompile Include="..\src\pgp_sequoia.c" />
@@ -164,6 +168,7 @@
     <ClCompile Include="..\src\sql_reliability.c" />
     <ClCompile Include="..\src\stringlist.c" />
     <ClCompile Include="..\src\stringpair.c" />
+    <ClCompile Include="..\src\string_utilities.c" />
     <ClCompile Include="..\src\Sync_actions.c" />
     <ClCompile Include="..\src\sync_api.c" />
     <ClCompile Include="..\src\sync_codec.c" />
@@ -210,6 +215,7 @@
     <ClInclude Include="..\src\openpgp_compat.h" />
     <ClInclude Include="..\src\pEpEngine.h" />
     <ClInclude Include="..\src\pEpEngine_internal.h" />
+    <ClInclude Include="..\src\pEp_debug.h" />
     <ClInclude Include="..\src\pEp_internal.h" />
     <ClInclude Include="..\src\pEp_log.h" />
     <ClInclude Include="..\src\pEp_rmd160.h" />
@@ -225,6 +231,7 @@
     <ClInclude Include="..\src\status_to_string.h" />
     <ClInclude Include="..\src\stringlist.h" />
     <ClInclude Include="..\src\stringpair.h" />
+    <ClInclude Include="..\src\string_utilities.h" />
     <ClInclude Include="..\src\sync_api.h" />
     <ClInclude Include="..\src\sync_codec.h" />
     <ClInclude Include="..\src\Sync_event.h" />
@@ -243,7 +250,7 @@
     <ProjectReference Include="..\..\libetpan\build-windows\libetpan\libetpan.vcxproj">
       <Project>{ba4ded3c-e56f-4484-bfc3-9c13e461a1be}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\libpEpTransport\build-windows\libpEpTransport.vcxproj">
+    <ProjectReference Include="..\..\libPlanckTransport\build-windows\libpEpTransport.vcxproj">
       <Project>{13f8fc08-53f8-4615-8445-3d713c0374e4}</Project>
     </ProjectReference>
     <ProjectReference Include="libpEpasn1\libpEpasn1.vcxproj">
