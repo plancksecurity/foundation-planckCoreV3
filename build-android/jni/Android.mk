@@ -4,7 +4,7 @@
 # see LICENSE.txt
 $(warning ==== PEPENGINE android.mk START)
 LOCAL_PATH := $(call my-dir)
-LIB_PEP_TRANSPORT_PATH:=$(SRC_PATH)/libpEpTransport
+LIB_PEP_TRANSPORT_PATH:=$(SRC_PATH)/libPlanckTransport
 $(warning ==== IN PEPENGINE: CURRENT LOCAL BUILT MODULE: $(LOCAL_BUILT_MODULE))
 $(warning ==== IN PEPENGINE: UUID BUILT MODULE: $(MY_UUID_BUILD))
 
@@ -53,4 +53,4 @@ include $(BUILD_STATIC_LIBRARY)
 
 $(call import-add-path,$(SRC_PATH))
 $(warning ==== PEPENGINE android.mk CALLING import-module LIBPEPTRANSPORT)
-$(call import-module, libpEpTransport/build-android/jni/)
+$(call import-module, libPlanckTransport/build-android/jni/)
