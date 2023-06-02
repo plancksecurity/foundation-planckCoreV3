@@ -303,11 +303,9 @@ void uuid_unparse_upper(pEpUUID uu, uuid_string_t out);
  *  @param[in]  out       pid_t, an integer type
  *
  */
-typedef DWORD _pEp_pid_t;
-_pEp_pid_t getpid(void);
-
-typedef DWORD pid_t;
-pid_t getpid(void);
+#ifdef WIN32
+    #define pid_t int
+#endif
 
 #ifndef __cplusplus
 #define inline __inline
