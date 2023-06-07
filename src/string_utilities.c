@@ -31,10 +31,11 @@ PEP_STATUS append_string(PEP_SESSION session,
     if (* big_buffer_p == NULL) {
         PEP_ASSERT(* big_buffer_used_size_p == 0);
         PEP_ASSERT(* big_buffer_allocated_size_p == 0);
-        * big_buffer_p = malloc(1);
-        if (big_buffer_p == NULL)
+        char *new_big_buffer = malloc(1);
+        if (new_big_buffer == NULL)
             return PEP_OUT_OF_MEMORY;
-        big_buffer_p[0] = '\0';
+        * big_buffer_p = new_big_buffer;
+        new_big_buffer[0] = '\0';
         * big_buffer_allocated_size_p = 1;
     }
     /* From now on we can assume that the big buffer is '\0'-terminated.  By
