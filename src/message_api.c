@@ -10,6 +10,12 @@
    paramter to our functions, even when not needed, just for this.  --positron,
    2022-10 */
 
+/*
+ Changelog:
+
+ * 2023-06 get_trustwords figures out the versions of input identities, if not set already
+ */
+
 #include "pEp_internal.h"
 #include "message_api.h"
 #include "pEpEngine.h"
@@ -7066,6 +7072,19 @@ static PEP_STATUS get_trustwords_algorithm_for_either(
     return status;
 }
 
+void update_identity_version(PEP_SESSION session, pEp_identity* id) {
+    if (id->major_ver == 0 || id->minor_ver == 0) {
+        pEp_identity *idCopy = identity_dup(id);
+
+        PEP_STATUS status = update_identity(session, idCopy);
+        LOG_STATUS_ERROR;
+        if (status == PEP_STATUS_OK) {
+            id->major_ver = idCopy->major_ver;
+            id->minor_ver = idCopy->minor_ver;
+        }
+    }
+}
+
 DYNAMIC_API PEP_STATUS get_trustwords(
         PEP_SESSION session, const pEp_identity* id1, const pEp_identity* id2,
         const char* lang, char **words, size_t *wsize, bool full
@@ -7075,11 +7094,16 @@ DYNAMIC_API PEP_STATUS get_trustwords(
                 && ! EMPTYSTR(id2->fpr) && ! EMPTYSTR(lang) && words &&
                 wsize);
 
+    pEp_identity *id1_copy = identity_dup(id1);
+    pEp_identity *id2_copy = identity_dup(id2);
+    update_identity_version(session, id1_copy);
+    update_identity_version(session, id2_copy);
+
     PEP_STATUS status = PEP_STATUS_OK;
     PEP_trustwords_algorithm algorithm;
 
     /* Check which trustword algorithm we should use. */
-    status = get_trustwords_algorithm_for_either(session, id1, id2, & algorithm);
+    status = get_trustwords_algorithm_for_either(session, id1_copy, id2_copy, & algorithm);
     if (status != PEP_STATUS_OK) goto end;
     trustword_function_f function
         = PEP_trustwords_algorithm_to_trustword_function(session, algorithm);
@@ -7089,7 +7113,7 @@ DYNAMIC_API PEP_STATUS get_trustwords(
     }
 
     /* If we have not failed yet use it. */
-    status = function(session, id1->fpr, id2->fpr, lang, words, wsize, full);
+    status = function(session, id1_copy->fpr, id2_copy->fpr, lang, words, wsize, full);
 
  end:
     return status;
