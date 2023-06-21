@@ -7079,9 +7079,13 @@ void update_identity_version(PEP_SESSION session, pEp_identity* id) {
         PEP_STATUS status = update_identity(session, idCopy);
         LOG_STATUS_ERROR;
         if (status == PEP_STATUS_OK) {
-            id->major_ver = idCopy->major_ver;
-            id->minor_ver = idCopy->minor_ver;
+            if (idCopy->major_ver || idCopy->minor_ver) {
+                id->major_ver = idCopy->major_ver;
+                id->minor_ver = idCopy->minor_ver;
+            }
         }
+
+        free_identity(idCopy);
     }
 }
 
@@ -7116,6 +7120,9 @@ DYNAMIC_API PEP_STATUS get_trustwords(
     status = function(session, id1_copy->fpr, id2_copy->fpr, lang, words, wsize, full);
 
  end:
+    free_identity(id1_copy);
+    free_identity(id2_copy);
+
     return status;
 }
 
