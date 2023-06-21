@@ -7103,6 +7103,19 @@ DYNAMIC_API PEP_STATUS get_trustwords(
     update_identity_version(session, id1_copy);
     update_identity_version(session, id2_copy);
 
+    if (!strcmp(id1_copy->address, id2_copy->address) &&
+        strcmp(id1_copy->fpr, id2_copy->fpr)) {
+        // Same address, different fingerprints, possibly key sync trustwords.
+        // If one identity has an undefined version, assume it's the same as the other.
+        if (!id1_copy->major_ver || !!id1_copy->minor_ver) {
+            id1_copy->major_ver = id2_copy->major_ver;
+            id1_copy->minor_ver = id2_copy->minor_ver;
+        } else if (!id2_copy->major_ver || !!id2_copy->minor_ver) {
+            id2_copy->major_ver = id1_copy->major_ver;
+            id2_copy->minor_ver = id1_copy->minor_ver;
+        }
+    }
+
     PEP_STATUS status = PEP_STATUS_OK;
     PEP_trustwords_algorithm algorithm;
 
