@@ -7097,6 +7097,20 @@ void update_identity_version(PEP_SESSION session, pEp_identity* id) {
     }
 }
 
+/**
+ *  <!--       identity_has_version()       -->
+ *
+ *  @brief For the given identity, checks whether it has a version set
+ *
+ *  @param[in]   id        identity to check the version for
+ *
+ *  @retval     1   Yes, this identity has version information
+ *  @retval     0   No, this identity has no version information
+ */
+int identity_has_version(const pEp_identity* id) {
+    return id->major_ver || id->minor_ver;
+}
+
 DYNAMIC_API PEP_STATUS get_trustwords(
         PEP_SESSION session, const pEp_identity* id1, const pEp_identity* id2,
         const char* lang, char **words, size_t *wsize, bool full
@@ -7123,10 +7137,10 @@ DYNAMIC_API PEP_STATUS get_trustwords(
         update_identity_version(session, id2_copy);
 
         // If one identity has an undefined version, assume it's the same as the other.
-        if (!id1_copy->major_ver || !!id1_copy->minor_ver) {
+        if (!identity_has_version(id1_copy) && identity_has_version(id2_copy)) {
             id1_copy->major_ver = id2_copy->major_ver;
             id1_copy->minor_ver = id2_copy->minor_ver;
-        } else if (!id2_copy->major_ver || !!id2_copy->minor_ver) {
+        } else if (identity_has_version(id1_copy) && !identity_has_version(id2_copy)) {
             id2_copy->major_ver = id1_copy->major_ver;
             id2_copy->minor_ver = id1_copy->minor_ver;
         }
