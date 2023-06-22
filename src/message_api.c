@@ -7106,13 +7106,17 @@ DYNAMIC_API PEP_STATUS get_trustwords(
                 && ! EMPTYSTR(id2->fpr) && ! EMPTYSTR(lang) && words &&
                 wsize);
 
+    // No real value yet, but make sure it can be freed at the end in any case.
+    pEp_identity *id1_copy = NULL;
+    pEp_identity *id2_copy = NULL;
+
 #if ! defined PEP_TRUSTWORDS_XOR_COMPATIBILITY
     // Special handling when we can assume that trustwords handling is uniform across
     // installed applications:
     // For key sync, when one own identity doesn't have a version set,
     // assume it's the same as the other.
-    pEp_identity *id1_copy = identity_dup(id1);
-    pEp_identity *id2_copy = identity_dup(id2);
+    id1_copy = identity_dup(id1);
+    id2_copy = identity_dup(id2);
     update_identity_version(session, id1_copy);
     update_identity_version(session, id2_copy);
 
