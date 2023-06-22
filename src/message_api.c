@@ -7080,7 +7080,7 @@ static PEP_STATUS get_trustwords_algorithm_for_either(
  *  @param[in]   session    session handle
  *  @param[in]   id        identity to set version for
  */
-void update_identity_version(PEP_SESSION session, pEp_identity* id) {
+void update_identity_version(PEP_SESSION session, pEp_identity *id) {
     if (id->major_ver == 0 || id->minor_ver == 0) {
         pEp_identity *idCopy = identity_dup(id);
 
@@ -7107,7 +7107,7 @@ void update_identity_version(PEP_SESSION session, pEp_identity* id) {
  *  @retval     1   Yes, this identity has version information
  *  @retval     0   No, this identity has no version information
  */
-int identity_has_version(const pEp_identity* id) {
+int identity_has_version(const pEp_identity *id) {
     return id->major_ver || id->minor_ver;
 }
 
