@@ -7106,22 +7106,22 @@ DYNAMIC_API PEP_STATUS get_trustwords(
                 && ! EMPTYSTR(id2->fpr) && ! EMPTYSTR(lang) && words &&
                 wsize);
 
-    // No real value yet, but make sure it can be freed at the end in any case.
+    // No real value yet, but make sure these can be freed at the end in any case.
     pEp_identity *id1_copy = NULL;
     pEp_identity *id2_copy = NULL;
 
 #if ! defined PEP_TRUSTWORDS_XOR_COMPATIBILITY
     // Special handling when we can assume that trustwords handling is uniform across
-    // installed applications:
-    // For key sync, when one own identity doesn't have a version set,
-    // assume it's the same as the other.
-    id1_copy = identity_dup(id1);
-    id2_copy = identity_dup(id2);
-    update_identity_version(session, id1_copy);
-    update_identity_version(session, id2_copy);
+    // installed applications, and we are likely computing trustwords for key sync:
+    // When one own identity doesn't have a version set, assume it's the same as the other.
+    if (!strcmp(id1->address, id2->address)
+        && strcmp(id1->fpr, id2->fpr)
+        && (id1->me || id2->me)) {
+        id1_copy = identity_dup(id1);
+        id2_copy = identity_dup(id2);
+        update_identity_version(session, id1_copy);
+        update_identity_version(session, id2_copy);
 
-    if (!strcmp(id1_copy->address, id2_copy->address) &&
-        strcmp(id1_copy->fpr, id2_copy->fpr)) {
         // Same address, different fingerprints, possibly key sync trustwords.
         // If one identity has an undefined version, assume it's the same as the other.
         if (!id1_copy->major_ver || !!id1_copy->minor_ver) {
@@ -7131,10 +7131,10 @@ DYNAMIC_API PEP_STATUS get_trustwords(
             id2_copy->major_ver = id1_copy->major_ver;
             id2_copy->minor_ver = id1_copy->minor_ver;
         }
-    }
 
-    id1 = id1_copy;
-    id2 = id2_copy;
+        id1 = id1_copy;
+        id2 = id2_copy;
+    }
 #endif
 
     PEP_STATUS status = PEP_STATUS_OK;
