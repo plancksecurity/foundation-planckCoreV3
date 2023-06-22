@@ -7122,7 +7122,6 @@ DYNAMIC_API PEP_STATUS get_trustwords(
         update_identity_version(session, id1_copy);
         update_identity_version(session, id2_copy);
 
-        // Same address, different fingerprints, possibly key sync trustwords.
         // If one identity has an undefined version, assume it's the same as the other.
         if (!id1_copy->major_ver || !!id1_copy->minor_ver) {
             id1_copy->major_ver = id2_copy->major_ver;
