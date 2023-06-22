@@ -7072,6 +7072,14 @@ static PEP_STATUS get_trustwords_algorithm_for_either(
     return status;
 }
 
+/**
+ *  <!--       update_identity_version()       -->
+ *
+ *  @brief For the given identity, update the version, if it can be determined via `update_identity`
+ *
+ *  @param[in]   session    session handle
+ *  @param[in]   id        identity to set version for
+ */
 void update_identity_version(PEP_SESSION session, pEp_identity* id) {
     if (id->major_ver == 0 || id->minor_ver == 0) {
         pEp_identity *idCopy = identity_dup(id);
@@ -7098,6 +7106,11 @@ DYNAMIC_API PEP_STATUS get_trustwords(
                 && ! EMPTYSTR(id2->fpr) && ! EMPTYSTR(lang) && words &&
                 wsize);
 
+#if ! defined PEP_TRUSTWORDS_XOR_COMPATIBILITY
+    // Special handling when we can assume that trustwords handling is uniform across
+    // installed applications:
+    // For key sync, when one own identity doesn't have a version set,
+    // assume it's the same as the other.
     pEp_identity *id1_copy = identity_dup(id1);
     pEp_identity *id2_copy = identity_dup(id2);
     update_identity_version(session, id1_copy);
@@ -7116,11 +7129,15 @@ DYNAMIC_API PEP_STATUS get_trustwords(
         }
     }
 
+    id1 = id1_copy;
+    id2 = id2_copy;
+#endif
+
     PEP_STATUS status = PEP_STATUS_OK;
     PEP_trustwords_algorithm algorithm;
 
     /* Check which trustword algorithm we should use. */
-    status = get_trustwords_algorithm_for_either(session, id1_copy, id2_copy, & algorithm);
+    status = get_trustwords_algorithm_for_either(session, id1, id2, & algorithm);
     if (status != PEP_STATUS_OK) goto end;
     trustword_function_f function
         = PEP_trustwords_algorithm_to_trustword_function(session, algorithm);
@@ -7130,7 +7147,7 @@ DYNAMIC_API PEP_STATUS get_trustwords(
     }
 
     /* If we have not failed yet use it. */
-    status = function(session, id1_copy->fpr, id2_copy->fpr, lang, words, wsize, full);
+    status = function(session, id1->fpr, id2->fpr, lang, words, wsize, full);
 
  end:
     free_identity(id1_copy);
