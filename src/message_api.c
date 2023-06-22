@@ -7124,14 +7124,14 @@ DYNAMIC_API PEP_STATUS get_trustwords(
                 && ! EMPTYSTR(id2->fpr) && ! EMPTYSTR(lang) && words &&
                 wsize);
 
-    // No real value yet, but make sure these can be freed at the end in any case.
+    /* No real value yet, but make sure these can be freed at the end in any case. */
     pEp_identity *id1_copy = NULL;
     pEp_identity *id2_copy = NULL;
 
 #if ! defined PEP_TRUSTWORDS_XOR_COMPATIBILITY
-    // Special handling when we can assume that trustwords handling is uniform across
-    // installed applications, and we are likely computing trustwords for key sync:
-    // When one own identity doesn't have a version set, assume it's the same as the other.
+    /* Special handling when we can assume that trustwords handling is uniform across
+     installed applications, and we are likely computing trustwords for key sync:
+     When one own identity doesn't have a version set, assume it's the same as the other. */
     if (!strcmp(id1->address, id2->address)
         && strcmp(id1->fpr, id2->fpr)
         && (id1->me || id2->me)) {
@@ -7140,7 +7140,7 @@ DYNAMIC_API PEP_STATUS get_trustwords(
         update_identity_version(session, id1_copy);
         update_identity_version(session, id2_copy);
 
-        // If one identity has an undefined version, assume it's the same as the other.
+        /* If one identity has an undefined version, assume it's the same as the other. */
         if (!identity_has_version(id1_copy) && identity_has_version(id2_copy)) {
             id1_copy->major_ver = id2_copy->major_ver;
             id1_copy->minor_ver = id2_copy->minor_ver;
