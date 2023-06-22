@@ -7073,6 +7073,8 @@ static PEP_STATUS get_trustwords_algorithm_for_either(
 }
 
 /**
+ *  @internal
+ *
  *  <!--       update_identity_version()       -->
  *
  *  @brief For the given identity, update the version, if it can be determined via `update_identity`
@@ -7098,6 +7100,8 @@ void update_identity_version(PEP_SESSION session, pEp_identity *id) {
 }
 
 /**
+ *  @internal
+ *
  *  <!--       identity_has_version()       -->
  *
  *  @brief For the given identity, checks whether it has a version set
