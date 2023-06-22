@@ -7080,7 +7080,7 @@ static PEP_STATUS get_trustwords_algorithm_for_either(
  *  @brief For the given identity, update the version, if it can be determined via `update_identity`
  *
  *  @param[in]   session    session handle
- *  @param[in]   id        identity to set version for
+ *  @param[in,out]   id        identity to set version for
  */
 void update_identity_version(PEP_SESSION session, pEp_identity *id) {
     if (id->major_ver == 0 || id->minor_ver == 0) {
