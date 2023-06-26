@@ -7075,12 +7075,12 @@ static PEP_STATUS get_trustwords_algorithm_for_either(
 /**
  *  @internal
  *
- *  <!--       update_identity_version()       -->
+ *  <!-- update_identity_version() -->
  *
- *  @brief For the given identity, update the version, if it can be determined via `update_identity`
+ *  @brief For the given identity, update the version, if it can be determined via `update_identity`.
  *
- *  @param[in]   session    session handle
- *  @param[in,out]   id        identity to set version for
+ *  @param[in] session session handle
+ *  @param[in,out] id identity to set version for
  */
 void update_identity_version(PEP_SESSION session, pEp_identity *id) {
     if (id->major_ver == 0 || id->minor_ver == 0) {
@@ -7102,14 +7102,14 @@ void update_identity_version(PEP_SESSION session, pEp_identity *id) {
 /**
  *  @internal
  *
- *  <!--       identity_has_version()       -->
+ *  <!-- identity_has_version() -->
  *
- *  @brief For the given identity, checks whether it has a version set
+ *  @brief For the given identity, checks whether it has a version set.
  *
- *  @param[in]   id        identity to check the version for
+ *  @param[in] id identity to check the version for
  *
- *  @retval     1   Yes, this identity has version information
- *  @retval     0   No, this identity has no version information
+ *  @retval 1 Yes, this identity has version information
+ *  @retval 0 No, this identity has no version information
  */
 int identity_has_version(const pEp_identity *id) {
     return id->major_ver || id->minor_ver;
