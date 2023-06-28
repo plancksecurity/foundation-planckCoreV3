@@ -7095,7 +7095,7 @@ int identity_has_version(const pEp_identity *id) {
  *
  *  @brief For the given identity, update the version, if it doesn't already have any,
  *         can be determined via `update_identity` or `myself`,
- *         and the fingerprint stays the same.
+ *         and the fingerprint stays the same after the update.
  *
  *  @param[in] session session handle
  *  @param[in,out] id identity to set version for
@@ -7134,14 +7134,14 @@ void update_identity_version(PEP_SESSION session, pEp_identity *id) {
  *         otherwise return NULL.
  *
  *  @param[in] session session handle
- *  @param[in] identity identity to use as a base for one with version information
+ *  @param[in] id identity to use as a base for one with version information
  *
  *  @retval NULL The identity already has a version, or no version information could be retrieved.
- *  @retval Non-NULL A duplicated identity with version information that must be freed.
+ *  @retval Non-NULL A duplicated identity with version information that must be freed by the caller with `free_identity`.
  */
-pEp_identity *identity_with_version(PEP_SESSION session, const pEp_identity *identity) {
-    if (!identity_has_version(identity)) {
-        pEp_identity *id_copy = identity_dup(identity);
+pEp_identity *identity_with_version(PEP_SESSION session, const pEp_identity *id) {
+    if (!identity_has_version(id)) {
+        pEp_identity *id_copy = identity_dup(id);
         update_identity_version(session, id_copy);
         if (identity_has_version(id_copy)) {
             return id_copy;
