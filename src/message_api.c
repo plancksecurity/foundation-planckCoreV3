@@ -7093,25 +7093,35 @@ int identity_has_version(const pEp_identity *id) {
  *
  *  <!-- update_identity_version() -->
  *
- *  @brief For the given identity, update the version, if it doesn't already have any _and_ it can be determined via `update_identity`.
+ *  @brief For the given identity, update the version, if it doesn't already have any,
+ *         can be determined via `update_identity` or `myself`,
+ *         and the fingerprint stays the same.
  *
  *  @param[in] session session handle
  *  @param[in,out] id identity to set version for
  */
 void update_identity_version(PEP_SESSION session, pEp_identity *id) {
     if (!identity_has_version(id)) {
-        pEp_identity *idCopy = identity_dup(id);
+        pEp_identity *id_copy = identity_dup(id);
+        const char *original_fingprint = strdup(id->fpr);
 
-        PEP_STATUS status = update_identity(session, idCopy);
+        PEP_STATUS status = PEP_ILLEGAL_VALUE;
+        if (id->me) {
+            status = myself(session, id_copy);
+        } else {
+            status = update_identity(session, id_copy);
+        }
         LOG_STATUS_ERROR;
-        if (status == PEP_STATUS_OK) {
-            if (idCopy->major_ver || idCopy->minor_ver) {
-                id->major_ver = idCopy->major_ver;
-                id->minor_ver = idCopy->minor_ver;
+
+        if (status == PEP_STATUS_OK && strcmp(original_fingprint, id_copy->fpr)) {
+            if (id_copy->major_ver || id_copy->minor_ver) {
+                id->major_ver = id_copy->major_ver;
+                id->minor_ver = id_copy->minor_ver;
             }
         }
 
-        free_identity(idCopy);
+        free(original_fingprint);
+        free_identity(id_copy);
     }
 }
 
