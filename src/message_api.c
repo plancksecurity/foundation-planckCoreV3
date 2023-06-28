@@ -7134,7 +7134,7 @@ void update_identity_version(PEP_SESSION session, pEp_identity *id) {
  *         otherwise return NULL.
  *
  *  @param[in] session session handle
- *  @param[in] id identity to use as a base for one with version information
+ *  @param[in] identity identity to use as a base for one with version information
  *
  *  @retval NULL No version information could be retrieved.
  *  @retval Non-NULL A duplicated identity with version information that must be freed.
