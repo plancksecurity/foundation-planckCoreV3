@@ -7128,13 +7128,16 @@ DYNAMIC_API PEP_STATUS get_trustwords(
     pEp_identity *id1_copy = NULL;
     pEp_identity *id2_copy = NULL;
 
+    int is_key_sync =
+    !strcmp(id1->address, id2->address) /* same address */
+    && strcmp(id1->fpr, id2->fpr) /* different fingerprints */
+    && (id1->me || id2->me); /* one identity as an own one */
+
 #if ! defined PEP_TRUSTWORDS_XOR_COMPATIBILITY
     /* Special handling when we can assume that trustwords handling is uniform across
      installed applications, and we are likely computing trustwords for key sync:
      When one own identity doesn't have a version set, assume it's the same as the other. */
-    if (!strcmp(id1->address, id2->address) /* same address */
-        && strcmp(id1->fpr, id2->fpr) /* different fingerprints */
-        && (id1->me || id2->me)) /* one identity as an own one */ {
+    if (is_key_sync) {
         id1_copy = identity_dup(id1);
         id2_copy = identity_dup(id2);
         update_identity_version(session, id1_copy);
