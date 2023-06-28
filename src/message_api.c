@@ -7140,9 +7140,7 @@ void update_identity_version(PEP_SESSION session, pEp_identity *id) {
  *  @retval Non-NULL A duplicated identity with version information that must be freed.
  */
 pEp_identity *identity_with_version(PEP_SESSION session, const pEp_identity *identity) {
-    int has_version = identity_has_version(identity);
-
-    if (!has_version) {
+    if (!identity_has_version(identity)) {
         pEp_identity *id_copy = identity_dup(identity);
         update_identity_version(session, id_copy);
         if (identity_has_version(id_copy)) {
