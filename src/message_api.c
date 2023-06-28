@@ -7099,7 +7099,7 @@ int identity_has_version(const pEp_identity *id) {
  *  @param[in,out] id identity to set version for
  */
 void update_identity_version(PEP_SESSION session, pEp_identity *id) {
-    if (id->major_ver == 0 || id->minor_ver == 0) {
+    if (!identity_has_version(id)) {
         pEp_identity *idCopy = identity_dup(id);
 
         PEP_STATUS status = update_identity(session, idCopy);
