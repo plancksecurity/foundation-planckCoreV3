@@ -7138,6 +7138,34 @@ DYNAMIC_API PEP_STATUS get_trustwords(
     pEp_identity *id1_copy = NULL;
     pEp_identity *id2_copy = NULL;
 
+    int id1_has_version = identity_has_version(id1);
+    int id2_has_version = identity_has_version(id2);
+
+    if (!id1_has_version) {
+        id1_copy = identity_dup(id1);
+        update_identity_version(session, id1_copy);
+        if (identity_has_version(id1_copy)) {
+            id1 = id1_copy;
+        } else {
+            free_identity(id1_copy);
+            id1_copy = NULL;
+        }
+    }
+
+    if (!id2_has_version) {
+        id2_copy = identity_dup(id2);
+        update_identity_version(session, id2_copy);
+        if (identity_has_version(id2_copy)) {
+            id2 = id2_copy;
+        } else {
+            free_identity(id2_copy);
+            id2_copy = NULL;
+        }
+    }
+
+    id1_has_version = identity_has_version(id1);
+    id2_has_version = identity_has_version(id2);
+
     int is_key_sync =
     !strcmp(id1->address, id2->address) /* same address */
     && strcmp(id1->fpr, id2->fpr) /* different fingerprints */
