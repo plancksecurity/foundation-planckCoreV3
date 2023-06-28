@@ -7178,8 +7178,6 @@ DYNAMIC_API PEP_STATUS get_trustwords(
     if (is_key_sync) {
         id1_copy = identity_dup(id1);
         id2_copy = identity_dup(id2);
-        update_identity_version(session, id1_copy);
-        update_identity_version(session, id2_copy);
 
         /* If one identity has an undefined version, set it to the other's version. */
         if (!identity_has_version(id1_copy) && identity_has_version(id2_copy)) {
