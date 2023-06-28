@@ -7125,6 +7125,35 @@ void update_identity_version(PEP_SESSION session, pEp_identity *id) {
     }
 }
 
+/**
+ *  @internal
+ *
+ *  <!-- identity_with_version() -->
+ *
+ *  @brief If the given identity has no version info and can be updated, duplicate it with version information and return that,
+ *         otherwise return NULL.
+ *
+ *  @param[in] session session handle
+ *  @param[in] id identity to use as a base for one with version information
+ *
+ *  @retval NULL No version information could be retrieved.
+ *  @retval Non-NULL A duplicated identity with version information that must be freed.
+ */
+pEp_identity *identity_with_version(PEP_SESSION session, const pEp_identity *identity) {
+    int has_version = identity_has_version(identity);
+
+    if (!has_version) {
+        pEp_identity *id_copy = identity_dup(identity);
+        update_identity_version(session, id_copy);
+        if (identity_has_version(id_copy)) {
+            return id_copy;
+        } else {
+            free_identity(id_copy);
+            return NULL;
+        }
+    }
+}
+
 DYNAMIC_API PEP_STATUS get_trustwords(
         PEP_SESSION session, const pEp_identity* id1, const pEp_identity* id2,
         const char* lang, char **words, size_t *wsize, bool full
@@ -7134,37 +7163,16 @@ DYNAMIC_API PEP_STATUS get_trustwords(
                 && ! EMPTYSTR(id2->fpr) && ! EMPTYSTR(lang) && words &&
                 wsize);
 
-    /* No real value yet, but make sure these can be freed at the end in any case. */
-    pEp_identity *id1_copy = NULL;
-    pEp_identity *id2_copy = NULL;
+    pEp_identity *id1_copy = identity_with_version(session, id1);
+    pEp_identity *id2_copy = identity_with_version(session, id2);
 
-    int id1_has_version = identity_has_version(id1);
-    int id2_has_version = identity_has_version(id2);
-
-    if (!id1_has_version) {
-        id1_copy = identity_dup(id1);
-        update_identity_version(session, id1_copy);
-        if (identity_has_version(id1_copy)) {
-            id1 = id1_copy;
-        } else {
-            free_identity(id1_copy);
-            id1_copy = NULL;
-        }
+    if (id1_copy) {
+        id1 = id1_copy;
     }
 
-    if (!id2_has_version) {
-        id2_copy = identity_dup(id2);
-        update_identity_version(session, id2_copy);
-        if (identity_has_version(id2_copy)) {
-            id2 = id2_copy;
-        } else {
-            free_identity(id2_copy);
-            id2_copy = NULL;
-        }
+    if (id2_copy) {
+        id2 = id2_copy;
     }
-
-    id1_has_version = identity_has_version(id1);
-    id2_has_version = identity_has_version(id2);
 
     int is_key_sync =
     !strcmp(id1->address, id2->address) /* same address */
