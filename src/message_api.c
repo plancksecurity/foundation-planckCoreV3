@@ -7113,7 +7113,7 @@ void update_identity_version(PEP_SESSION session, pEp_identity *id) {
         }
         LOG_STATUS_ERROR;
 
-        if (status == PEP_STATUS_OK && strcmp(original_fingprint, id_copy->fpr)) {
+        if (status == PEP_STATUS_OK && !strcmp(original_fingprint, id_copy->fpr)) {
             if (id_copy->major_ver || id_copy->minor_ver) {
                 id->major_ver = id_copy->major_ver;
                 id->minor_ver = id_copy->minor_ver;
