@@ -7093,7 +7093,7 @@ int identity_has_version(const pEp_identity *id) {
  *
  *  <!-- update_identity_version() -->
  *
- *  @brief For the given identity, update the version, if it can be determined via `update_identity`.
+ *  @brief For the given identity, update the version, if it doesn't already have any _and_ it can be determined via `update_identity`.
  *
  *  @param[in] session session handle
  *  @param[in,out] id identity to set version for
