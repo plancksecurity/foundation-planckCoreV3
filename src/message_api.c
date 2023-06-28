@@ -13,7 +13,7 @@
 /*
  Changelog:
 
- * 2023-06 get_trustwords figures out the versions of input identities, if not set already
+ * 2023-06 get_trustwords() figures out the versions of input identities, if not set already.
  */
 
 #include "pEp_internal.h"
