@@ -4886,6 +4886,10 @@ static PEP_STATUS process_Distribution_message(PEP_SESSION session,
             break; // We'll do something later here on refactor!
         case Distribution_PR_managedgroup:
             // Set the group stuff in motion!
+            // CORE-45: msg->_sender_fpr is verified afterwards for incoming groupmail distribution messages
+            // TODO as@planck.security: Verifiy it is a good solution
+            msg->_sender_fpr = strdup(sender_fpr);
+            // CORE-45
             status = receive_managed_group_message(session, msg,
                                                    msg_rating, dist);
             break;
@@ -6095,6 +6099,14 @@ static PEP_STATUS _decrypt_message(
             msg->recv_by = identity_dup(src->recv_by);
             if (!msg->recv_by)
                 goto enomem;
+            // CORE-45 WIP.
+            // When a user is reliable but not trusted msg->to->ident->fpr
+            // is NULL, causing the distribution groupmail messages to be rejected
+            // This is a temporary solution.
+            if (msg->to->ident->fpr == NULL)
+                if (src->to->ident->fpr != NULL)
+                    msg->to->ident->fpr = strdup(src->to->ident->fpr);
+            // CORE-45
         }
         decorate_message(session, msg, *rating, _keylist, false, true);
 
