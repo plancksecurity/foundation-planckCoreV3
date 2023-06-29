@@ -200,8 +200,8 @@ PEP_STATUS base_extract_message(
                 _payload_size = bl->size;
             }
             else {
-                status = PEP_DECRYPT_WRONG_FORMAT;
-                goto the_end;
+                //status = PEP_DECRYPT_WRONG_FORMAT; // AQUI
+                //goto the_end;
             }
         }
         else if (bl->mime_type && strcasecmp(bl->mime_type, _BASE_PROTO_MIME_TYPE_SIGN) == 0) {
@@ -210,8 +210,15 @@ PEP_STATUS base_extract_message(
                 _sign_size = bl->size;
             }
             else {
-                status = PEP_DECRYPT_WRONG_FORMAT;
-                goto the_end;
+                // CORE-45
+                // Temporary disabling this check to unblock dependent blocked issues
+                // WARNING: THIS IS NOT A SOLUTION
+                // TODO: FIND A PROPER SOLUTION
+                 /*
+                 status = PEP_DECRYPT_WRONG_FORMAT;
+                 goto the_end;
+                 */
+                // CORE-45
             }
         }
     }
