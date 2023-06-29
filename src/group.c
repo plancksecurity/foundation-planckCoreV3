@@ -1803,8 +1803,16 @@ DYNAMIC_API void free_group(pEp_group *group) {
 
 static PEP_STATUS _validate_member_ident(PEP_SESSION session, pEp_identity* ident) {
     PEP_REQUIRE(session && ident
-                && ! EMPTYSTR(ident->address) && ! EMPTYSTR(ident->username)
-                && ! EMPTYSTR(ident->fpr));
+                && ! EMPTYSTR(ident->address) && ! EMPTYSTR(ident->username));
+    PEP_STATUS status = PEP_STATUS_OK;
+    if (is_me(session, ident)) {
+        status = myself(session, ident);
+    } else {
+        status = update_identity(session, ident);
+    }
+    if (status != PEP_STATUS_OK)
+        return status;
+    PEP_REQUIRE(session && ! EMPTYSTR(ident->fpr));
     if (_rating(ident->comm_type) < PEP_rating_reliable)
         return PEP_KEY_UNSUITABLE;
     return PEP_STATUS_OK;
@@ -1833,8 +1841,15 @@ DYNAMIC_API PEP_STATUS group_create(
     PEP_REQUIRE(session && group_identity && manager
                 && ! EMPTYSTR(group_identity->address)
                 && ! EMPTYSTR(manager->address));
-
-    PEP_STATUS status = _validate_member_identities(session, member_ident_list);
+    PEP_STATUS status = PEP_STATUS_OK;
+    if (is_me(session, manager)) {
+        status = myself(session, manager);
+    } else {
+        status = update_identity(session, manager);
+    }
+    if (status != PEP_STATUS_OK)
+        return status;
+    status = _validate_member_identities(session, member_ident_list);
     if (status != PEP_STATUS_OK)
         return status;
 
