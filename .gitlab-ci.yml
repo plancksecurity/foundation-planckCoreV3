@@ -1,85 +1,100 @@
-include:
-  - '.gitlab-ci-files/common-prepare.yml'
 
-# Pipeline-wide variables; Applies to all jobs.
+
+
 variables:
-  PEP_MACHINE_DIR: "/install/share/pEp"
-  CARGO_HOME: /cargo
-  CARGO_TARGET_DIR:
+  REGISTRY: "dockerreg.planck.security"
+  DEBIAN: "corev3-debian"
+  
+
 
 stages:
-  - deps
-  - build
+  - docker
   - test
+  - release
 
-# Debian
 
-debian11:deps:
-  extends: .make_in_docker
-  stage: deps
-  variables:
-    MAKE_TARGET: "deps"
-    CI_DISTRO_TARGET: "debian11"
-    DEBIAN_FRONTEND: "noninteractive"
-    BUILD: /build
-  rules:
-    - changes:
-        - DEPENDENCIES
-        - scripts/ci/debian11/deps.pEpEngine.debian11.Dockerfile
-        - scripts/ci/common/build_pEpEngine_deps.sh
 
-debian11:build:
+debian-docker:
+  stage: docker
   tags:
-    - linux
-  stage: build
-  image: ${DOCKER_REGISTRY_HOST}/pep-debian11-engine-deps:${CI_COMMIT_REF_SLUG}
+    - docker
+  when: manual
+  variables:
+    VERSION: "1.0"
+    DOCKER_HOST: "tcp://docker:2376"
+    DOCKER_TLS_CERT: ""
+    DOCKER_BUILDKIT: 1
+  image: docker:23.0.6
+  services:
+    - docker:23.0.6-dind
+  retry:
+    max: 2
+    when: [runner_system_failure, unknown_failure, stuck_or_timeout_failure]
+  rules:
+    - if: $CI_COMMIT_BRANCH
+      changes:
+        paths: [docker/debian/*]
+        compare_to: master
   script:
-    - ./scripts/ci/common/prep_build.sh
-    - make all
-    - make db
-    - make install
-  variables:
-    DEBUG: "maintainer"
-    PKG_CONFIG_PATH: "$INSTPREFIX/share/pkgconfig/"
-    LC_ALL: "en_US.UTF-8"
-    CI_DISTRO_TARGET: "debian11"
-    DEBIAN_FRONTEND: "noninteractive"
-  rules:
-    - if: '$CI_COMMIT_TAG  !~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
+    - docker login -u ${PLANCK_DOCKER_REGISTRY_USER} -p ${PLANCK_DOCKER_REGISTRY_PASSWORD} ${REGISTRY}
+    - docker pull ${REGISTRY}/${DEBIAN}:latest || true
+    - docker build
+      --network=host
+      --cache-from ${DEBIAN}:${VERSION}
+      -t ${REGISTRY}/${DEBIAN}:${VERSION}
+      -t ${REGISTRY}/${DEBIAN}:latest
+      -f docker/debian/Dockerfile
+      .
+    - docker push ${REGISTRY}/${DEBIAN}:${VERSION}
+    - docker push ${REGISTRY}/${DEBIAN}:latest
 
-debian11:tagged-build:
-  tags:
-    - linux
-  stage: build
-  image: ${DOCKER_REGISTRY_HOST}/pep-debian11-engine-deps:${CI_COMMIT_REF_SLUG}
-  script:
-    - ./scripts/ci/common/prep_build.sh
-    - make all
-    - make db
-    - make install
-  variables:
-    DEBUG: "release"
-    PKG_CONFIG_PATH: "$INSTPREFIX/share/pkgconfig/"
-    LC_ALL: "en_US.UTF-8"
-    CI_DISTRO_TARGET: "debian11"
-    DEBIAN_FRONTEND: "noninteractive"
-  rules:
-    - if: '$CI_COMMIT_TAG  =~ /^Release_[0-9]+\.[0-9]+\.[0-9]+$/'
 
-debian11:test:
-  tags:
-    - linux
-  image: ${DOCKER_REGISTRY_HOST}/pep-debian11-engine-deps:${CI_COMMIT_REF_SLUG}
+
+debian-test:
   stage: test
+  tags: [ linux ]
+  needs: []
+  image: ${REGISTRY}/${DEBIAN}:latest
   script:
-    - ./scripts/ci/common/prep_build.sh
+    - cp gitlab/debian/planckCoreV3-debug.conf local.conf
+    - source /opt/tools/virtualenv/bin/activate
+    - make clean
+    - make asn1
+    - make all -j 4
     - make dbinstall
-    - LD_LIBRARY_PATH=/install/lib:$LD_LIBARY_PATH make test
-  after_script:
-    - cat local.conf
-  variables:
-    DEBUG: "maintainer"
-    PKG_CONFIG_PATH: "$INSTPREFIX/share/pkgconfig/"
-    LC_ALL: "en_US.UTF-8"
-    CI_DISTRO_TARGET: "debian11"
-    DEBIAN_FRONTEND: "noninteractive"
+    - make test -j 4
+
+
+.debian-release:
+  stage: release
+  tags:
+    - linux
+  needs: [debian-test]
+  image: ${REGISTRY}/${DEBIAN}:latest
+  script:
+    - cp gitlab/debian/planckCoreV3-release.conf local.conf
+    - source /opt/tools/virtualenv/bin/activate
+    - make clean
+    - make asn1
+    - make all -j 4
+    - make install
+    - make dbinstall
+    - tar  -C /opt/ -zcvf planckCoreV3.tar.gz planck
+
+debian-release:
+  extends: .debian-release
+  artifacts:
+    paths:
+      - planckCoreV3.tar.gz
+    expire_in: 2 days
+    name: corev3-$CI_COMMIT_BRANCH
+
+debian-tag-release:
+  extends: .debian-release
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_COMMIT_TAG != null
+  artifacts:
+    paths:
+      - planckCoreV3.tar.gz
+    expire_in: 6 mos
+    name: corev3-$CI_COMMIT_TAG
