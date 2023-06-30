@@ -6099,14 +6099,6 @@ static PEP_STATUS _decrypt_message(
             msg->recv_by = identity_dup(src->recv_by);
             if (!msg->recv_by)
                 goto enomem;
-            // CORE-45 WIP.
-            // When a user is reliable but not trusted msg->to->ident->fpr
-            // is NULL, causing the distribution groupmail messages to be rejected
-            // This is a temporary solution.
-            if (msg->to->ident->fpr == NULL)
-                if (src->to->ident->fpr != NULL)
-                    msg->to->ident->fpr = strdup(src->to->ident->fpr);
-            // CORE-45
         }
         decorate_message(session, msg, *rating, _keylist, false, true);
 
