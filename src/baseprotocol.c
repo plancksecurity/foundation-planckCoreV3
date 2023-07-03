@@ -224,9 +224,9 @@ PEP_STATUS base_extract_message(
        - Sync.Sync;
        - Distribution.Key_reset
        but *not* if the protocol is
-       - Distribytion.Echo.
+       - Distribution.Echo.
        Here we know the family (Sync vs Distribution) but not the actual
-       protcol.  Unfortunately we need to decode the payload here just to
+       protocol.  Unfortunately we need to decode the payload here just to
        check, in case the family is Distribution.  A little wasteful, but
        not terribly important: this engine branch will not live long, and
        v3 does not need this same hack. */

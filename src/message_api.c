@@ -1,3 +1,9 @@
+/*
+ Changelog:
+
+ * 2023-06 _decrypt_message() while working on Major version 3 does properly handle a sync key-reset via using the result without hard-overwritting it.
+ */
+
 /**
  * @file     message_api.c
  * @brief    implementation of pEp engine API for message handling and evaluation and related functions
@@ -5856,7 +5862,7 @@ static PEP_STATUS _decrypt_message(
                                 is_inner = (strcmp(searched->value->value, "INNER") == 0);
                                 // FIXME: This is a mess, but we need to keep backwards compat before refactor
                                 is_deprecated_key_reset = (strcmp(searched->value->value, "KEY_RESET") == 0);
-                                if (is_inner || (is_deprecated_key_reset && (major_ver != 2 || minor_ver != 1))) {
+                                if (major_ver != 3 && (is_inner || (is_deprecated_key_reset && (major_ver != 2 || minor_ver != 1)))) {
                                     is_deprecated_key_reset = false;
                                     is_inner = true; // I know this is messy, just trust me... this goes out in the refactor
                                 }
@@ -5934,7 +5940,7 @@ static PEP_STATUS _decrypt_message(
                                 status = _check_and_set_default_key(session, inner_message->from, key_claim_fpr);
                                 if (status == PEP_OUT_OF_MEMORY)
                                     goto enomem;
-                            }   
+                            }
                         }
                         if (is_deprecated_key_reset) {
                             if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
