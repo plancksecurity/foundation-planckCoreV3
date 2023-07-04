@@ -1968,7 +1968,7 @@ DYNAMIC_API PEP_STATUS group_create(
                     if (status == PEP_STATUS_OK) {
                         if (is_me(session, member)) {
                             status = add_own_membership_entry(session, group_ident_clone, manager, member);
-                            if (status == PEP_STATUS_OK && is_me(session, manager))
+                            if (status == PEP_STATUS_OK && !is_me(session, manager))
                                 status = group_join(session, group_ident_clone, member);
                         }
                     }
