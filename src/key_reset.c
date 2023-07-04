@@ -351,7 +351,7 @@ static PEP_STATUS _generate_keyreset_command_message(PEP_SESSION session,
         return status;
         
     status = base_prepare_message(session, outgoing_ident, to_ident,
-                                  BASE_DISTRIBUTION, payload, size, NULL,
+                                  BASE_DISTRIBUTION, payload, size, old_fpr,
                                   &msg);
                                   
     if (status != PEP_STATUS_OK) {
