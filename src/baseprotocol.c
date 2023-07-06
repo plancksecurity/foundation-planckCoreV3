@@ -43,6 +43,11 @@ static PEP_STATUS _get_base_protocol_type_str(base_protocol_type type, const cha
     return PEP_STATUS_OK;
 }
 
+/*
+ Changelog:
+
+ * 2023-07 base_decorate_message() do not add signature to distribution messages.
+ */
 PEP_STATUS base_decorate_message(
         PEP_SESSION session,
         message *msg,
@@ -87,7 +92,7 @@ PEP_STATUS base_decorate_message(
     else if (!msg->attachments)
         msg->attachments = bl;
 
-    if (fpr && fpr[0] != '\0') {
+    if (type != BASE_DISTRIBUTION && fpr && fpr[0] != '\0') {
         char *sign;
         size_t sign_size;
         status = sign_only(session,  payload, size, fpr, &sign, &sign_size);

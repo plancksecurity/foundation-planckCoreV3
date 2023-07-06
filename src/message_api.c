@@ -322,12 +322,6 @@ static bool sync_message_attached(message *msg)
     return false;
 }
 
-/*
- Changelog:
-
- * 2023-07 set_receiverRating() call base_decorate_message() with NULL fpr so that an extra signature is not added to the message.
- */
-
 /**
  *  @internal
  *
@@ -370,7 +364,7 @@ PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rati
     if (status)
         return status;
 
-    return base_decorate_message(session, msg, BASE_SYNC, payload, size, NULL);
+    return base_decorate_message(session, msg, BASE_SYNC, payload, size, msg->recv_by->fpr);
 }
 
 /**
