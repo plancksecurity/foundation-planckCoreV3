@@ -1823,6 +1823,11 @@ static PEP_STATUS _validate_member_identities(PEP_SESSION session, identity_list
     return PEP_STATUS_OK;
 }
 
+/*
+ Changelog:
+
+ * 2023-07 group_create() only allow to join a group if we are not its manager. It fixes the memeber not sending the groupAdopted message to the group manager.
+ */
 DYNAMIC_API PEP_STATUS group_create(
         PEP_SESSION session,
         pEp_identity *group_identity,
