@@ -1686,7 +1686,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_join_member_4) {
     status = group_join(session, group_identity, me);
     ASSERT_OK;
 
-    ASSERT_EQ(m_queue.size(), 1);
+    ASSERT_EQ(m_queue.size(), 2);
 
     msg = m_queue[0];
     ASSERT_NE(msg, nullptr);
