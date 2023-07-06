@@ -322,6 +322,12 @@ static bool sync_message_attached(message *msg)
     return false;
 }
 
+/*
+ Changelog:
+
+ * 2023-07 set_receiverRating() call base_decorate_message() with NULL fpr so that an extra signature is not added to the message.
+ */
+
 /**
  *  @internal
  *
