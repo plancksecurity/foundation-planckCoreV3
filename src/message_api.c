@@ -320,6 +320,7 @@ static bool sync_message_attached(message *msg)
  *  @param[in]    session        session handle
  *  @param[in]    *msg        message
  *  @param[in]    rating        PEP_rating
+ *  @param[in]    add_signature when true adds a signature with fpr in msg->recv_by->fpr (CORE-45)
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
@@ -327,7 +328,7 @@ static bool sync_message_attached(message *msg)
  *  @retval PEP_SYNC_NO_CHANNEL
  *  @retval any other value on error
  */
-PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rating)
+PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rating, bool add_signature)
 {
     if (!(session && msg && rating))
         return PEP_ILLEGAL_VALUE;
@@ -351,8 +352,14 @@ PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rati
     free_Sync_message(res);
     if (status)
         return status;
-
-    return base_decorate_message(session, msg, BASE_SYNC, payload, size, msg->recv_by->fpr);
+    
+    if (!add_signature)
+        // CORE-45
+        // Omit the parameter 'fpr' so no signature is created to avoid having
+        // two signatures when creating a group.
+        return base_decorate_message(session, msg, BASE_SYNC, payload, size, NULL);
+    else
+        return base_decorate_message(session, msg, BASE_SYNC, payload, size, msg->recv_by->fpr);
 }
 
 /**
@@ -429,11 +436,45 @@ void decorate_message(
 
     if (rating != PEP_rating_undefined) {
         replace_opt_field(msg, "X-EncStatus", rating_to_string(rating), clobber);
-        set_receiverRating(session, msg, rating);
+        set_receiverRating(session, msg, rating, true);
     }
 
     if (keylist) {
         char *_keylist = keylist_to_string(keylist);
+        replace_opt_field(msg, "X-KeyList", _keylist, clobber);
+        free(_keylist);
+    }
+
+    msg->rating = rating;
+}
+
+// CORE-45
+// Specific decorate_message function used when decrypting.
+// It does not add signature to avoid having two signatures in Group Mail
+void decorate_message_for_decryption(
+    PEP_SESSION session,
+    message* msg,
+    PEP_rating rating,
+    stringlist_t* keylist,
+    bool add_version,
+    bool clobber
+)
+{
+    PEP_REQUIRE_ORELSE(msg, { return; });
+
+    if (add_version)
+        replace_opt_field(msg, "X-pEp-Version", PEP_PROTOCOL_VERSION, clobber);
+
+    if (rating != PEP_rating_undefined) {
+        replace_opt_field(msg, "X-EncStatus", rating_to_string(rating), clobber);
+        // CORE-45
+        // Set add_signature to false to avoid creating 
+        // a signature when decrypting the message
+        set_receiverRating(session, msg, rating, false);
+    }
+
+    if (keylist) {
+        char* _keylist = keylist_to_string(keylist);
         replace_opt_field(msg, "X-KeyList", _keylist, clobber);
         free(_keylist);
     }
@@ -6088,7 +6129,7 @@ static PEP_STATUS _decrypt_message(
             if (!msg->recv_by)
                 goto enomem;
         }
-        decorate_message(session, msg, *rating, _keylist, false, true);
+        decorate_message_for_decryption(session, msg, *rating, _keylist, false, true);
 
         // Maybe unnecessary
         // if (keys_were_imported)
@@ -8144,7 +8185,7 @@ got_keylist:
              msg->from, _keylist);
     if (status == PEP_STATUS_OK) {
         remove_sync_message(msg);
-        set_receiverRating(session, msg, _rating);
+        set_receiverRating(session, msg, _rating, true);
         *rating = _rating;
     }
 
