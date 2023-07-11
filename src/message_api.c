@@ -1,3 +1,9 @@
+/*
+ Changelog:
+
+ * 2023-06 _decrypt_message() while working on Major version 3 does properly handle a sync key-reset via using the result without hard-overwritting it.
+ */
+
 /**
  * @file     message_api.c
  * @brief    implementation of pEp engine API for message handling and evaluation and related functions
@@ -9,6 +15,12 @@
    logging functionalities.  I wonder if we should systematically add a session
    paramter to our functions, even when not needed, just for this.  --positron,
    2022-10 */
+
+/*
+ Changelog:
+
+ * 2023-06 get_trustwords() figures out the versions of input identities, if not set already.
+ */
 
 #include "pEp_internal.h"
 #include "message_api.h"
@@ -5895,7 +5907,7 @@ static PEP_STATUS _decrypt_message(
                                 is_inner = (strcmp(searched->value->value, "INNER") == 0);
                                 // FIXME: This is a mess, but we need to keep backwards compat before refactor
                                 is_deprecated_key_reset = (strcmp(searched->value->value, "KEY_RESET") == 0);
-                                if (is_inner || (is_deprecated_key_reset && (major_ver != 2 || minor_ver != 1))) {
+                                if (major_ver != 3 && (is_inner || (is_deprecated_key_reset && (major_ver != 2 || minor_ver != 1)))) {
                                     is_deprecated_key_reset = false;
                                     is_inner = true; // I know this is messy, just trust me... this goes out in the refactor
                                 }
@@ -5973,7 +5985,7 @@ static PEP_STATUS _decrypt_message(
                                 status = _check_and_set_default_key(session, inner_message->from, key_claim_fpr);
                                 if (status == PEP_OUT_OF_MEMORY)
                                     goto enomem;
-                            }   
+                            }
                         }
                         if (is_deprecated_key_reset) {
                             if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
@@ -7111,6 +7123,87 @@ static PEP_STATUS get_trustwords_algorithm_for_either(
     return status;
 }
 
+/**
+ *  @internal
+ *
+ *  <!-- identity_has_version() -->
+ *
+ *  @brief For the given identity, checks whether it has a version set.
+ *
+ *  @param[in] id identity to check the version for
+ *
+ *  @retval 1 Yes, this identity has version information
+ *  @retval 0 No, this identity has no version information
+ */
+int identity_has_version(const pEp_identity *id) {
+    return id->major_ver || id->minor_ver;
+}
+
+/**
+ *  @internal
+ *
+ *  <!-- update_identity_version() -->
+ *
+ *  @brief For the given identity, update the version, if it doesn't already have any,
+ *         can be determined via `update_identity` or `myself`,
+ *         and the fingerprint stays the same after the update.
+ *
+ *  @param[in] session session handle
+ *  @param[in,out] id identity to set version for
+ */
+void update_identity_version(PEP_SESSION session, pEp_identity *id) {
+    if (!identity_has_version(id)) {
+        pEp_identity *id_copy = identity_dup(id);
+        const char *original_fingprint = strdup(id->fpr);
+
+        PEP_STATUS status = PEP_ILLEGAL_VALUE;
+        if (id->me) {
+            status = myself(session, id_copy);
+        } else {
+            status = update_identity(session, id_copy);
+        }
+        LOG_STATUS_ERROR;
+
+        if (status == PEP_STATUS_OK && !strcmp(original_fingprint, id_copy->fpr)) {
+            if (id_copy->major_ver || id_copy->minor_ver) {
+                id->major_ver = id_copy->major_ver;
+                id->minor_ver = id_copy->minor_ver;
+            }
+        }
+
+        free(original_fingprint);
+        free_identity(id_copy);
+    }
+}
+
+/**
+ *  @internal
+ *
+ *  <!-- identity_with_version() -->
+ *
+ *  @brief If the given identity has no version info and can be updated, duplicate it with version information and return that,
+ *         otherwise return NULL.
+ *
+ *  @param[in] session session handle
+ *  @param[in] id identity to use as a base for one with version information
+ *
+ *  @retval NULL The identity already has a version, or no version information could be retrieved.
+ *  @retval Non-NULL A duplicated identity with version information that must be freed by the caller with `free_identity`.
+ */
+pEp_identity *identity_with_version(PEP_SESSION session, const pEp_identity *id) {
+    if (!identity_has_version(id)) {
+        pEp_identity *id_copy = identity_dup(id);
+        update_identity_version(session, id_copy);
+        if (identity_has_version(id_copy)) {
+            return id_copy;
+        } else {
+            free_identity(id_copy);
+            return NULL;
+        }
+    }
+    return NULL;
+}
+
 DYNAMIC_API PEP_STATUS get_trustwords(
         PEP_SESSION session, const pEp_identity* id1, const pEp_identity* id2,
         const char* lang, char **words, size_t *wsize, bool full
@@ -7119,6 +7212,41 @@ DYNAMIC_API PEP_STATUS get_trustwords(
     PEP_REQUIRE(session && id1 && ! EMPTYSTR(id1->fpr) && id2
                 && ! EMPTYSTR(id2->fpr) && ! EMPTYSTR(lang) && words &&
                 wsize);
+
+    pEp_identity *id1_copy = identity_with_version(session, id1);
+    pEp_identity *id2_copy = identity_with_version(session, id2);
+
+    if (id1_copy) {
+        id1 = id1_copy;
+    }
+
+    if (id2_copy) {
+        id2 = id2_copy;
+    }
+
+#if ! defined PEP_TRUSTWORDS_XOR_COMPATIBILITY
+    /* Special handling when we can assume that trustwords handling is uniform across
+     installed applications, and we are likely computing trustwords for key sync:
+     When one own identity doesn't have a version set, assume it's the same as the other. */
+    if (!strcmp(id1->address, id2->address) /* same address */
+        && strcmp(id1->fpr, id2->fpr) /* different fingerprints */
+        && (id1->me || id2->me) /* one identity as an own one */) {
+        id1_copy = identity_dup(id1);
+        id2_copy = identity_dup(id2);
+
+        /* If one identity has an undefined version, set it to the other's version. */
+        if (!identity_has_version(id1_copy) && identity_has_version(id2_copy)) {
+            id1_copy->major_ver = id2_copy->major_ver;
+            id1_copy->minor_ver = id2_copy->minor_ver;
+        } else if (identity_has_version(id1_copy) && !identity_has_version(id2_copy)) {
+            id2_copy->major_ver = id1_copy->major_ver;
+            id2_copy->minor_ver = id1_copy->minor_ver;
+        }
+
+        id1 = id1_copy;
+        id2 = id2_copy;
+    }
+#endif
 
     PEP_STATUS status = PEP_STATUS_OK;
     PEP_trustwords_algorithm algorithm;
@@ -7137,6 +7265,9 @@ DYNAMIC_API PEP_STATUS get_trustwords(
     status = function(session, id1->fpr, id2->fpr, lang, words, wsize, full);
 
  end:
+    free_identity(id1_copy);
+    free_identity(id2_copy);
+
     return status;
 }
 

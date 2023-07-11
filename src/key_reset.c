@@ -6,9 +6,9 @@
  */
 
 /* In this compilation unit very few functions take a session as a
-   paramter; this prevents me from using the new debugging and logging
+   parameter; this prevents me from using the new debugging and logging
    functionalities.  I wonder if we should systematically add a session
-   paramter to our functions, even when not needed, just for this.
+   parameter to our functions, even when not needed, just for this.
    --positron, 2022-10 */
 
 #include "pEp_internal.h"
