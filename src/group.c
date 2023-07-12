@@ -4,6 +4,12 @@
  * @license This file is under GNU General Public License 3.0 - see LICENSE.txt
  */
 
+ /*
+  Changelog:
+
+  * 2023-07 receive_GroupInvite() call myself on the memeber identity before calling group_create.
+  */
+
 #include "group.h"
 #include "group_internal.h"
 
