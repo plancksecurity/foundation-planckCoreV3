@@ -1345,6 +1345,8 @@ PEP_STATUS receive_GroupInvite(PEP_SESSION session, message* msg, PEP_rating rat
         goto pEp_free;
     }
 
+    status = myself(session, member_ident);
+
     list = new_identity_list(member_ident);
     if (!list) {
         status = PEP_OUT_OF_MEMORY;

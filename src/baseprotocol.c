@@ -210,15 +210,8 @@ PEP_STATUS base_extract_message(
                 _sign_size = bl->size;
             }
             else {
-                // CORE-45
-                // Temporary disabling this check to unblock dependent blocked issues
-                // WARNING: THIS IS NOT A SOLUTION
-                // TODO: FIND A PROPER SOLUTION
-                 /*
                  status = PEP_DECRYPT_WRONG_FORMAT;
                  goto the_end;
-                 */
-                // CORE-45
             }
         }
     }
