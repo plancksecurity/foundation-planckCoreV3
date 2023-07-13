@@ -747,6 +747,29 @@ void decorate_message(
     bool add_version,
     bool clobber);
 
+
+/**
+ *  @internal
+ *  <!--       decorate_message_for_decryption()       -->
+ *
+ *  @brief  Same of 'decorate_message' bot does not add a signature
+ *          to the message to avoid multiples signatures in Group Mail.
+ *
+ *  @param[in]  msg          message*
+ *  @param[in]  rating       PEP_rating
+ *  @param[in]  keylist      stringlist_t*
+ *  @param[in]  add_version  bool
+ *  @param[in]  clobber      bool
+ *
+ */
+void decorate_message_for_decryption(
+    PEP_SESSION session,
+    message* msg,
+    PEP_rating rating,
+    stringlist_t* keylist,
+    bool add_version,
+    bool clobber);
+
 /**
  *  @internal
  *  @enum    _normalize_hex_rest_t

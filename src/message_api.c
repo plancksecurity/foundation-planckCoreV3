@@ -460,12 +460,27 @@ PEP_STATUS get_receiverRating(PEP_SESSION session, message *msg, PEP_rating *rat
     return PEP_STATUS_OK;
 }
 
-void decorate_message(
+/**
+ *  @internal
+ *  <!--       _decorate_message()       -->
+ *
+ *  @brief            TODO
+ *
+ *  @param[in]  msg          message*
+ *  @param[in]  rating       PEP_rating
+ *  @param[in]  keylist      stringlist_t*
+ *  @param[in]  add_version  bool
+ *  @param[in]  add_signature  bool
+ *  @param[in]  clobber      bool
+ *
+ */
+void _decorate_message(
     PEP_SESSION session,
     message *msg,
     PEP_rating rating,
     stringlist_t *keylist,
     bool add_version,
+    bool add_signature,
     bool clobber
     )
 {
@@ -476,7 +491,7 @@ void decorate_message(
 
     if (rating != PEP_rating_undefined) {
         replace_opt_field(msg, "X-EncStatus", rating_to_string(rating), clobber);
-        set_receiverRating(session, msg, rating, true);
+        set_receiverRating(session, msg, rating, add_signature);
     }
 
     if (keylist) {
@@ -486,6 +501,33 @@ void decorate_message(
     }
 
     msg->rating = rating;
+}
+
+void decorate_message(
+    PEP_SESSION session,
+    message *msg,
+    PEP_rating rating,
+    stringlist_t *keylist,
+    bool add_version,
+    bool clobber
+)
+{
+    _decorate_message(session, msg, rating, keylist, add_version, true, clobber);
+}
+
+// CORE-45
+// Specific decorate_message function used when decrypting.
+// It does not add signature to avoid having two signatures in Group Mail
+void decorate_message_for_decryption(
+    PEP_SESSION session,
+    message* msg,
+    PEP_rating rating,
+    stringlist_t* keylist,
+    bool add_version,
+    bool clobber
+)
+{
+    _decorate_message(session, msg, rating, keylist, add_version, false, clobber);
 }
 
 /**
@@ -6131,7 +6173,7 @@ static PEP_STATUS _decrypt_message(
             if (!msg->recv_by)
                 goto enomem;
         }
-        decorate_message(session, msg, *rating, _keylist, false, true);
+        decorate_message_for_decryption(session, msg, *rating, _keylist, false, true);
 
         // Maybe unnecessary
         // if (keys_were_imported)
