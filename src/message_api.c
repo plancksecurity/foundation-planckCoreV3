@@ -360,6 +360,7 @@ static bool sync_message_attached(message *msg)
  *  @param[in]    session        session handle
  *  @param[in]    *msg        message
  *  @param[in]    rating        PEP_rating
+ *  @param[in]    add_signature when true adds a signature with fpr in msg->recv_by->fpr (CORE-45)
  *
  *  @retval PEP_STATUS_OK
  *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
@@ -367,7 +368,7 @@ static bool sync_message_attached(message *msg)
  *  @retval PEP_SYNC_NO_CHANNEL
  *  @retval any other value on error
  */
-PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rating)
+PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rating, bool add_signature)
 {
     if (!(session && msg && rating))
         return PEP_ILLEGAL_VALUE;
@@ -392,7 +393,13 @@ PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rati
     if (status)
         return status;
 
-    return base_decorate_message(session, msg, BASE_SYNC, payload, size, msg->recv_by->fpr);
+    if (!add_signature)
+        // CORE-45
+        // Omit the parameter 'fpr' so no signature is created to avoid having
+        // two signatures when creating a group.
+        return base_decorate_message(session, msg, BASE_SYNC, payload, size, NULL);
+    else
+        return base_decorate_message(session, msg, BASE_SYNC, payload, size, msg->recv_by->fpr);
 }
 
 /**
@@ -469,7 +476,7 @@ void decorate_message(
 
     if (rating != PEP_rating_undefined) {
         replace_opt_field(msg, "X-EncStatus", rating_to_string(rating), clobber);
-        set_receiverRating(session, msg, rating);
+        set_receiverRating(session, msg, rating, true);
     }
 
     if (keylist) {
@@ -8299,7 +8306,7 @@ got_keylist:
              msg->from, _keylist);
     if (status == PEP_STATUS_OK) {
         remove_sync_message(msg);
-        set_receiverRating(session, msg, _rating);
+        set_receiverRating(session, msg, _rating, true);
         *rating = _rating;
     }
 
