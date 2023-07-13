@@ -9,6 +9,7 @@
  Changelog:
 
  * 2023-07 _add_auto_consume() checks if header field already exists.
+ * 2023-07 decorate_message_for_decryption() new function to decorate message without signature.
  */
 
 #ifndef PEP_INTERNAL_H

@@ -21,6 +21,9 @@
 
  * 2023-06 get_trustwords() figures out the versions of input identities, if not set already.
  * 2023-07 search_opt_field() searches for an existing header field.
+ * 2023-07 set_receiverRating add new bool parameter to decide whether to add signature with rating.
+ * 2023-07 _decorate_message() new internal function with parameter add_signature to decide whether to add signature with rating.
+ * 2023-07 decorate_message_for_decryption() new function to decorate message without signature.
  */
 
 #include "pEp_internal.h"
