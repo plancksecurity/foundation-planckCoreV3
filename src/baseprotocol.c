@@ -145,12 +145,12 @@ PEP_STATUS base_prepare_message(
         goto enomem;
 
     if (type == BASE_SYNC)
-        msg->shortmsg = strdup("p≡p key management message (Sync) - please ignore");
+        msg->shortmsg = strdup("planck key management message (Sync) - please ignore");
     else
-        msg->shortmsg = strdup("p≡p key management message (Distribution) - please ignore");
+        msg->shortmsg = strdup("planck key management message (Distribution) - please ignore");
     PEP_WEAK_ASSERT_ORELSE_GOTO(msg->shortmsg, enomem);
 
-    msg->longmsg = strdup("This message is part of p≡p's concept to manage keys.\n\n"
+    msg->longmsg = strdup("This message is part of planck's concept to manage keys.\n\n"
                         "You can safely ignore it. It will be deleted automatically.\n");
     PEP_WEAK_ASSERT_ORELSE_GOTO(msg->longmsg, enomem);
 
