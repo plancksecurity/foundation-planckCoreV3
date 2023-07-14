@@ -615,7 +615,7 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
     // assert(strcmp(shortmsg, "pEp") != 0 && _unsigned_signed_strcmp(pEpstr, shortmsg, PEP_SUBJ_BYTELEN) != 0); 
     // in case encrypt_message() is called twice with a different passphrase this was done already
     
-    if (strcmp(shortmsg, "pEp") == 0 || _unsigned_signed_strcmp(pEpstr, shortmsg, PEP_SUBJ_BYTELEN) == 0) {
+    if (strcmp(shortmsg, "pEp") == 0 || strcmp(shortmsg, "planck") == 0 || _unsigned_signed_strcmp(pEpstr, shortmsg, PEP_SUBJ_BYTELEN) == 0) {
         char *ptext = strdup(longmsg);
         assert(ptext);
         if (!ptext)
@@ -623,7 +623,7 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
         return ptext;
     }
 
-    if (!shortmsg || strcmp(shortmsg, "pEp") == 0 || 
+    if (!shortmsg || strcmp(shortmsg, "pEp") == 0 || strcmp(shortmsg, "planck") == 0 ||
                      _unsigned_signed_strcmp(pEpstr, shortmsg, PEP_SUBJ_BYTELEN) == 0) {
         if (!longmsg) {
             return NULL;
@@ -679,12 +679,8 @@ static PEP_STATUS replace_subject(message* msg) {
         }
     }
     free(msg->shortmsg);
-#ifdef WIN32
-    msg->shortmsg = strdup("pEp");
-#else
-    msg->shortmsg = strdup((char*)pEpstr);
-#endif    
-    
+    msg->shortmsg = strdup("planck");
+
     if (!msg->shortmsg)
         return PEP_OUT_OF_MEMORY;
     
@@ -868,14 +864,14 @@ static PEP_STATUS generate_message_id(message* msg) {
 
     buf_len += strlen(new_uuid);
 
-    buf_len += 6; // "pEp" and 3 '.' chars
+    buf_len += 9; // "planck" and 3 '.' chars
 
     retval = calloc(buf_len, 1);
     
     if (!retval)
         goto enomem;
     
-    strlcpy(retval, "pEp.", buf_len);
+    strlcpy(retval, "planck.", buf_len);
     strlcat(retval, time_prefix, buf_len);
     strlcat(retval, ".", buf_len);
     strlcat(retval, random_id, buf_len);
@@ -2931,12 +2927,7 @@ static PEP_STATUS encrypt_message_possibly_with_media_key(
         PEP_ASSERT(msg);
 LOG_TRACE("Z: replacing subject: BEFORE:  %s", msg->shortmsg);
         char *old_subject = msg->shortmsg;
-#ifdef WIN32
-        msg->shortmsg = strdup("pEp");
-#else
-        const unsigned char pEpstr[] = PEP_SUBJ_STRING;
-        msg->shortmsg = strdup((char*)pEpstr);
-#endif
+        msg->shortmsg = strdup("planck");
         if (msg->shortmsg == NULL && ! EMPTYSTR(old_subject)) {
             msg->shortmsg = old_subject;
             return PEP_OUT_OF_MEMORY;
@@ -3782,6 +3773,7 @@ static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg,
                 
             // FIXME: This is a mess. Talk with VB about how far we go to identify
             if (is_a_pEpmessage(src) || (src->shortmsg == NULL || strcmp(src->shortmsg, "pEp") == 0 ||
+                                         strcmp(src->shortmsg, "planck") == 0 ||
                 _unsigned_signed_strcmp(pEpstr, src->shortmsg, PEP_SUBJ_BYTELEN) == 0) ||
                 (strcmp(src->shortmsg, "p=p") == 0))
             {
@@ -3803,6 +3795,7 @@ static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg,
                 if (!(*msg_wrap_info || change_source_in_place)) {
                     if (!shortmsg || 
                         (src->shortmsg != NULL && strcmp(src->shortmsg, "pEp") != 0 &&
+                         strcmp(src->shortmsg, "planck") != 0 &&
                          _unsigned_signed_strcmp(pEpstr, src->shortmsg, PEP_SUBJ_BYTELEN) != 0 &&
                         strcmp(src->shortmsg, "p=p") != 0)) {
                              
@@ -6374,7 +6367,7 @@ static PEP_STATUS _decrypt_message(
 
     if (EMPTYSTR(msg->shortmsg) && EMPTYSTR(msg->longmsg) && EMPTYSTR(msg->longmsg_formatted)) {
         free(msg->shortmsg);
-        msg->shortmsg = strdup("pEp");
+        msg->shortmsg = strdup("planck");
         PEP_WEAK_ASSERT_ORELSE_GOTO(msg->shortmsg, enomem);
 
         if (src->enc_format == PEP_enc_inline_EA) {

@@ -948,14 +948,7 @@ static inline int _unsigned_signed_strcmp(const unsigned char* bytestr, const ch
  *  
  */
 static inline char* _pEp_subj_copy(void) {
-#ifndef WIN32
-    unsigned char pEpstr[] = PEP_SUBJ_STRING;
-    void* retval = calloc(1, sizeof(unsigned char)*PEP_SUBJ_BYTELEN + 1);
-    memcpy(retval, pEpstr, PEP_SUBJ_BYTELEN);
-    return (char*)retval;
-#else
-    return strdup("pEp");
-#endif
+    return strdup("planck");
 }
 
 /**
