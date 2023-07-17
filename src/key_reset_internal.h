@@ -68,6 +68,12 @@ PEP_STATUS key_reset(
         pEp_identity* ident
     );
 
+PEP_STATUS key_reset_ignoring_device_group(
+        PEP_SESSION session,
+        const char* key_id,
+        pEp_identity* ident
+);
+
 /*
 PEP_STATUS key_reset_own_and_deliver_revocations(PEP_SESSION session,
                                                  identity_list** own_identities,
