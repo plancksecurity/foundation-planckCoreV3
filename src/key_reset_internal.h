@@ -68,6 +68,22 @@ PEP_STATUS key_reset(
         pEp_identity* ident
     );
 
+/**
+ * @internal
+ *  <!--       key_reset_ignoring_device_group()       -->
+ *
+ *  @brief Same as [key_reset], but this version does not send new key to device group partners.
+ *
+ *  @param[in]   session    session handle
+ *  @param[in]   fpr        @see [key_reset]
+ *  @param[in]   ident      @see [key_reset]
+ *
+ *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
+ */
 PEP_STATUS key_reset_ignoring_device_group(
         PEP_SESSION session,
         const char* key_id,

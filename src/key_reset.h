@@ -116,6 +116,14 @@ DYNAMIC_API PEP_STATUS key_reset_user(
  */
 DYNAMIC_API PEP_STATUS key_reset_all_own_keys(PEP_SESSION session);
 
+/**
+ *  <!--       key_reset_all_own_keys_ignoring_device_group()       -->
+ *
+ *  @brief Same as [key_reset_all_own_keys], but it does not deliver new key to device group partners.
+ *
+ *  @param[in]   session    session handle
+ *
+ */
 PEP_STATUS key_reset_all_own_keys_ignoring_device_group(PEP_SESSION session);
 
 // FIXME: Doc
