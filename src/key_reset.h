@@ -5,6 +5,12 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
+/*
+Changelog:
+
+* 2023-07 key_reset_all_own_keys_ignoring_device_group() function added.
+*/
+
 #ifndef KEY_RESET_H
 #define KEY_RESET_H
 

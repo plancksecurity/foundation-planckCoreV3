@@ -11,6 +11,15 @@
    parameter to our functions, even when not needed, just for this.
    --positron, 2022-10 */
 
+   /*
+    Changelog:
+
+    * 2023-07 _key_reset() function added.
+    * 2023-07 key_reset() function modified to call _key_reset().
+    * 2023-07 key_reset_ignoring_device_group() function added.
+    * 2023-07 key_reset_all_own_keys_ignoring_device_group() function added.
+    */
+
 #include "pEp_internal.h"
 #include "dynamic_api.h"
 #include "message_api.h"
