@@ -325,27 +325,27 @@ void add_opt_field(message *msg, const char *name, const char *value)
  *
  */
 void replace_opt_field(message *msg,
-                       const char *name,
+                       const char *name, 
                        const char *value,
                        bool clobber)
 {
     assert(msg && name && value);
-
+    
     if (msg && name && value) {
         stringpair_list_t* opt_fields = msg->opt_fields;
         stringpair_t* pair = NULL;
-
+        
         if (opt_fields) {
             while (opt_fields) {
                 pair = opt_fields->value;
                 if (pair && (strcasecmp(name, pair->key) == 0))
                     break;
-
+                    
                 pair = NULL;
                 opt_fields = opt_fields->next;
             }
         }
-
+        
         if (pair) {
             if (clobber) {
                 free(pair->value);
