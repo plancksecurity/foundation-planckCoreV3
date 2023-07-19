@@ -20,6 +20,9 @@
  Changelog:
 
  * 2023-06 get_trustwords() figures out the versions of input identities, if not set already.
+ * 2023-07 add_opt_field() refuses to add duplicates,
+ *  asserts if there is a contradiction,
+ *  but overwrites the old value with the new value if the assert is skipped.
  */
 
 #include "pEp_internal.h"
@@ -230,6 +233,17 @@ bool _memnmemn(const char* needle,
     return found;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       search_opt_field()       -->
+ *
+ *  @brief     Searches for an existing optional field, and returns it, or `NULL`, in case it's not found.
+ *
+ *  @param[in]    *msg        message           The message to search in.
+ *  @param[in]    *name      const char         The name of the optional field to search for.
+ *
+ */
 stringpair_t *search_opt_field(message *msg, const char *name)
 {
     assert(msg && name);
@@ -257,6 +271,53 @@ stringpair_t *search_opt_field(message *msg, const char *name)
     return NULL;
 }
 
+/**
+ *  @internal
+ *
+ *  <!--       replace_opt_field()       -->
+ *
+ *  @brief            TODO
+ *
+ *  @param[in]    *msg        message
+ *  @param[in]    *name        const char
+ *  @param[in]    *value        const char
+ *  @param[in]    clobber        bool
+ *
+ */
+void replace_opt_field(message *msg,
+                       const char *name,
+                       const char *value,
+                       bool clobber)
+{
+    assert(msg && name && value);
+
+    if (msg && name && value) {
+        stringpair_list_t* opt_fields = msg->opt_fields;
+        stringpair_t* pair = NULL;
+
+        if (opt_fields) {
+            while (opt_fields) {
+                pair = opt_fields->value;
+                if (pair && (strcasecmp(name, pair->key) == 0))
+                    break;
+
+                pair = NULL;
+                opt_fields = opt_fields->next;
+            }
+        }
+
+        if (pair) {
+            if (clobber) {
+                free(pair->value);
+                pair->value = strdup(value);
+            }
+        }
+        else {
+            add_opt_field(msg, name, value);
+        }
+    }
+}
+
 void add_opt_field(message *msg, const char *name, const char *value)
 {
     assert(msg && name && value);
@@ -264,7 +325,15 @@ void add_opt_field(message *msg, const char *name, const char *value)
     if (msg && name && value) {
         stringpair_t *existing_pair = search_opt_field(msg, name);
         if (existing_pair) {
-            assert(strcmp(existing_pair->value, value) == 0);
+            int cmp_values = strcmp(existing_pair->value, value);
+
+            // The same header should not have different values.
+            assert(cmp_values == 0);
+
+            if (cmp_values != 0) {
+                // If this was not caught during development, then prefer the later (this) value.
+                replace_opt_field(msg, name, value, true);
+            }
         }
 
         stringpair_t *pair = new_stringpair(name, value);
@@ -280,53 +349,6 @@ void add_opt_field(message *msg, const char *name, const char *value)
 
         if (msg->opt_fields == NULL)
             msg->opt_fields = field;
-    }
-}
-
-/**
- *  @internal
- *
- *  <!--       replace_opt_field()       -->
- *
- *  @brief            TODO
- *
- *  @param[in]    *msg        message
- *  @param[in]    *name        const char
- *  @param[in]    *value        const char
- *  @param[in]    clobber        bool
- *
- */
-void replace_opt_field(message *msg,
-                       const char *name, 
-                       const char *value,
-                       bool clobber)
-{
-    assert(msg && name && value);
-    
-    if (msg && name && value) {
-        stringpair_list_t* opt_fields = msg->opt_fields;
-        stringpair_t* pair = NULL;
-        
-        if (opt_fields) {
-            while (opt_fields) {
-                pair = opt_fields->value;
-                if (pair && (strcasecmp(name, pair->key) == 0))
-                    break;
-                    
-                pair = NULL;
-                opt_fields = opt_fields->next;
-            }
-        }
-        
-        if (pair) {
-            if (clobber) {
-                free(pair->value);
-                pair->value = strdup(value);
-            }
-        }
-        else {
-            add_opt_field(msg, name, value);
-        }
     }
 }
 
