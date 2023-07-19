@@ -273,6 +273,44 @@ stringpair_t *search_opt_field(message *msg, const char *name)
     return NULL;
 }
 
+void add_opt_field(message *msg, const char *name, const char *value)
+{
+    assert(msg && name && value);
+
+    if (msg && name && value) {
+        stringpair_t *existing_pair = search_opt_field(msg, name);
+        if (existing_pair) {
+            int cmp_values = strcmp(existing_pair->value, value);
+
+            // The same header should not have different values.
+            assert(cmp_values == 0);
+
+            // If this was _not_ caught during development,
+            // then at least prefer the later (this) value.
+            if (cmp_values != 0) {
+                free(existing_pair->value);
+                existing_pair->value = strdup(value);
+            }
+
+            return;
+        }
+
+        stringpair_t *pair = new_stringpair(name, value);
+        if (pair == NULL)
+            return;
+
+        stringpair_list_t *field = stringpair_list_add(msg->opt_fields, pair);
+        if (field == NULL)
+        {
+            free_stringpair(pair);
+            return;
+        }
+
+        if (msg->opt_fields == NULL)
+            msg->opt_fields = field;
+    }
+}
+
 /**
  *  @internal
  *
@@ -317,43 +355,6 @@ void replace_opt_field(message *msg,
         else {
             add_opt_field(msg, name, value);
         }
-    }
-}
-
-void add_opt_field(message *msg, const char *name, const char *value)
-{
-    assert(msg && name && value);
-
-    if (msg && name && value) {
-        stringpair_t *existing_pair = search_opt_field(msg, name);
-        if (existing_pair) {
-            int cmp_values = strcmp(existing_pair->value, value);
-
-            // The same header should not have different values.
-            assert(cmp_values == 0);
-
-            // If this was _not_ caught during development,
-            // then at least prefer the later (this) value.
-            if (cmp_values != 0) {
-                replace_opt_field(msg, name, value, true);
-            }
-
-            return;
-        }
-
-        stringpair_t *pair = new_stringpair(name, value);
-        if (pair == NULL)
-            return;
-
-        stringpair_list_t *field = stringpair_list_add(msg->opt_fields, pair);
-        if (field == NULL)
-        {
-            free_stringpair(pair);
-            return;
-        }
-
-        if (msg->opt_fields == NULL)
-            msg->opt_fields = field;
     }
 }
 
