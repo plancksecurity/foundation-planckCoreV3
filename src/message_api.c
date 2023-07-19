@@ -230,11 +230,43 @@ bool _memnmemn(const char* needle,
     return found;
 }
 
+stringpair_t *search_opt_field(message *msg, const char *name)
+{
+    assert(msg && name);
+
+    if (msg && name) {
+        stringpair_list_t* opt_fields = msg->opt_fields;
+        stringpair_t* pair = NULL;
+
+        if (opt_fields) {
+            while (opt_fields) {
+                pair = opt_fields->value;
+                if (pair && (strcasecmp(name, pair->key) == 0))
+                    break;
+
+                pair = NULL;
+                opt_fields = opt_fields->next;
+            }
+        }
+
+        if (pair) {
+            return pair;
+        }
+    }
+
+    return NULL;
+}
+
 void add_opt_field(message *msg, const char *name, const char *value)
 {
     assert(msg && name && value);
 
     if (msg && name && value) {
+        stringpair_t *existing_pair = search_opt_field(msg, name);
+        if (existing_pair) {
+            assert(strcmp(existing_pair->value, value) == 0);
+        }
+
         stringpair_t *pair = new_stringpair(name, value);
         if (pair == NULL)
             return;
