@@ -330,10 +330,13 @@ void add_opt_field(message *msg, const char *name, const char *value)
             // The same header should not have different values.
             assert(cmp_values == 0);
 
+            // If this was _not_ caught during development,
+            // then at least prefer the later (this) value.
             if (cmp_values != 0) {
-                // If this was not caught during development, then prefer the later (this) value.
                 replace_opt_field(msg, name, value, true);
             }
+
+            return;
         }
 
         stringpair_t *pair = new_stringpair(name, value);
