@@ -282,7 +282,13 @@ void add_opt_field(message *msg, const char *name, const char *value)
         if (existing_pair) {
             int cmp_values = strcmp(existing_pair->value, value);
 
-            // The same header should not have different values.
+            if (cmp_values != 0) {
+                fprintf(stderr,
+                        "Error: Field %s: Overwriting %s with %s\n",
+                        name, existing_pair->value, value);
+            }
+
+                // The same header should not have different values.
             assert(cmp_values == 0);
 
             // If this was _not_ caught during development,
