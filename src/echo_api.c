@@ -806,6 +806,8 @@ static void send_ping_if_unknown(PEP_SESSION session,
                                  const pEp_identity *to_identity,
                                  bool only_if_pEp)
 {
+    only_if_pEp = false;
+
     PEP_REQUIRE_ORELSE(session && from_identity, { return; });
     if (! from_identity->me) {
         LOG_WARNING("send_ping_if_unknown: trying to send from non-own identity %s <%s>", ASNONNULLSTR(from_identity->username), ASNONNULLSTR(from_identity->address));
@@ -847,7 +849,7 @@ static void send_ping_to_unknowns_in(PEP_SESSION session,
 {
     const identity_list *rest;
     for (rest = to_identities; rest != NULL; rest = rest->next)
-        send_ping_if_unknown(session, from_identity, rest->ident, only_pEp);
+        send_ping_if_unknown(session, from_identity, rest->ident, false);
 }
 
 /* This factors the common logic of
@@ -857,6 +859,8 @@ static PEP_STATUS send_ping_to_unknowns_in_incoming_message(PEP_SESSION session,
                                                             const message *msg,
                                                             bool only_pEp)
 {
+    only_pEp = false;
+
     /* Sanity checks. */
     PEP_REQUIRE(session && msg
                 && msg->dir == PEP_dir_incoming);
