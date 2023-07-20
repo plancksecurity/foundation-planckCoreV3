@@ -66,6 +66,8 @@
 #define VER_2_1 "2.1"
 #define VER_2_2 "2.2"
 
+#include <stdio.h>
+
 #include "platform.h"
 
 #ifdef WIN32
@@ -110,6 +112,7 @@
 #include "key_reset.h"
 
 #include "pEpEngine_internal.h"
+#include "message_api_internal.h"
 #include "sql_reliability.h"
 #include "key_reset_internal.h"
 #include "group_internal.h"
@@ -124,7 +127,6 @@
 #include "transport.h"
 #include "sync_api.h"
 #include "Sync_func.h"
-
 
 /* Detailed versioning.
  * ***************************************************************** */
@@ -1180,8 +1182,12 @@ static inline void _init_globals(void) {
  *
  */
 static inline void _add_auto_consume(message* msg) {
-    add_opt_field(msg, "pEp-auto-consume", "yes");
-    msg->in_reply_to = stringlist_add(msg->in_reply_to, "pEp-auto-consume@pEp.foundation");
+    const char *auto_consume_header_field = "pEp-auto-consume";
+    if (!search_opt_field(msg, auto_consume_header_field)) {
+        // Only add auto-consume fields once.
+        add_opt_field(msg, auto_consume_header_field, "yes");
+        msg->in_reply_to = stringlist_add(msg->in_reply_to, "pEp-auto-consume@pEp.foundation");
+    }
 }
 
 

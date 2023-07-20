@@ -233,19 +233,6 @@ bool _memnmemn(const char* needle,
     return found;
 }
 
-/**
- *  @internal
- *
- *  <!-- search_opt_field() -->
- *
- *  @brief Searches for an existing optional field, and returns it, or `NULL`, in case it has not been found.
- *    The returned value, if not `NULL` is never directly owned by the caller, it points directly to the element
- *    of the input parameret `*msg`.
- *
- *  @param[in] *msg message The message to search in.
- *  @param[in] *name const char The name of the optional field to search for.
- *
- */
 stringpair_t *search_opt_field(message *msg, const char *name)
 {
     assert(msg && name);
