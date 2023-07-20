@@ -133,8 +133,7 @@ PEP_STATUS base_prepare_message(
     if (!msg)
         goto enomem;
 
-    add_opt_field(msg, "pEp-auto-consume", "yes");
-    msg->in_reply_to = stringlist_add(msg->in_reply_to, "pEp-auto-consume@pEp.foundation");
+    _add_auto_consume(msg);
 
     msg->from = identity_dup(me);
     if (!msg->from)
