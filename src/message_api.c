@@ -288,9 +288,6 @@ void add_opt_field(message *msg, const char *name, const char *value)
                         name, existing_pair->value, value);
             }
 
-                // The same header should not have different values.
-            assert(cmp_values == 0);
-
             // If this was _not_ caught during development,
             // then at least prefer the later (this) value.
             if (cmp_values != 0) {
