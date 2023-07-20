@@ -20,9 +20,7 @@
  Changelog:
 
  * 2023-06 get_trustwords() figures out the versions of input identities, if not set already.
- * 2023-07 add_opt_field() refuses to add duplicates,
- *  asserts if there is a contradiction,
- *  but overwrites the old value with the new value if the assert is skipped.
+ * 2023-07 search_opt_field() searches for an existing header field.
  */
 
 #include "pEp_internal.h"

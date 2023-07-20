@@ -3,6 +3,12 @@
 /// @author Created by Krista Bennett on 14.04.21.
 ///
 
+/*
+ Changelog:
+
+ * 2023-07 Added search_opt_field() signature and comment.
+ */
+
 #ifndef MESSAGE_API_INTERNAL_H
 #define MESSAGE_API_INTERNAL_H
 
