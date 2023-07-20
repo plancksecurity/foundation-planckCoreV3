@@ -66,8 +66,6 @@
 #define VER_2_1 "2.1"
 #define VER_2_2 "2.2"
 
-#include <stdio.h>
-
 #include "platform.h"
 
 #ifdef WIN32
