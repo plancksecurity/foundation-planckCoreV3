@@ -280,22 +280,9 @@ void add_opt_field(message *msg, const char *name, const char *value)
     if (msg && name && value) {
         stringpair_t *existing_pair = search_opt_field(msg, name);
         if (existing_pair) {
-            int cmp_values = strcmp(existing_pair->value, value);
-
-            if (cmp_values != 0) {
-                fprintf(stderr,
-                        "Error: Field %s: Overwriting %s with %s\n",
-                        name, existing_pair->value, value);
-            }
-
-            // If this was _not_ caught during development,
-            // then at least prefer the later (this) value.
-            if (cmp_values != 0) {
-                free(existing_pair->value);
-                existing_pair->value = strdup(value);
-            }
-
-            return;
+            fprintf(stderr,
+                    "Error: Field %s: Overwriting %s with %s\n",
+                    name, existing_pair->value, value);
         }
 
         stringpair_t *pair = new_stringpair(name, value);
