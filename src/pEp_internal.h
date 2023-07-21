@@ -8,7 +8,7 @@
 /*
  Changelog:
 
- * 2023-07 _add_auto_consume() checks of header field already exists.
+ * 2023-07 _add_auto_consume() checks if header field already exists.
  */
 
 #ifndef PEP_INTERNAL_H
