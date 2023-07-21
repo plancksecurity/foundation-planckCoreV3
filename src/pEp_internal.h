@@ -1190,7 +1190,7 @@ static inline void _add_auto_consume(message* msg) {
     if (!search_opt_field(msg, auto_consume_header_field)) {
         // Only add auto-consume fields once.
         add_opt_field(msg, auto_consume_header_field, "yes");
-        msg->in_reply_to = stringlist_add(msg->in_reply_to, "pEp-auto-consume@pEp.foundation");
+        msg->in_reply_to = stringlist_add(msg->in_reply_to, "planck-auto-consume@planck.security");
     }
 }
 
