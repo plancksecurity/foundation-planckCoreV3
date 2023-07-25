@@ -110,6 +110,25 @@ PEP_STATUS base_prepare_message(
         message **result
     );
 
+/**
+ * @internal
+ *  <!--       is_distribution_message()       -->
+ *
+ *  @brief      Check if a message is or not a distribution message.
+ *
+ *  @param[in]   session    session handle
+ *  @param[in]   msg        message to analyze
+ *
+ *  @retval true       if no error occurred
+ *  @retval false   illegal parameter values
+ *
+ */
+
+bool is_distribution_message(
+        PEP_SESSION session,
+        message *msg
+);
+
 
 /**
  * @internal

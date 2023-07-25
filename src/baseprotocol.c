@@ -163,6 +163,20 @@ enomem:
     return PEP_OUT_OF_MEMORY;
 }
 
+bool is_distribution_message(
+        PEP_SESSION session,
+        message *msg
+)
+{
+    assert(session);
+    for (bloblist_t *bl = msg->attachments; bl ; bl = bl->next) {
+        if (bl->mime_type && strcasecmp(bl->mime_type, _BASE_PROTO_MIME_TYPE_DIST) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 PEP_STATUS base_extract_message(
         PEP_SESSION session,
         message *msg,

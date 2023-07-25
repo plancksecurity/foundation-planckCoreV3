@@ -530,7 +530,8 @@ void decorate_message_for_decryption(
     bool clobber
 )
 {
-    _decorate_message(session, msg, rating, keylist, add_version, false, clobber);
+    bool isDistributionMessage = is_distribution_message(session, msg);
+    _decorate_message(session, msg, rating, keylist, add_version, !isDistributionMessage, clobber);
 }
 
 /**
