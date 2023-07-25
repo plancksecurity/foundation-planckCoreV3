@@ -654,8 +654,7 @@ tstylesheet {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 continue;
                             }
-                            add_opt_field(m, "pEp-auto-consume", "yes");
-                            m->in_reply_to = stringlist_add(m->in_reply_to, "pEp-auto-consume@pEp.foundation");
+                            _add_auto_consume(m);
                             free_message(_m);
                             break;
 
@@ -832,8 +831,7 @@ tstylesheet {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 continue;
                             }
-                            add_opt_field(m, "pEp-auto-consume", "yes");
-                            m->in_reply_to = stringlist_add(m->in_reply_to, "pEp-auto-consume@pEp.foundation");
+                            _add_auto_consume(m);
                             free_message(_m);
                             break;
 
@@ -941,8 +939,7 @@ tstylesheet {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 continue;
                             }
-                            add_opt_field(m, "pEp-auto-consume", "yes");
-                            m->in_reply_to = stringlist_add(m->in_reply_to, "pEp-auto-consume@pEp.foundation");
+                            _add_auto_consume(m);
                             free_message(_m);
                             break;
 
@@ -971,8 +968,7 @@ tstylesheet {
                                     goto the_end;
                                 continue;
                             }
-                            add_opt_field(m, "pEp-auto-consume", "yes");
-                            m->in_reply_to = stringlist_add(m->in_reply_to, "pEp-auto-consume@pEp.foundation");
+                            _add_auto_consume(m);
                             free_message(_m);
                     }
 
