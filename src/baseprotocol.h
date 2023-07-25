@@ -9,6 +9,11 @@
  *           The payloads of these messages are, in general, not human-readable.
  * @license  GNU General Public License 3.0 - see LICENSE.txt
  */
+/*
+Changelog:
+
+* 2023-07 is_distribution_message() new function to check if a message is a distribution protocol message.
+*/
 
 #ifndef BASEPROTOCOL_H
 #define BASEPROTOCOL_H

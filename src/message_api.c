@@ -24,6 +24,7 @@
  * 2023-07 set_receiverRating add new bool parameter to decide whether to add signature with rating.
  * 2023-07 _decorate_message() new internal function with parameter add_signature to decide whether to add signature with rating.
  * 2023-07 decorate_message_for_decryption() new function to decorate message without signature.
+ * 2023-07 decorate_message_for_decryption() update: only add rating attachment signature if the message is not a distribution message.
  */
 
 #include "pEp_internal.h"
