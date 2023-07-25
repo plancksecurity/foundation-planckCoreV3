@@ -586,5 +586,5 @@ action resetOwnGroupedKeys
 
 action resetOwnKeysUngrouped
 ||
-    return key_reset_all_own_keys(session);
+    return key_reset_all_own_keys_ignoring_device_group(session);
 ||

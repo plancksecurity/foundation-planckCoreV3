@@ -5,6 +5,12 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
+/*
+Changelog:
+
+* 2023-07 key_reset_all_own_keys_ignoring_device_group() function added.
+*/
+
 #ifndef KEY_RESET_H
 #define KEY_RESET_H
 
@@ -115,6 +121,16 @@ DYNAMIC_API PEP_STATUS key_reset_user(
  *  
  */
 DYNAMIC_API PEP_STATUS key_reset_all_own_keys(PEP_SESSION session);
+
+/**
+ *  <!--       key_reset_all_own_keys_ignoring_device_group()       -->
+ *
+ *  @brief Same as [key_reset_all_own_keys], but it does not deliver new key to device group partners.
+ *
+ *  @param[in]   session    session handle
+ *
+ */
+PEP_STATUS key_reset_all_own_keys_ignoring_device_group(PEP_SESSION session);
 
 // FIXME: Doc
 // This is simply NOT SAFE for multiple passwords on the extant 
