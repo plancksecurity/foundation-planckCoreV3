@@ -195,26 +195,15 @@ PEP_STATUS base_extract_message(
     int sync_messages_count = 0;
 
     const char* type_str = NULL;
-    const char* sync_str = NULL;
-    const char* dist_str = NULL;
 
     status = _get_base_protocol_type_str(type, &type_str);
     if (status != PEP_STATUS_OK || !type_str)
         return status;
 
-    status = _get_base_protocol_type_str(BASE_SYNC, &sync_str);
-    if (status != PEP_STATUS_OK || !type_str)
-        return status;
-
-    status = _get_base_protocol_type_str(BASE_DISTRIBUTION, &dist_str);
-    if (status != PEP_STATUS_OK || !type_str)
-        return status;
-
-
     for (bloblist_t *bl = msg->attachments; bl ; bl = bl->next) {
-        if (!strcasecmp(bl->mime_type, dist_str))
+        if (!strcasecmp(bl->mime_type, _BASE_PROTO_MIME_TYPE_DIST))
             ++distribution_messages_count;
-        if (!strcasecmp(bl->mime_type, sync_str))
+        if (!strcasecmp(bl->mime_type, _BASE_PROTO_MIME_TYPE_SYNC))
             ++sync_messages_count;
 
         if (bl->mime_type && strcasecmp(bl->mime_type, type_str) == 0) {
