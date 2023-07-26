@@ -222,7 +222,7 @@ PEP_STATUS base_extract_message(
                 _sign_size = bl->size;
             }
             else {
-                // CORE-45 Check that there are one sync attachment and on distribution attachment.
+                // CORE-45 Check that there are one sync attachment and one distribution attachment.
                 // In group mail two signatures are found: one for the group mail distribution
                 // attachment and another for the sync attachment added by set_receiverRating.
                 // If there are only one attachment of each, we suppose it is correct.
