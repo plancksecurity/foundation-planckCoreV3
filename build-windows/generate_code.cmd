@@ -5,6 +5,7 @@ SET current_directory=%~dp0
 
 :: Engine directory is ...\pEpForWindowsAdapterSolution\PlanckCoreV3\
 SET engine_directory=%current_directory:~0,-15%
+ECHO %engine_directory%
 
 :: YML2 directory is ...\pEpForWindowsAdapterSolution\yml2\
 SET yml2_directory=%engine_directory:~0,-13%\yml2
@@ -98,10 +99,12 @@ DEL *-sample.c
 
 CD %engine_directory%\..
 MKDIR pEp
+MKDIR pEp\internal
 XCOPY PlanckCoreV3\src\*.h pEp\ /Y/F/I
-XCOPY libpEpAdapter\src\*.h pEp\ /Y/F/I
-XCOPY libpEpAdapter\src\*.hh pEp\ /Y/F/I
-XCOPY libpEpAdapter\src\*.hxx pEp\ /Y/F/I
+XCOPY libPlanckWrapper\src\*.h pEp\ /Y/F/I
+XCOPY libPlanckWrapper\src\*.hh pEp\ /Y/F/I
+XCOPY libPlanckWrapper\src\*.hxx pEp\ /Y/F/I
+XCOPY libPlanckWrapper\src\internal\*.* pEp\internal /Y/F/I
 
 :end
 

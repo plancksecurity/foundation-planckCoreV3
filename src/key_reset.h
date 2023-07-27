@@ -130,7 +130,7 @@ DYNAMIC_API PEP_STATUS key_reset_all_own_keys(PEP_SESSION session);
  *  @param[in]   session    session handle
  *
  */
-PEP_STATUS key_reset_all_own_keys_ignoring_device_group(PEP_SESSION session);
+DYNAMIC_API PEP_STATUS key_reset_all_own_keys_ignoring_device_group(PEP_SESSION session);
 
 // FIXME: Doc
 // This is simply NOT SAFE for multiple passwords on the extant 
