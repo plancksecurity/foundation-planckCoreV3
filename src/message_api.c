@@ -20,6 +20,7 @@
  Changelog:
 
  * 2023-06 get_trustwords() figures out the versions of input identities, if not set already.
+ * 2023-07 search_opt_field() searches for an existing header field.
  */
 
 #include "pEp_internal.h"
@@ -228,6 +229,33 @@ bool _memnmemn(const char* needle,
         remaining_hay--;
     }
     return found;
+}
+
+stringpair_t *search_opt_field(message *msg, const char *name)
+{
+    assert(msg && name);
+
+    if (msg && name) {
+        stringpair_list_t* opt_fields = msg->opt_fields;
+        stringpair_t* pair = NULL;
+
+        if (opt_fields) {
+            while (opt_fields) {
+                pair = opt_fields->value;
+                if (pair && (strcasecmp(name, pair->key) == 0))
+                    break;
+
+                pair = NULL;
+                opt_fields = opt_fields->next;
+            }
+        }
+
+        if (pair) {
+            return pair;
+        }
+    }
+
+    return NULL;
 }
 
 void add_opt_field(message *msg, const char *name, const char *value)

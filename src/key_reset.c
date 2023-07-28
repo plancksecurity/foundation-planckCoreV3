@@ -11,6 +11,15 @@
    parameter to our functions, even when not needed, just for this.
    --positron, 2022-10 */
 
+   /*
+    Changelog:
+
+    * 2023-07 _key_reset() function added.
+    * 2023-07 key_reset() function modified to call _key_reset().
+    * 2023-07 key_reset_ignoring_device_group() function added.
+    * 2023-07 key_reset_all_own_keys_ignoring_device_group() function added.
+    */
+
 #include "pEp_internal.h"
 #include "dynamic_api.h"
 #include "message_api.h"
@@ -1158,6 +1167,10 @@ DYNAMIC_API PEP_STATUS key_reset_all_own_keys(PEP_SESSION session) {
     return key_reset(session, NULL, NULL);
 }
 
+DYNAMIC_API PEP_STATUS key_reset_all_own_keys_ignoring_device_group(PEP_SESSION session) {
+    return key_reset_ignoring_device_group(session, NULL, NULL);
+}
+
 /**
  *  @internal
  *  
@@ -1685,11 +1698,11 @@ pEp_free:
     return status;
 }
 
-
-PEP_STATUS key_reset(
+PEP_STATUS _key_reset(
         PEP_SESSION session,
         const char* key_id,
-        pEp_identity* ident
+        pEp_identity* ident,
+        bool ignore_device_group
     )
 {
     PEP_REQUIRE(session
@@ -1741,7 +1754,7 @@ PEP_STATUS key_reset(
             
             for (curr_key = keys; curr_key && curr_key->value; curr_key = curr_key->next) {
                 // FIXME: Is the ident really necessary?
-                status = key_reset(session, curr_key->value, tmp_ident);
+                status = _key_reset(session, curr_key->value, tmp_ident, ignore_device_group);
                 if (status != PEP_STATUS_OK && status != PEP_CANNOT_FIND_IDENTITY)
                     break;
                 else 
@@ -1828,7 +1841,9 @@ PEP_STATUS key_reset(
             // to a limited extent in any event.
             
             bool is_in_device_group = false;
-            status = deviceGrouped(session, &is_in_device_group);
+            if (!ignore_device_group) {
+                status = deviceGrouped(session, &is_in_device_group);
+            }
              
             // Regardless of the single identity this is for, for own keys, we do this 
             // for all keys associated with the identity.
@@ -1925,6 +1940,22 @@ pEp_free:
     config_passphrase(session, cached_passphrase); 
     free(cached_passphrase);
     return status;
+}
+
+PEP_STATUS key_reset(
+        PEP_SESSION session,
+        const char* key_id,
+        pEp_identity* ident
+) {
+    return _key_reset(session, key_id, ident, false);
+}
+
+PEP_STATUS key_reset_ignoring_device_group(
+        PEP_SESSION session,
+        const char* key_id,
+        pEp_identity* ident
+) {
+    return _key_reset(session, key_id, ident, true);
 }
 
 /**
