@@ -1,0 +1,11 @@
+
+
+windows-test:
+  stage: test
+  tags: [ windows-docker ]
+  image: mcr.microsoft.com/windows-cssc/python:3.11-servercore-ltsc2022
+  script:
+    - ls
+    - git --version
+    - pwd
+    - docker --version
