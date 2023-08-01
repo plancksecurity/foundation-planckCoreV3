@@ -4,6 +4,11 @@
 # This file may be used under the terms of the GNU General Public License version 3
 # see LICENSE.txt
 
+# Changelog
+#
+# 2023-08 Make SQLITE3_FROM_OS configurable
+#
+
 
 # Introduction
 # #########################################################
@@ -151,3 +156,8 @@
 # # Fall back to xor trustwords with communication partners using protocol
 # # version <= 3.2 (default: fail with PEP_TRUSTWORD_NOT_FOUND instead).
 # TRUSTWORDSXORCOMPATIBILITY = yes
+
+######### sqlite3 #########
+# If empty (or undefined), compile sqlite3 from the sources shipped with the pEp distribution.
+# Otherwise, use an sqlite3 implementation found in the OS's include/library paths.
+#SQLITE3_FROM_OS=on
