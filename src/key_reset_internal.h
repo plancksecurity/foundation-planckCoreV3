@@ -6,6 +6,12 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
+ /*
+ Changelog:
+
+ * 2023-07 key_reset_ignoring_device_group() function added.
+ */
+
 #ifndef KEY_RESET_INTERNAL_H
 #define KEY_RESET_INTERNAL_H
 
@@ -67,6 +73,28 @@ PEP_STATUS key_reset(
         const char* fpr,
         pEp_identity* ident
     );
+
+/**
+ * @internal
+ *  <!--       key_reset_ignoring_device_group()       -->
+ *
+ *  @brief Same as [key_reset], but this version does not send new key to device group partners.
+ *
+ *  @param[in]   session    session handle
+ *  @param[in]   fpr        @see [key_reset]
+ *  @param[in]   ident      @see [key_reset]
+ *
+ *
+ *  @retval PEP_STATUS_OK
+ *  @retval PEP_ILLEGAL_VALUE   illegal parameter values
+ *  @retval PEP_OUT_OF_MEMORY   out of memory
+ *  @retval any other value on error
+ */
+PEP_STATUS key_reset_ignoring_device_group(
+        PEP_SESSION session,
+        const char* key_id,
+        pEp_identity* ident
+);
 
 /*
 PEP_STATUS key_reset_own_and_deliver_revocations(PEP_SESSION session,

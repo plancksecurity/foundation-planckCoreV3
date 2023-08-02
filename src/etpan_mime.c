@@ -1650,11 +1650,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     int r;
     clist * fields_list = NULL;
     unsigned char pEpstr[] = PEP_SUBJ_STRING; // unsigned due to UTF-8 byte fun
-#ifdef WIN32
-    char* altstr = "pEp";
-#else
-    char* altstr = (char*)pEpstr;
-#endif        
+    char* altstr = "planck";
     char *subject = msg->shortmsg && msg->shortmsg[0] ? msg->shortmsg : altstr;
 
     assert(msg);

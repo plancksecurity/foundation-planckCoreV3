@@ -190,7 +190,7 @@ static inline const char *pEp_comm_type_to_string(PEP_comm_type ct) {
     case PEP_ct_OpenPGP: return "OpenPGP";
     case PEP_ct_OTR: return "OTR";
     case PEP_ct_confirmed_enc_anon: return "confirmed_enc_anon";
-    case PEP_ct_pEp: return "pEp";
+    case PEP_ct_pEp: return "planck";
     default: return "invalid comm type";
     }
 }

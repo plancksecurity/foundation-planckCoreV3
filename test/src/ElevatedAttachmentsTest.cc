@@ -410,7 +410,7 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message_elevated) {
     ASSERT_TRUE(dec_msg);
     // today the engine is sucking keys in
     // ASSERT_STREQ(dec_msg->attachments->mime_type, "application/pgp-keys");
-    ASSERT_STREQ(dec_msg->shortmsg, "pEp");
+    ASSERT_STREQ(dec_msg->shortmsg, "planck");
 
     stringpair_list_t *of;
     bool pEp_auto_consume_found = false;

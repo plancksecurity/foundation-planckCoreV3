@@ -3,6 +3,12 @@
 /// @author Created by Krista Bennett on 14.04.21.
 ///
 
+/*
+ Changelog:
+
+ * 2023-07 Added search_opt_field() signature and comment.
+ */
+
 #ifndef MESSAGE_API_INTERNAL_H
 #define MESSAGE_API_INTERNAL_H
 
@@ -61,6 +67,20 @@ void attach_own_key(PEP_SESSION session, message *msg);
  *
  */
 PEP_cryptotech determine_encryption_format(message *msg);
+
+/**
+ *  @internal
+ *  <!-- search_opt_field() -->
+ *
+ *  @brief Searches for an existing optional field, and returns it, or `NULL`, in case it has not been found.
+ *    The returned value, if not `NULL` is never directly owned by the caller, it points directly to the element
+ *    of the input parameret `*msg`.
+ *
+ *  @param[in] *msg message The message to search in.
+ *  @param[in] *name const char The name of the optional field to search for.
+ *
+ */
+stringpair_t *search_opt_field(message *msg, const char *name);
 
 /**
  *  @internal
