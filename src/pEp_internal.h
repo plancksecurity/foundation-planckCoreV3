@@ -741,8 +741,6 @@ void decorate_message(
     bool add_version,
     bool clobber);
 
-
-
 /**
  *  @internal
  *  @enum    _normalize_hex_rest_t

@@ -365,7 +365,7 @@ PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rati
     if (status)
         return status;
     
-     return base_decorate_message(session, msg, BASE_SYNC, payload, size, msg->recv_by->fpr);
+    return base_decorate_message(session, msg, BASE_SYNC, payload, size, msg->recv_by->fpr);
 }
 
 /**
@@ -453,7 +453,6 @@ void decorate_message(
 
     msg->rating = rating;
 }
-
 
 /**
  *  @internal
