@@ -364,7 +364,7 @@ PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rati
     free_Sync_message(res);
     if (status)
         return status;
-    
+
     return base_decorate_message(session, msg, BASE_SYNC, payload, size, msg->recv_by->fpr);
 }
 
