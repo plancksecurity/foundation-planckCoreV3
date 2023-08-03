@@ -21,6 +21,7 @@
 
  * 2023-06 get_trustwords() figures out the versions of input identities, if not set already.
  * 2023-07 search_opt_field() searches for an existing header field.
+ * 2023-07 set_receiverRating add new bool parameter to decide whether to add signature with rating.
  */
 
 #include "pEp_internal.h"
@@ -4907,6 +4908,10 @@ static PEP_STATUS process_Distribution_message(PEP_SESSION session,
             break; // We'll do something later here on refactor!
         case Distribution_PR_managedgroup:
             // Set the group stuff in motion!
+            // CORE-45: msg->_sender_fpr is verified afterwards for incoming groupmail distribution messages
+            // TODO as@planck.security: Verifiy it is a good solution
+            msg->_sender_fpr = strdup(sender_fpr);
+            // CORE-45
             status = receive_managed_group_message(session, msg,
                                                    msg_rating, dist);
             break;

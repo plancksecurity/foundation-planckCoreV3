@@ -1,4 +1,9 @@
-/** 
+/*
+ Changelog:
+ 2023-07 base_extract_message deals with the problem that two signatures are found when receiving Group Mail distribution messages
+ */
+ 
+ /**
  * @internal
  * @file     baseprotocol.c
  * @brief    Implementation of basic functions for administrative pEp messages (preparation,
@@ -185,6 +190,8 @@ PEP_STATUS base_extract_message(
     const char *_sign = NULL;
     size_t _sign_size = 0;
     stringlist_t *keylist = NULL;
+    int distribution_messages_count = 0;
+    int sync_messages_count = 0;
 
     const char* type_str = NULL;
 
@@ -193,6 +200,11 @@ PEP_STATUS base_extract_message(
         return status;
 
     for (bloblist_t *bl = msg->attachments; bl ; bl = bl->next) {
+        if (!strcasecmp(bl->mime_type, _BASE_PROTO_MIME_TYPE_DIST))
+            ++distribution_messages_count;
+        if (!strcasecmp(bl->mime_type, _BASE_PROTO_MIME_TYPE_SYNC))
+            ++sync_messages_count;
+
         if (bl->mime_type && strcasecmp(bl->mime_type, type_str) == 0) {
             if (!_payload) {
                 _payload = bl->value;
@@ -209,8 +221,14 @@ PEP_STATUS base_extract_message(
                 _sign_size = bl->size;
             }
             else {
-                status = PEP_DECRYPT_WRONG_FORMAT;
-                goto the_end;
+                // CORE-45 Check that there are one sync attachment and one distribution attachment.
+                // In group mail two signatures are found: one for the group mail distribution
+                // attachment and another for the sync attachment added by set_receiverRating.
+                // If there are only one attachment of each, we suppose it is correct.
+                if (distribution_messages_count != 1 || sync_messages_count != 1) {
+                    status = PEP_DECRYPT_WRONG_FORMAT;
+                    goto the_end;
+                }
             }
         }
     }
