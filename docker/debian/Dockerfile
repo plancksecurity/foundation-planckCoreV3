@@ -18,10 +18,10 @@ RUN make dist
 # building libetpan
 FROM gcc:11-bullseye as libetpanBuilder 
 WORKDIR /root/
-RUN git clone --depth=1 --branch=master https://git.planck.security/foundation/libetpan.git
+RUN git clone --depth=1 --branch=1.9.4 https://github.com/dinhvh/libetpan.git
 WORKDIR /root/libetpan
 RUN ./autogen.sh --prefix=/opt/planck
-RUN make install
+RUN make -j4 install
 WORKDIR /root/
 #
 #building ASN1C
