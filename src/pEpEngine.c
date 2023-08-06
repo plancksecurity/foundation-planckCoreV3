@@ -3366,6 +3366,71 @@ DYNAMIC_API PEP_STATUS import_key_with_fpr_return(
             size, private_keys, imported_keys, changed_public_keys);
 }
 
+DYNAMIC_API PEP_STATUS import_extrakey_with_fpr_return(PEP_SESSION session,
+    const char* key_data,
+    size_t size,
+    identity_list** private_keys,
+    stringlist_t** imported_keys,
+    uint64_t* changed_public_keys
+)
+{
+    PEP_REQUIRE(session && key_data && size
+    /* the other fields are allowed to be NULL. */);
+
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    /* When provided initialise private_keys out of defensiveness, to avoid
+       misleading the caller with invalid pointers even in case of failure;
+       do not do the same with imported_keys, which is an inout parameter. */
+    if (private_keys != NULL)
+        *private_keys = NULL;
+
+    if (imported_keys && !*imported_keys && changed_public_keys)
+        *changed_public_keys = 0;    
+
+    status = session->cryptotech[PEP_crypt_OpenPGP].import_key(session, key_data,
+        size, private_keys, imported_keys, changed_public_keys);
+    if (status != PEP_KEY_IMPORTED){
+        goto end_import_extrakey_with_fpr_return;
+    }
+
+    if (imported_keys == NULL) {
+        status = PEP_NO_KEY_IMPORTED;
+        goto end_import_extrakey_with_fpr_return;
+    }
+
+    if ((*imported_keys)->value == NULL) {
+        status = PEP_NO_KEY_IMPORTED;
+        goto end_import_extrakey_with_fpr_return;
+    }
+
+    stringlist_t* imported_key = (*imported_keys);
+    do {
+        const char* fpr = imported_key->value;
+        const char all_ids[64];
+        sprintf(all_ids, "extrakey_%s", imported_key->value);
+        pEp_identity* identity = new_identity(&all_ids, fpr, &all_ids, &all_ids);
+        
+        identity->comm_type = PEP_ct_OpenPGP;
+        identity->flags = PEP_idf_not_for_sync;
+        identity->major_ver = 3;
+        identity->minor_ver = 0;
+        identity->me = false;
+
+        status = set_identity(session, identity);
+        if (status != PEP_STATUS_OK) {
+            imported_key->next == NULL;
+            goto prepare_identity_creation_exit;
+        }
+        imported_key = imported_key->next;
+    prepare_identity_creation_exit:
+         free_identity(identity);
+    } while (imported_key != NULL);
+
+end_import_extrakey_with_fpr_return:
+    return status;
+}
+
 DYNAMIC_API PEP_STATUS recv_key(PEP_SESSION session, const char *pattern)
 {
     PEP_REQUIRE(session && ! EMPTYSTR(pattern));

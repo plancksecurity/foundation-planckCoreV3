@@ -313,6 +313,44 @@ protocol session {
             """;    
     }
 
+    method import_extrakey_with_fpr_return 
+    doc="""
+        import extrakeys from data, return optional list of fprs imported
+        """
+    {
+        // parms
+
+        use string key_data doc="key data, i.e. ASCII armored OpenPGP key";
+
+        use size_t size doc="amount of data to handle";
+
+        create identity_list private_keys 
+        doc="""
+            list of identities containing the private keys that have been imported. Private_keys
+            and imported_keys can be left NULL, it is then ignored.
+            *** THIS IS THE ACTUAL FUNCTION IMPLEMENTED BY CRYPTOTECH "import_key" ***
+            """;
+            
+        create identity_list imported keys doc="if non-NULL, list of actual keys imported"
+        
+        create identity_list changed_public_keys
+        doc="""
+            if non-NULL AND imported_keys is non-NULL: bitvector - corresponds to the first 
+            64 keys imported. If nth bit is set, import changed a key corresponding to the nth 
+            element in imported keys (i.e. key was in DB and was changed by import).
+            """;
+            
+        // exceptions
+
+        throws out_of_memory doc="out of memory";
+        
+        throws illegal_value 
+        doc="""
+            there is no key data to import, or imported keys was NULL and changed_public_keys 
+            was not.
+            """;    
+    }
+
 
     method export_key doc="export ascii armored key"
     {
