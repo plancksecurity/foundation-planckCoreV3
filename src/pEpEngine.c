@@ -3397,7 +3397,7 @@ DYNAMIC_API PEP_STATUS import_extrakey_with_fpr_return(PEP_SESSION session,
     }
 
     // now, we populate the management.db with appropriate data points
-    stringlist_t* imported_key = (*imported_keys);
+    stringlist_t* imported_key = *imported_keys;
     do {
         const char iddata[64]; 
         const char* fpr = imported_key->value;
