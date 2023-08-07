@@ -3421,8 +3421,8 @@ DYNAMIC_API PEP_STATUS import_extrakey_with_fpr_return(PEP_SESSION session,
         
         identity->comm_type = PEP_ct_OpenPGP;
         identity->flags = PEP_idf_not_for_sync;
-        identity->major_ver = 3;
-        identity->minor_ver = 0;
+        identity->major_ver = PEP_PROTOCOL_VERSION_MAJOR;
+        identity->minor_ver = PEP_PROTOCOL_VERSION_MINOR;
         identity->me = false;
 
         status = set_identity(session, identity);
