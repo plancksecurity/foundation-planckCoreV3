@@ -3411,7 +3411,12 @@ DYNAMIC_API PEP_STATUS import_extrakey_with_fpr_return(PEP_SESSION session,
     do {
         const char* fpr = imported_key->value;
         const char all_ids[64];
-        sprintf(all_ids, "extrakey_%s", imported_key->value);
+        int len = strlen(imported_key->value);
+        if (len + strlen("extrakey_") > 63) {            
+            status = PEP_KEY_IMPORT_STATUS_UNKNOWN;
+            goto end_import_extrakey_with_fpr_return;
+        }
+        snprintf(all_ids, len, "extrakey_%s", imported_key->value);
         pEp_identity* identity = new_identity(&all_ids, fpr, &all_ids, &all_ids);
         
         identity->comm_type = PEP_ct_OpenPGP;
