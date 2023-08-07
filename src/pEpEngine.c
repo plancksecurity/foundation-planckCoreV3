@@ -3374,25 +3374,14 @@ DYNAMIC_API PEP_STATUS import_extrakey_with_fpr_return(PEP_SESSION session,
     size_t size,
     identity_list** private_keys,
     stringlist_t** imported_keys,
-    uint64_t* changed_public_keys
-)
+    uint64_t* changed_public_keys)
 {
-    PEP_REQUIRE(session && key_data && size
-    /* the other fields are allowed to be NULL. */);
+    PEP_STATUS status = PEP_STATUS_OK;   
 
-    PEP_STATUS status = PEP_STATUS_OK;
+    // call import key
+    status = import_key_with_fpr_return(session, key_data,
+        size, private_keys, imported_keys, changed_public_keys);)
 
-    /* When provided initialise private_keys out of defensiveness, to avoid
-       misleading the caller with invalid pointers even in case of failure;
-       do not do the same with imported_keys, which is an inout parameter. */
-    if (private_keys != NULL)
-        *private_keys = NULL;
-
-    if (imported_keys && !*imported_keys && changed_public_keys)
-        *changed_public_keys = 0;    
-
-    status = session->cryptotech[PEP_crypt_OpenPGP].import_key(session, key_data,
-        size, private_keys, imported_keys, changed_public_keys);
     if (status != PEP_KEY_IMPORTED){
         goto end_import_extrakey_with_fpr_return;
     }
@@ -3407,16 +3396,15 @@ DYNAMIC_API PEP_STATUS import_extrakey_with_fpr_return(PEP_SESSION session,
         goto end_import_extrakey_with_fpr_return;
     }
 
+    // now, we populate the management.db with appropriate data points
     stringlist_t* imported_key = (*imported_keys);
     do {
+        const char iddata[64]; 
         const char* fpr = imported_key->value;
-        const char all_ids[64];
-        int len = strlen(imported_key->value);
-        if (len + strlen("extrakey_") > 63) {            
-            status = PEP_KEY_IMPORT_STATUS_UNKNOWN;
-            goto end_import_extrakey_with_fpr_return;
-        }
-        snprintf(all_ids, len, "extrakey_%s", imported_key->value);
+
+        // build an identitfier that we use in username, address and user_id
+        snprintf(iddata, 64, "extrakey_%s", imported_key->value);
+
         pEp_identity* identity = new_identity(&all_ids, fpr, &all_ids, &all_ids);
         
         identity->comm_type = PEP_ct_OpenPGP;
@@ -3427,7 +3415,7 @@ DYNAMIC_API PEP_STATUS import_extrakey_with_fpr_return(PEP_SESSION session,
 
         status = set_identity(session, identity);
         if (status != PEP_STATUS_OK) {
-            imported_key->next == NULL;
+            imported_key->next = NULL;
             goto prepare_identity_creation_exit;
         }
         imported_key = imported_key->next;
