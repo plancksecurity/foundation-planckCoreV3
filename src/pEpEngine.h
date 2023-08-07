@@ -26,6 +26,8 @@ extern "C" {
 #define PEP_PROTOCOL_VERSION_MAJOR  3 ///< pEp *protocol* version major component
 #define PEP_PROTOCOL_VERSION_MINOR  3 ///< pEp *protocol* version minor component
 
+#define EXTRAKEY_FPR_BUFFER_LENGTH 64 // buffer length to generate extrakey identifiers
+
 /* Expand to the stringification of the macro parameter, itself unexpanded. */
 #define _STRINGIFY_UNEXPANDED(whatever)  \
     # whatever

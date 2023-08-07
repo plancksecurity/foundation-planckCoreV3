@@ -4,7 +4,7 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
- // 07.08.2023/IP - added method import_extrakey_with_fpr_return
+ // 07.08.2023/IP - added method import_extrakey_with_fpr_return & changed behaviour of handling identity flags when extrakey encryption is requested
 
 #include "pEp_internal.h"
 #include "dynamic_api.h"
@@ -3380,7 +3380,7 @@ DYNAMIC_API PEP_STATUS import_extrakey_with_fpr_return(PEP_SESSION session,
 
     // call import key
     status = import_key_with_fpr_return(session, key_data,
-        size, private_keys, imported_keys, changed_public_keys);)
+        size, private_keys, imported_keys, changed_public_keys);
 
     if (status != PEP_KEY_IMPORTED){
         goto end_import_extrakey_with_fpr_return;
@@ -3399,13 +3399,13 @@ DYNAMIC_API PEP_STATUS import_extrakey_with_fpr_return(PEP_SESSION session,
     // now, we populate the management.db with appropriate data points
     stringlist_t* imported_key = *imported_keys;
     do {
-        const char iddata[64]; 
+        char iddata[EXTRAKEY_FPR_BUFFER_LENGTH];
         const char* fpr = imported_key->value;
 
         // build an identitfier that we use in username, address and user_id
-        snprintf(iddata, 64, "extrakey_%s", imported_key->value);
+        snprintf(iddata, EXTRAKEY_FPR_BUFFER_LENGTH, "extrakey_%s", imported_key->value);
 
-        pEp_identity* identity = new_identity(&all_ids, fpr, &all_ids, &all_ids);
+        pEp_identity* identity = new_identity(&iddata, fpr, &iddata, &iddata);
         
         identity->comm_type = PEP_ct_OpenPGP;
         identity->flags = PEP_idf_not_for_sync;
