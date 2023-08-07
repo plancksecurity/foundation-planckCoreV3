@@ -6,6 +6,7 @@
 
 // written by Nana Karlstetter and Volker Birk
 
+// 07.08.2023/IP - added method import_extrakey_with_fpr_return
 
 type ISO639_1 is string size=2 > a-z;
 

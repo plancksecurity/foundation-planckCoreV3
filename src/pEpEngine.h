@@ -4,6 +4,8 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
+ // 07.08.2023/IP - added method import_extrakey_with_fpr_return
+
 #ifndef PEP_ENGINE_H
 #define PEP_ENGINE_H
 
@@ -1298,6 +1300,7 @@ DYNAMIC_API PEP_STATUS import_key_with_fpr_return(
         uint64_t* changed_public_keys // use as bit field for the first 64 changed keys
 );
 
+// 07.08.2023/IP - added method import_extrakey_with_fpr_return
 /**
  *  <!--       import_extrakey_with_fpr_return()       -->
  *

@@ -4,6 +4,8 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
+ // 07.08.2023/IP - added method import_extrakey_with_fpr_return
+
 #include "pEp_internal.h"
 #include "dynamic_api.h"
 #include "cryptotech.h"
@@ -3366,6 +3368,7 @@ DYNAMIC_API PEP_STATUS import_key_with_fpr_return(
             size, private_keys, imported_keys, changed_public_keys);
 }
 
+// 07.08.2023/IP - added method import_extrakey_with_fpr_return
 DYNAMIC_API PEP_STATUS import_extrakey_with_fpr_return(PEP_SESSION session,
     const char* key_data,
     size_t size,
