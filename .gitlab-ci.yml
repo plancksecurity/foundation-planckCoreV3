@@ -51,9 +51,14 @@ debian-test:
   tags: [ linux ]
   needs: []
   image: ${REGISTRY}/${DEBIAN}:${VERSION}
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+    GIT_SUBMODULE_FORCE_HTTPS: 'true'
   script:
     - cp gitlab/debian/planckCoreV3-debug.conf local.conf
     - source /opt/tools/virtualenv/bin/activate
+    - cd libetpan && ./autogen.sh --prefix=/opt/planck && make install && cd ..
+    - echo "" > libPlanckTransport/Makefile.conf
     - make clean
     - make asn1
     - make all -j 4
@@ -67,9 +72,14 @@ debian-test:
     - linux
   needs: [debian-test]
   image: ${REGISTRY}/${DEBIAN}:${VERSION}
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+    GIT_SUBMODULE_FORCE_HTTPS: 'true'
   script:
     - cp gitlab/debian/planckCoreV3-release.conf local.conf
     - source /opt/tools/virtualenv/bin/activate
+    - cd libetpan && ./autogen.sh --prefix=/opt/planck && make install && cd ..
+    - echo "" > libPlanckTransport/Makefile.conf
     - make clean
     - make asn1
     - make all -j 4

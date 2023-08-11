@@ -1,0 +1,6 @@
+[submodule "libPlanckTransport"]
+	path = libPlanckTransport
+	url = git@git.planck.security:foundation/libPlanckTransport.git
+[submodule "libetpan"]
+	path = libetpan
+	url = git@git.planck.security:foundation/libetpan.git

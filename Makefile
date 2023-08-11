@@ -13,7 +13,9 @@ ifdef PEP_MIME
     BUILT_IN_MIME=pepmime
 endif
 
-.PHONY: all $(BUILT_IN_MIME) codegen asn1 build install dbinstall uninstall clean tags test package db doc
+export
+
+.PHONY: all $(BUILT_IN_MIME) codegen planckTransport asn1 build install dbinstall uninstall clean tags test package db doc
 
 build: $(BUILT_IN_MIME) asn1
 	$(MAKE) -C src
@@ -25,12 +27,14 @@ all: build
 pepmime: 
 	$(MAKE) -C pEpMIME lib
 
-codegen:
+codegen: planckTransport
 	$(MAKE) -C codegen
 
 asn1: codegen
 	$(MAKE) -C asn.1
 
+planckTransport:
+	$(MAKE) -C libPlanckTransport install
 
 install: build
 	$(MAKE) -C src install
