@@ -24,6 +24,8 @@
  * 2023-07 set_receiverRating add new bool parameter to decide whether to add signature with rating.
  */
 
+// 07.08.2023/IP - added method import_extrakey_with_fpr_return
+
 #include "pEp_internal.h"
 #include "message_api.h"
 #include "pEpEngine.h"
@@ -2738,15 +2740,19 @@ static PEP_STATUS encrypt_message_possibly_with_media_key(
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
+    // IP/06.08.2023 - we want to use an extra key alway when one is configured, 
+    // as there is no easy way currently to manage the identity flags in a way
+    // that is not manual or overwhelmingly complex.
+    // 
     // This is only local, the caller will keep the keylist, but we don't want to
     // allow extra keys for non-org (e.g. business) accounts, so we set it to NULL
     // locally so as not to use it if it's a non-org account (cheaper than checks
     // everywhere)
-    if (!(src->from->flags & PEP_idf_org_ident)) {
-        // if this is not from pEp Sync
-        if (!message_is_from_Sync(src))
-            extra = NULL;
-    }
+    //if (!(src->from->flags & PEP_idf_org_ident)) {
+    //    // if this is not from pEp Sync
+    //    if (!message_is_from_Sync(src))
+    //        extra = NULL;
+    //}
 
     // is a passphrase needed?
     status = probe_encrypt(session, src->from->fpr);

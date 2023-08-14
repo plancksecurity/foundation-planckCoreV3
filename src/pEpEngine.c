@@ -4,6 +4,8 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
+ // 07.08.2023/IP - added method import_extrakey_with_fpr_return & changed behaviour of handling identity flags when extrakey encryption is requested
+
 #include "pEp_internal.h"
 #include "dynamic_api.h"
 #include "cryptotech.h"
@@ -3364,6 +3366,65 @@ DYNAMIC_API PEP_STATUS import_key_with_fpr_return(
 
     return session->cryptotech[PEP_crypt_OpenPGP].import_key(session, key_data,
             size, private_keys, imported_keys, changed_public_keys);
+}
+
+// 07.08.2023/IP - added method import_extrakey_with_fpr_return
+DYNAMIC_API PEP_STATUS import_extrakey_with_fpr_return(PEP_SESSION session,
+    const char* key_data,
+    size_t size,
+    identity_list** private_keys,
+    stringlist_t** imported_keys,
+    uint64_t* changed_public_keys)
+{
+    PEP_STATUS status = PEP_STATUS_OK;   
+
+    // call import key
+    status = import_key_with_fpr_return(session, key_data,
+        size, private_keys, imported_keys, changed_public_keys);
+
+    if (status != PEP_KEY_IMPORTED){
+        goto end_import_extrakey_with_fpr_return;
+    }
+
+    if (imported_keys == NULL) {
+        status = PEP_NO_KEY_IMPORTED;
+        goto end_import_extrakey_with_fpr_return;
+    }
+
+    if ((*imported_keys)->value == NULL) {
+        status = PEP_NO_KEY_IMPORTED;
+        goto end_import_extrakey_with_fpr_return;
+    }
+
+    // now, we populate the management.db with appropriate data points
+    stringlist_t* imported_key = *imported_keys;
+    do {
+        char iddata[EXTRAKEY_FPR_BUFFER_LENGTH];
+        const char* fpr = imported_key->value;
+
+        // build an identitfier that we use in username, address and user_id
+        snprintf(iddata, EXTRAKEY_FPR_BUFFER_LENGTH, "extrakey_%s", imported_key->value);
+
+        pEp_identity* identity = new_identity(&iddata, fpr, &iddata, &iddata);
+        
+        identity->comm_type = PEP_ct_OpenPGP;
+        identity->flags = PEP_idf_not_for_sync;
+        identity->major_ver = PEP_PROTOCOL_VERSION_MAJOR;
+        identity->minor_ver = PEP_PROTOCOL_VERSION_MINOR;
+        identity->me = false;
+
+        status = set_identity(session, identity);
+        if (status != PEP_STATUS_OK) {
+            imported_key->next = NULL;
+            goto prepare_identity_creation_exit;
+        }
+        imported_key = imported_key->next;
+    prepare_identity_creation_exit:
+         free_identity(identity);
+    } while (imported_key != NULL);
+
+end_import_extrakey_with_fpr_return:
+    return status;
 }
 
 DYNAMIC_API PEP_STATUS recv_key(PEP_SESSION session, const char *pattern)

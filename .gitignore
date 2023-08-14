@@ -155,3 +155,4 @@ test/test_mails/default_keys_test_*.eml
 
 # I prefix my off-git files and directories with an underscore.
 _*
+/.vs
