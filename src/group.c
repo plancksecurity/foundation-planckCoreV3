@@ -4,6 +4,8 @@
  * @license This file is under GNU General Public License 3.0 - see LICENSE.txt
  */
 
+ // 17.08.2023/DZ - Don't write to NULL in group_create on error.
+
 #include "group.h"
 #include "group_internal.h"
 
@@ -1992,7 +1994,9 @@ pEp_error:
     }
     else
         free_group(_group);
-    *group = NULL;
+    if (group) {
+        *group = NULL;
+    }
     return status;
 }
 
