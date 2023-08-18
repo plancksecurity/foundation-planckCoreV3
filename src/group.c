@@ -5,6 +5,7 @@
  */
 
  // 17.08.2023/DZ - Don't write to NULL in group_create on error.
+ // 18.08.2023/DZ - send_GroupAdopted returns early (but OK) when the manager is an own identity
 
 #include "group.h"
 #include "group_internal.h"
@@ -1206,9 +1207,9 @@ PEP_STATUS send_GroupAdopted(PEP_SESSION session, pEp_identity* group_identity, 
         goto pEp_error;
     }
 
-    // ?? Is this really necessary? It's an internal call. Well, anything can mess up, no?
+    // Simply ignore this if the manager is an own identity.
     if (is_me(session, manager))
-        return PEP_ILLEGAL_VALUE;
+        return PEP_STATUS_OK;
 
     status = update_identity(session, manager);
     if (status != PEP_STATUS_OK)
