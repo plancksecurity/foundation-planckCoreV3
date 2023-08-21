@@ -2023,7 +2023,16 @@ static PEP_comm_type _get_comm_type(
 
     if (status == PEP_STATUS_OK) {
         if (ident->flags & PEP_idf_group_ident) {
-            // TODO: Special handling for group.
+            member_list *members;
+            status = retrieve_active_group_membership(session, ident, &members);
+            if (status != PEP_STATUS_OK) {
+                return PEP_ct_pEp_unconfirmed;
+            }
+            member_list *theMembers = members;
+            for (pEp_member *m = theMembers->member; m; theMembers = theMembers->next) {
+                printf("*** group member %s", m->ident->address);
+            }
+            free_memberlist(members);
             return PEP_ct_pEp_unconfirmed;
         } else {
             if (ident->comm_type == PEP_ct_compromised)
