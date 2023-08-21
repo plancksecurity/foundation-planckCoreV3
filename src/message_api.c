@@ -2023,18 +2023,25 @@ static PEP_comm_type _get_comm_type(
 
     if (status == PEP_STATUS_OK) {
         if (ident->flags & PEP_idf_group_ident) {
-            member_list *members;
-            status = retrieve_full_group_membership(session, ident, &members);
-            if (status != PEP_STATUS_OK) {
+            int isOwn = 0;
+            is_own_group_identity(session, ident, &isOwn);
+            if (isOwn) {
+                // If we created this group, we have access to all members.
+                member_list *members;
+                status = retrieve_full_group_membership(session, ident, &members);
+                if (status != PEP_STATUS_OK) {
+                    return PEP_ct_pEp_unconfirmed;
+                }
+                member_list *theMembers = members;
+                while (theMembers && theMembers->member) {
+                    printf("*** group member %s\n", theMembers->member->ident->address);
+                    theMembers = theMembers->next;
+                }
+                free_memberlist(members);
+            } else {
+                // Someone else created this group, we don't the individual comm types.
                 return PEP_ct_pEp_unconfirmed;
             }
-            member_list *theMembers = members;
-            while (theMembers && theMembers->member) {
-                printf("*** group member %s\n", theMembers->member->ident->address);
-                theMembers = theMembers->next;
-            }
-            free_memberlist(members);
-            return PEP_ct_pEp_unconfirmed;
         } else {
             if (ident->comm_type == PEP_ct_compromised)
                 return PEP_ct_compromised;
