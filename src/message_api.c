@@ -2021,16 +2021,21 @@ static PEP_comm_type _get_comm_type(
         status = _myself(session, ident, false, false, false, true);
     }
 
+    PEP_comm_type ctOnError = PEP_ct_unknown;
+
     if (status == PEP_STATUS_OK) {
         if (ident->flags & PEP_idf_group_ident) {
             int isOwn = 0;
-            is_own_group_identity(session, ident, &isOwn);
+            status = is_own_group_identity(session, ident, &isOwn);
+            if (status != PEP_STATUS_OK) {
+                return ctOnError;
+            }
             if (isOwn) {
                 // If we created this group, we have access to all members.
                 member_list *members;
                 status = retrieve_full_group_membership(session, ident, &members);
                 if (status != PEP_STATUS_OK) {
-                    return PEP_ct_pEp_unconfirmed;
+                    return ctOnError;
                 }
                 member_list *theMembers = members;
                 while (theMembers && theMembers->member) {
