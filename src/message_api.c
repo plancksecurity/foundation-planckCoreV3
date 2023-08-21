@@ -2038,7 +2038,6 @@ static PEP_comm_type _get_comm_type(
                     return ctOnError;
                 }
                 for (member_list *theMembers = members; theMembers && theMembers->member; theMembers = theMembers->next) {
-                    printf("*** group member %s\n", theMembers->member->ident->address);
                     max_comm_type = _get_comm_type(session, max_comm_type, theMembers->member->ident);
                 }
                 free_memberlist(members);
