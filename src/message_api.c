@@ -2029,8 +2029,9 @@ static PEP_comm_type _get_comm_type(
                 return PEP_ct_pEp_unconfirmed;
             }
             member_list *theMembers = members;
-            for (pEp_member *m = theMembers->member; m; theMembers = theMembers->next) {
-                printf("*** group member %s", m->ident->address);
+            while (theMembers && theMembers->member) {
+                printf("*** group member %s\n", theMembers->member->ident->address);
+                theMembers = theMembers->next;
             }
             free_memberlist(members);
             return PEP_ct_pEp_unconfirmed;
