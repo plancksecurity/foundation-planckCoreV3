@@ -135,19 +135,6 @@ PEP_STATUS retrieve_full_group_membership(
  * @internal
  *
  * @param session
- * @param group_identity
- * @param members
- * @return
- */
-PEP_STATUS retrieve_active_group_membership(
-        PEP_SESSION session,
-        pEp_identity* group_identity,
-        member_list** members);
-
-/**
- * @internal
- *
- * @param session
  * @param group
  * @return
  */

@@ -2024,7 +2024,7 @@ static PEP_comm_type _get_comm_type(
     if (status == PEP_STATUS_OK) {
         if (ident->flags & PEP_idf_group_ident) {
             member_list *members;
-            status = retrieve_active_group_membership(session, ident, &members);
+            status = retrieve_full_group_membership(session, ident, &members);
             if (status != PEP_STATUS_OK) {
                 return PEP_ct_pEp_unconfirmed;
             }
