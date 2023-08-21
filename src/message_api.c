@@ -25,6 +25,7 @@
  */
 
 // 07.08.2023/IP - added method import_extrakey_with_fpr_return
+// 21.08.2023/DZ - make _get_comm_type understand group identities
 
 #include "pEp_internal.h"
 #include "message_api.h"
