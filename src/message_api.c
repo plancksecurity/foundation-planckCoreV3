@@ -2032,7 +2032,7 @@ static PEP_comm_type _get_comm_type(
                 return ctOnError;
             }
             if (isOwn) {
-                // If we created this group, we have access to all members.
+                // We created this group, so we have access to all members, and can check them.
                 member_list *members;
                 status = retrieve_full_group_membership(session, ident, &members);
                 if (status != PEP_STATUS_OK) {
@@ -2044,7 +2044,8 @@ static PEP_comm_type _get_comm_type(
                 free_memberlist(members);
                 return max_comm_type;
             } else {
-                // Someone else created this group, we don't the individual comm types.
+                // Someone else created this group, we don't know the individual comm types,
+                // but assume group identities are reliable.
                 return PEP_ct_pEp_unconfirmed;
             }
         } else {
