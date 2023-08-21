@@ -2022,12 +2022,17 @@ static PEP_comm_type _get_comm_type(
     }
 
     if (status == PEP_STATUS_OK) {
-        if (ident->comm_type == PEP_ct_compromised)
-            return PEP_ct_compromised;
-        else if (ident->comm_type == PEP_ct_mistrusted)
-            return PEP_ct_mistrusted;
-        else
-            return MIN(max_comm_type, ident->comm_type);
+        if (ident->flags & PEP_idf_group_ident) {
+            // TODO: Special handling for group.
+            return PEP_ct_pEp_unconfirmed;
+        } else {
+            if (ident->comm_type == PEP_ct_compromised)
+                return PEP_ct_compromised;
+            else if (ident->comm_type == PEP_ct_mistrusted)
+                return PEP_ct_mistrusted;
+            else
+                return MIN(max_comm_type, ident->comm_type);
+        }
     }
     else {
         return PEP_ct_unknown;
