@@ -2037,10 +2037,8 @@ static PEP_comm_type _get_comm_type(
                 if (status != PEP_STATUS_OK) {
                     return ctOnError;
                 }
-                member_list *theMembers = members;
-                while (theMembers && theMembers->member) {
+                for (member_list *theMembers = members; theMembers && theMembers->member; theMembers = theMembers->next) {
                     printf("*** group member %s\n", theMembers->member->ident->address);
-                    theMembers = theMembers->next;
                 }
                 free_memberlist(members);
             } else {
