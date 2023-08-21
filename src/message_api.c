@@ -2022,7 +2022,7 @@ static PEP_comm_type _get_comm_type(
         status = _myself(session, ident, false, false, false, true);
     }
 
-    PEP_comm_type ctOnError = PEP_ct_unknown;
+    const PEP_comm_type ctOnError = PEP_ct_unknown;
 
     if (status == PEP_STATUS_OK) {
         if (ident->flags & PEP_idf_group_ident) {
@@ -2058,7 +2058,7 @@ static PEP_comm_type _get_comm_type(
         }
     }
     else {
-        return PEP_ct_unknown;
+        return ctOnError;
     }                    
 }
 
