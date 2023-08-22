@@ -3368,6 +3368,23 @@ DYNAMIC_API PEP_STATUS import_key_with_fpr_return(
             size, private_keys, imported_keys, changed_public_keys);
 }
 
+DYNAMIC_API PEP_STATUS import_extra_key(
+        PEP_SESSION session,
+        const char *key_data,
+        size_t size,
+        identity_list **private_keys)
+{
+            PEP_REQUIRE(session && key_data && size
+    /* private_keys is allowed to be NULL. */);
+
+    /* When provided initialise private_keys out of defensiveness, to avoid
+       misleading the caller with invalid pointers even in case of failure. */
+    if (private_keys != NULL)
+        * private_keys = NULL;
+
+    return import_extrakey_with_fpr_return(session, key_data, size, private_keys, NULL, NULL);
+}
+
 // 07.08.2023/IP - added method import_extrakey_with_fpr_return
 DYNAMIC_API PEP_STATUS import_extrakey_with_fpr_return(PEP_SESSION session,
     const char* key_data,

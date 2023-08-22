@@ -1372,6 +1372,12 @@ DYNAMIC_API PEP_STATUS import_key(
         identity_list **private_keys       
     );
 
+DYNAMIC_API PEP_STATUS import_extra_key(
+        PEP_SESSION session,
+        const char *key_data,
+        size_t size,
+        identity_list **private_keys);
+
 
 /**
  *  <!--       export_key()       -->
