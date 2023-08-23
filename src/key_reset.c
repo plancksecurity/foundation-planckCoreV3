@@ -1845,6 +1845,10 @@ PEP_STATUS _key_reset(
                 status = deviceGrouped(session, &is_in_device_group);
             }
 
+            // `leave_device_group` will reset own keys anyways, which means we are done.
+            // Please note that in case the user has more than one own key that is getting reset,
+            // this will happen more than once in the same call,
+            // but it looks like this does no harm.
             if (status == PEP_STATUS_OK && is_in_device_group) {
                 status = leave_device_group(session);
                 goto pEp_free;
