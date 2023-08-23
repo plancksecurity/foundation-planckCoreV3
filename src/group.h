@@ -9,6 +9,8 @@
  *
  */
 
+ // 23.08.2023/IG - Update group_rating doc: Group rating is now Reliable (not Trusted) for members.
+
 #include "platform.h"
 #include "dynamic_api.h"
 #include "message_api.h"
