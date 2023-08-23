@@ -2313,8 +2313,11 @@ DYNAMIC_API PEP_STATUS group_rating(
 ) {
 
     PEP_STATUS status = PEP_STATUS_OK;
-    if (!is_me(session, manager))
-        return identity_rating(session, group_identity, rating);
+    if (!is_me(session, manager)) {
+        *rating = PEP_rating_reliable;
+        return status;
+    }
+
 
     member_list* active_members = NULL;
 
