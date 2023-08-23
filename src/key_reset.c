@@ -1844,6 +1844,11 @@ PEP_STATUS _key_reset(
             if (!ignore_device_group) {
                 status = deviceGrouped(session, &is_in_device_group);
             }
+
+            if (status == PEP_STATUS_OK && is_in_device_group) {
+                status = leave_device_group(session);
+                goto pEp_free;
+            }
              
             // Regardless of the single identity this is for, for own keys, we do this 
             // for all keys associated with the identity.
