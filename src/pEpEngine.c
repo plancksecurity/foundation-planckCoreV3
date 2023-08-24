@@ -3381,8 +3381,9 @@ DYNAMIC_API PEP_STATUS import_extra_key(
        misleading the caller with invalid pointers even in case of failure. */
     if (private_keys != NULL)
         * private_keys = NULL;
+    stringlist_t* imported_keys = new_stringlist(NULL);
 
-    return import_extrakey_with_fpr_return(session, key_data, size, private_keys, NULL, NULL);
+    return import_extrakey_with_fpr_return(session, key_data, size, private_keys, &imported_keys, NULL);
 }
 
 // 07.08.2023/IP - added method import_extrakey_with_fpr_return
