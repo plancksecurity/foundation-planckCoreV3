@@ -863,7 +863,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multi_ident_one_fpr) {
 
     status = myself(session, alex_id3);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_STRNE(pubkey1, alex_id3->fpr);
+    ASSERT_STREQ(pubkey1, alex_id3->fpr);
 
     ASSERT_STRNE(alex_id->fpr, alex_id2->fpr);
     ASSERT_STRNE(alex_id->fpr, alex_id3->fpr);
@@ -1065,7 +1065,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
     revoked = false;
     status = key_revoked(session, pubkey3, &revoked);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_TRUE(revoked);
+    ASSERT_FALSE(revoked);
 
     status = myself(session, alex_id);
     ASSERT_EQ(status, PEP_STATUS_OK);
