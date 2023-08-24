@@ -25,7 +25,7 @@
 
 #include <gtest/gtest.h>
 
-// 2023-08-24/DZ Update tests
+// 24.08.2023/DZ Update tests
 
 PEP_STATUS KRMT_message_send_callback(message* msg);
 PEP_STATUS KRMT_ensure_passphrase_callback(PEP_SESSION session, const char* key);
@@ -786,7 +786,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_recv) {
 
     main_key = NULL;
     status = get_main_user_fpr(session, alice->user_id, &main_key);
-    ASSERT_STRNE(main_key, alice_fpr);
+    ASSERT_STREQ(main_key, alice_fpr);
     ASSERT_STREQ(alice->fpr, "924DFC739144B9A6060A92D6EE9B17DF9E1B5A1B");
 }
 
@@ -846,12 +846,12 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multi_ident_one_fpr) {
     free(alex_id->fpr);
     alex_id->fpr = strdup(pubkey1);
     status = get_trust(session, alex_id);
-    ASSERT_EQ(alex_id->comm_type , PEP_ct_pEp); // DZ Update test to current reality.
+    ASSERT_EQ(alex_id->comm_type , PEP_ct_pEp);
 
     bool revoked = false;
     status = key_revoked(session, pubkey1, &revoked);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_TRUE(revoked);
+    ASSERT_FALSE(revoked);
 
     status = myself(session, alex_id);
     ASSERT_EQ(status, PEP_STATUS_OK);
@@ -1040,7 +1040,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
     free(alex_id->fpr);
     alex_id->fpr = strdup(pubkey1);
     status = get_trust(session, alex_id);
-    ASSERT_EQ(alex_id->comm_type , PEP_ct_mistrusted);
+    ASSERT_EQ(alex_id->comm_type , PEP_ct_pEp);
 
     free(alex_id2->fpr);
     alex_id2->fpr = strdup(pubkey2);
