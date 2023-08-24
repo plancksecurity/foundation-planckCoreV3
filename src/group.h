@@ -9,6 +9,8 @@
  *
  */
 
+ // 23.08.2023/IG - Update group_rating doc: Group rating is now Reliable (not Trusted) for members.
+
 #include "platform.h"
 #include "dynamic_api.h"
 #include "message_api.h"
@@ -358,7 +360,8 @@ DYNAMIC_API PEP_STATUS group_remove_member(
  *  <!--       group_rating()       -->
  *
  *  @brief      Get the rating for this group - if the caller is the manager, this will return the aggregate rating
- *              of group members. For members, this will return the rating of the group_identity
+ *              of group members. For members, this will return PEP_rating_reliable as default since the rating of
+ *              the whole group cannot be calculated.
  *
  *  @param[in]      session             associated session object
  *  @param[in]      group_identity      the pEp_identity object representing the group. Must contain at least
