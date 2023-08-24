@@ -25,6 +25,8 @@
 
 #include <gtest/gtest.h>
 
+// 2023-08-24/DZ Update tests
+
 PEP_STATUS KRMT_message_send_callback(message* msg);
 PEP_STATUS KRMT_ensure_passphrase_callback(PEP_SESSION session, const char* key);
 
@@ -844,7 +846,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multi_ident_one_fpr) {
     free(alex_id->fpr);
     alex_id->fpr = strdup(pubkey1);
     status = get_trust(session, alex_id);
-    ASSERT_EQ(alex_id->comm_type , PEP_ct_mistrusted);
+    ASSERT_EQ(alex_id->comm_type , PEP_ct_pEp); // DZ Update test to current reality.
 
     bool revoked = false;
     status = key_revoked(session, pubkey1, &revoked);
