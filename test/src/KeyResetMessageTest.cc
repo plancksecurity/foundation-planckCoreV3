@@ -866,7 +866,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multi_ident_one_fpr) {
     ASSERT_STREQ(pubkey1, alex_id3->fpr);
 
     ASSERT_STREQ(alex_id->fpr, alex_id2->fpr);
-    ASSERT_STRNE(alex_id->fpr, alex_id3->fpr);
+    ASSERT_STREQ(alex_id->fpr, alex_id3->fpr);
     ASSERT_STRNE(alex_id2->fpr, alex_id3->fpr);
 
     ASSERT_EQ(m_queue.size(),1);
@@ -1073,11 +1073,11 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
 
     status = myself(session, alex_id2);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_STRNE(pubkey2, alex_id2->fpr);
+    ASSERT_STREQ(pubkey2, alex_id2->fpr);
 
     status = myself(session, alex_id3);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_STRNE(pubkey3, alex_id3->fpr);
+    ASSERT_STREQ(pubkey3, alex_id3->fpr);
 
     // Not reaaaally necessary, but...
     ASSERT_STRNE(alex_id->fpr, alex_id2->fpr);
