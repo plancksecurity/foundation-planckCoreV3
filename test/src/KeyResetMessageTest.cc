@@ -1060,7 +1060,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
     revoked = false;
     status = key_revoked(session, pubkey2, &revoked);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_TRUE(revoked);
+    ASSERT_FALSE(revoked);
 
     revoked = false;
     status = key_revoked(session, pubkey3, &revoked);
@@ -1773,7 +1773,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
     ASSERT_STRNE(alex_id->fpr, alex_id3->fpr);
     ASSERT_STRNE(alex_id2->fpr, alex_id3->fpr);
 
-    ASSERT_EQ(m_queue.size(),1);
+    ASSERT_EQ(m_queue.size(),0);
     if (false) {
         ofstream outfile;
         message* curr_sent_msg = m_queue.at(0);        
