@@ -1,3 +1,5 @@
+// Changelog
+// 24.08.2023/IP - added preservation of major/minor version attributes when copying/creating identites
 /**
  * @file    keymanagement.c
  * @brief   Implementation of functions to manage keys 
@@ -456,6 +458,10 @@ static void transfer_ident_lang_and_flags(pEp_identity* new_ident,
 
     new_ident->flags = stored_ident->flags;
     new_ident->me = new_ident->me || stored_ident->me;
+
+    // 24.08.2023/IP: also copy version information
+    new_ident->major_ver = stored_ident->major_ver;
+    new_ident->minor_ver = stored_ident->minor_ver;
 }
 
 /**
@@ -1228,6 +1234,7 @@ PEP_STATUS _myself(PEP_SESSION session,
         identity->comm_type = PEP_ct_unknown;
     }
 
+    // IP: why is this set but not retrieved from the db? implicit assumptions are ALWAYS BAD when writing codes that OTHERS need to understand
     identity->major_ver = PEP_PROTOCOL_VERSION_MAJOR;
     identity->minor_ver = PEP_PROTOCOL_VERSION_MINOR;
     
