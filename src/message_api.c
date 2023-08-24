@@ -25,6 +25,7 @@
  */
 
 // 07.08.2023/IP - added method import_extrakey_with_fpr_return
+// 21.08.2023/DZ - make _get_comm_type understand group identities
 
 #include "pEp_internal.h"
 #include "message_api.h"
@@ -2021,16 +2022,43 @@ static PEP_comm_type _get_comm_type(
         status = _myself(session, ident, false, false, false, true);
     }
 
+    const PEP_comm_type ctOnError = PEP_ct_unknown;
+
     if (status == PEP_STATUS_OK) {
-        if (ident->comm_type == PEP_ct_compromised)
-            return PEP_ct_compromised;
-        else if (ident->comm_type == PEP_ct_mistrusted)
-            return PEP_ct_mistrusted;
-        else
-            return MIN(max_comm_type, ident->comm_type);
+        if (ident->flags & PEP_idf_group_ident) {
+            int isOwn = 0;
+            status = is_own_group_identity(session, ident, &isOwn);
+            if (status != PEP_STATUS_OK) {
+                return ctOnError;
+            }
+            if (isOwn) {
+                // We created this group, so we have access to all members, and can check them.
+                member_list *members;
+                status = retrieve_full_group_membership(session, ident, &members);
+                if (status != PEP_STATUS_OK) {
+                    return ctOnError;
+                }
+                for (member_list *theMembers = members; theMembers && theMembers->member; theMembers = theMembers->next) {
+                    max_comm_type = _get_comm_type(session, max_comm_type, theMembers->member->ident);
+                }
+                free_memberlist(members);
+                return max_comm_type;
+            } else {
+                // Someone else created this group, we don't know the individual comm types,
+                // but assume group identities are reliable.
+                return PEP_ct_pEp_unconfirmed;
+            }
+        } else {
+            if (ident->comm_type == PEP_ct_compromised)
+                return PEP_ct_compromised;
+            else if (ident->comm_type == PEP_ct_mistrusted)
+                return PEP_ct_mistrusted;
+            else
+                return MIN(max_comm_type, ident->comm_type);
+        }
     }
     else {
-        return PEP_ct_unknown;
+        return ctOnError;
     }                    
 }
 
