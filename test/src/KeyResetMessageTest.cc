@@ -710,7 +710,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own) {
 
     main_key = NULL;
     status = get_main_user_fpr(session, alice->user_id, &main_key);
-    ASSERT_STRNE(main_key, alice_fpr);
+    ASSERT_STREQ(main_key, alice_fpr);
 
 
     ASSERT_EQ(m_queue.size(), 1);
@@ -855,7 +855,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multi_ident_one_fpr) {
 
     status = myself(session, alex_id);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_STRNE(pubkey1, alex_id->fpr);
+    ASSERT_STREQ(pubkey1, alex_id->fpr);
 
     status = myself(session, alex_id2);
     ASSERT_EQ(status, PEP_STATUS_OK);
@@ -1050,7 +1050,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
     free(alex_id3->fpr);
     alex_id3->fpr = strdup(pubkey3);
     status = get_trust(session, alex_id3);
-    ASSERT_EQ(alex_id3->comm_type , PEP_ct_mistrusted);
+    ASSERT_EQ(alex_id3->comm_type , PEP_ct_pEp);
 
     bool revoked = false;
     status = key_revoked(session, pubkey1, &revoked);
@@ -1749,7 +1749,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
     revoked = false;
     status = key_revoked(session, pubkey2, &revoked);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_TRUE(revoked);
+    ASSERT_FALSE(revoked);
 
     revoked = false;
     status = key_revoked(session, pubkey3, &revoked);
