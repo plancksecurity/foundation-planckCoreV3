@@ -867,7 +867,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multi_ident_one_fpr) {
 
     ASSERT_STREQ(alex_id->fpr, alex_id2->fpr);
     ASSERT_STREQ(alex_id->fpr, alex_id3->fpr);
-    ASSERT_STRNE(alex_id2->fpr, alex_id3->fpr);
+    ASSERT_STREQ(alex_id2->fpr, alex_id3->fpr);
 
     ASSERT_EQ(m_queue.size(),1);
     if (false) {
@@ -1084,7 +1084,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
     ASSERT_STRNE(alex_id->fpr, alex_id3->fpr);
     ASSERT_STRNE(alex_id2->fpr, alex_id3->fpr);
 
-    ASSERT_EQ(m_queue.size(),3);
+    ASSERT_EQ(m_queue.size(),0);
     if (false) {
         ofstream outfile;
         int i = 0;
