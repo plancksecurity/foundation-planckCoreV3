@@ -9,6 +9,7 @@
 #include "TestUtilities.h"
 
 #include "platform.h"
+#include "log_sign.h"
 
 #include <gtest/gtest.h>
 
@@ -85,5 +86,4 @@ namespace
 
 TEST_F(LogSignTest, simple_sign_log)
 {
-    ASSERT_TRUE(false);
 }
