@@ -4,6 +4,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "log_sign.h"
 
@@ -30,17 +31,17 @@ PEP_STATUS log_sign(
         return PEP_CANNOT_FIND_IDENTITY;
     }
 
-    pEp_identity *own_ident = identity_dup(own_identities->ident);
+    *fingerprint_size = strlen(own_identities->ident->fpr) + 1;
+    char *theFingerprint = malloc(*fingerprint_size);
+    strlcpy(theFingerprint, own_identities->ident->fpr, *fingerprint_size);
 
-    PEP_STATUS status = myself(session, own_identities);
+    PEP_STATUS status = sign_only(session, ptext, psize, theFingerprint, stext, ssize);
     if (status != PEP_STATUS_OK) {
-        goto planck_free;
+        free(theFingerprint);
+        *fingerprint = NULL;
+    } else {
+        *fingerprint = theFingerprint;
     }
-
-    status = sign_only(session, own_identities->ident->fpr, ptext, psize, stext, ssize);
-
-planck_free:
-    free_identity(own_ident);
 
     return status;
 }
