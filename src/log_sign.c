@@ -4,6 +4,7 @@
  */
 
 #include "pEpEngine.h"
+#include "keymanagement.h"
 
 PEP_STATUS log_sign(
     PEP_SESSION session,
@@ -14,5 +15,11 @@ PEP_STATUS log_sign(
     char **stext,
     size_t *ssize)
 {
+    identity_list *own_identities;
+    own_identities_retrieve(session, &own_identities);
+    if (!own_identities->ident) {
+        return PEP_CANNOT_FIND_IDENTITY;
+    }
+    //PEP_STATUS status = sign_only(session, fpr, ptext, psize, stext, ssize);
     return PEP_ILLEGAL_VALUE;
 }

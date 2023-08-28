@@ -84,8 +84,8 @@ namespace
 
 } // namespace
 
-TEST_F(LogSignTest, simple_sign_log)
+TEST_F(LogSignTest, no_own_identity)
 {
     PEP_STATUS status = log_sign(session, "", 0, NULL, 0, NULL, 0);
-    ASSERT_TRUE(status == PEP_STATUS_OK);
+    EXPECT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
 }
