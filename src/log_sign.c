@@ -5,7 +5,7 @@
 
 #include "pEpEngine.h"
 
-PEP_STATUS sign_log(
+PEP_STATUS log_sign(
     PEP_SESSION session,
     const char *ptext,
     size_t psize,
