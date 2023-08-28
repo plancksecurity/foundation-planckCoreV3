@@ -17,12 +17,10 @@ PEP_STATUS log_sign(
     PEP_SESSION session,
     const char *ptext,
     size_t psize,
-    char **fingerprint,
-    size_t *fingerprint_size,
     char **stext,
     size_t *ssize)
 {
-    PEP_REQUIRE(session && ptext && fingerprint && fingerprint_size);
+    PEP_REQUIRE(session && ptext);
 
     identity_list *own_identities;
     own_identities_retrieve(session, &own_identities);
@@ -31,17 +29,7 @@ PEP_STATUS log_sign(
         return PEP_CANNOT_FIND_IDENTITY;
     }
 
-    *fingerprint_size = strlen(own_identities->ident->fpr) + 1;
-    char *theFingerprint = malloc(*fingerprint_size);
-    strlcpy(theFingerprint, own_identities->ident->fpr, *fingerprint_size);
-
-    PEP_STATUS status = sign_only(session, ptext, psize, theFingerprint, stext, ssize);
-    if (status != PEP_STATUS_OK) {
-        free(theFingerprint);
-        *fingerprint = NULL;
-    } else {
-        *fingerprint = theFingerprint;
-    }
+    PEP_STATUS status = sign_only(session, ptext, psize, own_identities->ident->fpr, stext, ssize);
 
     return status;
 }
