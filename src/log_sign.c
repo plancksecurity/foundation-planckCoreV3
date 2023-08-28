@@ -41,7 +41,7 @@ PEP_STATUS log_verify(
     const char *stext,
     size_t ssize)
 {
-    stringlist_t *keylist;
+    stringlist_t *keylist; // TODO: Remove?
     PEP_STATUS status = verify_text(session, ptext, psize, stext, ssize, &keylist);
     free_stringlist(keylist);
     return status;

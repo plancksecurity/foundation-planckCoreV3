@@ -86,28 +86,24 @@ namespace
 
 } // namespace
 
-// Have to test all in order, since the DB is not reset between
-// individual `TEST_F` cases.
-TEST_F(LogSignTest, test_flow)
+TEST_F(LogSignTest, roundtrip)
 {
     char *signed_text = NULL;
     size_t signed_size = 0;
-    char *fpr_result = NULL;
-    size_t fpr_result_len = 0;
 
-    PEP_STATUS status = log_sign(session, "", 0, &fpr_result, &fpr_result_len, &signed_text, &signed_size);
+    PEP_STATUS status = log_sign(session, "", 0, &signed_text, &signed_size);
     EXPECT_EQ(status, PEP_CANNOT_FIND_IDENTITY); // no own identity yet
 
-    pEp_identity *test1 = new_identity("test1@example.com",
-                                       NULL,
-                                       "test1",
-                                       "Test 1");
-    ASSERT_NOTNULL(test1);
-    myself(session, test1);
-    ASSERT_NOTNULL(test1->fpr);
+    pEp_identity *test_identity = new_identity("test1@example.com",
+                                               NULL,
+                                               "test1",
+                                               "Test 1");
+    ASSERT_NOTNULL(test_identity);
+    myself(session, test_identity);
+    ASSERT_NOTNULL(test_identity->fpr);
 
-    const char *data = "Some data to sign";
-    const size_t data_size = strlen(data) + 1;
-    status = log_sign(session, data, data_size, &fpr_result, &fpr_result_len, &signed_text, &signed_size);
-    EXPECT_EQ(status, PEP_ILLEGAL_VALUE);
+    const char *text_to_sign = "Some data to sign";
+    const size_t size_text_to_sign = strlen(text_to_sign) + 1;
+    status = log_sign(session, text_to_sign, size_text_to_sign, &signed_text, &signed_size);
+    EXPECT_EQ(status, PEP_STATUS_OK);
 }
