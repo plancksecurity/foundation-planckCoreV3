@@ -6,9 +6,21 @@
 #ifndef LOG_SIGN_H
 #define LOG_SIGN_H
 
+#include "pEpEngine.h"
+
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
+
+    PEP_STATUS sign_log(
+        PEP_SESSION session,
+        const char *ptext,
+        size_t psize,
+        char **fingerprint,
+        size_t **fingerprint_size,
+        char **stext,
+        size_t *ssize);
 
 #ifdef __cplusplus
 }
