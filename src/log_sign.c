@@ -17,7 +17,7 @@ PEP_STATUS log_sign(
     const char *ptext,
     size_t psize,
     char **fingerprint,
-    size_t **fingerprint_size,
+    size_t *fingerprint_size,
     char **stext,
     size_t *ssize)
 {

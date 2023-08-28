@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <string.h>
 #include <iostream>
 
 #include "Engine.h"
@@ -85,14 +86,18 @@ namespace
 
 } // namespace
 
-TEST_F(LogSignTest, no_own_identity)
+// Have to test all in order, since the DB is not reset between
+// individual `TEST_F` cases.
+TEST_F(LogSignTest, test_flow)
 {
-    PEP_STATUS status = log_sign(session, "", 0, NULL, 0, NULL, 0);
-    EXPECT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
-}
+    char *signed_text = NULL;
+    size_t signed_size = 0;
+    char *fpr_result = NULL;
+    size_t fpr_result_len = 0;
 
-TEST_F(LogSignTest, one_valid_own_identity)
-{
+    PEP_STATUS status = log_sign(session, "", 0, &fpr_result, &fpr_result_len, &signed_text, &signed_size);
+    EXPECT_EQ(status, PEP_CANNOT_FIND_IDENTITY); // no own identity yet
+
     pEp_identity *test1 = new_identity("test1@example.com",
                                        NULL,
                                        "test1",
@@ -103,6 +108,6 @@ TEST_F(LogSignTest, one_valid_own_identity)
 
     ASSERT_NOTNULL(test1->fpr);
 
-    PEP_STATUS status = log_sign(session, "", 0, NULL, 0, NULL, 0);
+    status = log_sign(session, "", 0, &fpr_result, &fpr_result_len, &signed_text, &signed_size);
     EXPECT_EQ(status, PEP_ILLEGAL_VALUE);
 }
