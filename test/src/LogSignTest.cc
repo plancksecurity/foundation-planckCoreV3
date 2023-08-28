@@ -8,6 +8,7 @@
 #include "Engine.h"
 #include "TestUtilities.h"
 
+#include "keymanagement.h"
 #include "platform.h"
 #include "log_sign.h"
 
@@ -88,4 +89,20 @@ TEST_F(LogSignTest, no_own_identity)
 {
     PEP_STATUS status = log_sign(session, "", 0, NULL, 0, NULL, 0);
     EXPECT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
+}
+
+TEST_F(LogSignTest, one_valid_own_identity)
+{
+    pEp_identity *test1 = new_identity("test1@example.com",
+                                       NULL,
+                                       "test1",
+                                       "Test 1");
+    ASSERT_NOTNULL(test1);
+
+    myself(session, test1);
+
+    ASSERT_NOTNULL(test1->fpr);
+
+    PEP_STATUS status = log_sign(session, "", 0, NULL, 0, NULL, 0);
+    EXPECT_EQ(status, PEP_ILLEGAL_VALUE);
 }
