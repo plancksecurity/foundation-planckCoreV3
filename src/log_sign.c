@@ -17,9 +17,12 @@ PEP_STATUS log_sign(
 {
     identity_list *own_identities;
     own_identities_retrieve(session, &own_identities);
-    if (!own_identities->ident) {
+    if (!own_identities->ident)
+    {
         return PEP_CANNOT_FIND_IDENTITY;
     }
-    //PEP_STATUS status = sign_only(session, fpr, ptext, psize, stext, ssize);
-    return PEP_ILLEGAL_VALUE;
+
+    PEP_STATUS status = sign_only(session, own_identities->ident->fpr, ptext, psize, stext, ssize);
+
+    return status;
 }
