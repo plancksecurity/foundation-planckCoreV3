@@ -86,4 +86,6 @@ namespace
 
 TEST_F(LogSignTest, simple_sign_log)
 {
+    PEP_STATUS status = log_sign(session, "", 0, NULL, 0, NULL, 0);
+    ASSERT_TRUE(status == PEP_STATUS_OK);
 }
