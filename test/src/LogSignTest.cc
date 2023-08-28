@@ -103,11 +103,11 @@ TEST_F(LogSignTest, test_flow)
                                        "test1",
                                        "Test 1");
     ASSERT_NOTNULL(test1);
-
     myself(session, test1);
-
     ASSERT_NOTNULL(test1->fpr);
 
-    status = log_sign(session, "", 0, &fpr_result, &fpr_result_len, &signed_text, &signed_size);
+    const char *data = "Some data to sign";
+    const size_t data_size = strlen(data) + 1;
+    status = log_sign(session, data, data_size, &fpr_result, &fpr_result_len, &signed_text, &signed_size);
     EXPECT_EQ(status, PEP_ILLEGAL_VALUE);
 }
