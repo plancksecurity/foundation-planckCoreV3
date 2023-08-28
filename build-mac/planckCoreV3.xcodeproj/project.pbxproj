@@ -262,6 +262,10 @@
 		4322103E2924C94A00AE872F /* echo_api.c in Sources */ = {isa = PBXBuildFile; fileRef = 4322103C2924C94A00AE872F /* echo_api.c */; };
 		432210402924C97E00AE872F /* pEp_log.c in Sources */ = {isa = PBXBuildFile; fileRef = 4322103F2924C97E00AE872F /* pEp_log.c */; };
 		432210412924C97E00AE872F /* pEp_log.c in Sources */ = {isa = PBXBuildFile; fileRef = 4322103F2924C97E00AE872F /* pEp_log.c */; };
+		4363ADED2A9CD24900E28F68 /* log_sign.h in Headers */ = {isa = PBXBuildFile; fileRef = 4363ADCF2A9CD24800E28F68 /* log_sign.h */; };
+		4363ADEE2A9CD24900E28F68 /* log_sign.h in Headers */ = {isa = PBXBuildFile; fileRef = 4363ADCF2A9CD24800E28F68 /* log_sign.h */; };
+		4363ADEF2A9CD24900E28F68 /* log_sign.c in Sources */ = {isa = PBXBuildFile; fileRef = 4363ADEC2A9CD24900E28F68 /* log_sign.c */; };
+		4363ADF02A9CD24900E28F68 /* log_sign.c in Sources */ = {isa = PBXBuildFile; fileRef = 4363ADEC2A9CD24900E28F68 /* log_sign.c */; };
 		43A7D64629DD9BA10031FECB /* libbotan-2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 43A7D64529DD9BA10031FECB /* libbotan-2.a */; };
 		43B2AD612923EE2500D8C6F8 /* libpep_engine_sequoia_backend.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 43B2AD422923EE2500D8C6F8 /* libpep_engine_sequoia_backend.a */; };
 		43C1FB1A29952A1200336111 /* sql_reliability.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C1FAF829952A1200336111 /* sql_reliability.h */; };
@@ -564,6 +568,8 @@
 		432210332924C65A00AE872F /* media_key.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = media_key.c; path = ../src/media_key.c; sourceTree = "<group>"; };
 		4322103C2924C94A00AE872F /* echo_api.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = echo_api.c; path = ../src/echo_api.c; sourceTree = "<group>"; };
 		4322103F2924C97E00AE872F /* pEp_log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pEp_log.c; path = ../src/pEp_log.c; sourceTree = "<group>"; };
+		4363ADCF2A9CD24800E28F68 /* log_sign.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = log_sign.h; path = ../src/log_sign.h; sourceTree = "<group>"; };
+		4363ADEC2A9CD24900E28F68 /* log_sign.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = log_sign.c; path = ../src/log_sign.c; sourceTree = "<group>"; };
 		43A7D64529DD9BA10031FECB /* libbotan-2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libbotan-2.a"; path = "../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libbotan-2.a"; sourceTree = "<group>"; };
 		43A7D64729DD9C1D0031FECB /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
 		43A7D64929DD9CAB0031FECB /* libc++.1.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.1.tbd"; path = "usr/lib/libc++.1.tbd"; sourceTree = SDKROOT; };
@@ -722,6 +728,8 @@
 		64A8264B1B455C5600EECAF0 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				4363ADEC2A9CD24900E28F68 /* log_sign.c */,
+				4363ADCF2A9CD24800E28F68 /* log_sign.h */,
 				43F2D1A829A7681A000572FA /* string_utilities.c */,
 				43F2D1C729A7681A000572FA /* string_utilities.h */,
 				43C1FB1729952A1200336111 /* pEp_rmd160.c */,
@@ -914,6 +922,7 @@
 				151585BF26CE5397003D8685 /* internal_format.h in Headers */,
 				151585CA26CE5397003D8685 /* pgp_sequoia.h in Headers */,
 				151585BA26CE5397003D8685 /* transport.h in Headers */,
+				4363ADEE2A9CD24900E28F68 /* log_sign.h in Headers */,
 				151585C426CE5397003D8685 /* message_api_internal.h in Headers */,
 				151585B426CE5397003D8685 /* message_api.h in Headers */,
 				151585D326CE5397003D8685 /* engine_sql.h in Headers */,
@@ -956,6 +965,7 @@
 				1515835A26CE4F82003D8685 /* message_api.h in Headers */,
 				1515836226CE4F82003D8685 /* group_internal.h in Headers */,
 				1515834526CE4F81003D8685 /* pgp_sequoia_internal.h in Headers */,
+				4363ADED2A9CD24900E28F68 /* log_sign.h in Headers */,
 				1515831726CE4F81003D8685 /* pEp_internal.h in Headers */,
 				1515834226CE4F81003D8685 /* baseprotocol.h in Headers */,
 				43C1FB2C29952A4500336111 /* echo_api.h in Headers */,
@@ -1335,6 +1345,7 @@
 				1515853326CE536A003D8685 /* Sync_event.c in Sources */,
 				1515854526CE536B003D8685 /* sync_api.c in Sources */,
 				1515853226CE536A003D8685 /* TrustSync_fsm.c in Sources */,
+				4363ADF02A9CD24900E28F68 /* log_sign.c in Sources */,
 				1515853426CE536A003D8685 /* bloblist.c in Sources */,
 				1515852A26CE536A003D8685 /* baseprotocol.c in Sources */,
 				1515854326CE536B003D8685 /* etpan_mime.c in Sources */,
@@ -1396,6 +1407,7 @@
 				1515832226CE4F81003D8685 /* security_checks.c in Sources */,
 				43C1FB1C29952A1200336111 /* pEp_rmd160.c in Sources */,
 				1515833C26CE4F81003D8685 /* stringlist.c in Sources */,
+				4363ADEF2A9CD24900E28F68 /* log_sign.c in Sources */,
 				1515833326CE4F81003D8685 /* keymanagement.c in Sources */,
 				1515839126CE4FB8003D8685 /* baseprotocol.c in Sources */,
 				1515834726CE4F81003D8685 /* mime.c in Sources */,
