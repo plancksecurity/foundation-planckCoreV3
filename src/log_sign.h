@@ -13,7 +13,7 @@ extern "C"
 {
 #endif
 
-    PEP_STATUS log_sign(
+PEP_STATUS log_sign(
         PEP_SESSION session,
         const char *ptext,
         size_t psize,
@@ -21,6 +21,13 @@ extern "C"
         size_t *fingerprint_size,
         char **stext,
         size_t *ssize);
+
+PEP_STATUS log_verify(
+    PEP_SESSION session,
+    const char *ptext,
+    size_t psize,
+    const char *stext,
+    size_t ssize);
 
 #ifdef __cplusplus
 }

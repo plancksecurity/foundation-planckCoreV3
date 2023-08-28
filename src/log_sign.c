@@ -45,3 +45,16 @@ PEP_STATUS log_sign(
 
     return status;
 }
+
+PEP_STATUS log_verify(
+    PEP_SESSION session,
+    const char *ptext,
+    size_t psize,
+    const char *stext,
+    size_t ssize)
+{
+    stringlist_t *keylist;
+    PEP_STATUS status = verify_text(session, ptext, psize, stext, ssize, &keylist);
+    free_stringlist(keylist);
+    return status;
+}
