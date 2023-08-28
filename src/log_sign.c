@@ -30,7 +30,17 @@ PEP_STATUS log_sign(
         return PEP_CANNOT_FIND_IDENTITY;
     }
 
-    PEP_STATUS status = sign_only(session, own_identities->ident->fpr, ptext, psize, stext, ssize);
+    pEp_identity *own_ident = identity_dup(own_identities->ident);
+
+    PEP_STATUS status = myself(session, own_identities);
+    if (status != PEP_STATUS_OK) {
+        goto planck_free;
+    }
+
+    status = sign_only(session, own_identities->ident->fpr, ptext, psize, stext, ssize);
+
+planck_free:
+    free_identity(own_ident);
 
     return status;
 }
