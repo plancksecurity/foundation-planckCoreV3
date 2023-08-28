@@ -7,7 +7,7 @@ HERE:=$(CURDIR)
 
 GTEST_SRC_DIR:=/usr/src/gtest
 GTEST_INC_DIR:=$(GTEST_SRC_DIR)/include
-GTEST_PL:=$(HOME)/src/gtest-parallel/gtest_parallel.py
+GTEST_PL?=$(HOME)/src/gtest-parallel/gtest_parallel.py
 
 include ../Makefile.conf # This should import changed values for the above from
                          # local.conf
