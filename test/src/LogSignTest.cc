@@ -103,7 +103,10 @@ TEST_F(LogSignTest, roundtrip)
     ASSERT_NOTNULL(test_identity->fpr);
 
     const char *text_to_sign = "Some data to sign";
-    const size_t size_text_to_sign = strlen(text_to_sign) + 1;
-    status = log_sign(session, text_to_sign, size_text_to_sign, &signed_text, &signed_size);
+    const size_t text_to_sign_size = strlen(text_to_sign) + 1;
+    status = log_sign(session, text_to_sign, text_to_sign_size, &signed_text, &signed_size);
     EXPECT_EQ(status, PEP_STATUS_OK);
+
+    status = log_verify(session, text_to_sign, text_to_sign_size, signed_text, signed_size);
+    EXPECT_EQ(status, PEP_VERIFIED);
 }
