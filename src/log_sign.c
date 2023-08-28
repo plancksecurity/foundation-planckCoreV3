@@ -3,8 +3,14 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
+#include <stdlib.h>
+
+#include "log_sign.h"
+
 #include "pEpEngine.h"
+#include "pEpEngine_internal.h"
 #include "keymanagement.h"
+#include "pEp_debug.h"
 
 PEP_STATUS log_sign(
     PEP_SESSION session,
@@ -15,6 +21,8 @@ PEP_STATUS log_sign(
     char **stext,
     size_t *ssize)
 {
+    PEP_REQUIRE(session && ptext && fingerprint && fingerprint_size);
+
     identity_list *own_identities;
     own_identities_retrieve(session, &own_identities);
     if (!own_identities->ident)
