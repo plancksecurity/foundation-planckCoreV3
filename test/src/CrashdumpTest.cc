@@ -92,5 +92,6 @@ TEST_F(CrashdumpTest, check_crashdump) {
                    include PEP_LOG_DESTINATION_DATABASE -- see
                    local.conf.example . */
                 || status2 == PEP_RECORD_NOT_FOUND);
-    output_stream << text;
+    // Note: This makes googletest v1.12.x mark the test as failing, without details.
+    //output_stream << text;
 }
