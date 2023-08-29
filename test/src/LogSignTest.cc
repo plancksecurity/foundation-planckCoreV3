@@ -6,14 +6,16 @@
 #include <string.h>
 #include <iostream>
 
+#include <gtest/gtest.h>
+
 #include "Engine.h"
 #include "TestUtilities.h"
 
 #include "keymanagement.h"
 #include "platform.h"
-#include "log_sign.h"
+#include "key_reset.h"
 
-#include <gtest/gtest.h>
+#include "log_sign.h"
 
 namespace
 {
@@ -94,13 +96,19 @@ TEST_F(LogSignTest, roundtrip)
     PEP_STATUS status = log_sign(session, "", 0, &signed_text, &signed_size);
     EXPECT_EQ(status, PEP_CANNOT_FIND_IDENTITY); // no own identity yet
 
-    pEp_identity *test_identity = new_identity("test1@example.com",
+    const char *user_address = "test1@example.com";
+    const char *user_id = "test1";
+    const char *user_name = "Test 1";
+
+    pEp_identity *test_identity = new_identity(user_address,
                                                NULL,
-                                               "test1",
-                                               "Test 1");
+                                               user_id,
+                                               user_name);
     ASSERT_NOTNULL(test_identity);
     myself(session, test_identity);
     ASSERT_NOTNULL(test_identity->fpr);
+
+    const char *fpr1 = strdup(test_identity->fpr);
 
     const char *text_to_sign = "Some data to sign";
     const size_t text_to_sign_size = strlen(text_to_sign) + 1;
@@ -109,4 +117,19 @@ TEST_F(LogSignTest, roundtrip)
 
     status = log_verify(session, text_to_sign, text_to_sign_size, signed_text, signed_size);
     EXPECT_EQ(status, PEP_VERIFIED);
+
+    status = key_reset_all_own_keys_ignoring_device_group(session);
+    EXPECT_EQ(status, PEP_STATUS_OK);
+
+    pEp_identity *test_identity2 = new_identity(user_address,
+                                               NULL,
+                                               user_id,
+                                               user_name);
+    ASSERT_NOTNULL(test_identity2);
+    myself(session, test_identity2);
+    ASSERT_NOTNULL(test_identity2->fpr);
+
+    ASSERT_STRNE(fpr1, test_identity2->fpr);
+
+    free((void *) fpr1);
 }
