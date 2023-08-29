@@ -115,11 +115,17 @@ TEST_F(LogSignTest, roundtrip)
     const char *text_to_sign1 = "Some data to sign";
     const size_t text_to_sign_size1 = strlen(text_to_sign1);
     status = log_sign(session, text_to_sign1, text_to_sign_size1, &signed_text, &signed_size);
-    EXPECT_EQ(status, PEP_STATUS_OK);
-    EXPECT_EQ(strlen(signed_text), signed_size);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(strlen(signed_text), signed_size);
 
-    status = log_verify(session, text_to_sign1, text_to_sign_size1, signed_text, signed_size);
-    EXPECT_EQ(status, PEP_VERIFIED);
+    char *signing_key = NULL;
+
+    status = log_verify(session, text_to_sign1, text_to_sign_size1, signed_text, signed_size, &signing_key);
+    ASSERT_EQ(status, PEP_VERIFIED);
+    ASSERT_NOTNULL(signing_key);
+    ASSERT_STREQ(signing_key, fpr1);
+    free(signing_key);
+    signing_key = NULL;
 
     // Reset our keys, so our own identity #2 will have a different one,
     // but the old one should still be availabe for verifying.
@@ -136,19 +142,22 @@ TEST_F(LogSignTest, roundtrip)
 
     ASSERT_STRNE(fpr1, test_identity2->fpr);
 
-    free((void *) fpr1);
-
     // Note that the key we originally used to sign this has been reset, that is
     // exchanged with a new own key. Still, verification should work forever.
     // But note the changed status.
-    status = log_verify(session, text_to_sign1, text_to_sign_size1, signed_text, signed_size);
-    EXPECT_EQ(status, PEP_VERIFY_SIGNER_KEY_REVOKED);
+    status = log_verify(session, text_to_sign1, text_to_sign_size1, signed_text, signed_size, &signing_key);
+    ASSERT_EQ(status, PEP_VERIFY_SIGNER_KEY_REVOKED);
+    ASSERT_NOTNULL(signing_key);
+    ASSERT_STREQ(signing_key, fpr1);
+    free(signing_key);
+    signing_key = NULL;
 
     // Try to verify a different text that should not match the signature.
     const char *text_to_sign2 = "Other text, not signed";
     const size_t text_to_sign_size2 = strlen(text_to_sign2);
-    status = log_verify(session, text_to_sign2, text_to_sign_size2, signed_text, signed_size);
+    status = log_verify(session, text_to_sign2, text_to_sign_size2, signed_text, signed_size, &signing_key);
+    ASSERT_NULL(signing_key);
+    free(signing_key); // just in case
 
-    // This is bad, and makes it unusable.
-    EXPECT_EQ(status, PEP_VERIFY_SIGNER_KEY_REVOKED);
+    free((void *) fpr1);
 }
