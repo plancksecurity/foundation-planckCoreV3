@@ -39,21 +39,10 @@ PEP_STATUS log_verify(
     const char *ptext,
     size_t psize,
     const char *stext,
-    size_t ssize,
-    char **signing_key)
+    size_t ssize)
 {
-    stringlist_t *keylist;
+    stringlist_t *keylist; // TODO: Remove?
     PEP_STATUS status = verify_text(session, ptext, psize, stext, ssize, &keylist);
-
-    if (keylist && keylist->value)
-    {
-        *signing_key = strdup(keylist->value);
-    }
-    else
-    {
-        *signing_key = NULL;
-    }
-
     free_stringlist(keylist);
     return status;
 }

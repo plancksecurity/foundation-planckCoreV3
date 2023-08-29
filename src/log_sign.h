@@ -44,7 +44,6 @@ extern "C"
      *  @param[in] psize The size of the text to verify, in bytes, excluding any terminating \0
      *  @param[out] stext The signature text
      *  @param[out] ssize The size of the signature text, in bytes, excluding any terminating \0
-     *  @param[out] signing_key The fingerprint of the key the message was signed with
      *
      *  @retval PEP_STATUS_OK success
      *  @retval PEP_VERIFIED success
@@ -56,8 +55,7 @@ extern "C"
         const char *ptext,
         size_t psize,
         const char *stext,
-        size_t ssize,
-        char **signing_key);
+        size_t ssize);
 
 #ifdef __cplusplus
 }
