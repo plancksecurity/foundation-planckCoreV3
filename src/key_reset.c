@@ -18,6 +18,7 @@
     * 2023-07 key_reset() function modified to call _key_reset().
     * 2023-07 key_reset_ignoring_device_group() function added.
     * 2023-07 key_reset_all_own_keys_ignoring_device_group() function added.
+    * 2023-08-23/DZ _key_reset will simply leave the device group if it's an own key.
     */
 
 #include "pEp_internal.h"
@@ -1843,6 +1844,15 @@ PEP_STATUS _key_reset(
             bool is_in_device_group = false;
             if (!ignore_device_group) {
                 status = deviceGrouped(session, &is_in_device_group);
+            }
+
+            // `leave_device_group` will reset own keys anyways, which means we are done.
+            // Please note that in case the user has more than one own key that is getting reset,
+            // this will happen more than once in the same call,
+            // but it looks like this does no harm.
+            if (status == PEP_STATUS_OK && is_in_device_group) {
+                status = leave_device_group(session);
+                goto pEp_free;
             }
              
             // Regardless of the single identity this is for, for own keys, we do this 
