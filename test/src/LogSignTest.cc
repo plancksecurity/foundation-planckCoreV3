@@ -112,12 +112,13 @@ TEST_F(LogSignTest, roundtrip)
 
     const char *fpr1 = strdup(test_identity->fpr);
 
-    const char *text_to_sign = "Some data to sign";
-    const size_t text_to_sign_size = strlen(text_to_sign) + 1;
-    status = log_sign(session, text_to_sign, text_to_sign_size, &signed_text, &signed_size);
+    const char *text_to_sign1 = "Some data to sign";
+    const size_t text_to_sign_size1 = strlen(text_to_sign1);
+    status = log_sign(session, text_to_sign1, text_to_sign_size1, &signed_text, &signed_size);
     EXPECT_EQ(status, PEP_STATUS_OK);
+    EXPECT_EQ(strlen(signed_text), signed_size);
 
-    status = log_verify(session, text_to_sign, text_to_sign_size, signed_text, signed_size);
+    status = log_verify(session, text_to_sign1, text_to_sign_size1, signed_text, signed_size);
     EXPECT_EQ(status, PEP_VERIFIED);
 
     // Reset our keys, so our own identity #2 will have a different one,
@@ -140,6 +141,6 @@ TEST_F(LogSignTest, roundtrip)
     // Note that the key we originally used to sign this has been reset, that is
     // exchanged with a new own key. Still, verification should work forever.
     // But note the changed status.
-    status = log_verify(session, text_to_sign, text_to_sign_size, signed_text, signed_size);
+    status = log_verify(session, text_to_sign1, text_to_sign_size1, signed_text, signed_size);
     EXPECT_EQ(status, PEP_VERIFY_SIGNER_KEY_REVOKED);
 }
