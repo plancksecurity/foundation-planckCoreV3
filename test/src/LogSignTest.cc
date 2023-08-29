@@ -96,10 +96,12 @@ TEST_F(LogSignTest, roundtrip)
     PEP_STATUS status = log_sign(session, "", 0, &signed_text, &signed_size);
     EXPECT_EQ(status, PEP_CANNOT_FIND_IDENTITY); // no own identity yet
 
+    // Own identity data
     const char *user_address = "test1@example.com";
     const char *user_id = "test1";
     const char *user_name = "Test 1";
 
+    // First own identity with which we will sign and verify
     pEp_identity *test_identity = new_identity(user_address,
                                                NULL,
                                                user_id,
@@ -118,6 +120,8 @@ TEST_F(LogSignTest, roundtrip)
     status = log_verify(session, text_to_sign, text_to_sign_size, signed_text, signed_size);
     EXPECT_EQ(status, PEP_VERIFIED);
 
+    // Reset our keys, so our own identity #2 will have a different one,
+    // but the old one should still be availabe for verifying.
     status = key_reset_all_own_keys_ignoring_device_group(session);
     EXPECT_EQ(status, PEP_STATUS_OK);
 
@@ -132,4 +136,10 @@ TEST_F(LogSignTest, roundtrip)
     ASSERT_STRNE(fpr1, test_identity2->fpr);
 
     free((void *) fpr1);
+
+    // Note that the key we originally used to sign this has been reset, that is
+    // exchanged with a new own key. Still, verification should work forever.
+    // But note the changed status.
+    status = log_verify(session, text_to_sign, text_to_sign_size, signed_text, signed_size);
+    EXPECT_EQ(status, PEP_VERIFY_SIGNER_KEY_REVOKED);
 }
