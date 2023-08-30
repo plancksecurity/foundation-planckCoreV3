@@ -13,7 +13,7 @@
 #include "keymanagement.h"
 #include "pEp_debug.h"
 
-PEP_STATUS signer_identity(PEP_SESSION session, pEp_identity **signer_identity)
+PEP_STATUS signing_identity(PEP_SESSION session, pEp_identity **signer_identity)
 {
     *signer_identity = new_identity(AUDIT_LOG_USER_ADDRESS,
                                     NULL,
@@ -32,14 +32,14 @@ PEP_STATUS log_sign(
 {
     PEP_REQUIRE(session && ptext);
 
-    identity_list *own_identities;
-    own_identities_retrieve(session, &own_identities);
-    if (!own_identities->ident)
-    {
-        return PEP_CANNOT_FIND_IDENTITY;
+    pEp_identity *sign_identity = NULL;
+    PEP_STATUS status = signing_identity(session, &sign_identity);
+
+    if (status != PEP_STATUS_OK) {
+        return status;
     }
 
-    PEP_STATUS status = sign_only(session, ptext, psize, own_identities->ident->fpr, stext, ssize);
+    PEP_STATUS status = sign_only(session, ptext, psize, sign_identity->fpr, stext, ssize);
 
     return status;
 }
