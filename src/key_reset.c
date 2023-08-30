@@ -19,6 +19,7 @@
     * 2023-07 key_reset_ignoring_device_group() function added.
     * 2023-07 key_reset_all_own_keys_ignoring_device_group() function added.
     * 2023-08-23/DZ _key_reset will simply leave the device group if it's an own key.
+    * 2023-08-30/DZ Don't ever reset the own identity for audit logging.
     */
 
 #include "pEp_internal.h"
@@ -1742,6 +1743,15 @@ PEP_STATUS _key_reset(
         status = get_default_own_userid(session, &user_id);
         if (status != PEP_STATUS_OK || !user_id)
             goto pEp_free;                    
+    }
+
+    // Skip the own identity for audit logging
+    if (ident && ident->address) {
+        size_t max_cmp_len = strlen(AUDIT_LOG_USER_ADDRESS);
+        int order = strncmp(ident->address, AUDIT_LOG_USER_ADDRESS, max_cmp_len);
+        if (!order) {
+            goto pEp_free;
+        }
     }
     
     // FIXME: Make sure this can't result in a double-free in recursive calls
