@@ -32,14 +32,14 @@ PEP_STATUS log_sign(
 {
     PEP_REQUIRE(session && ptext);
 
-    pEp_identity *sign_identity = NULL;
-    PEP_STATUS status = signing_identity(session, &sign_identity);
+    pEp_identity *the_signing_identity = NULL;
+    PEP_STATUS status = signing_identity(session, &the_signing_identity);
 
     if (status != PEP_STATUS_OK) {
         return status;
     }
 
-    PEP_STATUS status = sign_only(session, ptext, psize, sign_identity->fpr, stext, ssize);
+    PEP_STATUS status = sign_only(session, ptext, psize, the_signing_identity->fpr, stext, ssize);
 
     return status;
 }
