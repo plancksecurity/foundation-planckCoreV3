@@ -20,6 +20,7 @@ PEP_STATUS signing_identity(PEP_SESSION session, pEp_identity **signer_identity)
                                     PEP_OWN_USERID,
                                     "Audit Log Signer");
     PEP_STATUS status = myself(session, *signer_identity);
+    // TODO: Set flags (e.g., no sync)
     return status;
 }
 
