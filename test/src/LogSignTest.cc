@@ -105,13 +105,12 @@ TEST_F(LogSignTest, roundtrip)
     EXPECT_EQ(status, PEP_STATUS_OK);
 
     status = log_verify(session, text_to_sign1, text_to_sign_size1, signed_text, signed_size);
-    EXPECT_EQ(status, PEP_VERIFY_SIGNER_KEY_REVOKED);
+    EXPECT_EQ(status, PEP_VERIFIED);
 
     // Try to verify a different text that should not match the signature.
     const char *text_to_sign2 = "Other text, not signed";
     const size_t text_to_sign_size2 = strlen(text_to_sign2);
     status = log_verify(session, text_to_sign2, text_to_sign_size2, signed_text, signed_size);
 
-    // This is bad, and makes it unusable.
-    EXPECT_EQ(status, PEP_VERIFY_SIGNER_KEY_REVOKED);
+    EXPECT_EQ(status, PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH);
 }
