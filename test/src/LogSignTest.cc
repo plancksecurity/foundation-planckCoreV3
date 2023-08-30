@@ -90,27 +90,46 @@ namespace
 
 TEST_F(LogSignTest, roundtrip)
 {
+    // Some data
     size_t signed_size = 0;
     char *signed_text = NULL;
     const char *text_to_sign1 = "Some data to sign";
     const size_t text_to_sign_size1 = strlen(text_to_sign1);
 
+    // Most basic signing. Should work out of the box.
     PEP_STATUS status = log_sign(session, text_to_sign1, text_to_sign_size1, &signed_text, &signed_size);
-    EXPECT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(status, PEP_STATUS_OK);
 
+    // Verify.
     status = log_verify(session, text_to_sign1, text_to_sign_size1, signed_text, signed_size);
-    EXPECT_EQ(status, PEP_VERIFIED);
+    ASSERT_EQ(status, PEP_VERIFIED);
 
     status = key_reset_all_own_keys_ignoring_device_group(session);
-    EXPECT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(status, PEP_STATUS_OK);
 
+    // Verify after all own keys have been reset (which should skip the identity used for signing).
     status = log_verify(session, text_to_sign1, text_to_sign_size1, signed_text, signed_size);
-    EXPECT_EQ(status, PEP_VERIFIED);
+    ASSERT_EQ(status, PEP_VERIFIED);
 
     // Try to verify a different text that should not match the signature.
     const char *text_to_sign2 = "Other text, not signed";
     const size_t text_to_sign_size2 = strlen(text_to_sign2);
     status = log_verify(session, text_to_sign2, text_to_sign_size2, signed_text, signed_size);
+    ASSERT_EQ(status, PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH);
 
-    EXPECT_EQ(status, PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH);
+    // Get the default user id.
+    char *default_user_id = NULL;
+    status = get_default_own_userid(session, &default_user_id);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    // Try to directly reset the identity used for signing.
+    pEp_identity *audit_ident = new_identity(AUDIT_LOG_USER_ADDRESS, NULL, default_user_id, AUDIT_LOG_USER_NAME);
+    status = myself(session, audit_ident);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    status = key_reset_identity(session, audit_ident, audit_ident->fpr);
+
+    // And verify the signature again.
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    status = log_verify(session, text_to_sign1, text_to_sign_size1, signed_text, signed_size);
+    ASSERT_EQ(status, PEP_VERIFIED);
 }
