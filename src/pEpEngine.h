@@ -5,6 +5,7 @@
  */
 
  // 07.08.2023/IP - added method import_extrakey_with_fpr_return
+ // 30.08.2320/DZ - add special user address for the identity signing audit log entries
 
 #ifndef PEP_ENGINE_H
 #define PEP_ENGINE_H
@@ -62,6 +63,7 @@ extern "C" {
 
 #define PEP_OWN_USERID "pEp_own_userId"
 
+#define AUDIT_LOG_USER_ADDRESS "audit_log_sign@planck.security"
 
 // This minimum version is only used in update_pEp_user_trust_vals; the code
 // there is subtler than one might think.  If I (positron) am interpreting it
