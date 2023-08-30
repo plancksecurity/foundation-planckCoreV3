@@ -94,7 +94,7 @@ TEST_F(LogSignTest, roundtrip)
     size_t signed_size = 0;
 
     PEP_STATUS status = log_sign(session, "", 0, &signed_text, &signed_size);
-    EXPECT_EQ(status, PEP_CANNOT_FIND_IDENTITY); // no own identity yet
+    EXPECT_EQ(status, PEP_STATUS_OK);
 
     return; // TODO
 
