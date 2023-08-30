@@ -90,10 +90,12 @@ namespace
 
 TEST_F(LogSignTest, roundtrip)
 {
-    char *signed_text = NULL;
     size_t signed_size = 0;
+    char *signed_text = NULL;
+    const char *text_to_sign1 = "Some data to sign";
+    const size_t text_to_sign_size1 = strlen(text_to_sign1);
 
-    PEP_STATUS status = log_sign(session, "", 0, &signed_text, &signed_size);
+    PEP_STATUS status = log_sign(session, text_to_sign1, text_to_sign_size1, &signed_text, &signed_size);
     EXPECT_EQ(status, PEP_STATUS_OK);
 
     return; // TODO
@@ -114,8 +116,6 @@ TEST_F(LogSignTest, roundtrip)
 
     const char *fpr1 = strdup(test_identity->fpr);
 
-    const char *text_to_sign1 = "Some data to sign";
-    const size_t text_to_sign_size1 = strlen(text_to_sign1);
     status = log_sign(session, text_to_sign1, text_to_sign_size1, &signed_text, &signed_size);
     EXPECT_EQ(status, PEP_STATUS_OK);
     EXPECT_EQ(strlen(signed_text), signed_size);
@@ -129,16 +129,16 @@ TEST_F(LogSignTest, roundtrip)
     EXPECT_EQ(status, PEP_STATUS_OK);
 
     pEp_identity *test_identity2 = new_identity(user_address,
-                                               NULL,
-                                               user_id,
-                                               user_name);
+                                                NULL,
+                                                user_id,
+                                                user_name);
     ASSERT_NOTNULL(test_identity2);
     myself(session, test_identity2);
     ASSERT_NOTNULL(test_identity2->fpr);
 
     ASSERT_STRNE(fpr1, test_identity2->fpr);
 
-    free((void *) fpr1);
+    free((void *)fpr1);
 
     // Note that the key we originally used to sign this has been reset, that is
     // exchanged with a new own key. Still, verification should work forever.
