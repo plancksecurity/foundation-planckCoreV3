@@ -13,6 +13,16 @@
 #include "keymanagement.h"
 #include "pEp_debug.h"
 
+PEP_STATUS signer_identity(PEP_SESSION session, pEp_identity **signer_identity)
+{
+    *signer_identity = new_identity(AUDIT_LOG_USER_ADDRESS,
+                                    NULL,
+                                    PEP_OWN_USERID,
+                                    "Audit Log Signer");
+    PEP_STATUS status = (session, signer_identity);
+    return status;
+}
+
 PEP_STATUS log_sign(
     PEP_SESSION session,
     const char *ptext,
