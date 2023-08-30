@@ -19,7 +19,7 @@ PEP_STATUS signing_identity(PEP_SESSION session, pEp_identity **signer_identity)
                                     NULL,
                                     PEP_OWN_USERID,
                                     "Audit Log Signer");
-    PEP_STATUS status = (session, signer_identity);
+    PEP_STATUS status = myself(session, *signer_identity);
     return status;
 }
 
@@ -39,7 +39,7 @@ PEP_STATUS log_sign(
         return status;
     }
 
-    PEP_STATUS status = sign_only(session, ptext, psize, the_signing_identity->fpr, stext, ssize);
+    status = sign_only(session, ptext, psize, the_signing_identity->fpr, stext, ssize);
 
     return status;
 }
