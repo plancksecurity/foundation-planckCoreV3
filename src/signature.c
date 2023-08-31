@@ -1,5 +1,5 @@
 /**
- * @file    sign.c
+ * @file    signature.c
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
@@ -28,7 +28,11 @@ signing_identity(PEP_SESSION session, pEp_identity** signer_identity)
 }
 
 PEP_STATUS
-log_sign(PEP_SESSION session, const char* ptext, size_t psize, char** stext, size_t* ssize)
+signature_for_text(PEP_SESSION session,
+                   const char* ptext,
+                   size_t psize,
+                   char** stext,
+                   size_t* ssize)
 {
     PEP_REQUIRE(session && ptext);
 
@@ -45,7 +49,11 @@ log_sign(PEP_SESSION session, const char* ptext, size_t psize, char** stext, siz
 }
 
 PEP_STATUS
-log_verify(PEP_SESSION session, const char* ptext, size_t psize, const char* stext, size_t ssize)
+verify_signature(PEP_SESSION session,
+                 const char* ptext,
+                 size_t psize,
+                 const char* stext,
+                 size_t ssize)
 {
     stringlist_t* keylist; // not used, but needed to satisfy the API
     PEP_STATUS status = verify_text(session, ptext, psize, stext, ssize, &keylist);
