@@ -15,7 +15,7 @@ extern "C"
 
     /**
      *  <!--       log_sign()       -->
-     * 
+     *
      *  @brief Calculates a signature for a given input text.
      *
      *  @param[in] session session
@@ -27,16 +27,15 @@ extern "C"
      *  @retval PEP_STATUS_OK         success
      *
      */
-    PEP_STATUS log_sign(
-        PEP_SESSION session,
-        const char *ptext,
-        size_t psize,
-        char **stext,
-        size_t *ssize);
+    PEP_STATUS log_sign(PEP_SESSION session,
+                        const char* ptext,
+                        size_t psize,
+                        char** stext,
+                        size_t* ssize);
 
     /**
      *  <!--       log_verify()       -->
-     * 
+     *
      *  @brief Verifies that a given text corresponds to a given signature.
      *
      *  @param[in] session session
@@ -50,12 +49,11 @@ extern "C"
      *  @retval PEP_VERIFY_SIGNER_KEY_REVOKED success
      *
      */
-    PEP_STATUS log_verify(
-        PEP_SESSION session,
-        const char *ptext,
-        size_t psize,
-        const char *stext,
-        size_t ssize);
+    PEP_STATUS log_verify(PEP_SESSION session,
+                          const char* ptext,
+                          size_t psize,
+                          const char* stext,
+                          size_t ssize);
 
 #ifdef __cplusplus
 }

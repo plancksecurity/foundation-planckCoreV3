@@ -8,20 +8,18 @@
 
 #include "log_sign.h"
 
+#include "keymanagement.h"
 #include "pEpEngine.h"
 #include "pEpEngine_internal.h"
-#include "keymanagement.h"
 #include "pEp_debug.h"
 
-PEP_STATUS signing_identity(PEP_SESSION session, pEp_identity **signer_identity)
+PEP_STATUS
+signing_identity(PEP_SESSION session, pEp_identity** signer_identity)
 {
-    *signer_identity = new_identity(SIGNING_IDENTITY_USER_ADDRESS,
-                                    NULL,
-                                    PEP_OWN_USERID,
-                                    SIGNING_IDENTITY_USER_NAME);
+    *signer_identity =
+      new_identity(SIGNING_IDENTITY_USER_ADDRESS, NULL, PEP_OWN_USERID, SIGNING_IDENTITY_USER_NAME);
     PEP_STATUS status = myself(session, *signer_identity);
-    if (status != PEP_STATUS_OK)
-    {
+    if (status != PEP_STATUS_OK) {
         return status;
     }
 
@@ -29,20 +27,15 @@ PEP_STATUS signing_identity(PEP_SESSION session, pEp_identity **signer_identity)
     return status;
 }
 
-PEP_STATUS log_sign(
-    PEP_SESSION session,
-    const char *ptext,
-    size_t psize,
-    char **stext,
-    size_t *ssize)
+PEP_STATUS
+log_sign(PEP_SESSION session, const char* ptext, size_t psize, char** stext, size_t* ssize)
 {
     PEP_REQUIRE(session && ptext);
 
-    pEp_identity *the_signing_identity = NULL;
+    pEp_identity* the_signing_identity = NULL;
     PEP_STATUS status = signing_identity(session, &the_signing_identity);
 
-    if (status != PEP_STATUS_OK)
-    {
+    if (status != PEP_STATUS_OK) {
         return status;
     }
 
@@ -51,14 +44,10 @@ PEP_STATUS log_sign(
     return status;
 }
 
-PEP_STATUS log_verify(
-    PEP_SESSION session,
-    const char *ptext,
-    size_t psize,
-    const char *stext,
-    size_t ssize)
+PEP_STATUS
+log_verify(PEP_SESSION session, const char* ptext, size_t psize, const char* stext, size_t ssize)
 {
-    stringlist_t *keylist; // TODO: Remove?
+    stringlist_t* keylist; // TODO: Remove?
     PEP_STATUS status = verify_text(session, ptext, psize, stext, ssize, &keylist);
     free_stringlist(keylist);
     return status;
