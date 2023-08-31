@@ -163,3 +163,22 @@ TEST_F(LogSignTest, basically_binary)
     status = verify_signature(session, text_to_sign, length, signed_text, signed_size);
     ASSERT_EQ(status, PEP_VERIFIED);
 }
+
+TEST_F(LogSignTest, reverse_data_with_signature)
+{
+    size_t signed_size = 0;
+    char *signed_text = NULL;
+    const char *text_to_sign1 = "Some data to sign";
+    const size_t text_to_sign_size1 = strlen(text_to_sign1);
+
+    PEP_STATUS status =
+      signature_for_text(session, text_to_sign1, text_to_sign_size1, &signed_text, &signed_size);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    status = verify_signature(session, text_to_sign1, text_to_sign_size1, signed_text, signed_size);
+    ASSERT_EQ(status, PEP_VERIFIED);
+
+    // Accidentally switch signature with data.
+    status = verify_signature(session, signed_text, signed_size, text_to_sign1, text_to_sign_size1);
+    ASSERT_EQ(status, PEP_VERIFIED);
+}
