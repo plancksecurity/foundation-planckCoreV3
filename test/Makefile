@@ -5,7 +5,7 @@
 
 HERE:=$(CURDIR)
 
-GTEST_SRC_DIR:=/usr/src/gtest
+GTEST_SRC_DIR?=/usr/src/gtest
 GTEST_INC_DIR:=$(GTEST_SRC_DIR)/include
 GTEST_PL?=$(HOME)/src/gtest-parallel/gtest_parallel.py
 
