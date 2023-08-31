@@ -22,7 +22,7 @@ namespace {
 class LogSignTest : public ::testing::Test
 {
   public:
-    Engine* engine;
+    Engine *engine;
     PEP_SESSION session;
 
   protected:
@@ -80,8 +80,8 @@ class LogSignTest : public ::testing::Test
     }
 
   private:
-    const char* test_suite_name;
-    const char* test_name;
+    const char *test_suite_name;
+    const char *test_name;
     string test_path;
     // Objects declared here can be used by all tests in the LogSignTest suite.
 };
@@ -92,8 +92,8 @@ TEST_F(LogSignTest, roundtrip)
 {
     // Some data
     size_t signed_size = 0;
-    char* signed_text = NULL;
-    const char* text_to_sign1 = "Some data to sign";
+    char *signed_text = NULL;
+    const char *text_to_sign1 = "Some data to sign";
     const size_t text_to_sign_size1 = strlen(text_to_sign1);
 
     // Most basic signing. Should work out of the box.
@@ -113,18 +113,18 @@ TEST_F(LogSignTest, roundtrip)
     ASSERT_EQ(status, PEP_VERIFIED);
 
     // Try to verify a different text that should not match the signature.
-    const char* text_to_sign2 = "Other text, not signed";
+    const char *text_to_sign2 = "Other text, not signed";
     const size_t text_to_sign_size2 = strlen(text_to_sign2);
     status = verify_signature(session, text_to_sign2, text_to_sign_size2, signed_text, signed_size);
     ASSERT_EQ(status, PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH);
 
     // Get the default user id.
-    char* default_user_id = NULL;
+    char *default_user_id = NULL;
     status = get_default_own_userid(session, &default_user_id);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
     // Try to directly reset the identity used for signing.
-    pEp_identity* audit_ident = new_identity(
+    pEp_identity *audit_ident = new_identity(
       SIGNING_IDENTITY_USER_ADDRESS, NULL, default_user_id, SIGNING_IDENTITY_USER_NAME);
     status = myself(session, audit_ident);
     ASSERT_EQ(status, PEP_STATUS_OK);
@@ -136,7 +136,7 @@ TEST_F(LogSignTest, roundtrip)
     ASSERT_EQ(status, PEP_VERIFIED);
 
     // No one should be able to list the signing identity as own identity.
-    identity_list* all_own_identities;
+    identity_list *all_own_identities;
     status = own_identities_retrieve(session, &all_own_identities);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(all_own_identities);
@@ -147,7 +147,7 @@ TEST_F(LogSignTest, roundtrip)
 TEST_F(LogSignTest, basically_binary)
 {
     size_t signed_size = 0;
-    char* signed_text = NULL;
+    char *signed_text = NULL;
 
     const size_t length = 256;
     char text_to_sign[length];

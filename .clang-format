@@ -1,3 +1,4 @@
 BasedOnStyle: Mozilla
 ColumnLimit: 100
 IndentWidth: 4
+PointerAlignment: Right

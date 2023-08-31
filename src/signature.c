@@ -14,7 +14,7 @@
 #include "pEp_debug.h"
 
 PEP_STATUS
-signing_identity(PEP_SESSION session, pEp_identity** signer_identity)
+signing_identity(PEP_SESSION session, pEp_identity **signer_identity)
 {
     *signer_identity =
       new_identity(SIGNING_IDENTITY_USER_ADDRESS, NULL, PEP_OWN_USERID, SIGNING_IDENTITY_USER_NAME);
@@ -29,14 +29,14 @@ signing_identity(PEP_SESSION session, pEp_identity** signer_identity)
 
 PEP_STATUS
 signature_for_text(PEP_SESSION session,
-                   const char* ptext,
+                   const char *ptext,
                    size_t psize,
-                   char** stext,
-                   size_t* ssize)
+                   char **stext,
+                   size_t *ssize)
 {
     PEP_REQUIRE(session && ptext);
 
-    pEp_identity* the_signing_identity = NULL;
+    pEp_identity *the_signing_identity = NULL;
     PEP_STATUS status = signing_identity(session, &the_signing_identity);
 
     if (status != PEP_STATUS_OK) {
@@ -50,12 +50,12 @@ signature_for_text(PEP_SESSION session,
 
 PEP_STATUS
 verify_signature(PEP_SESSION session,
-                 const char* ptext,
+                 const char *ptext,
                  size_t psize,
-                 const char* stext,
+                 const char *stext,
                  size_t ssize)
 {
-    stringlist_t* keylist; // not used, but needed to satisfy the API
+    stringlist_t *keylist; // not used, but needed to satisfy the API
     PEP_STATUS status = verify_text(session, ptext, psize, stext, ssize, &keylist);
     free_stringlist(keylist);
     return status;

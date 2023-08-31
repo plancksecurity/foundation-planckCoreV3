@@ -28,10 +28,10 @@ extern "C"
      *
      */
     PEP_STATUS signature_for_text(PEP_SESSION session,
-                                  const char* ptext,
+                                  const char *ptext,
                                   size_t psize,
-                                  char** stext,
-                                  size_t* ssize);
+                                  char **stext,
+                                  size_t *ssize);
 
     /**
      *  <!--       verify_signature()       -->
@@ -49,9 +49,9 @@ extern "C"
      *
      */
     PEP_STATUS verify_signature(PEP_SESSION session,
-                                const char* ptext,
+                                const char *ptext,
                                 size_t psize,
-                                const char* stext,
+                                const char *stext,
                                 size_t ssize);
 
 #ifdef __cplusplus
