@@ -44,8 +44,7 @@ extern "C"
      *  @param[out] stext The signature text
      *  @param[out] ssize The size of the signature text, in bytes, excluding any terminating \0
      *
-     *  @retval PEP_STATUS_OK success
-     *  @retval PEP_VERIFIED success
+     *  @retval PEP_VERIFIED The given text has been signed with the given signature.
      *
      */
     PEP_STATUS verify_signature(PEP_SESSION session,
