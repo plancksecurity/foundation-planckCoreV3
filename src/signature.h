@@ -1,5 +1,5 @@
 /**
- * @file    log_sign.h
+ * @file    signature.h
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
@@ -14,7 +14,7 @@ extern "C"
 #endif
 
     /**
-     *  <!--       log_sign()       -->
+     *  <!--       signature_for_text()       -->
      *
      *  @brief Calculates a signature for a given input text.
      *
@@ -27,14 +27,14 @@ extern "C"
      *  @retval PEP_STATUS_OK         success
      *
      */
-    PEP_STATUS log_sign(PEP_SESSION session,
-                        const char* ptext,
-                        size_t psize,
-                        char** stext,
-                        size_t* ssize);
+    PEP_STATUS signature_for_text(PEP_SESSION session,
+                                  const char* ptext,
+                                  size_t psize,
+                                  char** stext,
+                                  size_t* ssize);
 
     /**
-     *  <!--       log_verify()       -->
+     *  <!--       verify_signature()       -->
      *
      *  @brief Verifies that a given text corresponds to a given signature.
      *
@@ -46,14 +46,13 @@ extern "C"
      *
      *  @retval PEP_STATUS_OK success
      *  @retval PEP_VERIFIED success
-     *  @retval PEP_VERIFY_SIGNER_KEY_REVOKED success
      *
      */
-    PEP_STATUS log_verify(PEP_SESSION session,
-                          const char* ptext,
-                          size_t psize,
-                          const char* stext,
-                          size_t ssize);
+    PEP_STATUS verify_signature(PEP_SESSION session,
+                                const char* ptext,
+                                size_t psize,
+                                const char* stext,
+                                size_t ssize);
 
 #ifdef __cplusplus
 }

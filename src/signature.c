@@ -1,12 +1,12 @@
 /**
- * @file    log_sign.c
+ * @file    sign.c
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
 #include <stdlib.h>
 #include <string.h>
 
-#include "log_sign.h"
+#include "signature.h"
 
 #include "keymanagement.h"
 #include "pEpEngine.h"
