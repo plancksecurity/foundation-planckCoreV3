@@ -20,7 +20,12 @@ PEP_STATUS signing_identity(PEP_SESSION session, pEp_identity **signer_identity)
                                     PEP_OWN_USERID,
                                     AUDIT_LOG_USER_NAME);
     PEP_STATUS status = myself(session, *signer_identity);
-    // TODO: Set flags (e.g., no sync)
+    if (status != PEP_STATUS_OK)
+    {
+        return status;
+    }
+
+    status = set_identity_flags(session, signer_identity, PEP_idf_not_for_sync);
     return status;
 }
 
@@ -36,7 +41,8 @@ PEP_STATUS log_sign(
     pEp_identity *the_signing_identity = NULL;
     PEP_STATUS status = signing_identity(session, &the_signing_identity);
 
-    if (status != PEP_STATUS_OK) {
+    if (status != PEP_STATUS_OK)
+    {
         return status;
     }
 
