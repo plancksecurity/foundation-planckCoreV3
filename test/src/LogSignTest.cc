@@ -132,4 +132,12 @@ TEST_F(LogSignTest, roundtrip)
     ASSERT_EQ(status, PEP_STATUS_OK);
     status = log_verify(session, text_to_sign1, text_to_sign_size1, signed_text, signed_size);
     ASSERT_EQ(status, PEP_VERIFIED);
+
+    // No one should be able to list the signing identity as own identity.
+    identity_list *all_own_identities;
+    status = own_identities_retrieve(session, &all_own_identities);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NOTNULL(all_own_identities);
+    ASSERT_NULL(all_own_identities->ident);
+    ASSERT_NULL(all_own_identities->next);
 }
