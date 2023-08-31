@@ -18,6 +18,10 @@ extern "C"
      *
      *  @brief Calculates a signature for a given input text.
      *
+     *  @note A special own identity is used, and at the moment no special handling
+     *   is taking place when it gets renewed just when calling the corresponding
+     *   verification function.
+     *
      *  @param[in] session session
      *  @param[in] ptext The text to sign
      *  @param[in] psize The size of the text to sign, in bytes, excluding any terminating \0
