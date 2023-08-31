@@ -123,7 +123,7 @@ TEST_F(LogSignTest, roundtrip)
     ASSERT_EQ(status, PEP_STATUS_OK);
 
     // Try to directly reset the identity used for signing.
-    pEp_identity *audit_ident = new_identity(AUDIT_LOG_USER_ADDRESS, NULL, default_user_id, AUDIT_LOG_USER_NAME);
+    pEp_identity *audit_ident = new_identity(SIGNING_IDENTITY_USER_ADDRESS, NULL, default_user_id, SIGNING_IDENTITY_USER_NAME);
     status = myself(session, audit_ident);
     ASSERT_EQ(status, PEP_STATUS_OK);
     status = key_reset_identity(session, audit_ident, audit_ident->fpr);

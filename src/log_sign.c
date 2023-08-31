@@ -15,10 +15,10 @@
 
 PEP_STATUS signing_identity(PEP_SESSION session, pEp_identity **signer_identity)
 {
-    *signer_identity = new_identity(AUDIT_LOG_USER_ADDRESS,
+    *signer_identity = new_identity(SIGNING_IDENTITY_USER_ADDRESS,
                                     NULL,
                                     PEP_OWN_USERID,
-                                    AUDIT_LOG_USER_NAME);
+                                    SIGNING_IDENTITY_USER_NAME);
     PEP_STATUS status = myself(session, *signer_identity);
     if (status != PEP_STATUS_OK)
     {

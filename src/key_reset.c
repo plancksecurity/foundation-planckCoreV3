@@ -1748,8 +1748,8 @@ PEP_STATUS _key_reset(
     // Skip any key reset of the (own) identity used for audit logging.
     if (!reset_all_for_user) {
         if (ident && ident->address) {
-            size_t max_cmp_len = strlen(AUDIT_LOG_USER_ADDRESS);
-            int order = strncmp(ident->address, AUDIT_LOG_USER_ADDRESS, max_cmp_len);
+            size_t max_cmp_len = strlen(SIGNING_IDENTITY_USER_ADDRESS);
+            int order = strncmp(ident->address, SIGNING_IDENTITY_USER_ADDRESS, max_cmp_len);
             if (!order) {
                 goto pEp_free;
             }
@@ -1761,7 +1761,7 @@ PEP_STATUS _key_reset(
                 size_t userid_len = strlen(default_user_id);
                 int order = strncmp(default_user_id, user_id, userid_len);
                 if (!order) {
-                    pEp_identity *audit_ident = new_identity(AUDIT_LOG_USER_ADDRESS, NULL, default_user_id, AUDIT_LOG_USER_NAME);
+                    pEp_identity *audit_ident = new_identity(SIGNING_IDENTITY_USER_ADDRESS, NULL, default_user_id, SIGNING_IDENTITY_USER_NAME);
                     if (audit_ident) {
                         status = myself(session, audit_ident);
                         if (status == PEP_STATUS_OK) {

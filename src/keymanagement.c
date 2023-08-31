@@ -1673,8 +1673,8 @@ PEP_STATUS _own_identities_retrieve(
                 flags = (unsigned int)
                     sqlite3_column_int(session->own_identities_retrieve, 5);
 
-                int order1 = strcmp(address, AUDIT_LOG_USER_ADDRESS);
-                int order2 = strcmp(username, AUDIT_LOG_USER_NAME);
+                int order1 = strcmp(address, SIGNING_IDENTITY_USER_ADDRESS);
+                int order2 = strcmp(username, SIGNING_IDENTITY_USER_NAME);
 
                 // only consider own identities that are not the signing identity
                 if (order1 && order2) {
