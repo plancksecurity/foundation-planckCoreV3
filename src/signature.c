@@ -55,7 +55,7 @@ verify_signature(PEP_SESSION session,
                  const char *stext,
                  size_t ssize)
 {
-    stringlist_t *keylist; // not used, but needed to satisfy the API
+    stringlist_t *keylist = NULL; // not used, but needed to satisfy the API
     PEP_STATUS status = verify_text(session, ptext, psize, stext, ssize, &keylist);
     free_stringlist(keylist);
     return status;
