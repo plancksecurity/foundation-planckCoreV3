@@ -7,6 +7,7 @@
  // 17.08.2023/DZ - Don't write to NULL in group_create on error.
  // 18.08.2023/DZ - send_GroupAdopted returns early (but OK) when the manager is an own identity
  // 23.08.2023/IG - Make group rating Reliable for members.
+ // 21.08.2023/IG - group_create(): Allow to re-create a group that is inactive.
 
 #include "group.h"
 #include "group_internal.h"
