@@ -1867,9 +1867,14 @@ DYNAMIC_API PEP_STATUS group_create(
 
     // Do we already have this group?
     bool already_exists = false;
+    bool active = false;
     status = exists_group(session, group_identity, &already_exists);
-    if (already_exists)
-        return PEP_GROUP_EXISTS;
+    if (already_exists) {
+        status = is_group_active(session, group_identity, &active);
+        if (active) {
+            return PEP_GROUP_EXISTS;
+        }
+    }
 
     // set it as a group_identity
     status = set_identity_flags(session, group_identity, group_identity->flags | PEP_idf_group_ident);
@@ -1937,7 +1942,9 @@ DYNAMIC_API PEP_STATUS group_create(
 
     PEP_SQL_BEGIN_EXCLUSIVE_TRANSACTION();
 
-    status = create_group_entry(session, _group);
+    if (!already_exists) {
+        status = create_group_entry(session, _group);
+    }
 
     if (status == PEP_STATUS_OK) {
         status = group_enable(session, group_ident_clone);
