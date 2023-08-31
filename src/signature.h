@@ -19,8 +19,8 @@ extern "C"
      *  @brief Calculates a signature for a given input text.
      *
      *  @note A special own identity is used, and at the moment no special handling
-     *   is taking place when it gets renewed just when calling the corresponding
-     *   verification function.
+     *   is taking place when it gets renewed between a call to generating a signature
+     *   and trying to verify it.
      *
      *  @param[in] session session
      *  @param[in] ptext The text to sign
