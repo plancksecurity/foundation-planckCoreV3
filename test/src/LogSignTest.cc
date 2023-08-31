@@ -180,5 +180,5 @@ TEST_F(LogSignTest, reverse_data_with_signature)
 
     // Accidentally switch signature with data.
     status = verify_signature(session, signed_text, signed_size, text_to_sign1, text_to_sign_size1);
-    ASSERT_EQ(status, PEP_VERIFIED);
+    ASSERT_EQ(status, PEP_VERIFY_NO_KEY);
 }
