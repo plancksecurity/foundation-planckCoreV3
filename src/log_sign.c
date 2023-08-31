@@ -25,7 +25,7 @@ PEP_STATUS signing_identity(PEP_SESSION session, pEp_identity **signer_identity)
         return status;
     }
 
-    status = set_identity_flags(session, signer_identity, PEP_idf_not_for_sync);
+    status = set_identity_flags(session, *signer_identity, PEP_idf_not_for_sync);
     return status;
 }
 
