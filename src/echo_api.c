@@ -918,8 +918,8 @@ PEP_STATUS send_ping_to_unknown_pEp_identities_in_outgoing_message(PEP_SESSION s
        potential Ping recipients: those will simply never be sent to, as they
        will all have a known key.  Here we do not make any effort to avoid
        sending multiple Ping messages to the same recipient. */
-    send_ping_to_unknowns_in(session, ping_from_identity, msg->to, true);
-    send_ping_to_unknowns_in(session, ping_from_identity, msg->cc, true);
+    send_ping_to_unknowns_in(session, ping_from_identity, msg->to, false);
+    send_ping_to_unknowns_in(session, ping_from_identity, msg->cc, false);
     send_ping_to_unknowns_in(session, ping_from_identity, msg->reply_to, true);
     /* Do not consider Bcc identities; the Bcc field should be empty anyway,
        and sending Pings would leak privacy. */
