@@ -47,7 +47,7 @@ log_sign(PEP_SESSION session, const char* ptext, size_t psize, char** stext, siz
 PEP_STATUS
 log_verify(PEP_SESSION session, const char* ptext, size_t psize, const char* stext, size_t ssize)
 {
-    stringlist_t* keylist; // TODO: Remove?
+    stringlist_t* keylist; // not used, but needed to satisfy the API
     PEP_STATUS status = verify_text(session, ptext, psize, stext, ssize, &keylist);
     free_stringlist(keylist);
     return status;
