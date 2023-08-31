@@ -21,6 +21,8 @@
 #include "KeySync_fsm.h"
 #include "media_key.h"
 
+// 2023-08-31/DZ _own_identities_retrieve ignores the signing identity
+
 static bool key_matches_address(PEP_SESSION session, const char* address,
                                 const char* fpr) {
     if (!session || !address || !fpr)
