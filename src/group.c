@@ -1868,9 +1868,9 @@ DYNAMIC_API PEP_STATUS group_create(
 
     // Do we already have this group?
     bool already_exists = false;
-    bool active = false;
     status = exists_group(session, group_identity, &already_exists);
     if (already_exists) {
+        bool active = false;
         status = is_group_active(session, group_identity, &active);
         if (active) {
             return PEP_GROUP_EXISTS;
