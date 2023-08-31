@@ -143,3 +143,23 @@ TEST_F(LogSignTest, roundtrip)
     ASSERT_NULL(all_own_identities->ident);
     ASSERT_NULL(all_own_identities->next);
 }
+
+TEST_F(LogSignTest, basically_binary)
+{
+    size_t signed_size = 0;
+    char* signed_text = NULL;
+
+    const size_t length = 256;
+    char text_to_sign[length];
+
+    for (size_t i = 0; i < length; ++i) {
+        text_to_sign[i] = i;
+    }
+
+    PEP_STATUS status =
+      signature_for_text(session, text_to_sign, length, &signed_text, &signed_size);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    status = verify_signature(session, text_to_sign, length, signed_text, signed_size);
+    ASSERT_EQ(status, PEP_VERIFIED);
+}
