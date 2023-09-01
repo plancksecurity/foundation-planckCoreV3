@@ -1753,7 +1753,7 @@ PEP_STATUS _key_reset(
                 goto pEp_free;
             }
         } else if (user_id && fpr_copy) {
-            int should_skip = 0;
+            bool should_skip = false;
             char *default_user_id = NULL;
             status = get_default_own_userid(session, &default_user_id);
             if (status == PEP_STATUS_OK && default_user_id) {
@@ -1765,7 +1765,7 @@ PEP_STATUS _key_reset(
                         if (status == PEP_STATUS_OK) {
                             int order_fpr = strcmp(fpr_copy, signing_identity->fpr);
                             if (!order_fpr) {
-                                should_skip = 1;
+                                should_skip = true;
                             }
                         }
                     }
