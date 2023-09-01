@@ -134,7 +134,6 @@
     <ClCompile Include="..\src\bloblist.c" />
     <ClCompile Include="..\src\cryptotech.c" />
     <ClCompile Include="..\src\distribution_codec.c" />
-    <ClCompile Include="..\src\echo_api.c" />
     <ClCompile Include="..\src\email.c" />
     <ClCompile Include="..\src\engine_sql.c" />
     <ClCompile Include="..\src\etpan_mime.c" />

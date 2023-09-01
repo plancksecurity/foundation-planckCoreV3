@@ -141,7 +141,7 @@ PEP_STATUS validate_fpr(PEP_SESSION session,
     
     if (!revoked) {
         time_t exp_time = (ident->me ? 
-                           time(NULL) + (7*24*3600) : time(NULL));
+                           time(NULL) + (60) : time(NULL));
 
         // Should not need to decrypt key material                           
         status = key_expired(session, fpr, 
