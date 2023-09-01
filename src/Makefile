@@ -3,6 +3,8 @@
 # This file may be used under the terms of the GNU General Public License version 3
 # see LICENSE.txt
 
+# 2023-09-01/DZ Add signature.h to the installed headers.
+
 include ../Makefile.conf
 
 ifneq ($(BUILD_FOR),OS/390)
