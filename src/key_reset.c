@@ -1760,11 +1760,11 @@ PEP_STATUS _key_reset(
                 size_t userid_len = strlen(default_user_id);
                 int order = strncmp(default_user_id, user_id, userid_len);
                 if (!order) {
-                    pEp_identity *audit_ident = new_identity(SIGNING_IDENTITY_USER_ADDRESS, NULL, default_user_id, SIGNING_IDENTITY_USER_NAME);
-                    if (audit_ident) {
-                        status = myself(session, audit_ident);
+                    pEp_identity *signing_identity = new_identity(SIGNING_IDENTITY_USER_ADDRESS, NULL, default_user_id, SIGNING_IDENTITY_USER_NAME);
+                    if (signing_identity) {
+                        status = myself(session, signing_identity);
                         if (status == PEP_STATUS_OK) {
-                            int order_fpr = strcmp(fpr_copy, audit_ident->fpr);
+                            int order_fpr = strcmp(fpr_copy, signing_identity->fpr);
                             if (!order_fpr) {
                                 should_skip = 1;
                             }
