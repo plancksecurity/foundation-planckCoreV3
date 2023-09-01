@@ -1748,8 +1748,7 @@ PEP_STATUS _key_reset(
     // Skip the signing identity.
     if (!reset_all_for_user) {
         if (ident && ident->address) {
-            size_t max_cmp_len = strlen(SIGNING_IDENTITY_USER_ADDRESS);
-            int order = strncmp(ident->address, SIGNING_IDENTITY_USER_ADDRESS, max_cmp_len);
+            int order = strcmp(ident->address, SIGNING_IDENTITY_USER_ADDRESS);
             if (!order) {
                 goto pEp_free;
             }
