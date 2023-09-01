@@ -1757,8 +1757,7 @@ PEP_STATUS _key_reset(
             char *default_user_id = NULL;
             status = get_default_own_userid(session, &default_user_id);
             if (status == PEP_STATUS_OK && default_user_id) {
-                size_t userid_len = strlen(default_user_id);
-                int order = strncmp(default_user_id, user_id, userid_len);
+                int order = strcmp(default_user_id, user_id);
                 if (!order) {
                     pEp_identity *signing_identity = new_identity(SIGNING_IDENTITY_USER_ADDRESS, NULL, default_user_id, SIGNING_IDENTITY_USER_NAME);
                     if (signing_identity) {
