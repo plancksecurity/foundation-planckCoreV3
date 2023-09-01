@@ -93,5 +93,6 @@ TEST_F(CrashdumpTest, check_crashdump) {
                    local.conf.example . */
                 || status2 == PEP_RECORD_NOT_FOUND);
     // Note: This makes googletest v1.12.x mark the test as failing, without details.
+    // Commenting it out work for both v1.12.x and 1.1.10.x.
     //output_stream << text;
 }
