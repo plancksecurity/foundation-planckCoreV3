@@ -1745,7 +1745,7 @@ PEP_STATUS _key_reset(
             goto pEp_free;                    
     }
 
-    // Skip any key reset of the (own) identity used for audit logging.
+    // Skip the signing identity.
     if (!reset_all_for_user) {
         if (ident && ident->address) {
             size_t max_cmp_len = strlen(SIGNING_IDENTITY_USER_ADDRESS);
