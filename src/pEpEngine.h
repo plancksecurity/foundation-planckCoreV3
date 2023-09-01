@@ -5,7 +5,7 @@
  */
 
  // 07.08.2023/IP - added method import_extrakey_with_fpr_return
- // 30.08.2320/DZ - add special user address for the identity signing audit log entries
+ // 30.08.2320/DZ - add #define for the signing identity
 
 #ifndef PEP_ENGINE_H
 #define PEP_ENGINE_H
