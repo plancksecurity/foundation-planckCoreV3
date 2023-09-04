@@ -406,6 +406,11 @@ DYNAMIC_API PEP_STATUS retrieve_active_member_list(
         pEp_identity* group_identity,
         member_list** mbr_idents);
 
+DYNAMIC_API PEP_STATUS retrieve_active_member_ident_list(
+        PEP_SESSION session,
+        pEp_identity* group_identity,
+        identity_list** id_list);
+
 /**
  *
  * @internal

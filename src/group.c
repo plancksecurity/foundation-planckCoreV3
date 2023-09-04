@@ -1117,6 +1117,64 @@ enomem:
     return status;
 }
 
+DYNAMIC_API PEP_STATUS retrieve_active_member_ident_list(
+        PEP_SESSION session,
+        pEp_identity* group_identity,
+        identity_list** id_list)
+{
+            PEP_REQUIRE(session && group_identity && id_list
+                        && ! EMPTYSTR(group_identity->user_id)
+                        && ! EMPTYSTR(group_identity->address));
+
+    PEP_STATUS status = PEP_STATUS_OK;
+    *id_list = NULL;
+
+    sql_reset_and_clear_bindings(session->get_active_members);
+    sqlite3_bind_text(session->get_active_members, 1, group_identity->user_id, -1, SQLITE_STATIC);
+    sqlite3_bind_text(session->get_active_members, 2, group_identity->address, -1, SQLITE_STATIC);
+    int result;
+
+    identity_list* retval = NULL;
+    identity_list** id_list_next = &retval;
+
+    while ((result = pEp_sqlite3_step_nonbusy(session, session->get_active_members)) == SQLITE_ROW) {
+        pEp_identity *ident = new_identity((const char *) sqlite3_column_text(session->get_active_members, 1),
+                                           NULL,(const char *) sqlite3_column_text(session->get_active_members, 0),
+                                           NULL);
+        PEP_WEAK_ASSERT_ORELSE_GOTO(ident, enomem);
+
+        identity_list* new_node = new_identity_list(ident);
+        if (!new_node) {
+            free_identity(ident);
+            goto enomem;
+        }
+
+        *id_list_next = new_node;
+        id_list_next = &(new_node->next);
+    }
+
+    identity_list* curr = retval;
+
+    for ( ; curr && curr->ident; curr = curr->next) {
+        if (!curr->ident)
+            goto enomem;
+        status = update_identity(session, curr->ident);
+    }
+
+    sql_reset_and_clear_bindings(session->get_active_members);
+
+    *id_list = retval;
+    return PEP_STATUS_OK;
+
+    enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+//pEp_error: // Uncomment if other errors are valid
+    sql_reset_and_clear_bindings(session->get_active_members);
+    free_identity_list(retval);
+    return status;
+}
+
 PEP_STATUS retrieve_group_info(PEP_SESSION session, pEp_identity* group_identity, pEp_group** group_info) {
     PEP_REQUIRE(session && group_identity
                 && ! EMPTYSTR(group_identity->address) && group_info);
