@@ -602,7 +602,7 @@ PEP_STATUS set_membership_status(PEP_SESSION session,
 }
 
 
-PEP_STATUS get_group_manager(PEP_SESSION session,
+DYNAMIC_API PEP_STATUS get_group_manager(PEP_SESSION session,
                              pEp_identity* group_identity,
                              pEp_identity** manager) {
     PEP_REQUIRE(session && group_identity && manager
@@ -1053,7 +1053,7 @@ enomem:
     return status;
 }
 
-PEP_STATUS retrieve_active_member_list(
+DYNAMIC_API PEP_STATUS retrieve_active_member_list(
         PEP_SESSION session,
         pEp_identity* group_identity,
         member_list** mbr_list)

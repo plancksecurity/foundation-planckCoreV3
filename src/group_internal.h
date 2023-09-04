@@ -183,19 +183,6 @@ PEP_STATUS receive_managed_group_message(PEP_SESSION session, message* msg, PEP_
  *
  * @param session
  * @param group_identity
- * @param mbr_idents
- * @return
- */
-PEP_STATUS retrieve_active_member_list(
-        PEP_SESSION session,
-        pEp_identity* group_identity,
-        member_list** mbr_idents);
-
-/**
- * @internal
- *
- * @param session
- * @param group_identity
  * @param as_member
  * @param active
  * @return
@@ -222,18 +209,6 @@ PEP_STATUS is_own_group_identity(PEP_SESSION session, pEp_identity* group_identi
  * @return
  */
 identity_list* member_list_to_identity_list(member_list* memberlist);
-
-/**
- *
- * @internal
- * @param session
- * @param group_identity
- * @param manager
- * @return
- */
-PEP_STATUS get_group_manager(PEP_SESSION session,
-                             pEp_identity* group_identity,
-                             pEp_identity** manager);
 
 /**
  *

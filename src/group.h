@@ -393,6 +393,31 @@ DYNAMIC_API PEP_STATUS retrieve_all_active_groups_as_manager(
         pEp_identity* manager,
         identity_list** id_list);
 
+/**
+ * @internal
+ *
+ * @param session
+ * @param group_identity
+ * @param mbr_idents
+ * @return
+ */
+DYNAMIC_API PEP_STATUS retrieve_active_member_list(
+        PEP_SESSION session,
+        pEp_identity* group_identity,
+        member_list** mbr_idents);
+
+/**
+ *
+ * @internal
+ * @param session
+ * @param group_identity
+ * @param manager
+ * @return
+ */
+DYNAMIC_API PEP_STATUS get_group_manager(PEP_SESSION session,
+                             pEp_identity* group_identity,
+                             pEp_identity** manager);
+
 #ifdef __cplusplus
 }
 #endif
