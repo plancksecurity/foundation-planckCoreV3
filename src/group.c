@@ -1053,7 +1053,7 @@ enomem:
     return status;
 }
 
-DYNAMIC_API PEP_STATUS retrieve_active_member_list(
+PEP_STATUS retrieve_active_member_list(
         PEP_SESSION session,
         pEp_identity* group_identity,
         member_list** mbr_list)

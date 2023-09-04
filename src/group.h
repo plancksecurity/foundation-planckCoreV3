@@ -383,41 +383,93 @@ DYNAMIC_API PEP_STATUS group_rating(
         PEP_rating *rating
     );
 
+/**
+ *  <!--       retrieve_all_groups_as_manager()       -->
+ *
+ *  @brief      Get all ther groups I am manager of.
+ *
+ *  @param[in]      session             associated session object
+ *
+ *  @param[in]      manager             the pEp_identity object representing the group manager. Must contain
+ *                                      a user_id and address
+ *  @param[out]     id_list             the identity_list object representing the identities of all the groups
+ *                                      I am manager of.
+ *
+ *  @retval         PEP_STATUS_OK       on success
+ *  @retval         error               on failure
+ *
+ *  @ownership      FIXME
+ *
+ */
 DYNAMIC_API PEP_STATUS retrieve_all_groups_as_manager(
         PEP_SESSION session,
         pEp_identity* manager,
         identity_list** id_list);
 
+/**
+ *  <!--       retrieve_all_active_groups_as_manager()       -->
+ *
+ *  @brief      Get all ther groups I am manager of.
+ *
+ *  @param[in]      session             associated session object
+ *
+ *  @param[in]      manager             the pEp_identity object representing the group manager. Must contain
+ *                                      a user_id and address
+ *  @param[out]     id_list             the identity_list object representing the identities of all the active groups
+ *                                      I am manager of.
+ *
+ *  @retval         PEP_STATUS_OK       on success
+ *  @retval         error               on failure
+ *
+ *  @ownership      FIXME
+ *
+ */
 DYNAMIC_API PEP_STATUS retrieve_all_active_groups_as_manager(
         PEP_SESSION session,
         pEp_identity* manager,
         identity_list** id_list);
 
 /**
- * @internal
+ *  <!--       retrieve_active_member_ident_list()       -->
  *
- * @param session
- * @param group_identity
- * @param mbr_idents
- * @return
+ *  @brief      Get all active members for a given group. Empty return if I am not manager of the group.
+ *
+ *  @param[in]      session             associated session object
+ *
+ *  @param[in]      group_identity      the pEp_identity object representing the group. Must contain at least
+ *                                      a user_id and address
+ *
+ *  @param[out]     id_list             the identity_list object representing the identities of all the active
+ *                                      members of the group.
+ *
+ *  @retval         PEP_STATUS_OK       on success
+ *  @retval         error               on failure
+ *
+ *  @ownership      FIXME
+ *
  */
-DYNAMIC_API PEP_STATUS retrieve_active_member_list(
-        PEP_SESSION session,
-        pEp_identity* group_identity,
-        member_list** mbr_idents);
-
 DYNAMIC_API PEP_STATUS retrieve_active_member_ident_list(
         PEP_SESSION session,
         pEp_identity* group_identity,
         identity_list** id_list);
 
 /**
+ *  <!--       get_group_manager()       -->
  *
- * @internal
- * @param session
- * @param group_identity
- * @param manager
- * @return
+ *  @brief      Get the manager of a group.
+ *
+ *  @param[in]      session             associated session object
+ *
+ *  @param[in]      group_identity      the pEp_identity object representing the group. Must contain at least
+ *                                      a user_id and address
+ *
+ *  @param[out]     manager            the pEp_identity object representing the group manager.
+ *
+ *  @retval         PEP_STATUS_OK       on success
+ *  @retval         error               on failure
+ *
+ *  @ownership      FIXME
+ *
  */
 DYNAMIC_API PEP_STATUS get_group_manager(PEP_SESSION session,
                              pEp_identity* group_identity,

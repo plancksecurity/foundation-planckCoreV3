@@ -183,6 +183,19 @@ PEP_STATUS receive_managed_group_message(PEP_SESSION session, message* msg, PEP_
  *
  * @param session
  * @param group_identity
+ * @param mbr_idents
+ * @return
+ */
+PEP_STATUS retrieve_active_member_list(
+        PEP_SESSION session,
+        pEp_identity* group_identity,
+        member_list** mbr_idents);
+
+/**
+ * @internal
+ *
+ * @param session
+ * @param group_identity
  * @param as_member
  * @param active
  * @return
