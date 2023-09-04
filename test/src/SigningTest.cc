@@ -18,8 +18,8 @@
 
 namespace {
 
-// The fixture for LogSignTest
-class LogSignTest : public ::testing::Test
+// The fixture
+class SigningTest : public ::testing::Test
 {
   public:
     Engine *engine;
@@ -28,7 +28,7 @@ class LogSignTest : public ::testing::Test
   protected:
     // You can remove any or all of the following functions if its body
     // is empty.
-    LogSignTest()
+    SigningTest()
     {
         // You can do set-up work for each test here.
         test_suite_name =
@@ -37,7 +37,7 @@ class LogSignTest : public ::testing::Test
         test_path = get_main_test_home_dir() + "/" + test_suite_name + "/" + test_name;
     }
 
-    ~LogSignTest() override
+    ~SigningTest() override
     {
         // You can do clean-up work that doesn't throw exceptions here.
     }
@@ -88,7 +88,7 @@ class LogSignTest : public ::testing::Test
 
 } // namespace
 
-TEST_F(LogSignTest, roundtrip)
+TEST_F(SigningTest, roundtrip)
 {
     // Some data
     size_t signed_size = 0;
@@ -144,7 +144,7 @@ TEST_F(LogSignTest, roundtrip)
     ASSERT_NULL(all_own_identities->next);
 }
 
-TEST_F(LogSignTest, basically_binary)
+TEST_F(SigningTest, basically_binary)
 {
     size_t signed_size = 0;
     char *signed_text = NULL;
@@ -164,7 +164,7 @@ TEST_F(LogSignTest, basically_binary)
     ASSERT_EQ(status, PEP_VERIFIED);
 }
 
-TEST_F(LogSignTest, reverse_data_with_signature)
+TEST_F(SigningTest, reverse_data_with_signature)
 {
     size_t signed_size = 0;
     char *signed_text = NULL;
