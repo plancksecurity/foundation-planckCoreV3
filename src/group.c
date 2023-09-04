@@ -7,6 +7,7 @@
  // 17.08.2023/DZ - Don't write to NULL in group_create on error.
  // 18.08.2023/DZ - send_GroupAdopted returns early (but OK) when the manager is an own identity
  // 23.08.2023/IG - Make group rating Reliable for members.
+ // 21.08.2023/IG - group_create(): Allow to re-create a group that is inactive.
 
 #include "group.h"
 #include "group_internal.h"
@@ -1868,8 +1869,13 @@ DYNAMIC_API PEP_STATUS group_create(
     // Do we already have this group?
     bool already_exists = false;
     status = exists_group(session, group_identity, &already_exists);
-    if (already_exists)
-        return PEP_GROUP_EXISTS;
+    if (already_exists) {
+        bool active = false;
+        status = is_group_active(session, group_identity, &active);
+        if (active) {
+            return PEP_GROUP_EXISTS;
+        }
+    }
 
     // set it as a group_identity
     status = set_identity_flags(session, group_identity, group_identity->flags | PEP_idf_group_ident);
@@ -1937,7 +1943,9 @@ DYNAMIC_API PEP_STATUS group_create(
 
     PEP_SQL_BEGIN_EXCLUSIVE_TRANSACTION();
 
-    status = create_group_entry(session, _group);
+    if (!already_exists) {
+        status = create_group_entry(session, _group);
+    }
 
     if (status == PEP_STATUS_OK) {
         status = group_enable(session, group_ident_clone);
