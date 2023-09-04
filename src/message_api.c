@@ -2297,8 +2297,9 @@ bool import_attached_keys(
                 }
             }
             identity_list *local_private_idents = NULL;
-            PEP_STATUS import_status = import_key_with_fpr_return(
-                                                  session, blob_value, blob_size, 
+            PEP_STATUS import_status = import_key_strict(
+                                                  session, blob_value, blob_size,
+                                                  msg->from,
                                                   &local_private_idents,
                                                   &_keylist,
                                                   changed_keys);

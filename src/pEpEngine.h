@@ -1301,6 +1301,15 @@ DYNAMIC_API PEP_STATUS import_key_with_fpr_return(
         stringlist_t** imported_keys,
         uint64_t* changed_public_keys // use as bit field for the first 64 changed keys
 );
+DYNAMIC_API PEP_STATUS import_key_strict(
+        PEP_SESSION session,
+        const char *key_data,
+        size_t size,
+        pEp_identity *key_owner,
+        identity_list **private_keys,
+        stringlist_t** imported_keys,
+        uint64_t* changed_public_keys
+);
 
 // 07.08.2023/IP - added method import_extrakey_with_fpr_return
 /**

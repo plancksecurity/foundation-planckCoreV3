@@ -3354,6 +3354,32 @@ DYNAMIC_API PEP_STATUS import_key_with_fpr_return(
             size, private_keys, imported_keys, changed_public_keys);
 }
 
+DYNAMIC_API PEP_STATUS import_key_strict(
+        PEP_SESSION session,
+        const char *key_data,
+        size_t size,
+        pEp_identity *key_owner,
+        identity_list **private_keys,
+        stringlist_t** imported_keys,
+        uint64_t* changed_public_keys
+)
+{
+            PEP_REQUIRE(session && key_data && size && key_owner
+    /* the other fields are allowed to be NULL. */);
+
+    /* When provided initialise private_keys out of defensiveness, to avoid
+       misleading the caller with invalid pointers even in case of failure;
+       do not do the same with imported_keys, which is an inout parameter. */
+    if (private_keys != NULL)
+        * private_keys = NULL;
+
+    if (imported_keys && !*imported_keys && changed_public_keys)
+        *changed_public_keys = 0;
+
+    return session->cryptotech[PEP_crypt_OpenPGP].import_key_strict(session, key_data,
+                                                             size, key_owner, private_keys, imported_keys, changed_public_keys);
+}
+
 // 07.08.2023/IP - added method import_extrakey_with_fpr_return
 DYNAMIC_API PEP_STATUS import_extrakey_with_fpr_return(PEP_SESSION session,
     const char* key_data,
