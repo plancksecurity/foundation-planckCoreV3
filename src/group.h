@@ -383,6 +383,16 @@ DYNAMIC_API PEP_STATUS group_rating(
         PEP_rating *rating
     );
 
+DYNAMIC_API PEP_STATUS retrieve_all_groups_as_manager(
+        PEP_SESSION session,
+        pEp_identity* manager,
+        identity_list** id_list);
+
+DYNAMIC_API PEP_STATUS retrieve_all_active_groups_as_manager(
+        PEP_SESSION session,
+        pEp_identity* manager,
+        identity_list** id_list);
+
 #ifdef __cplusplus
 }
 #endif

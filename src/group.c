@@ -1174,6 +1174,122 @@ pEp_error:
     return status;
 }
 
+DYNAMIC_API PEP_STATUS retrieve_all_groups_as_manager(
+        PEP_SESSION session,
+        pEp_identity* manager,
+        identity_list** id_list)
+{
+            PEP_REQUIRE(session && manager && id_list
+                        && ! EMPTYSTR(manager->user_id)
+                        && ! EMPTYSTR(manager->address));
+
+    PEP_STATUS status = PEP_STATUS_OK;
+    *id_list = NULL;
+
+    sql_reset_and_clear_bindings(session->get_all_groups_as_manager);
+    sqlite3_bind_text(session->get_all_groups_as_manager, 1, manager->user_id, -1, SQLITE_STATIC);
+    sqlite3_bind_text(session->get_all_groups_as_manager, 2, manager->address, -1, SQLITE_STATIC);
+    int result;
+
+    identity_list * retval = NULL;
+    identity_list ** id_list_next = &retval;
+
+    while ((result = pEp_sqlite3_step_nonbusy(session, session->get_all_groups_as_manager)) == SQLITE_ROW) {
+        pEp_identity *ident = new_identity((const char *) sqlite3_column_text(session->get_all_groups_as_manager, 1),
+                                           NULL,(const char *) sqlite3_column_text(session->get_all_groups_as_manager, 0),
+                                           NULL);
+        PEP_WEAK_ASSERT_ORELSE_GOTO(ident, enomem);
+
+        identity_list * new_node = new_identity_list(ident);
+        if (!new_node) {
+            free_identity(ident);
+            goto enomem;
+        }
+
+        *id_list_next = new_node;
+        id_list_next = &(new_node->next);
+    }
+
+    identity_list* curr = retval;
+
+    for ( ; curr && curr->ident && curr->ident; curr = curr->next) {
+        if (!curr->ident)
+            goto enomem;
+        status = update_identity(session, curr->ident);
+    }
+
+    sql_reset_and_clear_bindings(session->get_all_groups_as_manager);
+
+    *id_list = retval;
+    return PEP_STATUS_OK;
+
+    enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+//pEp_error: // Uncomment if other errors are valid
+    sql_reset_and_clear_bindings(session->get_all_groups_as_manager);
+    free_identity_list(retval);
+    return status;
+}
+
+DYNAMIC_API PEP_STATUS retrieve_all_active_groups_as_manager(
+        PEP_SESSION session,
+        pEp_identity* manager,
+        identity_list** id_list)
+{
+            PEP_REQUIRE(session && manager && id_list
+                        && ! EMPTYSTR(manager->user_id)
+                        && ! EMPTYSTR(manager->address));
+
+    PEP_STATUS status = PEP_STATUS_OK;
+    *id_list = NULL;
+
+    sql_reset_and_clear_bindings(session->get_all_active_groups_as_manager);
+    sqlite3_bind_text(session->get_all_active_groups_as_manager, 1, manager->user_id, -1, SQLITE_STATIC);
+    sqlite3_bind_text(session->get_all_active_groups_as_manager, 2, manager->address, -1, SQLITE_STATIC);
+    int result;
+
+    identity_list * retval = NULL;
+    identity_list ** id_list_next = &retval;
+
+    while ((result = pEp_sqlite3_step_nonbusy(session, session->get_all_active_groups_as_manager)) == SQLITE_ROW) {
+        pEp_identity *ident = new_identity((const char *) sqlite3_column_text(session->get_all_active_groups_as_manager, 1),
+                                           NULL,(const char *) sqlite3_column_text(session->get_all_active_groups_as_manager, 0),
+                                           NULL);
+        PEP_WEAK_ASSERT_ORELSE_GOTO(ident, enomem);
+
+        identity_list * new_node = new_identity_list(ident);
+        if (!new_node) {
+            free_identity(ident);
+            goto enomem;
+        }
+
+        *id_list_next = new_node;
+        id_list_next = &(new_node->next);
+    }
+
+    identity_list* curr = retval;
+
+    for ( ; curr && curr->ident && curr->ident; curr = curr->next) {
+        if (!curr->ident)
+            goto enomem;
+        status = update_identity(session, curr->ident);
+    }
+
+    sql_reset_and_clear_bindings(session->get_all_active_groups_as_manager);
+
+    *id_list = retval;
+    return PEP_STATUS_OK;
+
+    enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+//pEp_error: // Uncomment if other errors are valid
+    sql_reset_and_clear_bindings(session->get_all_active_groups_as_manager);
+    free_identity_list(retval);
+    return status;
+}
+
 PEP_STATUS send_GroupAdopted(PEP_SESSION session, pEp_identity* group_identity, pEp_identity* from) {
     PEP_REQUIRE(session && group_identity && from
                 && ! EMPTYSTR(group_identity->user_id)

@@ -659,8 +659,12 @@ static const char *sql_is_active_group_member MAYBE_UNUSED =
         "   where group_id = ?1 and group_address = ?2 and member_id = ?3 and member_address = ?4; ";
 static const char *sql_get_all_groups MAYBE_UNUSED =
         "select group_id, group_address from own_memberships; ";
+static const char *sql_get_all_groups_as_manager MAYBE_UNUSED =
+        "select group_id, group_address from groups where manager_userid = ?1 and manager_address = ?2; ";
 static const char *sql_get_active_groups MAYBE_UNUSED =
         "select group_id, group_address from own_memberships where have_joined = 1; ";
+static const char *sql_get_all_active_groups_as_manager MAYBE_UNUSED =
+        "select group_id, group_address from groups where manager_userid = ?1 and manager_address = ?2 and active = 1; ";
 static const char *sql_add_own_membership_entry MAYBE_UNUSED =
         "insert or replace into own_memberships (group_id, group_address, own_id, own_address, have_joined) "
         "    values (?1, ?2, ?3, ?4, 0) ; ";
