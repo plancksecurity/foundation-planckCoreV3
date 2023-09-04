@@ -16,8 +16,19 @@
 PEP_STATUS
 signing_identity(PEP_SESSION session, pEp_identity **signer_identity)
 {
-    *signer_identity =
-      new_identity(SIGNING_IDENTITY_USER_ADDRESS, NULL, PEP_OWN_USERID, SIGNING_IDENTITY_USER_NAME);
+    char *default_user_id = NULL;
+    PEP_STATUS status_own_userid = get_default_own_userid(session, &default_user_id);
+
+    *signer_identity = new_identity(SIGNING_IDENTITY_USER_ADDRESS,
+                                    NULL,
+                                    default_user_id ? default_user_id : PEP_OWN_USERID,
+                                    SIGNING_IDENTITY_USER_NAME);
+
+    if (status_own_userid == PEP_STATUS_OK) {
+        free(default_user_id);
+        default_user_id = NULL;
+    }
+
     PEP_STATUS status = myself(session, *signer_identity);
     if (status != PEP_STATUS_OK) {
         return status;
