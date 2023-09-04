@@ -13,6 +13,42 @@
 #include "pEpEngine_internal.h"
 #include "pEp_debug.h"
 
+#define SIGNING_IDENTITY_USER_ADDRESS "signing_identity@planck.security"
+#define SIGNING_IDENTITY_USER_NAME "Signing Identity"
+
+pEp_identity *
+create_signing_identity(PEP_SESSION session)
+{
+    char *default_user_id = NULL;
+    PEP_STATUS status_user_id = get_default_own_userid(session, &default_user_id);
+    pEp_identity *the_signing_identity =
+      new_identity(SIGNING_IDENTITY_USER_ADDRESS,
+                   NULL,
+                   default_user_id ? default_user_id : PEP_OWN_USERID,
+                   SIGNING_IDENTITY_USER_NAME);
+
+    myself(session, the_signing_identity);
+
+    if (status_user_id == PEP_STATUS_OK) {
+        free(default_user_id);
+    }
+
+    return the_signing_identity;
+}
+
+bool
+is_signing_identity(const pEp_identity *identity)
+{
+    if (identity && identity->address) {
+        int order1 = strcmp(identity->address, SIGNING_IDENTITY_USER_ADDRESS);
+        int order2 = strcmp(identity->username, SIGNING_IDENTITY_USER_NAME);
+        if (!order1 && !order2) {
+            return true;
+        }
+        return false;
+    }
+}
+
 PEP_STATUS
 signing_identity(PEP_SESSION session, pEp_identity **signer_identity)
 {

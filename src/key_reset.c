@@ -36,6 +36,7 @@
 #include "baseprotocol.h"
 #include "../asn.1/Distribution.h"
 #include "Sync_impl.h" // this seems... bad
+#include "signature.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -1747,32 +1748,12 @@ PEP_STATUS _key_reset(
 
     // Skip the signing identity.
     if (!reset_all_for_user) {
-        if (ident && ident->address) {
-            int order = strcmp(ident->address, SIGNING_IDENTITY_USER_ADDRESS);
-            if (!order) {
+        if (is_signing_identity(ident)) {
                 goto pEp_free;
-            }
         } else if (user_id && fpr_copy) {
-            bool should_skip = false;
-            char *default_user_id = NULL;
-            status = get_default_own_userid(session, &default_user_id);
-            if (status == PEP_STATUS_OK && default_user_id) {
-                int order = strcmp(default_user_id, user_id);
-                if (!order) {
-                    pEp_identity *signing_identity = new_identity(SIGNING_IDENTITY_USER_ADDRESS, NULL, default_user_id, SIGNING_IDENTITY_USER_NAME);
-                    if (signing_identity) {
-                        status = myself(session, signing_identity);
-                        if (status == PEP_STATUS_OK) {
-                            int order_fpr = strcmp(fpr_copy, signing_identity->fpr);
-                            if (!order_fpr) {
-                                should_skip = true;
-                            }
-                        }
-                    }
-                }
-            }
-            free(default_user_id);
-            if (should_skip) {
+            pEp_identity *signing_identity = create_signing_identity(session);
+            int order_fpr = strcmp(fpr_copy, signing_identity->fpr);
+            if (!order_fpr) {
                 goto pEp_free;
             }
         }
