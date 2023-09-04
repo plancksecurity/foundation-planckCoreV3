@@ -3,6 +3,8 @@
 /// @brief  Internal functions for representation of groups
 /// @license This file is under GNU General Public License 3.0 - see LICENSE.txt
 
+// 04.09.2023/IG - Move get_group_manager() to group.h and make it DYNAMIC API.
+
 #ifndef GROUP_INTERNAL_H
 #define GROUP_INTERNAL_H
 

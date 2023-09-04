@@ -10,6 +10,8 @@
  */
 
  // 23.08.2023/IG - Update group_rating doc: Group rating is now Reliable (not Trusted) for members.
+ // 04.09.2023/IG - Add retrieve_all_groups_as_manager() and retrieve_all_active_groups_as_manager().
+ // 04.09.2023/IG - Move get_group_manager() to group.h and make it DYNAMIC API.
 
 #include "platform.h"
 #include "dynamic_api.h"
