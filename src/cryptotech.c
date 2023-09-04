@@ -14,7 +14,6 @@
 
 #include <stdlib.h>
 #include <memory.h>
-#include <pEp/pgp_sequoia.h>
 
 
 PEP_cryptotech_t cryptotech[PEP_crypt__count];
