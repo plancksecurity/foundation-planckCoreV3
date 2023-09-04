@@ -20,7 +20,6 @@
 #include "keymanagement_internal.h"
 #include "KeySync_fsm.h"
 #include "media_key.h"
-#include "signature.h"
 
 // 2023-08-31/DZ _own_identities_retrieve ignores the signing identity
 
@@ -1676,10 +1675,8 @@ PEP_STATUS _own_identities_retrieve(
                 flags = (unsigned int)
                     sqlite3_column_int(session->own_identities_retrieve, 5);
 
-                pEp_identity *signing_identity = create_signing_identity(session);
-                int order1 = strcmp(address, signing_identity->address);
-                int order2 = strcmp(username, signing_identity->username);
-                free_identity(signing_identity);
+                int order1 = strcmp(address, SIGNING_IDENTITY_USER_ADDRESS);
+                int order2 = strcmp(username, SIGNING_IDENTITY_USER_NAME);
 
                 // only consider own identities that are not the signing identity
                 if (order1 && order2) {

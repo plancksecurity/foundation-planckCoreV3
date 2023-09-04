@@ -14,28 +14,6 @@ extern "C"
 #endif
 
     /**
-     *  <!--       create_signing_identity()       -->
-     *
-     *  @brief Creates a signing identity.
-     *
-     *  @param[in] session session
-     */
-    pEp_identity *create_signing_identity(PEP_SESSION session);
-
-    /**
-     *  <!--       is_signing_identity()       -->
-     *
-     *  @brief Indicates if the given identity is the signing identity.
-     *
-     *  @param[in] identity The identity to check.
-     *
-     *  @retval true The given identity is the signing identity.
-     *  @retval false The given identity is not the signing identity.
-     *
-     */
-    bool is_signing_identity(const pEp_identity *identity);
-
-    /**
      *  <!--       signature_for_text()       -->
      *
      *  @brief Calculates a signature for a given input text.
