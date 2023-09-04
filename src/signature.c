@@ -14,7 +14,7 @@
 #include "pEp_debug.h"
 
 PEP_STATUS
-signing_identity(PEP_SESSION session, pEp_identity **signer_identity)
+create_signing_identity(PEP_SESSION session, pEp_identity **signer_identity)
 {
     char *default_user_id = NULL;
     PEP_STATUS status_own_userid = get_default_own_userid(session, &default_user_id);
@@ -48,7 +48,7 @@ signature_for_text(PEP_SESSION session,
     PEP_REQUIRE(session && ptext);
 
     pEp_identity *the_signing_identity = NULL;
-    PEP_STATUS status = signing_identity(session, &the_signing_identity);
+    PEP_STATUS status = create_signing_identity(session, &the_signing_identity);
 
     if (status != PEP_STATUS_OK) {
         return status;

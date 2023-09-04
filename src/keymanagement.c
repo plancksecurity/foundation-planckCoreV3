@@ -20,6 +20,7 @@
 #include "keymanagement_internal.h"
 #include "KeySync_fsm.h"
 #include "media_key.h"
+#include "signature.h"
 
 // 2023-08-31/DZ _own_identities_retrieve ignores the signing identity
 

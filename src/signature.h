@@ -13,6 +13,23 @@ extern "C"
 {
 #endif
 
+#define SIGNING_IDENTITY_USER_ADDRESS "signing_identity@planck.security"
+#define SIGNING_IDENTITY_USER_NAME "Signing Identity"
+
+    /**
+     *  <!--       create_signing_identity()       -->
+     *
+     *  @brief Creates the signing identity, including a call to `myself`.
+     *
+     *  @param[in] session session
+     *  @param[in] pEp_identity ** The identity to be filled with the created signing identity.
+     *
+     *  @retval PEP_STATUS_OK         success
+     *
+     */
+    PEP_STATUS
+    create_signing_identity(PEP_SESSION session, pEp_identity **signer_identity);
+
     /**
      *  <!--       signature_for_text()       -->
      *
