@@ -1303,7 +1303,7 @@ DYNAMIC_API PEP_STATUS import_key_with_fpr_return(
 );
 
 /**
- *  <!--       import_key_with_fpr_return()       -->
+ *  <!--       import_key_strict()       -->
  *
  *  @brief import keys from data, return optional list of fprs imported, albeit with certain restrictions,
  *  because of certain division of responsibilities, the cryptographic back end software never knows who

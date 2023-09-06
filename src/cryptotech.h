@@ -145,7 +145,7 @@ typedef PEP_STATUS (*import_key_t)(PEP_SESSION session, const char *key_data,
 /**
  *  @brief Signature for crypto drivers to implement for import_key_strict(), which is like import_key(), except stricter
  *  @copydoc pgp_import_keydata_strict()
- *  @see import_key() - This wrapper function has a mismatched signature
+ *  @see import_key() -
  *  @see pgp_import_keydata_strict() - This is one function that might be pointed to via an pointer of type import_keydata_strict_t
  */
 typedef PEP_STATUS (*import_keydata_strict_t)(PEP_SESSION session, const char *key_data,
