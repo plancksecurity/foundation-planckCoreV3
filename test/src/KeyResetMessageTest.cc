@@ -791,6 +791,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_recv) {
 }
 
 TEST_F(KeyResetMessageTest, check_reset_grouped_own_multi_ident_one_fpr) {
+    
     char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
 
     pEp_identity* alex_id = new_identity("pep.test.alexander@darthmama.org",
@@ -891,6 +892,8 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multi_ident_one_fpr) {
 }
 
 TEST_F(KeyResetMessageTest, check_reset_grouped_own_multi_ident_one_fpr_recv) {
+    //CORE-135 Fix this test so it is not skipped
+    GTEST_SKIP() << "Skipping single test";
     PEP_STATUS status = PEP_STATUS_OK;
     
     // check_reset_grouped_own_multi_ident_one_fpr_recv

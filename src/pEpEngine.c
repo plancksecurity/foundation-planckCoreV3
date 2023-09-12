@@ -3364,7 +3364,7 @@ DYNAMIC_API PEP_STATUS import_key_strict(
         uint64_t* changed_public_keys
 )
 {
-            PEP_REQUIRE(session && key_data && size && key_owner
+    PEP_REQUIRE(session && key_data && size && key_owner
     /* the other fields are allowed to be NULL. */);
 
     /* When provided initialise private_keys out of defensiveness, to avoid

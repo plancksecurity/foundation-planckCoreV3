@@ -2298,12 +2298,17 @@ bool import_attached_keys(
             }
             identity_list *local_private_idents = NULL;
             PEP_STATUS import_status = import_key_strict(
-                                                  session, blob_value, blob_size,
-                                                  msg->from,
-                                                  &local_private_idents,
-                                                  &_keylist,
-                                                  changed_keys);
-                                                  
+                    session, blob_value, blob_size,
+                    msg->from,
+                    &local_private_idents,
+                    &_keylist,
+                    changed_keys);
+//            PEP_STATUS import_status = import_key_with_fpr_return(
+//                    session, blob_value, blob_size,
+//                    &local_private_idents,
+//                    &_keylist,
+//                    changed_keys);
+
             if (_keylist) {
                 stringlist_t* added_keys = last_fpr_ptr ? last_fpr_ptr->next : _keylist;
                 if (stringlist_length(added_keys) == 1)
@@ -5552,7 +5557,7 @@ static PEP_STATUS _decrypt_message(
             
             case PEP_enc_PGP_MIME:
             case PEP_enc_PGP_MIME_Outlook1:
-            
+
                 status = mime_decode_message(ptext, psize, &msg, &has_inner);
                 if (status != PEP_STATUS_OK)
                     goto pEp_error;
@@ -5565,6 +5570,14 @@ static PEP_STATUS _decrypt_message(
                     free(src->shortmsg);
                     src->shortmsg = strdup(msg->shortmsg);                    
                 }
+
+                //Sascha Funfact: mime_decode_message doesn't include any of the extra fields like
+                //From, to, etc... which is a real cool thing when you need em later, additionally
+                //It is an informational leak so to speak as you lose you should have access to
+                // also because the function works as such to turn the msg param to null
+                // doing msg = message_dup(src); before calling it on the placeholder is not a
+                //Possibly and as such...
+                msg->from = identity_dup(src->from);
 
                 // check for private key in decrypted message attachment while importing
                 // N.B. Apparently, we always import private keys into the keyring; however,
