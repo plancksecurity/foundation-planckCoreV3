@@ -11,7 +11,6 @@
 #include "cryptotech.h"
 #include "transport.h"
 #include "KeySync_fsm.h"
-#include "echo_api.h"
 #include "media_key.h"
 #include "engine_sql.h"
 #include "pEp_log.h"
@@ -92,8 +91,6 @@ DYNAMIC_API PEP_STATUS init(
     _session->messageToSend = messageToSend;
     _session->inject_sync_event = inject_sync_event;
     _session->ensure_passphrase = ensure_passphrase;
-    _session->enable_echo_protocol = true;
-    _session->enable_echo_in_outgoing_message_rating_preview = true;
 
     /* Logging is off by default, unless the environment variable PEP_LOG is
        defined to any value.  Logging can also be enabled by the configuration
@@ -143,10 +140,6 @@ DYNAMIC_API PEP_STATUS init(
         goto pEp_error;
 
     status = init_transport_system(_session, in_first);
-    if (status != PEP_STATUS_OK)
-        goto pEp_error;
-
-    status = echo_initialize(_session);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
@@ -253,9 +246,6 @@ DYNAMIC_API void release(PEP_SESSION session)
     /* Clear the path cache, releasing a little memory. */
     if (out_last)
         clear_path_cache();
-
-    /* Finalise the Echo subsystem, which uses the management database... */
-    echo_finalize(session);
 
     /* ... And then finalise the database subsystem. */
     pEp_sql_finalize(session, out_last);
@@ -534,14 +524,10 @@ DYNAMIC_API bool PEP_STATUS_is_error(PEP_STATUS status)
 
 DYNAMIC_API void config_enable_echo_protocol(PEP_SESSION session, bool enable)
 {
-    PEP_REQUIRE_ORELSE(session, { return; });
-    session->enable_echo_protocol = enable;
 }
 
 DYNAMIC_API void config_enable_echo_in_outgoing_message_rating_preview(PEP_SESSION session, bool enable)
 {
-    PEP_REQUIRE_ORELSE(session, { return; });
-    session->enable_echo_in_outgoing_message_rating_preview = enable;
 }
 
 DYNAMIC_API void config_enable_log(PEP_SESSION session, bool enable)

@@ -68,24 +68,5 @@ protocol Distribution 2 {
             field Identity back;
         }
     }
-
-    /* The Echo protocol does not delvier any security property; it is only
-       used to initiate TOFU.  The Echo protocol partly destroys privacy --
-       that is why it can be switched off, session-wise. */
-    fsm Echo 5 {
-        version 1, 0;
-
-        message EchoPing 2 {
-            field TID challenge;
-            /* Naïf comment for positron, to delete:
-               We should rely on recv_by: we do not have a recipient identity
-               specified here, and we should not rely on such information
-               anyway. */
-        }
-
-        message EchoPong 3 {
-            field TID challenge;
-        }
-    }
 }
 

@@ -21,7 +21,7 @@ ifeq ($(BUILD_FOR),Linux)
   CPPFLAGS+=-U_REENTRANT
 endif
 
-DISTRIBUTION = distribution keyreset managedgroup exploration echo
+DISTRIBUTION = distribution keyreset managedgroup exploration
 SYNC  = sync keysync trustsync groupsync
 STORAGE = storage messagestorage
 

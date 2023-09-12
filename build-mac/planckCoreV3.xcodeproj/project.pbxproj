@@ -258,8 +258,6 @@
 		15A32429260E1873009D07EB /* libpEpASN1_macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15A322F5260E0B75009D07EB /* libpEpASN1_macOS.a */; };
 		432210342924C65A00AE872F /* media_key.c in Sources */ = {isa = PBXBuildFile; fileRef = 432210332924C65A00AE872F /* media_key.c */; };
 		432210352924C65A00AE872F /* media_key.c in Sources */ = {isa = PBXBuildFile; fileRef = 432210332924C65A00AE872F /* media_key.c */; };
-		4322103D2924C94A00AE872F /* echo_api.c in Sources */ = {isa = PBXBuildFile; fileRef = 4322103C2924C94A00AE872F /* echo_api.c */; };
-		4322103E2924C94A00AE872F /* echo_api.c in Sources */ = {isa = PBXBuildFile; fileRef = 4322103C2924C94A00AE872F /* echo_api.c */; };
 		432210402924C97E00AE872F /* pEp_log.c in Sources */ = {isa = PBXBuildFile; fileRef = 4322103F2924C97E00AE872F /* pEp_log.c */; };
 		432210412924C97E00AE872F /* pEp_log.c in Sources */ = {isa = PBXBuildFile; fileRef = 4322103F2924C97E00AE872F /* pEp_log.c */; };
 		43A7D64629DD9BA10031FECB /* libbotan-2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 43A7D64529DD9BA10031FECB /* libbotan-2.a */; };
@@ -276,8 +274,6 @@
 		43C1FB2729952A4500336111 /* media_key.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C1FB2229952A4500336111 /* media_key.h */; };
 		43C1FB2A29952A4500336111 /* pEp_log.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C1FB2429952A4500336111 /* pEp_log.h */; };
 		43C1FB2B29952A4500336111 /* pEp_log.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C1FB2429952A4500336111 /* pEp_log.h */; };
-		43C1FB2C29952A4500336111 /* echo_api.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C1FB2529952A4500336111 /* echo_api.h */; };
-		43C1FB2D29952A4500336111 /* echo_api.h in Headers */ = {isa = PBXBuildFile; fileRef = 43C1FB2529952A4500336111 /* echo_api.h */; };
 		43F2D1C829A7681A000572FA /* string_utilities.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F2D1A829A7681A000572FA /* string_utilities.c */; };
 		43F2D1C929A7681A000572FA /* string_utilities.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F2D1A829A7681A000572FA /* string_utilities.c */; };
 		43F2D1CA29A7681A000572FA /* string_utilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 43F2D1C729A7681A000572FA /* string_utilities.h */; };
@@ -562,7 +558,6 @@
 		15A3203B260E030B009D07EB /* pEpASN1.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = pEpASN1.xcodeproj; path = Subprojects/pEpASN1/pEpASN1.xcodeproj; sourceTree = "<group>"; };
 		4309FF0327315E560055C6C9 /* planckTransport.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = planckTransport.xcodeproj; path = "../../libPlanckTransport/build-mac/planckTransport.xcodeproj"; sourceTree = "<group>"; };
 		432210332924C65A00AE872F /* media_key.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = media_key.c; path = ../src/media_key.c; sourceTree = "<group>"; };
-		4322103C2924C94A00AE872F /* echo_api.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = echo_api.c; path = ../src/echo_api.c; sourceTree = "<group>"; };
 		4322103F2924C97E00AE872F /* pEp_log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pEp_log.c; path = ../src/pEp_log.c; sourceTree = "<group>"; };
 		43A7D64529DD9BA10031FECB /* libbotan-2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libbotan-2.a"; path = "../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libbotan-2.a"; sourceTree = "<group>"; };
 		43A7D64729DD9C1D0031FECB /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
@@ -574,7 +569,6 @@
 		43C1FB1929952A1200336111 /* pEp_rmd160.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pEp_rmd160.h; path = ../src/pEp_rmd160.h; sourceTree = "<group>"; };
 		43C1FB2229952A4500336111 /* media_key.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = media_key.h; path = ../src/media_key.h; sourceTree = "<group>"; };
 		43C1FB2429952A4500336111 /* pEp_log.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pEp_log.h; path = ../src/pEp_log.h; sourceTree = "<group>"; };
-		43C1FB2529952A4500336111 /* echo_api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = echo_api.h; path = ../src/echo_api.h; sourceTree = "<group>"; };
 		43F2D1A829A7681A000572FA /* string_utilities.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = string_utilities.c; path = ../src/string_utilities.c; sourceTree = "<group>"; };
 		43F2D1C729A7681A000572FA /* string_utilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = string_utilities.h; path = ../src/string_utilities.h; sourceTree = "<group>"; };
 		644297BF1BE11C65002BC73B /* pEpTrustWords.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = pEpTrustWords.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -730,8 +724,6 @@
 				43C1FAF829952A1200336111 /* sql_reliability.h */,
 				4322103F2924C97E00AE872F /* pEp_log.c */,
 				43C1FB2429952A4500336111 /* pEp_log.h */,
-				4322103C2924C94A00AE872F /* echo_api.c */,
-				43C1FB2529952A4500336111 /* echo_api.h */,
 				432210332924C65A00AE872F /* media_key.c */,
 				43C1FB2229952A4500336111 /* media_key.h */,
 				1515837326CE4FB7003D8685 /* baseprotocol.c */,
@@ -902,7 +894,6 @@
 				151585C826CE5397003D8685 /* message_codec.h in Headers */,
 				151585E826CE5397003D8685 /* key_reset.h in Headers */,
 				151585C626CE5397003D8685 /* security_checks.h in Headers */,
-				43C1FB2D29952A4500336111 /* echo_api.h in Headers */,
 				151585C126CE5397003D8685 /* Sync_impl.h in Headers */,
 				1552DB142577D4F100A92F71 /* pEpEngine_macOS.h in Headers */,
 				151585D226CE5397003D8685 /* GroupSync_fsm.h in Headers */,
@@ -958,7 +949,6 @@
 				1515834526CE4F81003D8685 /* pgp_sequoia_internal.h in Headers */,
 				1515831726CE4F81003D8685 /* pEp_internal.h in Headers */,
 				1515834226CE4F81003D8685 /* baseprotocol.h in Headers */,
-				43C1FB2C29952A4500336111 /* echo_api.h in Headers */,
 				1515831526CE4F81003D8685 /* KeySync_fsm.h in Headers */,
 				1515832C26CE4F81003D8685 /* etpan_mime.h in Headers */,
 				1515832026CE4F81003D8685 /* group.h in Headers */,
@@ -1301,7 +1291,6 @@
 				1515852B26CE536A003D8685 /* GroupSync_fsm.c in Sources */,
 				432210352924C65A00AE872F /* media_key.c in Sources */,
 				1515853026CE536A003D8685 /* key_reset.c in Sources */,
-				4322103E2924C94A00AE872F /* echo_api.c in Sources */,
 				1515852426CE536A003D8685 /* pgp_sequoia.c in Sources */,
 				43C1FB1F29952A1200336111 /* sql_reliability.c in Sources */,
 				1515854826CE536B003D8685 /* resource_id.c in Sources */,
@@ -1371,7 +1360,6 @@
 				1515838A26CE4FB8003D8685 /* storage_codec.c in Sources */,
 				1515839526CE4FB8003D8685 /* Sync_actions.c in Sources */,
 				1515835D26CE4F82003D8685 /* transport.c in Sources */,
-				4322103D2924C94A00AE872F /* echo_api.c in Sources */,
 				1515833A26CE4F81003D8685 /* resource_id.c in Sources */,
 				1515831126CE4F81003D8685 /* message.c in Sources */,
 				1515835626CE4F82003D8685 /* platform_unix.c in Sources */,

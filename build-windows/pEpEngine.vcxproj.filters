@@ -147,9 +147,6 @@
     <ClCompile Include="..\src\pEp_log.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\echo_api.c">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\media_key.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>

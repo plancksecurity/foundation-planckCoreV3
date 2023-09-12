@@ -101,7 +101,6 @@ for i in range(num_keys):
     genkey_file.write("Expire-Date: 0\n");
     genkey_file.write("%no-protection\n");
     genkey_file.write("%commit\n");
-    genkey_file.write("%echo done with key for " + email + "\n");
     genkey_file.write("\n");
     
 genkey_file.close()    

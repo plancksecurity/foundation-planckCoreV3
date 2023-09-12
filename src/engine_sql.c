@@ -11,8 +11,6 @@
 
 #include "pEp_internal.h"
 #include "engine_sql.h"
-#include "echo_api.h"  /* for echo_finalize and echo_initialize ,
-                          needed by pEp_refresh_database_connections . */
 
 /* Prevent people from using obsolete feature macros thinking that they still
    work. */
@@ -2148,17 +2146,10 @@ PEP_STATUS pEp_refresh_database_connections(PEP_SESSION session)
     session->first_session_at_init_time = false;
 
     /* Finalise every subsystem which depends on databases. */
-    status = echo_finalize(session);
-    CHECK;
-
     /* Finalise and then re-initialies databases. */
     status = pEp_sql_finalize(session, false);
     CHECK;
     status = pEp_sql_init(session);
-    CHECK;
-
-    /* Re-initialise the subsystems we finalised earlier. */
-    status = echo_initialize(session);
     CHECK;
 
     LOG_TRACE("database connections have been refreshed for session %p", session);

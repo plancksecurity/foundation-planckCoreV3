@@ -544,16 +544,6 @@ protocol session {
 DYNAMIC_API bool PEP_STATUS_is_error(PEP_STATUS status);
 
 // These all return void.
-    method config_enable_echo_protocol
-    doc="actually send Echo.Ping messages"
-    {
-        use bool enable doc="enable iff this is true";
-    }
-    method config_enable_echo_in_outgoing_message_rating_preview
-    doc="send Echo.Ping messages (unless the Echo protocol is disabled) when computing message_rating_preview, making it slower but increasing the chance of making the outgoing message protected"
-    {
-        use bool enable doc="enable iff this is true";
-    }
     method config_enable_log
     doc="enable or disable logging"
     {

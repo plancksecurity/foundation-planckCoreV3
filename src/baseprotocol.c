@@ -240,8 +240,6 @@ PEP_STATUS base_extract_message(
        missing signature if the protocol is one of:
        - Sync.Sync;
        - Distribution.Key_reset
-       but *not* if the protocol is
-       - Distribution.Echo.
        Here we know the family (Sync vs Distribution) but not the actual
        protocol.  Unfortunately we need to decode the payload here just to
        check, in case the family is Distribution.  A little wasteful, but
@@ -273,8 +271,6 @@ PEP_STATUS base_extract_message(
         case Distribution_PR_exploration:
             PEP_UNIMPLEMENTED; // FIXME: ask Volker if this requires a valid signature
             break;
-        case Distribution_PR_echo:
-            _require_signature = false; break;
         default:
             PEP_UNEXPECTED_VALUE(_dist->present);
         }
