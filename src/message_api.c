@@ -5577,6 +5577,7 @@ static PEP_STATUS _decrypt_message(
                 // also because the function works as such to turn the msg param to null
                 // doing msg = message_dup(src); before calling it on the placeholder is not a
                 //Possibly and as such...
+                free_identity(msg->from);
                 msg->from = identity_dup(src->from);
 
                 // check for private key in decrypted message attachment while importing
