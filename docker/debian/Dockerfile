@@ -1,9 +1,9 @@
 
 # building SequoiaBackend
 FROM rust:1.70-bullseye as sequoiaBuilder
-RUN apt-get update && apt-get install -yqq --no-install-recommends libclang-dev nettle-dev pkg-config libssl-dev
+RUN apt-get update && apt-get install -yqq --no-install-recommends libclang-dev libbotan-2-dev pkg-config libssl-dev
 WORKDIR /root/
-RUN git clone --depth=1 --branch=v1.0.0 https://git.planck.security/foundation/planckCoreSequoiaBackend.git
+RUN git clone --depth=1 --branch=v1.1.1 https://git.planck.security/foundation/planckCoreSequoiaBackend.git
 WORKDIR /root/planckCoreSequoiaBackend
 COPY docker/debian/planckCoreSequoiaBackend.conf local.conf
 RUN make install
@@ -56,7 +56,7 @@ COPY --from=sequoiaBuilder /opt/planck /opt/planck
 
 # WARNING: even if version v2.7.5 is checked out, the version is still 2.7.4
 COPY --from=yml2Builder /root/yml2/dist/yml2-2.7.4.tar.gz /root/
-RUN apt-get update && apt-get install -yqq --no-install-recommends python3 python3-pip virtualenv cmake libgtest-dev faketime
+RUN apt-get update && apt-get install -yqq --no-install-recommends python3 python3-pip virtualenv cmake libgtest-dev faketime libbotan-2-dev
 RUN virtualenv /opt/tools/virtualenv
 RUN . /opt/tools/virtualenv/bin/activate && pip install /root/yml2-2.7.4.tar.gz
 
