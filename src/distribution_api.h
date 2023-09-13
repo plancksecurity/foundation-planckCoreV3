@@ -17,7 +17,6 @@ extern "C" {
 #include "pEpEngine.h"
 
 /* Just #include every relevant header for the Distribution protocol family. */
-#include "echo_api.h"
 #include "key_reset.h"
 
 #ifdef __cplusplus

@@ -41,7 +41,6 @@
 #include "keymanagement.h"
 #include "sync_codec.h"
 #include "distribution_codec.h"
-#include "echo_api.h"
 #include "media_key.h"
 #include "pEp_rmd160.h"
 
@@ -2298,12 +2297,18 @@ bool import_attached_keys(
                 }
             }
             identity_list *local_private_idents = NULL;
-            PEP_STATUS import_status = import_key_with_fpr_return(
-                                                  session, blob_value, blob_size, 
-                                                  &local_private_idents,
-                                                  &_keylist,
-                                                  changed_keys);
-                                                  
+            PEP_STATUS import_status = import_key_strict(
+                    session, blob_value, blob_size,
+                    msg->from,
+                    &local_private_idents,
+                    &_keylist,
+                    changed_keys);
+//            PEP_STATUS import_status = import_key_with_fpr_return(
+//                    session, blob_value, blob_size,
+//                    &local_private_idents,
+//                    &_keylist,
+//                    changed_keys);
+
             if (_keylist) {
                 stringlist_t* added_keys = last_fpr_ptr ? last_fpr_ptr->next : _keylist;
                 if (stringlist_length(added_keys) == 1)
@@ -4949,28 +4954,6 @@ static PEP_STATUS process_Distribution_message(PEP_SESSION session,
             status = receive_managed_group_message(session, msg,
                                                    msg_rating, dist);
             break;
-        case Distribution_PR_echo:
-            switch (dist->choice.echo.present) {
-                case Echo_PR_echoPing:
-                    status = send_pong(session, msg, dist);
-                    break;
-                case Echo_PR_echoPong:
-                    LOG_EVENT("Received a Pong from %s <%s>", ASNONNULLSTR(msg->from->username), ASNONNULLSTR(msg->from->address));
-                    status = handle_pong(session, msg->recv_by, msg->from, dist);
-                    if (status == PEP_STATUS_OK)
-                        LOG_EVENT("Good");
-                    else if (status == PEP_DISTRIBUTION_ILLEGAL_MESSAGE) {
-                        /* If the challenge is wrong there is not much we can do
-                           other than detecting a possible forged message. */
-                        LOG_WARNING("Received a Pong from %s <%s> with status %i %s: FORGED?", ASNONNULLSTR(msg->from->username), ASNONNULLSTR(msg->from->address), (int) status, pEp_status_to_string(status));
-                    }
-                    else
-                        LOG_ERROR("Error: 0x%x %i %s", (int) status, (int) status, pEp_status_to_string(status));
-                    break;
-                default:
-                    PEP_ASSERT(false);
-            }
-            break;
         default:
             status = PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
     }
@@ -5574,7 +5557,7 @@ static PEP_STATUS _decrypt_message(
             
             case PEP_enc_PGP_MIME:
             case PEP_enc_PGP_MIME_Outlook1:
-            
+
                 status = mime_decode_message(ptext, psize, &msg, &has_inner);
                 if (status != PEP_STATUS_OK)
                     goto pEp_error;
@@ -5587,6 +5570,15 @@ static PEP_STATUS _decrypt_message(
                     free(src->shortmsg);
                     src->shortmsg = strdup(msg->shortmsg);                    
                 }
+
+                //Sascha Funfact: mime_decode_message doesn't include any of the extra fields like
+                //From, to, etc... which is a real cool thing when you need em later, additionally
+                //It is an informational leak so to speak as you lose you should have access to
+                // also because the function works as such to turn the msg param to null
+                // doing msg = message_dup(src); before calling it on the placeholder is not a
+                //Possibly and as such...
+                free_identity(msg->from);
+                msg->from = identity_dup(src->from);
 
                 // check for private key in decrypted message attachment while importing
                 // N.B. Apparently, we always import private keys into the keyring; however,
@@ -6629,21 +6621,6 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
         free(sender_fpr);
     } // end of Sync message handling
 
-    if (msg->dir == PEP_dir_incoming /* it is *almost* always the case */) {
-        // In case this message is at least reliable, make sure we know every
-        // identity mentioned in it by sending Pings (we accept sending them to
-        // PGP users as well) to unknown identities.
-        // We can do something similar even if the message is not reliable: in
-        // that case we cannot be sure that every recipient identity we do not
-        // know uses pEp -- but we can say that some of the recipients use pEp
-        // even without knowing them, thanks to media keys.  So, for unreliable
-        // messages, we want to sent Ping messages to unknown identities which
-        // are known to use pEp.  This implements ENGINE-1007.
-        if (rating >= PEP_rating_reliable)
-            send_ping_to_all_unknowns_in_incoming_message(session, msg);
-        else
-            send_ping_to_unknown_pEp_identities_in_incoming_message(session, msg);
-    }
 //LOG_MESSAGE_TRACE("msg is ", msg);
  
     // Removed for now - partial fix in ENGINE-647, but we have sync issues. Need to 
@@ -6867,11 +6844,6 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
     else
         *rating = _MAX(_rating(max_comm_type), PEP_rating_unencrypted);
 
-    /* We might be able to improve the rating by receving Pong replies from
-       identities which are unknown but are known to use pEp before the message
-       is actually sent. */
-    send_ping_to_unknown_pEp_identities_in_outgoing_message(session, msg);
-
     return PEP_STATUS_OK;
 }
 
@@ -6896,13 +6868,6 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating_preview(
             &max_comm_type);
 
     *rating = _MAX(_rating(max_comm_type), PEP_rating_unencrypted);
-
-    /* We might be able to improve the rating by receving Pong replies from
-       identities which are unknown but are known to use pEp before the message
-       is actually sent.  This behaviour can be disabled in the
-       configuration.  */
-    if (session->enable_echo_in_outgoing_message_rating_preview)
-        send_ping_to_unknown_pEp_identities_in_outgoing_message(session, msg);
 
     return PEP_STATUS_OK;
 }
