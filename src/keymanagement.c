@@ -1119,7 +1119,7 @@ PEP_STATUS _myself(PEP_SESSION session,
     identity->comm_type = PEP_ct_pEp;
     identity->me = true;
     if(ignore_flags)
-        identity->flags = 0;
+        identity->flags = PEP_idf_default;
     
     // Let's see if we have an identity record in the DB for 
     // this user_id + address
