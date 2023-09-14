@@ -1051,8 +1051,7 @@ DYNAMIC_API PEP_STATUS pEp_log(PEP_SESSION session,
 #endif /* #if defined (PEP_HAVE_SYSLOG) */
 
 #if defined (PEP_HAVE_ANDROID_LOG)
-    if (PEP_LOG_DESTINATIONS & PEP_LOG_DESTINATION_ANDROID)
-        COMBINE_STATUS(_pEp_log_android_log(ACTUALS));
+    COMBINE_STATUS(_pEp_log_android_log(ACTUALS));
 #endif /* #if defined (PEP_HAVE_ANDROID_LOG) */
 
 #if defined (PEP_HAVE_WINDOWS_LOG)
