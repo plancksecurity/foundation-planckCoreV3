@@ -79,10 +79,10 @@ rem DISTRIBUTION = distribution keyreset managedgroup exploration echo
 rem SYNC  = sync keysync trustsync groupsync
 rem STORAGE = storage messagestorage
 
-..\..\Tools\asn1c\bin\asn1c -S ../../Tools/asn1c/share/asn1c -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 sync.asn1 keysync.asn1 trustsync.asn1 groupsync.asn1 distribution.asn1 keyreset.asn1 managedgroup.asn1 exploration.asn1 echo.asn1
+..\..\Tools\asn1c\bin\asn1c -S ../../Tools/asn1c/share/asn1c -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 sync.asn1 keysync.asn1 trustsync.asn1 groupsync.asn1 distribution.asn1 keyreset.asn1 managedgroup.asn1 exploration.asn1
 IF %ERRORLEVEL% NEQ 0 GOTO end
 type nul >> "Sync.c"
-..\..\Tools\asn1c\bin\asn1c -S ../../Tools/asn1c/share/asn1c -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 distribution.asn1 keyreset.asn1 managedgroup.asn1 exploration.asn1 echo.asn1
+..\..\Tools\asn1c\bin\asn1c -S ../../Tools/asn1c/share/asn1c -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 distribution.asn1 keyreset.asn1 managedgroup.asn1 exploration.asn1
 IF %ERRORLEVEL% NEQ 0 GOTO end
 type nul >> "Distribution.c"
 del /q ReceiverRating.c.* ReceiverRating.h.*
