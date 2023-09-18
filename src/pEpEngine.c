@@ -102,7 +102,7 @@ DYNAMIC_API PEP_STATUS init(
     #else
         _session->enable_log = true;
     #endif
-#elif
+#else
     _session->enable_log = (getenv("PEP_LOG") != NULL);
 #endif
 
