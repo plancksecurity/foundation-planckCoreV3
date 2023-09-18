@@ -874,6 +874,7 @@ typedef enum _PEP_comm_type {
  *  
  */
 typedef enum _identity_flags {
+    PEP_idf_default = 0x0000,
     // the first octet flags are app defined settings
     PEP_idf_not_for_sync = 0x0001,   // don't use this identity for sync
     PEP_idf_list = 0x0002,           // identity of list of persons
