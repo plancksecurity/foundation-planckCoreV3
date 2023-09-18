@@ -95,7 +95,16 @@ DYNAMIC_API PEP_STATUS init(
     /* Logging is off by default, unless the environment variable PEP_LOG is
        defined to any value.  Logging can also be enabled by the configuration
        call config_enable_log . */
+
+#ifdef ANDROID
+    #ifdef NDEBUG
+        _session->enable_log = false;
+    #else
+        _session->enable_log = true;
+    #endif
+#else
     _session->enable_log = (getenv("PEP_LOG") != NULL);
+#endif
 
     /* There are no nested SQL transactions in progress yet. */
     _session->transaction_in_progress_no = 0;
