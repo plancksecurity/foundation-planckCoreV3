@@ -1757,11 +1757,13 @@ PEP_STATUS _key_reset(
             pEp_identity *signing_identity = NULL;
             PEP_STATUS status_create = create_signing_identity(session, &signing_identity);
 
-            int order1 = strcmp(user_id, signing_identity->user_id);
-            int order2 = strcmp(fpr_copy, signing_identity->fpr);
+            if (status_create == PEP_STATUS_OK) {
+                int order1 = strcmp(user_id, signing_identity->user_id);
+                int order2 = strcmp(fpr_copy, signing_identity->fpr);
 
-            if (!order1 && !order2) {
-                goto pEp_free;
+                if (!order1 && !order2) {
+                    goto pEp_free;
+                }
             }
         }
     }
