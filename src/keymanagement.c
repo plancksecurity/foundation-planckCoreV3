@@ -20,6 +20,9 @@
 #include "keymanagement_internal.h"
 #include "KeySync_fsm.h"
 #include "media_key.h"
+#include "signature.h"
+
+// 2023-08-31/DZ _own_identities_retrieve ignores the signing identity
 
 static bool key_matches_address(PEP_SESSION session, const char* address,
                                 const char* fpr) {
@@ -1673,22 +1676,28 @@ PEP_STATUS _own_identities_retrieve(
                 flags = (unsigned int)
                     sqlite3_column_int(session->own_identities_retrieve, 5);
 
-                pEp_identity *ident = new_identity(address, fpr, user_id, username);
-                if (!ident)
-                    goto enomem;
-                ident->comm_type = comm_type;
-                if (lang && lang[0]) {
-                    ident->lang[0] = lang[0];
-                    ident->lang[1] = lang[1];
-                    ident->lang[2] = 0;
-                }
-                ident->me = true;
-                ident->flags = flags;
+                int order1 = strcmp(address, SIGNING_IDENTITY_USER_ADDRESS);
+                int order2 = strcmp(username, SIGNING_IDENTITY_USER_NAME);
 
-                _bl = identity_list_add(_bl, ident);
-                if (_bl == NULL) {
-                    free_identity(ident);
-                    goto enomem;
+                // only consider own identities that are not the signing identity
+                if (order1 && order2) {
+                    pEp_identity *ident = new_identity(address, fpr, user_id, username);
+                    if (!ident)
+                        goto enomem;
+                    ident->comm_type = comm_type;
+                    if (lang && lang[0]) {
+                        ident->lang[0] = lang[0];
+                        ident->lang[1] = lang[1];
+                        ident->lang[2] = 0;
+                    }
+                    ident->me = true;
+                    ident->flags = flags;
+
+                    _bl = identity_list_add(_bl, ident);
+                    if (_bl == NULL) {
+                        free_identity(ident);
+                        goto enomem;
+                    }
                 }
                 
                 break;

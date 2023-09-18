@@ -5,9 +5,9 @@
 
 HERE:=$(CURDIR)
 
-GTEST_SRC_DIR:=/usr/src/gtest
+GTEST_SRC_DIR?=/usr/src/gtest
 GTEST_INC_DIR:=$(GTEST_SRC_DIR)/include
-GTEST_PL:=$(HOME)/src/gtest-parallel/gtest_parallel.py
+GTEST_PL?=$(HOME)/src/gtest-parallel/gtest_parallel.py
 
 include ../Makefile.conf # This should import changed values for the above from
                          # local.conf
@@ -81,7 +81,7 @@ CXXFLAGS:=$(filter-out -DNDEBUG,$(CXXFLAGS))
 CFLAGS:=$(filter-out -DNDEBUG,$(CFLAGS))
 
 # FIXME Possibly missing incdirs: ASN1C_INC
-CXXFLAGS+= -I$(GTEST_INC_DIR) -I./src -I../sync $(INC_FLAGS) -Wno-deprecated -Wno-unused-variable
+CXXFLAGS+= -I$(GTEST_INC_DIR) -I./src -I../sync -I$(PREFIX)/include $(INC_FLAGS) -Wno-deprecated -Wno-unused-variable
 
 CXXFLAGS+= -I./src -I../src -I ../asn.1 -I../sync $(INC_FLAGS)
 CXXFLAGS+= -Wno-deprecated -Wno-unused-variable

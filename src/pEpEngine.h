@@ -62,7 +62,6 @@ extern "C" {
 
 #define PEP_OWN_USERID "pEp_own_userId"
 
-
 // This minimum version is only used in update_pEp_user_trust_vals; the code
 // there is subtler than one might think.  If I (positron) am interpreting it
 // correctly, this is the protocol version we assume to be supported by a user

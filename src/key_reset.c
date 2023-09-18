@@ -19,6 +19,7 @@
     * 2023-07 key_reset_ignoring_device_group() function added.
     * 2023-07 key_reset_all_own_keys_ignoring_device_group() function added.
     * 2023-08-23/DZ _key_reset will simply leave the device group if it's an own key.
+    * 2023-08-30/DZ Don't reset the signing identity.
     */
 
 #include "pEp_internal.h"
@@ -35,6 +36,7 @@
 #include "baseprotocol.h"
 #include "../asn.1/Distribution.h"
 #include "Sync_impl.h" // this seems... bad
+#include "signature.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -1742,6 +1744,28 @@ PEP_STATUS _key_reset(
         status = get_default_own_userid(session, &user_id);
         if (status != PEP_STATUS_OK || !user_id)
             goto pEp_free;                    
+    }
+
+    // Skip the signing identity.
+    if (!reset_all_for_user) {
+        if (ident && ident->address) {
+            int order = strcmp(ident->address, SIGNING_IDENTITY_USER_ADDRESS);
+            if (!order) {
+                goto pEp_free;
+            }
+        } else if (user_id && fpr_copy) {
+            pEp_identity *signing_identity = NULL;
+            PEP_STATUS status_create = create_signing_identity(session, &signing_identity);
+
+            if (status_create == PEP_STATUS_OK) {
+                int order1 = strcmp(user_id, signing_identity->user_id);
+                int order2 = strcmp(fpr_copy, signing_identity->fpr);
+
+                if (!order1 && !order2) {
+                    goto pEp_free;
+                }
+            }
+        }
     }
     
     // FIXME: Make sure this can't result in a double-free in recursive calls

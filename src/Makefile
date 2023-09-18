@@ -3,6 +3,8 @@
 # This file may be used under the terms of the GNU General Public License version 3
 # see LICENSE.txt
 
+# 2023-09-01/DZ Add signature.h to the installed headers.
+
 include ../Makefile.conf
 
 ifneq ($(BUILD_FOR),OS/390)
@@ -121,7 +123,8 @@ HEADERS_TO_INSTALL = \
   platform.h platform_unix.h platform_windows.h platform_zos.h \
   pEp_debug.h pEp_log.h sql_reliability.h \
   pEpEngine_version.h \
-  transport.h growing_buf.h $(wildcard ../asn.1/*.h)
+  transport.h growing_buf.h $(wildcard ../asn.1/*.h) \
+  signature.h
 
 # CAVEAT:
 # install_headers is needed for building *STANDALONE* pEp MIME - it is NOT used for built-in functionality!!!
