@@ -388,7 +388,7 @@ DYNAMIC_API PEP_STATUS group_rating(
 /**
  *  <!--       retrieve_all_groups_as_manager()       -->
  *
- *  @brief      Get all ther groups I am manager of.
+ *  @brief      Get all the groups I am manager of.
  *
  *  @param[in]      session             associated session object
  *
@@ -411,7 +411,7 @@ DYNAMIC_API PEP_STATUS retrieve_all_groups_as_manager(
 /**
  *  <!--       retrieve_all_active_groups_as_manager()       -->
  *
- *  @brief      Get all ther groups I am manager of.
+ *  @brief      Get all the active groups I am manager of.
  *
  *  @param[in]      session             associated session object
  *
