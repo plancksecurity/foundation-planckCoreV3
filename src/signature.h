@@ -6,12 +6,13 @@
 #ifndef SIGNATURE_H
 #define SIGNATURE_H
 
-#include "pEpEngine.h"
-
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+#include "platform.h"
+#include "pEpEngine.h"
 
 #define SIGNING_IDENTITY_USER_ADDRESS "signing_identity@planck.security"
 #define SIGNING_IDENTITY_USER_NAME "Signing Identity"
@@ -48,11 +49,11 @@ extern "C"
      *  @retval PEP_STATUS_OK         success
      *
      */
-    PEP_STATUS signature_for_text(PEP_SESSION session,
-                                  const char *ptext,
-                                  size_t psize,
-                                  char **stext,
-                                  size_t *ssize);
+    DYNAMIC_API PEP_STATUS signature_for_text(PEP_SESSION session,
+                                              const char *ptext,
+                                              size_t psize,
+                                              char **stext,
+                                              size_t *ssize);
 
     /**
      *  <!--       verify_signature()       -->
@@ -68,11 +69,11 @@ extern "C"
      *  @retval PEP_VERIFIED The given text has been signed with the given signature.
      *
      */
-    PEP_STATUS verify_signature(PEP_SESSION session,
-                                const char *ptext,
-                                size_t psize,
-                                const char *stext,
-                                size_t ssize);
+    DYNAMIC_API PEP_STATUS verify_signature(PEP_SESSION session,
+                                            const char *ptext,
+                                            size_t psize,
+                                            const char *stext,
+                                            size_t ssize);
 
 #ifdef __cplusplus
 }

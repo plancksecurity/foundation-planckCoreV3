@@ -39,7 +39,7 @@ create_signing_identity(PEP_SESSION session, pEp_identity **signer_identity)
     return status;
 }
 
-PEP_STATUS
+DYNAMIC_API PEP_STATUS
 signature_for_text(PEP_SESSION session,
                    const char *ptext,
                    size_t psize,
@@ -60,7 +60,7 @@ signature_for_text(PEP_SESSION session,
     return status;
 }
 
-PEP_STATUS
+DYNAMIC_API PEP_STATUS
 verify_signature(PEP_SESSION session,
                  const char *ptext,
                  size_t psize,
