@@ -10,6 +10,8 @@
  */
 
  // 23.08.2023/IG - Update group_rating doc: Group rating is now Reliable (not Trusted) for members.
+ // 04.09.2023/IG - Add retrieve_all_groups_as_manager() and retrieve_all_active_groups_as_manager().
+ // 04.09.2023/IG - Move get_group_manager() to group.h and make it DYNAMIC API.
 
 #include "platform.h"
 #include "dynamic_api.h"
@@ -382,6 +384,98 @@ DYNAMIC_API PEP_STATUS group_rating(
         pEp_identity *manager,
         PEP_rating *rating
     );
+
+/**
+ *  <!--       retrieve_all_groups_as_manager()       -->
+ *
+ *  @brief      Get all the groups I am manager of.
+ *
+ *  @param[in]      session             associated session object
+ *
+ *  @param[in]      manager             the pEp_identity object representing the group manager. Must contain
+ *                                      a user_id and address
+ *  @param[out]     id_list             the identity_list object representing the identities of all the groups
+ *                                      I am manager of.
+ *
+ *  @retval         PEP_STATUS_OK       on success
+ *  @retval         error               on failure
+ *
+ *  @ownership      FIXME
+ *
+ */
+DYNAMIC_API PEP_STATUS retrieve_all_groups_as_manager(
+        PEP_SESSION session,
+        pEp_identity* manager,
+        identity_list** id_list);
+
+/**
+ *  <!--       retrieve_all_active_groups_as_manager()       -->
+ *
+ *  @brief      Get all the active groups I am manager of.
+ *
+ *  @param[in]      session             associated session object
+ *
+ *  @param[in]      manager             the pEp_identity object representing the group manager. Must contain
+ *                                      a user_id and address
+ *  @param[out]     id_list             the identity_list object representing the identities of all the active groups
+ *                                      I am manager of.
+ *
+ *  @retval         PEP_STATUS_OK       on success
+ *  @retval         error               on failure
+ *
+ *  @ownership      FIXME
+ *
+ */
+DYNAMIC_API PEP_STATUS retrieve_all_active_groups_as_manager(
+        PEP_SESSION session,
+        pEp_identity* manager,
+        identity_list** id_list);
+
+/**
+ *  <!--       retrieve_active_member_ident_list()       -->
+ *
+ *  @brief      Get all active members for a given group. Empty return if I am not manager of the group.
+ *
+ *  @param[in]      session             associated session object
+ *
+ *  @param[in]      group_identity      the pEp_identity object representing the group. Must contain at least
+ *                                      a user_id and address
+ *
+ *  @param[out]     id_list             the identity_list object representing the identities of all the active
+ *                                      members of the group.
+ *
+ *  @retval         PEP_STATUS_OK       on success
+ *  @retval         error               on failure
+ *
+ *  @ownership      FIXME
+ *
+ */
+DYNAMIC_API PEP_STATUS retrieve_active_member_ident_list(
+        PEP_SESSION session,
+        pEp_identity* group_identity,
+        identity_list** id_list);
+
+/**
+ *  <!--       get_group_manager()       -->
+ *
+ *  @brief      Get the manager of a group.
+ *
+ *  @param[in]      session             associated session object
+ *
+ *  @param[in]      group_identity      the pEp_identity object representing the group. Must contain at least
+ *                                      a user_id and address
+ *
+ *  @param[out]     manager            the pEp_identity object representing the group manager.
+ *
+ *  @retval         PEP_STATUS_OK       on success
+ *  @retval         error               on failure
+ *
+ *  @ownership      FIXME
+ *
+ */
+DYNAMIC_API PEP_STATUS get_group_manager(PEP_SESSION session,
+                             pEp_identity* group_identity,
+                             pEp_identity** manager);
 
 #ifdef __cplusplus
 }

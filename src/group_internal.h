@@ -3,6 +3,8 @@
 /// @brief  Internal functions for representation of groups
 /// @license This file is under GNU General Public License 3.0 - see LICENSE.txt
 
+// 04.09.2023/IG - Move get_group_manager() to group.h and make it DYNAMIC API.
+
 #ifndef GROUP_INTERNAL_H
 #define GROUP_INTERNAL_H
 
@@ -222,18 +224,6 @@ PEP_STATUS is_own_group_identity(PEP_SESSION session, pEp_identity* group_identi
  * @return
  */
 identity_list* member_list_to_identity_list(member_list* memberlist);
-
-/**
- *
- * @internal
- * @param session
- * @param group_identity
- * @param manager
- * @return
- */
-PEP_STATUS get_group_manager(PEP_SESSION session,
-                             pEp_identity* group_identity,
-                             pEp_identity** manager);
 
 /**
  *

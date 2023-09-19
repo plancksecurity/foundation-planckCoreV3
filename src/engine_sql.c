@@ -1968,7 +1968,9 @@ static PEP_STATUS _prepare_sql_stmts(PEP_SESSION session) {
     PREPARE(db, get_all_members);
     PREPARE(db, get_active_members);
     PREPARE(db, get_all_groups);
+    PREPARE(db, get_all_groups_as_manager);
     PREPARE(db, get_active_groups);
+    PREPARE(db, get_all_active_groups_as_manager);
     PREPARE(db, add_own_membership_entry);
     PREPARE(db, get_own_membership_status);
     PREPARE(db, retrieve_own_membership_info_for_group_and_ident);
@@ -2078,7 +2080,9 @@ static PEP_STATUS _finalize_sql_stmts(PEP_SESSION session) {
     sqlite3_finalize(session->get_all_members);
     sqlite3_finalize(session->get_active_members);
     sqlite3_finalize(session->get_active_groups);
+    sqlite3_finalize(session->get_all_active_groups_as_manager);
     sqlite3_finalize(session->get_all_groups);
+    sqlite3_finalize(session->get_all_groups_as_manager);
     sqlite3_finalize(session->add_own_membership_entry);
     sqlite3_finalize(session->get_own_membership_status);
     sqlite3_finalize(session->retrieve_own_membership_info_for_group_and_ident);
