@@ -163,6 +163,7 @@
     <ClCompile Include="..\src\platform_windows.cpp" />
     <ClCompile Include="..\src\resource_id.c" />
     <ClCompile Include="..\src\security_checks.c" />
+    <ClCompile Include="..\src\signature.c" />
     <ClCompile Include="..\src\sqlite3.c" />
     <ClCompile Include="..\src\sql_reliability.c" />
     <ClCompile Include="..\src\stringlist.c" />
@@ -226,6 +227,7 @@
     <ClInclude Include="..\src\resource.h" />
     <ClInclude Include="..\src\resource_id.h" />
     <ClInclude Include="..\src\security_checks.h" />
+    <ClInclude Include="..\src\signature.h" />
     <ClInclude Include="..\src\sqlite3.h" />
     <ClInclude Include="..\src\status_to_string.h" />
     <ClInclude Include="..\src\stringlist.h" />
