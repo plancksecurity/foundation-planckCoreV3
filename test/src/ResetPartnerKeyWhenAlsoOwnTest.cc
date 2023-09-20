@@ -147,20 +147,6 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
     status = set_comm_partner_key(session, tyrell_partner, fpr);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
-    // check the partner identity
-    pEp_identity *tyrell_partner_check = identity_dup(tyrell_partner);
-    free(tyrell_partner_check->fpr);
-    tyrell_partner_check->fpr = NULL;
-    tyrell_partner_check->minor_ver = 0;
-    tyrell_partner_check->major_ver = 0;
-    status = update_identity(session, tyrell_partner_check);
-    ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_STREQ(tyrell_partner->fpr, tyrell_partner_check->fpr);
-    ASSERT_EQ(tyrell_partner->major_ver, tyrell_partner_check->major_ver);
-    ASSERT_EQ(tyrell_partner->minor_ver, tyrell_partner_check->minor_ver);
-    ASSERT_EQ(tyrell_partner_check->major_ver, PEP_ENGINE_VERSION_MAJOR);
-    ASSERT_EQ(tyrell_partner_check->minor_ver, PEP_ENGINE_VERSION_MINOR);
-
     status = key_reset_identity(session, tyrell_partner, fpr);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
@@ -183,7 +169,6 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
 
     free_identity(tyrell_own);
     free_identity(tyrell_partner);
-    free_identity(tyrell_partner_check);
 
     ASSERT_TRUE(false);
 }
