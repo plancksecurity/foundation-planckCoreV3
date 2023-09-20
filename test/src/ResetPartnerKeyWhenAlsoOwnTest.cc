@@ -123,8 +123,7 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
     msg->shortmsg = strdup(message_subject);
     msg->longmsg = strdup(message_text);
     message *msg_encrypted = NULL;
-    status =
-      encrypt_message_for_self(session, tyrell_own, msg, NULL, &msg_encrypted, PEP_enc_PEP, 0);
+    status = encrypt_message(session, msg, NULL, &msg_encrypted, PEP_enc_PEP, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(msg_encrypted);
     ASSERT_STRNE(msg_encrypted->shortmsg, msg->shortmsg);
@@ -175,7 +174,7 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
     ASSERT_STREQ(msg_decrypted->longmsg, msg->longmsg);
 
     for (stringlist_t *member = keylist; member && member->value; member = member->next) {
-      printf("*** encrypted to %s\n", member->value);
+        printf("*** encrypted to %s\n", member->value);
     }
 
     free_message(msg);
@@ -186,5 +185,5 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
     free_identity(tyrell_partner);
     free_identity(tyrell_partner_check);
 
-    //ASSERT_TRUE(false);
+    ASSERT_TRUE(false);
 }
