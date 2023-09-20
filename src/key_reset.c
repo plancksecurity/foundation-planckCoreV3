@@ -1939,8 +1939,7 @@ PEP_STATUS _key_reset(
                 status = clear_trust_info(session, tmp_ident->user_id, fpr_copy);
 
             bool has_private_key = false;
-            // Don't care about the status, because it really really should not write
-            // the out parameter in case of error.
+            // Best effort to find out if this is a private key, no error handling.
             contains_priv_key(session, fpr_copy, &has_private_key);
 
             if (!has_private_key) {
