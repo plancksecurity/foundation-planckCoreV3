@@ -135,7 +135,6 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
   ASSERT_EQ(status, PEP_STATUS_OK);
 
   // check the partner identity
-  /*
   pEp_identity *tyrell_partner_check = identity_dup(tyrell_partner);
   free(tyrell_partner_check->fpr);
   tyrell_partner_check->fpr = NULL;
@@ -148,5 +147,4 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
   ASSERT_EQ(tyrell_partner->minor_ver, tyrell_partner_check->minor_ver);
   ASSERT_EQ(tyrell_partner_check->major_ver, PEP_ENGINE_VERSION_MAJOR);
   ASSERT_EQ(tyrell_partner_check->minor_ver, PEP_ENGINE_VERSION_MINOR);
-  */
 }
