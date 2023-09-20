@@ -1942,17 +1942,16 @@ PEP_STATUS _key_reset(
             bool has_private_key = false;
             contains_priv_key(session, fpr_copy, &has_private_key);
 
-            //if (!has_private_key) {
+            if (!has_private_key) {
                 // This is a public key, delete it from the keyring.
                 //
                 // FIXME: when key election disappears, so should this!
-                printf("*** delete_keypair %s\n", fpr_copy);
                 status = delete_keypair(session, fpr_copy); /* positron: I believe the previous comment
                                                                         is wrong and we should in fact
                                                                         not delete the key from the
                                                                         keyring without key election.
                                                                         Can fdik confirm? */
-            //}
+            }
         }
 
         // REGARDLESS OF WHO OWNS THE KEY, WE NOW NEED TO REMOVE IT AS A DEFAULT.

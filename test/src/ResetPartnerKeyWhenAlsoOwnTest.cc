@@ -90,30 +90,18 @@ class ResetPartnerKeyWhenAlsoOwnTest : public ::testing::Test
 
 TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
 {
-    ASSERT_TRUE(slurp_and_import_key(session, "test_keys/tyrell.asc"));
-
-    const char *fpr = "7A60C123B027A26648B0EFBA5847167BE968FBF7";
     const char *address = "tyrell@example.com";
     const char *name = "Eldon Tyrell";
     const char *message_subject = "short message";
     const char *message_text = "long message";
 
     // create the own identity
-    pEp_identity *tyrell_own = new_identity(address, fpr, PEP_OWN_USERID, name);
+    pEp_identity *tyrell_own = new_identity(address, NULL, PEP_OWN_USERID, name);
     ASSERT_NOTNULL(tyrell_own);
-
-    // configure the own identity
-    tyrell_own->me = true;
-    set_own_key(session, tyrell_own, fpr);
+    PEP_STATUS status = myself(session, tyrell_own);
     ASSERT_NOTNULL(tyrell_own->fpr);
-    ASSERT_STREQ(tyrell_own->fpr, fpr);
-    PEP_STATUS status = set_as_pEp_user(session, tyrell_own);
-    ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_STREQ(tyrell_own->fpr, fpr);
-    status =
-      set_protocol_version(session, tyrell_own, PEP_ENGINE_VERSION_MAJOR, PEP_ENGINE_VERSION_MINOR);
-    ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_STREQ(tyrell_own->fpr, fpr);
+    ASSERT_EQ(tyrell_own->major_ver, PEP_ENGINE_VERSION_MAJOR);
+    ASSERT_EQ(tyrell_own->minor_ver, PEP_ENGINE_VERSION_MINOR);
 
     // encrypt a message
     message *msg = new_message(PEP_dir_outgoing);
@@ -135,8 +123,6 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
 
     // configure the partner
     tyrell_partner->me = false;
-    free(tyrell_partner->fpr);
-    tyrell_partner->fpr = NULL;
     free(tyrell_partner->user_id);
     tyrell_partner->user_id = strdup("tofu_tyrell");
     status = set_as_pEp_user(session, tyrell_partner);
@@ -144,10 +130,8 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
     status = set_protocol_version(
       session, tyrell_partner, PEP_ENGINE_VERSION_MAJOR, PEP_ENGINE_VERSION_MINOR);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    status = set_comm_partner_key(session, tyrell_partner, fpr);
-    ASSERT_EQ(status, PEP_STATUS_OK);
 
-    status = key_reset_identity(session, tyrell_partner, fpr);
+    status = key_reset_identity(session, tyrell_partner, tyrell_partner->fpr);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
     // Make sure we can still decrypt the message, so we still have our original private key.
@@ -155,13 +139,9 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
     PEP_decrypt_flags_t flags_decrypted;
     stringlist_t *keylist;
     status = decrypt_message_2(session, msg_encrypted, &msg_decrypted, &keylist, &flags_decrypted);
-    ASSERT_TRUE(status == PEP_STATUS_OK || status == PEP_DECRYPTED);
+    ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_STREQ(msg_decrypted->shortmsg, msg->shortmsg);
     ASSERT_STREQ(msg_decrypted->longmsg, msg->longmsg);
-
-    for (stringlist_t *member = keylist; member && member->value; member = member->next) {
-        printf("*** encrypted to %s\n", member->value);
-    }
 
     free_message(msg);
     free_message(msg_encrypted);
@@ -169,6 +149,4 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
 
     free_identity(tyrell_own);
     free_identity(tyrell_partner);
-
-    ASSERT_TRUE(false);
 }
