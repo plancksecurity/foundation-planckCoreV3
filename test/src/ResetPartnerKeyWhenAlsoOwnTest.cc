@@ -154,4 +154,12 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
 
   status = key_reset_identity(session, tyrell_partner, fpr);
   ASSERT_EQ(status, PEP_STATUS_OK);
+
+  pEp_identity *tyrell_own2 = new_identity(address, NULL, PEP_OWN_USERID, name);
+  ASSERT_NOTNULL(tyrell_own2);
+  status = myself(session, tyrell_own2);
+  ASSERT_EQ(status, PEP_STATUS_OK);
+  ASSERT_NOTNULL(tyrell_own2->fpr);
+  ASSERT_EQ(tyrell_own2->major_ver, PEP_ENGINE_VERSION_MAJOR);
+  ASSERT_EQ(tyrell_own2->minor_ver, PEP_ENGINE_VERSION_MINOR);
 }
