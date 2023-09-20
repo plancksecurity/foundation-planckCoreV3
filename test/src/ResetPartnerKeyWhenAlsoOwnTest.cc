@@ -93,9 +93,10 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
 
   const char *fpr = "7A60C123B027A26648B0EFBA5847167BE968FBF7";
   const char *address = "tyrell@example.com";
+  const char *name = "Eldon Tyrell";
 
   // create the own identity
-  pEp_identity *tyrell_own = new_identity(address, fpr, PEP_OWN_USERID, "Eldon Tyrell");
+  pEp_identity *tyrell_own = new_identity(address, fpr, PEP_OWN_USERID, name);
   ASSERT_NOTNULL(tyrell_own);
 
   // configure the own identity
