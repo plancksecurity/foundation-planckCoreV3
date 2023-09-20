@@ -120,7 +120,7 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
     msg->shortmsg = strdup(message_subject);
     msg->longmsg = strdup(message_text);
     message *msg_encrypted = NULL;
-    status = encrypt_message(session, msg, NULL, &msg_encrypted, PEP_enc_PEP, 0);
+    status = encrypt_message_for_self(session, tyrell_own, msg, NULL, &msg_encrypted, PEP_enc_PEP, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(msg_encrypted);
     ASSERT_STRNE(msg_encrypted->shortmsg, msg->shortmsg);
