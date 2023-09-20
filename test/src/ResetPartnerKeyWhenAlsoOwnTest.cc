@@ -111,15 +111,19 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
   status = set_protocol_version(session, tyrell_own, PEP_ENGINE_VERSION_MAJOR, PEP_ENGINE_VERSION_MINOR);
   ASSERT_EQ(status, PEP_STATUS_OK);
 
+  // encrypt a message
   message *msg = new_message(PEP_dir_outgoing);
-  msg->from = tyrell_own;
-  identity_list *tos = new_identity_list(tyrell_own);
+  msg->from = identity_dup(tyrell_own);
+  identity_list *tos = new_identity_list(identity_dup(tyrell_own));
   msg->to = tos;
   msg->shortmsg = strdup(message_subject);
   msg->longmsg = strdup(message_text);
   message *msg_encrypted = NULL;
   status = encrypt_message(session, msg, NULL, &msg_encrypted, PEP_enc_PEP, 0);
   ASSERT_EQ(status, PEP_STATUS_OK);
+  ASSERT_NOTNULL(msg_encrypted);
+  ASSERT_STRNE(msg_encrypted->shortmsg, msg->shortmsg);
+  ASSERT_STRNE(msg_encrypted->longmsg, msg->longmsg);
 
   // nil some parts
   free(tyrell_own->fpr);
@@ -143,7 +147,7 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
   free(tyrell_partner->fpr);
   tyrell_partner->fpr = NULL;
   free(tyrell_partner->user_id);
-  tyrell_partner->user_id = "tofu_tyrell";
+  tyrell_partner->user_id = strdup("tofu_tyrell");
   status = set_as_pEp_user(session, tyrell_partner);
   ASSERT_EQ(status, PEP_STATUS_OK);
   status = set_protocol_version(session, tyrell_partner, PEP_ENGINE_VERSION_MAJOR, PEP_ENGINE_VERSION_MINOR);
@@ -179,4 +183,22 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
   // While the private key should not have been deleted, we still
   // changed ours.
   ASSERT_STRNE(tyrell_own2->fpr, fpr);
+
+  // Make sure we can still decrypt the message, so we still have our original private key.
+  message *msg_decrypted;
+  PEP_decrypt_flags_t flags_decrypted;
+  stringlist_t *keylist;
+  status = decrypt_message_2(session, msg_encrypted, &msg_decrypted, &keylist, &flags_decrypted);
+  ASSERT_EQ(status, PEP_STATUS_OK);
+  ASSERT_STREQ(msg_decrypted->shortmsg, msg->shortmsg);
+  ASSERT_STREQ(msg_decrypted->longmsg, msg->longmsg);
+
+  free_message(msg);
+  free_message(msg_encrypted);
+  free_message(msg_decrypted);
+
+  free_identity(tyrell_own);
+  free_identity(tyrell_own2);
+  free_identity(tyrell_partner);
+  free_identity(tyrell_partner_check);
 }
