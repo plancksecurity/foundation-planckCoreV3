@@ -162,4 +162,6 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
   ASSERT_NOTNULL(tyrell_own2->fpr);
   ASSERT_EQ(tyrell_own2->major_ver, PEP_ENGINE_VERSION_MAJOR);
   ASSERT_EQ(tyrell_own2->minor_ver, PEP_ENGINE_VERSION_MINOR);
+
+  ASSERT_STREQ(tyrell_own2->fpr, fpr);
 }
