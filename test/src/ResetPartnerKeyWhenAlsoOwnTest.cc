@@ -108,6 +108,14 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
   status = set_protocol_version(session, tyrell_own, PEP_ENGINE_VERSION_MAJOR, PEP_ENGINE_VERSION_MINOR);
   ASSERT_EQ(status, PEP_STATUS_OK);
 
+  const char *str_to_encrypt = "This should get encrypted";
+  const size_t str_to_encrypt_size = strlen(str_to_encrypt);
+  char *encrypted;
+  size_t encrypted_size;
+  stringlist_t *keys = new_stringlist(fpr);
+  status = encrypt_and_sign(session, NULL, str_to_encrypt, str_to_encrypt_size, &encrypted, &encrypted_size);
+  ASSERT_EQ(status, PEP_STATUS_OK);
+
   // nil some parts
   free(tyrell_own->fpr);
   tyrell_own->fpr = NULL;
