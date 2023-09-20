@@ -131,15 +131,6 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
   status = set_protocol_version(session, tyrell_partner, PEP_ENGINE_VERSION_MAJOR, PEP_ENGINE_VERSION_MINOR);
   ASSERT_EQ(status, PEP_STATUS_OK);
 
-  /*
-  PEP_STATUS status = set_identity(session, tyrell_partner);
-  ASSERT_EQ(status, PEP_STATUS_OK);
-  status = set_as_pEp_user(session, tyrell_partner);
-  ASSERT_EQ(status, PEP_STATUS_OK);
-  status = set_protocol_version(session, tyrell_partner, PEP_ENGINE_VERSION_MAJOR, PEP_ENGINE_VERSION_MINOR);
-  ASSERT_EQ(status, PEP_STATUS_OK);
-  */
-
   // check the partner identity
   /*
   pEp_identity *tyrell_partner_check = identity_dup(tyrell_partner);
