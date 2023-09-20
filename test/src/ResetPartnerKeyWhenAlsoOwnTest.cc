@@ -95,10 +95,12 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
   // create the own identity
   pEp_identity *tyrell_own = new_identity("tyrell@example.com", fpr, "tofu_tyrell", "Eldon Tyrell");
   ASSERT_NOTNULL(tyrell_own);
-  set_own_key(session, tyrell_own, fpr);
-  ASSERT_NOTNULL(tyrell_own->fpr);
 
   // configure the own identity
+  tyrell_own->me = true;
+  tyrell_own->user_id = PEP_OWN_USERID;
+  set_own_key(session, tyrell_own, fpr);
+  ASSERT_NOTNULL(tyrell_own->fpr);
   PEP_STATUS status = set_as_pEp_user(session, tyrell_own);
   ASSERT_EQ(status, PEP_STATUS_OK);
   status = set_protocol_version(session, tyrell_own, PEP_ENGINE_VERSION_MAJOR, PEP_ENGINE_VERSION_MINOR);
