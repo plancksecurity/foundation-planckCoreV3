@@ -20,7 +20,7 @@
     * 2023-07 key_reset_all_own_keys_ignoring_device_group() function added.
     * 2023-08-23/DZ _key_reset will simply leave the device group if it's an own key.
     * 2023-08-30/DZ Don't reset the signing identity.
-    * 2023-09-20/DZ _key_reset() will never remove a private key from the keyring
+    * 2023-09-20/DZ _key_reset() will not remove a private key from the keyring
     *  in the context of resetting a partner's key.
     */
 
