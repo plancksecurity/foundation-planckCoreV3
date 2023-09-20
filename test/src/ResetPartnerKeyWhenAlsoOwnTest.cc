@@ -90,7 +90,7 @@ class ResetPartnerKeyWhenAlsoOwnTest : public ::testing::Test
 
 TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
 {
-    slurp_and_import_key(session, "test_keys/tyrell.asc");
+    ASSERT_TRUE(slurp_and_import_key(session, "test_keys/tyrell.asc"));
 
     const char *fpr = "7A60C123B027A26648B0EFBA5847167BE968FBF7";
     const char *address = "tyrell@example.com";
@@ -106,11 +106,14 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
     tyrell_own->me = true;
     set_own_key(session, tyrell_own, fpr);
     ASSERT_NOTNULL(tyrell_own->fpr);
+    ASSERT_STREQ(tyrell_own->fpr, fpr);
     PEP_STATUS status = set_as_pEp_user(session, tyrell_own);
     ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_STREQ(tyrell_own->fpr, fpr);
     status =
       set_protocol_version(session, tyrell_own, PEP_ENGINE_VERSION_MAJOR, PEP_ENGINE_VERSION_MINOR);
     ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_STREQ(tyrell_own->fpr, fpr);
 
     // encrypt a message
     message *msg = new_message(PEP_dir_outgoing);
@@ -137,6 +140,7 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
     status = myself(session, tyrell_own);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(tyrell_own->fpr);
+    ASSERT_STREQ(tyrell_own->fpr, fpr);
     ASSERT_EQ(tyrell_own->major_ver, PEP_ENGINE_VERSION_MAJOR);
     ASSERT_EQ(tyrell_own->minor_ver, PEP_ENGINE_VERSION_MINOR);
 
@@ -196,6 +200,10 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
     ASSERT_STREQ(msg_decrypted->shortmsg, msg->shortmsg);
     ASSERT_STREQ(msg_decrypted->longmsg, msg->longmsg);
 
+    for (stringlist_t *member = keylist; member && member->value; member = member->next) {
+      printf("*** encrypted to %s\n", member->value);
+    }
+
     free_message(msg);
     free_message(msg_encrypted);
     free_message(msg_decrypted);
@@ -204,4 +212,6 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
     free_identity(tyrell_own2);
     free_identity(tyrell_partner);
     free_identity(tyrell_partner_check);
+
+    ASSERT_TRUE(false);
 }
