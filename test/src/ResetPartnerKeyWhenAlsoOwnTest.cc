@@ -122,13 +122,13 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
   // create the partner identity
   pEp_identity *tyrell_partner = identity_dup(tyrell_own);
   ASSERT_NOTNULL(tyrell_partner);
+
+  // configure the partner
   tyrell_partner->me = false;
   free(tyrell_partner->fpr);
   tyrell_partner->fpr = NULL;
   free(tyrell_partner->user_id);
   tyrell_partner->user_id = "tofu_tyrell";
-
-  // configure the partner
   status = set_as_pEp_user(session, tyrell_partner);
   ASSERT_EQ(status, PEP_STATUS_OK);
   status = set_protocol_version(session, tyrell_partner, PEP_ENGINE_VERSION_MAJOR, PEP_ENGINE_VERSION_MINOR);
