@@ -125,6 +125,8 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
   tyrell_partner->me = false;
   free(tyrell_partner->fpr);
   tyrell_partner->fpr = NULL;
+  free(tyrell_partner->user_id);
+  tyrell_partner->user_id = "tofu_tyrell";
 
   // configure the partner
   status = set_as_pEp_user(session, tyrell_partner);
