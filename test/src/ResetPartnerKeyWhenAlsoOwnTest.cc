@@ -90,15 +90,16 @@ class ResetPartnerKeyWhenAlsoOwnTest : public ::testing::Test
 TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
 {
   slurp_and_import_key(session, "test_keys/tyrell.asc");
+
   const char *fpr = "7A60C123B027A26648B0EFBA5847167BE968FBF7";
+  const char *address = "tyrell@example.com";
 
   // create the own identity
-  pEp_identity *tyrell_own = new_identity("tyrell@example.com", fpr, "tofu_tyrell", "Eldon Tyrell");
+  pEp_identity *tyrell_own = new_identity(address, fpr, PEP_OWN_USERID, "Eldon Tyrell");
   ASSERT_NOTNULL(tyrell_own);
 
   // configure the own identity
   tyrell_own->me = true;
-  tyrell_own->user_id = PEP_OWN_USERID;
   set_own_key(session, tyrell_own, fpr);
   ASSERT_NOTNULL(tyrell_own->fpr);
   PEP_STATUS status = set_as_pEp_user(session, tyrell_own);
