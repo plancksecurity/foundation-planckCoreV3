@@ -13,8 +13,7 @@
 #include "key_reset.h"
 #include "keymanagement.h"
 #include "platform.h"
-
-#include "signature.h"
+#include "pEpEngine_internal.h"
 
 namespace {
 
@@ -90,5 +89,68 @@ class ResetPartnerKeyWhenAlsoOwnTest : public ::testing::Test
 
 TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
 {
-  ASSERT_TRUE(false);
+  slurp_and_import_key(session, "test_keys/tyrell.asc");
+  const char *fpr = "7A60C123B027A26648B0EFBA5847167BE968FBF7";
+
+  // create the own identity
+  pEp_identity *tyrell_own = new_identity("tyrell@example.com", fpr, "tofu_tyrell", "Eldon Tyrell");
+  ASSERT_NOTNULL(tyrell_own);
+  set_own_key(session, tyrell_own, fpr);
+  ASSERT_NOTNULL(tyrell_own->fpr);
+
+  // configure the own identity
+  PEP_STATUS status = set_as_pEp_user(session, tyrell_own);
+  ASSERT_EQ(status, PEP_STATUS_OK);
+  status = set_protocol_version(session, tyrell_own, PEP_ENGINE_VERSION_MAJOR, PEP_ENGINE_VERSION_MINOR);
+  ASSERT_EQ(status, PEP_STATUS_OK);
+
+  // nil some parts
+  free(tyrell_own->fpr);
+  tyrell_own->fpr = NULL;
+  tyrell_own->major_ver = 0;
+  tyrell_own->minor_ver = 0;
+
+  // check myself
+  status = myself(session, tyrell_own);
+  ASSERT_EQ(status, PEP_STATUS_OK);
+  ASSERT_NOTNULL(tyrell_own->fpr);
+  ASSERT_EQ(tyrell_own->major_ver, PEP_ENGINE_VERSION_MAJOR);
+  ASSERT_EQ(tyrell_own->minor_ver, PEP_ENGINE_VERSION_MINOR);
+
+  // create the partner identity
+  pEp_identity *tyrell_partner = identity_dup(tyrell_own);
+  ASSERT_NOTNULL(tyrell_partner);
+  status = set_identity(session, tyrell_partner);
+  ASSERT_EQ(status, PEP_STATUS_OK);
+
+  // configure the partner
+  status = set_as_pEp_user(session, tyrell_partner);
+  ASSERT_EQ(status, PEP_STATUS_OK);
+  status = set_protocol_version(session, tyrell_partner, PEP_ENGINE_VERSION_MAJOR, PEP_ENGINE_VERSION_MINOR);
+  ASSERT_EQ(status, PEP_STATUS_OK);
+
+  /*
+  PEP_STATUS status = set_identity(session, tyrell_partner);
+  ASSERT_EQ(status, PEP_STATUS_OK);
+  status = set_as_pEp_user(session, tyrell_partner);
+  ASSERT_EQ(status, PEP_STATUS_OK);
+  status = set_protocol_version(session, tyrell_partner, PEP_ENGINE_VERSION_MAJOR, PEP_ENGINE_VERSION_MINOR);
+  ASSERT_EQ(status, PEP_STATUS_OK);
+  */
+
+  // check the partner identity
+  /*
+  pEp_identity *tyrell_partner_check = identity_dup(tyrell_partner);
+  free(tyrell_partner_check->fpr);
+  tyrell_partner_check->fpr = NULL;
+  tyrell_partner_check->minor_ver = 0;
+  tyrell_partner_check->major_ver = 0;
+  status = update_identity(session, tyrell_partner_check);
+  ASSERT_EQ(status, PEP_STATUS_OK);
+  ASSERT_STREQ(tyrell_partner->fpr, tyrell_partner_check->fpr);
+  ASSERT_EQ(tyrell_partner->major_ver, tyrell_partner_check->major_ver);
+  ASSERT_EQ(tyrell_partner->minor_ver, tyrell_partner_check->minor_ver);
+  ASSERT_EQ(tyrell_partner_check->major_ver, PEP_ENGINE_VERSION_MAJOR);
+  ASSERT_EQ(tyrell_partner_check->minor_ver, PEP_ENGINE_VERSION_MINOR);
+  */
 }
