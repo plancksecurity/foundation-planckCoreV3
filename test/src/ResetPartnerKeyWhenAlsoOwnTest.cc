@@ -95,6 +95,8 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
   const char *fpr = "7A60C123B027A26648B0EFBA5847167BE968FBF7";
   const char *address = "tyrell@example.com";
   const char *name = "Eldon Tyrell";
+  const char *message_subject = "short message";
+  const char *message_text = "long message";
 
   // create the own identity
   pEp_identity *tyrell_own = new_identity(address, fpr, PEP_OWN_USERID, name);
@@ -109,12 +111,14 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
   status = set_protocol_version(session, tyrell_own, PEP_ENGINE_VERSION_MAJOR, PEP_ENGINE_VERSION_MINOR);
   ASSERT_EQ(status, PEP_STATUS_OK);
 
-  const char *str_to_encrypt = "This should get encrypted";
-  const size_t str_to_encrypt_size = strlen(str_to_encrypt);
-  char *encrypted;
-  size_t encrypted_size;
-  stringlist_t *keys = new_stringlist(fpr);
-  status = encrypt_only(session, keys, str_to_encrypt, str_to_encrypt_size, &encrypted, &encrypted_size);
+  message *msg = new_message(PEP_dir_outgoing);
+  msg->from = tyrell_own;
+  identity_list *tos = new_identity_list(tyrell_own);
+  msg->to = tos;
+  msg->shortmsg = strdup(message_subject);
+  msg->longmsg = strdup(message_text);
+  message *msg_encrypted = NULL;
+  status = encrypt_message(session, msg, NULL, &msg_encrypted, PEP_enc_PEP, 0);
   ASSERT_EQ(status, PEP_STATUS_OK);
 
   // nil some parts
