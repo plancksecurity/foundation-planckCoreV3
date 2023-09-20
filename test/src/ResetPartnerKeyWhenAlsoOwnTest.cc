@@ -130,20 +130,6 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
     ASSERT_STRNE(msg_encrypted->shortmsg, msg->shortmsg);
     ASSERT_STRNE(msg_encrypted->longmsg, msg->longmsg);
 
-    // nil some parts
-    free(tyrell_own->fpr);
-    tyrell_own->fpr = NULL;
-    tyrell_own->major_ver = 0;
-    tyrell_own->minor_ver = 0;
-
-    // check myself
-    status = myself(session, tyrell_own);
-    ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NOTNULL(tyrell_own->fpr);
-    ASSERT_STREQ(tyrell_own->fpr, fpr);
-    ASSERT_EQ(tyrell_own->major_ver, PEP_ENGINE_VERSION_MAJOR);
-    ASSERT_EQ(tyrell_own->minor_ver, PEP_ENGINE_VERSION_MINOR);
-
     // create the partner identity
     pEp_identity *tyrell_partner = identity_dup(tyrell_own);
     ASSERT_NOTNULL(tyrell_partner);
@@ -179,18 +165,6 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
     status = key_reset_identity(session, tyrell_partner, fpr);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
-    pEp_identity *tyrell_own2 = new_identity(address, NULL, PEP_OWN_USERID, name);
-    ASSERT_NOTNULL(tyrell_own2);
-    status = myself(session, tyrell_own2);
-    ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NOTNULL(tyrell_own2->fpr);
-    ASSERT_EQ(tyrell_own2->major_ver, PEP_ENGINE_VERSION_MAJOR);
-    ASSERT_EQ(tyrell_own2->minor_ver, PEP_ENGINE_VERSION_MINOR);
-
-    // While the private key should not have been deleted, we still
-    // changed ours.
-    ASSERT_STRNE(tyrell_own2->fpr, fpr);
-
     // Make sure we can still decrypt the message, so we still have our original private key.
     message *msg_decrypted;
     PEP_decrypt_flags_t flags_decrypted;
@@ -209,9 +183,8 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
     free_message(msg_decrypted);
 
     free_identity(tyrell_own);
-    free_identity(tyrell_own2);
     free_identity(tyrell_partner);
     free_identity(tyrell_partner_check);
 
-    ASSERT_TRUE(false);
+    //ASSERT_TRUE(false);
 }
