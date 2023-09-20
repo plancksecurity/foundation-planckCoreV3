@@ -14,6 +14,7 @@
 #include "keymanagement.h"
 #include "platform.h"
 #include "pEpEngine_internal.h"
+#include "pEp_internal.h"
 
 namespace {
 
@@ -113,7 +114,7 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
   char *encrypted;
   size_t encrypted_size;
   stringlist_t *keys = new_stringlist(fpr);
-  status = encrypt_and_sign(session, NULL, str_to_encrypt, str_to_encrypt_size, &encrypted, &encrypted_size);
+  status = encrypt_only(session, keys, str_to_encrypt, str_to_encrypt_size, &encrypted, &encrypted_size);
   ASSERT_EQ(status, PEP_STATUS_OK);
 
   // nil some parts
