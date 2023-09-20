@@ -131,14 +131,13 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
       session, tyrell_partner, PEP_ENGINE_VERSION_MAJOR, PEP_ENGINE_VERSION_MINOR);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
-    // Without the counter-measure of not removing private keys from the DB
-    // in a context of partner key rest,
-    // this key reset on the fake partner identity, using the own private key,
-    // would remove the own private key.
+    // Trick the core into resetting a partner key, that is actually our own.
+    // Without counter-measures, this would remove our own private key.
     status = key_reset_identity(session, tyrell_partner, tyrell_partner->fpr);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
-    // Make sure we can still decrypt the message, so we still have our original private key.
+    // Prove we can still decrypt the message, so we still have our original private key.
+    // Nothing got deleted from the keyring.
     message *msg_decrypted;
     PEP_decrypt_flags_t flags_decrypted;
     stringlist_t *keylist;
