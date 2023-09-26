@@ -20,6 +20,8 @@
     * 2023-07 key_reset_all_own_keys_ignoring_device_group() function added.
     * 2023-08-23/DZ _key_reset will simply leave the device group if it's an own key.
     * 2023-08-30/DZ Don't reset the signing identity.
+    * 2023-09-20/DZ _key_reset() will not remove a private key from the keyring
+    *  in the context of resetting a partner's key.
     */
 
 #include "pEp_internal.h"
@@ -1937,16 +1939,20 @@ PEP_STATUS _key_reset(
             if (tmp_ident->user_id)
                 status = clear_trust_info(session, tmp_ident->user_id, fpr_copy);
 
-            // This is a public key (or a private key that isn't ours, which means
-            // we want it gone anyway)
-            //
-            // Delete this key from the keyring.
-            // FIXME: when key election disappears, so should this!
-            status = delete_keypair(session, fpr_copy); /* positron: I believe the previous comment
-                                                                     is wrong and we should in fact
-                                                                     not delete the key from the
-                                                                     keyring without key election.
-                                                                     Can fdik confirm? */
+            // Best effort to find out if this is a private key, no error handling.
+            bool has_private_key = false;
+            contains_priv_key(session, fpr_copy, &has_private_key);
+
+            if (!has_private_key) {
+                // This is a public key, delete it from the keyring.
+                //
+                // FIXME: when key election disappears, so should this!
+                status = delete_keypair(session, fpr_copy); /* positron: I believe the previous comment
+                                                                        is wrong and we should in fact
+                                                                        not delete the key from the
+                                                                        keyring without key election.
+                                                                        Can fdik confirm? */
+            }
         }
 
         // REGARDLESS OF WHO OWNS THE KEY, WE NOW NEED TO REMOVE IT AS A DEFAULT.
