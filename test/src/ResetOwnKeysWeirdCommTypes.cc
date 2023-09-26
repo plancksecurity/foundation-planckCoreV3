@@ -121,6 +121,15 @@ TEST_F(ResetOwnKeysWeirdCommTypes, basic)
     // Must be corrected. CORE-154.
     //ASSERT_EQ(tyrell2->comm_type, ct);
 
+    // verify by directly looking into the DB
+    pEp_identity *tyrell_db = NULL;
+    status = get_identity(session, address, PEP_OWN_USERID, &tyrell_db);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(tyrell_db->comm_type, ct);
+
+    status = key_reset_all_own_keys(session);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
     free_identity(tyrell1);
     free_identity(tyrell2);
 }
