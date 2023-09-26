@@ -97,14 +97,24 @@ TEST_F(ResetOwnKeysWeirdCommTypes, basic)
     pEp_identity *tyrell1 = new_identity(address, NULL, PEP_OWN_USERID, name);
     ASSERT_NOTNULL(tyrell1);
     PEP_STATUS status = myself(session, tyrell1);
+    ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(tyrell1->fpr);
     ASSERT_EQ(tyrell1->major_ver, PEP_ENGINE_VERSION_MAJOR);
     ASSERT_EQ(tyrell1->minor_ver, PEP_ENGINE_VERSION_MINOR);
 
     // manipulate the ct
-    tyrell1->comm_type = PEP_ct_pEp_unconfirmed;
+    PEP_comm_type ct = PEP_ct_pEp_unconfirmed;
+    tyrell1->comm_type = ct;
     status = set_trust(session, tyrell1);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
+    // verify
+    pEp_identity *tyrell2 = new_identity(address, NULL, PEP_OWN_USERID, name);
+    ASSERT_NOTNULL(tyrell2);
+    status = myself(session, tyrell2); // TODO: This resets the comm type
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_STREQ(tyrell1->fpr, tyrell2->fpr);
+
     free_identity(tyrell1);
+    free_identity(tyrell2);
 }
