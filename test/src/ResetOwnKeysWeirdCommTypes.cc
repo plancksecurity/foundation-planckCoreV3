@@ -94,12 +94,17 @@ TEST_F(ResetOwnKeysWeirdCommTypes, basic)
     const char *name = "Eldon Tyrell";
 
     // create the own identity
-    pEp_identity *tyrell_own = new_identity(address, NULL, PEP_OWN_USERID, name);
-    ASSERT_NOTNULL(tyrell_own);
-    PEP_STATUS status = myself(session, tyrell_own);
-    ASSERT_NOTNULL(tyrell_own->fpr);
-    ASSERT_EQ(tyrell_own->major_ver, PEP_ENGINE_VERSION_MAJOR);
-    ASSERT_EQ(tyrell_own->minor_ver, PEP_ENGINE_VERSION_MINOR);
+    pEp_identity *tyrell1 = new_identity(address, NULL, PEP_OWN_USERID, name);
+    ASSERT_NOTNULL(tyrell1);
+    PEP_STATUS status = myself(session, tyrell1);
+    ASSERT_NOTNULL(tyrell1->fpr);
+    ASSERT_EQ(tyrell1->major_ver, PEP_ENGINE_VERSION_MAJOR);
+    ASSERT_EQ(tyrell1->minor_ver, PEP_ENGINE_VERSION_MINOR);
 
-    free_identity(tyrell_own);
+    // manipulate the ct
+    tyrell1->comm_type = PEP_ct_pEp_unconfirmed;
+    status = set_trust(session, tyrell1);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    free_identity(tyrell1);
 }
