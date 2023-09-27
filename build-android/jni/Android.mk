@@ -15,7 +15,7 @@ $(error GPGBUILD must be set)
 endif
 
 LOCAL_MODULE    := pEpEngine
-LOCAL_CFLAGS    += -std=c99
+LOCAL_CFLAGS    += -std=c99 $(PEP_LOG)
 
 # from http://www.sqlite.org/android/finfo?name=jni/sqlite/Android.mk 
 #      http://www.sqlite.org/android/artifact/e8ed354b3e58c835
