@@ -5589,18 +5589,31 @@ static PEP_STATUS _decrypt_message(
                 //
                 free(imported_sender_key_fpr);
                 imported_sender_key_fpr = NULL;
+                bool shouldImportKeys = true;
+                if (is_pEp_msg
+                    && src->from
+                    && !is_me(session, src->from)
+                    && decrypt_status == PEP_DECRYPTED) { /* if decrypted, but not verified... */
+                    pEp_identity *tmp_from = src->from;
+                    update_identity(session, tmp_from);
+                    if (tmp_from->fpr) { // if we could not verify this partner's identity but we already have an fpr for them:
+                        shouldImportKeys = false;
+                    }
+                }
                 
                 stringlist_t** start = (_imported_key_list ? &(stringlist_get_tail(_imported_key_list)->next) : &_imported_key_list);
                 // if this is a non-pEp message or a 1.0 message, we'll need to do some default-setting here. 
                 // otherwise, we don't ask for a sender import fpr because for pEp 2.0+ any legit default key attachments should 
-                // be INSIDE the message 
-                status = import_keys_from_decrypted_msg(session, msg, is_pEp_msg,
-                                                        &keys_were_imported,
-                                                        &imported_private_key_address,
-                                                        private_il,
-                                                        &_imported_key_list,
-                                                        &_changed_keys,
-                                                        &imported_sender_key_fpr);
+                // be INSIDE the message
+                if (shouldImportKeys) {
+                    status = import_keys_from_decrypted_msg(session, msg, is_pEp_msg,
+                                                            &keys_were_imported,
+                                                            &imported_private_key_address,
+                                                            private_il,
+                                                            &_imported_key_list,
+                                                            &_changed_keys,
+                                                            &imported_sender_key_fpr);
+                }
 
                 if (src->from) {
                     if (!is_me(session, src->from)) {
