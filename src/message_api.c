@@ -26,6 +26,7 @@
 
 // 07.08.2023/IP - added method import_extrakey_with_fpr_return
 // 21.08.2023/DZ - make _get_comm_type understand group identities
+// 28.09.2023/IG - _decrypt_message - Reject new keys for unverified existing partner
 
 #include "pEp_internal.h"
 #include "message_api.h"
