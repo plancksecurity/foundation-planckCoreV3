@@ -1036,7 +1036,7 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_reliable_bob_noclobber_n
 
     // Ok, we now the desired state. Run the import mail fun.
     read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_1_0_wrong_key_filename_no_pEp.eml",
-                                     PEP_rating_reliable, PEP_STATUS_OK);
+                                     PEP_rating_unreliable, PEP_DECRYPTED);
 
      // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
@@ -1207,7 +1207,7 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_trusted_bob_noclobber_no
 
     // Ok, we now the desired state. Run the import mail fun.
     read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_1_0_wrong_key_filename_no_pEp.eml",
-                                     PEP_rating_reliable, PEP_STATUS_OK);
+                                     PEP_rating_unreliable, PEP_DECRYPTED);
 
      // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
