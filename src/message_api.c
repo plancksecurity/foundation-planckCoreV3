@@ -5591,8 +5591,7 @@ static PEP_STATUS _decrypt_message(
                 free(imported_sender_key_fpr);
                 imported_sender_key_fpr = NULL;
                 bool shouldImportKeys = true;
-                if (is_pEp_msg
-                    && src->from
+                if (src->from
                     && !is_me(session, src->from)
                     && decrypt_status == PEP_DECRYPTED) { /* if decrypted, but not verified... */
                     pEp_identity *tmp_from = src->from;
