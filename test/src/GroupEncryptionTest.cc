@@ -3280,7 +3280,7 @@ TEST_F(GroupEncryptionTest, check_group_key_reset_receive_partner_1) {
 //    EXPECT_TRUE(is_revoked);
 
     status = update_identity(session, group_ident);
-    ASSERT_STRNE(group_ident->fpr, group_1_replacement_revoke_1);
+    ASSERT_STREQ(group_ident->fpr, group_1_fpr); // Signature check fails as it was signed with an unknown key, then attached key was not imported.
     bool has_private = false;
     contains_priv_key(session, group_ident->fpr, &has_private);
     ASSERT_FALSE(has_private);
