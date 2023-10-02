@@ -478,7 +478,7 @@ TEST_F(KeyResetMessageTest, check_reset_receive_revoked) {
     status = decrypt_message_2(session, received_mail,
                                   &decrypted_msg, &keylist, &flags);
 
-    ASSERT_EQ(status, PEP_DECRYPTED); // The key used to sign the message was <alice_receive_reset_fpr>, while the fpr in the sender identity is <alice_fpr>. Therefore, the message should be decrypted but the signature check must fail.
+    ASSERT_EQ(status, PEP_KEY_NOT_FOUND); // The key used to sign the message was <alice_receive_reset_fpr>, while the fpr in the sender identity is <alice_fpr>. Therefore, the message should be decrypted but the signature check must fail.
     ASSERT_NULL(keylist);
     if (keylist) // there's a test option to continue when asserts fail, so...
         ASSERT_STREQ(keylist->value, alice_receive_reset_fpr);

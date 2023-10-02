@@ -3272,7 +3272,6 @@ TEST_F(GroupEncryptionTest, check_group_key_reset_receive_partner_1) {
     message* dec_msg = NULL;
 
     status = decrypt_message_2(session, enc_msg, &dec_msg, &keylist, &flags);
-    ASSERT_OK;
 
     // FIXME: reinstate this when key election removal is in - fails due to delete_keypair
 //    bool is_revoked;
@@ -3314,7 +3313,7 @@ TEST_F(GroupEncryptionTest, check_group_key_reset_receive_partner_2) {
     message* dec_msg = NULL;
 
     status = decrypt_message_2(session, enc_msg, &dec_msg, &keylist, &flags);
-    ASSERT_OK;
+    ASSERT_EQ(status, PEP_KEY_NOT_FOUND);
 
     // FIXME: reinstate this when key election removal is in - fails due to delete_keypair
 //    bool is_revoked;

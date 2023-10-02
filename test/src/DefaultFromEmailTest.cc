@@ -972,7 +972,7 @@ TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_reliable_bob_noclobber
 
     // Ok, we now have a blank slate. Run the import mail fun.
     read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_2.eml",
-                                     PEP_rating_reliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
+                                    PEP_rating_unreliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
 
     // Make sure import didn't overwrite default
     check_sender_default_key_status(sender_info2, PEP_ct_pEp_unconfirmed);
@@ -988,7 +988,7 @@ TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_reliable_bob_noclobber
 
     // Ok, we now have a blank slate. Run the import mail fun.
     read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_1.eml",
-                                     PEP_rating_reliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
+                                    PEP_rating_unreliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
 
     // Make sure import didn't overwrite default
     check_sender_default_key_status(sender_info2, PEP_ct_pEp_unconfirmed);
@@ -1004,7 +1004,7 @@ TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_reliable_bob_noclobber
 
     // Ok, we now have a blank slate. Run the import mail fun.
     read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_0.eml",
-                                     PEP_rating_reliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
+                                    PEP_rating_unreliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
 
     // Make sure import didn't overwrite default
     check_sender_default_key_status(sender_info2, PEP_ct_pEp_unconfirmed);
@@ -1020,7 +1020,7 @@ TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_reliable_bob_noclobber
 
     // Ok, we now have a blank slate. Run the import mail fun.
     read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_1_0.eml",
-                                     PEP_rating_reliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
+                                    PEP_rating_unreliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
 
     // Make sure import didn't overwrite default
     check_sender_default_key_status(sender_info2, PEP_ct_pEp_unconfirmed);
@@ -1052,8 +1052,8 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_reliable_bob_noclobber_2
     force_sender_default_to_be_set(TestUtilsPreset::BOB2, false);
 
     // Ok, we now the desired state. Run the import mail fun.
-    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_2.eml", 
-                                     PEP_rating_reliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_2.eml",
+                                    PEP_rating_unreliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
 
     // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
@@ -1070,8 +1070,8 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_reliable_bob_noclobber_2
     force_sender_default_to_be_set(TestUtilsPreset::BOB2, false);
 
     // Ok, we now the desired state. Run the import mail fun.
-    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_1.eml", 
-                                     PEP_rating_reliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_1.eml",
+                                    PEP_rating_unreliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
 
     // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
@@ -1088,8 +1088,8 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_reliable_bob_noclobber_2
     force_sender_default_to_be_set(TestUtilsPreset::BOB2, false);
 
     // Ok, we now the desired state. Run the import mail fun.
-    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_0.eml", 
-                                     PEP_rating_reliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_0.eml",
+                                    PEP_rating_unreliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
 
     // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
@@ -1108,7 +1108,7 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_reliable_bob_noclobber_1
 
     // Ok, we now the desired state. Run the import mail fun.
     read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_1_0_wrong_key_filename_ModifiedVersion.eml", 
-                                     PEP_rating_reliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
+                                     PEP_rating_unreliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
     
     // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
@@ -1143,7 +1143,7 @@ TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_trusted_bob_noclobber_
 
     // Ok, we now have a blank slate. Run the import mail fun.
     read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_2.eml",
-                                     PEP_rating_reliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
+                                     PEP_rating_unreliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
 
     // Make sure import didn't overwrite default
     check_sender_default_key_status(sender_info2, PEP_ct_pEp);
@@ -1159,7 +1159,7 @@ TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_trusted_bob_noclobber_
 
     // Ok, we now have a blank slate. Run the import mail fun.
     read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_1.eml",
-                                     PEP_rating_reliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
+                                     PEP_rating_unreliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
 
     // Make sure import didn't overwrite default
     check_sender_default_key_status(sender_info2, PEP_ct_pEp);
@@ -1175,7 +1175,7 @@ TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_trusted_bob_noclobber_
 
     // Ok, we now have a blank slate. Run the import mail fun.
     read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_0.eml",
-                                     PEP_rating_reliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
+                                     PEP_rating_unreliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
 
     // Make sure import didn't overwrite default
     check_sender_default_key_status(sender_info2, PEP_ct_pEp);
@@ -1191,7 +1191,7 @@ TEST_F(DefaultFromEmailTest, check_unencrypted_key_import_trusted_bob_noclobber_
 
     // Ok, we now have a blank slate. Run the import mail fun.
     read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_1_0.eml",
-                                     PEP_rating_reliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
+                                     PEP_rating_unreliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
 
     // Make sure import didn't overwrite default
     check_sender_default_key_status(sender_info2, PEP_ct_pEp);
@@ -1224,7 +1224,7 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_trusted_bob_noclobber_2_
 
     // Ok, we now the desired state. Run the import mail fun.
     read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_2.eml", 
-                                     PEP_rating_reliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
+                                     PEP_rating_unreliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
 
     // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
@@ -1242,7 +1242,7 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_trusted_bob_noclobber_2_
 
     // Ok, we now the desired state. Run the import mail fun.
     read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_1.eml", 
-                                     PEP_rating_reliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
+                                     PEP_rating_unreliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
 
     // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
@@ -1259,8 +1259,8 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_trusted_bob_noclobber_2_
     force_sender_default_to_be_set(TestUtilsPreset::BOB2, true);
 
     // Ok, we now the desired state. Run the import mail fun.
-    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_0.eml", 
-                                     PEP_rating_reliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_2_0.eml",
+                                    PEP_rating_unreliable, PEP_DECRYPTED); // The key used to sign the message was <TestUtilsPreset::BOB>, while the fpr in the sender identity is <TestUtilsPreset::BOB2>. Therefore, the message should be decrypted but the signature check must fail.
 
     // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
@@ -1278,8 +1278,8 @@ TEST_F(DefaultFromEmailTest, check_encrypted_key_import_trusted_bob_noclobber_1_
     force_sender_default_to_be_set(TestUtilsPreset::BOB2, true);
 
     // Ok, we now the desired state. Run the import mail fun.
-    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_1_0_wrong_key_filename_ModifiedVersion.eml", 
-                                     PEP_rating_reliable, PEP_STATUS_OK);
+    read_decrypt_check_incoming_mail("test_mails/CanonicalFrom2.2BobToAlice_1_0_wrong_key_filename_ModifiedVersion.eml",
+                                    PEP_rating_unreliable, PEP_DECRYPTED);
     
     // Check that the default key matches the canonical default key for this sender,
     // if expected to be present.
