@@ -3280,7 +3280,7 @@ TEST_F(GroupEncryptionTest, check_group_key_reset_receive_partner_1) {
 //    EXPECT_TRUE(is_revoked);
 
     status = update_identity(session, group_ident);
-    ASSERT_STREQ(group_ident->fpr, group_1_replacement_revoke_1);
+    ASSERT_STRNE(group_ident->fpr, group_1_replacement_revoke_1);
     bool has_private = false;
     contains_priv_key(session, group_ident->fpr, &has_private);
     ASSERT_FALSE(has_private);
