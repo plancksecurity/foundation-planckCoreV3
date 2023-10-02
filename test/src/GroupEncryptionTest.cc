@@ -3313,7 +3313,7 @@ TEST_F(GroupEncryptionTest, check_group_key_reset_receive_partner_2) {
     message* dec_msg = NULL;
 
     status = decrypt_message_2(session, enc_msg, &dec_msg, &keylist, &flags);
-    ASSERT_EQ(status, PEP_KEY_NOT_FOUND);
+    ASSERT_EQ(status, PEP_KEY_NOT_FOUND); // different fpr for same key is not imported and so key cannot be found
 
     // FIXME: reinstate this when key election removal is in - fails due to delete_keypair
 //    bool is_revoked;
@@ -3322,7 +3322,7 @@ TEST_F(GroupEncryptionTest, check_group_key_reset_receive_partner_2) {
 //    EXPECT_TRUE(is_revoked);
 
     status = update_identity(session, group_ident);
-    ASSERT_STREQ(group_ident->fpr, group_1_replacement_revoke_1);
+    ASSERT_STRNE(group_ident->fpr, group_1_replacement_revoke_1); // different fpr for same key is not imported and identity not overwritten
     bool has_private = false;
     contains_priv_key(session, group_ident->fpr, &has_private);
     ASSERT_FALSE(has_private);

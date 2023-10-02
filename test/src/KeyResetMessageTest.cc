@@ -428,7 +428,7 @@ TEST_F(KeyResetMessageTest, check_non_reset_receive_revoked) {
 
     ASSERT_EQ(status, PEP_DECRYPTED); // The key used to sign the message was <alice_receive_reset_fpr>, while the fpr in the sender identity is <alice_fpr>. Therefore, the message should be decrypted but the signature check must fail.
 
-    ASSERT_NULL(keylist);
+    ASSERT_NOTNULL(keylist);
 
     // FIXME: key election - right now, this case is intended to fail. But I am not sure it should. Question to fdik on hold.
     /*
@@ -478,14 +478,14 @@ TEST_F(KeyResetMessageTest, check_reset_receive_revoked) {
     status = decrypt_message_2(session, received_mail,
                                   &decrypted_msg, &keylist, &flags);
 
-    ASSERT_EQ(status, PEP_KEY_NOT_FOUND); // The key used to sign the message was <alice_receive_reset_fpr>, while the fpr in the sender identity is <alice_fpr>. Therefore, the message should be decrypted but the signature check must fail.
+    ASSERT_EQ(status, PEP_KEY_NOT_FOUND); // The key used to sign the message was <alice_receive_reset_fpr>, while the fpr in the sender identity is <alice_fpr>. According to the new logic, the key is not imported and fpr should not be replaced in db.
     ASSERT_NULL(keylist);
     if (keylist) // there's a test option to continue when asserts fail, so...
         ASSERT_STREQ(keylist->value, alice_receive_reset_fpr);
 
     status = update_identity(session, alice_ident);
     ASSERT_NOTNULL(alice_ident->fpr);
-    ASSERT_STREQ(alice_receive_reset_fpr, alice_ident->fpr);
+    ASSERT_STRNE(alice_receive_reset_fpr, alice_ident->fpr); // The key used to sign the message was <alice_receive_reset_fpr>, while the fpr in the sender identity is <alice_fpr>. According to the new logic, the fpr should not be replaced in db.
 
     keylist = NULL;
 
