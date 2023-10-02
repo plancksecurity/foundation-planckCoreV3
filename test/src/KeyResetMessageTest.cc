@@ -426,9 +426,9 @@ TEST_F(KeyResetMessageTest, check_non_reset_receive_revoked) {
     ASSERT_OK;
     status = decrypt_message_2(session, enc_msg_obj, &dec_msg_obj, &keylist, &flags);
 
-    ASSERT_OK;
+    ASSERT_EQ(status, PEP_DECRYPTED); // The key used to sign the message was <alice_receive_reset_fpr>, while the fpr in the sender identity is <alice_fpr>. Therefore, the message should be decrypted but the signature check must fail.
 
-    ASSERT_NOTNULL(keylist);
+    ASSERT_NULL(keylist);
 
     // FIXME: key election - right now, this case is intended to fail. But I am not sure it should. Question to fdik on hold.
     /*
@@ -478,8 +478,8 @@ TEST_F(KeyResetMessageTest, check_reset_receive_revoked) {
     status = decrypt_message_2(session, received_mail,
                                   &decrypted_msg, &keylist, &flags);
 
-    ASSERT_OK;
-    ASSERT_NOTNULL(keylist);
+    ASSERT_EQ(status, PEP_DECRYPTED); // The key used to sign the message was <alice_receive_reset_fpr>, while the fpr in the sender identity is <alice_fpr>. Therefore, the message should be decrypted but the signature check must fail.
+    ASSERT_NULL(keylist);
     if (keylist) // there's a test option to continue when asserts fail, so...
         ASSERT_STREQ(keylist->value, alice_receive_reset_fpr);
 
