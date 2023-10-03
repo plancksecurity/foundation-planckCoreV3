@@ -41,6 +41,11 @@ protocol Sync 1 {
                 send Beacon;
             }
 
+            on SyncReinit {
+                debug > cry, baby
+                send Beacon;
+            }
+
             on Beacon {
                 if sameChallenge {
                     debug > this is our own Beacon; ignore
@@ -138,7 +143,7 @@ protocol Sync 1 {
                     go HandshakingPhase2Offerer;
             }
 
-            on CannotDecrypt {
+            on SyncReinit {
                 send Rollback;
                 go Sole;
             }
@@ -181,7 +186,7 @@ protocol Sync 1 {
                 go HandshakingPhase1Requester;
             }
 
-            on CannotDecrypt {
+            on SyncReinit {
                 send Rollback;
                 go Sole;
             }
@@ -315,6 +320,11 @@ protocol Sync 1 {
                 send SynchronizeGroupKeys;
             }
 
+            on SyncReinit {
+                debug > cry, baby
+                send SynchronizeGroupKeys;
+            }
+
             on SynchronizeGroupKeys {
                 do prepareOwnKeys;
                 send GroupKeysUpdate;
@@ -430,7 +440,7 @@ protocol Sync 1 {
                 go HandshakingToJoinPhase1;
             }
 
-            on CannotDecrypt {
+            on SyncReinit {
                 send Rollback;
                 go Sole;
             }
@@ -543,7 +553,7 @@ protocol Sync 1 {
                     do saveGroupKeys;
             }
 
-            on CannotDecrypt {
+            on SyncReinit {
                 send Rollback;
                 go Grouped;
             }
