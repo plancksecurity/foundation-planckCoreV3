@@ -415,5 +415,5 @@ DYNAMIC_API PEP_STATUS sync_reinit(PEP_SESSION session)
     PEP_REQUIRE(session);
 
     /* Go to the appropriate state. */
-    return signal_Sync_event(session, Sync_PR_keysync, CannotDecrypt, NULL);
+    return signal_Sync_event(session, Sync_PR_keysync, SyncReinit, NULL);
 }
