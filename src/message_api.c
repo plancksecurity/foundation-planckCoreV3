@@ -6080,11 +6080,18 @@ static PEP_STATUS _decrypt_message(
         
         *rating = decrypt_rating(decrypt_status);
 
-        // Ok, so if it was signed and it's all verified, we can update
+        // Ok, so if it was signed and it's all verified, we can update -> But maybe it was only verified because we imported the sender's key!
         // eligible signer comm_types to PEP_ct_pEp_*
         // This also sets and upgrades pEp version
-        if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED && !is_deprecated_key_reset && is_pEp_msg && calculated_src->from)
-            status = update_sender_to_pEp_trust(session, msg->from, _keylist, major_ver, minor_ver);
+        if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED && !is_deprecated_key_reset &&
+            is_pEp_msg && calculated_src->from) {
+            pEp_identity *tmp_from = src->from;
+            update_identity(session, tmp_from);
+            if (!tmp_from->fpr) { // only allow one entry for same user // check fpr or identity rating or comm_type?
+                status = update_sender_to_pEp_trust(session, msg->from, _keylist, major_ver,
+                                                    minor_ver);
+            }
+        }
 
         /* Ok, now we have a keylist used for decryption/verification.
            now we need to update the message rating with the 
