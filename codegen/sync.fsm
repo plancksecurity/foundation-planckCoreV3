@@ -137,6 +137,10 @@ protocol Sync 1 {
                 if sameNegotiation
                     go HandshakingPhase2Offerer;
             }
+
+            on CannotDecrypt {
+                go Sole;
+            }
         }
 
         // handshaking without existing Device group
@@ -174,6 +178,10 @@ protocol Sync 1 {
                 do trustThisKey;
                 send CommitAcceptRequester;
                 go HandshakingPhase1Requester;
+            }
+
+            on CannotDecrypt {
+                go Sole;
             }
         }
 
@@ -302,7 +310,7 @@ protocol Sync 1 {
 
             on CannotDecrypt {
                 debug > cry, baby
-                send SynchronizeGroupKeys;
+                send Beacon;
             }
 
             on SynchronizeGroupKeys {
@@ -419,6 +427,10 @@ protocol Sync 1 {
                 do trustThisKey;
                 go HandshakingToJoinPhase1;
             }
+
+            on CannotDecrypt {
+                go Sole;
+            }
         }
 
         state HandshakingToJoinPhase1 {
@@ -526,6 +538,10 @@ protocol Sync 1 {
             on GroupKeysUpdate {
                 if fromGroupMember // double check
                     do saveGroupKeys;
+            }
+
+            on CannotDecrypt {
+                go Grouped;
             }
         }
 
