@@ -1616,6 +1616,7 @@ tstylesheet {
             )
         {
             PEP_REQUIRE_ORELSE_RETURN(session, invalid_state);
+            «@name»_LOG_SERVICE("«@name» TELLTALE IN STATE %s GOT EVENT %s", «@name»_state_name(state), «@name»_event_name(event));
 
             if ((int) state == None)
                 state = «@name»_state_Init;
