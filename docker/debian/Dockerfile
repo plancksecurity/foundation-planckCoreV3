@@ -40,7 +40,7 @@ WORKDIR /root/
 COPY --from=yml2Builder /root/yml2/dist/yml2-2.7.4.tar.gz /root/
 RUN virtualenv /root/virtualenv
 RUN . /root/virtualenv/bin/activate && pip install /root/yml2-2.7.4.tar.gz
-RUN git clone --depth=1 --branch=v1.0.0 https://git.planck.security/foundation/libPlanckTransport.git
+RUN git clone --depth=1 --branch=v3.3.0-RC9 https://git.planck.security/foundation/libPlanckTransport.git
 WORKDIR /root/libPlanckTransport
 COPY docker/debian/libPlanckTransport.conf local.conf
 RUN . /root/virtualenv/bin/activate && make && make install
