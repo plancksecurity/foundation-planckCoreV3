@@ -139,6 +139,7 @@ protocol Sync 1 {
             }
 
             on CannotDecrypt {
+                send Rollback;
                 go Sole;
             }
         }
@@ -181,6 +182,7 @@ protocol Sync 1 {
             }
 
             on CannotDecrypt {
+                send Rollback;
                 go Sole;
             }
         }
@@ -310,7 +312,7 @@ protocol Sync 1 {
 
             on CannotDecrypt {
                 debug > cry, baby
-                send Beacon;
+                send SynchronizeGroupKeys;
             }
 
             on SynchronizeGroupKeys {
@@ -429,6 +431,7 @@ protocol Sync 1 {
             }
 
             on CannotDecrypt {
+                send Rollback;
                 go Sole;
             }
         }
@@ -541,6 +544,7 @@ protocol Sync 1 {
             }
 
             on CannotDecrypt {
+                send Rollback;
                 go Grouped;
             }
         }
