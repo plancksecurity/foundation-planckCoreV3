@@ -26,6 +26,7 @@
 
 // 07.08.2023/IP - added method import_extrakey_with_fpr_return
 // 21.08.2023/DZ - make _get_comm_type understand group identities
+// 03.10.2023/IG - _decrypt_message - Do not update sender trust if there is already an fpr available
 
 #include "pEp_internal.h"
 #include "message_api.h"
