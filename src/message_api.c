@@ -26,7 +26,7 @@
 
 // 07.08.2023/IP - added method import_extrakey_with_fpr_return
 // 21.08.2023/DZ - make _get_comm_type understand group identities
-// 28.09.2023/IG - _decrypt_message - Reject new keys for unverified existing partner
+// 28.09.2023/IG - _decrypt_message - Rollback decrypt_status to PEP_DECRYPTED if there is a fpr available for the user.
 
 #include "pEp_internal.h"
 #include "message_api.h"
@@ -5590,14 +5590,14 @@ static PEP_STATUS _decrypt_message(
                 //
                 free(imported_sender_key_fpr);
                 imported_sender_key_fpr = NULL;
-                bool shouldImportKeys = true;
+                bool shouldRollbackVerificationStatus = false;
                 if (src->from
                     && !is_me(session, src->from)
                     && decrypt_status == PEP_DECRYPTED) { /* if decrypted, but not verified... */
                     pEp_identity *tmp_from = src->from;
                     update_identity(session, tmp_from);
                     if (tmp_from->fpr) { // if we could not verify this partner's identity but we already have an fpr for them:
-                        shouldImportKeys = false;
+                        shouldRollbackVerificationStatus = true;
                     }
                 }
                 
@@ -5605,28 +5605,30 @@ static PEP_STATUS _decrypt_message(
                 // if this is a non-pEp message or a 1.0 message, we'll need to do some default-setting here. 
                 // otherwise, we don't ask for a sender import fpr because for pEp 2.0+ any legit default key attachments should 
                 // be INSIDE the message
-                if (shouldImportKeys) {
-                    status = import_keys_from_decrypted_msg(session, msg, is_pEp_msg,
-                                                            &keys_were_imported,
-                                                            &imported_private_key_address,
-                                                            private_il,
-                                                            &_imported_key_list,
-                                                            &_changed_keys,
-                                                            &imported_sender_key_fpr);
-                }
+                status = import_keys_from_decrypted_msg(session, msg, is_pEp_msg,
+                                                        &keys_were_imported,
+                                                        &imported_private_key_address,
+                                                        private_il,
+                                                        &_imported_key_list,
+                                                        &_changed_keys,
+                                                        &imported_sender_key_fpr);
 
                 if (src->from) {
                     if (!is_me(session, src->from)) {
 
                         /* if decrypted, but not verified... */
                         if (status == PEP_STATUS_OK && decrypt_status == PEP_DECRYPTED) {
-                            if (src->from)
+                            if (src->from) {
                                 status = verify_decrypted(session,
                                                           src, msg,
                                                           ptext, psize,
                                                           &_keylist,
                                                           &decrypt_status,
                                                           crypto);
+                                if (shouldRollbackVerificationStatus && decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
+                                    decrypt_status = PEP_DECRYPTED;
+                                }
+                            }
                         }
 
                         if (status == PEP_STATUS_OK && !has_inner) {
