@@ -144,7 +144,7 @@ protocol Sync 1 {
             }
 
             on SyncReinit {
-                send Rollback;
+                send Beacon;
                 go Sole;
             }
         }
@@ -187,7 +187,7 @@ protocol Sync 1 {
             }
 
             on SyncReinit {
-                send Rollback;
+                send Beacon;
                 go Sole;
             }
         }
@@ -322,7 +322,7 @@ protocol Sync 1 {
 
             on SyncReinit {
                 debug > cry, baby
-                send SynchronizeGroupKeys;
+                send Beacon;
             }
 
             on SynchronizeGroupKeys {
@@ -441,7 +441,7 @@ protocol Sync 1 {
             }
 
             on SyncReinit {
-                send Rollback;
+                send Beacon;
                 go Sole;
             }
         }
@@ -554,7 +554,7 @@ protocol Sync 1 {
             }
 
             on SyncReinit {
-                send Rollback;
+                send Beacon;
                 go Grouped;
             }
         }
