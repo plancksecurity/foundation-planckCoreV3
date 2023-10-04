@@ -26,7 +26,7 @@
 
 // 07.08.2023/IP - added method import_extrakey_with_fpr_return
 // 21.08.2023/DZ - make _get_comm_type understand group identities
-// 03.10.2023/IG - _decrypt_message - Do not update sender trust if there is already an fpr available
+// 04.10.2023/IG - update_sender_to_pEp_trust - Do not update sender trust if there is already an fpr available
 
 #include "pEp_internal.h"
 #include "message_api.h"
@@ -4365,9 +4365,13 @@ static PEP_STATUS update_sender_to_pEp_trust(
     free(sender->fpr);
     sender->fpr = NULL;
 
-    PEP_STATUS status = is_me(session, sender) ? _myself(session, sender, false, false, false, true) : update_identity(session, sender);
+    bool me = is_me(session, sender);
+    PEP_STATUS status = me ? _myself(session, sender, false, false, false, true) : update_identity(session, sender);
 
     if (PASS_ERROR(status))
+        return status;
+
+    if (!me && sender->fpr) // If there is already an available fpr for this identity, another fpr for same identity should not be trusted.
         return status;
 
     if (EMPTYSTR(sender->fpr) || strcmp(sender->fpr, keylist->value) != 0) {
@@ -6081,18 +6085,11 @@ static PEP_STATUS _decrypt_message(
         
         *rating = decrypt_rating(decrypt_status);
 
-        // Ok, so if it was signed and it's all verified, we can update -> But maybe it was only verified because we imported the sender's key!
+        // Ok, so if it was signed and it's all verified, we can update
         // eligible signer comm_types to PEP_ct_pEp_*
         // This also sets and upgrades pEp version
-        if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED && !is_deprecated_key_reset &&
-            is_pEp_msg && calculated_src->from) {
-            pEp_identity *tmp_from = src->from;
-            update_identity(session, tmp_from);
-            if (!tmp_from->fpr) { // only allow one entry for same user // check fpr or identity rating or comm_type?
-                status = update_sender_to_pEp_trust(session, msg->from, _keylist, major_ver,
-                                                    minor_ver);
-            }
-        }
+        if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED && !is_deprecated_key_reset && is_pEp_msg && calculated_src->from)
+            status = update_sender_to_pEp_trust(session, msg->from, _keylist, major_ver, minor_ver);
 
         /* Ok, now we have a keylist used for decryption/verification.
            now we need to update the message rating with the 
