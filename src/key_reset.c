@@ -1845,8 +1845,22 @@ PEP_STATUS _key_reset(
             if (status != PEP_STATUS_OK)
                 goto pEp_free;
             if (!own_key) {
-                status = PEP_ILLEGAL_VALUE;
-                goto pEp_free;
+                // We are trying to reset an _own_ key for an identity that is not considered
+                // our own. Try to correct its comm type, and proceed
+                // with resetting it.
+                char *default_own_user_id = NULL;
+                status = get_default_own_userid(session, &default_own_user_id);
+                if (status == PEP_STATUS_OK) {
+                    pEp_identity *tmp_own_ident = new_identity(NULL, fpr_copy, default_own_user_id, NULL);
+                    if (tmp_own_ident) {
+                        if (tmp_own_ident->comm_type != PEP_ct_pEp) {
+                            tmp_own_ident->comm_type = PEP_ct_pEp;
+                            set_trust(session, tmp_own_ident);
+                        }
+                    }
+                    free_identity(tmp_own_ident);
+                }
+                free(default_own_user_id);
             }
 
             status = contains_priv_key(session, fpr_copy, &is_own_private);
