@@ -1722,7 +1722,9 @@ PEP_STATUS _key_reset(
     pEp_identity* tmp_ident = NULL;
     identity_list* key_idents = NULL;
     stringlist_t* keys = NULL;
-    
+    char *default_own_user_id = NULL;
+    pEp_identity *tmp_own_ident_ct_repair = NULL;
+
     char* cached_passphrase = EMPTYSTR(session->curr_passphrase) ? NULL : strdup(session->curr_passphrase);
     
     if (!EMPTYSTR(key_id)) {
@@ -1845,22 +1847,27 @@ PEP_STATUS _key_reset(
             if (status != PEP_STATUS_OK)
                 goto pEp_free;
             if (!own_key) {
-                // We are trying to reset an _own_ key for an identity that is not considered
-                // our own. Try to correct its comm type, and proceed
-                // with resetting it.
-                char *default_own_user_id = NULL;
+                // We are trying to reset an own key for an identity that is
+                // both considered our own and not.
+                // If it is associated with an own user id,
+                // try to repair the comm type and proceed with the reset.
                 status = get_default_own_userid(session, &default_own_user_id);
                 if (status == PEP_STATUS_OK) {
-                    pEp_identity *tmp_own_ident = new_identity(NULL, fpr_copy, default_own_user_id, NULL);
-                    if (tmp_own_ident) {
-                        if (tmp_own_ident->comm_type != PEP_ct_pEp) {
-                            tmp_own_ident->comm_type = PEP_ct_pEp;
-                            set_trust(session, tmp_own_ident);
+                    pEp_identity *tmp_own_ident_ct_repair = new_identity(NULL, fpr_copy, default_own_user_id, NULL);
+                    if (tmp_own_ident_ct_repair) {
+                        status = get_trust(session, tmp_own_ident_ct_repair);
+                        if (status != PEP_STATUS_OK) {
+                            goto pEp_free;
+                        }
+                        if (tmp_own_ident_ct_repair->comm_type != PEP_ct_pEp) {
+                            tmp_own_ident_ct_repair->comm_type = PEP_ct_pEp;
+                            status = set_trust(session, tmp_own_ident_ct_repair);
+                            if (status != PEP_STATUS_OK) {
+                                goto pEp_free;
+                            }
                         }
                     }
-                    free_identity(tmp_own_ident);
                 }
-                free(default_own_user_id);
             }
 
             status = contains_priv_key(session, fpr_copy, &is_own_private);
@@ -1984,8 +1991,7 @@ PEP_STATUS _key_reset(
     }           
         
 pEp_free:
-    if (!ident)
-        free_identity(tmp_ident);
+    free_identity(tmp_ident);
     free(fpr_copy);
     free(own_id);
     free_identity_list(key_idents);
@@ -1993,6 +1999,8 @@ pEp_free:
     free(new_key);   
     config_passphrase(session, cached_passphrase); 
     free(cached_passphrase);
+    free(default_own_user_id);
+    free_identity(tmp_own_ident_ct_repair);
     return status;
 }
 
