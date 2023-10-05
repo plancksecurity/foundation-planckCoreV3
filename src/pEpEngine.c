@@ -97,10 +97,10 @@ DYNAMIC_API PEP_STATUS init(
        call config_enable_log . */
 
 #ifdef ANDROID
-    #ifdef NDEBUG
-        _session->enable_log = false;
-    #else
+    #ifdef PEP_LOG
         _session->enable_log = true;
+    #else
+        _session->enable_log = false;
     #endif
 #else
     _session->enable_log = (getenv("PEP_LOG") != NULL);
