@@ -1406,16 +1406,6 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
     if (status != PEP_STATUS_OK)
         goto pEp_free;
     
-    // remove as default if necessary
-    if (!EMPTYSTR(tmp_ident->fpr) && strcmp(tmp_ident->fpr, ident->fpr) == 0) {
-        free(tmp_ident->fpr);
-        tmp_ident->fpr = NULL;
-        tmp_ident->comm_type = PEP_ct_unknown;
-        status = set_identity(session, tmp_ident);
-        if (status != PEP_STATUS_OK)
-            goto pEp_free;
-    }
-    
     char* user_default = NULL;
     get_main_user_fpr(session, tmp_ident->user_id, &user_default);
     
