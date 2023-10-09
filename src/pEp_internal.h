@@ -9,6 +9,9 @@
  Changelog:
 
  * 2023-07 _add_auto_consume() checks if header field already exists.
+ * 2023-10-09/DZ Offer `untrust_this_key` as a more clearly defined
+   alternative to `key_reset_trust`.
+
  */
 
 #ifndef PEP_INTERNAL_H
@@ -1179,5 +1182,18 @@ static inline void _add_auto_consume(message* msg) {
     }
 }
 
+/**
+ *  @internal
+ *
+ *  <!-- untrust_this_key() -->
+ *
+ *  @brief Called by key sync code (`untrustThisKey`), handles the case where "your other secret key"
+ *    has been imported, but your other self bail out of the process at a very late stage.
+ *
+ *  @param[in] *msg  message
+ *  @param[in] *identity the own identity from the other device to neutralize
+ *
+ */
+PEP_STATUS untrust_this_key(PEP_SESSION session, const pEp_identity *identity);
 
 #endif
