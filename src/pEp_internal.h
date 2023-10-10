@@ -1188,7 +1188,7 @@ static inline void _add_auto_consume(message* msg) {
  *  <!-- untrust_this_key() -->
  *
  *  @brief Called by key sync code (`untrustThisKey`), handles the case where "your other secret key"
- *    has been imported, but your other self bail out of the process at a very late stage.
+ *    has been imported, but your other self bails out of the process at a very late stage.
  *
  *  @param[in] *msg  message
  *  @param[in] *identity the own identity from the other device to neutralize
