@@ -104,7 +104,7 @@ TEST_F(KeyResetTrustTest, basic_trust_reset_cycle)
     ASSERT_TRUE(slurp_and_import_key(session, "test_keys/tyrell.asc"));
 
     // partner data
-    const char *fpr_partner = "7A60C123B027A26648B0EFBA5847167BE968FBF7";
+    const char *fpr_partner = "259CEA532C1AC42662A95F89111F93B3CA3E9A09";
     const char *userid_partner = "tyrell_id";
     const char *address_partner = "tyrell@example.com";
     const char *name_partner = "Eldon Tyrell";
