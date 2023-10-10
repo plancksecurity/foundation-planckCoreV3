@@ -352,9 +352,10 @@ protocol Sync 1 {
             }
 
             on LeaveDeviceGroup {
+                do useOwnResponse;
+                send LeaveDeviceGroupMessage;
                 send InitUnledGroupKeyReset;
-                do disable;
-                do resetOwnKeysUngrouped;
+                go LeavingDeviceGroup;
             }
 
             on InitUnledGroupKeyReset {
@@ -362,6 +363,16 @@ protocol Sync 1 {
                 do useOwnResponse;
                 send ElectGroupKeyResetLeader;
                 go GroupKeyResetElection;
+            }
+        }
+
+        state LeavingDeviceGroup {
+            on LeaveDeviceGroupMessage {
+                if sameResponse {
+                    //do disable;
+                    do resetOwnKeysUngrouped;
+                    go Sole;
+                }
             }
         }
 
@@ -687,6 +698,10 @@ protocol Sync 1 {
 
         message ReceiverRating 22, security=ignore {
             field Rating rating;
+        }
+
+        message LeaveDeviceGroupMessage 23 {
+            field TID response;
         }
     }
 
