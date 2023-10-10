@@ -88,6 +88,7 @@ class KeyResetTrustTest : public ::testing::Test
 
 } // namespace
 
+// `key_reset_trust` should reset the trust, but _not_ remove the key.
 TEST_F(KeyResetTrustTest, basic_trust_reset_cycle)
 {
     // create an own identity
