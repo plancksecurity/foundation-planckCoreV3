@@ -124,8 +124,36 @@ TEST_F(KeyResetTrustTest, basic_trust_reset_cycle)
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_STREQ(tyrell_partner->fpr, fpr_partner);
 
+    // Check the current rating, which should be reliable
+    PEP_rating rating;
+    status = identity_rating(session, tyrell_partner, &rating);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(rating, PEP_rating_reliable);
+
     status = trust_personal_key(session, tyrell_partner);
     ASSERT_EQ(status, PEP_STATUS_OK);
+
+    status = update_identity(session, tyrell_partner);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_STREQ(tyrell_partner->fpr, fpr_partner);
+
+    // Check the rating after trust
+    status = identity_rating(session, tyrell_partner, &rating);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(rating, PEP_rating_trusted_and_anonymized);
+
+    // Reset the trust
+    status = key_reset_trust(session, tyrell_partner);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    status = update_identity(session, tyrell_partner);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_STREQ(tyrell_partner->fpr, fpr_partner);
+
+    // Check the rating after resetting the trust
+    status = identity_rating(session, tyrell_partner, &rating);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(rating, PEP_rating_reliable);
 
     free_identity(deckard_own);
     free_identity(tyrell_partner);
