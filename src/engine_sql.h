@@ -212,8 +212,8 @@ static const char *sql_update_person MAYBE_UNUSED =
         "       lang = ?3, "
         "       main_key_id =  "
         "           (select coalesce( "
-        "               (select main_key_id from person where id = ?1), "
-        "                upper(replace(?4,' ',''))))"
+        "                upper(replace(?4,' ','')),"
+        "                (select main_key_id from person where id = ?1))) "
         "   where id = ?1 ;";
 
 // Will cascade.
