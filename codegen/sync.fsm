@@ -43,7 +43,7 @@ protocol Sync 1 {
 
             on SyncReinit {
                 debug > cry, baby
-                send Rollback;
+                send BackToStart;
                 send Beacon;
             }
 
@@ -118,6 +118,11 @@ protocol Sync 1 {
                     go Sole;
             }
 
+            on BackToStart {
+                if sameNegotiation
+                    go Sole;
+            }
+
             // Reject is CommitReject
             on Reject {
                 send CommitReject;
@@ -145,7 +150,7 @@ protocol Sync 1 {
             }
 
             on SyncReinit {
-                send Rollback;
+                send BackToStart;
                 send Beacon;
                 go Sole;
             }
@@ -163,6 +168,11 @@ protocol Sync 1 {
             }
 
             on Rollback {
+                if sameNegotiation
+                    go Sole;
+            }
+
+            on BackToStart {
                 if sameNegotiation
                     go Sole;
             }
@@ -189,7 +199,7 @@ protocol Sync 1 {
             }
 
             on SyncReinit {
-                send Rollback;
+                send BackToStart;
                 send Beacon;
                 go Sole;
             }
@@ -226,7 +236,7 @@ protocol Sync 1 {
                     go Sole;
                 }
             }
-            
+
             on CommitReject {
                 if sameNegotiation {
                     do untrustThisKey;
@@ -325,7 +335,7 @@ protocol Sync 1 {
 
             on SyncReinit {
                 debug > cry, baby
-                send Rollback;
+                send BackToStart;
                 send Beacon;
             }
 
@@ -419,6 +429,11 @@ protocol Sync 1 {
                     go Sole;
             }
 
+            on BackToStart {
+                if sameNegotiation
+                    go Sole;
+            }
+
             // Reject is CommitReject
             on Reject {
                 send CommitReject;
@@ -445,7 +460,7 @@ protocol Sync 1 {
             }
 
             on SyncReinit {
-                send Rollback;
+                send BackToStart;
                 send Beacon;
                 go Sole;
             }
@@ -528,6 +543,11 @@ protocol Sync 1 {
                     go Grouped;
             }
 
+            on BackToStart {
+                if sameNegotiation
+                    go BackToStart;
+            }
+
             // Reject is CommitReject
             on Reject {
                 send CommitReject;
@@ -559,7 +579,7 @@ protocol Sync 1 {
             }
 
             on SyncReinit {
-                send Rollback;
+                send BackToStart;
                 send Beacon;
                 go Grouped;
             }
@@ -723,6 +743,10 @@ protocol Sync 1 {
 
         message ReceiverRating 22, security=ignore {
             field Rating rating;
+        }
+
+        message BackToStart 23, security=untrusted {
+            field TID negotiation;
         }
     }
 
