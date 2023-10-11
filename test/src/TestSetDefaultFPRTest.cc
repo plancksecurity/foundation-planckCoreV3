@@ -103,7 +103,7 @@ TEST_F(TestSetDefaultFPRTest, check_test_set_default_fpr) {
     ASSERT_OK;
     status = update_identity(session, carol);
     ASSERT_OK;
-    ASSERT_STREQ(carol->fpr, carol_fpr); // Should be the user default, we don't have alice_fpr's key
+    ASSERT_STREQ(carol->fpr, bob_fpr); // Should be the last one set, we don't have alice_fpr's key
     ASSERT_EQ(carol->comm_type, PEP_ct_pEp_unconfirmed);
     free_identity(carol);
 }
@@ -127,7 +127,7 @@ TEST_F(TestSetDefaultFPRTest, check_test_set_comm_partner_key) {
     ASSERT_OK;
     status = update_identity(session, carol);
     ASSERT_OK;
-    ASSERT_STREQ(carol->fpr, carol_fpr); // Should be the user default, we don't have alice_fpr's key
+    ASSERT_STREQ(carol->fpr, bob_fpr); // Should be the one last set, we don't have alice_fpr's key
     ASSERT_EQ(carol->comm_type, PEP_ct_pEp_unconfirmed);
     free_identity(carol);
 }
@@ -181,7 +181,7 @@ TEST_F(TestSetDefaultFPRTest, check_test_set_comm_partner_key_no_set_identity) {
     ASSERT_OK;
     status = update_identity(session, carol);
     ASSERT_OK;
-    ASSERT_STREQ(carol->fpr, carol_fpr); // Should be the user default, we don't have alice_fpr's key
+    ASSERT_STREQ(carol->fpr, bob_fpr); // Should be the last one set, we don't have alice_fpr's key
     ASSERT_EQ(carol->comm_type, PEP_ct_OpenPGP_unconfirmed);
 
     pEp_identity* carol_bob = new_identity(carol->address, NULL, "BOB", "Carol is Bob, but not really");
