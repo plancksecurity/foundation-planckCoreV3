@@ -39,6 +39,9 @@ typedef enum _sync_handshake_signal {
     SYNC_NOTIFY_ACCEPTED_GROUP_CREATED = 7,
     SYNC_NOTIFY_ACCEPTED_DEVICE_ACCEPTED = 8,
 
+    SYNC_NOTIFY_BACK_TO_START = 9,
+    SYNC_NOTIFY_CANCELLED = 10,
+
     // handshake dialog must be closed
     // SYNC_NOTIFY_OVERTAKEN = 9,
 
