@@ -121,6 +121,7 @@ protocol Sync 1 {
             on BackToStart {
                 if sameNegotiation {
                     do showBackToStart;
+                    send Beacon;
                     go Sole;
                 }
             }
@@ -177,6 +178,7 @@ protocol Sync 1 {
             on BackToStart {
                 if sameNegotiation {
                     do showBackToStart;
+                    send Beacon;
                     go Sole;
                 }
             }
@@ -436,6 +438,7 @@ protocol Sync 1 {
             on BackToStart {
                 if sameNegotiation {
                     do showBackToStart;
+                    send Beacon;
                     go Sole;
                 }
             }
@@ -552,6 +555,7 @@ protocol Sync 1 {
             on BackToStart {
                 if sameNegotiation {
                     do showBackToStart;
+                    send Beacon;
                     go Grouped;
                 }
             }
