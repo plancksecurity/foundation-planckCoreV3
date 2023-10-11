@@ -119,8 +119,10 @@ protocol Sync 1 {
             }
 
             on BackToStart {
-                if sameNegotiation
+                if sameNegotiation {
+                    do showBackToStart;
                     go Sole;
+                }
             }
 
             // Reject is CommitReject
@@ -173,8 +175,10 @@ protocol Sync 1 {
             }
 
             on BackToStart {
-                if sameNegotiation
+                if sameNegotiation {
+                    do showBackToStart;
                     go Sole;
+                }
             }
 
             // Reject is CommitReject
@@ -430,8 +434,10 @@ protocol Sync 1 {
             }
 
             on BackToStart {
-                if sameNegotiation
+                if sameNegotiation {
+                    do showBackToStart;
                     go Sole;
+                }
             }
 
             // Reject is CommitReject
@@ -544,8 +550,10 @@ protocol Sync 1 {
             }
 
             on BackToStart {
-                if sameNegotiation
-                    go BackToStart;
+                if sameNegotiation {
+                    do showBackToStart;
+                    go Grouped;
+                }
             }
 
             // Reject is CommitReject
