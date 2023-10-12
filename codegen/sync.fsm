@@ -114,8 +114,10 @@ protocol Sync 1 {
             }
 
             on Rollback {
-                if sameNegotiation
+                if sameNegotiation {
+                    do showHandshakeCancelled;
                     go Sole;
+                }
             }
 
             on BackToStart {
@@ -171,8 +173,10 @@ protocol Sync 1 {
             }
 
             on Rollback {
-                if sameNegotiation
+                if sameNegotiation {
+                    do showHandshakeCancelled;
                     go Sole;
+                }
             }
 
             on BackToStart {
@@ -215,6 +219,7 @@ protocol Sync 1 {
             on Rollback {
                 if sameNegotiation {
                     do untrustThisKey;
+                    do showHandshakeCancelled;
                     go Sole;
                 }
             }
@@ -239,6 +244,7 @@ protocol Sync 1 {
             on Rollback {
                 if sameNegotiation {
                     do untrustThisKey;
+                    do showHandshakeCancelled;
                     go Sole;
                 }
             }
@@ -292,8 +298,10 @@ protocol Sync 1 {
                 go Sole;
             }
 
-            on Rollback
+            on Rollback {
+                do showHandshakeCancelled;
                 go Sole;
+            }
 
             on OwnKeysRequester {
                 if sameNegotiationAndPartner {
@@ -314,8 +322,10 @@ protocol Sync 1 {
                 go Sole;
             }
 
-            on Rollback
+            on Rollback {
+                do showHandshakeCancelled;
                 go Sole;
+            }
 
             on OwnKeysOfferer {
                 if sameNegotiation {
@@ -431,8 +441,10 @@ protocol Sync 1 {
             }
 
             on Rollback {
-                if sameNegotiation
+                if sameNegotiation {
+                    do showHandshakeCancelled;
                     go Sole;
+                }
             }
 
             on BackToStart {
@@ -479,6 +491,7 @@ protocol Sync 1 {
             on Rollback {
                 if sameNegotiation {
                     do untrustThisKey;
+                    do showHandshakeCancelled;
                     go Sole;
                 }
             }
@@ -548,8 +561,10 @@ protocol Sync 1 {
             }
 
             on Rollback {
-                if sameNegotiation
+                if sameNegotiation {
+                    do showHandshakeCancelled;
                     go Grouped;
+                }
             }
 
             on BackToStart {
@@ -606,6 +621,7 @@ protocol Sync 1 {
             on Rollback {
                 if sameNegotiation {
                     do untrustThisKey;
+                    do showHandshakeCancelled;
                     go Grouped;
                 }
             }
