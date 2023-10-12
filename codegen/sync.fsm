@@ -94,6 +94,10 @@ protocol Sync 1 {
                     debug > cannot approve NegotiationOpen
                 }
             }
+
+            onRollback {
+                do showHandshakeCancelled;
+            }
         }
 
         // handshaking without existing Device group
@@ -108,8 +112,10 @@ protocol Sync 1 {
             }
 
             on Rollback {
-                if sameNegotiation
+                if sameNegotiation {
+                    do showHandshakeCancelled;
                     go Sole;
+                }
             }
 
             // Reject is CommitReject
@@ -151,8 +157,10 @@ protocol Sync 1 {
             }
 
             on Rollback {
-                if sameNegotiation
+                if sameNegotiation {
+                    do showHandshakeCancelled;
                     go Sole;
+                }
             }
 
             // Reject is CommitReject
@@ -181,6 +189,7 @@ protocol Sync 1 {
             on Rollback {
                 if sameNegotiation {
                     do untrustThisKey;
+                    do showHandshakeCancelled;
                     go Sole;
                 }
             }
@@ -205,6 +214,7 @@ protocol Sync 1 {
             on Rollback {
                 if sameNegotiation {
                     do untrustThisKey;
+                    do showHandshakeCancelled;
                     go Sole;
                 }
             }
@@ -258,8 +268,10 @@ protocol Sync 1 {
                 go Sole;
             }
 
-            on Rollback
+            on Rollback {
+                do showHandshakeCancelled;
                 go Sole;
+            }
 
             on OwnKeysRequester {
                 if sameNegotiationAndPartner {
@@ -280,8 +292,10 @@ protocol Sync 1 {
                 go Sole;
             }
 
-            on Rollback
+            on Rollback {
+                do showHandshakeCancelled;
                 go Sole;
+            }
 
             on OwnKeysOfferer {
                 if sameNegotiation {
@@ -391,8 +405,10 @@ protocol Sync 1 {
             }
 
             on Rollback {
-                if sameNegotiation
+                if sameNegotiation {
+                    do showHandshakeCancelled;
                     go Sole;
+                }
             }
 
             // Reject is CommitReject
@@ -425,6 +441,7 @@ protocol Sync 1 {
             on Rollback {
                 if sameNegotiation {
                     do untrustThisKey;
+                    do showHandshakeCancelled;
                     go Sole;
                 }
             }
@@ -494,8 +511,10 @@ protocol Sync 1 {
             }
 
             on Rollback {
-                if sameNegotiation
+                if sameNegotiation {
+                    do showHandshakeCancelled;
                     go Grouped;
+                }
             }
 
             // Reject is CommitReject
@@ -538,6 +557,7 @@ protocol Sync 1 {
             on Rollback {
                 if sameNegotiation {
                     do untrustThisKey;
+                    do showHandshakeCancelled;
                     go Grouped;
                 }
             }
