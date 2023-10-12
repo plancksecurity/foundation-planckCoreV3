@@ -350,6 +350,9 @@ action showBeingSole
 action showBeingInGroup
     call "show_handshake" with "type" > SYNC_NOTIFY_IN_GROUP
 
+    action showHandshakeCancelled
+        call "show_handshake" with "type" > SYNC_NOTIFY_CANCELLED
+
 timeout KeySync
     call "show_handshake" with "type" > SYNC_NOTIFY_TIMEOUT
 
