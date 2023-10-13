@@ -26,6 +26,7 @@
 
 // 07.08.2023/IP - added method import_extrakey_with_fpr_return
 // 21.08.2023/DZ - make _get_comm_type understand group identities
+// 04.10.2023/IG - update_sender_to_pEp_trust - Do not update sender trust if there is already an fpr available
 
 #include "pEp_internal.h"
 #include "message_api.h"
@@ -4364,9 +4365,13 @@ static PEP_STATUS update_sender_to_pEp_trust(
     free(sender->fpr);
     sender->fpr = NULL;
 
-    PEP_STATUS status = is_me(session, sender) ? _myself(session, sender, false, false, false, true) : update_identity(session, sender);
+    bool me = is_me(session, sender);
+    PEP_STATUS status = me ? _myself(session, sender, false, false, false, true) : update_identity(session, sender);
 
     if (PASS_ERROR(status))
+        return status;
+
+    if (!me && sender->fpr) // If there is already an available fpr for this identity, another fpr for same identity should not be trusted.
         return status;
 
     if (EMPTYSTR(sender->fpr) || strcmp(sender->fpr, keylist->value) != 0) {
