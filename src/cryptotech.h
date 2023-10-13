@@ -7,6 +7,8 @@
  * 	and corresponding \@copydoc targets.
  */
 
+// 13.10.2023/IG - generate_keypair_t - add parameter to ignore passphrase
+
 #ifndef CRYPTOTECH_H
 #define CRYPTOTECH_H
 

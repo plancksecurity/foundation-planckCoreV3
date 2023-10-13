@@ -5,6 +5,7 @@
  */
 
  // 07.08.2023/IP - added method import_extrakey_with_fpr_return & changed behaviour of handling identity flags when extrakey encryption is requested
+ // 13.10.2023/IG - _generate_keypair() - ignore passphrase to generate signing identity
 
 #include "pEp_internal.h"
 #include "dynamic_api.h"
