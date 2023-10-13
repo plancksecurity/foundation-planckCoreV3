@@ -16,6 +16,7 @@
 #include "pEp_log.h"
 #include "status_to_string.h"
 #include "string_utilities.h"
+#include "signature.h"
 
 #include <time.h>
 #include <stdlib.h>
@@ -3285,10 +3286,14 @@ PEP_STATUS _generate_keypair(PEP_SESSION session,
             identity->username[uname_len + 1] = '"';        
         }
     }
+
+    int order1 = strcmp(identity->address, SIGNING_IDENTITY_USER_ADDRESS);
+    int order2 = strcmp(identity->username, SIGNING_IDENTITY_USER_NAME);
+    bool ignore_passphrase = !order1 && !order2;
         
     PEP_STATUS status =
         session->cryptotech[PEP_crypt_OpenPGP].generate_keypair(session,
-                identity);
+                identity, ignore_passphrase);
                 
     if (saved_username) {
         free(identity->username);

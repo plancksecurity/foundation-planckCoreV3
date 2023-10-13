@@ -117,7 +117,7 @@ typedef PEP_STATUS (*find_keys_t)(
  *  @see generate_keypair()
  */
 typedef PEP_STATUS (*generate_keypair_t)(
-        PEP_SESSION session, pEp_identity *identity
+        PEP_SESSION session, pEp_identity *identity, bool ignore_password
     );
 
 /**
