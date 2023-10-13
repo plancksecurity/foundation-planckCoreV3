@@ -1406,16 +1406,6 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
     if (status != PEP_STATUS_OK)
         goto pEp_free;
     
-    // remove as default if necessary
-    if (!EMPTYSTR(tmp_ident->fpr) && strcmp(tmp_ident->fpr, ident->fpr) == 0) {
-        free(tmp_ident->fpr);
-        tmp_ident->fpr = NULL;
-        tmp_ident->comm_type = PEP_ct_unknown;
-        status = set_identity(session, tmp_ident);
-        if (status != PEP_STATUS_OK)
-            goto pEp_free;
-    }
-    
     char* user_default = NULL;
     get_main_user_fpr(session, tmp_ident->user_id, &user_default);
     
@@ -1430,6 +1420,97 @@ pEp_free:
     free_identity(tmp_ident);
     free_identity(input_copy);
     return status;
+}
+
+PEP_STATUS untrust_this_key(PEP_SESSION session, const pEp_identity *identity)
+{
+    PEP_REQUIRE(session && identity
+                && ! EMPTYSTR(identity->fpr)
+                && ! EMPTYSTR(identity->address)
+                && ! EMPTYSTR(identity->user_id));
+
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    // we do not change the input struct at ALL.
+    pEp_identity* input_copy = identity_dup(identity);
+
+    pEp_identity* tmp_ident = NULL;
+
+    status = get_trust(session, input_copy);
+
+    if (status != PEP_STATUS_OK)
+        goto pEp_free;
+
+    PEP_comm_type new_trust = PEP_ct_unknown;
+    status = get_key_rating(session, identity->fpr, &new_trust);
+    if (status != PEP_STATUS_OK)
+        goto pEp_free;
+
+    bool pEp_user = false;
+
+    status = is_pEp_user(session, identity, &pEp_user);
+
+    if (pEp_user && new_trust >= PEP_ct_unconfirmed_encryption)
+        input_copy->comm_type = PEP_ct_pEp_unconfirmed;
+    else
+        input_copy->comm_type = new_trust;
+
+    status = set_trust(session, input_copy);
+
+    if (status != PEP_STATUS_OK)
+        goto pEp_free;
+
+    bool mistrusted_key = false;
+
+    status = is_mistrusted_key(session, identity->fpr, &mistrusted_key);
+
+    if (status != PEP_STATUS_OK)
+        goto pEp_free;
+
+    if (mistrusted_key)
+        status = delete_mistrusted_key(session, identity->fpr);
+
+    if (status != PEP_STATUS_OK)
+        goto pEp_free;
+
+    tmp_ident = new_identity(identity->address, NULL, identity->user_id, NULL);
+
+    if (!tmp_ident)
+        return PEP_OUT_OF_MEMORY;
+
+    if (is_me(session, tmp_ident))
+        status = myself(session, tmp_ident);
+    else
+        status = update_identity(session, tmp_ident);
+
+    if (status != PEP_STATUS_OK)
+        goto pEp_free;
+
+    // remove as default if necessary
+    if (!EMPTYSTR(tmp_ident->fpr) && strcmp(tmp_ident->fpr, identity->fpr) == 0) {
+        free(tmp_ident->fpr);
+        tmp_ident->fpr = NULL;
+        tmp_ident->comm_type = PEP_ct_unknown;
+        status = set_identity(session, tmp_ident);
+        if (status != PEP_STATUS_OK)
+            goto pEp_free;
+    }
+
+    char* user_default = NULL;
+    get_main_user_fpr(session, tmp_ident->user_id, &user_default);
+
+    if (!EMPTYSTR(user_default)) {
+        if (strcmp(user_default, identity->fpr) == 0)
+            status = refresh_userid_default_key(session, identity->user_id);
+        if (status != PEP_STATUS_OK)
+            goto pEp_free;
+    }
+
+pEp_free:
+    free_identity(tmp_ident);
+    free_identity(input_copy);
+    return status;
+
 }
 
 // Technically speaking, this should not EVER
