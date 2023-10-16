@@ -3,6 +3,8 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
+// 16.10.2023/IG - create_signing_identity() - always create a signing identity without passphrase.
+
 #include <stdlib.h>
 #include <string.h>
 
