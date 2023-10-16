@@ -325,6 +325,21 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
 );
 
 /**
+ *  <!--       get_fprs()       -->
+ *
+ *  @brief .....
+ *
+ *  @param[in]   session    session handle
+ *  @param[in]   msg        message to decrypt
+ *  @param[out]  keylist    keylist
+ */
+DYNAMIC_API PEP_STATUS get_fprs(
+    PEP_SESSION session, 
+    message *msg, 
+    stringlist_t **keylist
+);
+
+/**
  *  <!--       decrypt_message()       -->
  *
  *  @brief Exactly like decrypt_message_2, but with the rating output parameter.

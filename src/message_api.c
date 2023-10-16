@@ -5191,6 +5191,28 @@ end:
 }
 #undef GOTO_END_ON_FAILURE
 
+DYNAMIC_API PEP_STATUS get_fprs(PEP_SESSION session, message *msg, stringlist_t **keylist)
+{
+    PEP_REQUIRE(session && msg && keylist);
+
+    char *ctext;
+    size_t csize;
+
+    PEP_cryptotech crypto = determine_encryption_format(msg);
+    if (crypto == PEP_crypt_none) {
+        return PEP_UNENCRYPTED;
+    }
+
+    PEP_STATUS status = get_crypto_text(msg, &ctext, &csize);
+    if (status) {
+        return status;
+    }
+
+    status = cryptotech[crypto].get_fprs(session, ctext, csize, &keylist);
+
+    return status;
+}
+
 /** @internal
  *  Rule for this function, since it is one of the three most complicated functions in this whole damned
  *  business:

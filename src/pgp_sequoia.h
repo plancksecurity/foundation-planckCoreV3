@@ -75,6 +75,25 @@ PEP_STATUS pgp_decrypt_and_verify(
 
 /**
  *  @internal
+ *  <!--       pgp_get_fprs()       -->
+ *
+ *  @brief            TODO
+ *
+ *  @param[in]  session       session handle
+ *  @param[in]  ctext         const char*
+ *  @param[in]  csize         size_t
+ *  @param[in]  keylist       stringlist_t**
+ *
+ *  @retval PEP_STATUS_OK
+ *  @retval any other value on error
+ */
+PEP_STATUS pgp_get_fprs(PEP_SESSION session,
+                       const char *ctext,
+                       size_t csize,                      
+                       stringlist_t **keylist);
+
+/**
+ *  @internal
  *  <!--       pgp_encrypt_and_sign()       -->
  *  
  *  @brief            TODO

@@ -103,6 +103,17 @@ struct message {
 
 
 protocol session {
+    method get_fprs 
+    doc="""
+        returns the key fingerprints uses in this message
+        """
+    {
+        support message msg;
+        supply hash_list keylist;
+        throws illegal_value;
+        throws any doc="any other value on error";
+    }
+    
     method encrypt_message 
     doc="""
         encrypt message in memory. enc_format PEP_enc_inline_EA:
