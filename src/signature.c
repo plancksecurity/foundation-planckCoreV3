@@ -12,6 +12,7 @@
 #include "pEpEngine.h"
 #include "pEpEngine_internal.h"
 #include "pEp_debug.h"
+#include "pEp_internal.h"
 
 PEP_STATUS
 create_signing_identity(PEP_SESSION session, pEp_identity **signer_identity)
@@ -29,7 +30,10 @@ create_signing_identity(PEP_SESSION session, pEp_identity **signer_identity)
         default_user_id = NULL;
     }
 
+    bool passphrase_for_new_keys_enabled = session->new_key_pass_enable;
+    session->new_key_pass_enable = false;
     PEP_STATUS status = myself(session, *signer_identity);
+    session->new_key_pass_enable = passphrase_for_new_keys_enabled;
     if (status != PEP_STATUS_OK) {
         return status;
     }
