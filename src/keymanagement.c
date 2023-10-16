@@ -1734,6 +1734,9 @@ PEP_STATUS _own_identities_retrieve(
     PEP_comm_type comm_type = PEP_ct_unknown;
     const char *lang = NULL;
     unsigned int flags = 0;
+    unsigned int major_ver = 0;
+    unsigned int minor_ver = 0;
+    PEP_enc_format enc_format = PEP_enc_none;
     
     identity_list *_bl = _own_identities;
 
@@ -1756,6 +1759,9 @@ PEP_STATUS _own_identities_retrieve(
                     sqlite3_column_text(session->own_identities_retrieve, 4);
                 flags = (unsigned int)
                     sqlite3_column_int(session->own_identities_retrieve, 5);
+                major_ver = (unsigned int) sqlite3_column_int(session->own_identities_retrieve, 6);
+                minor_ver = (unsigned int) sqlite3_column_int(session->own_identities_retrieve, 7);
+                enc_format = (PEP_enc_format) sqlite3_column_int(session->own_identities_retrieve, 8);
 
                 int order1 = strcmp(address, SIGNING_IDENTITY_USER_ADDRESS);
                 int order2 = strcmp(username, SIGNING_IDENTITY_USER_NAME);
@@ -1773,6 +1779,9 @@ PEP_STATUS _own_identities_retrieve(
                     }
                     ident->me = true;
                     ident->flags = flags;
+                    ident->major_ver = major_ver;
+                    ident->minor_ver = minor_ver;
+                    ident->enc_format = enc_format;
 
                     _bl = identity_list_add(_bl, ident);
                     if (_bl == NULL) {
