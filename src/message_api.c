@@ -2230,7 +2230,8 @@ bool import_attached_keys(
         PEP_SESSION session,
         message *msg,
         bool is_pEp_msg,
-        identity_list **private_idents, 
+        identity_list **idents,
+        identity_list **private_idents,
         stringlist_t** imported_key_list,
         uint64_t* changed_keys,
         char** pEp_sender_key
@@ -2297,18 +2298,15 @@ bool import_attached_keys(
                     continue;
                 }
             }
+            identity_list *local_idents = NULL;
             identity_list *local_private_idents = NULL;
-            PEP_STATUS import_status = import_key_strict(
+
+            PEP_STATUS import_status = import_key_with_fpr_return(
                     session, blob_value, blob_size,
-                    msg->from,
+                    &local_idents,
                     &local_private_idents,
                     &_keylist,
                     changed_keys);
-//            PEP_STATUS import_status = import_key_with_fpr_return(
-//                    session, blob_value, blob_size,
-//                    &local_private_idents,
-//                    &_keylist,
-//                    changed_keys);
 
             if (_keylist) {
                 stringlist_t* added_keys = last_fpr_ptr ? last_fpr_ptr->next : _keylist;
@@ -2370,6 +2368,12 @@ bool import_attached_keys(
                 *private_idents = local_private_idents;
             else
                 free_identity_list(local_private_idents);
+
+            if (idents && *idents == NULL && local_idents != NULL)
+                *idents = local_idents;
+            else
+                free_identity_list(local_idents);
+
             if (free_blobval)
                 free(blob_value);
         }
@@ -4007,7 +4011,7 @@ static PEP_STATUS verify_decrypted(PEP_SESSION session,
     PEP_STATUS status = _get_detached_signature(msg, &detached_sig);
     stringlist_t *verify_keylist = NULL;
     
-    
+    //This should never trigger, detached signatures aren't handled by SQBE - Sascha, see lib.rs
     if (detached_sig) {
         char* dsig_text = detached_sig->value;
         size_t dsig_size = detached_sig->size;
@@ -4253,15 +4257,17 @@ static PEP_STATUS import_keys_from_decrypted_msg(PEP_SESSION session,
         *private_il = NULL;
 
     // check for private key in decrypted message attachment while importing
+    identity_list *_il = NULL;
     identity_list *_private_il = NULL;
 
     bool _keys_were_imported = import_attached_keys(session, msg, is_pEp_msg,
-                                                    &_private_il, keylist, 
+                                                    &_il, &_private_il,
+                                                    keylist,
                                                     changed_keys, pEp_sender_key);
     bool _imported_private = false;
     if (_private_il && _private_il->ident && _private_il->ident->address)
         _imported_private = true;
-
+    //This entire line block doesn't do anything; if you have imported private keys they get their identity set as the user_id
     if (private_il && _imported_private) {
         // the private identity list should NOT be subject to myself() or
         // update_identity() at this point.
@@ -4271,7 +4277,8 @@ static PEP_STATUS import_keys_from_decrypted_msg(PEP_SESSION session,
         // directly in a set_own_key() call by putting the own_id on it.
         char* own_id = NULL;
         status = get_default_own_userid(session, &own_id);
-        
+
+        //Shouldn't this if check be reversed to avoid the initial allocation of resources via the for iteration? - Sascha
         for (identity_list* il = _private_il; il; il = il->next) {
             if (own_id) {
                 free(il->ident->user_id);
@@ -5290,7 +5297,7 @@ static PEP_STATUS _decrypt_message(
 
     if (imported_key_fprs)
         *imported_key_fprs = NULL;
-        
+
     stringlist_t* _imported_key_list = NULL;
     uint64_t _changed_keys = 0;
     
@@ -5395,9 +5402,12 @@ static PEP_STATUS _decrypt_message(
     bool keys_were_imported = false;
         
     PEP_cryptotech enc_type = determine_encryption_format(src);
+    identity_list *local_idents = NULL;
+
+    //Heavily review this.
     if (enc_type != PEP_crypt_OpenPGP || !(src->enc_format == PEP_enc_PGP_MIME || src->enc_format == PEP_enc_PGP_MIME_Outlook1)) {
         keys_were_imported = import_attached_keys(session, 
-                                                  src, is_pEp_msg, NULL, 
+                                                  src, is_pEp_msg, &local_idents, NULL,
                                                   &_imported_key_list, 
                                                   &_changed_keys,
                                                   &imported_sender_key_fpr);
@@ -5478,10 +5488,16 @@ static PEP_STATUS _decrypt_message(
                     }
                 }
             }
+
             // Set default key if there isn't one
             // This is the case ONLY for unencrypted messages and differs from the 1.0 and 2.x cases,
             // in case you are led to think this is pure code duplication.
-            if (! EMPTYSTR(src->from->address)) {
+            // Sascha: We need to check that the local_ident, namely, the identities that have previously imported data
+            // are in fact from the same ID that we got the message from, this is to avoid strange things
+            // on non-encrypted messages, a message that is signed has a format and as such none of this applies, at least for now
+            if (!EMPTYSTR(src->from->address) &&
+                local_idents && !(local_idents->next) && strcmp(local_idents->ident->address, src->from->address)==0) {
+
                 PEP_STATUS incoming_status = status;
                 const char* sender_key = NULL;
                 if (imported_sender_key_fpr) { // pEp protocol version 2.2 or greater, or someone knows to use the filename
@@ -5497,6 +5513,8 @@ static PEP_STATUS _decrypt_message(
 
                 status = _check_and_set_default_key(session, src->from, sender_key);
                 free(imported_sender_key_fpr);
+                //Sascha: local_idents isn't used further ahead, at least currently and as such it is free'd.
+                free(local_idents);
                 imported_sender_key_fpr = NULL;
 
                 if (status == PEP_OUT_OF_MEMORY)
@@ -5635,7 +5653,7 @@ static PEP_STATUS _decrypt_message(
                         /* if decrypted, but not verified... */
                         if (status == PEP_STATUS_OK && decrypt_status == PEP_DECRYPTED) {
                             if (src->from)
-                                status = verify_decrypted(session,
+                                 status = verify_decrypted(session,
                                                           src, msg,
                                                           ptext, psize,
                                                           &_keylist,

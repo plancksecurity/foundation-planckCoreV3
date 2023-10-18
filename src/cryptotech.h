@@ -138,20 +138,9 @@ typedef PEP_STATUS (*get_key_rating_t)(
  *  @see pgp_import_keydata() - This is one function that might be pointed to via an pointer of type import_key_t
  */
 typedef PEP_STATUS (*import_key_t)(PEP_SESSION session, const char *key_data,
-                                   size_t size, identity_list **private_idents, stringlist_t** imported_keys,
+                                   size_t size, identity_list **idents, identity_list **private_idents, stringlist_t** imported_keys,
                                    uint64_t* changed_key_index);
 
-
-/**
- *  @brief Signature for crypto drivers to implement for import_key_strict(), which is like import_key(), except stricter
- *  @copydoc pgp_import_keydata_strict()
- *  @see import_key() -
- *  @see pgp_import_keydata_strict() - This is one function that might be pointed to via an pointer of type import_keydata_strict_t
- */
-typedef PEP_STATUS (*import_keydata_strict_t)(PEP_SESSION session, const char *key_data,
-                                   size_t size, pEp_identity *key_owner,
-                                   identity_list **private_idents, stringlist_t** imported_keys,
-                                   uint64_t* changed_key_index);
 
 /**
  *  @brief Signature for crypto drivers to implement for recv_key()
@@ -272,7 +261,6 @@ typedef struct _PEP_cryptotech_t {
     generate_keypair_t generate_keypair;
     get_key_rating_t get_key_rating;
     import_key_t import_key;
-    import_keydata_strict_t import_key_strict;
     recv_key_t recv_key;
     send_key_t send_key;
     renew_key_t renew_key;
