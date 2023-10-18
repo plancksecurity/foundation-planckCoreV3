@@ -4727,7 +4727,8 @@ static bool import_header_keys(PEP_SESSION session, message* src, stringlist_t**
     PEP_STATUS status = import_key_with_fpr_return(session, 
                                                     the_key->value, 
                                                     the_key->size, 
-                                                    NULL, 
+                                                    NULL,
+                                                    NULL,
                                                     imported_key_list, 
                                                     changed_keys);
     free_bloblist(the_key);

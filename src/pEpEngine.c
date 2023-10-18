@@ -3335,7 +3335,7 @@ DYNAMIC_API PEP_STATUS import_key(
     if (private_keys != NULL)
         * private_keys = NULL;
 
-    return import_key_with_fpr_return(session, key_data, size, private_keys, NULL, NULL);
+    return import_key_with_fpr_return(session, key_data, size, NULL, private_keys, NULL, NULL);
 }
 
 DYNAMIC_API PEP_STATUS import_key_with_fpr_return(
@@ -3380,7 +3380,7 @@ DYNAMIC_API PEP_STATUS import_extrakey_with_fpr_return(PEP_SESSION session,
 
     // call import key
     status = import_key_with_fpr_return(session, key_data,
-        size, private_keys, imported_keys, changed_public_keys);
+        size, NULL, private_keys, imported_keys, changed_public_keys);
 
     if (status != PEP_KEY_IMPORTED){
         goto end_import_extrakey_with_fpr_return;
