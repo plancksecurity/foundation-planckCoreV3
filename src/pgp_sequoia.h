@@ -13,7 +13,7 @@
  * @todo    more doc
  * @todo    tidy up tabs
  */
-
+// 18.10.2023/TC - removed pgp_import_keydata_strict as it is no longer used.
 #ifndef PGP_SEQUOIA_H
 #define PGP_SEQUOIA_H
 
@@ -280,32 +280,6 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
                               size_t size, identity_list **private_idents,
                               stringlist_t** imported_keys,
                               uint64_t* changed_key_index);
-
-/**
- *  @internal
- *  <!--       pgp_import_keydata_strict()       -->
- *
- *  @brief            Similar to pgp_import_keydata except it works
- *  under much more strict rules, only a single armored ascii
- *  block can be imported, along with that an identity of ownership
- *  must be specified, if any parameter is incorrect (more than a single
- *  block, the key isn't owned by the given identity, etc...) nothing
- *  will be imported.
- *
- *  @param[in]  session                 session handle
- *  @param[in]  key_data                const char *
- *  @param[in]  size                    size_t
- *  @param[in]  pEp_identity            *key_owner
- *  @param[out]  private_idents         identity_list **
- *  @param[out]  imported_keys          stringlist_t **
- *  @param[out]  changed_key_index      uint64_t *
- *
- */
-PEP_STATUS pgp_import_keydata_strict(PEP_SESSION session, const char *key_data,
-                                     size_t size, pEp_identity *key_owner,
-                                     identity_list **private_idents,
-                                     stringlist_t** imported_keys,
-                                     uint64_t* changed_key_index);
 /**
  *  @internal
  *  <!--       pgp_import_private_keydata()       -->

@@ -5,7 +5,7 @@
  */
 
  // 07.08.2023/IP - added method import_extrakey_with_fpr_return & changed behaviour of handling identity flags when extrakey encryption is requested
-
+// 18.10.2023/TC - added identities out param, additionally made the param names more descriptive, removed import_key_strict as it isn't used anymore.
 #include "pEp_internal.h"
 #include "dynamic_api.h"
 #include "cryptotech.h"
@@ -3342,7 +3342,8 @@ DYNAMIC_API PEP_STATUS import_key_with_fpr_return(
         PEP_SESSION session,
         const char *key_data,
         size_t size,
-        identity_list **private_keys,
+        identity_list **identities,
+        identity_list **private_ident,
         stringlist_t** imported_keys,
         uint64_t* changed_public_keys        
     )
@@ -3350,43 +3351,21 @@ DYNAMIC_API PEP_STATUS import_key_with_fpr_return(
     PEP_REQUIRE(session && key_data && size
                 /* the other fields are allowed to be NULL. */);
 
-    /* When provided initialise private_keys out of defensiveness, to avoid
+    /* When provided initialise identities & private_identout of defensiveness, to avoid
        misleading the caller with invalid pointers even in case of failure;
        do not do the same with imported_keys, which is an inout parameter. */
-    if (private_keys != NULL)
-        * private_keys = NULL;
+    if (private_ident != NULL)
+        * private_ident = NULL;
+
+    if (identities != NULL)
+        * identities = NULL;
+
 
     if (imported_keys && !*imported_keys && changed_public_keys)
         *changed_public_keys = 0;
 
     return session->cryptotech[PEP_crypt_OpenPGP].import_key(session, key_data,
-            size, private_keys, imported_keys, changed_public_keys);
-}
-
-DYNAMIC_API PEP_STATUS import_key_strict(
-        PEP_SESSION session,
-        const char *key_data,
-        size_t size,
-        pEp_identity *key_owner,
-        identity_list **private_keys,
-        stringlist_t** imported_keys,
-        uint64_t* changed_public_keys
-)
-{
-    PEP_REQUIRE(session && key_data && size && key_owner
-    /* the other fields are allowed to be NULL. */);
-
-    /* When provided initialise private_keys out of defensiveness, to avoid
-       misleading the caller with invalid pointers even in case of failure;
-       do not do the same with imported_keys, which is an inout parameter. */
-    if (private_keys != NULL)
-        * private_keys = NULL;
-
-    if (imported_keys && !*imported_keys && changed_public_keys)
-        *changed_public_keys = 0;
-
-    return session->cryptotech[PEP_crypt_OpenPGP].import_key_strict(session, key_data,
-                                                             size, key_owner, private_keys, imported_keys, changed_public_keys);
+            size, identities, private_ident, imported_keys, changed_public_keys);
 }
 
 // 07.08.2023/IP - added method import_extrakey_with_fpr_return
