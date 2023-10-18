@@ -11,6 +11,7 @@
 // 21.09.2023/AT - bumped version to 3.3.4
 // 05.10.2023/AT - bumped version to 3.3.5
 // 11.10.2023/AT - bumped version to 3.3.6
+// 18.10.2023/IG - bump version to 3.3.7
 
 #ifndef _PEP_ENGINE_VERSION_H_
 #define _PEP_ENGINE_VERSION_H_
