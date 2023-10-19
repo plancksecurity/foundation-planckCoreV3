@@ -203,7 +203,7 @@ TEST_F(ImportKeyTest, check_import_change_wo_fpr_illegal) {
     
     string pubkey = slurp("test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");
     uint64_t changes = 0;
-    status = import_key_with_fpr_return(session, pubkey.c_str(), pubkey.size(), NULL, NULL, &changes);
+    status = import_key_with_fpr_return(session, pubkey.c_str(), pubkey.size(), NULL, NULL, NULL, &changes);
     ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
 }
 
