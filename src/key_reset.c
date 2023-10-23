@@ -1226,6 +1226,7 @@ static PEP_STATUS _dup_grouped_only(identity_list* idents, identity_list** filte
 static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION session,
                                                                   pEp_identity* ident,
                                                                   char* old_fpr) {
+    PEP_REQUIRE(session && ident && ident->address && old_fpr);
 
     bool is_own_identity_group = false;
     PEP_STATUS status = PEP_STATUS_OK;
