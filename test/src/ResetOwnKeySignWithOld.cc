@@ -104,5 +104,14 @@ TEST_F(ResetOwnKeySignWithOld, generate_key_check_myself)
     ASSERT_EQ(tyrell1->major_ver, PEP_ENGINE_VERSION_MAJOR);
     ASSERT_EQ(tyrell1->minor_ver, PEP_ENGINE_VERSION_MINOR);
 
+    pEp_identity *tyrell2 = identity_dup(tyrell1);
+    free(tyrell2->fpr);
+    tyrell2->fpr = NULL;
+    status = generate_keypair(session, tyrell2);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NOTNULL(tyrell2->fpr);
+
+    ASSERT_STRNE(tyrell1->fpr, tyrell2->fpr);
+
     free_identity(tyrell1);
 }
