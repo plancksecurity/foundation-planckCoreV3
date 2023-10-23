@@ -4267,7 +4267,7 @@ static PEP_STATUS import_keys_from_decrypted_msg(PEP_SESSION session,
     bool _imported_private = false;
     if (_private_il && _private_il->ident && _private_il->ident->address)
         _imported_private = true;
-    //This entire line block doesn't do anything; if you have imported private keys they get their identity set as the user_id
+
     if (private_il && _imported_private) {
         // the private identity list should NOT be subject to myself() or
         // update_identity() at this point.
@@ -5516,6 +5516,7 @@ static PEP_STATUS _decrypt_message(
                 free(imported_sender_key_fpr);
                 //Sascha: local_idents isn't used further ahead, at least currently and as such it is free'd.
                 free(local_idents);
+                local_idents = NULL;
                 imported_sender_key_fpr = NULL;
 
                 if (status == PEP_OUT_OF_MEMORY)
