@@ -3,7 +3,7 @@
 FROM rust:1.70-bullseye as sequoiaBuilder
 RUN apt-get update && apt-get install -yqq --no-install-recommends libclang-dev libbotan-2-dev pkg-config libssl-dev
 WORKDIR /root/
-RUN git clone --depth=1 --branch=v1.1.1 https://git.planck.security/foundation/planckCoreSequoiaBackend.git
+RUN git clone --depth=1 --branch=CORE-135 https://git.planck.security/foundation/planckCoreSequoiaBackend.git
 WORKDIR /root/planckCoreSequoiaBackend
 COPY docker/debian/planckCoreSequoiaBackend.conf local.conf
 RUN make install
