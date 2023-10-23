@@ -1241,7 +1241,6 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
         }
     }
 
-    // Urgh. Can this cause a memleak? FIXME.
     char* cached_passphrase = EMPTYSTR(session->curr_passphrase) ? NULL : strdup(session->curr_passphrase);
 
     // Do the full reset on this identity
@@ -1253,7 +1252,7 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
 
     // Should never happen, we checked this, but STILL.
     if (PASS_ERROR(status))
-        return status;
+        goto planck_free;
 
     const char* new_key = NULL;
 
@@ -1287,7 +1286,7 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
             status = myself(session, ident);
         }
         else
-            return status; // FIXME: MEM
+            goto planck_free;
     }
 
     if (status == PEP_STATUS_OK)
@@ -1328,6 +1327,9 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
     // Whether new_key is NULL or not, if this key is equal to the current user default, we
     // replace it.
     status = replace_main_user_fpr_if_equal(session, ident->user_id, new_key, old_fpr);
+
+planck_free:
+    free(cached_passphrase);
 
     return status;
 }
