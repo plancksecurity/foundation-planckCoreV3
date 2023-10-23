@@ -107,11 +107,23 @@ TEST_F(ResetOwnKeySignWithOld, generate_key_check_myself)
     pEp_identity *tyrell2 = identity_dup(tyrell1);
     free(tyrell2->fpr);
     tyrell2->fpr = NULL;
+
+    // Generate another key that should _not_ be used yet officially.
     status = generate_keypair(session, tyrell2);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(tyrell2->fpr);
 
     ASSERT_STRNE(tyrell1->fpr, tyrell2->fpr);
+
+    pEp_identity *tyrell3 = identity_dup(tyrell1);
+    free(tyrell3->fpr);
+    tyrell3->fpr = NULL;
+
+    // Verify that the original key is still the official one.
+    status = myself(session, tyrell3);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NOTNULL(tyrell3->fpr);
+    ASSERT_STREQ(tyrell3->fpr, tyrell1->fpr);
 
     free_identity(tyrell1);
 }
