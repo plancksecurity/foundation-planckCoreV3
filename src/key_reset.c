@@ -1257,38 +1257,33 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
 
     const char* new_key = NULL;
 
-    // If we have a full identity, we have some cleanup and generation tasks here
-    // FIXME: I think this should always be true here
-    if (!EMPTYSTR(ident->address)) {
+    // Note - this will be ignored right now by keygen for group identities.
+    // Testing needs to make sure all callers set the flag appropriately before
+    // we get into the current function.
+    config_passphrase(session, session->generation_passphrase);
 
-        // Note - this will be ignored right now by keygen for group identities.
-        // Testing needs to make sure all callers set the flag appropriately before
-        // we get into the current function.
-        config_passphrase(session, session->generation_passphrase);
+    // generate new key
+    ident->fpr = NULL;
+    status = myself(session, ident);
 
-        // generate new key
-        ident->fpr = NULL;
+    if (status == PEP_STATUS_OK && ident->fpr && strcmp(old_fpr, ident->fpr) != 0)
+        new_key = strdup(ident->fpr);
+    // Error handling?
+
+    // mistrust old_fpr from trust
+    ident->fpr = old_fpr;
+
+    ident->comm_type = PEP_ct_mistrusted;
+    status = set_trust(session, ident);
+    ident->fpr = NULL;
+
+    // Done with old use of ident.
+    if (status == PEP_STATUS_OK) {
+        // Generate new key
         status = myself(session, ident);
-
-        if (status == PEP_STATUS_OK && ident->fpr && strcmp(old_fpr, ident->fpr) != 0)
-            new_key = strdup(ident->fpr);
-        // Error handling?
-
-        // mistrust old_fpr from trust
-        ident->fpr = old_fpr;
-
-        ident->comm_type = PEP_ct_mistrusted;
-        status = set_trust(session, ident);
-        ident->fpr = NULL;
-
-        // Done with old use of ident.
-        if (status == PEP_STATUS_OK) {
-            // Generate new key
-            status = myself(session, ident);
-        }
-        else
-            goto planck_free;
     }
+    else
+        goto planck_free;
 
     if (status == PEP_STATUS_OK)
         // cascade that mistrust for anyone using this key
