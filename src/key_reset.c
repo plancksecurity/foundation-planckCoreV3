@@ -1263,6 +1263,7 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
             status = send_key_reset_to_active_group_members(session, ident, manager, old_fpr, new_key);
         }
     }
+
     if (status == PEP_STATUS_OK) {
         status = send_key_reset_to_recents(session, ident, old_fpr, new_key);
     }
