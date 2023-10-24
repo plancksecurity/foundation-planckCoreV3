@@ -1255,7 +1255,11 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
     if (PASS_ERROR(status))
         goto planck_free;
 
-    const char* new_key = NULL;
+    pEp_identity *gen_ident = identity_dup(ident);
+    free(gen_ident->fpr);
+    gen_ident->fpr = NULL;
+    status = generate_keypair(session, gen_ident);
+    const char *new_key = strdup(gen_ident->fpr);
 
     // Note - this will be ignored right now by keygen for group identities.
     // Testing needs to make sure all callers set the flag appropriately before
@@ -1326,6 +1330,8 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
 
 planck_free:
     free(cached_passphrase);
+    free(new_key);
+    free(gen_ident);
 
     return status;
 }
