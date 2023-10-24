@@ -21,7 +21,6 @@ debian-docker:
   stage: docker
   tags:
     - docker
-  when: manual
   variables:
     DOCKER_HOST: "tcp://docker:2376"
     DOCKER_TLS_CERT: ""
@@ -47,6 +46,10 @@ debian-docker:
       -f docker/debian/Dockerfile
       .
     - docker push ${REGISTRY}/${DEBIAN}:${VERSION}
+  rules:
+    - changes:
+    # Only run this job when the Dockerfile is modified
+        - docker/debian/Dockerfile
 
 
 
