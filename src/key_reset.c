@@ -1231,14 +1231,11 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
     bool is_own_identity_group = false;
     PEP_STATUS status = PEP_STATUS_OK;
 
-    // Before we start, deal with group identities...
     // Deal with group identities
     if (ident->flags & PEP_idf_group_ident) {
         status = is_own_group_identity(session, ident, &is_own_identity_group);
-        if (status != PEP_STATUS_OK)
-            return status; // inconsistent crap going on here... hrm.
-        if (!is_own_identity_group) {
-            // dun dun dunnnnnn
+        if (status != PEP_STATUS_OK) {
+            return status;
         }
     }
 
