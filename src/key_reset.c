@@ -1242,6 +1242,32 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
         }
     }
 
+    pEp_identity *gen_ident = identity_dup(ident);
+    free(gen_ident->fpr);
+    gen_ident->fpr = NULL;
+    status = generate_keypair(session, gen_ident);
+
+    if (status != PEP_STATUS_OK) {
+        goto planck_free;
+    }
+
+    const char *new_key = strdup(gen_ident->fpr);
+
+    if (is_own_identity_group) {
+        pEp_identity* manager = NULL;
+        status = get_group_manager(session, ident, &manager);
+        if (status == PEP_STATUS_OK) {
+            status = send_key_reset_to_active_group_members(session, ident, manager, old_fpr, new_key);
+        }
+    }
+    if (status == PEP_STATUS_OK) {
+        status = send_key_reset_to_recents(session, ident, old_fpr, new_key);
+    }
+
+    if (status != PEP_STATUS_OK) {
+        goto planck_free;
+    }
+
     char* cached_passphrase = EMPTYSTR(session->curr_passphrase) ? NULL : strdup(session->curr_passphrase);
 
     // Do the full reset on this identity
@@ -1251,43 +1277,42 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
     // key for all idents for this user.
     status = revoke_key(session, old_fpr, NULL);
 
-    // Should never happen, we checked this, but STILL.
-    if (PASS_ERROR(status))
+    if (status != PEP_STATUS_OK) {
         goto planck_free;
+    }
 
-    pEp_identity *gen_ident = identity_dup(ident);
-    free(gen_ident->fpr);
-    gen_ident->fpr = NULL;
-    status = generate_keypair(session, gen_ident);
-    const char *new_key = strdup(gen_ident->fpr);
+    status = set_revoked(session, old_fpr, new_key, time(NULL));
+
+    if (status != PEP_STATUS_OK) {
+        goto planck_free;
+    }
 
     // Note - this will be ignored right now by keygen for group identities.
     // Testing needs to make sure all callers set the flag appropriately before
     // we get into the current function.
     config_passphrase(session, session->generation_passphrase);
 
-    // generate new key
+    free(ident->fpr);
     ident->fpr = NULL;
-    status = myself(session, ident);
+    status = set_own_key(session, ident, new_key);
 
-    if (status == PEP_STATUS_OK && ident->fpr && strcmp(old_fpr, ident->fpr) != 0)
-        new_key = strdup(ident->fpr);
-    // Error handling?
+    status = set_as_pEp_user(session, ident);
+
+    if (status != PEP_STATUS_OK) {
+        goto planck_free;
+    }
 
     // mistrust old_fpr from trust
     ident->fpr = old_fpr;
 
     ident->comm_type = PEP_ct_mistrusted;
     status = set_trust(session, ident);
-    ident->fpr = NULL;
 
-    // Done with old use of ident.
-    if (status == PEP_STATUS_OK) {
-        // Generate new key
-        status = myself(session, ident);
-    }
-    else
+    if (status != PEP_STATUS_OK) {
         goto planck_free;
+    }
+
+    ident->fpr = NULL;
 
     if (status == PEP_STATUS_OK)
         // cascade that mistrust for anyone using this key
@@ -1298,30 +1323,6 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
     if (status == PEP_STATUS_OK)
         status = add_mistrusted_key(session, old_fpr);
 
-    // If there's a new key, do the DB linkage with the revoked one, and
-    // send the key reset mail opportunistically to recently contacted
-    // partners
-    if (new_key) {
-        // add to revocation list
-        if (status == PEP_STATUS_OK)
-            status = set_revoked(session, old_fpr, new_key, time(NULL));
-        // for all active communication partners:
-        //      active_send revocation
-
-        //ident->fpr = old_fpr; ???????
-        if (status == PEP_STATUS_OK) {
-            if (is_own_identity_group) {
-                pEp_identity* manager = NULL;
-                status = get_group_manager(session, ident, &manager);
-                if (status == PEP_STATUS_OK) {
-                    status = send_key_reset_to_active_group_members(session, ident, manager, old_fpr, new_key);
-                }
-            }
-            if (status == PEP_STATUS_OK)
-                status = send_key_reset_to_recents(session, ident, old_fpr, new_key);
-        }
-        ident->fpr = NULL;
-    }
     config_passphrase(session, cached_passphrase);
 
     // Whether new_key is NULL or not, if this key is equal to the current user default, we
