@@ -295,7 +295,7 @@ static char *_string_concatenate_3(const char *a, const char *b, const char *c)
         return _string_concatenate_2(a_b, c);
 }
 
-#if !defined(BSD) && !defined(__APPLE__)
+#if !defined(BSD) && !defined(__APPLE__) && !defined(HAS_STRL)
 
 size_t strlcpy(char* dst, const char* src, size_t size) {
     size_t retval = strlen(src);
@@ -323,6 +323,10 @@ size_t strlcat(char* dst, const char* src, size_t size) {
     dst[start_len + size_to_copy] = '\0';
     return retval;
 }
+
+#endif
+
+#if !defined(BSD) && !defined(__APPLE__)
 
 char *strnstr(const char *big, const char *little, size_t len) {
     if (big == NULL || little == NULL)
