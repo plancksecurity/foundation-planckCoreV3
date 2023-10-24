@@ -2,7 +2,7 @@
 ## Prefer git tags instead of SHA hashes when possible.
 # We take pEpEngineSequoiaBackend from
 #   https://gitea.pep.foundation/pEp.foundation/pEpEngineSequoiaBackend.git
-pEpEngineSequoiaBackend=v1.1.3-RC1
+pEpEngineSequoiaBackend=v1.1.3-RC2
 yml2=v2.7.6
 libpEpTransport=planck_v1.0.0
 
