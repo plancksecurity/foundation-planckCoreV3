@@ -1242,7 +1242,13 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
         }
     }
 
-    pEp_identity *gen_ident = identity_dup(ident);
+    // Variables that are handled in the free block at the end
+
+    char *new_key = NULL;
+    char *cached_passphrase = NULL;
+    pEp_identity *gen_ident = NULL;
+
+    gen_ident = identity_dup(ident);
     free(gen_ident->fpr);
     gen_ident->fpr = NULL;
     status = generate_keypair(session, gen_ident);
@@ -1251,7 +1257,7 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
         goto planck_free;
     }
 
-    const char *new_key = strdup(gen_ident->fpr);
+    new_key = strdup(gen_ident->fpr);
 
     if (is_own_identity_group) {
         pEp_identity* manager = NULL;
@@ -1268,7 +1274,7 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
         goto planck_free;
     }
 
-    char* cached_passphrase = EMPTYSTR(session->curr_passphrase) ? NULL : strdup(session->curr_passphrase);
+    cached_passphrase = EMPTYSTR(session->curr_passphrase) ? NULL : strdup(session->curr_passphrase);
 
     // Do the full reset on this identity
     // Base case for is_own_private starts here
@@ -1332,7 +1338,7 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
 planck_free:
     free(cached_passphrase);
     free(new_key);
-    free(gen_ident);
+    free_identity(gen_ident);
 
     return status;
 }
