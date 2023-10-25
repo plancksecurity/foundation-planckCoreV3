@@ -1224,15 +1224,15 @@ static PEP_STATUS _dup_grouped_only(identity_list* idents, identity_list** filte
 }
 
 static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION session,
-                                                                  pEp_identity* parameter_ident,
+                                                                  pEp_identity* ident,
                                                                   char* old_fpr) {
-    PEP_REQUIRE(session && parameter_ident && parameter_ident->address && old_fpr);
+    PEP_REQUIRE(session && ident && ident->address && old_fpr);
 
     // Variables that are handled in the free block at the end
 
     char *new_key = NULL;
     char *cached_passphrase = NULL;
-    pEp_identity *local_ident = identity_dup(parameter_ident); // Don't touch the parameter
+    pEp_identity *local_ident = identity_dup(ident); // Don't touch the parameter
     pEp_identity *gen_ident = NULL;
 
     bool is_own_identity_group = false;
