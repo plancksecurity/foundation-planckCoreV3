@@ -1224,28 +1224,29 @@ static PEP_STATUS _dup_grouped_only(identity_list* idents, identity_list** filte
 }
 
 static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION session,
-                                                                  pEp_identity* ident,
+                                                                  pEp_identity* parameter_ident,
                                                                   char* old_fpr) {
-    PEP_REQUIRE(session && ident && ident->address && old_fpr);
-
-    bool is_own_identity_group = false;
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    // Deal with group identities
-    if (ident->flags & PEP_idf_group_ident) {
-        status = is_own_group_identity(session, ident, &is_own_identity_group);
-        if (status != PEP_STATUS_OK) {
-            return status;
-        }
-    }
+    PEP_REQUIRE(session && parameter_ident && parameter_ident->address && old_fpr);
 
     // Variables that are handled in the free block at the end
 
     char *new_key = NULL;
     char *cached_passphrase = NULL;
+    pEp_identity *local_ident = identity_dup(parameter_ident); // Don't touch the parameter
     pEp_identity *gen_ident = NULL;
 
-    gen_ident = identity_dup(ident);
+    bool is_own_identity_group = false;
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    // Deal with group identities
+    if (local_ident->flags & PEP_idf_group_ident) {
+        status = is_own_group_identity(session, local_ident, &is_own_identity_group);
+        if (status != PEP_STATUS_OK) {
+            return status;
+        }
+    }
+
+    gen_ident = identity_dup(local_ident);
     free(gen_ident->fpr);
     gen_ident->fpr = NULL;
     status = generate_keypair(session, gen_ident);
@@ -1258,14 +1259,14 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
 
     if (is_own_identity_group) {
         pEp_identity* manager = NULL;
-        status = get_group_manager(session, ident, &manager);
+        status = get_group_manager(session, local_ident, &manager);
         if (status == PEP_STATUS_OK) {
-            status = send_key_reset_to_active_group_members(session, ident, manager, old_fpr, new_key);
+            status = send_key_reset_to_active_group_members(session, local_ident, manager, old_fpr, new_key);
         }
     }
 
     if (status == PEP_STATUS_OK) {
-        status = send_key_reset_to_recents(session, ident, old_fpr, new_key);
+        status = send_key_reset_to_recents(session, local_ident, old_fpr, new_key);
     }
 
     if (status != PEP_STATUS_OK) {
@@ -1298,27 +1299,27 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
 
     // Install the new key as own    
 
-    free(ident->fpr);
-    ident->fpr = NULL;
-    status = set_own_key(session, ident, new_key);
+    free(local_ident->fpr);
+    local_ident->fpr = NULL;
+    status = set_own_key(session, local_ident, new_key);
 
-    status = set_as_pEp_user(session, ident);
+    status = set_as_pEp_user(session, local_ident);
 
     if (status != PEP_STATUS_OK) {
         goto planck_free;
     }
 
     // mistrust old_fpr from trust
-    ident->fpr = old_fpr;
+    local_ident->fpr = old_fpr;
 
-    ident->comm_type = PEP_ct_mistrusted;
-    status = set_trust(session, ident);
+    local_ident->comm_type = PEP_ct_mistrusted;
+    status = set_trust(session, local_ident);
 
     if (status != PEP_STATUS_OK) {
         goto planck_free;
     }
 
-    ident->fpr = NULL;
+    local_ident->fpr = NULL;
 
     if (status == PEP_STATUS_OK)
         // cascade that mistrust for anyone using this key
@@ -1333,11 +1334,12 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
 
     // Whether new_key is NULL or not, if this key is equal to the current user default, we
     // replace it.
-    status = replace_main_user_fpr_if_equal(session, ident->user_id, new_key, old_fpr);
+    status = replace_main_user_fpr_if_equal(session, local_ident->user_id, new_key, old_fpr);
 
 planck_free:
     free(cached_passphrase);
     free(new_key);
+    free_identity(local_ident);
     free_identity(gen_ident);
 
     return status;
