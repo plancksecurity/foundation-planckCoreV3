@@ -1272,8 +1272,6 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
         goto planck_free;
     }
 
-    cached_passphrase = EMPTYSTR(session->curr_passphrase) ? NULL : strdup(session->curr_passphrase);
-
     // Do the full reset on this identity
     // Base case for is_own_private starts here
     // Note that we reset this key for ANY own ident that has it. And if
@@ -1290,6 +1288,8 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
     if (status != PEP_STATUS_OK) {
         goto planck_free;
     }
+
+    cached_passphrase = EMPTYSTR(session->curr_passphrase) ? NULL : strdup(session->curr_passphrase);
 
     // Note - this will be ignored right now by keygen for group identities.
     // Testing needs to make sure all callers set the flag appropriately before
