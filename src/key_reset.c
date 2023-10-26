@@ -1266,6 +1266,7 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
         }
     }
 
+    // Note: On PEP_SYNC_NO_MESSAGE_SEND_CALLBACK, there is no point to try sending in any case.
     if (status == PEP_STATUS_OK) {
         status = send_key_reset_to_recents(session, local_ident, old_fpr, new_key);
     }
