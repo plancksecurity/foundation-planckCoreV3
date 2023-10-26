@@ -7,6 +7,7 @@
 // written by Nana Karlstetter and Volker Birk
 
 // 07.08.2023/IP - added method import_extrakey_with_fpr_return
+// 19.10.2023/TC - Added identities to import_extrakey_with_fpr_return
 
 type ISO639_1 is string size=2 > a-z;
 
@@ -287,7 +288,9 @@ protocol session {
 
         use size_t size doc="amount of data to handle";
 
-        create identity_list private_keys 
+        create identity_list identities 
+
+        create identity_list private_ident 
         doc="""
             list of identities containing the private keys that have been imported. Private_keys
             and imported_keys can be left NULL, it is then ignored.
