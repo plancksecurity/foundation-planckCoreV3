@@ -1232,7 +1232,8 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
 
     char *new_key = NULL;
     char *cached_passphrase = NULL;
-    pEp_identity *local_ident = identity_dup(ident); // Don't touch the parameter
+    // Don't touch the input  parameter
+    pEp_identity *local_ident = identity_dup(ident);
     pEp_identity *gen_ident = NULL;
 
     bool is_own_identity_group = false;
