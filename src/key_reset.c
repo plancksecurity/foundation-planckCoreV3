@@ -1269,7 +1269,7 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
         status = send_key_reset_to_recents(session, local_ident, old_fpr, new_key);
     }
 
-    if (status != PEP_STATUS_OK) {
+    if (status != PEP_STATUS_OK && status != PEP_SYNC_NO_MESSAGE_SEND_CALLBACK) {
         goto planck_free;
     }
 
