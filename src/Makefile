@@ -117,6 +117,7 @@ HEADERS_TO_INSTALL = \
   cryptotech.h sync_api.h pEp_string.h openpgp_compat.h engine_sql.h \
   labeled_int_list.h key_reset.h base64.h sync_codec.h distribution_codec.h \
   message_codec.h storage_codec.h status_to_string.h keyreset_command.h \
+  group_internal.h \
   string_utilities.h \
   distribution_api.h media_key.h \
   map_asn1.h \
