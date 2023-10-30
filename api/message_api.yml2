@@ -103,9 +103,9 @@ struct message {
 
 
 protocol session {
-    method get_fprs 
+    method get_key_ids 
     doc="""
-        returns the key fingerprints uses in this message
+        returns the key ids uses in this message
         """
     {
         support message msg;

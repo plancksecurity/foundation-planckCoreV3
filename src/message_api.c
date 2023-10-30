@@ -5199,7 +5199,7 @@ end:
 }
 #undef GOTO_END_ON_FAILURE
 
-DYNAMIC_API PEP_STATUS get_fprs(PEP_SESSION session, message *msg, stringlist_t **keylist)
+DYNAMIC_API PEP_STATUS get_key_ids(PEP_SESSION session, message *msg, stringlist_t **keylist)
 {
     PEP_REQUIRE(session && msg && keylist);
 
@@ -5216,7 +5216,7 @@ DYNAMIC_API PEP_STATUS get_fprs(PEP_SESSION session, message *msg, stringlist_t 
         return status;
     }
 
-    status = cryptotech[crypto].get_fprs(session, ctext, csize, keylist);
+    status = cryptotech[crypto].get_key_ids(session, ctext, csize, keylist);
 
     return status;
 }

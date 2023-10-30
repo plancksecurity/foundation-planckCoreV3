@@ -75,7 +75,7 @@ PEP_STATUS pgp_decrypt_and_verify(
 
 /**
  *  @internal
- *  <!--       pgp_get_fprs()       -->
+ *  <!--       pgp_get_key_ids()       -->
  *
  *  @brief            TODO
  *
@@ -87,7 +87,7 @@ PEP_STATUS pgp_decrypt_and_verify(
  *  @retval PEP_STATUS_OK
  *  @retval any other value on error
  */
-PEP_STATUS pgp_get_fprs(PEP_SESSION session,
+PEP_STATUS pgp_get_key_ids(PEP_SESSION session,
                        const char *ctext,
                        size_t csize,                      
                        stringlist_t **keylist);

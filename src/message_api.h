@@ -325,7 +325,7 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
 );
 
 /**
- *  <!--       get_fprs()       -->
+ *  <!--       get_key_ids()       -->
  *
  *  @brief .....
  *
@@ -333,7 +333,7 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
  *  @param[in]   msg        message to decrypt
  *  @param[out]  keylist    keylist
  */
-DYNAMIC_API PEP_STATUS get_fprs(
+DYNAMIC_API PEP_STATUS get_key_ids(
     PEP_SESSION session, 
     message *msg, 
     stringlist_t **keylist

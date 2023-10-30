@@ -230,11 +230,11 @@ typedef PEP_STATUS (*config_cipher_suite_t)(PEP_SESSION session,
         PEP_CIPHER_SUITE suite);
 
 /**
- *  @brief Signature for crypto drivers to implement for config_cipher_suite()
- *  @copydoc config_cipher_suite()
- *  @see config_cipher_suite()
+ *  @brief 
+ *  @copydoc 
+ *  @see 
  */
-typedef PEP_STATUS (*get_fprs_t)(PEP_SESSION session,
+typedef PEP_STATUS (*get_key_ids_t)(PEP_SESSION session,
                                  const char *ctext,
                                  size_t csize,                                 
                                  stringlist_t **keylist);
@@ -272,7 +272,7 @@ typedef struct _PEP_cryptotech_t {
     contains_priv_key_t contains_priv_key;
     find_private_keys_t find_private_keys;
     config_cipher_suite_t config_cipher_suite;
-    get_fprs_t get_fprs;
+    get_key_ids_t get_key_ids;
 } PEP_cryptotech_t;
 
 extern PEP_cryptotech_t cryptotech[PEP_crypt__count]; ///< array of all supported cryptotech drivers/interfaces (?)
