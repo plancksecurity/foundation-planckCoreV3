@@ -1374,7 +1374,7 @@ static PEP_STATUS wrap_message_as_attachment(
         }
         else {
             _envelope->longmsg = strdup(
-                "This message was encrypted with p≡p (https://pep.software). If you are seeing this message,\n" 
+                "This message was encrypted with planck (https://www.planck.security). If you are seeing this message,\n"
                 "your client does not support raising message attachments. Please click on the message attachment\n"
                 "to view it, or better yet, consider using p≡p!\n"
             );
