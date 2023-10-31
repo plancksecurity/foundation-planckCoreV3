@@ -496,10 +496,17 @@ action receivedKeysAreDefaultKeys
         return status;
     }
 
-    for (identity_list *_il = il; _il && _il->ident ; _il = _il->next) {
-        status = set_own_key(session, _il->ident, _il->ident->fpr);
-        if (status != PEP_STATUS_OK && status != PEP_KEY_UNSUITABLE)
-            break;
+    identity_list* curr_idents = NULL;
+    status = own_identities_retrieve(session, &curr_idents);
+    if (status == PEP_STATUS_OK){
+        for (identity_list *_il = il; _il && _il->ident ; _il = _il->next) {
+            status = send_key_reset_to_recents(session, _il->ident, curr_idents->ident->fpr, _il->ident->fpr);
+            if(status == PEP_STATUS_OK){
+                status = set_own_key(session, _il->ident, _il->ident->fpr);
+                if (status != PEP_STATUS_OK && status != PEP_KEY_UNSUITABLE)
+                    break;
+            }
+        }
     }
 
     free_identity_list(il);
