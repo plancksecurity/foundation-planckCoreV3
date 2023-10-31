@@ -428,10 +428,10 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
         default:
             break;
     }
-    
     // should never happen, but we will MAKE sure
-    if (PASS_ERROR(status)) 
+    if (PASS_ERROR(status))  {
         status = PEP_KEY_UNSUITABLE; // renew it on your own time, baby
+    }
         
     return status;
 }
@@ -1121,7 +1121,7 @@ PEP_STATUS _myself(PEP_SESSION session,
     // Ok, so now, set up the own_identity:
     identity->comm_type = PEP_ct_pEp;
     identity->me = true;
-    if(ignore_flags)
+    if(ignore_flags && !(identity->flags & PEP_idf_signing))
         identity->flags = PEP_idf_default;
     
     // Let's see if we have an identity record in the DB for 
@@ -2173,7 +2173,7 @@ static PEP_STATUS _wipe_own_default_key_if_invalid(PEP_SESSION session,
             break;   
         default:
             break;
-    }     
+    }
     free(cached_fpr);
     
     // This may have been for a user default, not an identity default.
