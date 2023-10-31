@@ -87,7 +87,8 @@ namespace {
 
 // Neal: how are these supposed to behave under gnupg? Or is this again sequoia-specific?
 #ifdef USE_SEQUOIA
-TEST_F(GetKeyIDsTest, list_keys   ) {
+TEST_F(GetFingerprintsTest, list_keys)
+{
     PEP_STATUS status;
     string input_key;
 
