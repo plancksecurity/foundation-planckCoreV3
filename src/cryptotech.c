@@ -1,3 +1,7 @@
+// Changelog
+// 31.10.2023/IP: added function to retrieve key_ids
+//
+
 /** 
  * @file cryptotech.c 
  * @brief File description for doxygen missing. FIXME 

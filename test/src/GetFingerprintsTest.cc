@@ -1,3 +1,6 @@
+// Changelog
+// 31.10.2023/IP: added function to retrieve key_ids
+// 
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 

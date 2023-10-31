@@ -1,3 +1,7 @@
+// Changelog
+// 31.10.2023/IP: added function to retrieve key_ids
+//
+
 /**
  * @file     message_api.h
  * @brief    pEp engine API for message handling and evaluation and related functions
