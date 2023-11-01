@@ -498,7 +498,7 @@ static const char *sql_own_identities_retrieve MAYBE_UNUSED =
         "         else identity.username end),"
         "   lang, identity.flags,"
 //        "   identity.flags | pgp_keypair.flags,"
-        "   pEp_version_major, pEp_version_minor"
+        "   pEp_version_major, pEp_version_minor, enc_format"
         "   from identity"
         "   join person on id = identity.user_id"
         "   left join pgp_keypair on fpr = identity.main_key_id"
