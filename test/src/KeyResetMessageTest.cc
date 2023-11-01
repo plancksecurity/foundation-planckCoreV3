@@ -50,8 +50,6 @@ class KeyResetMessageTest : public ::testing::Test {
         const char* erin_fpr = "1B0E197E8AE66277B8A024B9AEA69F509F8D7CBA";
         const char* fenris_fpr = "0969FA229DF21C832A64A04711B1B9804F3D2900";
 
-        const char* alice_receive_reset_fpr = "9B3CC93A689B1167082A90C80766A463E439CB71";
-
         const string alice_user_id = PEP_OWN_USERID;
         const string bob_user_id = "BobId";
         const string carol_user_id = "carolId";
@@ -367,9 +365,9 @@ TEST_F(KeyResetMessageTest, check_reset_key_and_notify) {
         hashmap[jt->first] = true;
 
         // Uncomment to regenerate received message - remember to update
-        // alice_receive_reset_fpr
+        // alice_fpr
         if (false) {
-            output_stream << "WARNING: alice_receive_reset_fpr is now " << new_fpr << endl;
+            output_stream << "WARNING: alice_fpr is now " << new_fpr << endl;
             output_stream << "PLEASE CHANGE THE VALUE IN KeyResetMessageTest.cc!!!!" << endl;
             if (strcmp(curr_sent_msg->to->ident->user_id, bob_user_id.c_str()) == 0) {
                 ofstream outfile;
@@ -433,11 +431,11 @@ TEST_F(KeyResetMessageTest, check_non_reset_receive_revoked) {
     // FIXME: key election - right now, this case is intended to fail. But I am not sure it should. Question to fdik on hold.
     /*
     if (keylist) // there's a test option to continue when asserts fail, so...
-        ASSERT_STREQ(keylist->value,alice_receive_reset_fpr);
+        ASSERT_STREQ(keylist->value,alice_fpr);
 
     status = update_identity(session, alice_ident);
     ASSERT_NOTNULL(alice_ident->fpr);
-    ASSERT_STREQ(alice_receive_reset_fpr,alice_ident->fpr);
+    ASSERT_STREQ(alice_fpr,alice_ident->fpr);
     //keylist = NULL; // WTF?
     */
     free_stringlist(keylist);
@@ -475,17 +473,16 @@ TEST_F(KeyResetMessageTest, check_reset_receive_revoked) {
     message* decrypted_msg = NULL;
     stringlist_t* keylist = NULL;
     PEP_decrypt_flags_t flags = 0;
-    status = decrypt_message_2(session, received_mail,
-                                  &decrypted_msg, &keylist, &flags);
+    status = decrypt_message_2(session, received_mail, &decrypted_msg, &keylist, &flags);
 
     ASSERT_OK;
     ASSERT_NOTNULL(keylist);
     if (keylist) // there's a test option to continue when asserts fail, so...
-        ASSERT_STREQ(keylist->value, alice_receive_reset_fpr);
+        ASSERT_STREQ(keylist->value, alice_fpr);
 
     status = update_identity(session, alice_ident);
     ASSERT_NOTNULL(alice_ident->fpr);
-    ASSERT_STREQ(alice_receive_reset_fpr, alice_ident->fpr);
+    ASSERT_STREQ(alice_fpr, alice_ident->fpr);
 
     keylist = NULL;
 
