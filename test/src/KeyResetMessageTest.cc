@@ -349,6 +349,11 @@ TEST_F(KeyResetMessageTest, check_reset_key_and_notify) {
     // Number of messages we SHOULD be sending.
     ASSERT_EQ(m_queue.size(), 3);
 
+    std::map<string,string> export_files;
+    export_files[carol_user_id] = "test_files/398_reset_from_alice_to_carol.eml";
+    export_files[erin_user_id] = "test_files/398_reset_from_alice_to_erin.eml";
+    export_files[fenris_user_id] = "test_files/398_reset_from_alice_to_fenris.eml";
+
     for (vector<message*>::iterator it = m_queue.begin(); it != m_queue.end(); it++) {
         message* curr_sent_msg = *it;
         ASSERT_NOTNULL(curr_sent_msg);
@@ -366,24 +371,17 @@ TEST_F(KeyResetMessageTest, check_reset_key_and_notify) {
 
         // Uncomment to regenerate received message - remember to update
         // alice_fpr
+
         if (false) {
-            output_stream << "WARNING: alice_fpr is now " << new_fpr << endl;
-            output_stream << "PLEASE CHANGE THE VALUE IN KeyResetMessageTest.cc!!!!" << endl;
-            if (strcmp(curr_sent_msg->to->ident->user_id, bob_user_id.c_str()) == 0) {
+            std::string uid_str = curr_sent_msg->to->ident->user_id;
+            if(export_files.count(uid_str)>0) {
+                char* export_msg = NULL;
                 ofstream outfile;
-                outfile.open("test_files/398_reset_from_alice_to_bob.eml");
-                char* bob_msg = NULL;
-                mime_encode_message(curr_sent_msg, false, &bob_msg, false);
-                outfile << bob_msg;
+                outfile.open(export_files[uid_str]);
+                mime_encode_message(curr_sent_msg, false, &export_msg, false);
+                outfile << export_msg;
                 outfile.close();
-            }
-            else if (strcmp(curr_sent_msg->to->ident->user_id, fenris_user_id.c_str()) == 0) {
-                ofstream outfile;
-                outfile.open("test_files/398_reset_from_alice_to_fenris.eml");
-                char* fenris_msg = NULL;
-                mime_encode_message(curr_sent_msg, false, &fenris_msg, false);
-                outfile << fenris_msg;
-                outfile.close();
+                output_stream << "Wrote file " << export_files[uid_str] << endl;
             }
         }
     }
@@ -398,7 +396,6 @@ TEST_F(KeyResetMessageTest, check_reset_key_and_notify) {
     ASSERT_FALSE(hashmap[dave_user_id]);
     ASSERT_TRUE(hashmap[erin_user_id]);
     ASSERT_TRUE(hashmap[fenris_user_id]);
-    cout << "HEY! reset_fpr is " << new_fpr << endl;
 }
 
 
