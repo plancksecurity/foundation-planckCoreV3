@@ -206,7 +206,6 @@ DYNAMIC_API identity_list *identity_list_add_or_update(identity_list *id_list, p
 
     if(strcmp(list_curr->ident->address, ident->address)==0){
         free_identity(list_curr->ident);
-        list_curr->ident = NULL;
         list_curr->ident = ident;
         return list_curr;
     } else {
