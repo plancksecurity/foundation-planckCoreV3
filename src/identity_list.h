@@ -134,7 +134,8 @@ DYNAMIC_API identity_list *identity_list_add(identity_list *id_list, pEp_identit
  *  @param[in]   id_list    identity_list to add to
  *  @param[in]   ident      identity being added or updated
  *
- *  @retval pointer to the last element in identity_list or NULL if out of memory
+ *  @retval pointer to the inserted or modified element in identity_list or NULL if
+ *  out of memory or nothing is inserted
  *
  *  @warning ident is being moved, the caller loses ownership if the function is
  *           successful

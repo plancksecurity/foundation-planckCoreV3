@@ -201,18 +201,18 @@ DYNAMIC_API identity_list *identity_list_add_or_update(identity_list *id_list, p
 
     identity_list* list_curr = id_list;
     //navigates to the either the latest one *or* the FIRST identity address twin.
-    while (list_curr->next && strcmp(list_curr->ident->address, ident->address)!=0)
+    while (list_curr->next && strcmp(list_curr->ident->address, ident->address))
         list_curr = list_curr->next;
 
-    if(strcmp(list_curr->ident->address, ident->address)!=0){
+    if(strcmp(list_curr->ident->address, ident->address)==0){
         free_identity(list_curr->ident);
         list_curr->ident = NULL;
         list_curr->ident = ident;
+        return list_curr;
     } else {
         list_curr->next = new_identity_list(ident);
+        return list_curr->next;
     }
-
-    return list_curr->next;
 }
 
 // returns *head* of list
