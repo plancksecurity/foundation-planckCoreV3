@@ -492,6 +492,7 @@ action receivedKeysAreDefaultKeys
 
     status = set_all_userids_to_own(session, il);
     if (status != PEP_STATUS_OK) {
+        free_identity_list(il);
         free(user_id);
         return status;
     }
@@ -507,7 +508,7 @@ action receivedKeysAreDefaultKeys
         if (status != PEP_STATUS_OK && status != PEP_KEY_UNSUITABLE)
             break;
     }
-    
+
     identity_list *own_ident = NULL;
     status = own_identities_retrieve(session, &own_ident);
     if (status == PEP_STATUS_OK){
