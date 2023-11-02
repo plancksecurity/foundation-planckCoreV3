@@ -124,6 +124,27 @@ DYNAMIC_API void free_identity_list(identity_list *id_list);
 DYNAMIC_API identity_list *identity_list_add(identity_list *id_list, pEp_identity *ident);
 
 /**
+ *  <!--       identity_list_add_or_update()       -->
+ *
+ *  @brief Add identity to an identity_list or updates the FIRST
+ *  identity with the same address, used for fpr, name, etc..
+ *  adjacent updates to a list where the address is maintained
+ *  but these are changed.
+ *
+ *  @param[in]   id_list    identity_list to add to
+ *  @param[in]   ident      identity being added or updated
+ *
+ *  @retval pointer to the last element in identity_list or NULL if out of memory
+ *
+ *  @warning ident is being moved, the caller loses ownership if the function is
+ *           successful
+ *
+ */
+
+DYNAMIC_API identity_list *identity_list_add_or_update(identity_list *id_list, pEp_identity *ident);
+
+
+/**
  *  <!--       identity_list_add()       -->
  *  
  *  @brief Join second identity_list to the first.
