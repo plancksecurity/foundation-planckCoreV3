@@ -706,7 +706,7 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
             revoked = false;
             status = key_revoked(session, old_fpr, &revoked); 
 
-            if (!revoked)
+            if (revoked)
                 return PEP_KEY_NOT_RESET;            
 
             // Also don't let someone change the replacement fpr 
