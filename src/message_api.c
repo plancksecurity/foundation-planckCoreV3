@@ -2395,6 +2395,27 @@ bool import_attached_keys(
     return remove;
 }
 
+/**
+ *  @internal
+ *  <!--       attach_new_own_key()       -->
+ *
+ *  @brief            TODO
+ *
+ *  @param[in]  session     session handle
+ *  @param[in]  msg         message*
+ *  @param[in]  fpr         const char*
+ *
+ */
+void attach_new_own_key(PEP_SESSION session, message *msg, const char *fpr)
+{
+    PEP_REQUIRE_ORELSE(session && msg && ! EMPTYSTR(fpr), { return; });
+    if (msg->dir == PEP_dir_incoming)
+        return;
+
+    if(_attach_key(session, fpr, msg, "file://sender_key.asc") != PEP_STATUS_OK)
+        return;
+}
+
 
 /**
  *  @internal
