@@ -1,3 +1,6 @@
+// Changelog
+// 31.10.2023/IP: added function to retrieve key_ids
+// 
 // p≡p Message API
 
 // Copyleft (c) 2019-2020, p≡p foundation
@@ -103,6 +106,17 @@ struct message {
 
 
 protocol session {
+    method get_key_ids 
+    doc="""
+        returns the key ids uses in this message
+        """
+    {
+        support message msg;
+        supply hash_list keylist;
+        throws illegal_value;
+        throws any doc="any other value on error";
+    }
+    
     method encrypt_message 
     doc="""
         encrypt message in memory. enc_format PEP_enc_inline_EA:

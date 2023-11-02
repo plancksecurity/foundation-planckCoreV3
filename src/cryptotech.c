@@ -1,3 +1,7 @@
+// Changelog
+// 31.10.2023/IP: added function to retrieve key_ids
+//
+
 /** 
  * @file cryptotech.c 
  * @brief File description for doxygen missing. FIXME 
@@ -56,6 +60,7 @@ PEP_STATUS init_cryptotech(PEP_SESSION session, bool in_first)
         cryptotech[PEP_crypt_OpenPGP].contains_priv_key = pgp_contains_priv_key;
         cryptotech[PEP_crypt_OpenPGP].find_private_keys = pgp_find_private_keys;
         cryptotech[PEP_crypt_OpenPGP].config_cipher_suite = pgp_config_cipher_suite;
+        cryptotech[PEP_crypt_OpenPGP].get_key_ids = pgp_get_key_ids;
 #ifdef PGP_BINARY_PATH
         cryptotech[PEP_crypt_OpenPGP].binary_path = PGP_BINARY_PATH;
 #endif
