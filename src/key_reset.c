@@ -891,12 +891,14 @@ PEP_STATUS create_standalone_key_reset_message(PEP_SESSION session,
         status = PEP_UNKNOWN_ERROR;
         goto pEp_free;
     }    
-    
+
+    attach_new_own_key(session, reset_msg, new_fpr);
+
     message* output_msg = NULL;
     
     status = encrypt_message(session, reset_msg, NULL,
                              &output_msg, PEP_enc_auto,
-                             PEP_encrypt_flag_key_reset_only);
+                             PEP_encrypt_flag_key_reset_only|PEP_encrypt_flag_force_no_attached_key);
 
     if (status == PEP_STATUS_OK)
         *dst = output_msg;
