@@ -50,6 +50,8 @@ class KeyResetMessageTest : public ::testing::Test {
         const char* erin_fpr = "1B0E197E8AE66277B8A024B9AEA69F509F8D7CBA";
         const char* fenris_fpr = "0969FA229DF21C832A64A04711B1B9804F3D2900";
 
+        const char* alice_new_fpr = "502ADD04042695AAE5F2DBEC5BF2AEF3B6FE2110";
+
         const string alice_user_id = PEP_OWN_USERID;
         const string bob_user_id = "BobId";
         const string carol_user_id = "carolId";
@@ -479,7 +481,7 @@ TEST_F(KeyResetMessageTest, check_reset_receive_revoked) {
 
     status = update_identity(session, alice_ident);
     ASSERT_NOTNULL(alice_ident->fpr);
-    ASSERT_STREQ(alice_fpr, alice_ident->fpr);
+    ASSERT_STREQ(alice_new_fpr, alice_ident->fpr);
 
     keylist = NULL;
 
