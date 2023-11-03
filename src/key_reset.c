@@ -603,6 +603,14 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         old_fpr = curr_ident->fpr;
         new_fpr = strdup(curr_cmd->new_key);
 
+        // only allow replacing with the valid signature of existing identity
+        // if those fingerprints don't match, someone wants to hijack the identity
+        // abort, because that's a malformed reset message
+        if (strcmp(sender_fpr, old_fpr) !=0 ) {
+            status = PEP_KEY_NOT_RESET;
+            goto pEp_free;
+        }
+
         // Ok, we have to do this earlier now because we need group ident info
 
         // We need to update the identity to get the user_id
@@ -682,12 +690,9 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
             return PEP_KEY_NOT_RESET;
         
         // Alright, so we have a key to reset. Good.
-        
-        // If this is a non-own user, for NOW, we presume key reset 
-        // by email for non-own keys is ONLY in case of revoke-and-replace. 
-        // This means we have, at a *minimum*, an object that once 
-        // required the initial private key in order to replace that key 
-        // with another.
+
+        // We have, at a *minimum*, an object that once required the
+        // initial private key in order to replace that key with another.
         //
         // The limitations on what this guarantees are known - this does 
         // not prevent, for example, replay attacks from someone with 
