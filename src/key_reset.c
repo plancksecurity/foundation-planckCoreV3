@@ -903,7 +903,7 @@ PEP_STATUS create_standalone_key_reset_message(PEP_SESSION session,
     
     status = encrypt_message(session, reset_msg, NULL,
                              &output_msg, PEP_enc_auto,
-                             PEP_encrypt_flag_key_reset_only|PEP_encrypt_flag_force_no_attached_key);
+                             PEP_encrypt_flag_key_reset_only | PEP_encrypt_flag_force_no_attached_key);
 
     if (status == PEP_STATUS_OK)
         *dst = output_msg;
