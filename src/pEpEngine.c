@@ -4163,13 +4163,10 @@ PEP_STATUS set_all_userids_to_own(PEP_SESSION session, identity_list* id_list) {
 
     static char* ownid = NULL;
     PEP_STATUS status = PEP_STATUS_OK;
-    if (!ownid) {
-        status = get_default_own_userid(session, &ownid);
-    }    
-    if (status == PEP_STATUS_OK) {
-        if (ownid) {
-            status = set_all_userids_in_list(id_list, ownid);
-        }
+    status = get_default_own_userid(session, &ownid);
+    if (status == PEP_STATUS_OK && ownid) {
+        status = set_all_userids_in_list(id_list, ownid);
+        free(ownid);
     }
     return status;    
 }
