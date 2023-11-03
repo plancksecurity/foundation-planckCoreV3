@@ -5,7 +5,7 @@ Content-Type: multipart/mixed; boundary="6f47e8af358911342c968a5c60624f4b"
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
 
-This message was encrypted with p=E2=89=A1p (https://pep.software). If yo=
+This message was encrypted with planck (https://www.planck.security). If yo=
 u are seeing this message,
 your client does not support raising message attachments. Please click on=
  the message attachment

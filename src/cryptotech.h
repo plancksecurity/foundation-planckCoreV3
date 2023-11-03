@@ -1,3 +1,7 @@
+// Changelog
+// 31.10.2023/IP: added function to retrieve key_ids
+// 
+
 /**
  * @file    cryptotech.h
  * @brief   cryptotech function typedefs and structures for crypto drivers 
@@ -229,6 +233,15 @@ typedef PEP_STATUS (*find_private_keys_t)(
 typedef PEP_STATUS (*config_cipher_suite_t)(PEP_SESSION session,
         PEP_CIPHER_SUITE suite);
 
+/**
+ *  @brief 
+ *  @copydoc 
+ *  @see 
+ */
+typedef PEP_STATUS (*get_key_ids_t)(PEP_SESSION session,
+                                 const char *ctext,
+                                 size_t csize,                                 
+                                 stringlist_t **keylist);
 
 /**
  *  @struct    PEP_cryptotech_t
@@ -263,6 +276,7 @@ typedef struct _PEP_cryptotech_t {
     contains_priv_key_t contains_priv_key;
     find_private_keys_t find_private_keys;
     config_cipher_suite_t config_cipher_suite;
+    get_key_ids_t get_key_ids;
 } PEP_cryptotech_t;
 
 extern PEP_cryptotech_t cryptotech[PEP_crypt__count]; ///< array of all supported cryptotech drivers/interfaces (?)
