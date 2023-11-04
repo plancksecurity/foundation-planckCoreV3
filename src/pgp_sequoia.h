@@ -1,3 +1,6 @@
+// Changelog
+// 31.10.2023/IP: added function to retrieve key_ids
+// 
 /**
  * @internal
  * @file    src/pgp_sequoia.h
@@ -72,6 +75,25 @@ PEP_STATUS pgp_decrypt_and_verify(
         char **ptext, size_t *psize, stringlist_t **keylist,
         char** filename_ptr
     );
+
+/**
+ *  @internal
+ *  <!--       pgp_get_key_ids()       -->
+ *
+ *  @brief            TODO
+ *
+ *  @param[in]  session       session handle
+ *  @param[in]  ctext         const char*
+ *  @param[in]  csize         size_t
+ *  @param[out]  keylist       stringlist_t**
+ *
+ *  @retval PEP_STATUS_OK
+ *  @retval any other value on error
+ */
+PEP_STATUS pgp_get_key_ids(PEP_SESSION session,
+                       const char *ctext,
+                       size_t csize,                      
+                       stringlist_t **keylist);
 
 /**
  *  @internal

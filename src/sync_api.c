@@ -316,12 +316,12 @@ DYNAMIC_API PEP_STATUS enable_identity_for_sync(PEP_SESSION session,
 
     // if we're grouped and this identity is enabled already we can stop here
 
-    if ((ident->flags & PEP_idf_devicegroup) && !(ident->flags & PEP_idf_not_for_sync))
+    if ((ident->flags & PEP_idf_devicegroup) && !(ident->flags & (PEP_idf_not_for_sync | PEP_idf_signing)))
         return PEP_STATUS_OK;
 
     // if the identity is marked not for sync unset this to enable
 
-    if (ident->flags & PEP_idf_not_for_sync) {
+    if (ident->flags & (PEP_idf_not_for_sync | PEP_idf_signing)) {
         status = unset_identity_flags(session, ident, PEP_idf_not_for_sync);
         if (status)
             return status;
@@ -366,7 +366,7 @@ DYNAMIC_API PEP_STATUS disable_identity_for_sync(PEP_SESSION session,
 
     // if this identity is disabled and not part of a device group already we can end here
 
-    if ((ident->flags & PEP_idf_not_for_sync) && !(ident->flags & PEP_idf_devicegroup))
+    if ( (ident->flags & (PEP_idf_signing | PEP_idf_not_for_sync)) && !(ident->flags & PEP_idf_devicegroup))
         return PEP_STATUS_OK;
 
     // if the identity is not part of a device group just disable it to keep this

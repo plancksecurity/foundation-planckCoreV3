@@ -1,3 +1,7 @@
+// Changelog
+// 31.10.2023/IP: added function to retrieve key_ids
+//
+
 /**
  * @file     message_api.h
  * @brief    pEp engine API for message handling and evaluation and related functions
@@ -322,6 +326,21 @@ DYNAMIC_API PEP_STATUS decrypt_message_2(
         message **dst,
         stringlist_t **keylist,
         PEP_decrypt_flags_t *flags
+);
+
+/**
+ *  <!--       get_key_ids()       -->
+ *
+ *  @brief .....
+ *
+ *  @param[in]   session    session handle
+ *  @param[in]   msg        message to decrypt
+ *  @param[out]  keylist    keylist
+ */
+DYNAMIC_API PEP_STATUS get_key_ids(
+    PEP_SESSION session, 
+    message *msg, 
+    stringlist_t **keylist
 );
 
 /**

@@ -26,7 +26,9 @@
 
 // 07.08.2023/IP - added method import_extrakey_with_fpr_return
 // 21.08.2023/DZ - make _get_comm_type understand group identities
-// 04.10.2023/IG - update_sender_to_pEp_trust - Do not update sender trust if there is already an fpr available
+// 04.10.2023/IG - update_sender_to_pEp_trust - Do not update sender trust if there is already an fpr available 
+// 31.10.2023/IP - added function to retrieve key_ids
+// 
 
 #include "pEp_internal.h"
 #include "message_api.h"
@@ -1374,7 +1376,7 @@ static PEP_STATUS wrap_message_as_attachment(
         }
         else {
             _envelope->longmsg = strdup(
-                "This message was encrypted with p≡p (https://pep.software). If you are seeing this message,\n" 
+                "This message was encrypted with planck (https://www.planck.security). If you are seeing this message,\n"
                 "your client does not support raising message attachments. Please click on the message attachment\n"
                 "to view it, or better yet, consider using p≡p!\n"
             );
@@ -5198,6 +5200,28 @@ end:
 #undef HANDLE_LISt
 }
 #undef GOTO_END_ON_FAILURE
+
+DYNAMIC_API PEP_STATUS get_key_ids(PEP_SESSION session, message *msg, stringlist_t **keylist)
+{
+    PEP_REQUIRE(session && msg && keylist);
+
+    char *ctext;
+    size_t csize;
+
+    PEP_cryptotech crypto = determine_encryption_format(msg);
+    if (crypto == PEP_crypt_none) {
+        return PEP_UNENCRYPTED;
+    }
+
+    PEP_STATUS status = get_crypto_text(msg, &ctext, &csize);
+    if (status) {
+        return status;
+    }
+
+    status = cryptotech[crypto].get_key_ids(session, ctext, csize, keylist);
+
+    return status;
+}
 
 /** @internal
  *  Rule for this function, since it is one of the three most complicated functions in this whole damned
