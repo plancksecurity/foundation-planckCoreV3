@@ -603,10 +603,13 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         old_fpr = curr_ident->fpr;
         new_fpr = strdup(curr_cmd->new_key);
 
-        // only allow replacing with the valid signature of existing identity
+        // Only allow reset commands from the key the message was signed with
         // if those fingerprints don't match, someone wants to hijack the identity
-        // abort, because that's a malformed reset message
-        if (strcmp(sender_fpr, old_fpr) !=0 ) {
+        // abort, because that's a malformed reset message.
+        // Also make sure that the sender doesn't reset someone else's identity
+        if (strcmp(curr_ident->address, reset_msg->from->address) != 0 ||
+            strcmp(curr_ident->user_id, reset_msg->from->user_id) != 0 ||
+            strcmp(sender_fpr, old_fpr) !=0 ) {
             status = PEP_KEY_NOT_RESET;
             goto pEp_free;
         }
