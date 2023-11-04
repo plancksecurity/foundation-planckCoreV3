@@ -608,7 +608,6 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         // abort, because that's a malformed reset message.
         // Also make sure that the sender doesn't reset someone else's identity
         if (strcmp(curr_ident->address, reset_msg->from->address) != 0 ||
-            strcmp(curr_ident->user_id, reset_msg->from->user_id) != 0 ||
             strcmp(sender_fpr, old_fpr) !=0 ) {
             status = PEP_KEY_NOT_RESET;
             goto pEp_free;
