@@ -1299,7 +1299,7 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
     // we get into the current function.
     config_passphrase(session, session->generation_passphrase);
 
-    // Install the new key as own    
+    // Install the new key as own
 
     free(local_ident->fpr);
     local_ident->fpr = NULL;
