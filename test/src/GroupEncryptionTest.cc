@@ -85,7 +85,7 @@ namespace {
             const char* group_2_name = "Vanus for Best Mage Ever Campaign";
             const char* group_2_fpr = "A39A9EE41E9D6380C8E5220E6DC64C166456E7C7";
             const char* group_2_prefix = "vanus_for_archmage_0x6456E7C7";
-            const char* group_1_replacement_revoke_1 = "B267A15D4873ADB8FF6B303E21C98B8ABC528ECC"; // CHANGE ME
+            const char* group_1_replacement_revoke_1 = "5DB324EB3BD818B354C4465CB8A66C0553844B53"; // CHANGE ME
 
             string kf_name(const char* prefix, bool priv) {
                 return string("test_keys/") + (priv ? "priv/" : "pub/") + prefix + (priv ? "_priv.asc" : "_pub.asc");
