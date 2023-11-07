@@ -603,6 +603,16 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         old_fpr = curr_ident->fpr;
         new_fpr = strdup(curr_cmd->new_key);
 
+        // Only allow reset commands from the key the message was signed with
+        // if those fingerprints don't match, someone wants to hijack the identity
+        // abort, because that's a malformed reset message.
+        // Also make sure that the sender doesn't reset someone else's identity
+        if (strcmp(curr_ident->address, reset_msg->from->address) != 0 ||
+            strcmp(sender_fpr, old_fpr) !=0 ) {
+            status = PEP_KEY_NOT_RESET;
+            goto pEp_free;
+        }
+
         // Ok, we have to do this earlier now because we need group ident info
 
         // We need to update the identity to get the user_id
@@ -682,12 +692,9 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
             return PEP_KEY_NOT_RESET;
         
         // Alright, so we have a key to reset. Good.
-        
-        // If this is a non-own user, for NOW, we presume key reset 
-        // by email for non-own keys is ONLY in case of revoke-and-replace. 
-        // This means we have, at a *minimum*, an object that once 
-        // required the initial private key in order to replace that key 
-        // with another.
+
+        // We have, at a *minimum*, an object that once required the
+        // initial private key in order to replace that key with another.
         //
         // The limitations on what this guarantees are known - this does 
         // not prevent, for example, replay attacks from someone with 
@@ -706,7 +713,7 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
             revoked = false;
             status = key_revoked(session, old_fpr, &revoked); 
 
-            if (!revoked)
+            if (revoked)
                 return PEP_KEY_NOT_RESET;            
 
             // Also don't let someone change the replacement fpr 
@@ -891,12 +898,14 @@ PEP_STATUS create_standalone_key_reset_message(PEP_SESSION session,
         status = PEP_UNKNOWN_ERROR;
         goto pEp_free;
     }    
-    
+
+    attach_new_own_key(session, reset_msg, new_fpr);
+
     message* output_msg = NULL;
     
     status = encrypt_message(session, reset_msg, NULL,
                              &output_msg, PEP_enc_auto,
-                             PEP_encrypt_flag_key_reset_only);
+                             PEP_encrypt_flag_key_reset_only | PEP_encrypt_flag_force_no_attached_key);
 
     if (status == PEP_STATUS_OK)
         *dst = output_msg;

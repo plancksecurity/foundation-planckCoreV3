@@ -48,6 +48,19 @@ bool import_attached_keys(
 
 /**
  *  @internal
+ *  <!--       attach_new_own_key()       -->
+ *
+ *  @brief            TODO
+ *
+ *  @param[in]  session     session handle
+ *  @param[in]  msg         message*
+ *  @param[in]  fpr         const char*
+ *
+ */
+void attach_new_own_key(PEP_SESSION session, message *msg, const char *fpr);
+
+/**
+ *  @internal
  *  <!--       attach_own_key()       -->
  *
  *  @brief            TODO
