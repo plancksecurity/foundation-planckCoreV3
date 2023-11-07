@@ -522,7 +522,6 @@ action receivedKeysAreDefaultKeys
     }
 
 
-    free_identity_list(updated_identities);
     free_identity_list(own_ident);
     free_identity_list(il);
     free(user_id);
