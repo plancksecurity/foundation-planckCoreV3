@@ -14,13 +14,14 @@
 // 18.10.2023/IG - bump version to 3.3.7
 // 25.10.2023/AT - bumped version to 3.3.8
 // 31.10.2023/AT - bumped version to 3.3.9
+// 08.11.2023/IG - bump version to 3.3.12
 
 #ifndef _PEP_ENGINE_VERSION_H_
 #define _PEP_ENGINE_VERSION_H_
 
 #define PEP_ENGINE_VERSION_MAJOR          3
 #define PEP_ENGINE_VERSION_MINOR          3
-#define PEP_ENGINE_VERSION_PATCH          11
+#define PEP_ENGINE_VERSION_PATCH          12
 
 // #define PEP_ENGINE_VERSION_RC             4   /* This is a Release Candidate. */
 
@@ -29,6 +30,6 @@
 /* PEP_ENGINE_VERSION_BRANCH_SUFFIX not defined. */
 
 /* The main version string for the user. */
-#define PEP_ENGINE_VERSION "3.3.11"
+#define PEP_ENGINE_VERSION "3.3.12"
 
 #endif /* #ifndef _PEP_ENGINE_VERSION_H_ */
