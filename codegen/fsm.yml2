@@ -11,11 +11,11 @@ decl version(major, minor);
 
 // a protocol family has a name and an ID
 
-decl protocol @name (id, threshold=10);
+decl protocol @name (id, threshold=20);
 
 // each protocol in a family has a finite state machine
 
-decl fsm @name (id, threshold=10);
+decl fsm @name (id, threshold=20);
 
 // a state has a name and a timeout; after the timeout the state machine will
 // be reset
