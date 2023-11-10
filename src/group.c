@@ -1275,7 +1275,7 @@ DYNAMIC_API PEP_STATUS retrieve_all_groups_as_manager(
     for ( ; curr && curr->ident && curr->ident; curr = curr->next) {
         if (!curr->ident)
             goto enomem;
-        status = update_identity(session, curr->ident);
+        status = myself(session, curr->ident);
     }
 
     sql_reset_and_clear_bindings(session->get_all_groups_as_manager);
