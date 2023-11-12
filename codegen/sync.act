@@ -502,9 +502,9 @@ action receivedKeysAreDefaultKeys
     identity_list *updated_identities = NULL; 
     for (identity_list *_il = il; _il && _il->ident ; _il = _il->next) {
         if(updated_identities == NULL){
-            updated_identities = new_identity_list(_il->ident);
+            updated_identities = new_identity_list(identity_dup(_il->ident));
         } else {
-            identity_list_add_or_update(updated_identities, _il->ident);
+            identity_list_add_or_update(updated_identities, identity_dup(_il->ident));
         }
     }
 
@@ -524,6 +524,7 @@ action receivedKeysAreDefaultKeys
     }
 
 
+    free_identity_list(updated_identities);
     free_identity_list(own_ident);
     free_identity_list(il);
     free(user_id);
