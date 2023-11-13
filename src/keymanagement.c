@@ -209,7 +209,7 @@ PEP_STATUS validate_fpr(PEP_SESSION session,
             status = update_trust_for_fpr(session, 
                                           fpr, 
                                           ct);
-        case PEP_ct_mistrusted:                                  
+        case PEP_ct_mistrusted:
             free(ident->fpr);
             ident->fpr = NULL;
             ident->comm_type = ct;            
@@ -579,7 +579,8 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
 
             free(stored_ident->fpr);
             stored_ident->fpr = NULL;
-            stored_ident->comm_type = PEP_ct_key_not_found;
+            if(!stored_ident->comm_type)
+                stored_ident->comm_type = PEP_ct_key_not_found;
     }
 
     free(return_id->fpr);
