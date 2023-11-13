@@ -579,7 +579,7 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
 
             free(stored_ident->fpr);
             stored_ident->fpr = NULL;
-            if(!stored_ident->comm_type)
+            if(stored_ident->comm_type != PEP_ct_mistrusted)
                 stored_ident->comm_type = PEP_ct_key_not_found;
     }
 
