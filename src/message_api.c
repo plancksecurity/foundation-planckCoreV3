@@ -2053,8 +2053,6 @@ static PEP_comm_type _get_comm_type(
         } else {
             if (ident->comm_type == PEP_ct_compromised)
                 return PEP_ct_compromised;
-            else if (ident->comm_type == PEP_ct_mistrusted)
-                return PEP_ct_mistrusted;
             else
                 return MIN(max_comm_type, ident->comm_type);
         }
@@ -6911,7 +6909,7 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
         *rating = PEP_rating_undefined;
     }
     else
-        *rating = _MAX(_rating(max_comm_type), PEP_rating_unencrypted);
+        *rating = _rating(max_comm_type);
 
     return PEP_STATUS_OK;
 }
