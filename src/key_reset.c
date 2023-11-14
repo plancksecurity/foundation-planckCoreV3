@@ -597,36 +597,23 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
             EMPTYSTR(curr_cmd->ident->address)) {
             return PEP_MALFORMED_KEY_RESET_MSG;        
         }
-        pEp_identity* curr_ident = curr_cmd->ident;
 
+        pEp_identity *curr_ident = curr_cmd->ident;
+
+        // Check the group flag
+        bool is_group_identity = false;
+        pEp_identity *ident_dup = identity_dup(curr_ident);
+        status = update_identity(session, ident_dup);
+        if (status == PEP_STATUS_OK || status == PEP_GET_KEY_FAILED) {
+            is_group_identity = ident_dup->flags & PEP_idf_group_ident;
+            free_identity(ident_dup);
+        }
 
         old_fpr = curr_ident->fpr;
         new_fpr = strdup(curr_cmd->new_key);
 
-        // Only allow reset commands from the key the message was signed with
-        // if those fingerprints don't match, someone wants to hijack the identity
-        // abort, because that's a malformed reset message.
-        // Also make sure that the sender doesn't reset someone else's identity
-        if (strcmp(curr_ident->address, reset_msg->from->address) != 0 ||
-            strcmp(sender_fpr, old_fpr) !=0 ) {
-            status = PEP_KEY_NOT_RESET;
-            goto pEp_free;
-        }
-
-        // Ok, we have to do this earlier now because we need group ident info
-
-        // We need to update the identity to get the user_id
-        curr_ident->fpr = NULL; // ensure old_fpr is preserved
-        free(curr_ident->user_id);
-        curr_ident->user_id = NULL;
-        status = update_identity(session, curr_ident); // Won't gen key, so safe
-        if (status != PEP_STATUS_OK && status != PEP_GET_KEY_FAILED)
-            return status;
-
-        bool is_group_identity = curr_ident->flags & PEP_idf_group_ident; // sender_own_key will be false
-        // If it's a group ident (that we are a member of), let's make sure the manager sent it
         if (is_group_identity) {
-            pEp_identity* manager = NULL;
+            pEp_identity *manager = NULL;
             status = get_group_manager(session, curr_ident, &manager);
             if (status != PEP_STATUS_OK)
                 goto pEp_free;
@@ -639,7 +626,27 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
                 status = PEP_KEY_NOT_RESET;
                 goto pEp_free;
             }
+        } else {
+            // Only allow reset commands from the key the message was signed with
+            // if those fingerprints don't match, someone wants to hijack the identity
+            // abort, because that's a malformed reset message.
+            // Also make sure that the sender doesn't reset someone else's identity
+            if (strcmp(curr_ident->address, reset_msg->from->address) != 0 ||
+                strcmp(sender_fpr, old_fpr) != 0) {
+                status = PEP_KEY_NOT_RESET;
+                goto pEp_free;
+            }
         }
+
+        // Ok, we have to do this earlier now because we need group ident info
+
+        // We need to update the identity to get the user_id
+        curr_ident->fpr = NULL; // ensure old_fpr is preserved
+        free(curr_ident->user_id);
+        curr_ident->user_id = NULL;
+        status = update_identity(session, curr_ident); // Won't gen key, so safe
+        if (status != PEP_STATUS_OK && status != PEP_GET_KEY_FAILED)
+            return status;
 
         bool is_old_own = false;
         // if the SENDER key is our key and the old one is revoked, we skip it.
