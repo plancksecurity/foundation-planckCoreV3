@@ -599,18 +599,19 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         }
 
         pEp_identity *curr_ident = curr_cmd->ident;
-
-        // Check the group flag
-        bool is_group_identity = false;
-        pEp_identity *stored_identity = NULL;
-        status = get_identity(session, curr_ident->address, curr_ident->user_id, &stored_identity);
-        if (status == PEP_STATUS_OK) {
-            is_group_identity = stored_identity->flags & PEP_idf_group_ident;
-            free_identity(stored_identity);
-        }
-
         old_fpr = curr_ident->fpr;
         new_fpr = strdup(curr_cmd->new_key);
+
+        // Check the group flag and known fingerprint
+        bool is_group_identity = false;
+        bool is_key_reset_of_group_identity = false;
+        pEp_identity *stored_group_identity = NULL;
+        status = get_identity(session, curr_ident->address, curr_ident->user_id, &stored_group_identity);
+        if (status == PEP_STATUS_OK) {
+            is_group_identity = stored_group_identity->flags & PEP_idf_group_ident;
+            is_key_reset_of_group_identity = strcmp(stored_group_identity->fpr, old_fpr) == 0;
+            free_identity(stored_group_identity);
+        }
 
         if (is_group_identity) {
             pEp_identity *manager = NULL;
@@ -628,9 +629,10 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
                 status = PEP_KEY_NOT_RESET;
                 goto pEp_free;
             }
-            if (strcmp(stored_manager->address, reset_msg->from->address) != 0 ||
+            if ((strcmp(stored_manager->address, reset_msg->from->address) != 0 ||
                 strcmp(stored_manager->user_id, reset_msg->from->user_id) != 0 ||
-                strcmp(stored_manager->fpr, sender_fpr) != 0) {
+                strcmp(stored_manager->fpr, sender_fpr) != 0) &&
+                is_key_reset_of_group_identity) {
                 free_identity(stored_manager);
                 status = PEP_KEY_NOT_RESET;
                 goto pEp_free;
