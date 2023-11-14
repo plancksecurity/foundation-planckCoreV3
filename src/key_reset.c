@@ -621,8 +621,17 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
                 status = PEP_KEY_NOT_RESET;
                 goto pEp_free;
             }
-            if (strcmp(manager->address, reset_msg->from->address) != 0 ||
-                strcmp(manager->user_id, reset_msg->from->user_id) != 0) {
+            pEp_identity *stored_manager = NULL;
+            status = get_identity(session, manager->address, manager->user_id, &stored_manager);
+            free_identity(manager);
+            if (status != PEP_STATUS_OK) {
+                status = PEP_KEY_NOT_RESET;
+                goto pEp_free;
+            }
+            if (strcmp(stored_manager->address, reset_msg->from->address) != 0 ||
+                strcmp(stored_manager->user_id, reset_msg->from->user_id) != 0 ||
+                strcmp(stored_manager->fpr, sender_fpr) != 0) {
+                free_identity(stored_manager);
                 status = PEP_KEY_NOT_RESET;
                 goto pEp_free;
             }
