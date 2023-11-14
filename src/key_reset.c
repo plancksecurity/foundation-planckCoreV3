@@ -602,11 +602,11 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
 
         // Check the group flag
         bool is_group_identity = false;
-        pEp_identity *ident_dup = identity_dup(curr_ident);
-        status = update_identity(session, ident_dup);
-        if (status == PEP_STATUS_OK || status == PEP_GET_KEY_FAILED) {
-            is_group_identity = ident_dup->flags & PEP_idf_group_ident;
-            free_identity(ident_dup);
+        pEp_identity *stored_identity = NULL;
+        status = get_identity(session, curr_ident->address, curr_ident->user_id, &stored_identity);
+        if (status == PEP_STATUS_OK) {
+            is_group_identity = stored_identity->flags & PEP_idf_group_ident;
+            free_identity(stored_identity);
         }
 
         old_fpr = curr_ident->fpr;
