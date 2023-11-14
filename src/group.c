@@ -2262,6 +2262,10 @@ DYNAMIC_API PEP_STATUS group_dissolve(
 
     // If I'm the manager, then I have to send out the dissolution stuff and deactivate
     if (is_me(session, manager)) {
+        status = myself(session, manager);
+        if (status != PEP_STATUS_OK)
+            goto pEp_free;
+
         status = revoke_key(session, group_identity->fpr, NULL);
         if (status != PEP_STATUS_OK)
             goto pEp_free;
