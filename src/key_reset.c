@@ -635,6 +635,7 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
                 status = PEP_KEY_NOT_RESET;
                 goto pEp_free;
             }
+            free_identity(stored_manager);
         } else {
             // Only allow reset commands from the key the message was signed with
             // if those fingerprints don't match, someone wants to hijack the identity
