@@ -602,11 +602,19 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         old_fpr = curr_ident->fpr;
         new_fpr = strdup(curr_cmd->new_key);
 
-        // Check the group flag and known fingerprint
         bool is_group_identity = false;
         bool is_key_reset_of_group_identity = false;
+
         pEp_identity *stored_group_identity = NULL;
         status = get_identity(session, curr_ident->address, curr_ident->user_id, &stored_group_identity);
+        if (status != PEP_STATUS_OK) {
+            char *default_own_user_id = NULL;
+            status = get_default_own_userid(session, &default_own_user_id);
+            if (status == PEP_STATUS_OK) {
+                status = get_identity(session, curr_ident->address, default_own_user_id, &stored_group_identity);
+                free(default_own_user_id);
+            }
+        }
         if (status == PEP_STATUS_OK) {
             is_group_identity = stored_group_identity->flags & PEP_idf_group_ident;
             is_key_reset_of_group_identity = strcmp(stored_group_identity->fpr, old_fpr) == 0;
