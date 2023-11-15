@@ -21,7 +21,6 @@ debian-docker:
   stage: docker
   tags:
     - docker
-  when: manual
   variables:
     DOCKER_HOST: "tcp://docker:2376"
     DOCKER_TLS_CERT: ""
@@ -47,13 +46,14 @@ debian-docker:
       -f docker/debian/Dockerfile
       .
     - docker push ${REGISTRY}/${DEBIAN}:${VERSION}
-
-
+  rules:
+    - changes:
+    # Only run this job when the Dockerfile is modified
+        - docker/debian/Dockerfile
 
 debian-test:
   stage: test
   tags: [ linux ]
-  needs: []
   image: ${REGISTRY}/${DEBIAN}:${VERSION}
   script:
     - cp gitlab/debian/planckCoreV3-debug.conf local.conf
@@ -63,7 +63,6 @@ debian-test:
     - make all -j 4
     - make dbinstall
     - make test -j 4
-
 
 .debian-release:
   stage: release
