@@ -650,8 +650,6 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
             }
         }
 
-        // Ok, we have to do this earlier now because we need group ident info
-
         // We need to update the identity to get the user_id
         curr_ident->fpr = NULL; // ensure old_fpr is preserved
         free(curr_ident->user_id);
