@@ -1,0 +1,124 @@
+name: foundation/planckCoreV3
+on:
+  push:
+  workflow_dispatch:
+concurrency:
+  group: "${{ github.ref }}"
+  cancel-in-progress: true
+env:
+  DOCKER_AUTH_CONFIG: '{"auths":{"dockerreg.planck.security":{"auth":"cGxhbmNrR2l0bGFiOlEwQlM5UTZqU3Q0REhtTmVFaWhEd1lqNFZiaWtFM2JXZEs1NEYyeHhXWVRkY2pNMU1XQXRqRVZTbGFocg=="}}}'
+  PLANCK_DOCKER_REGISTRY_USER: planckGitlab
+  PLANCK_DOCKER_REGISTRY_PASSWORD: Q0BS9Q6jSt4DHmNeEihDwYj4VbikE3bWdK54F2xxWYTdcjM1MWAtjEVSlahr
+jobs:
+  debian-docker:
+    runs-on:
+      - self-hosted
+      - docker
+    container:
+      image: docker:23.0.6
+    if: github.event_name == 'workflow_dispatch'
+    timeout-minutes: 60
+    services:
+      docker:23.0.6-dind:
+        image: docker:23.0.6-dind
+    env:
+      REGISTRY: dockerreg.planck.security
+      DEBIAN: corev3-debian
+      PREVIOUS_VERSION: '1.0'
+      VERSION: '2.0'
+      DOCKER_HOST: tcp://docker:2376
+      DOCKER_TLS_CERT: ''
+      DOCKER_BUILDKIT: 1
+    steps:
+    - uses: actions/checkout@v4.1.0
+      with:
+        fetch-depth: 20
+        lfs: true
+    - run: docker login -u ${PLANCK_DOCKER_REGISTRY_USER} -p ${PLANCK_DOCKER_REGISTRY_PASSWORD} ${REGISTRY}
+    - run: docker pull ${REGISTRY}/${DEBIAN}:${PREVIOUS_VERSION} || true
+    - run: docker build --network=host --cache-from ${DEBIAN}:${PREVIOUS_VERSION} -t ${REGISTRY}/${DEBIAN}:${VERSION} -f docker/debian/Dockerfile .
+    - run: docker push ${REGISTRY}/${DEBIAN}:${VERSION}
+  debian-test:
+    needs: debian-docker
+    runs-on: ubuntu-latest
+    container:
+      image: "${REGISTRY}/${DEBIAN}:${VERSION}"
+    timeout-minutes: 60
+    env:
+      REGISTRY: dockerreg.planck.security
+      DEBIAN: corev3-debian
+      PREVIOUS_VERSION: '1.0'
+      VERSION: '2.0'
+    steps:
+    - uses: actions/checkout@v4.1.0
+      with:
+        fetch-depth: 20
+        lfs: true
+    - run: cp gitlab/debian/planckCoreV3-debug.conf local.conf
+    - run: source /opt/tools/virtualenv/bin/activate
+    - run: make clean
+    - run: make asn1
+    - run: make all -j 4
+    - run: make dbinstall
+    - run: make test -j 4
+  debian-release:
+    needs: debian-test
+    runs-on: ubuntu-latest
+    container:
+      image: "${REGISTRY}/${DEBIAN}:${VERSION}"
+    timeout-minutes: 60
+    env:
+      REGISTRY: dockerreg.planck.security
+      DEBIAN: corev3-debian
+      PREVIOUS_VERSION: '1.0'
+      VERSION: '2.0'
+    steps:
+    - uses: actions/checkout@v4.1.0
+      with:
+        fetch-depth: 20
+        lfs: true
+    - run: cp gitlab/debian/planckCoreV3-release.conf local.conf
+    - run: source /opt/tools/virtualenv/bin/activate
+    - run: make clean
+    - run: make asn1
+    - run: make all -j 4
+    - run: make install
+    - run: make dbinstall
+    - run: tar  -C /opt/ -zcvf planckCoreV3.tar.gz planck
+    - uses: actions/upload-artifact@v3.1.3
+      if: success()
+      with:
+        name: "${{ github.job }}"
+        retention-days: 2
+        path: planckCoreV3.tar.gz
+  debian-tag-release:
+    needs: debian-test
+    runs-on: ubuntu-latest
+    container:
+      image: "${REGISTRY}/${DEBIAN}:${VERSION}"
+    if: ${{ github.ref }} == $CI_DEFAULT_BRANCH && ${{ github.ref }} != null
+    timeout-minutes: 60
+    env:
+      REGISTRY: dockerreg.planck.security
+      DEBIAN: corev3-debian
+      PREVIOUS_VERSION: '1.0'
+      VERSION: '2.0'
+    steps:
+    - uses: actions/checkout@v4.1.0
+      with:
+        fetch-depth: 20
+        lfs: true
+    - run: cp gitlab/debian/planckCoreV3-release.conf local.conf
+    - run: source /opt/tools/virtualenv/bin/activate
+    - run: make clean
+    - run: make asn1
+    - run: make all -j 4
+    - run: make install
+    - run: make dbinstall
+    - run: tar  -C /opt/ -zcvf planckCoreV3.tar.gz planck
+    - uses: actions/upload-artifact@v3.1.3
+      if: success()
+      with:
+        name: "${{ github.job }}"
+        retention-days: 90
+        path: planckCoreV3.tar.gz
