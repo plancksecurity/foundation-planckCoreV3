@@ -959,7 +959,6 @@ static PEP_STATUS send_key_reset_to_active_group_members(PEP_SESSION session,
     if (members) {
         pEp_identity *group_ident_clone = identity_dup(group_ident);
         if (!group_ident_clone) {
-            free_identity(group_ident_clone);
             status = PEP_OUT_OF_MEMORY;
             goto pEp_free;
         }
