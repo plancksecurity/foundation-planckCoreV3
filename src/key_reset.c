@@ -629,10 +629,10 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
                 status = PEP_KEY_NOT_RESET;
                 goto pEp_free;
             }
-            if ((strcmp(stored_manager->address, reset_msg->from->address) != 0 ||
+            if (is_key_reset_of_group_identity &&
+                (strcmp(stored_manager->address, reset_msg->from->address) != 0 ||
                 strcmp(stored_manager->user_id, reset_msg->from->user_id) != 0 ||
-                strcmp(stored_manager->fpr, sender_fpr) != 0) &&
-                is_key_reset_of_group_identity) {
+                strcmp(stored_manager->fpr, sender_fpr) != 0)) {
                 free_identity(stored_manager);
                 status = PEP_KEY_NOT_RESET;
                 goto pEp_free;
