@@ -22,6 +22,9 @@
     * 2023-08-30/DZ Don't reset the signing identity.
     * 2023-09-20/DZ _key_reset() will not remove a private key from the keyring
     *  in the context of resetting a partner's key.
+    * 2023-11-16/DZ receive_key_reset accepts group key resets from the manager.
+    * 2023-11-16/DZ send_key_reset_to_active_group_members encodes the key
+    *  reset message "from existing group key to the new one" correctly.
     */
 
 #include "pEp_internal.h"
