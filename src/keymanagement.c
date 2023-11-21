@@ -1763,11 +1763,8 @@ PEP_STATUS _own_identities_retrieve(
                 minor_ver = (unsigned int) sqlite3_column_int(session->own_identities_retrieve, 7);
                 enc_format = (PEP_enc_format) sqlite3_column_int(session->own_identities_retrieve, 8);
 
-                int order1 = strcmp(address, SIGNING_IDENTITY_USER_ADDRESS);
-                int order2 = strcmp(username, SIGNING_IDENTITY_USER_NAME);
-
                 // only consider own identities that are not the signing identity
-                if (order1 && order2) {
+                if (!(flags & PEP_idf_signing)) {
                     pEp_identity *ident = new_identity(address, fpr, user_id, username);
                     if (!ident)
                         goto enomem;

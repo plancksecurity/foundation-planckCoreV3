@@ -1774,12 +1774,12 @@ PEP_STATUS _key_reset(
 
     // Skip the signing identity.
     if (!reset_all_for_user) {
-        if (ident && ident->address) {
-            int order = strcmp(ident->address, SIGNING_IDENTITY_USER_ADDRESS);
-            if (!order) {
-                goto pEp_free;
-            }
+        if (ident && (ident->flags & PEP_idf_signing) ) {
+            goto pEp_free;
         } else if (user_id && fpr_copy) {
+            // We still need to create the object for the signing identity
+            // because all we've got is the user_id string, and can't simply
+            // compare the flags.
             pEp_identity *signing_identity = NULL;
             PEP_STATUS status_create = create_signing_identity(session, &signing_identity);
 
