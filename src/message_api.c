@@ -6908,6 +6908,8 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
         // keys
         *rating = PEP_rating_undefined;
     }
+    else if (_rating(max_comm_type) == PEP_rating_have_no_key)
+        *rating = PEP_rating_unencrypted;
     else
         *rating = _rating(max_comm_type);
 
