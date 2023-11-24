@@ -6909,7 +6909,7 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
         *rating = PEP_rating_undefined;
     }
     else
-        *rating = _rating(max_comm_type);
+        *rating = _MAX(_rating(max_comm_type), PEP_rating_unencrypted);
 
     return PEP_STATUS_OK;
 }
