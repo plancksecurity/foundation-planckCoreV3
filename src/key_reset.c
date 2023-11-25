@@ -612,7 +612,9 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         status = get_identity(session, curr_ident->address, curr_ident->user_id, &stored_group_identity);
         if (status == PEP_STATUS_OK) {
             is_group_identity = stored_group_identity->flags & PEP_idf_group_ident;
-            is_key_reset_of_group_identity = strcmp(stored_group_identity->fpr, old_fpr) == 0;
+            if (is_group_identity) {
+                is_key_reset_of_group_identity = strcmp(stored_group_identity->fpr, old_fpr) == 0;
+            }
             free_identity(stored_group_identity);
         }
 
