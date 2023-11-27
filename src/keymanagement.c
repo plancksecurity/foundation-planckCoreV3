@@ -467,6 +467,8 @@ static void transfer_ident_lang_and_flags(pEp_identity* new_ident,
     // 24.08.2023/IP: also copy version information
     new_ident->major_ver = stored_ident->major_ver;
     new_ident->minor_ver = stored_ident->minor_ver;
+
+    new_ident->enc_format = stored_ident->enc_format;
 }
 
 /**
@@ -1198,7 +1200,7 @@ PEP_STATUS _myself(PEP_SESSION session,
                     break;
             }        
         }
-        // reconcile language, flags
+        // reconcile language, flags, other properties
         transfer_ident_lang_and_flags(identity, stored_identity);
     }
     
