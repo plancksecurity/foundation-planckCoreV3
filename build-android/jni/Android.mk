@@ -4,7 +4,7 @@
 # see LICENSE.txt
 $(warning ==== PEPENGINE android.mk START)
 LOCAL_PATH := $(call my-dir)
-LIB_PEP_TRANSPORT_PATH:=$(SRC_PATH)/libPlanckTransport
+LIB_PEP_TRANSPORT_PATH:=$(LOCAL_PATH)/../../submodules/libPlanckTransport
 $(warning ==== IN PEPENGINE: CURRENT LOCAL BUILT MODULE: $(LOCAL_BUILT_MODULE))
 $(warning ==== IN PEPENGINE: UUID BUILT MODULE: $(MY_UUID_BUILD))
 
