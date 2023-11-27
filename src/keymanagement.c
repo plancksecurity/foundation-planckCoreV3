@@ -468,7 +468,9 @@ static void transfer_ident_lang_and_flags(pEp_identity* new_ident,
     new_ident->major_ver = stored_ident->major_ver;
     new_ident->minor_ver = stored_ident->minor_ver;
 
+    new_ident->comm_type = stored_ident->comm_type;
     new_ident->enc_format = stored_ident->enc_format;
+    new_ident->me = stored_ident->me;
 }
 
 /**
