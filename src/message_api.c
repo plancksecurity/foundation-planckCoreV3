@@ -28,6 +28,7 @@
 // 21.08.2023/DZ - make _get_comm_type understand group identities
 // 04.10.2023/IG - update_sender_to_pEp_trust - Do not update sender trust if there is already an fpr available 
 // 31.10.2023/IP - added function to retrieve key_ids
+// 23.11.2023/DZ - reconcile_identity_lists checks for emtpy identity_list
 // 
 
 #include "pEp_internal.h"
@@ -4508,7 +4509,7 @@ static PEP_STATUS reconcile_identity_lists(identity_list* src_ids,
         identity_list* curr_src_id = src_ids;
         pEp_identity* result_identity = curr_id->ident;
         
-        while (curr_src_id) {
+        while (curr_src_id && curr_src_id->ident) {
             pEp_identity* source_identity = curr_src_id->ident;
             
             if (EMPTYSTR(source_identity->address) || EMPTYSTR(result_identity->address))
