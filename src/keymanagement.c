@@ -1,5 +1,8 @@
 // Changelog
 // 24.08.2023/IP - added preservation of major/minor version attributes when copying/creating identites
+// 2023-08-31/DZ _own_identities_retrieve ignores the signing identity
+// 2023-11-27/DZ transfer_ident_lang_and_flags considers more properties
+
 /**
  * @file    keymanagement.c
  * @brief   Implementation of functions to manage keys 
@@ -21,8 +24,6 @@
 #include "KeySync_fsm.h"
 #include "media_key.h"
 #include "signature.h"
-
-// 2023-08-31/DZ _own_identities_retrieve ignores the signing identity
 
 static bool key_matches_address(PEP_SESSION session, const char* address,
                                 const char* fpr) {
@@ -441,7 +442,8 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
  *  
  *  <!--       transfer_ident_lang_and_flags()       -->
  *  
- *  @brief            TODO
+ *  @brief Updates the given "new" identity with basic properties from the given "stored" one.
+ *  @note The functions updates a lot more than the name hints at.
  *  
  *  @param[in]    *new_ident        pEp_identity
  *  @param[in]    *stored_ident        pEp_identity
