@@ -1,0 +1,8 @@
+[submodule "planckCoreSequoiaBackend"]
+	path = submodules/planckCoreSequoiaBackend
+	url = git@github.com:plancksecurity/foundation-planckCoreSequoiaBackend.git
+	branch = develop
+[submodule "libPlanckTransport"]
+	path = submodules/libPlanckTransport
+	url = git@github.com:plancksecurity/foundation-libPlanckTransport.git
+	branch = develop
