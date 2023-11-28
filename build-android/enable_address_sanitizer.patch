@@ -15,7 +15,7 @@ diff --git a/build-android/jni/Android.mk b/build-android/jni/Android.mk
 @@ -28,6 +30,7 @@
                      $(GPGME_INCLUDE_PATH) \
                      $(LIBETPAN_PATH)/include
- LOCAL_C_INCLUDES += $(GPGBUILD)/$(TARGET_ARCH_ABI)/app_opt/include
+ LOCAL_C_INCLUDES += $(BUILD_PATH)/$(TARGET_ARCH_ABI)/app_opt/include
 +LOCAL_C_INCLUDES += /home/huss/src/test/sequoia/openpgp-ffi/include
  
  $(shell sh $(LOCAL_PATH)/../takeOutHeaderFiles.sh $(LOCAL_PATH)../../)
