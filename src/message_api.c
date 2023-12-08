@@ -1379,7 +1379,7 @@ static PEP_STATUS wrap_message_as_attachment(
             _envelope->longmsg = strdup(
                 "This message was encrypted with planck (https://www.planck.security). If you are seeing this message,\n"
                 "your client does not support raising message attachments. Please click on the message attachment\n"
-                "to view it, or better yet, consider using p≡p!\n"
+                "to view it, or better yet, consider using planck!\n"
             );
         }
 
@@ -1671,7 +1671,7 @@ static PEP_STATUS encrypt_PGP_MIME(
     if (ctext == NULL || status)
         goto pEp_error;
 
-    dst->longmsg = strdup("this message was encrypted with p≡p "
+    dst->longmsg = strdup("this message was encrypted with planck "
         "https://pEp-project.org");
     PEP_WEAK_ASSERT_ORELSE_GOTO(dst->longmsg, enomem);
 
