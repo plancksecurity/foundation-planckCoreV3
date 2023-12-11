@@ -1672,7 +1672,7 @@ static PEP_STATUS encrypt_PGP_MIME(
         goto pEp_error;
 
     dst->longmsg = strdup("this message was encrypted with planck "
-        "https://pEp-project.org");
+        "https://www.planck.security");
     PEP_WEAK_ASSERT_ORELSE_GOTO(dst->longmsg, enomem);
 
     char *v = strdup("Version: 1");
