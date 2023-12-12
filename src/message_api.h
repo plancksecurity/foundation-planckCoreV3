@@ -49,7 +49,11 @@ typedef enum _PEP_encrypt_flags {
     
     /// This flag is used to let internal functions know that an encryption 
     /// call is being used as part of a reencryption operation
-    PEP_encrypt_reencrypt = 0x40
+    PEP_encrypt_reencrypt = 0x40,
+
+    // Repropagation
+    PEP_encrypt_flag_key_reset_repropagate = 0x80
+
 } PEP_encrypt_flags; 
 
 typedef unsigned int PEP_encrypt_flags_t;

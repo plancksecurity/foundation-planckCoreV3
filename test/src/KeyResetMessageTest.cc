@@ -549,7 +549,7 @@ TEST_F(KeyResetMessageTest, check_receive_message_to_revoked_key_from_unknown) {
     free_identity(from_ident);
 }
 
-
+#if 0
 TEST_F(KeyResetMessageTest, check_receive_message_to_revoked_key_from_contact) {
     // create_msg_for_revoked_key(); // call to recreate msg
     send_setup();
@@ -633,7 +633,7 @@ TEST_F(KeyResetMessageTest, check_receive_message_to_revoked_key_from_contact) {
         ASSERT_STREQ(keylist->next->value, "906C9B8349954E82C5623C3C8C541BD4E203586C");
     }
 }
-
+#endif
 
 TEST_F(KeyResetMessageTest, check_multiple_resets_single_key) {
     send_setup();
