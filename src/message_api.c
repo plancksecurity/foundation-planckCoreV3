@@ -6268,23 +6268,14 @@ static PEP_STATUS _decrypt_message(
                             if (status == PEP_STATUS_OK && my_rev_ids) {
                                 // get identities in this list the message was to/cc'd to (not for bcc)
                                 identity_list* used_ids_for_key = NULL;
-                                status = ident_list_intersect(my_rev_ids, msg->to, &used_ids_for_key);
-                                if (status != PEP_STATUS_OK)
-                                    goto pEp_error; // out of memory
-
-                                identity_list* used_cc_ids = NULL;    
-                                status = ident_list_intersect(my_rev_ids, msg->cc, &used_cc_ids);
-                                if (status != PEP_STATUS_OK)
-                                    goto pEp_error;
-
-                                used_ids_for_key = identity_list_join(used_ids_for_key, used_cc_ids);
-                                
+                                used_ids_for_key = identity_list_add(used_ids_for_key, msg->from);
+                                used_ids_for_key = identity_list_join(used_ids_for_key, msg->to);
                                 identity_list* curr_recip = used_ids_for_key;
-
                                 // We have all possible recips that use our revoked key.
                                 for ( ; curr_recip && curr_recip->ident; curr_recip = curr_recip->next) {
-                                    if (!is_me(session, curr_recip->ident))
+                                    if (!is_me(session, curr_recip->ident)) {
                                         continue;
+                                    }
 
                                     // If this is a group identity, we'd better be the manager - otherwise,
                                     // ignore this.
@@ -6358,12 +6349,14 @@ static PEP_STATUS _decrypt_message(
                                         // Otherwise, normal reset...
                                     }
 
-                                    status = create_standalone_key_reset_message(session,
+                                    status = create_standalone_key_reset_message(
+                                        session,
                                         &reset_msg,
                                         curr_recip->ident,
                                         msg->from,
                                         curr_pair->key,
-                                        curr_pair->value);
+                                        curr_pair->value
+                                    );
 
                                     // If we can't find the identity, this is someone we've never mailed, so we just
                                     // go on letting them use the wrong key until we mail them ourselves. (Spammers, etc)
@@ -6395,7 +6388,7 @@ static PEP_STATUS _decrypt_message(
                                             goto pEp_error;
                                         }
                                     }
-                                }    
+                                }
                             } // else we couldn't find an ident for replacement key    
                         }
                     }        
@@ -6404,7 +6397,7 @@ static PEP_STATUS _decrypt_message(
         }    
         free_stringpair_list(revoke_replace_pairs);
         revoke_replace_pairs = NULL;
-    } // end !is_me(msg->from)    
+    } // end !is_me(msg->from)
 
     // 4. Reencrypt if necessary
     bool reenc_signer_key_is_own_key = false; // only matters for reencrypted messages

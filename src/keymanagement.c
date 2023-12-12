@@ -68,8 +68,9 @@ PEP_STATUS validate_fpr(PEP_SESSION session,
     
     // N.B. Will not contain PEP_PASSPHRASE related returns here
     if (ident->me && own_must_contain_private) {
-        if (status != PEP_STATUS_OK || !has_private)
+        if (status != PEP_STATUS_OK || !has_private) {
             return PEP_KEY_UNSUITABLE;
+        }
     }
     else if (status != PEP_STATUS_OK && has_private) { // should never happen
         has_private = false;
@@ -200,6 +201,7 @@ PEP_STATUS validate_fpr(PEP_SESSION session,
             // delete key from being default key for all users/identities
             status = remove_fpr_as_default(session, fpr);
             // fallthrough intentional!
+        case PEP_ct_mistrusted:
         case PEP_ct_key_expired:
         case PEP_ct_key_expired_but_confirmed:
             // Note: we no longer remove expired keys as defaults; pEp users 
@@ -209,11 +211,7 @@ PEP_STATUS validate_fpr(PEP_SESSION session,
             status = update_trust_for_fpr(session, 
                                           fpr, 
                                           ct);
-        case PEP_ct_mistrusted:
-            free(ident->fpr);
-            ident->fpr = NULL;
-            ident->comm_type = ct;            
-            status = PEP_KEY_UNSUITABLE;
+
         default:
             break;
     }            
@@ -1539,8 +1537,9 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
     // Before we do anything, be sure the input fpr is even eligible to be trusted
     PEP_comm_type input_default_ct = PEP_ct_unknown;
     status = get_key_rating(session, ident->fpr, &input_default_ct);
-    if (input_default_ct < PEP_ct_strong_but_unconfirmed)
+    if (input_default_ct < PEP_ct_strong_but_unconfirmed) {
         return PEP_KEY_UNSUITABLE;
+    }
 
     status = set_pgp_keypair(session, ident->fpr);
     if (status != PEP_STATUS_OK)
@@ -1665,8 +1664,9 @@ DYNAMIC_API PEP_STATUS trust_own_key(
     if (status != PEP_STATUS_OK)
         return status;
             
-    if (ident->comm_type < PEP_ct_strong_but_unconfirmed)
+    if (ident->comm_type < PEP_ct_strong_but_unconfirmed) {
         return PEP_KEY_UNSUITABLE;
+    }
 
     ident->comm_type |= PEP_ct_confirmed;
     
@@ -2012,8 +2012,9 @@ DYNAMIC_API PEP_STATUS set_own_key(
     if (status != PEP_STATUS_OK)
         return status;
         
-    if (!private)
+    if (!private) {
         return PEP_KEY_UNSUITABLE;
+    }
  
     if (me->fpr)
         free(me->fpr);

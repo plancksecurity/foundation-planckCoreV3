@@ -360,7 +360,7 @@ static PEP_STATUS _generate_keyreset_command_message(PEP_SESSION session,
         
     if (!key_attachments || !kr_list)
         return PEP_UNKNOWN_ERROR;
-        
+
     char* payload = NULL;
     size_t size = 0;
     status = key_reset_commands_to_PER(session, kr_list, &payload, &size);
@@ -710,8 +710,9 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
 
         // Basically, see if fpr is even in the database
         // for this user - we'll get PEP_ct_unknown if it isn't
-        if (ct_result == PEP_ct_unknown)
+        if (ct_result == PEP_ct_unknown) {
             return PEP_KEY_NOT_RESET;
+        }
         
         // Alright, so we have a key to reset. Good.
 
@@ -735,8 +736,9 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
             revoked = false;
             status = key_revoked(session, old_fpr, &revoked); 
 
-            if (revoked)
-                return PEP_KEY_NOT_RESET;            
+            if (revoked) {
+                return PEP_KEY_NOT_RESET;
+            }
 
             // Also don't let someone change the replacement fpr 
             // if the replacement fpr was also revoked - we really need 
@@ -748,8 +750,9 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
             revoked = false;
             status = key_revoked(session, new_fpr, &revoked); 
 
-            if (revoked)
-                return PEP_KEY_NOT_RESET;                        
+            if (revoked) {
+                return PEP_KEY_NOT_RESET;
+            }
         }
         
         // Hooray! We apparently now are dealing with keys 
@@ -901,15 +904,22 @@ PEP_STATUS create_standalone_key_reset_message(PEP_SESSION session,
                 && recip && ! EMPTYSTR(recip->address)
                 && ! EMPTYSTR(old_fpr) && ! EMPTYSTR(new_fpr));
 
+
+    PEP_STATUS status;
+
     *dst = NULL;
     
     message* reset_msg = NULL;
-    
-    PEP_STATUS status = _generate_keyreset_command_message(session, own_identity,
-                                                           recip,
-                                                           old_fpr, new_fpr, false,
-                                                           &reset_msg);
-                            
+
+    own_identity = new_identity(own_identity->address, old_fpr, PEP_OWN_USERID, own_identity->username);
+
+    status = set_own_key(session, own_identity, old_fpr);
+
+    status = _generate_keyreset_command_message(session, own_identity,
+                                                       recip,
+                                                       old_fpr, new_fpr, false,
+                                                       &reset_msg);
+
     if (status != PEP_STATUS_OK)
         goto pEp_free;
     
