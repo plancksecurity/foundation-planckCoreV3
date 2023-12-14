@@ -3199,6 +3199,7 @@ static PEP_STATUS interpret_MIME(
                 bloblist_t *_a = bloblist_add(msg->attachments, data, size,
                         mime_type, _filename);
                 free(_filename);
+                free(mime_type);
                 free_rid_list(resource_id_list);
                 resource_id_list = NULL;
                 if (_a == NULL)
