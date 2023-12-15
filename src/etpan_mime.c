@@ -970,10 +970,10 @@ int _get_content_type(
     char *_charset = NULL;
 
     assert(content);
-    assert(type);
     assert(charset);
 
-    *type = NULL;
+    if (type)
+        *type = NULL;
     *charset = NULL;
 
     if (content->ct_subtype == NULL)
@@ -1008,16 +1008,17 @@ int _get_content_type(
                 return EINVAL;
         }
 
-        len = strlen(_main_type) + 1 + strlen(content->ct_subtype) + 1;
-        _type = calloc(1, len);
-        assert(_type);
-        if (_type == NULL)
-            return ENOMEM;
-
-        strncpy(_type, _main_type, len);
-        len -= strlen(_main_type);
-        strncat(_type, "/", len--);
-        strncat(_type, content->ct_subtype, len);
+        if (type) {
+            len = strlen(_main_type) + 1 + strlen(content->ct_subtype) + 1;
+            _type = calloc(1, len);
+            assert(_type);
+            if (_type == NULL)
+                return ENOMEM;
+            strncpy(_type, _main_type, len);
+            len -= strlen(_main_type);
+            strncat(_type, "/", len--);
+            strncat(_type, content->ct_subtype, len);
+        }
 
         if (content->ct_parameters) {
             clistiter *cur;
@@ -1034,7 +1035,8 @@ int _get_content_type(
                 *charset = strdup(_charset);
         }
 
-        *type = _type;
+        if (type)
+            *type = _type;
         return 0;
     }
 
