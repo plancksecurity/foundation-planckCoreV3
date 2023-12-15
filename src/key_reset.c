@@ -937,7 +937,7 @@ PEP_STATUS create_standalone_key_reset_message(PEP_SESSION session,
        | PEP_encrypt_flag_force_no_attached_key;
 
     if (!reset_msg->from->fpr) {
-        reset_msg->from->fpr = old_fpr;
+        reset_msg->from->fpr = strdup(old_fpr);
     }
     status = encrypt_message(session, reset_msg, NULL, &output_msg, PEP_enc_auto, flags);
 
