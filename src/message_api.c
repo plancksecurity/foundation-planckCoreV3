@@ -6084,8 +6084,8 @@ static PEP_STATUS _decrypt_message(
                             // needed...
                             reconcile_src_and_inner_messages(src, inner_message);
                             
-                            // FIXME: free msg, but check references
-                            //src = msg = inner_message;
+                            free_message(msg);
+                            msg = NULL;
                             calculated_src = msg = inner_message;
                             
                         }
