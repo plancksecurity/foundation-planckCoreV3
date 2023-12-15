@@ -51,7 +51,11 @@ typedef enum _PEP_encrypt_flags {
     /// call is being used as part of a reencryption operation
     PEP_encrypt_reencrypt = 0x40,
 
-    // Repropagation
+    // Repropagation of reset message after revocation
+    // This flag can be used in the future to instruct the engine to revive
+    // previously invalidated keys and use them for notifying partners not
+    // aware about an identity change, to update a key, using the previously
+    // know identity for validating the authenticity
     PEP_encrypt_flag_key_reset_repropagate = 0x80
 
 } PEP_encrypt_flags; 
