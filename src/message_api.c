@@ -6274,7 +6274,6 @@ static PEP_STATUS _decrypt_message(
                             if (status == PEP_STATUS_OK && my_rev_ids) {
                                 // get identities in this list the message was to/cc'd to (not for bcc)
                                 identity_list* used_ids_for_key = NULL;
-                                used_ids_for_key = identity_list_add(used_ids_for_key, msg->from);
                                 used_ids_for_key = identity_list_join(used_ids_for_key, msg->to);
                                 used_ids_for_key = identity_list_join(used_ids_for_key, msg->cc);
                                 identity_list* curr_recip = used_ids_for_key;
