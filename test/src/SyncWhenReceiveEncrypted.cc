@@ -466,6 +466,8 @@ TEST_F(SyncWhenReceiveEncrypted, decrypt_test_mail_after_reset)
     status = decrypt_message_2(session, msg, &dmsg, &keylist_used, &flags);
     ASSERT_OK;
 
+	ASSERT_EQ(m_queue.size(), 1);
+
 #if UPDATE_DATA
     ofstream outfile;
     for (vector<message*>::iterator it = m_queue.begin(); it != m_queue.end(); it++) {
