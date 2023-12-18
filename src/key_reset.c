@@ -849,6 +849,8 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
             }
 
             stringpair_t* revp = new_stringpair(old_copy, new_copy);                
+            free(old_copy);
+            free(new_copy);
             if (!rev_pairs) {
                 rev_pairs = new_stringpair_list(revp);
                 if (!rev_pairs) {
