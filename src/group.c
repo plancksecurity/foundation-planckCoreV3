@@ -2502,6 +2502,14 @@ DYNAMIC_API PEP_STATUS group_rating(
 ) {
 
     PEP_STATUS status = PEP_STATUS_OK;
+    bool active = false;
+    status = is_group_active(session, group_identity, &active);
+    if (status != PEP_STATUS_OK)
+        return status;
+    if (!active) {
+        *rating = PEP_rating_undefined;
+        return status;
+    }
     if (!is_me(session, manager)) {
         *rating = PEP_rating_reliable;
         return status;
