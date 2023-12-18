@@ -2789,6 +2789,8 @@ static PEP_STATUS interpret_body(struct mailmime *part, char **longmsg, size_t *
             if (charset && strncasecmp(charset, "utf-8", 5) != 0 && strncasecmp(charset, "utf8", 4) != 0) {
                 char * _text;
                 int r = charconv("utf-8", charset, _longmsg, _size, &_text);
+                free(charset);
+                free(_longmsg);
                 switch (r) {
                     case MAILIMF_NO_ERROR:
                         break;
@@ -2797,7 +2799,6 @@ static PEP_STATUS interpret_body(struct mailmime *part, char **longmsg, size_t *
                     default:
                         return PEP_ILLEGAL_VALUE;
                 }
-                free(_longmsg);
                 _longmsg = _text;
                 _size = strlen(_longmsg);
             }
