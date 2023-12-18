@@ -3201,8 +3201,6 @@ static PEP_STATUS interpret_MIME(
                         free(_filename);
                         _filename = filename;
                     }
-
-                    free(chosen_resource_id);
                 }
 
                 bloblist_t *_a = bloblist_add(msg->attachments, data, size,
