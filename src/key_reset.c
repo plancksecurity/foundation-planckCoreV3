@@ -662,8 +662,10 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         free(curr_ident->user_id);
         curr_ident->user_id = NULL;
         status = update_identity(session, curr_ident); // Won't gen key, so safe
-        if (status != PEP_STATUS_OK && status != PEP_GET_KEY_FAILED)
+        if (status != PEP_STATUS_OK && status != PEP_GET_KEY_FAILED) {
+            free(new_fpr);
             return status;
+        }
 
         bool is_old_own = false;
         // if the SENDER key is our key and the old one is revoked, we skip it.
