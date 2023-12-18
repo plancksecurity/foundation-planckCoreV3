@@ -663,8 +663,7 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         curr_ident->user_id = NULL;
         status = update_identity(session, curr_ident); // Won't gen key, so safe
         if (status != PEP_STATUS_OK && status != PEP_GET_KEY_FAILED) {
-            free(new_fpr);
-            return status;
+            goto pEp_free;
         }
 
         bool is_old_own = false;
@@ -708,14 +707,16 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         curr_ident->fpr = old_fpr;
         status = get_trust(session, curr_ident);
         if (status != PEP_STATUS_OK)
-            return status;
-        
+            goto pEp_free;
+
         PEP_comm_type ct_result = curr_ident->comm_type;
 
         // Basically, see if fpr is even in the database
         // for this user - we'll get PEP_ct_unknown if it isn't
-        if (ct_result == PEP_ct_unknown)
-            return PEP_KEY_NOT_RESET;
+        if (ct_result == PEP_ct_unknown) {
+            status = PEP_KEY_NOT_RESET;
+            goto pEp_free;
+        }
         
         // Alright, so we have a key to reset. Good.
 
@@ -739,8 +740,10 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
             revoked = false;
             status = key_revoked(session, old_fpr, &revoked); 
 
-            if (revoked)
-                return PEP_KEY_NOT_RESET;            
+            if (revoked) {
+                status = PEP_KEY_NOT_RESET;
+                goto pEp_free;
+            }
 
             // Also don't let someone change the replacement fpr 
             // if the replacement fpr was also revoked - we really need 
@@ -752,8 +755,10 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
             revoked = false;
             status = key_revoked(session, new_fpr, &revoked); 
 
-            if (revoked)
-                return PEP_KEY_NOT_RESET;                        
+            if (revoked) {
+                status = PEP_KEY_NOT_RESET;
+                goto pEp_free;
+            }
         }
         
         // Hooray! We apparently now are dealing with keys 
@@ -774,7 +779,7 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
                                                     new_fpr, old_fpr);                    
 
             if (status != PEP_STATUS_OK)
-                return status;
+                goto pEp_free;
                 
             // This only sets as the default, does NOT TRUST IN ANY WAY
             PEP_comm_type new_key_rating = PEP_ct_unknown;
@@ -817,7 +822,7 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
             status = set_own_key(session, curr_ident, new_fpr);
             
             if (status != PEP_STATUS_OK)
-                return status;
+                goto pEp_free;
 
             // Whether new_key is NULL or not, if this key is equal to the current user default, we 
             // replace it.
@@ -825,26 +830,31 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
                                                     new_fpr, old_fpr);                    
 
             if (status != PEP_STATUS_OK)
-                return status;            
-                
+                goto pEp_free;
+
             status = myself(session, curr_ident);
 
             if (status != PEP_STATUS_OK)
-                return status;            
+                goto pEp_free;
 
             char* old_copy = NULL;
             char* new_copy = NULL;
             old_copy = strdup(old_fpr);
             new_copy = strdup(new_fpr);
-            if (!old_copy || !new_copy)
-                return PEP_OUT_OF_MEMORY;
-                                
+            if (!old_copy || !new_copy) {
+                free(old_copy);
+                free(new_copy);
+                status = PEP_OUT_OF_MEMORY;
+                goto pEp_free;
+            }
 
             stringpair_t* revp = new_stringpair(old_copy, new_copy);                
             if (!rev_pairs) {
                 rev_pairs = new_stringpair_list(revp);
-                if (!rev_pairs)
-                    return PEP_OUT_OF_MEMORY;
+                if (!rev_pairs) {
+                    status = PEP_OUT_OF_MEMORY;
+                    goto pEp_free;
+                }
             }
             else    
                 stringpair_list_add(rev_pairs, revp);
