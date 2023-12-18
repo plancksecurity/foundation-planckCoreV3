@@ -2790,7 +2790,9 @@ static PEP_STATUS interpret_body(struct mailmime *part, char **longmsg, size_t *
                 char * _text;
                 int r = charconv("utf-8", charset, _longmsg, _size, &_text);
                 free(charset);
+                charset = NULL;
                 free(_longmsg);
+                _longmsg = NULL;
                 switch (r) {
                     case MAILIMF_NO_ERROR:
                         break;
@@ -2801,6 +2803,9 @@ static PEP_STATUS interpret_body(struct mailmime *part, char **longmsg, size_t *
                 }
                 _longmsg = _text;
                 _size = strlen(_longmsg);
+            } else {
+                free(charset);
+                charset = NULL;
             }
         }
     }
