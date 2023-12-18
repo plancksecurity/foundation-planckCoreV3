@@ -1706,8 +1706,6 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
         }
     }
 
-    return status;
-
 pEp_error:
     // Just in case
     config_passphrase(session, cached_passphrase);
@@ -1801,8 +1799,10 @@ PEP_STATUS _key_reset(
     
     if (!EMPTYSTR(key_id)) {
         fpr_copy = strdup(key_id);
-        if (!fpr_copy)
-            return PEP_OUT_OF_MEMORY;
+        if (!fpr_copy) {
+            status = PEP_OUT_OF_MEMORY;
+            goto pEp_free;
+        }
     }
 
     // This is true when we don't have a user_id and address and the fpr isn't specified
