@@ -428,10 +428,12 @@ PEP_STATUS has_key_reset_been_sent(
         default:
             sql_reset_and_clear_bindings(session->was_id_for_revoke_contacted);
             free(alias_default);
+            alias_default = NULL;
             return PEP_UNKNOWN_DB_ERROR;
     }
 
-    // positron: is alias_default leaked when we arrive here?  I strongly suspect it is.
+    free(alias_default);
+    alias_default = NULL;
 
     sql_reset_and_clear_bindings(session->was_id_for_revoke_contacted);
     return PEP_STATUS_OK;
