@@ -1993,8 +1993,8 @@ PEP_STATUS _key_reset(
                     // even possibly with callback.
                     status = _check_own_reset_passphrase_readiness(session, fpr_copy);
                     if (status != PEP_STATUS_OK)
-                        return status;
-                    
+                        goto pEp_free;
+
                     // now have ident list, or should
                     identity_list* curr_ident;
 
@@ -2064,6 +2064,7 @@ PEP_STATUS _key_reset(
     }           
         
 pEp_free:
+    free(user_id);
     free_identity(tmp_ident);
     free(fpr_copy);
     free(own_id);
