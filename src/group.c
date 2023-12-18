@@ -10,6 +10,7 @@
  // 21.08.2023/IG - group_create(): Allow to re-create a group that is inactive.
  // 04.09.2023/IG - Add retrieve_all_groups_as_manager() and retrieve_all_active_groups_as_manager().
  // 04.09.2023/IG - Move get_group_manager() to group.h and make it DYNAMIC API.
+ // 18.12.2023/IG - Return PEP_rating_undefined directly for inactive group rating.
 
 #include "group.h"
 #include "group_internal.h"
