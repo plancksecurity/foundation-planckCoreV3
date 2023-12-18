@@ -56,7 +56,7 @@ DYNAMIC_API void free_message(message *msg)
         free(msg->comments);
         free_stringpair_list(msg->opt_fields);
         free(msg->_sender_fpr);
-        //free(msg);
+        free(msg);
     }
 }
 
