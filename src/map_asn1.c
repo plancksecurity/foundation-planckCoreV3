@@ -284,6 +284,8 @@ Identity_t *Identity_from_Struct(
             goto enomem;
     }
 
+    result->flags = ident->flags;
+
     return result;
 
 enomem:
@@ -335,6 +337,8 @@ pEp_identity *Identity_to_Struct(Identity_t *ident, pEp_identity *result)
         result->lang[1] = ident->lang.buf[1];
         result->lang[2] = 0;
     }
+
+    result->flags = (identity_flags) ident->flags;
 
     return result;
 
