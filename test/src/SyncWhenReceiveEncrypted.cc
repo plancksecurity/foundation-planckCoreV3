@@ -66,7 +66,7 @@ class SyncWhenReceiveEncrypted : public ::testing::Test
 
     // Bob after reset
     string fpr_bob_reset = "";
-    
+
     // Identities
     pEp_identity* alice = NULL;
     pEp_identity* bob = NULL;
@@ -300,8 +300,8 @@ TEST_F(SyncWhenReceiveEncrypted, update_alice_ident)
     outfile.open(keyfile_priv_alice);
     keyval = NULL;
     status = export_secret_key(session,  strdup(alice->fpr), &keyval, &keysize);
-    ASSERT_NOTNULL(keyval);                
-    ASSERT_NE(keysize, 0);                
+    ASSERT_NOTNULL(keyval);
+    ASSERT_NE(keysize, 0);
     outfile << endl << keyval;
     outfile.close();
 #endif
@@ -312,7 +312,7 @@ TEST_F(SyncWhenReceiveEncrypted, update_alice_ident)
 
 TEST_F(SyncWhenReceiveEncrypted, update_bob_ident)
 {
-    PEP_STATUS status = PEP_STATUS_OK;   
+    PEP_STATUS status = PEP_STATUS_OK;
 
     // create test idents
     bob = new_identity(address_bob, NULL, PEP_OWN_USERID, name_bob);
@@ -343,8 +343,8 @@ TEST_F(SyncWhenReceiveEncrypted, update_bob_ident)
     free(keyval);
     keyval = NULL;
     status = export_secret_key(session,  strdup(bob->fpr), &keyval, &keysize);
-    ASSERT_NOTNULL(keyval);                
-    ASSERT_NE(keysize, 0);                
+    ASSERT_NOTNULL(keyval);
+    ASSERT_NE(keysize, 0);
     outfile << endl << keyval;
     outfile.close();
 #endif
@@ -397,7 +397,7 @@ TEST_F(SyncWhenReceiveEncrypted, create_test_mail)
     dump_out(mailfile_hello_message.c_str(), outstring);
     free(outstring);
 #endif
-    free_message(enc_outgoing_msg);   
+    free_message(enc_outgoing_msg);
     free_identity(alice);
     free_identity(bob);
 }
