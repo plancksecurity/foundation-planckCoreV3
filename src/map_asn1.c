@@ -4,6 +4,9 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
+// Changelog:
+// 19.12.2023/IG - Add missing "flags" field to the Identity struct.
+
 #include "pEp_internal.h"
 #include "map_asn1.h"
 #include "message_codec.h"
