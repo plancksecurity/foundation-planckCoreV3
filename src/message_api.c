@@ -3893,8 +3893,10 @@ static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg,
                          _unsigned_signed_strcmp(pEpstr, src->shortmsg, PEP_SUBJ_BYTELEN) != 0 &&
                         strcmp(src->shortmsg, "p=p") != 0)) {
                              
-                        if (shortmsg != NULL)
-                            free(shortmsg);                        
+                        if (shortmsg != NULL) {
+                            free(shortmsg);
+                            shortmsg = NULL;
+                        }
                             
                         if (src->shortmsg == NULL) {
                             shortmsg = strdup("");
@@ -3911,9 +3913,10 @@ static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg,
                     free(msg->shortmsg);
                     msg->shortmsg = shortmsg;
                 }
-                
+                if (msg->shortmsg != shortmsg) {
+                    free(shortmsg);
+                }
                 free(msg->longmsg);
-
                 msg->longmsg = longmsg;
             }
             else {
