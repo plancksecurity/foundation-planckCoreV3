@@ -8240,8 +8240,8 @@ static PEP_STATUS string_to_keylist(const char * skeylist, stringlist_t **keylis
             goto enomem;
         
         _kcurr = stringlist_add(_kcurr, fpr);
+        free(fpr);
         if (_kcurr == NULL) {
-            free(fpr);
             goto enomem;
         }
         
