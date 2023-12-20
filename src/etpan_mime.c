@@ -970,10 +970,10 @@ int _get_content_type(
     char *_charset = NULL;
 
     assert(content);
-    assert(type);
     assert(charset);
 
-    *type = NULL;
+    if (type)
+        *type = NULL;
     *charset = NULL;
 
     if (content->ct_subtype == NULL)
@@ -1008,16 +1008,17 @@ int _get_content_type(
                 return EINVAL;
         }
 
-        len = strlen(_main_type) + 1 + strlen(content->ct_subtype) + 1;
-        _type = calloc(1, len);
-        assert(_type);
-        if (_type == NULL)
-            return ENOMEM;
-
-        strncpy(_type, _main_type, len);
-        len -= strlen(_main_type);
-        strncat(_type, "/", len--);
-        strncat(_type, content->ct_subtype, len);
+        if (type) {
+            len = strlen(_main_type) + 1 + strlen(content->ct_subtype) + 1;
+            _type = calloc(1, len);
+            assert(_type);
+            if (_type == NULL)
+                return ENOMEM;
+            strncpy(_type, _main_type, len);
+            len -= strlen(_main_type);
+            strncat(_type, "/", len--);
+            strncat(_type, content->ct_subtype, len);
+        }
 
         if (content->ct_parameters) {
             clistiter *cur;
@@ -1034,7 +1035,8 @@ int _get_content_type(
                 *charset = strdup(_charset);
         }
 
-        *type = _type;
+        if (type)
+            *type = _type;
         return 0;
     }
 
@@ -2743,7 +2745,6 @@ static PEP_STATUS interpret_body(struct mailmime *part, char **longmsg, size_t *
     size_t length;
     size_t _size;
     size_t index;
-    char *type = NULL;
     char *charset = NULL;
 
     assert(part);
@@ -2783,11 +2784,15 @@ static PEP_STATUS interpret_body(struct mailmime *part, char **longmsg, size_t *
     }
 
     if (part->mm_content_type) {
-        if (_get_content_type(part->mm_content_type, &type, &charset) == 0) {
+        if (_get_content_type(part->mm_content_type, NULL, &charset) == 0) {
             // We can be more elegant about this later.
             if (charset && strncasecmp(charset, "utf-8", 5) != 0 && strncasecmp(charset, "utf8", 4) != 0) {
                 char * _text;
                 int r = charconv("utf-8", charset, _longmsg, _size, &_text);
+                free(charset);
+                charset = NULL;
+                free(_longmsg);
+                _longmsg = NULL;
                 switch (r) {
                     case MAILIMF_NO_ERROR:
                         break;
@@ -2796,9 +2801,11 @@ static PEP_STATUS interpret_body(struct mailmime *part, char **longmsg, size_t *
                     default:
                         return PEP_ILLEGAL_VALUE;
                 }
-                free(_longmsg);
                 _longmsg = _text;
                 _size = strlen(_longmsg);
+            } else {
+                free(charset);
+                charset = NULL;
             }
         }
     }
@@ -3199,6 +3206,7 @@ static PEP_STATUS interpret_MIME(
                 bloblist_t *_a = bloblist_add(msg->attachments, data, size,
                         mime_type, _filename);
                 free(_filename);
+                free(mime_type);
                 free_rid_list(resource_id_list);
                 resource_id_list = NULL;
                 if (_a == NULL)

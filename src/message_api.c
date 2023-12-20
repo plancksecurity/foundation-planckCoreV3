@@ -3899,8 +3899,10 @@ static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg,
                          _unsigned_signed_strcmp(pEpstr, src->shortmsg, PEP_SUBJ_BYTELEN) != 0 &&
                         strcmp(src->shortmsg, "p=p") != 0)) {
                              
-                        if (shortmsg != NULL)
-                            free(shortmsg);                        
+                        if (shortmsg != NULL) {
+                            free(shortmsg);
+                            shortmsg = NULL;
+                        }
                             
                         if (src->shortmsg == NULL) {
                             shortmsg = strdup("");
@@ -3917,9 +3919,10 @@ static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg,
                     free(msg->shortmsg);
                     msg->shortmsg = shortmsg;
                 }
-                
+                if (msg->shortmsg != shortmsg) {
+                    free(shortmsg);
+                }
                 free(msg->longmsg);
-
                 msg->longmsg = longmsg;
             }
             else {
@@ -6090,8 +6093,8 @@ static PEP_STATUS _decrypt_message(
                             // needed...
                             reconcile_src_and_inner_messages(src, inner_message);
                             
-                            // FIXME: free msg, but check references
-                            //src = msg = inner_message;
+                            free_message(msg);
+                            msg = NULL;
                             calculated_src = msg = inner_message;
                             
                         }
@@ -8236,8 +8239,8 @@ static PEP_STATUS string_to_keylist(const char * skeylist, stringlist_t **keylis
             goto enomem;
         
         _kcurr = stringlist_add(_kcurr, fpr);
+        free(fpr);
         if (_kcurr == NULL) {
-            free(fpr);
             goto enomem;
         }
         

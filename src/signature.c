@@ -62,6 +62,7 @@ signature_for_text(PEP_SESSION session,
     }
 
     status = sign_only(session, ptext, psize, the_signing_identity->fpr, stext, ssize);
+    free_identity(the_signing_identity);
 
     return status;
 }
