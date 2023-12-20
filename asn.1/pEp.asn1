@@ -28,7 +28,8 @@ Identity ::= SEQUENCE {
     user-id     PString,
     username    PString,
     comm-type   INTEGER (0..255),
-    lang        ISO639-1
+    lang        ISO639-1,
+    flags       INTEGER (0..65535)
 }
 
 IdentityList ::= SEQUENCE OF Identity
