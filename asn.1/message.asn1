@@ -54,7 +54,7 @@ PIdentity ::= SEQUENCE {
     username    PString OPTIONAL,
     comm-type   INTEGER (0..255),
     lang        ISO639-1 OPTIONAL,
-    flags       INTEGER (0..61440)
+    flags       INTEGER (0..65535)
 }
 
 PIdentityList ::= SEQUENCE OF PIdentity
