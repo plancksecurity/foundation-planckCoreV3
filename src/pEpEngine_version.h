@@ -37,6 +37,6 @@
 /* PEP_ENGINE_VERSION_BRANCH_SUFFIX not defined. */
 
 /* The main version string for the user. */
-#define PEP_ENGINE_VERSION "3.3.18"
+#define PEP_ENGINE_VERSION "3.3.19"
 
 #endif /* #ifndef _PEP_ENGINE_VERSION_H_ */
