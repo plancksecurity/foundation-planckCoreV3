@@ -360,7 +360,7 @@ static PEP_STATUS _generate_keyreset_command_message(PEP_SESSION session,
         
     if (!key_attachments || !kr_list)
         return PEP_UNKNOWN_ERROR;
-        
+
     char* payload = NULL;
     size_t size = 0;
     status = key_reset_commands_to_PER(session, kr_list, &payload, &size);
@@ -710,8 +710,9 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
 
         // Basically, see if fpr is even in the database
         // for this user - we'll get PEP_ct_unknown if it isn't
-        if (ct_result == PEP_ct_unknown)
+        if (ct_result == PEP_ct_unknown) {
             return PEP_KEY_NOT_RESET;
+        }
         
         // Alright, so we have a key to reset. Good.
 
@@ -735,8 +736,9 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
             revoked = false;
             status = key_revoked(session, old_fpr, &revoked); 
 
-            if (revoked)
-                return PEP_KEY_NOT_RESET;            
+            if (revoked) {
+                return PEP_KEY_NOT_RESET;
+            }
 
             // Also don't let someone change the replacement fpr 
             // if the replacement fpr was also revoked - we really need 
@@ -748,8 +750,9 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
             revoked = false;
             status = key_revoked(session, new_fpr, &revoked); 
 
-            if (revoked)
-                return PEP_KEY_NOT_RESET;                        
+            if (revoked) {
+                return PEP_KEY_NOT_RESET;
+            }
         }
         
         // Hooray! We apparently now are dealing with keys 
@@ -901,15 +904,18 @@ PEP_STATUS create_standalone_key_reset_message(PEP_SESSION session,
                 && recip && ! EMPTYSTR(recip->address)
                 && ! EMPTYSTR(old_fpr) && ! EMPTYSTR(new_fpr));
 
+
+    PEP_STATUS status;
+
     *dst = NULL;
     
     message* reset_msg = NULL;
-    
-    PEP_STATUS status = _generate_keyreset_command_message(session, own_identity,
-                                                           recip,
-                                                           old_fpr, new_fpr, false,
-                                                           &reset_msg);
-                            
+
+    status = _generate_keyreset_command_message(session, own_identity,
+                                                       recip,
+                                                       old_fpr, new_fpr, false,
+                                                       &reset_msg);
+
     if (status != PEP_STATUS_OK)
         goto pEp_free;
     
@@ -925,9 +931,15 @@ PEP_STATUS create_standalone_key_reset_message(PEP_SESSION session,
 
     message* output_msg = NULL;
     
-    status = encrypt_message(session, reset_msg, NULL,
-                             &output_msg, PEP_enc_auto,
-                             PEP_encrypt_flag_key_reset_only | PEP_encrypt_flag_force_no_attached_key);
+    PEP_encrypt_flags_t flags =
+       PEP_encrypt_flag_key_reset_repropagate
+       | PEP_encrypt_flag_key_reset_only
+       | PEP_encrypt_flag_force_no_attached_key;
+
+    if (!reset_msg->from->fpr) {
+        reset_msg->from->fpr = strdup(old_fpr);
+    }
+    status = encrypt_message(session, reset_msg, NULL, &output_msg, PEP_enc_auto, flags);
 
     if (status == PEP_STATUS_OK)
         *dst = output_msg;
