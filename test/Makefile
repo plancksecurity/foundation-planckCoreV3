@@ -139,7 +139,7 @@ test: all prepare-test-data
             faketime '2021-07-07 23:05:30Z' \
             $(TEST_DEBUGGER) \
             python3 $(GTEST_PL) \
-		--gtest_color=no ./$(TARGET)
+		--gtest_color=no ./$(TARGET) --gtest_filter=$(TEST_FILTER)
 
 prepare-test-data:
 	cp \
