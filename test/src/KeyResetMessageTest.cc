@@ -50,7 +50,7 @@ class KeyResetMessageTest : public ::testing::Test {
         const char* erin_fpr = "1B0E197E8AE66277B8A024B9AEA69F509F8D7CBA";
         const char* fenris_fpr = "0969FA229DF21C832A64A04711B1B9804F3D2900";
 
-        const char* alice_new_fpr = "502ADD04042695AAE5F2DBEC5BF2AEF3B6FE2110";
+        const char* alice_new_fpr = "3B644B63B873F04BA918AB6C3D188D02163D18FC";
 
         const string alice_user_id = PEP_OWN_USERID;
         const string bob_user_id = "BobId";
