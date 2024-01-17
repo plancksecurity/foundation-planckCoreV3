@@ -1467,8 +1467,6 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_extant_key) {
 }
 
 TEST_F(GroupEncryptionTest, check_protocol_group_join_member_1) {
-    //CORE-135 Fix this test so it is not skipped
-    GTEST_SKIP() << "Skipping single test";
     const char* own_id = "DIFFERENT_OWN_ID_FOR_KICKS";
     pEp_identity* me = new_identity(member_1_address, NULL, own_id, member_1_name);
     read_file_and_import_key(session, kf_name(member_1_prefix, false).c_str());
@@ -1542,8 +1540,6 @@ TEST_F(GroupEncryptionTest, check_protocol_group_join_member_1) {
 }
 
 TEST_F(GroupEncryptionTest, check_protocol_group_join_member_2) {
-    //CORE-135 Fix this test so it is not skipped
-    GTEST_SKIP() << "Skipping single test";
     const char* own_id = "PEP_OWN_USERID"; // on purpose, little joke here
     pEp_identity* me = new_identity(member_2_address, NULL, own_id, member_2_name);
     read_file_and_import_key(session, kf_name(member_2_prefix, false).c_str());
@@ -1603,8 +1599,6 @@ TEST_F(GroupEncryptionTest, check_protocol_group_join_member_2) {
 }
 
 TEST_F(GroupEncryptionTest, check_protocol_group_join_member_3) {
-    //CORE-135 Fix this test so it is not skipped
-    GTEST_SKIP() << "Skipping single test";
     const char* own_id = "BAH";
     pEp_identity* me = new_identity(member_3_address, NULL, own_id, member_3_name);
     read_file_and_import_key(session, kf_name(member_3_prefix, false).c_str());
@@ -1664,8 +1658,6 @@ TEST_F(GroupEncryptionTest, check_protocol_group_join_member_3) {
 }
 
 TEST_F(GroupEncryptionTest, check_protocol_group_join_member_4) {
-    //CORE-135 Fix this test so it is not skipped
-    GTEST_SKIP() << "Skipping single test";
     const char* own_id = PEP_OWN_USERID;
     pEp_identity* me = new_identity(member_4_address, NULL, own_id, member_4_name);
     read_file_and_import_key(session, kf_name(member_4_prefix, false).c_str());
