@@ -136,7 +136,7 @@ test: all prepare-test-data
 	$(RM) -rf ./pEp_test_home/*
 	$(TEST_CMD_PFX) \
             PEP_NOABORT=noabort PEP_LOG=yes PEP_LOG_ASYNC=yes GTEST_COLOR=no \
-            faketime '2021-07-07 05:05:30' \
+            faketime '2021-07-07 23:05:30Z' \
             $(TEST_DEBUGGER) \
             python3 $(GTEST_PL) \
 		--gtest_color=no ./$(TARGET)

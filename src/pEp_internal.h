@@ -967,13 +967,14 @@ static inline char* _pEp_subj_copy(void) {
  */
 static inline bool is_me(PEP_SESSION session, const pEp_identity* test_ident) {
     bool retval = false;
-    if (test_ident && test_ident->user_id) {
+    if (test_ident) {
         char* def_id = NULL;
         get_default_own_userid(session, &def_id);
-        if (test_ident->me || 
-            (def_id && strcmp(def_id, test_ident->user_id) == 0)) {
-            retval = true;
-        }
+        retval = (
+            test_ident->me
+            || ( def_id && test_ident->user_id && strcmp(def_id, test_ident->user_id) == 0 )
+            || ( def_id && test_ident->address && strcmp(def_id, test_ident->address) == 0 )
+        );
         free(def_id);
     }
     return retval;

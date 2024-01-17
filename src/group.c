@@ -10,6 +10,7 @@
  // 21.08.2023/IG - group_create(): Allow to re-create a group that is inactive.
  // 04.09.2023/IG - Add retrieve_all_groups_as_manager() and retrieve_all_active_groups_as_manager().
  // 04.09.2023/IG - Move get_group_manager() to group.h and make it DYNAMIC API.
+ // 18.12.2023/IG - Return PEP_rating_undefined directly for inactive group rating.
 
 #include "group.h"
 #include "group_internal.h"
@@ -1275,7 +1276,7 @@ DYNAMIC_API PEP_STATUS retrieve_all_groups_as_manager(
     for ( ; curr && curr->ident && curr->ident; curr = curr->next) {
         if (!curr->ident)
             goto enomem;
-        status = update_identity(session, curr->ident);
+        status = myself(session, curr->ident);
     }
 
     sql_reset_and_clear_bindings(session->get_all_groups_as_manager);
@@ -2262,6 +2263,10 @@ DYNAMIC_API PEP_STATUS group_dissolve(
 
     // If I'm the manager, then I have to send out the dissolution stuff and deactivate
     if (is_me(session, manager)) {
+        status = myself(session, manager);
+        if (status != PEP_STATUS_OK)
+            goto pEp_free;
+
         status = revoke_key(session, group_identity->fpr, NULL);
         if (status != PEP_STATUS_OK)
             goto pEp_free;
@@ -2498,6 +2503,15 @@ DYNAMIC_API PEP_STATUS group_rating(
 ) {
 
     PEP_STATUS status = PEP_STATUS_OK;
+    *rating = PEP_rating_undefined;
+    bool active = false;
+    status = is_group_active(session, group_identity, &active);
+    if (status != PEP_STATUS_OK)
+        return status;
+    if (!active) {
+        // we return PEP_rating_undefined in this case
+        return status;
+    }
     if (!is_me(session, manager)) {
         *rating = PEP_rating_reliable;
         return status;

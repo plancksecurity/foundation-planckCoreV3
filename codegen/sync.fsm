@@ -97,7 +97,7 @@ protocol Sync 1 {
         }
 
         // handshaking without existing Device group
-        state HandshakingOfferer timeout=600 {
+        state HandshakingOfferer timeout=120 {
             on Init
                 do showSoleHandshake;
 
@@ -140,7 +140,7 @@ protocol Sync 1 {
         }
 
         // handshaking without existing Device group
-        state HandshakingRequester timeout=600 {
+        state HandshakingRequester timeout=120 {
             on Init
                 do showSoleHandshake;
 
@@ -583,7 +583,7 @@ protocol Sync 1 {
 
         // beacons are always broadcasted
 
-        message Beacon 2, type=broadcast, ratelimit=10, security=unencrypted {
+        message Beacon 2, type=broadcast, ratelimit=20, security=unencrypted {
             field TID challenge;
             auto Version version;
         }
