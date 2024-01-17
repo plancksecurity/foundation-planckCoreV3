@@ -1285,9 +1285,9 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_grouped_recv) {
     char* pubkey3 = strdup("3C1E713D8519D7F907E3142D179EAA24A216E95A");
 
     // For pep.test.alexander@darthmama.org
-    const char* replkey1 = "0F9C2FBFB898AD3A1242257F300EFFDE4CE2C33F";
+    const char* replkey1 = "F33F91A1A34814644B8B777417457C130BBB2FA3";
     // For pep.test.alexander6a@darthmama.org
-    const char* replkey3 = "3671C09D3C79260C65045AE9A62A64E4CBEDAFDA";
+    const char* replkey3 = "B9EF0616F7ABABFB2AED9213FB6BB13E8B75DD42";
 
     pEp_identity* alex_id = new_identity("pep.test.alexander@darthmama.org",
                                         NULL,
@@ -1389,7 +1389,7 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_grouped_recv_with_sticky) {
     char* pubkey3 = strdup("3C1E713D8519D7F907E3142D179EAA24A216E95A");
 
     // For pep.test.alexander@darthmama.org
-    const char* replkey1 = "8FDB872F88BD76F2C6C2DE0E8453FAEA21DD0DCF";
+    const char* replkey1 = "214088852C7B91BD952AD638C956CE651EEBBCBC";
 
     pEp_identity* alex_id = new_identity("pep.test.alexander@darthmama.org",
                                         NULL,
