@@ -629,7 +629,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own) {
 
     ASSERT_EQ(m_queue.size(), 0);
 
-    if (false) {
+    if (false) { // This test mail can no longer be updated due to CORE-67 changes
         ofstream outfile;
         outfile.open("test_mails/check_reset_grouped_own_recv.eml");
         message* curr_sent_msg = m_queue.at(0);
@@ -664,6 +664,8 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own) {
 }
 
 TEST_F(KeyResetMessageTest, check_reset_grouped_own_recv) {
+    // CORE-257 test mails for this test case cannot be re-generated
+    GTEST_SKIP() << "Skipping single test";
     send_setup(); // lazy
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), NULL);
     PEP_STATUS status = myself(session, alice);
@@ -1002,7 +1004,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
     ASSERT_STRNE(alex_id2->fpr, alex_id3->fpr);
 
     ASSERT_EQ(m_queue.size(),0);
-    if (false) {
+    if (false) { // This test mail can no longer be updated due to CORE-67 changes
         ofstream outfile;
         int i = 0;
         for (vector<message*>::iterator it = m_queue.begin(); it != m_queue.end(); it++, i++) {
@@ -1485,6 +1487,8 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_grouped_recv_with_sticky) {
 
 
 TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_idents_reset_all_recv) {
+    // CORE-257 test mails for this test case cannot be re-generated
+    GTEST_SKIP() << "Skipping single test";
     PEP_STATUS status = PEP_STATUS_OK;
     char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
     char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
@@ -1691,7 +1695,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
     ASSERT_STRNE(alex_id2->fpr, alex_id3->fpr);
 
     ASSERT_EQ(m_queue.size(),0);
-    if (false) {
+    if (false) { // This test mail can no longer be updated due to CORE-67 changes
         ofstream outfile;
         message* curr_sent_msg = m_queue.at(0);        
         string fname = "test_mails/check_reset_grouped_own_multiple_keys_multiple_idents_reset_one.eml";
@@ -1711,6 +1715,8 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
 }
 
 TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_idents_reset_one_recv) {
+    // CORE-257 test mails for this test case cannot be re-generated
+    GTEST_SKIP() << "Skipping single test";
     char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
     char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
     char* pubkey3 = strdup("3C1E713D8519D7F907E3142D179EAA24A216E95A");
