@@ -16,6 +16,7 @@
 #include "keymanagement.h"
 #include "key_reset.h"
 #include "key_reset_internal.h"
+#include "message.h"
 
 #include "TestUtilities.h"
 #include "TestConstants.h"
@@ -112,6 +113,9 @@ class KeyResetMessageTest : public ::testing::Test {
         void TearDown() override {
             // Code here will be called immediately after each test (right
             // before the destructor).
+            for (vector<message*>::iterator it = m_queue.begin(); it != m_queue.end(); it++) {
+                free_message(*it);
+            }
             KRMT_fake_this = NULL;
             engine->shut_down();
             delete engine;
@@ -252,7 +256,7 @@ class KeyResetMessageTest : public ::testing::Test {
 };
 
 PEP_STATUS KRMT_message_send_callback(message* msg) {
-    ((KeyResetMessageTest*)KRMT_fake_this)->m_queue.push_back(msg);
+    ((KeyResetMessageTest*)KRMT_fake_this)->m_queue.push_back(message_dup(msg));
     return PEP_STATUS_OK;
 }
 
