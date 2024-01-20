@@ -1,0 +1,87 @@
+name: release
+
+on: push
+
+jobs:
+  ubuntu-release:
+    runs-on: ubuntu-latest
+    env:
+      YML2_PATH: /home/runner/venv/bin
+      PREFIX: /home/runner/install
+      GH_TOKEN: ${{ github.token }}
+      GTEST_SRC_DIR: /usr/src/googletest/googletest
+      GTEST_PL: /home/runner/work/foundation-planckCoreV3/foundation-planckCoreV3/gtest-parallel/gtest_parallel.py
+      LDFLAGS: -Wl,-rpath /home/runner/install/lib -L/home/runner/install/lib
+    steps:
+      - name: Get sources
+        uses: actions/checkout@v4
+      - name: Create prefix
+        run: mkdir -p /home/runner/install
+      - name: Get libPlanckTransport
+        uses: actions/download-artifact@v4
+        with:
+          name: ubuntu-3dd9db63865a29c5514bd7261318a6ab2531d138
+          github-token: ${{ github.token }}
+          repository: plancksecurity/foundation-libPlanckTransport
+          run-id: 7612367923
+          path: /home/runner/install
+      - name: Get libetpan
+        uses: actions/download-artifact@v4
+        with:
+          name: ubuntu-254813f3c9373c73465ff6d0aaccad407df64f8f
+          github-token: ${{ github.token }}
+          repository: plancksecurity/foundation-libetpan
+          run-id: 7615126619
+          path: /home/runner/install
+      - name: Get planckCoreSequoiaBackend
+        uses: actions/download-artifact@v4
+        with:
+          name: ubuntu-71779ab22bd5386bbbfc57df7e9a639aa3792d25
+          github-token: ${{ github.token }}
+          repository: plancksecurity/foundation-planckCoreSequoiaBackend
+          run-id: 7630482449
+          path: /home/runner/install
+      - name: Install asn1c
+        run: sudo apt install asn1c
+      - name: Install googletest
+        run: sudo apt install googletest libgtest-dev libgmock-dev
+      - name: Checkout gtest parallel
+        uses: actions/checkout@v4
+        with:
+          repository: google/gtest-parallel
+          path: /home/runner/work/foundation-planckCoreV3/foundation-planckCoreV3/gtest-parallel
+      - name: Install botan
+        run: sudo apt install -y libbotan-2-dev
+      - name: Install faketime
+        run: sudo apt install -y faketime
+      - name: Install YML2
+        run: |
+          python -m venv /home/runner/venv
+          . /home/runner/venv/bin/activate
+          pip install git+https://github.com/plancksecurity/foundation-yml2
+      - name: Build
+        run: |
+          . /home/runner/venv/bin/activate
+          make -j8
+      - name: Install
+        run: |
+          . /home/runner/venv/bin/activate
+          make install
+          make dbinstall
+      - name: Test
+        run: |
+          . /home/runner/venv/bin/activate
+          make test
+      - name: archive artifacts on sha
+        uses: actions/upload-artifact@v3
+        with:
+          name: ubuntu-${{ github.sha }}
+          path: install
+      - name: archive artifacts on tag
+        if: github.ref_type == 'tag'
+        uses: actions/upload-artifact@v3
+        with:
+          name: ubuntu-${{ github.ref }}
+          path: install
+
+
