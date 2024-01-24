@@ -34,13 +34,11 @@ jobs:
           run-id: 7615126619
           path: /home/runner/install
       - name: Get planckCoreSequoiaBackend
-        uses: actions/download-artifact@v4
-        with:
-          name: ubuntu-71779ab22bd5386bbbfc57df7e9a639aa3792d25
-          github-token: ${{ github.token }}
-          repository: plancksecurity/foundation-planckCoreSequoiaBackend
-          run-id: 7630482449
-          path: /home/runner/install
+        run: |
+          cd /home/runner/install
+          gh release download export-prc2 -R plancksecurity/foundation-planckCoreSequoiaBackend -p ubuntu-release.tar.bz2
+          tar xvfj ubuntu-release.tar.bz2
+          rm ubuntu-release.tar.bz2
       - name: Install asn1c
         run: sudo apt install asn1c
       - name: Install googletest
