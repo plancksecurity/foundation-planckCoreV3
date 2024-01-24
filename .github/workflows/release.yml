@@ -70,12 +70,11 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-${{ github.sha }}
-          path: install
+          path: /home/runner/install
       - name: archive artifacts on tag
         if: github.ref_type == 'tag'
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-${{ github.ref }}
-          path: install
-
+          path: /home/runner/install
 
