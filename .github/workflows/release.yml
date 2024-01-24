@@ -26,13 +26,11 @@ jobs:
           run-id: 7612367923
           path: /home/runner/install
       - name: Get libetpan
-        uses: actions/download-artifact@v4
-        with:
-          name: ubuntu-254813f3c9373c73465ff6d0aaccad407df64f8f
-          github-token: ${{ github.token }}
-          repository: plancksecurity/foundation-libetpan
-          run-id: 7615126619
-          path: /home/runner/install
+        run: |
+          cd /home/runner/install
+          gh release download lev -R plancksecurity/foundation-libetpan -p ubuntu-release.tar.bz2
+          tar xvfj ubuntu-release.tar.bz2
+          rm ubuntu-release.tar.bz2
       - name: Get planckCoreSequoiaBackend
         run: |
           cd /home/runner/install
