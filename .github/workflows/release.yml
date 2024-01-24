@@ -48,8 +48,6 @@ jobs:
         with:
           repository: google/gtest-parallel
           path: /home/runner/work/foundation-planckCoreV3/foundation-planckCoreV3/gtest-parallel
-      - name: Install botan
-        run: sudo apt install -y libbotan-2-dev
       - name: Install faketime
         run: sudo apt install -y faketime
       - name: Install YML2
