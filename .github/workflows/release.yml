@@ -78,3 +78,33 @@ jobs:
           name: ubuntu-${{ github.ref }}
           path: /home/runner/install
 
+  windows-asn-release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    env:
+      YML2_PATH: 'C:\hostedtoolcache\windows\python\3.9.13\x64\Scripts'
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          token: ${{ secrets.ALL_REPO_ACCESS_TOKEN }}
+      - name: Setup msbuild
+        uses: microsoft/setup-msbuild@v1.1
+      - name: Install yml2
+        run: |
+          pip install git+https://github.com/plancksecurity/foundation-yml2
+          pip list -v
+          python -m site --user-base
+      - name: Build
+        run: msbuild build-windows\libpEpasn1\libpEpasn1.vcxproj /p:Configuration=Release
+      - name: Compress
+        run: Compress-Archive -Path build-windows\Release\* -Destination windows-asn-release.zip
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.head_ref || github.ref_name }}
+          files: windows-asn-release.zip
+          fail_on_unmatched_files: true
+
