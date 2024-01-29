@@ -97,6 +97,12 @@ jobs:
           pip install git+https://github.com/plancksecurity/foundation-yml2
           pip list -v
           python -m site --user-base
+      - name: Get SQLite
+        run: |
+          cd C:\Users\runneradmin\AppData\Local\Microsoft\WindowsApps
+          curl -o sqlite.zip https://sqlite.org/2024/sqlite-tools-win-x64-3450000.zip
+          unzip sqlite.zip
+          rm sqlite.zip
       - name: Build
         run: msbuild build-windows\libpEpasn1\libpEpasn1.vcxproj /p:Configuration=Release
       - name: Compress
