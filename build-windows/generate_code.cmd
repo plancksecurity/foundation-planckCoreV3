@@ -8,7 +8,12 @@ SET engine_directory=%current_directory:~0,-15%
 ECHO %engine_directory%
 
 :: YML2 directory is ...\pEpForWindowsAdapterSolution\yml2\
+if "%YML2_PATH%"== "" (
 SET yml2_directory=%engine_directory:~0,-13%\yml2
+) else (
+SET yml2_directory=%YML2_PATH%
+)
+
 SET YML2PROC="%yml2_directory%\yml2proc"
 
 :: Create the system.db
