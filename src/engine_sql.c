@@ -1561,26 +1561,6 @@ static PEP_STATUS _upgrade_DB_to_ver_19(PEP_SESSION session) {
     return PEP_STATUS_OK;
 }
 
-static PEP_STATUS _unify_own_userid(PEP_SESSION session) {
-    return PEP_STATUS_OK;
-    /*
-    int int_result = SQLITE_OK;
-    PEP_SQL_BEGIN_LOOP(int_result);
-    int_result = sqlite3_exec(
-            session->db,
-            "update identity set user_id = \""
-            PEP_OWN_USERID
-            "\" where is_own = 1",
-            NULL,
-            NULL,
-            NULL
-    );
-    PEP_SQL_END_LOOP();
-    PEP_WEAK_ASSERT_ORELSE_RETURN(int_result == SQLITE_OK, PEP_UNKNOWN_DB_ERROR);
-    return PEP_STATUS_OK;
-    */
-}
-
 // Honestly, the upgrades should be redone in a transaction IMHO.
 static PEP_STATUS _check_and_execute_upgrades(PEP_SESSION session, int version) {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -1657,9 +1637,6 @@ static PEP_STATUS _check_and_execute_upgrades(PEP_SESSION session, int version) 
             if (status != PEP_STATUS_OK)
                 return status;
         case 19:
-            status = _unify_own_userid(session);
-            if (status != PEP_STATUS_OK)
-                return status;
             break;
         default:
             return PEP_ILLEGAL_VALUE;
