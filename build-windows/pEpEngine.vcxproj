@@ -85,14 +85,6 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <SuppressStartupBanner>false</SuppressStartupBanner>
     </Link>
-    <PreBuildEvent>
-      <Command>set NETTLE_HAVE_CV448=yes &amp;&amp; PUSHD $(SolutionDir)\PlanckCoreSequoiaBackend &amp;&amp; cargo rustc -- -L $(SolutionDir)botan  &amp;&amp; copy $(SolutionDir)botan\botan.dll $(SolutionDir)$(Configuration) &amp;&amp; copy target\$(Configuration)\deps\pep_engine_sequoia_backend.dll* $(SolutionDir)$(Configuration) &amp;&amp; POPD </Command>
-    </PreBuildEvent>
-    <PostBuildEvent>
-      <Command>xcopy "$(SolutionDir)sequoia\target\debug\sequoia_openpgp_ffi.dll" "$(TargetDir)" /Y</Command>
-      <Command>
-      </Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
