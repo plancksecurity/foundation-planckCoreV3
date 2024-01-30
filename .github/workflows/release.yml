@@ -103,6 +103,8 @@ jobs:
           rm sqlite.zip
       - name: Build
         run: |
+          mkdir ..\pEp
+          cp src\pEpEngine.h ..\pEp
           msbuild build-windows\pEpEngine.vcxproj /p:Configuration=Release
           dir
 #      - name: Compress
