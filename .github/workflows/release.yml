@@ -105,13 +105,9 @@ jobs:
         run: |
           gh release download export-prc2 -R plancksecurity/foundation-planckCoreSequoiaBackend -p windows-release.zip
           mkdir build-windows\botan
-          pushd build-windows\botan
-          unzip ..\..\windows-release.zip
-          popd
           mkdir target\Release\deps
-          pushd target\Release\deps
-          unzip ..\..\..\windows-release.zip
-          popd
+          Expand-Archive -Force windows-release.zip build-windows\botan
+          Expand-Archive -Force windows-release.zip target\Release\deps
           rm windows-release.zip
       - name: Build
         run: |
