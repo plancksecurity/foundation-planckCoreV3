@@ -78,7 +78,7 @@ jobs:
           name: ubuntu-${{ github.ref }}
           path: /home/runner/install
 
-  windows-asn-release:
+  windows-release:
     runs-on: windows-latest
     permissions:
       contents: write
@@ -105,8 +105,7 @@ jobs:
           rm sqlite.zip
       - name: Build
         run: |
-          cd build-windows\libpEpasn1
-          msbuild libpEpasn1.vcxproj /p:Configuration=Release
+          msbuild build-windows\pEpEngine.vcxproj /p:Configuration=Release
           dir
 #      - name: Compress
 #        run: Compress-Archive -Path build-windows\Release\* -Destination windows-asn-release.zip
