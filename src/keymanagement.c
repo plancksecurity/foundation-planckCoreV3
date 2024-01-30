@@ -1069,13 +1069,10 @@ PEP_STATUS _myself(PEP_SESSION session,
         identity->fpr = NULL;
     }
 
-    // this leads to crashes otherwise
-
-    if (EMPTYSTR(identity->user_id)) {
-        free(identity->user_id);
-        identity->user_id = strdup(PEP_OWN_USERID);
-        PEP_WEAK_ASSERT_ORELSE_RETURN(identity->user_id, PEP_OUT_OF_MEMORY);
-    }
+    // For own identities, it's always PEP_OWN_USERID
+    free(identity->user_id);
+    identity->user_id = strdup(PEP_OWN_USERID);
+    PEP_WEAK_ASSERT_ORELSE_RETURN(identity->user_id, PEP_OUT_OF_MEMORY);
 
     // Cache the input username, if there is one and it's not read_only; NULL
     // otherwise.  cached_input_username is never a pointer to an empty string.
@@ -1093,29 +1090,6 @@ PEP_STATUS _myself(PEP_SESSION session,
     char* default_own_id = NULL;
     status = get_default_own_userid(session, &default_own_id);
     
-    // Deal with non-default user_ids.
-    // FIXME: if non-default and read-only, reject totally?
-    if (default_own_id && strcmp(default_own_id, identity->user_id) != 0) {
-        if (read_only) {
-            free(identity->user_id);
-            identity->user_id = strdup(default_own_id);
-            PEP_WEAK_ASSERT_ORELSE_RETURN(identity->user_id, PEP_OUT_OF_MEMORY);
-        }
-        else {
-            status = set_userid_alias(session, default_own_id, identity->user_id);
-            // Do we want this to be fatal? For now, we'll do it...
-            if (status != PEP_STATUS_OK)
-                goto pEp_free;
-                
-            free(identity->user_id);
-            identity->user_id = strdup(default_own_id);
-            PEP_WEAK_ASSERT_ORELSE(identity->user_id, {
-                status = PEP_OUT_OF_MEMORY;
-                goto pEp_free;
-            });
-        }
-    }
-
     // NOTE: IF WE DON'T YET HAVE AN OWN_ID, WE IGNORE REFERENCES TO THIS ADDRESS IN THE
     // DB (WHICH MAY HAVE BEEN SET BEFORE MYSELF WAS CALLED BY RECEIVING AN EMAIL FROM
     // THIS ADDRESS), AS IT IS NOT AN OWN_IDENTITY AND HAS NO INFORMATION WE NEED OR WHAT TO
