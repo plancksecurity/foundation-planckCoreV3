@@ -18,13 +18,11 @@ jobs:
       - name: Create prefix
         run: mkdir -p /home/runner/install
       - name: Get libPlanckTransport
-        uses: actions/download-artifact@v4
-        with:
-          name: ubuntu-3dd9db63865a29c5514bd7261318a6ab2531d138
-          github-token: ${{ github.token }}
-          repository: plancksecurity/foundation-libPlanckTransport
-          run-id: 7612367923
-          path: /home/runner/install
+        run: |
+          cd /home/runner/install
+          gh release download cicd-pr2 -R plancksecurity/foundation-libPlanckTransport -p ubuntu-release.tar.bz2
+          tar xvfj ubuntu-release.tar.bz2
+          rm ubuntu-release.tar.bz2
       - name: Get libetpan
         run: |
           cd /home/runner/install

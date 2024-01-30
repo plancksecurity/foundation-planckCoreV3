@@ -248,12 +248,6 @@
     <Text Include="..\LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\libetpan\build-windows\libetpan\libetpan.vcxproj">
-      <Project>{ba4ded3c-e56f-4484-bfc3-9c13e461a1be}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\libPlanckTransport\build-windows\libpEpTransport.vcxproj">
-      <Project>{13f8fc08-53f8-4615-8445-3d713c0374e4}</Project>
-    </ProjectReference>
     <ProjectReference Include="libpEpasn1\libpEpasn1.vcxproj">
       <Project>{9a67164d-b8f8-4601-a24b-28afe774d41c}</Project>
     </ProjectReference>
