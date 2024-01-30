@@ -102,20 +102,19 @@ jobs:
           curl -o sqlite.zip https://sqlite.org/2024/sqlite-tools-win-x64-3450000.zip
           unzip sqlite.zip
           rm sqlite.zip
-      - name: Get planckCoreSequoiaBackend
-        run: |
-          gh release download export-prc2 -R plancksecurity/foundation-planckCoreSequoiaBackend -p windows-release.zip
-          mkdir build-windows\botan
-          mkdir target\Release\deps
-          Expand-Archive -Force windows-release.zip build-windows\botan
-          Expand-Archive -Force windows-release.zip target\Release\deps
-          rm windows-release.zip
+#      - name: Get planckCoreSequoiaBackend
+#        run: |
+#          gh release download export-prc2 -R plancksecurity/foundation-planckCoreSequoiaBackend -p windows-release.zip
+#          mkdir build-windows
+#          Expand-Archive -Force windows-release.zip build-windows\botan
+#          Expand-Archive -Force windows-release.zip target\Release\deps
+#          rm windows-release.zip
       - name: Build
         run: |
           mkdir ..\pEp
           cp src\pEpEngine.h ..\pEp
           msbuild build-windows\pEpEngine.vcxproj /p:Configuration=Release
-          dir
+          dir build-windows
 #      - name: Compress
 #        run: Compress-Archive -Path build-windows\Release\* -Destination windows-asn-release.zip
 #      - name: Release
