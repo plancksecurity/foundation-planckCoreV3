@@ -31,8 +31,8 @@ FAKE_TIME?=2021-07-07 23:05:30Z
 
 # Only run certain tests.
 # The empty value will run all tests.
-# Run Individual _tests_ with a value like 'SyncWhenReceiveEncrypted.*',
-# and individual _test cases_ with a value like 'SyncWhenReceiveEncrypted.update_alice_ident'.
+# Run an individual _test_ with a value like 'SyncWhenReceiveEncrypted.*',
+# and an individual _test case_ with a value like 'SyncWhenReceiveEncrypted.update_alice_ident'.
 TEST_FILTER?=
 
 LDFLAGS+= -L../asn.1 -L../src $(ETPAN_LIB) $(GTEST_LDFLAGS)
