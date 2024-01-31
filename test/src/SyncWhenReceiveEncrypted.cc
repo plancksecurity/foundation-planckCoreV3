@@ -263,6 +263,7 @@ message *SyncWhenReceiveEncrypted::slurp_hello_message_file_into_struct()
             to_identity->me = true;
         }
     }
+
     return msg;
 }
 
