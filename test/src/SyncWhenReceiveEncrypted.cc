@@ -184,7 +184,7 @@ PEP_STATUS SyncWhenReceiveEncrypted::PrivAlice()
         keyfile_priv_alice.c_str(),
         address_alice,
         fpr_alice.c_str(),
-        address_alice,
+        PEP_OWN_USERID,
         name_alice,
         &alice,
         true
@@ -223,7 +223,7 @@ PEP_STATUS SyncWhenReceiveEncrypted::PrivBob()
         keyfile_priv_bob.c_str(),
         address_bob,
         fpr_bob.c_str(),
-        address_bob,
+        PEP_OWN_USERID,
         name_bob,
         &bob,
         true
