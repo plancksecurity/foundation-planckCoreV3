@@ -25,6 +25,16 @@ endif
 
 #endif
 
+# Default faked time for running the tests, since many test keys expired
+# some time ago.
+FAKE_TIME?=2021-07-07 23:05:30Z
+
+# Only run certain tests.
+# The empty value will run all tests.
+# Run Individual _tests_ with a value like 'SyncWhenReceiveEncrypted.*',
+# and individual _test cases_ with a value like 'SyncWhenReceiveEncrypted.update_alice_ident'.
+TEST_FILTER?=
+
 LDFLAGS+= -L../asn.1 -L../src $(ETPAN_LIB) $(GTEST_LDFLAGS)
 
 TARGET:=EngineTests
@@ -136,10 +146,10 @@ test: all prepare-test-data
 	$(RM) -rf ./pEp_test_home/*
 	$(TEST_CMD_PFX) \
             PEP_NOABORT=noabort PEP_LOG=yes PEP_LOG_ASYNC=yes GTEST_COLOR=no \
-            faketime '2021-07-07 23:05:30Z' \
+            faketime "$(FAKE_TIME)" \
             $(TEST_DEBUGGER) \
             python3 $(GTEST_PL) \
-		--gtest_color=no ./$(TARGET) --gtest_filter=$(TEST_FILTER)
+		--gtest_color=no ./$(TARGET) --gtest_filter="$(TEST_FILTER)"
 
 prepare-test-data:
 	cp \
