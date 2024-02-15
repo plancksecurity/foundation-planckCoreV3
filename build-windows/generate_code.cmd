@@ -14,7 +14,7 @@ SET YML2PROC="%yml2_directory%\yml2proc"
 
 :: Create the system.db
 PUSHD %engine_directory%\db
-CALL make_systemdb
+CALL make_systemdb %1
 IF NOT EXIST "%ProgramData%\pEp" MKDIR "%ProgramData%\pEp"
 DEL /F /Q "%ProgramData%\pEp\system.db"
 MOVE system.db "%ProgramData%\pEp\system.db"
