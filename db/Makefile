@@ -22,7 +22,7 @@ install: system.db
 	# shell variable occurrences, to be expanded in their turn.  This
 	# serves to leave more freedom to the deployment engineer.
 	mkdir -p "$(DESTDIR)$(PER_MACHINE_DIRECTORY)"
-	cp system.db "$(DESTDIR)$(PER_MACHINE_DIRECTORY)"
+	install system.db "$(DESTDIR)$(PER_MACHINE_DIRECTORY)"
 
 .PHONY: clean
 clean:
