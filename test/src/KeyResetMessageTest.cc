@@ -53,7 +53,7 @@ class KeyResetMessageTest : public ::testing::Test {
 
         const char* alice_new_fpr = "3B644B63B873F04BA918AB6C3D188D02163D18FC";
 
-        const string alice_user_id = PEP_OWN_USERID;
+        const string alice_user_id = "AliceId";
         const string bob_user_id = "BobId";
         const string carol_user_id = "carolId";
         const string dave_user_id = "DaveId";
@@ -131,7 +131,7 @@ class KeyResetMessageTest : public ::testing::Test {
             status = set_up_ident_from_scratch(session,
                         "test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc",
                         "pep.test.alice@pep-project.org", alice_fpr,
-                        alice_user_id.c_str(), "Alice in Wonderland", NULL, true
+                        PEP_OWN_USERID, "Alice in Wonderland", NULL, true
                     );
             ASSERT_EQ(status, PEP_STATUS_OK);
 
@@ -602,7 +602,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_null_ident) {
 
 TEST_F(KeyResetMessageTest, check_reset_grouped_own) {
     send_setup(); // lazy
-    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), NULL);
+    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, NULL);
     PEP_STATUS status = myself(session, alice);
 
     ASSERT_OK;
@@ -667,7 +667,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_recv) {
     // CORE-257 test mails for this test case cannot be re-generated
     GTEST_SKIP() << "Skipping single test";
     send_setup(); // lazy
-    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), NULL);
+    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, NULL);
     PEP_STATUS status = myself(session, alice);
 
     ASSERT_OK;
@@ -1293,17 +1293,17 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_grouped_recv) {
 
     pEp_identity* alex_id = new_identity("pep.test.alexander@darthmama.org",
                                         NULL,
-                                        "AlexID",
+                                        PEP_OWN_USERID,
                                         "Alexander Braithwaite");
 
     pEp_identity* alex_id2 = new_identity("pep.test.alexander6@darthmama.org",
                                           NULL,
-                                          "AlexID",
+                                          PEP_OWN_USERID,
                                           "Alexander Braithwaite");
 
     pEp_identity* alex_id3 = new_identity("pep.test.alexander6a@darthmama.org",
                                           NULL,
-                                          "AlexID",
+                                          PEP_OWN_USERID,
                                           "Alexander Braithwaite");
 
 
@@ -1345,7 +1345,7 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_grouped_recv) {
     ASSERT_STREQ(pubkey3, alex_id3->fpr);
 
     char* old_main_key = NULL;
-    status = get_main_user_fpr(session, "AlexID", &old_main_key);
+    status = get_main_user_fpr(session, PEP_OWN_USERID, &old_main_key);
     ASSERT_NOTNULL(old_main_key);
 
 
@@ -1447,9 +1447,8 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_grouped_recv_with_sticky) {
     ASSERT_STREQ(pubkey3, alex_id3->fpr);
 
     char* old_main_key = NULL;
-    status = get_main_user_fpr(session, "AlexID", &old_main_key);
+    status = get_main_user_fpr(session, PEP_OWN_USERID, &old_main_key);
     ASSERT_NE(old_main_key, nullptr);
-
 
     const int num_msgs = 1;
 
@@ -1967,7 +1966,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_other_priv_no_fpr) {
 
 TEST_F(KeyResetMessageTest, check_reset_ident_own_priv_fpr) {
     send_setup(); // lazy
-    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), NULL);
+    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, NULL);
     PEP_STATUS status = myself(session, alice);
 
     ASSERT_OK;
@@ -1986,7 +1985,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_own_priv_fpr) {
 
 TEST_F(KeyResetMessageTest, check_reset_ident_own_priv_no_fpr) {
     send_setup(); // lazy
-    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), NULL);
+    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, NULL);
     PEP_STATUS status = myself(session, alice);
 
     ASSERT_OK;

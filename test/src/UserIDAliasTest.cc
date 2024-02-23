@@ -133,18 +133,4 @@ TEST_F(UserIDAliasTest, check_userid_aliases) {
     ASSERT_OK;
     output_stream << "After myself, user_id is " << alice->user_id << endl;
     ASSERT_STREQ(alice->user_id, own_id);
-
-    char* default_id = NULL;
-    status = get_userid_alias_default(session, alias1, &default_id);
-    ASSERT_OK;
-    output_stream << "Default user_id for " << alias1 << " is " << default_id << endl;
-    ASSERT_STREQ(default_id, own_id);
-
-    free(default_id);
-    default_id = NULL;
-    status = get_userid_alias_default(session, alias2, &default_id);
-    ASSERT_OK;
-    output_stream << "Default user_id for " << alias2 << " is " << default_id << endl;
-    ASSERT_STREQ(default_id, own_id);
-
 }

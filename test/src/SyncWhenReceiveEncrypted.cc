@@ -104,6 +104,8 @@ class SyncWhenReceiveEncrypted : public ::testing::Test
     PEP_STATUS PrivBob();
     PEP_STATUS PubBob();
 
+    message *slurp_hello_message_file_into_struct();
+
   private:
     const char *test_suite_name;
     const char *test_name;
@@ -184,7 +186,7 @@ PEP_STATUS SyncWhenReceiveEncrypted::PrivAlice()
         keyfile_priv_alice.c_str(),
         address_alice,
         fpr_alice.c_str(),
-        address_alice,
+        PEP_OWN_USERID,
         name_alice,
         &alice,
         true
@@ -223,7 +225,7 @@ PEP_STATUS SyncWhenReceiveEncrypted::PrivBob()
         keyfile_priv_bob.c_str(),
         address_bob,
         fpr_bob.c_str(),
-        address_bob,
+        PEP_OWN_USERID,
         name_bob,
         &bob,
         true
@@ -245,6 +247,24 @@ PEP_STATUS SyncWhenReceiveEncrypted::PubBob()
         false
     );
     return status;
+}
+
+message *SyncWhenReceiveEncrypted::slurp_hello_message_file_into_struct()
+{
+    message *msg = slurp_message_file_into_struct(mailfile_hello_message.c_str());
+
+    // An app is required to call `update_identity`/`myself` on _all_ identities
+    // in a `message` struct before providing it to most core functions.
+    // Try to uphold this in the test environment.
+    auto to_identity = msg->to->ident;
+    if (to_identity) {
+        std::string address{to_identity->address};
+        if (address == address_bob) {
+            to_identity->me = true;
+        }
+    }
+
+    return msg;
 }
 
 } // namespace
@@ -421,7 +441,7 @@ TEST_F(SyncWhenReceiveEncrypted, decrypt_test_mail)
     ASSERT_STRCASEEQ(bob->fpr, fpr_bob.c_str());
     ASSERT_TRUE(bob->me);
 
-    message* msg = slurp_message_file_into_struct(mailfile_hello_message.c_str());
+    message* msg = slurp_hello_message_file_into_struct();
     message* dmsg = NULL;
     stringlist_t* keylist_used = nullptr;
     PEP_decrypt_flags_t flags = 0;
@@ -458,7 +478,7 @@ TEST_F(SyncWhenReceiveEncrypted, decrypt_test_mail_after_reset)
     UpdateParams();
 #endif
 
-    message* msg = slurp_message_file_into_struct(mailfile_hello_message.c_str());
+    message* msg = slurp_hello_message_file_into_struct();
     message* dmsg = NULL;
     stringlist_t* keylist_used = nullptr;
     PEP_decrypt_flags_t flags = 0;

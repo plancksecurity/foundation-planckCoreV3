@@ -92,7 +92,8 @@ DYNAMIC_API PEP_STATUS update_identity(
  *  
  *  @param[in]     session     session to use
  *  @param[in,out] identity    identity of local user
- *                             both .address and .user_id must be set.
+ *                             `.address` must be set.
+ *                             `.user_id` will be _overwritten_ with a copy of `PEP_OWN_USERID`.
  *                             The .fpr field is output-only, and any value set at
  *                             input is ignored; it is set by key retrieval.
  *                             If .username is set, it will be used to set or patch
@@ -105,9 +106,6 @@ DYNAMIC_API PEP_STATUS update_identity(
  *  
  *  @warning If an fpr was found and is not a valid key, the reason for failure
  *           is immediately returned in the status and, possibly, identity->comm_type
- *  @warning If a default own user_id exists in the database, an alias will 
- *           be created for the default for the input user_id. The ENGINE'S default
- *           user_id is always returned in the .user_id field
  *  @warning myself() NEVER elects keys from the keyring; it will only 
  *           retrieve the key set as default key for the given identity in the database,
  *           which may have been set up by myself(), or which were imported
