@@ -34,7 +34,7 @@ CD ..\..\PlanckCoreV3\codegen
 IF NOT EXIST generated MKDIR generated
 
 ECHO %PY% %YML2PROC% -E utf-8 -y gen_actions.ysl2 sync.fsm
-ECHO define actfile = "./sync.act"; | PY %YML2PROC% - gen_actions.ysl2 | PY %YML2PROC% -X - sync.fsm -o sync.act.gen
+ECHO define actfile = "./sync.act"; | %PY% %YML2PROC% - gen_actions.ysl2 | %PY% %YML2PROC% -X - sync.fsm -o sync.act.gen
 IF %ERRORLEVEL% NEQ 0 GOTO end
 
 ECHO %PY% %YML2PROC% -E utf-8 -y gen_codec.ysl2 distribution.fsm
