@@ -973,7 +973,6 @@ static inline bool is_me(PEP_SESSION session, const pEp_identity* test_ident) {
         retval = (
             test_ident->me
             || ( def_id && test_ident->user_id && strcmp(def_id, test_ident->user_id) == 0 )
-            || ( def_id && test_ident->address && strcmp(def_id, test_ident->address) == 0 )
         );
         free(def_id);
     }
