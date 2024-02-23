@@ -38,7 +38,8 @@ ifeq ($(BUILD_FOR),OS/390)
     OPENPGP=NETPGP
     LDLIBS+= -lzz
 else ifeq ($(BUILD_FOR),Darwin)
-    LDLIBS+= -lz -liconv
+    LDLIBS+= /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/libiconv.tbd
+    LDLIBS+= /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/libz.tbd
 else ifeq ($(BUILD_FOR),Linux)
     CPPFLAGS+= -D_GNU_SOURCE
     LDLIBS+= -ldl -luuid
