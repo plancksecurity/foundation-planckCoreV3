@@ -327,7 +327,7 @@ DYNAMIC_API bool PEP_STATUS_is_error(PEP_STATUS status);
  *  
  *  @retval PEP_STATUS_OK or any other value on error
  *  
- *  @warning the ownership of msg goes to the callee
+ *  @warning the ownership of msg stays in the core
  *  
  */
 
