@@ -1069,6 +1069,9 @@ static PEP_STATUS send_key_reset_to_active_group_members(PEP_SESSION session,
             // insert into queue
             status = send_cb(enc_msg);
 
+            free(enc_msg);
+            enc_msg = NULL;
+
             if (status != PEP_STATUS_OK) { // FIXME: Do we still own enc_msg on failure?
                 free_identity_list(reset_ident_list);
                 goto pEp_free;
@@ -1188,8 +1191,10 @@ PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
         // insert into queue
         status = send_cb(reset_msg);
 
+        free(reset_msg);
+        reset_msg = NULL;
+
         if (status != PEP_STATUS_OK) {
-            free(reset_msg);
             goto pEp_free;            
         }
             
@@ -1617,6 +1622,9 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
             // insert into queue
             status = send_cb(enc_msg);
 
+            free(enc_msg);
+            enc_msg = NULL;
+
             if (status != PEP_STATUS_OK)
                 goto pEp_error;
         }
@@ -1720,7 +1728,6 @@ pEp_error:
     config_passphrase(session, cached_passphrase);
     free_stringlist(test_key);
     free_message(outmsg);
-    free_message(enc_msg);
     free(cached_passphrase);
     return status;
 }

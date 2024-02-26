@@ -178,6 +178,9 @@ static PEP_STATUS _create_and_send_managed_group_message(PEP_SESSION session,
     // insert into queue
     status = session->messageToSend(enc_msg);
 
+    free(enc_msg);
+    enc_msg = NULL;
+
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 

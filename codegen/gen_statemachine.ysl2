@@ -973,6 +973,7 @@ tstylesheet {
                     }
 
                     status = session->messageToSend(m);
+                    free(m);
                     m = NULL;
                 }
             ||

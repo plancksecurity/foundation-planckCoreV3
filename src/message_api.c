@@ -6349,6 +6349,8 @@ static PEP_STATUS _decrypt_message(
                                                     status = session->messageToSend(enc_group_reset_msg);
                                                 else
                                                     status = PEP_SYNC_NO_MESSAGE_SEND_CALLBACK;
+
+                                                free(enc_group_reset_msg);
                                             }
                                             continue;
                                         }
@@ -6383,6 +6385,8 @@ static PEP_STATUS _decrypt_message(
                                         else
                                             status = PEP_SYNC_NO_MESSAGE_SEND_CALLBACK;
 
+                                        free_message(reset_msg);
+                                        reset_msg = NULL;
 
                                         if (status == PEP_STATUS_OK) {
                                             // Put into notified DB
@@ -6392,8 +6396,6 @@ static PEP_STATUS _decrypt_message(
                                         }
                                         else {
                                             // According to Volker, this would only be a fatal error, so...
-                                            free_message(reset_msg); // ??
-                                            reset_msg = NULL; // ??
                                             goto pEp_error;
                                         }
                                     }
@@ -6568,7 +6570,6 @@ enomem:
 pEp_error:
     free(ptext);
     free_message(msg);
-    free_message(reset_msg);
     free_stringlist(_keylist);
     free_stringpair_list(revoke_replace_pairs);
     free(imported_sender_key_fpr);
