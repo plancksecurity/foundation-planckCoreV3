@@ -50,6 +50,7 @@ namespace {
 
             ~GroupEncryptionTest() override {
                 // You can do clean-up work that doesn't throw exceptions here.
+                clear_message_queue();
             }
 
             // yeah yeah, I played a lot of ESO over break.
@@ -116,7 +117,7 @@ namespace {
 
                 // Engine is up. Keep on truckin'
                 session->notifyHandshake = &GECT_notify_handshake_callback;
-                m_queue.clear();
+                clear_message_queue();
                 pass_list.clear();
             }
 
@@ -144,6 +145,12 @@ namespace {
                 return NULL;
             }
 
+            void clear_message_queue() {
+                for (auto m : m_queue) {
+                    free_message(m);
+                }
+                m_queue.clear();
+            }
 
         private:
             const char* test_suite_name;
@@ -156,19 +163,20 @@ namespace {
 }  // namespace
 
 PEP_STATUS GECT_message_send_callback(message* msg) {
-    ((GroupEncryptionTest*)GECT_fake_this)->m_queue.push_back(msg);
+    message *copy = message_dup(msg);
+    static_cast<GroupEncryptionTest *>(GECT_fake_this)->m_queue.push_back(copy);
     return PEP_STATUS_OK;
 }
 
 PEP_STATUS GECT_ensure_passphrase_callback(PEP_SESSION session, const char* fpr) {
-    return config_valid_passphrase(session, fpr, ((GroupEncryptionTest*)GECT_fake_this)->pass_list);
+    return config_valid_passphrase(session, fpr, static_cast<GroupEncryptionTest *>(GECT_fake_this)->pass_list);
 }
 
 PEP_STATUS GECT_notify_handshake_callback(pEp_identity* me, pEp_identity* partner, sync_handshake_signal signal) {
     if (me && partner && signal == SYNC_NOTIFY_GROUP_INVITATION) {
-        ((GroupEncryptionTest*)GECT_fake_this)->signal_check_ident_me = me;
-        ((GroupEncryptionTest*)GECT_fake_this)->signal_check_ident_partner = partner;
-        ((GroupEncryptionTest*)GECT_fake_this)->signal = signal;
+        static_cast<GroupEncryptionTest *>(GECT_fake_this)->signal_check_ident_me = me;
+        static_cast<GroupEncryptionTest *>(GECT_fake_this)->signal_check_ident_partner = partner;
+        static_cast<GroupEncryptionTest *>(GECT_fake_this)->signal = signal;
     }
     return PEP_STATUS_OK;
 }
@@ -801,7 +809,7 @@ TEST_F(GroupEncryptionTest, check_group_join) {
     ASSERT_TRUE(group->members->member->joined);
     ASSERT_EQ(group->members->next, nullptr);
 
-    m_queue.clear();
+    clear_message_queue();
 }
 
 TEST_F(GroupEncryptionTest, check_group_join_no_key) {
@@ -840,7 +848,7 @@ TEST_F(GroupEncryptionTest, check_group_join_no_key) {
     ASSERT_FALSE(group->members->member->joined);
     ASSERT_EQ(group->members->next, nullptr);
 
-    m_queue.clear();
+    clear_message_queue();
 }
 
 TEST_F(GroupEncryptionTest, check_protocol_group_create) {
@@ -926,7 +934,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create) {
 
 
     // MESSAGE LIST NOW INVALID.
-    m_queue.clear();
+    clear_message_queue();
 
     // FIXME: Check all of the DB stuff, etc
     // Ok, now let's see what's inside the box
@@ -1387,7 +1395,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_extant_key) {
     }
 
     // MESSAGE LIST NOW INVALID.
-    m_queue.clear();
+    clear_message_queue();
 
     // FIXME: Check all of the DB stuff, etc
     // Ok, now let's see what's inside the box
@@ -1532,7 +1540,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_join_member_1) {
     free(outdata);
 #endif
 
-    m_queue.clear();
+    clear_message_queue();
 
     status = retrieve_own_membership_info_for_group_and_identity(session, group, me);
     ASSERT_OK;
@@ -1595,7 +1603,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_join_member_2) {
     free(outdata);
 #endif
 
-    m_queue.clear();
+    clear_message_queue();
 }
 
 TEST_F(GroupEncryptionTest, check_protocol_group_join_member_3) {
@@ -1654,7 +1662,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_join_member_3) {
     free(outdata);
 #endif
 
-    m_queue.clear();
+    clear_message_queue();
 }
 
 TEST_F(GroupEncryptionTest, check_protocol_group_join_member_4) {
@@ -1713,7 +1721,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_join_member_4) {
     free(outdata);
 #endif
 
-    m_queue.clear();
+    clear_message_queue();
 }
 
 
@@ -1751,7 +1759,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_join_receive) {
     ASSERT_OK;
 
     // MESSAGE LIST NOW INVALID.
-    m_queue.clear();
+    clear_message_queue();
 
     // Make sure they aren't an active part of the group.
     free_group(group);
@@ -1867,7 +1875,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_send) {
     // Ok, so we've actually already got the messages for this written out elsewhere - this was all DB setup.
     // Let's move on to importing the acceptances - we'll decide only three are going to accept - and then
     // dissolving the group.
-    m_queue.clear();
+    clear_message_queue();
 
     // Get mails - out of order, just because
     // Member 4
@@ -1969,7 +1977,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_send) {
     }
 
     // Ok, group has all the members. Now we can dissolve the group.
-    m_queue.clear(); // Just in case
+    clear_message_queue(); // Just in case
 
     status = group_dissolve(session, group_ident, me);
     ASSERT_OK;
@@ -2040,7 +2048,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_send) {
     }
 
     // Ok, group has all the members. Now we can dissolve the group.
-    m_queue.clear(); // Just in case
+    clear_message_queue(); // Just in case
 
     free_group(group);
 }
@@ -2094,7 +2102,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_receive) {
     ASSERT_TRUE(group->members->member->joined);
 
     ASSERT_EQ(m_queue.size(), 1);
-    m_queue.clear();
+    clear_message_queue();
 
     // Now we "receive" a dissolution message from the manager. Make sure it works.
     msg_str = slurp(string("test_mails/group_dissolve_") + member_2_prefix + ".eml");
@@ -2168,7 +2176,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_join_member_unknown) {
     // Ok, so we've actually already got the messages for this written out elsewhere - this was all DB setup.
     // Let's move on to importing the acceptances - we'll decide only three are going to accept - and then
     // dissolving the group.
-    m_queue.clear();
+    clear_message_queue();
 
     // Ok, let's get an accept from someone we didn't invite
     string msg_str = slurp(string("test_mails/group_join_") + member_4_prefix + ".eml");
@@ -2421,7 +2429,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_different_own_identity_m
     }
 
     // MESSAGE LIST NOW INVALID.
-    m_queue.clear();
+    clear_message_queue();
 
     ASSERT_EQ(m_queue.size(), 0);
     identity_list* g2_new_member_idents = new_identity_list(member_2);
@@ -2458,7 +2466,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_create_different_own_identity_m
     }
 
     // MESSAGE LIST NOW INVALID.
-    m_queue.clear();
+    clear_message_queue();
 
     // Ok, now let's see what's inside the box
     pEp_group* group2_info = NULL;
@@ -2574,7 +2582,7 @@ TEST_F(GroupEncryptionTest, not_a_test_message_gen_for_group_dissolve_not_manage
     status = set_membership_status(session, group1_ident, member_2, true);
     ASSERT_OK;
 
-    m_queue.clear();
+    clear_message_queue();
     status = group_dissolve(session, group1_ident, me2);
     ASSERT_EQ(m_queue.size(), 1);
 
@@ -2647,7 +2655,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_dissolve_not_manager) {
     status = group_join(session, group2_ident, me);
     ASSERT_OK;
 
-    m_queue.clear();
+    clear_message_queue();
 
     // Now to receive a group dissolve for a group from someone who is not the manager.
     msg_str = slurp(string("test_mails/group_dissolve_not_manager_") + member_2_prefix + ".eml");
@@ -2751,7 +2759,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_no_recents) {
     ASSERT_EQ(group_ident->flags, PEP_idf_group_ident);
 
     // MESSAGE LIST NOW INVALID.
-    m_queue.clear();
+    clear_message_queue();
 
     // Let's manually set those guys to joined
     status = set_membership_status(session, group_ident, member_1, true);
@@ -2876,7 +2884,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_no_recents_two_active
     ASSERT_EQ(group_ident->flags, PEP_idf_group_ident);
 
     // MESSAGE LIST NOW INVALID.
-    m_queue.clear();
+    clear_message_queue();
 
     // Let's manually set those guys to joined
     status = set_membership_status(session, group_ident, member_1, true);
@@ -3042,7 +3050,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_two_recents) {
     ASSERT_EQ(group_ident->flags, PEP_idf_group_ident);
 
     // MESSAGE LIST NOW INVALID.
-    m_queue.clear();
+    clear_message_queue();
 
     // Let's manually set those guys to joined
     status = set_membership_status(session, group_ident, member_1, true);
@@ -3216,7 +3224,7 @@ TEST_F(GroupEncryptionTest, check_group_key_reset_receive_member_2) {
     status = group_join(session, group_ident, me);
     ASSERT_OK;
 
-    m_queue.clear();
+    clear_message_queue();
 
     string resetmsg = slurp(string("test_mails/group_key_reset_mixed_output_to_member_private_") + member_2_address + ".eml");
     free_message(enc_msg);
@@ -3392,7 +3400,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_two_recents_two_missi
     ASSERT_EQ(group_ident->flags, PEP_idf_group_ident);
 
     // MESSAGE LIST NOW INVALID.
-    m_queue.clear();
+    clear_message_queue();
 
     // Let's manually set some of those guys to joined
     status = set_membership_status(session, group_ident, member_2, true);
@@ -3580,7 +3588,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_one_recent_all_missin
     ASSERT_EQ(group_ident->flags, PEP_idf_group_ident);
 
     // MESSAGE LIST NOW INVALID.
-    m_queue.clear();
+    clear_message_queue();
 
     // Let's mail a couple of people
     pEp_identity* recip = new_identity(manager_2_address, manager_2_fpr, "NOTTHEMANAGER", manager_2_name);
@@ -3725,7 +3733,7 @@ TEST_F(GroupEncryptionTest, check_protocol_group_key_reset_no_recents_all_missin
     ASSERT_EQ(group_ident->flags, PEP_idf_group_ident);
 
     // MESSAGE LIST NOW INVALID.
-    m_queue.clear();
+    clear_message_queue();
 
     // Ok, now reset the group key
     status = key_reset(session, group_1_fpr, group_ident);
@@ -3809,7 +3817,7 @@ TEST_F(GroupEncryptionTest, check_protocol_remove_member_from_group_two_recents)
     ASSERT_EQ(group_ident->flags, PEP_idf_group_ident);
 
     // MESSAGE LIST NOW INVALID.
-    m_queue.clear();
+    clear_message_queue();
 
     // Let's manually set those guys to joined
     status = set_membership_status(session, group_ident, member_1, true);
@@ -4019,7 +4027,7 @@ TEST_F(GroupEncryptionTest, check_protocol_remove_member_not_joined_from_group_t
     ASSERT_EQ(group_ident->flags, PEP_idf_group_ident);
 
     // MESSAGE LIST NOW INVALID.
-    m_queue.clear();
+    clear_message_queue();
 
     // Let's manually set those guys to joined
     status = set_membership_status(session, group_ident, member_1, true);
@@ -4226,7 +4234,7 @@ TEST_F(GroupEncryptionTest, check_protocol_remove_unknown_member_from_group_two_
     ASSERT_EQ(group_ident->flags, PEP_idf_group_ident);
 
     // MESSAGE LIST NOW INVALID.
-    m_queue.clear();
+    clear_message_queue();
 
     // Let's manually set those guys to joined
     status = set_membership_status(session, group_ident, member_1, true);
@@ -4303,5 +4311,4 @@ TEST_F(GroupEncryptionTest, check_protocol_remove_unknown_member_from_group_two_
     ASSERT_STREQ(group_ident->fpr, group_1_fpr);
 
     ASSERT_EQ(m_queue.size(), 0);
-
 }
