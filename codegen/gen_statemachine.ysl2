@@ -7,6 +7,10 @@
 
 // Written by Volker Birk
 
+// Changelog
+//
+// 26.02.2024/DZ - Free after messageToSend()
+
 include yslt.yml2
 
 tstylesheet {

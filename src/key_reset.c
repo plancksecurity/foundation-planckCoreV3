@@ -11,21 +11,20 @@
    parameter to our functions, even when not needed, just for this.
    --positron, 2022-10 */
 
-   /*
-    Changelog:
-
-    * 2023-07 _key_reset() function added.
-    * 2023-07 key_reset() function modified to call _key_reset().
-    * 2023-07 key_reset_ignoring_device_group() function added.
-    * 2023-07 key_reset_all_own_keys_ignoring_device_group() function added.
-    * 2023-08-23/DZ _key_reset will simply leave the device group if it's an own key.
-    * 2023-08-30/DZ Don't reset the signing identity.
-    * 2023-09-20/DZ _key_reset() will not remove a private key from the keyring
-    *  in the context of resetting a partner's key.
-    * 2023-11-16/DZ receive_key_reset accepts group key resets from the manager.
-    * 2023-11-16/DZ send_key_reset_to_active_group_members encodes the key
-    *  reset message "from existing group key to the new one" correctly.
-    */
+// Changelog:
+//
+// 2023-07 _key_reset() function added.
+// 2023-07 key_reset() function modified to call _key_reset().
+// 2023-07 key_reset_ignoring_device_group() function added.
+// 2023-07 key_reset_all_own_keys_ignoring_device_group() function added.
+// 2023-08-23/DZ _key_reset will simply leave the device group if it's an own key.
+// 2023-08-30/DZ Don't reset the signing identity.
+// 2023-09-20/DZ _key_reset() will not remove a private key from the keyring
+//  in the context of resetting a partner's key.
+// 2023-11-16/DZ receive_key_reset accepts group key resets from the manager.
+// 2023-11-16/DZ send_key_reset_to_active_group_members encodes the key
+//  reset message "from existing group key to the new one" correctly.
+// 2024-02-26/DZ - Free after messageToSend()
 
 #include "pEp_internal.h"
 #include "dynamic_api.h"

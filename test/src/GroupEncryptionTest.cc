@@ -15,6 +15,10 @@
 
 #include <gtest/gtest.h>
 
+// Changelog
+//
+// 26.02.2024/DZ - Adapt tests to messageToSend not transfering ownership
+
 #define GECT_WRITEOUT 0
 
 PEP_STATUS GECT_message_send_callback(message* msg);

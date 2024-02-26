@@ -4,8 +4,11 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
- // 07.08.2023/IP - added method import_extrakey_with_fpr_return
+// Changelog
+//
+// 07.08.2023/IP - added method import_extrakey_with_fpr_return
 // 18.10.2023/TC - added identities out param, additionally made the param names more descriptive, removed import_key_strict as it isn't used anymore.
+// 26.02.2024/DZ - Document that messageToSend does not transfer ownership
 
 #ifndef PEP_ENGINE_H
 #define PEP_ENGINE_H
