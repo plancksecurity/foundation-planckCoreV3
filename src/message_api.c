@@ -5349,6 +5349,10 @@ static PEP_STATUS _decrypt_message(
     *keylist = NULL;
     *rating = PEP_rating_undefined;
 
+    // If the message was signed (which implies encryption),
+    // this is the expected signing key of the sender, as per our rules (TOFU etc.)
+    char *expected_signing_fingerprint = NULL;
+
     /*** End init ***/
 
     /*** Begin caching and setup information from non-me from identities ***/
@@ -5384,6 +5388,12 @@ static PEP_STATUS _decrypt_message(
             if (status == PEP_STATUS_OK) {
                 // Now set user as PEP (may also create an identity if none existed yet)
                 status = set_as_pEp_user(session, tmp_from);
+                expected_signing_fingerprint = strdup(src->from->fpr);
+            }
+        } else {
+            status = update_identity(session, src->from);
+            if (status == PEP_STATUS_OK) {
+                expected_signing_fingerprint = strdup(src->from->fpr);
             }
         }
         // Before we go any further, we need to check the rating of the "channel" (described
@@ -6573,6 +6583,7 @@ pEp_error:
     free_stringpair_list(revoke_replace_pairs);
     free(imported_sender_key_fpr);
     free(input_from_username);
+    free(expected_signing_fingerprint);
 
     return status;
 }
