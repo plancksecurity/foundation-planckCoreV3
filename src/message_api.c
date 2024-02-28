@@ -5381,6 +5381,10 @@ static PEP_STATUS _decrypt_message(
             free_identity(sender);
         }
 
+        if (expected_signing_fingerprint) {
+            printf("*** expected %s %s\n", src->from->address, expected_signing_fingerprint);
+        }
+
         if (is_pEp_msg) {
             pEp_identity* tmp_from = src->from;
     
