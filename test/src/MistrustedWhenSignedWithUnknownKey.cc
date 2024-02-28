@@ -127,7 +127,7 @@ PEP_STATUS MistrustedWhenSignedWithUnknownKey::PrivAlice()
     PEP_STATUS status;
     status = read_file_and_import_key(
         session,
-        keyfile_pub_alice.c_str()
+        keyfile_priv_alice.c_str()
     );
 
     if (status != PEP_KEY_IMPORTED) {
