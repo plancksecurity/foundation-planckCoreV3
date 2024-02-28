@@ -7,7 +7,10 @@
 #ifndef UNICODE
 #define UNICODE
 #endif
-#define _WIN32_WINNT 0x0600
+
+#ifndef _WIN32_WINNT 
+#define _WIN32_WINNT 0x0A00
+#endif
 
 #include <windows.h>
 #define _CRT_RAND_S

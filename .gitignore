@@ -33,6 +33,7 @@ build-android/pEpEngine-android-1
 build-android/include/*
 build-linux/*
 build-windows/libpEpasn1/libpEpasn1.vcxproj.user
+build-windows/libpEpasn1/.vs
 *.dSYM*
 *_test
 msg4.asc
