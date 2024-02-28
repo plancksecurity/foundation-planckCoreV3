@@ -5368,21 +5368,21 @@ static PEP_STATUS _decrypt_message(
         if (!EMPTYSTR(src->from->username))
             input_from_username = strdup(src->from->username); // Get it before update_identity changes it
 
-        if (src->from->fpr) {
-            expected_signing_fingerprint = strdup(src->from->fpr);
-        } else {
+        {
             pEp_identity *sender = identity_dup(src->from);
-            PEP_STATUS tmp_status = update_identity(session, sender);
-            if (tmp_status == PEP_STATUS_OK) {
+            if (sender) {
                 if (sender->fpr) {
-                    expected_signing_fingerprint = strdup(sender->fpr);
+                    free(sender->fpr);
+                    sender->fpr = NULL;
                 }
+                PEP_STATUS tmp_status = update_identity(session, sender);
+                if (tmp_status == PEP_STATUS_OK) {
+                    if (sender->fpr) {
+                        expected_signing_fingerprint = strdup(sender->fpr);
+                    }
+                }
+                free_identity(sender);
             }
-            free_identity(sender);
-        }
-
-        if (expected_signing_fingerprint) {
-            printf("*** expected %s %s\n", src->from->address, expected_signing_fingerprint);
         }
 
         if (is_pEp_msg) {
@@ -6580,7 +6580,6 @@ static PEP_STATUS _decrypt_message(
         char *signer_fpr = (*keylist)->value;
         if (signer_fpr) {
             int cmp_signer = strcmp(expected_signing_fingerprint, signer_fpr);
-            printf("is expected signer: %d\n", cmp_signer);
             if (cmp_signer && *rating >= PEP_rating_reliable) {
                 *rating = PEP_rating_mistrust;
             }
