@@ -5377,8 +5377,8 @@ static PEP_STATUS _decrypt_message(
                 if (sender->fpr) {
                     expected_signing_fingerprint = strdup(sender->fpr);
                 }
-                free_identity(sender);
             }
+            free_identity(sender);
         }
 
         if (is_pEp_msg) {
