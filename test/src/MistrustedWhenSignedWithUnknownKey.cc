@@ -30,28 +30,28 @@ class MistrustedWhenSignedWithUnknownKey : public ::testing::Test
     PEP_SESSION session;
 
   protected:
-    string keyfile_priv_bob1 = "test_keys/priv/mwswuk_bob1.asc";
-    string keyfile_pub_bob1 = "test_keys/pub/mwswuk_bob1.asc";
-    string keyfile_priv_bob2 = "test_keys/priv/mwswuk_bob2.asc";
-    string keyfile_pub_bob2 = "test_keys/pub/mwswuk_bob2.asc";
+    const string keyfile_priv_bob1 = "test_keys/priv/mwswuk_bob1.asc";
+    const string keyfile_pub_bob1 = "test_keys/pub/mwswuk_bob1.asc";
+    const string keyfile_priv_bob2 = "test_keys/priv/mwswuk_bob2.asc";
+    const string keyfile_pub_bob2 = "test_keys/pub/mwswuk_bob2.asc";
 
-    string keyfile_priv_alice = "test_keys/priv/mwswuk_alice.asc";
-    string keyfile_pub_alice = "test_keys/pub/mwswuk_alice.asc";
+    const string keyfile_priv_alice = "test_keys/priv/mwswuk_alice.asc";
+    const string keyfile_pub_alice = "test_keys/pub/mwswuk_alice.asc";
 
-    string mailfile_hello_message = "test_mails/mwswuk_hello.eml";
-    string mailfile_encrypted_message_1 = "test_mails/mwswuk_encrypted_1.eml";
-    string mailfile_encrypted_message_2 = "test_mails/mwswuk_encrypted_2.eml";
+    const string mailfile_hello_message = "test_mails/mwswuk_hello.eml";
+    const string mailfile_encrypted_message_1 = "test_mails/mwswuk_encrypted_1.eml";
+    const string mailfile_encrypted_message_2 = "test_mails/mwswuk_encrypted_2.eml";
 
     // Alice
     const char *address_alice = "alice@example.com";
     const char *name_alice = "Alice in wonderland";
-    string fpr_alice = "";
+    const string fpr_alice = "8C44BC1E06160A180121ADB52C21958990B3C080";
 
     // Bob
     const char *address_bob = "bob.builder@example.com";
     const char *name_bob = "Bob the builder";
-    string fpr_bob_1 = "D65E1EA3714FFAAE2410D3B454BD5263B050F3D1";
-    string fpr_bob_2 = "E12AE4ABAD52CFD360D7A71C4EDB7911C9C6610A";
+    const string fpr_bob_1 = "D65E1EA3714FFAAE2410D3B454BD5263B050F3D1";
+    const string fpr_bob_2 = "E12AE4ABAD52CFD360D7A71C4EDB7911C9C6610A";
 
     // Identities
     pEp_identity* alice = NULL;
