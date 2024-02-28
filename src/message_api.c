@@ -5368,15 +5368,17 @@ static PEP_STATUS _decrypt_message(
         if (!EMPTYSTR(src->from->username))
             input_from_username = strdup(src->from->username); // Get it before update_identity changes it
 
-        if (!src->from->fpr) {
-            // Best effort, don't care about errors here.
-            // This gets the expected fingerprint of the sender into the from identity.
-            update_identity(session, src->from);
-        }
-
-        // If there is a known sender
         if (src->from->fpr) {
             expected_signing_fingerprint = strdup(src->from->fpr);
+        } else {
+            pEp_identity *sender = identity_dup(src->from);
+            PEP_STATUS tmp_status = update_identity(session, sender);
+            if (tmp_status == PEP_STATUS_OK) {
+                if (sender->fpr) {
+                    expected_signing_fingerprint = strdup(sender->fpr);
+                }
+                free_identity(sender);
+            }
         }
 
         if (is_pEp_msg) {
@@ -5399,12 +5401,8 @@ static PEP_STATUS _decrypt_message(
                 // Now set user as PEP (may also create an identity if none existed yet)
                 status = set_as_pEp_user(session, tmp_from);
             }
-        } else {
-            status = update_identity(session, src->from);
-            if (status == PEP_STATUS_OK && src && src->from && src->from->fpr) {
-                expected_signing_fingerprint = strdup(src->from->fpr);
-            }
         }
+
         // Before we go any further, we need to check the rating of the "channel" (described
         // in some fdik video somewhere, apparently - this is usually only described as an
         // app concept, so as far as we're concerned for the moment, it's the "usual" rating
