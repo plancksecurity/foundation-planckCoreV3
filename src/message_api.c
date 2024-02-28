@@ -5368,6 +5368,17 @@ static PEP_STATUS _decrypt_message(
         if (!EMPTYSTR(src->from->username))
             input_from_username = strdup(src->from->username); // Get it before update_identity changes it
 
+        if (!src->from->fpr) {
+            // Best effort, don't care about errors here.
+            // This gets the expected fingerprint of the sender into the from identity.
+            update_identity(session, src->from);
+        }
+
+        // If there is a known sender
+        if (src->from->fpr) {
+            expected_signing_fingerprint = strdup(src->from->fpr);
+        }
+
         if (is_pEp_msg) {
             pEp_identity* tmp_from = src->from;
     
@@ -5387,9 +5398,6 @@ static PEP_STATUS _decrypt_message(
             if (status == PEP_STATUS_OK) {
                 // Now set user as PEP (may also create an identity if none existed yet)
                 status = set_as_pEp_user(session, tmp_from);
-                if (src && src->from && src->from->fpr) {
-                    expected_signing_fingerprint = strdup(src->from->fpr);
-                }
             }
         } else {
             status = update_identity(session, src->from);
