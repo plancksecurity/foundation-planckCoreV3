@@ -50,7 +50,8 @@ class MistrustedWhenSignedWithUnknownKey : public ::testing::Test
     // Bob
     const char *address_bob = "bob.builder@example.com";
     const char *name_bob = "Bob the builder";
-    string fpr_bob = "";
+    string fpr_bob_1 = "D65E1EA3714FFAAE2410D3B454BD5263B050F3D1";
+    string fpr_bob_2 = "E12AE4ABAD52CFD360D7A71C4EDB7911C9C6610A";
 
     // Identities
     pEp_identity* alice = NULL;
