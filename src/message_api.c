@@ -5388,11 +5388,13 @@ static PEP_STATUS _decrypt_message(
             if (status == PEP_STATUS_OK) {
                 // Now set user as PEP (may also create an identity if none existed yet)
                 status = set_as_pEp_user(session, tmp_from);
-                expected_signing_fingerprint = strdup(src->from->fpr);
+                if (src && src->from && src->from->fpr) {
+                    expected_signing_fingerprint = strdup(src->from->fpr);
+                }
             }
         } else {
             status = update_identity(session, src->from);
-            if (status == PEP_STATUS_OK) {
+            if (status == PEP_STATUS_OK && src && src->from && src->from->fpr) {
                 expected_signing_fingerprint = strdup(src->from->fpr);
             }
         }
