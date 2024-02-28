@@ -48,7 +48,6 @@
     <PreBuildEventUseInBuild>true</PreBuildEventUseInBuild>
     <PreLinkEventUseInBuild>true</PreLinkEventUseInBuild>
     <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
-    <CodeAnalysisRuleSet>C:\Program Files\Microsoft Visual Studio 14.0\Team Tools\Static Analysis Tools\Rule Sets\NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Linkage-libiconv>
     </Linkage-libiconv>
   </PropertyGroup>
@@ -59,7 +58,6 @@
     <PreBuildEventUseInBuild>true</PreBuildEventUseInBuild>
     <PreLinkEventUseInBuild>true</PreLinkEventUseInBuild>
     <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
-    <CodeAnalysisRuleSet>C:\Program Files\Microsoft Visual Studio 14.0\Team Tools\Static Analysis Tools\Rule Sets\NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <Linkage-libiconv>
     </Linkage-libiconv>
@@ -79,20 +77,19 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Shlwapi.lib; pep_engine_sequoia_backend.dll.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ShowProgress>NotSet</ShowProgress>
-      <AdditionalLibraryDirectories>$(SolutionDir)planckCoreSequoiaBackend\target\$(ConfigurationName);C:\msys64\mingw64\lib</AdditionalLibraryDirectories>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <SuppressStartupBanner>false</SuppressStartupBanner>
+      <AdditionalDependencies>Shlwapi.lib;libpEpasn1.lib;pep_engine_sequoia_backend.dll.lib;libetpan.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;iconv.lib;$(CoreLibraryDependencies);%(AdditionalDependencies);</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\$(Platform)\$(Configuration);</AdditionalLibraryDirectories>
     </Link>
-    <PreBuildEvent>
-      <Command>set NETTLE_HAVE_CV448=yes &amp;&amp; PUSHD $(SolutionDir)\PlanckCoreSequoiaBackend &amp;&amp; cargo rustc -- -L $(SolutionDir)botan  &amp;&amp; copy $(SolutionDir)botan\botan.dll $(SolutionDir)\$(Platform)\$(Configuration) &amp;&amp; copy target\$(Configuration)\deps\pep_engine_sequoia_backend.dll* $(SolutionDir)\$(Platform)\$(Configuration) &amp;&amp; POPD </Command>
-    </PreBuildEvent>
-    <PostBuildEvent>
-      <Command>xcopy "$(SolutionDir)sequoia\target\debug\sequoia_openpgp_ffi.dll" "$(TargetDir)" /Y</Command>
-      <Command>
-      </Command>
-    </PostBuildEvent>
+    <Lib>
+      <AdditionalLibraryDirectories>$(SolutionDir)\$(Platform)\$(Configuration);</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Shlwapi.lib;libpEpasn1.lib;pep_engine_sequoia_backend.dll.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
+    </Lib>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -116,17 +113,13 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Shlwapi.lib;pep_engine_sequoia_backend.dll.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)planckCoreSequoiaBackend\target\$(ConfigurationName);C:\msys64\mingw64\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Shlwapi.lib;libpEpasn1.lib;pep_engine_sequoia_backend.dll.lib;libetpan.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;iconv.lib;$(CoreLibraryDependencies);%(AdditionalDependencies);</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\$(Platform)\$(Configuration);</AdditionalLibraryDirectories>
     </Link>
-    <PreBuildEvent>
-      <Command>set NETTLE_HAVE_CV448=yes &amp;&amp; PUSHD $(SolutionDir)\PlanckCoreSequoiaBackend &amp;&amp; cargo rustc --release -- -L $(SolutionDir)botan &amp;&amp; copy $(SolutionDir)botan\botan.dll $(SolutionDir)$(Configuration)&amp;&amp; copy target\$(Configuration)\deps\pep_engine_sequoia_backend.dll* $(SolutionDir)$(Configuration) &amp;&amp; POPD </Command>
-    </PreBuildEvent>
-    <PostBuildEvent>
-      <Command>xcopy "$(SolutionDir)sequoia\target\release\sequoia_openpgp_ffi.dll" "$(TargetDir)" /Y</Command>
-      <Command>
-      </Command>
-    </PostBuildEvent>
+    <Lib>
+      <AdditionalDependencies>Shlwapi.lib;pep_engine_sequoia_backend.dll.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\$(Platform)\$(Configuration);</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\src\base64.c" />
@@ -248,11 +241,13 @@
     <Text Include="..\LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\libetpan\build-windows\libetpan\libetpan.vcxproj">
+    <ProjectReference Include="$(SolutionDir)\libetpan\build-windows\libetpan\libetpan.vcxproj">
       <Project>{ba4ded3c-e56f-4484-bfc3-9c13e461a1be}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\libPlanckTransport\build-windows\libpEpTransport.vcxproj">
+    <ProjectReference Include="$(SolutionDir)\libPlanckTransport\build-windows\libpEpTransport.vcxproj">
       <Project>{13f8fc08-53f8-4615-8445-3d713c0374e4}</Project>
+    </ProjectReference>
+    <ProjectReference Include="$(SolutionDir)\planckCoreSequoiaBackend\build-win64\pEpEngineSequoiaBackendProject.vcxproj">
     </ProjectReference>
     <ProjectReference Include="libpEpasn1\libpEpasn1.vcxproj">
       <Project>{9a67164d-b8f8-4601-a24b-28afe774d41c}</Project>
