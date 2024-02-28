@@ -5349,8 +5349,7 @@ static PEP_STATUS _decrypt_message(
     *keylist = NULL;
     *rating = PEP_rating_undefined;
 
-    // If the message was signed (which implies encryption),
-    // this is the expected signing key of the sender, as per our rules (TOFU etc.)
+    // This will contain the expected signing key of the sender, as per our rules (TOFU etc.)
     char *expected_signing_fingerprint = NULL;
 
     /*** End init ***/
@@ -6566,6 +6565,17 @@ static PEP_STATUS _decrypt_message(
     status = _update_or_myself_message(session, src);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
+
+    if (expected_signing_fingerprint && keylist && *keylist) {
+        char *signer_fpr = (*keylist)->value;
+        if (signer_fpr) {
+            int cmp_signer = strcmp(expected_signing_fingerprint, signer_fpr);
+            printf("is expected signer: %d\n", cmp_signer);
+            if (cmp_signer && *rating >= PEP_rating_reliable) {
+                *rating = PEP_rating_mistrust;
+            }
+        }
+    }
 
     if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
         UPGRADE_PROTOCOL_VERSION_IF_NEEDED(msg);
