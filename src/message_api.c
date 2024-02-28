@@ -5373,10 +5373,8 @@ static PEP_STATUS _decrypt_message(
         } else {
             pEp_identity *sender = identity_dup(src->from);
             PEP_STATUS tmp_status = update_identity(session, sender);
-            if (tmp_status == PEP_STATUS_OK) {
-                if (sender->fpr) {
-                    expected_signing_fingerprint = strdup(sender->fpr);
-                }
+            if (tmp_status == PEP_STATUS_OK && sender->fpr) {
+                expected_signing_fingerprint = strdup(sender->fpr);
             }
             free_identity(sender);
         }
