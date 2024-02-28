@@ -44,6 +44,9 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(IncludePath)</IncludePath>
+    <CopyLocalDebugSymbols>true</CopyLocalDebugSymbols>
+    <CopyCppRuntimeToOutputDir>true</CopyCppRuntimeToOutputDir>
+    <CopyLocalProjectReference>true</CopyLocalProjectReference>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(ProjectDir)..\..\asn.1;$(IncludePath)</IncludePath>
@@ -56,13 +59,27 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\asn.1;$(SolutionDir)pEp;$(SolutionDir)</AdditionalIncludeDirectories>
+      <MinimalRebuild>true</MinimalRebuild>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <GenerateSourceDependencies>true</GenerateSourceDependencies>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
+      <TreatLinkerWarningAsErrors>false</TreatLinkerWarningAsErrors>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+      <RegisterOutput>false</RegisterOutput>
+      <PerUserRedirection>true</PerUserRedirection>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateWindowsMetadata>true</GenerateWindowsMetadata>
     </Link>
     <PreBuildEvent>
       <Command>IF NOT EXIST "..\..\..\pEp\pEpEngine.h" CALL ..\generate_code.cmd $(SolutionDir)</Command>
     </PreBuildEvent>
+    <ProjectReference>
+      <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
+    </ProjectReference>
+    <Lib />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -74,6 +91,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\asn.1;$(SolutionDir)</AdditionalIncludeDirectories>
+      <GenerateSourceDependencies>true</GenerateSourceDependencies>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -91,10 +109,197 @@
     <None Include="..\generate_code.cmd" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\asn.1\*.c" />
+    <ClCompile Include="..\..\asn.1\ASN1Message.c" />
+    <ClCompile Include="..\..\asn.1\BIT_STRING.c" />
+    <ClCompile Include="..\..\asn.1\BOOLEAN.c" />
+    <ClCompile Include="..\..\asn.1\Beacon.c" />
+    <ClCompile Include="..\..\asn.1\Command.c" />
+    <ClCompile Include="..\..\asn.1\Commands.c" />
+    <ClCompile Include="..\..\asn.1\CommitAccept.c" />
+    <ClCompile Include="..\..\asn.1\CommitAcceptForGroup.c" />
+    <ClCompile Include="..\..\asn.1\CommitAcceptOfferer.c" />
+    <ClCompile Include="..\..\asn.1\CommitAcceptRequester.c" />
+    <ClCompile Include="..\..\asn.1\CommitReject.c" />
+    <ClCompile Include="..\..\asn.1\ContentDisposition.c" />
+    <ClCompile Include="..\..\asn.1\Distribution.c" />
+    <ClCompile Include="..\..\asn.1\ElectGroupKeyResetLeader.c" />
+    <ClCompile Include="..\..\asn.1\Exploration.c" />
+    <ClCompile Include="..\..\asn.1\ExploreAnswer.c" />
+    <ClCompile Include="..\..\asn.1\ExploreChallenge.c" />
+    <ClCompile Include="..\..\asn.1\ExploreRequest.c" />
+    <ClCompile Include="..\..\asn.1\ExploreResponse.c" />
+    <ClCompile Include="..\..\asn.1\GeneralizedTime.c" />
+    <ClCompile Include="..\..\asn.1\GroupAdopted.c" />
+    <ClCompile Include="..\..\asn.1\GroupDissolve.c" />
+    <ClCompile Include="..\..\asn.1\GroupHandshake.c" />
+    <ClCompile Include="..\..\asn.1\GroupInvite.c" />
+    <ClCompile Include="..\..\asn.1\GroupKeysAndClose.c" />
+    <ClCompile Include="..\..\asn.1\GroupKeysForNewMember.c" />
+    <ClCompile Include="..\..\asn.1\GroupKeysUpdate.c" />
+    <ClCompile Include="..\..\asn.1\GroupSync.c" />
+    <ClCompile Include="..\..\asn.1\GroupSyncRequest.c" />
+    <ClCompile Include="..\..\asn.1\GroupSyncUpdate.c" />
+    <ClCompile Include="..\..\asn.1\GroupTrustThisKey.c" />
+    <ClCompile Include="..\..\asn.1\Hash.c" />
+    <ClCompile Include="..\..\asn.1\Hex.c" />
+    <ClCompile Include="..\..\asn.1\INTEGER.c" />
+    <ClCompile Include="..\..\asn.1\ISO639-1.c" />
+    <ClCompile Include="..\..\asn.1\Identity.c" />
+    <ClCompile Include="..\..\asn.1\IdentityList.c" />
+    <ClCompile Include="..\..\asn.1\InitUnledGroupKeyReset.c" />
+    <ClCompile Include="..\..\asn.1\KeyReset.c" />
+    <ClCompile Include="..\..\asn.1\KeySync.c" />
+    <ClCompile Include="..\..\asn.1\ManagedGroup.c" />
+    <ClCompile Include="..\..\asn.1\MessageDirection.c" />
+    <ClCompile Include="..\..\asn.1\MessageStorage.c" />
+    <ClCompile Include="..\..\asn.1\NativeEnumerated.c" />
+    <ClCompile Include="..\..\asn.1\NativeInteger.c" />
+    <ClCompile Include="..\..\asn.1\NegotiationOpen.c" />
+    <ClCompile Include="..\..\asn.1\NegotiationRequest.c" />
+    <ClCompile Include="..\..\asn.1\NegotiationRequestGrouped.c" />
+    <ClCompile Include="..\..\asn.1\OCTET_STRING.c" />
+    <ClCompile Include="..\..\asn.1\OwnKeysOfferer.c" />
+    <ClCompile Include="..\..\asn.1\OwnKeysRequester.c" />
+    <ClCompile Include="..\..\asn.1\PBlob.c" />
+    <ClCompile Include="..\..\asn.1\PBlobList.c" />
+    <ClCompile Include="..\..\asn.1\PIdentity.c" />
+    <ClCompile Include="..\..\asn.1\PIdentityList.c" />
+    <ClCompile Include="..\..\asn.1\PString.c" />
+    <ClCompile Include="..\..\asn.1\PStringList.c" />
+    <ClCompile Include="..\..\asn.1\PStringPair.c" />
+    <ClCompile Include="..\..\asn.1\PStringPairList.c" />
+    <ClCompile Include="..\..\asn.1\PrintableString.c" />
+    <ClCompile Include="..\..\asn.1\Rating.c" />
+    <ClCompile Include="..\..\asn.1\ReceiverRating.c" />
+    <ClCompile Include="..\..\asn.1\Rollback.c" />
+    <ClCompile Include="..\..\asn.1\Storage.c" />
+    <ClCompile Include="..\..\asn.1\Sync.c" />
+    <ClCompile Include="..\..\asn.1\SynchronizeGroupKeys.c" />
+    <ClCompile Include="..\..\asn.1\TID.c" />
+    <ClCompile Include="..\..\asn.1\TrustRequest.c" />
+    <ClCompile Include="..\..\asn.1\TrustSync.c" />
+    <ClCompile Include="..\..\asn.1\TrustUpdate.c" />
+    <ClCompile Include="..\..\asn.1\UTF8String.c" />
+    <ClCompile Include="..\..\asn.1\Version.c" />
+    <ClCompile Include="..\..\asn.1\asn_SEQUENCE_OF.c" />
+    <ClCompile Include="..\..\asn.1\asn_SET_OF.c" />
+    <ClCompile Include="..\..\asn.1\asn_codecs_prim.c" />
+    <ClCompile Include="..\..\asn.1\ber_decoder.c" />
+    <ClCompile Include="..\..\asn.1\ber_tlv_length.c" />
+    <ClCompile Include="..\..\asn.1\ber_tlv_tag.c" />
+    <ClCompile Include="..\..\asn.1\constr_CHOICE.c" />
+    <ClCompile Include="..\..\asn.1\constr_SEQUENCE.c" />
+    <ClCompile Include="..\..\asn.1\constr_SEQUENCE_OF.c" />
+    <ClCompile Include="..\..\asn.1\constr_SET_OF.c" />
+    <ClCompile Include="..\..\asn.1\constr_TYPE.c" />
+    <ClCompile Include="..\..\asn.1\constraints.c" />
+    <ClCompile Include="..\..\asn.1\der_encoder.c" />
+    <ClCompile Include="..\..\asn.1\pdu_collection.c" />
+    <ClCompile Include="..\..\asn.1\per_decoder.c" />
+    <ClCompile Include="..\..\asn.1\per_encoder.c" />
+    <ClCompile Include="..\..\asn.1\per_opentype.c" />
+    <ClCompile Include="..\..\asn.1\per_support.c" />
+    <ClCompile Include="..\..\asn.1\xer_decoder.c" />
+    <ClCompile Include="..\..\asn.1\xer_encoder.c" />
+    <ClCompile Include="..\..\asn.1\xer_support.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\asn.1\*.h" />
+    <ClInclude Include="..\..\asn.1\ASN1Message.h" />
+    <ClInclude Include="..\..\asn.1\BIT_STRING.h" />
+    <ClInclude Include="..\..\asn.1\BOOLEAN.h" />
+    <ClInclude Include="..\..\asn.1\Beacon.h" />
+    <ClInclude Include="..\..\asn.1\Command.h" />
+    <ClInclude Include="..\..\asn.1\Commands.h" />
+    <ClInclude Include="..\..\asn.1\CommitAccept.h" />
+    <ClInclude Include="..\..\asn.1\CommitAcceptForGroup.h" />
+    <ClInclude Include="..\..\asn.1\CommitAcceptOfferer.h" />
+    <ClInclude Include="..\..\asn.1\CommitAcceptRequester.h" />
+    <ClInclude Include="..\..\asn.1\CommitReject.h" />
+    <ClInclude Include="..\..\asn.1\ContentDisposition.h" />
+    <ClInclude Include="..\..\asn.1\Distribution.h" />
+    <ClInclude Include="..\..\asn.1\ElectGroupKeyResetLeader.h" />
+    <ClInclude Include="..\..\asn.1\Exploration.h" />
+    <ClInclude Include="..\..\asn.1\ExploreAnswer.h" />
+    <ClInclude Include="..\..\asn.1\ExploreChallenge.h" />
+    <ClInclude Include="..\..\asn.1\ExploreRequest.h" />
+    <ClInclude Include="..\..\asn.1\ExploreResponse.h" />
+    <ClInclude Include="..\..\asn.1\GeneralizedTime.h" />
+    <ClInclude Include="..\..\asn.1\GroupAdopted.h" />
+    <ClInclude Include="..\..\asn.1\GroupDissolve.h" />
+    <ClInclude Include="..\..\asn.1\GroupHandshake.h" />
+    <ClInclude Include="..\..\asn.1\GroupInvite.h" />
+    <ClInclude Include="..\..\asn.1\GroupKeysAndClose.h" />
+    <ClInclude Include="..\..\asn.1\GroupKeysForNewMember.h" />
+    <ClInclude Include="..\..\asn.1\GroupKeysUpdate.h" />
+    <ClInclude Include="..\..\asn.1\GroupSync.h" />
+    <ClInclude Include="..\..\asn.1\GroupSyncRequest.h" />
+    <ClInclude Include="..\..\asn.1\GroupSyncUpdate.h" />
+    <ClInclude Include="..\..\asn.1\GroupTrustThisKey.h" />
+    <ClInclude Include="..\..\asn.1\Hash.h" />
+    <ClInclude Include="..\..\asn.1\Hex.h" />
+    <ClInclude Include="..\..\asn.1\INTEGER.h" />
+    <ClInclude Include="..\..\asn.1\ISO639-1.h" />
+    <ClInclude Include="..\..\asn.1\Identity.h" />
+    <ClInclude Include="..\..\asn.1\IdentityList.h" />
+    <ClInclude Include="..\..\asn.1\InitUnledGroupKeyReset.h" />
+    <ClInclude Include="..\..\asn.1\KeyReset.h" />
+    <ClInclude Include="..\..\asn.1\KeySync.h" />
+    <ClInclude Include="..\..\asn.1\ManagedGroup.h" />
+    <ClInclude Include="..\..\asn.1\MessageDirection.h" />
+    <ClInclude Include="..\..\asn.1\MessageStorage.h" />
+    <ClInclude Include="..\..\asn.1\NativeEnumerated.h" />
+    <ClInclude Include="..\..\asn.1\NativeInteger.h" />
+    <ClInclude Include="..\..\asn.1\NegotiationOpen.h" />
+    <ClInclude Include="..\..\asn.1\NegotiationRequest.h" />
+    <ClInclude Include="..\..\asn.1\NegotiationRequestGrouped.h" />
+    <ClInclude Include="..\..\asn.1\OCTET_STRING.h" />
+    <ClInclude Include="..\..\asn.1\OwnKeysOfferer.h" />
+    <ClInclude Include="..\..\asn.1\OwnKeysRequester.h" />
+    <ClInclude Include="..\..\asn.1\PBlob.h" />
+    <ClInclude Include="..\..\asn.1\PBlobList.h" />
+    <ClInclude Include="..\..\asn.1\PIdentity.h" />
+    <ClInclude Include="..\..\asn.1\PIdentityList.h" />
+    <ClInclude Include="..\..\asn.1\PString.h" />
+    <ClInclude Include="..\..\asn.1\PStringList.h" />
+    <ClInclude Include="..\..\asn.1\PStringPair.h" />
+    <ClInclude Include="..\..\asn.1\PStringPairList.h" />
+    <ClInclude Include="..\..\asn.1\PrintableString.h" />
+    <ClInclude Include="..\..\asn.1\Rating.h" />
+    <ClInclude Include="..\..\asn.1\ReceiverRating.h" />
+    <ClInclude Include="..\..\asn.1\Rollback.h" />
+    <ClInclude Include="..\..\asn.1\Storage.h" />
+    <ClInclude Include="..\..\asn.1\Sync.h" />
+    <ClInclude Include="..\..\asn.1\SynchronizeGroupKeys.h" />
+    <ClInclude Include="..\..\asn.1\TID.h" />
+    <ClInclude Include="..\..\asn.1\TrustRequest.h" />
+    <ClInclude Include="..\..\asn.1\TrustSync.h" />
+    <ClInclude Include="..\..\asn.1\TrustUpdate.h" />
+    <ClInclude Include="..\..\asn.1\UTF8String.h" />
+    <ClInclude Include="..\..\asn.1\Version.h" />
+    <ClInclude Include="..\..\asn.1\asn_SEQUENCE_OF.h" />
+    <ClInclude Include="..\..\asn.1\asn_SET_OF.h" />
+    <ClInclude Include="..\..\asn.1\asn_application.h" />
+    <ClInclude Include="..\..\asn.1\asn_codecs.h" />
+    <ClInclude Include="..\..\asn.1\asn_codecs_prim.h" />
+    <ClInclude Include="..\..\asn.1\asn_internal.h" />
+    <ClInclude Include="..\..\asn.1\asn_system.h" />
+    <ClInclude Include="..\..\asn.1\ber_decoder.h" />
+    <ClInclude Include="..\..\asn.1\ber_tlv_length.h" />
+    <ClInclude Include="..\..\asn.1\ber_tlv_tag.h" />
+    <ClInclude Include="..\..\asn.1\constr_CHOICE.h" />
+    <ClInclude Include="..\..\asn.1\constr_SEQUENCE.h" />
+    <ClInclude Include="..\..\asn.1\constr_SEQUENCE_OF.h" />
+    <ClInclude Include="..\..\asn.1\constr_SET_OF.h" />
+    <ClInclude Include="..\..\asn.1\constr_TYPE.h" />
+    <ClInclude Include="..\..\asn.1\constraints.h" />
+    <ClInclude Include="..\..\asn.1\der_encoder.h" />
+    <ClInclude Include="..\..\asn.1\per_decoder.h" />
+    <ClInclude Include="..\..\asn.1\per_encoder.h" />
+    <ClInclude Include="..\..\asn.1\per_opentype.h" />
+    <ClInclude Include="..\..\asn.1\per_support.h" />
+    <ClInclude Include="..\..\asn.1\xer_decoder.h" />
+    <ClInclude Include="..\..\asn.1\xer_encoder.h" />
+    <ClInclude Include="..\..\asn.1\xer_support.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\libetpan\build-windows\libetpan\libetpan.vcxproj">
