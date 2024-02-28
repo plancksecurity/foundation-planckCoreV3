@@ -122,19 +122,6 @@ void MistrustedWhenSignedWithUnknownKey::TearDown()
     session = NULL;
 }
 
-#if UPDATE_DATA
-void SyncWhenReceiveEncrypted::UpdateParams()
-{
-    // Read params
-    ofstream outfile;
-    outfile.open(paramfile);
-    outfile << fpr_alice << endl;
-    outfile << fpr_bob << endl;
-    outfile << fpr_bob_reset << endl;
-    outfile.close();
-}
-#endif
-
 PEP_STATUS MistrustedWhenSignedWithUnknownKey::PrivAlice()
 {
     PEP_STATUS status;
