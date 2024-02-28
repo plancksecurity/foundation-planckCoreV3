@@ -5381,10 +5381,6 @@ static PEP_STATUS _decrypt_message(
             free_identity(sender);
         }
 
-        if (expected_signing_fingerprint) {
-            printf("*** expected %s %s\n", src->from->address, expected_signing_fingerprint);
-        }
-
         if (is_pEp_msg) {
             pEp_identity* tmp_from = src->from;
     
@@ -6580,7 +6576,6 @@ static PEP_STATUS _decrypt_message(
         char *signer_fpr = (*keylist)->value;
         if (signer_fpr) {
             int cmp_signer = strcmp(expected_signing_fingerprint, signer_fpr);
-            printf("is expected signer: %d\n", cmp_signer);
             if (cmp_signer && *rating >= PEP_rating_reliable) {
                 *rating = PEP_rating_mistrust;
             }
