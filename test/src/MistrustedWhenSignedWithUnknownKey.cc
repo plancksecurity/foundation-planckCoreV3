@@ -93,7 +93,6 @@ class MistrustedWhenSignedWithUnknownKey : public ::testing::Test
     const char *test_suite_name;
     const char *test_name;
     string test_path;
-    // Objects declared here can be used by all tests in the LogSignTest suite.
 };
 
 void MistrustedWhenSignedWithUnknownKey::SetUp()
