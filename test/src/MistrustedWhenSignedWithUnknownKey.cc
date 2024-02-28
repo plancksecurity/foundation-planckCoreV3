@@ -39,6 +39,8 @@ class MistrustedWhenSignedWithUnknownKey : public ::testing::Test
     string keyfile_pub_alice = "test_keys/pub/mwswuk_alice.asc";
 
     string mailfile_hello_message = "test_mails/mwswuk_hello.eml";
+    string mailfile_encrypted_message_1 = "test_mails/mwswuk_encrypted_1.eml";
+    string mailfile_encrypted_message_2 = "test_mails/mwswuk_encrypted_2.eml";
 
     // Alice
     const char *address_alice = "alice@example.com";
@@ -76,10 +78,8 @@ class MistrustedWhenSignedWithUnknownKey : public ::testing::Test
     void SetUp() override;
     void TearDown() override;
 
-#if UPDATE_DATA
-    // Write params
-    void UpdateParams();
-#endif
+    message *slurp_message_file_into_struct(const std::string& filename);
+    message *slurp_hello_message_file_into_struct();
 
     // Identity loaders
     PEP_STATUS PrivAlice();
@@ -88,8 +88,6 @@ class MistrustedWhenSignedWithUnknownKey : public ::testing::Test
     PEP_STATUS PubBob1();
     PEP_STATUS PrivBob2();
     PEP_STATUS PubBob2();
-
-    message *slurp_hello_message_file_into_struct();
 
   private:
     const char *test_suite_name;
@@ -227,9 +225,9 @@ PEP_STATUS MistrustedWhenSignedWithUnknownKey::PubBob1()
     return status;
 }
 
-message *MistrustedWhenSignedWithUnknownKey::slurp_hello_message_file_into_struct()
+message *MistrustedWhenSignedWithUnknownKey::slurp_message_file_into_struct(const std::string& filename)
 {
-    message *msg = slurp_message_file_into_struct(mailfile_hello_message.c_str());
+    message *msg = slurp_message_file_into_struct(filename.c_str());
 
     // An app is required to call `update_identity`/`myself` on _all_ identities
     // in a `message` struct before providing it to most core functions.
@@ -243,6 +241,11 @@ message *MistrustedWhenSignedWithUnknownKey::slurp_hello_message_file_into_struc
     }
 
     return msg;
+}
+
+message *MistrustedWhenSignedWithUnknownKey::slurp_hello_message_file_into_struct()
+{
+    return slurp_message_file_into_struct(mailfile_hello_message);
 }
 
 } // namespace
