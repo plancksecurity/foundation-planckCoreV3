@@ -108,6 +108,21 @@ void MistrustedWhenSignedWithUnknownKey::SetUp()
     session = engine->session;
 
     // Engine is up. Keep on truckin'
+
+    PEP_STATUS status;
+
+    status = set_up_ident_from_scratch(
+        session,
+        keyfile_pub_alice.c_str(),
+        address_alice,
+        fpr_alice.c_str(),
+        address_alice,
+        name_alice,
+        &alice,
+        false
+    );
+
+    ASSERT_EQ(status, PEP_STATUS_OK);
 }
 
 void MistrustedWhenSignedWithUnknownKey::TearDown()
