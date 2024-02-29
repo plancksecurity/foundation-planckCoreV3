@@ -5346,6 +5346,9 @@ static PEP_STATUS _decrypt_message(
     *keylist = NULL;
     *rating = PEP_rating_undefined;
 
+    // This will contain the expected signing key of the sender, as per our rules (TOFU etc.)
+    char *expected_signing_fingerprint = NULL;
+
     /*** End init ***/
 
     /*** Begin caching and setup information from non-me from identities ***/
@@ -5361,6 +5364,17 @@ static PEP_STATUS _decrypt_message(
     if (src->from && !(is_me(session, src->from))) {
         if (!EMPTYSTR(src->from->username))
             input_from_username = strdup(src->from->username); // Get it before update_identity changes it
+
+        if (src->from->fpr) {
+            expected_signing_fingerprint = strdup(src->from->fpr);
+        } else {
+            pEp_identity *sender = identity_dup(src->from);
+            PEP_STATUS tmp_status = update_identity(session, sender);
+            if (tmp_status == PEP_STATUS_OK && sender->fpr) {
+                expected_signing_fingerprint = strdup(sender->fpr);
+            }
+            free_identity(sender);
+        }
 
         if (is_pEp_msg) {
             pEp_identity* tmp_from = src->from;
@@ -5383,6 +5397,7 @@ static PEP_STATUS _decrypt_message(
                 status = set_as_pEp_user(session, tmp_from);
             }
         }
+
         // Before we go any further, we need to check the rating of the "channel" (described
         // in some fdik video somewhere, apparently - this is usually only described as an
         // app concept, so as far as we're concerned for the moment, it's the "usual" rating
@@ -6554,6 +6569,16 @@ static PEP_STATUS _decrypt_message(
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
+    if (expected_signing_fingerprint && keylist && *keylist) {
+        char *signer_fpr = (*keylist)->value;
+        if (signer_fpr) {
+            int cmp_signer = strcmp(expected_signing_fingerprint, signer_fpr);
+            if (cmp_signer && *rating >= PEP_rating_reliable) {
+                *rating = PEP_rating_mistrust;
+            }
+        }
+    }
+
     if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
         UPGRADE_PROTOCOL_VERSION_IF_NEEDED(msg);
         return PEP_STATUS_OK;
@@ -6571,6 +6596,7 @@ pEp_error:
     free_stringpair_list(revoke_replace_pairs);
     free(imported_sender_key_fpr);
     free(input_from_username);
+    free(expected_signing_fingerprint);
 
     return status;
 }
