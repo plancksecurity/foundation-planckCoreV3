@@ -16,20 +16,17 @@
    paramter to our functions, even when not needed, just for this.  --positron,
    2022-10 */
 
-/*
- Changelog:
-
- * 2023-06 get_trustwords() figures out the versions of input identities, if not set already.
- * 2023-07 search_opt_field() searches for an existing header field.
- * 2023-07 set_receiverRating add new bool parameter to decide whether to add signature with rating.
- */
-
+// Changelog:
+//
+// 2023-06 get_trustwords() figures out the versions of input identities, if not set already.
+// 2023-07 search_opt_field() searches for an existing header field.
+// 2023-07 set_receiverRating add new bool parameter to decide whether to add signature with rating.
 // 07.08.2023/IP - added method import_extrakey_with_fpr_return
 // 21.08.2023/DZ - make _get_comm_type understand group identities
 // 04.10.2023/IG - update_sender_to_pEp_trust - Do not update sender trust if there is already an fpr available 
 // 31.10.2023/IP - added function to retrieve key_ids
 // 23.11.2023/DZ - reconcile_identity_lists checks for emtpy identity_list
-// 
+// 26.02.2024/DZ - Free after messageToSend()
 
 #include "pEp_internal.h"
 #include "message_api.h"
@@ -6364,6 +6361,8 @@ static PEP_STATUS _decrypt_message(
                                                     status = session->messageToSend(enc_group_reset_msg);
                                                 else
                                                     status = PEP_SYNC_NO_MESSAGE_SEND_CALLBACK;
+
+                                                free(enc_group_reset_msg);
                                             }
                                             continue;
                                         }
@@ -6398,6 +6397,8 @@ static PEP_STATUS _decrypt_message(
                                         else
                                             status = PEP_SYNC_NO_MESSAGE_SEND_CALLBACK;
 
+                                        free_message(reset_msg);
+                                        reset_msg = NULL;
 
                                         if (status == PEP_STATUS_OK) {
                                             // Put into notified DB
@@ -6407,8 +6408,6 @@ static PEP_STATUS _decrypt_message(
                                         }
                                         else {
                                             // According to Volker, this would only be a fatal error, so...
-                                            free_message(reset_msg); // ??
-                                            reset_msg = NULL; // ??
                                             goto pEp_error;
                                         }
                                     }
@@ -6593,7 +6592,6 @@ enomem:
 pEp_error:
     free(ptext);
     free_message(msg);
-    free_message(reset_msg);
     free_stringlist(_keylist);
     free_stringpair_list(revoke_replace_pairs);
     free(imported_sender_key_fpr);

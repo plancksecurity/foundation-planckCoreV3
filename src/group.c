@@ -4,13 +4,16 @@
  * @license This file is under GNU General Public License 3.0 - see LICENSE.txt
  */
 
- // 17.08.2023/DZ - Don't write to NULL in group_create on error.
- // 18.08.2023/DZ - send_GroupAdopted returns early (but OK) when the manager is an own identity
- // 23.08.2023/IG - Make group rating Reliable for members.
- // 21.08.2023/IG - group_create(): Allow to re-create a group that is inactive.
- // 04.09.2023/IG - Add retrieve_all_groups_as_manager() and retrieve_all_active_groups_as_manager().
- // 04.09.2023/IG - Move get_group_manager() to group.h and make it DYNAMIC API.
- // 18.12.2023/IG - Return PEP_rating_undefined directly for inactive group rating.
+// Changelog
+//
+// 17.08.2023/DZ - Don't write to NULL in group_create on error.
+// 18.08.2023/DZ - send_GroupAdopted returns early (but OK) when the manager is an own identity
+// 23.08.2023/IG - Make group rating Reliable for members.
+// 21.08.2023/IG - group_create(): Allow to re-create a group that is inactive.
+// 04.09.2023/IG - Add retrieve_all_groups_as_manager() and retrieve_all_active_groups_as_manager().
+// 04.09.2023/IG - Move get_group_manager() to group.h and make it DYNAMIC API.
+// 18.12.2023/IG - Return PEP_rating_undefined directly for inactive group rating.
+// 26.02.2024/DZ - Free after messageToSend()
 
 #include "group.h"
 #include "group_internal.h"
@@ -177,6 +180,9 @@ static PEP_STATUS _create_and_send_managed_group_message(PEP_SESSION session,
 
     // insert into queue
     status = session->messageToSend(enc_msg);
+
+    free(enc_msg);
+    enc_msg = NULL;
 
     if (status != PEP_STATUS_OK)
         goto pEp_error;
