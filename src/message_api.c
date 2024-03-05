@@ -5365,7 +5365,7 @@ static PEP_STATUS _decrypt_message(
         if (!EMPTYSTR(src->from->username))
             input_from_username = strdup(src->from->username); // Get it before update_identity changes it
 
-        if (src->from->fpr) {
+        if (!EMPTYSTR(src->from->fpr)) {
             expected_signing_fingerprint = strdup(src->from->fpr);
         } else {
             pEp_identity *sender = identity_dup(src->from);
