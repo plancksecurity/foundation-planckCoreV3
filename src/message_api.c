@@ -5261,7 +5261,7 @@ void update_potential_own_identity(
     while (node) {
         const char *address = node->value;
         if (!strcmp(address, identity->address)) {
-            mark_as_own_identity(identity);
+            mark_as_own_identity(session, identity);
             return;
         }
         node = node->next;
@@ -5271,6 +5271,12 @@ void update_potential_own_identity(
 void fix_own_identities_in_message(PEP_SESSION session, message *message)
 {
     if (!message) {
+        return;
+    }
+
+    identity_list *identities = NULL;
+    PEP_STATUS status = own_identities_retrieve(session, identities);
+    if (status != PEP_STATUS_OK) {
         return;
     }
 }
