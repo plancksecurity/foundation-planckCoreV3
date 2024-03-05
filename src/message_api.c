@@ -5248,11 +5248,14 @@ DYNAMIC_API PEP_STATUS get_key_ids(PEP_SESSION session, message *msg, stringlist
     return status;
 }
 
-void mark_as_own_identity(pEp_identity *identity)
+void mark_as_own_identity(PEP_SESSION session, pEp_identity *identity)
 {
 }
 
-void update_potential_own_identity(stringlist_t const * const all_own_identities, pEp_identity *identity)
+void update_potential_own_identity(
+    PEP_SESSION session,
+    stringlist_t const * const all_own_identities,
+    pEp_identity *identity)
 {
     stringlist_t *node = all_own_identities;
     while (node) {
@@ -5265,8 +5268,11 @@ void update_potential_own_identity(stringlist_t const * const all_own_identities
     }
 }
 
-void fix_own_identities_in_message(message *message)
+void fix_own_identities_in_message(PEP_SESSION session, message *message)
 {
+    if (!message) {
+        return;
+    }
 }
 
 /** @internal
@@ -5298,7 +5304,7 @@ static PEP_STATUS _decrypt_message(
     PEP_REQUIRE(session && src && dst && keylist && rating && flags);
 
     // Best effort, no error checking.
-    fix_own_identities_in_message(src);
+    fix_own_identities_in_message(session, src);
 
 /* Upgrade the pEp protocol version supported by the identity who sent the
    message.  This is called in case of success, after the sender identity
