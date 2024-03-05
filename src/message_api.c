@@ -5248,21 +5248,44 @@ DYNAMIC_API PEP_STATUS get_key_ids(PEP_SESSION session, message *msg, stringlist
     return status;
 }
 
-void mark_as_own_identity(PEP_SESSION session, pEp_identity *identity)
+void mark_identity_as_own(
+    PEP_SESSION session,
+    const pEp_identity *own_identity,
+    pEp_identity *identity)
 {
 }
 
-void update_potential_own_identity(
+void fix_own_identity(
     PEP_SESSION session,
-    stringlist_t const * const all_own_identities,
+    const identity_list *all_own_identities,
     pEp_identity *identity)
 {
-    stringlist_t *node = all_own_identities;
+    identity_list *node = all_own_identities;
     while (node) {
-        const char *address = node->value;
-        if (!strcmp(address, identity->address)) {
-            mark_as_own_identity(session, identity);
-            return;
+        const pEp_identity *own_ident = node->ident;
+        if (own_ident) {
+            const char *address = own_ident->address;
+            if (address) {
+                if (!strcmp(address, identity->address)) {
+                    mark_identity_as_own(session, own_ident, identity);
+                    return;
+                }
+            }
+        }
+        node = node->next;
+    }
+}
+
+void fix_own_identities(
+    PEP_SESSION session,
+    identity_list const * const all_own_identities,
+    identity_list const * const identities)
+{
+    identity_list *node = identities;
+    while (node) {
+        const pEp_identity *id = node->ident;
+        if (id) {
+            fix_own_identity(session, all_own_identities, id);
         }
         node = node->next;
     }
@@ -5279,6 +5302,11 @@ void fix_own_identities_in_message(PEP_SESSION session, message *message)
     if (status != PEP_STATUS_OK) {
         return;
     }
+
+    fix_own_identity(session, identities, message->from);
+    fix_own_identities(session, identities, message->to);
+    fix_own_identities(session, identities, message->cc);
+    fix_own_identities(session, identities, message->bcc);
 }
 
 /** @internal
