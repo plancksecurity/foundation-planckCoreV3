@@ -5248,6 +5248,10 @@ DYNAMIC_API PEP_STATUS get_key_ids(PEP_SESSION session, message *msg, stringlist
     return status;
 }
 
+PEP_STATUS update_own_identity(stringlist_t const * const all_own_identities) {
+   stringlist_t *node = all_own_identities;
+}
+
 /** @internal
  *  Rule for this function, since it is one of the three most complicated functions in this whole damned
  *  business:
