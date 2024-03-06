@@ -5249,7 +5249,7 @@ DYNAMIC_API PEP_STATUS get_key_ids(PEP_SESSION session, message *msg, stringlist
     return status;
 }
 
-void mark_identity_as_own(
+static void mark_identity_as_own(
     PEP_SESSION session,
     const pEp_identity *own_identity,
     pEp_identity *identity)
@@ -5261,7 +5261,7 @@ void mark_identity_as_own(
     }
 }
 
-void fix_own_identity(
+static void fix_own_identity(
     PEP_SESSION session,
     const identity_list *all_own_identities,
     pEp_identity *identity)
@@ -5282,7 +5282,7 @@ void fix_own_identity(
     }
 }
 
-void fix_own_identities(
+static void fix_own_identities(
     PEP_SESSION session,
     identity_list const * const all_own_identities,
     identity_list const * const identities)
@@ -5297,7 +5297,7 @@ void fix_own_identities(
     }
 }
 
-void fix_own_identities_in_message(PEP_SESSION session, message *message)
+static void fix_own_identities_in_message(PEP_SESSION session, message *message)
 {
     if (!message) {
         return;
