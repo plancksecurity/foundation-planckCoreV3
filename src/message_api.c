@@ -5269,9 +5269,9 @@ void fix_own_identity(
     while (node) {
         const pEp_identity *own_ident = node->ident;
         if (own_ident) {
-            const char *address = own_ident->address;
-            if (!EMPTYSTR(address)) {
-                if (!strcmp(address, identity->address)) {
+            const char *own_address = own_ident->address;
+            if (!EMPTYSTR(own_address)) {
+                if (!strcmp(own_address, identity->address)) {
                     mark_identity_as_own(session, own_ident, identity);
                     return;
                 }
