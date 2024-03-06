@@ -5255,7 +5255,7 @@ void mark_identity_as_own(
     pEp_identity *identity)
 {
     identity->me = true;
-    if (!identity->fpr && own_identity->fpr) {
+    if (EMPTYSTR(identity->fpr) && !EMPTYSTR(own_identity->fpr)) {
         identity->fpr = strdup(own_identity->fpr);
     }
 }
@@ -5270,7 +5270,7 @@ void fix_own_identity(
         const pEp_identity *own_ident = node->ident;
         if (own_ident) {
             const char *address = own_ident->address;
-            if (address) {
+            if (!EMPTYSTR(address)) {
                 if (!strcmp(address, identity->address)) {
                     mark_identity_as_own(session, own_ident, identity);
                     return;
