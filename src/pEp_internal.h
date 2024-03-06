@@ -5,14 +5,11 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-/*
- Changelog:
+//
+// Changelog:
 
- * 2023-07 _add_auto_consume() checks if header field already exists.
- * 2023-10-09/DZ Offer `untrust_this_key` as a more clearly defined
-   alternative to `key_reset_trust`.
-
- */
+// 2023-07 _add_auto_consume() checks if header field already exists.
+// 2023-10-09/DZ Offer `untrust_this_key` as a more clearly defined alternative to `key_reset_trust`.
 
 #ifndef PEP_INTERNAL_H
 #define PEP_INTERNAL_H
