@@ -5253,6 +5253,10 @@ void mark_identity_as_own(
     const pEp_identity *own_identity,
     pEp_identity *identity)
 {
+    identity->me = true;
+    if (!identity->fpr && own_identity->fpr) {
+        identity->fpr = strdup(own_identity->fpr);
+    }
 }
 
 void fix_own_identity(
