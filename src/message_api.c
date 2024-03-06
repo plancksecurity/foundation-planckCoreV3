@@ -5298,7 +5298,7 @@ void fix_own_identities_in_message(PEP_SESSION session, message *message)
     }
 
     identity_list *identities = NULL;
-    PEP_STATUS status = own_identities_retrieve(session, identities);
+    PEP_STATUS status = own_identities_retrieve(session, &identities);
     if (status != PEP_STATUS_OK) {
         return;
     }
