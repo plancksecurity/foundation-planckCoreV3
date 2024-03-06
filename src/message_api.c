@@ -5297,16 +5297,16 @@ static void fix_own_identities(
     }
 }
 
-static void fix_own_identities_in_message(PEP_SESSION session, message *message)
+static identity_list *fix_own_identities_in_message(PEP_SESSION session, message *message)
 {
     if (!message) {
-        return;
+        return NULL;
     }
 
     identity_list *all_own_identities = NULL;
     PEP_STATUS status = own_identities_retrieve(session, &all_own_identities);
     if (status != PEP_STATUS_OK) {
-        return;
+        return NULL;
     }
 
     fix_own_identity(session, all_own_identities, message->from);
@@ -5314,7 +5314,7 @@ static void fix_own_identities_in_message(PEP_SESSION session, message *message)
     fix_own_identities(session, all_own_identities, message->cc);
     fix_own_identities(session, all_own_identities, message->bcc);
 
-    free_identity_list(all_own_identities);
+    return all_own_identities;
 }
 
 /** @internal
@@ -5346,7 +5346,7 @@ static PEP_STATUS _decrypt_message(
     PEP_REQUIRE(session && src && dst && keylist && rating && flags);
 
     // Best effort, no error checking.
-    fix_own_identities_in_message(session, src);
+    identity_list *own_identities_from_message = fix_own_identities_in_message(session, src);
 
 /* Upgrade the pEp protocol version supported by the identity who sent the
    message.  This is called in case of success, after the sender identity
@@ -6670,6 +6670,7 @@ pEp_error:
     free(imported_sender_key_fpr);
     free(input_from_username);
     free(expected_signing_fingerprint);
+    free_identity_list(own_identities_from_message);
 
     return status;
 }
