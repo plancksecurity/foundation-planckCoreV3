@@ -978,6 +978,37 @@ static inline bool is_me(PEP_SESSION session, const pEp_identity* test_ident) {
         );
         free(def_id);
     }
+
+    // DEBUG CHECK
+    if (!EMPTYSTR(test_ident->address)) {
+        bool should_be_me = false;
+        identity_list *all_own_identities = NULL;
+        PEP_STATUS status = own_identities_retrieve(session, &all_own_identities);
+        if (status == PEP_STATUS_OK) {
+            identity_list *node = all_own_identities;
+            while (node) {
+                pEp_identity *own_ident = node->ident;
+                if (own_ident && !EMPTYSTR(own_ident->address) && !EMPTYSTR(test_ident->address)) {
+                    if (!strcmp(own_ident->address, test_ident->address)) {
+                        should_be_me = true;
+                        // Addresses match, so this is an own identity
+                        if (!test_ident->me) {
+                            printf("*** is_me() own identity %s not marked as own\n", own_ident->address);
+                        }
+                        if (EMPTYSTR(test_ident->fpr)) {
+                            printf("*** is_me() own identity %s without fingerprint\n", own_ident->address);
+                        }
+                    }
+                }
+                node = node->next;
+            }
+            free_identity_list(all_own_identities);
+        }
+        if (retval != should_be_me) {
+            printf("*** is_me() false negative %s\n", test_ident->address);
+        }
+    }
+
     return retval;
 }
 
