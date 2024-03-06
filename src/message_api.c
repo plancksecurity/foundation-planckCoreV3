@@ -5283,9 +5283,9 @@ void fix_own_identities(
 {
     identity_list *node = identities;
     while (node) {
-        const pEp_identity *id = node->ident;
-        if (id) {
-            fix_own_identity(session, all_own_identities, id);
+        const pEp_identity *ident = node->ident;
+        if (ident) {
+            fix_own_identity(session, all_own_identities, ident);
         }
         node = node->next;
     }
