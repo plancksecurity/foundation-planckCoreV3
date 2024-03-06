@@ -5297,16 +5297,16 @@ void fix_own_identities_in_message(PEP_SESSION session, message *message)
         return;
     }
 
-    identity_list *identities = NULL;
-    PEP_STATUS status = own_identities_retrieve(session, &identities);
+    identity_list *all_own_identities = NULL;
+    PEP_STATUS status = own_identities_retrieve(session, &all_own_identities);
     if (status != PEP_STATUS_OK) {
         return;
     }
 
-    fix_own_identity(session, identities, message->from);
-    fix_own_identities(session, identities, message->to);
-    fix_own_identities(session, identities, message->cc);
-    fix_own_identities(session, identities, message->bcc);
+    fix_own_identity(session, all_own_identities, message->from);
+    fix_own_identities(session, all_own_identities, message->to);
+    fix_own_identities(session, all_own_identities, message->cc);
+    fix_own_identities(session, all_own_identities, message->bcc);
 }
 
 /** @internal
