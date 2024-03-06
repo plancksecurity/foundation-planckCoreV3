@@ -6143,7 +6143,7 @@ static PEP_STATUS _decrypt_message(
                                 goto pEp_error;            
 
                             // Set default?
-                            // Note DZː There is no chance that this `inner_message->from` is detected as own identity.
+                            fix_own_identity(session, own_identities_from_message, inner_message->from);
                             if (!breaks_protocol && inner_message->from && !is_me(session, inner_message->from) && _imported_key_list) {
                                 // We don't consider the pEp 2.0 case anymore, so no special processing
                                 const char* key_claim_fpr = process_key_claim(inner_message, imported_sender_key_fpr,
