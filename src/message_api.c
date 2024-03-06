@@ -5256,6 +5256,7 @@ void mark_identity_as_own(
 {
     identity->me = true;
     if (EMPTYSTR(identity->fpr) && !EMPTYSTR(own_identity->fpr)) {
+        free(identity->fpr); // Could have been an allocated emtpy string
         identity->fpr = strdup(own_identity->fpr);
     }
 }
@@ -5312,6 +5313,8 @@ void fix_own_identities_in_message(PEP_SESSION session, message *message)
     fix_own_identities(session, all_own_identities, message->to);
     fix_own_identities(session, all_own_identities, message->cc);
     fix_own_identities(session, all_own_identities, message->bcc);
+
+    free_identity_list(all_own_identities);
 }
 
 /** @internal
