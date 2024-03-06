@@ -26,7 +26,8 @@
 // 04.10.2023/IG - update_sender_to_pEp_trust - Do not update sender trust if there is already an fpr available 
 // 31.10.2023/IP - added function to retrieve key_ids
 // 23.11.2023/DZ - reconcile_identity_lists checks for emtpy identity_list
-// 26.02.2024/DZ - Free after messageToSend()
+// 26.02.2024/DZ - free after messageToSend()
+// 06.03.2024/DZ - mark obvious own identities as own, before trying to decrypt
 
 #include "pEp_internal.h"
 #include "message_api.h"
