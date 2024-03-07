@@ -5291,8 +5291,8 @@ static void fix_own_identity(
 
 static void fix_own_identities(
     PEP_SESSION session,
-    identity_list const * const all_own_identities,
-    identity_list const * const identities)
+    const identity_list *all_own_identities,
+    const identity_list *identities)
 {
     identity_list *node = identities;
     while (node) {
