@@ -5269,6 +5269,9 @@ static void fix_own_identity(
     const identity_list *all_own_identities,
     pEp_identity *identity)
 {
+    if (!all_own_identities) {
+        return;
+    }
     identity_list *node = all_own_identities;
     while (node) {
         const pEp_identity *own_ident = node->ident;
@@ -5348,7 +5351,7 @@ static PEP_STATUS _decrypt_message(
 {
     PEP_REQUIRE(session && src && dst && keylist && rating && flags);
 
-    // Best effort, no error checking.
+    // Best effort, no error checking. Keep own identities for later.
     identity_list *own_identities_from_message = fix_own_identities_in_message(session, src);
 
 /* Upgrade the pEp protocol version supported by the identity who sent the
