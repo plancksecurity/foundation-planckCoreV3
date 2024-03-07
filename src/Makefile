@@ -8,7 +8,6 @@
 include ../Makefile.conf
 
 ifneq ($(BUILD_FOR),OS/390)
-    LDFLAGS += -shared
 endif
 
 NO_SOURCE=
@@ -31,7 +30,6 @@ CPPFLAGS+= -DSQLITE_THREADSAFE=1
 LDFLAGS+= -L../asn.1
 LDFLAGS+= -L$(PREFIX)/lib
 ifneq ($(BUILD_FOR),OS/390)
-    LDFLAGS+= -shared
     LDLIBS+= -lc
 endif
 LDLIBS+= -lasn1
@@ -40,7 +38,8 @@ ifeq ($(BUILD_FOR),OS/390)
     OPENPGP=NETPGP
     LDLIBS+= -lzz
 else ifeq ($(BUILD_FOR),Darwin)
-    LDLIBS+= -lz -liconv
+    LDLIBS+= /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/libiconv.tbd
+    LDLIBS+= /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/libz.tbd
 else ifeq ($(BUILD_FOR),Linux)
     CPPFLAGS+= -D_GNU_SOURCE
     LDLIBS+= -ldl -luuid
@@ -140,6 +139,7 @@ install: $(TARGET) install_headers
 	mkdir -p "$(DESTDIR)$(PREFIX)/lib/"
 	cp -v $< $(DESTDIR)$(PREFIX)/lib/
 	cp -v libpEpEngine.a $(DESTDIR)$(PREFIX)/lib/
+	cp -v ../asn.1/libasn1.a $(DESTDIR)$(PREFIX)/lib/
 
 beinstall: install
 	cp platform*.h $(DESTDIR)$(PREFIX)/include/pEp/
