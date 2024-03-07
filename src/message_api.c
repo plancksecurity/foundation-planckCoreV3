@@ -5270,10 +5270,6 @@ static void fix_own_identity(
     const identity_list *all_own_identities,
     pEp_identity *identity)
 {
-    // Extra check because it may be called stand-alone.
-    if (!all_own_identities) {
-        return;
-    }
     identity_list *node = all_own_identities;
     while (node) {
         const pEp_identity *own_ident = node->ident;
