@@ -5256,10 +5256,11 @@ static void mark_identity_as_own(
 {
     identity->me = true;
     if (EMPTYSTR(identity->fpr) && !EMPTYSTR(own_identity->fpr)) {
-        free(identity->fpr); // Could have been an allocated emtpy string
+        free(identity->fpr);
         identity->fpr = strdup(own_identity->fpr);
     }
     if (EMPTYSTR(identity->user_id) && !EMPTYSTR(own_identity->user_id)) {
+        free(identity->user_id);
         identity->user_id = strdup(own_identity->user_id);
     }
 }
