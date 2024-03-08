@@ -26,7 +26,8 @@
 // 04.10.2023/IG - update_sender_to_pEp_trust - Do not update sender trust if there is already an fpr available 
 // 31.10.2023/IP - added function to retrieve key_ids
 // 23.11.2023/DZ - reconcile_identity_lists checks for emtpy identity_list
-// 26.02.2024/DZ - Free after messageToSend()
+// 26.02.2024/DZ - free after messageToSend()
+// 06.03.2024/DZ - mark obvious own identities as own, before trying to decrypt
 
 #include "pEp_internal.h"
 #include "message_api.h"
@@ -5248,6 +5249,78 @@ DYNAMIC_API PEP_STATUS get_key_ids(PEP_SESSION session, message *msg, stringlist
     return status;
 }
 
+static void mark_identity_as_own(
+    PEP_SESSION session,
+    const pEp_identity *own_identity,
+    pEp_identity *identity)
+{
+    identity->me = true;
+    if (EMPTYSTR(identity->fpr) && !EMPTYSTR(own_identity->fpr)) {
+        free(identity->fpr);
+        identity->fpr = strdup(own_identity->fpr);
+    }
+    if (EMPTYSTR(identity->user_id) && !EMPTYSTR(own_identity->user_id)) {
+        free(identity->user_id);
+        identity->user_id = strdup(own_identity->user_id);
+    }
+}
+
+static void fix_own_identity(
+    PEP_SESSION session,
+    const identity_list *all_own_identities,
+    pEp_identity *identity)
+{
+    identity_list *node = all_own_identities;
+    while (node) {
+        const pEp_identity *own_ident = node->ident;
+        if (own_ident) {
+            const char *own_address = own_ident->address;
+            if (!EMPTYSTR(own_address)) {
+                if (!strcmp(own_address, identity->address)) {
+                    mark_identity_as_own(session, own_ident, identity);
+                    return;
+                }
+            }
+        }
+        node = node->next;
+    }
+}
+
+static void fix_own_identities(
+    PEP_SESSION session,
+    const identity_list *all_own_identities,
+    const identity_list *identities)
+{
+    identity_list *node = identities;
+    while (node) {
+        const pEp_identity *ident = node->ident;
+        if (ident) {
+            fix_own_identity(session, all_own_identities, ident);
+        }
+        node = node->next;
+    }
+}
+
+static identity_list *fix_own_identities_in_message(PEP_SESSION session, message *message)
+{
+    if (!message) {
+        return NULL;
+    }
+
+    identity_list *all_own_identities = NULL;
+    PEP_STATUS status = own_identities_retrieve(session, &all_own_identities);
+    if (status != PEP_STATUS_OK) {
+        return NULL;
+    }
+
+    fix_own_identity(session, all_own_identities, message->from);
+    fix_own_identities(session, all_own_identities, message->to);
+    fix_own_identities(session, all_own_identities, message->cc);
+    fix_own_identities(session, all_own_identities, message->bcc);
+
+    return all_own_identities;
+}
+
 /** @internal
  *  Rule for this function, since it is one of the three most complicated functions in this whole damned
  *  business:
@@ -5275,6 +5348,9 @@ static PEP_STATUS _decrypt_message(
     )
 {
     PEP_REQUIRE(session && src && dst && keylist && rating && flags);
+
+    // Best effort, no error checking. Keep own identities for later.
+    identity_list *own_identities = fix_own_identities_in_message(session, src);
 
 /* Upgrade the pEp protocol version supported by the identity who sent the
    message.  This is called in case of success, after the sender identity
@@ -6071,6 +6147,7 @@ static PEP_STATUS _decrypt_message(
                                 goto pEp_error;            
 
                             // Set default?
+                            fix_own_identity(session, own_identities, inner_message->from);
                             if (!breaks_protocol && inner_message->from && !is_me(session, inner_message->from) && _imported_key_list) {
                                 // We don't consider the pEp 2.0 case anymore, so no special processing
                                 const char* key_claim_fpr = process_key_claim(inner_message, imported_sender_key_fpr,
@@ -6597,6 +6674,7 @@ pEp_error:
     free(imported_sender_key_fpr);
     free(input_from_username);
     free(expected_signing_fingerprint);
+    free_identity_list(own_identities);
 
     return status;
 }
