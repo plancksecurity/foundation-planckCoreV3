@@ -5317,23 +5317,6 @@ static identity_list *fix_own_identities_in_message(PEP_SESSION session, message
     return all_own_identities;
 }
 
-void
-dump_blob_list_buffers(const bloblist_t *blobs)
-{
-    if (blobs) {
-        char buffer[512] = "";
-        sprintf(buffer, "0x%p:", blobs);
-        for (const bloblist_t *current = blobs; current; current = current->next) {
-            if (current->value) {
-                char buffer2[64] = "";
-                sprintf(buffer2, " 0x%p", current->value);
-                strcat(buffer, buffer2);
-            }
-        }
-        printf("%s\n", buffer);
-    }
-}
-
 /** @internal
  *  Rule for this function, since it is one of the three most complicated functions in this whole damned
  *  business:
@@ -5528,7 +5511,8 @@ static PEP_STATUS _decrypt_message(
     // header key here, but if this changes, we MUST change this assumption
     bool header_key_imported = import_header_keys(session, src, 
                                                   &_imported_key_list, 
-                                                  &_changed_keys);
+                                                  &_changed_keys);    
+    
     // Does this need to reflect the above?
     bool keys_were_imported = false;
         
