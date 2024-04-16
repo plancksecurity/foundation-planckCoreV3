@@ -1,9 +1,3 @@
-/*
- Changelog:
-
- * 2023-06 _decrypt_message() while working on Major version 3 does properly handle a sync key-reset via using the result without hard-overwritting it.
- */
-
 /**
  * @file     message_api.c
  * @brief    implementation of pEp engine API for message handling and evaluation and related functions
@@ -18,6 +12,7 @@
 
 // Changelog:
 //
+// 2023-06 _decrypt_message() while working on Major version 3 does properly handle a sync key-reset via using the result without hard-overwritting it.
 // 2023-06 get_trustwords() figures out the versions of input identities, if not set already.
 // 2023-07 search_opt_field() searches for an existing header field.
 // 2023-07 set_receiverRating add new bool parameter to decide whether to add signature with rating.
@@ -28,6 +23,7 @@
 // 23.11.2023/DZ - reconcile_identity_lists checks for emtpy identity_list
 // 26.02.2024/DZ - free after messageToSend()
 // 06.03.2024/DZ - mark obvious own identities as own, before trying to decrypt
+// 16.04.2024/DZ - fix memory leak
 
 #include "pEp_internal.h"
 #include "message_api.h"
@@ -6658,10 +6654,12 @@ static PEP_STATUS _decrypt_message(
 
     if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
         UPGRADE_PROTOCOL_VERSION_IF_NEEDED(msg);
+        free(ptext);
         return PEP_STATUS_OK;
-    }
-    else
+    } else {
+        free(ptext);
         return decrypt_status;
+    }
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
