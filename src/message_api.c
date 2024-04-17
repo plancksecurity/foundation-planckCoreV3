@@ -6652,12 +6652,13 @@ static PEP_STATUS _decrypt_message(
         }
     }
 
+    free(ptext);
+    free_identity_list(own_identities);
+
     if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
         UPGRADE_PROTOCOL_VERSION_IF_NEEDED(msg);
-        free(ptext);
         return PEP_STATUS_OK;
     } else {
-        free(ptext);
         return decrypt_status;
     }
 
