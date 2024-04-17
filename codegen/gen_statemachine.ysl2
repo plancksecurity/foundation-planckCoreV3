@@ -977,7 +977,7 @@ tstylesheet {
                     }
 
                     status = session->messageToSend(m);
-                    free(m);
+                    free_message(m);
                     m = NULL;
                 }
             ||
