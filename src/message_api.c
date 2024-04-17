@@ -4281,11 +4281,13 @@ static PEP_STATUS import_keys_from_decrypted_msg(PEP_SESSION session,
         *private_il = NULL;
 
     // check for private key in decrypted message attachment while importing
-    identity_list *_il = NULL;
     identity_list *_private_il = NULL;
 
-    bool _keys_were_imported = import_attached_keys(session, msg, is_pEp_msg,
-                                                    &_il, &_private_il,
+    bool _keys_were_imported = import_attached_keys(session,
+                                                    msg,
+                                                    is_pEp_msg,
+                                                    NULL,
+                                                    &_private_il,
                                                     keylist,
                                                     changed_keys, pEp_sender_key);
     bool _imported_private = false;
