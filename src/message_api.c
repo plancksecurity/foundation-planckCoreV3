@@ -4059,8 +4059,8 @@ static PEP_STATUS verify_decrypted(PEP_SESSION session,
     }
     else {
         size_t csize, psize;
-        char* ctext;
-        char* ptext;
+        char* ctext = NULL;
+        char* ptext = NULL;
         get_crypto_text(src, &ctext, &csize);
         // reverify - we may have imported a key in the meantime
         // status = cryptotech[crypto].verify_text(session, ctext,
@@ -4071,7 +4071,7 @@ static PEP_STATUS verify_decrypted(PEP_SESSION session,
                                              NULL, 0,
                                              &ptext, &psize, keylist,
                                              NULL);
-        
+        free(ptext);
     }
 
     if (*decrypt_status != PEP_DECRYPTED_AND_VERIFIED)
