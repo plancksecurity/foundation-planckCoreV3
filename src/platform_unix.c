@@ -600,9 +600,11 @@ static PEP_STATUS _move_files_from_old_to_new_if_necessary(void)
 #undef CHECK
 #undef CHECK_STATUS
 #undef MOVE
+    free(new_directory);
     return status;
 
  error:
+    free(new_directory);
     free(old_file);
     return status;
 }
