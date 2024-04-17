@@ -5462,8 +5462,10 @@ static PEP_STATUS _decrypt_message(
                 status = update_identity(session, tmp_from);
                 if (status == PEP_CANNOT_FIND_IDENTITY) {
                     tmp_from->user_id = calloc(1, strlen(tmp_from->address) + 6);
-                    if (!tmp_from->user_id)
+                    if (!tmp_from->user_id) {
+                        free_identity_list(own_identities);
                         return PEP_OUT_OF_MEMORY;
+                    }
                     snprintf(tmp_from->user_id, strlen(tmp_from->address) + 6,
                              "TOFU_%s", tmp_from->address);        
                     status = PEP_STATUS_OK;
@@ -5675,6 +5677,7 @@ static PEP_STATUS _decrypt_message(
                the multiple return points. */
             _update_or_myself_message(session, src); /* Ignore status. */
         }
+        free_identity_list(own_identities);
         return status;
     }
     /*** End check for and deal with unencrypted messages ***/
@@ -5695,6 +5698,7 @@ static PEP_STATUS _decrypt_message(
     if (src->recv_by && !EMPTYSTR(src->recv_by->address)) {
         status = myself(session, src->recv_by);
         if (status) {
+            free_identity_list(own_identities);
             free_stringlist(_imported_key_list);
             return status;
         }
@@ -5703,6 +5707,7 @@ static PEP_STATUS _decrypt_message(
     // FIXME: see above
     status = get_crypto_text(src, &ctext, &csize);
     if (status) {
+        free_identity_list(own_identities);
         free_stringlist(_imported_key_list);
         return status;
     }
@@ -6221,8 +6226,10 @@ static PEP_STATUS _decrypt_message(
                     status = update_identity(session, msg_from);
                     if (status == PEP_CANNOT_FIND_IDENTITY) {
                         msg_from->user_id = calloc(1, strlen(msg_from->address) + 6);
-                        if (!msg_from->user_id)
+                        if (!msg_from->user_id) {
+                            free_identity_list(own_identities);
                             return PEP_OUT_OF_MEMORY;
+                        }
                         snprintf(msg_from->user_id, strlen(msg_from->address) + 6,
                                  "TOFU_%s", msg_from->address);        
                         status = PEP_STATUS_OK;
@@ -6398,8 +6405,10 @@ static PEP_STATUS _decrypt_message(
                                             // FIXME: Factor out of send_key_reset_to_active_group_members
                                             message* outmsg = NULL;
                                             identity_list* reset_ident_list = new_identity_list(group_ident);
-                                            if (!group_ident)
+                                            if (!group_ident) {
+                                                free_identity_list(own_identities);
                                                 return PEP_OUT_OF_MEMORY;
+                                            }
 
                                             pEp_identity* manager = NULL;
                                             status = get_group_manager(session, group_ident, &manager);
@@ -6432,8 +6441,10 @@ static PEP_STATUS _decrypt_message(
                                                 // extra keys???
                                                 status = encrypt_message(session, outmsg, NULL, &enc_group_reset_msg, PEP_enc_auto, PEP_encrypt_flag_key_reset_only);
 
-                                                if (status != PEP_STATUS_OK)
+                                                if (status != PEP_STATUS_OK) {
+                                                    free_identity_list(own_identities);
                                                     return status;
+                                                }
 
                                                 _add_auto_consume(enc_group_reset_msg);
 
