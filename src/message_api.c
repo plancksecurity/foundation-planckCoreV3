@@ -5655,11 +5655,6 @@ static PEP_STATUS _decrypt_message(
         if (changed_public_keys)
             *changed_public_keys = _changed_keys;
         
-        if (imported_key_fprs)
-            *imported_key_fprs = _imported_key_list;
-        if (changed_public_keys)
-            *changed_public_keys = _changed_keys;
-
         // FIXME: double check for mem leaks from beginning of function in the unencrypted case!
         free(input_from_username); // in case we didn't use it (if we did, this is NULL)
 
