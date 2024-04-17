@@ -291,8 +291,11 @@ static char *_string_concatenate_3(const char *a, const char *b, const char *c)
     char *a_b = _string_concatenate_2(a, b);
     if (a_b == NULL)
         return NULL;
-    else
-        return _string_concatenate_2(a_b, c);
+    else {
+        char *result = _string_concatenate_2(a_b, c);
+        free(a_b);
+        return result;
+    }
 }
 
 #if !defined(BSD) && !defined(__APPLE__) && !defined(HAS_STRL)
