@@ -5636,9 +5636,6 @@ static PEP_STATUS _decrypt_message(
 
                 status = _check_and_set_default_key(session, src->from, sender_key);
                 free(imported_sender_key_fpr);
-                //Sascha: local_idents isn't used further ahead, at least currently and as such it is free'd.
-                free(local_idents);
-                local_idents = NULL;
                 imported_sender_key_fpr = NULL;
 
                 if (status == PEP_OUT_OF_MEMORY)
@@ -5647,6 +5644,9 @@ static PEP_STATUS _decrypt_message(
                     status = incoming_status;
             }
         }
+
+        free(local_idents);
+        local_idents = NULL;
 
         if (imported_key_fprs)
             *imported_key_fprs = _imported_key_list;
