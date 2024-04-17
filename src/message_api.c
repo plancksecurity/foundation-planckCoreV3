@@ -5527,8 +5527,11 @@ static PEP_STATUS _decrypt_message(
     //Heavily review this.
     if (enc_type != PEP_crypt_OpenPGP || !(src->enc_format == PEP_enc_PGP_MIME || src->enc_format == PEP_enc_PGP_MIME_Outlook1)) {
         keys_were_imported = import_attached_keys(session, 
-                                                  src, is_pEp_msg, &local_idents, NULL,
-                                                  &_imported_key_list, 
+                                                  src,
+                                                  is_pEp_msg,
+                                                  &local_idents,
+                                                  NULL,
+                                                  &_imported_key_list,
                                                   &_changed_keys,
                                                   &imported_sender_key_fpr);
     }
