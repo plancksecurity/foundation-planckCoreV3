@@ -3369,23 +3369,33 @@ DYNAMIC_API PEP_STATUS import_key_with_fpr_return(
     identity_list **local_private_ident = NULL;
     stringlist_t** local_imported_keys = NULL;
 
-    PEP_STATUS status = session->cryptotech[PEP_crypt_OpenPGP].import_key(session, key_data,
-            size, local_identities, local_private_ident, local_imported_keys, changed_public_keys);
+    PEP_STATUS status = session->cryptotech[PEP_crypt_OpenPGP].import_key(
+        session,
+        key_data,
+        size,
+        local_identities,
+        local_private_ident,
+        local_imported_keys,
+        changed_public_keys);
 
     if (status == PEP_STATUS_OK) {
         if (identities) {
-            *identities = identity_dup(local_identities);
-        }
-        if (private_ident) {
-            *private_ident = identity_dup(local_private_ident);
-        }
-        if (imported_keys) {
-            *imported_keys = stringlist_dup(local_imported_keys);
+            *identities = local_identities;
+        } else {
+            free_identity_list(local_identities);
         }
 
-        free_identity_list(local_identities);
-        free_identity_list(local_private_ident);
-        free_stringlist(local_imported_keys);
+        if (private_ident) {
+            *private_ident = local_private_ident;
+        } else {
+            free_identity_list(local_private_ident);
+        }
+
+        if (imported_keys) {
+            *imported_keys = local_imported_keys;
+        } else {
+            free_stringlist(local_imported_keys);
+        }
     }
 
     return status;
