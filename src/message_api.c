@@ -23,7 +23,7 @@
 // 23.11.2023/DZ - reconcile_identity_lists checks for emtpy identity_list
 // 26.02.2024/DZ - free after messageToSend()
 // 06.03.2024/DZ - mark obvious own identities as own, before trying to decrypt
-// 16.04.2024/DZ - fix memory leak
+// 16.04.2024/DZ - fix memory leaks
 
 #include "pEp_internal.h"
 #include "message_api.h"
