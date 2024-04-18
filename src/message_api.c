@@ -4291,7 +4291,8 @@ static PEP_STATUS import_keys_from_decrypted_msg(PEP_SESSION session,
                                                     NULL,
                                                     &_private_il,
                                                     keylist,
-                                                    changed_keys, pEp_sender_key);
+                                                    changed_keys,
+                                                    pEp_sender_key);
     bool _imported_private = false;
     if (_private_il && _private_il->ident && _private_il->ident->address)
         _imported_private = true;
