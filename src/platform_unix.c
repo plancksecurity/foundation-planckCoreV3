@@ -1087,7 +1087,10 @@ error:
    variables still need to be expanded ...*/
 static char *_unix_local_db(void)
 {
-    return _string_concatenate_3(_per_user_directory(), "/", LOCAL_DB_FILENAME);
+    const char *directory = _per_user_directory();
+    char *result = _string_concatenate_3(directory, "/", LOCAL_DB_FILENAME);
+    free(directory);
+    return result;
 }
 
 /* Like _unix_local_db for the log database: compute the path, without touching
@@ -1095,7 +1098,10 @@ static char *_unix_local_db(void)
    notice that variables still need to be expanded ...*/
 static char *_unix_log_db(void)
 {
-    return _string_concatenate_3(_per_user_directory(), "/", LOG_DB_FILENAME);
+    const char *directory = _per_user_directory();
+    char *result = _string_concatenate_3(directory, "/", LOG_DB_FILENAME);
+    free(directory);
+    return result;
 }
 
 static char *_per_machine_directory(void) {
