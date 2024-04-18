@@ -3170,6 +3170,7 @@ DYNAMIC_API PEP_STATUS probe_encrypt(PEP_SESSION session, const char *fpr)
     size_t csize = 0;
     PEP_STATUS status = encrypt_and_sign(session, keylist, "planck", 4, &ctext, &csize);
     free(ctext);
+    free_stringlist(keylist);
 
     return status;
 }
