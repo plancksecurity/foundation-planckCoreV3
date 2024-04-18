@@ -6672,6 +6672,7 @@ static PEP_STATUS _decrypt_message(
     free(ptext);
     free_identity_list(own_identities);
     free(expected_signing_fingerprint);
+    free(imported_sender_key_fpr);
 
     if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
         UPGRADE_PROTOCOL_VERSION_IF_NEEDED(msg);
