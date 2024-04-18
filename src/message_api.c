@@ -2377,15 +2377,17 @@ bool import_attached_keys(
             bl = bl->next;
         }
     }
-    if (pEp_sender_key)
+    if (pEp_sender_key) {
         *pEp_sender_key = _sender_key_retval;
-        
+    } else {
+        free(_sender_key_retval);
+    }
     if (imported_key_list) {
         if (!(*imported_key_list))
             *imported_key_list = _keylist;
-    }        
-    else 
+    } else {
         free_stringlist(_keylist);
+    }
         
     return remove;
 }
