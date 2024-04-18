@@ -4,6 +4,10 @@
  * @license This file is under GNU General Public License 3.0. - see LICENSE.txt 
  */
 
+// Changelog:
+//
+// 16.04.2024/DZ - fix memory leaks
+
 #ifndef __MVS__
 #define _POSIX_C_SOURCE 200809L
 #endif
