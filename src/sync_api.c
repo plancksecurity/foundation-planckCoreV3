@@ -5,6 +5,9 @@
  * see LICENSE.txt
  */
 
+// Changelog:
+//
+// 16.04.2024/DZ - fix memory leaks
 
 #include "pEp_internal.h"
 
