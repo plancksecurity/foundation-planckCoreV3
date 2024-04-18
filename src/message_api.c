@@ -5836,9 +5836,6 @@ static PEP_STATUS _decrypt_message(
                     }
                 }
 
-                free(imported_sender_key_fpr);
-                imported_sender_key_fpr = NULL;
-
                 if (status != PEP_STATUS_OK)
                     goto pEp_error;            
 
@@ -5898,6 +5895,10 @@ static PEP_STATUS _decrypt_message(
                     }
                 }
                                                         
+                // Duplicate code from above - factor out
+                free(imported_sender_key_fpr);
+                imported_sender_key_fpr = NULL;
+                
                 stringlist_t** start = (_imported_key_list ? &(stringlist_get_tail(_imported_key_list)->next) : &_imported_key_list);
                 // if this is a non-pEp message or a 1.0 message, we'll need to do some default-setting here. 
                 // otherwise, we don't ask for a sender import fpr because for pEp 2.0+ any legit default key attachments should 
