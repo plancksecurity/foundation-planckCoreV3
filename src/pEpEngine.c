@@ -4,8 +4,12 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
- // 07.08.2023/IP - added method import_extrakey_with_fpr_return & changed behaviour of handling identity flags when extrakey encryption is requested
+// Changelog
+//
+// 07.08.2023/IP - added method import_extrakey_with_fpr_return & changed behaviour of handling identity flags when extrakey encryption is requested
 // 18.10.2023/TC - added identities out param, additionally made the param names more descriptive, removed import_key_strict as it isn't used anymore.
+// 18.04.2024/DZ - fixed memory leaks
+
 #include "pEp_internal.h"
 #include "dynamic_api.h"
 #include "cryptotech.h"
