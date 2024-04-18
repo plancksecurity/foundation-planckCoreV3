@@ -153,6 +153,7 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
             break;
 
         do_sync_protocol_step(session, event);
+        free_Sync_event(event);
     }
     /* Here we could initialise session-local state, if we had any. */
 
