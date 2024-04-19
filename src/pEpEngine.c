@@ -3350,7 +3350,7 @@ DYNAMIC_API PEP_STATUS import_key_with_fpr_return(
         identity_list **identities,
         identity_list **private_ident,
         stringlist_t** imported_keys,
-        uint64_t* changed_public_keys        
+        uint64_t* changed_public_keys
     )
 {
     PEP_REQUIRE(session && key_data && size
@@ -3369,40 +3369,8 @@ DYNAMIC_API PEP_STATUS import_key_with_fpr_return(
     if (imported_keys && !*imported_keys && changed_public_keys)
         *changed_public_keys = 0;
 
-    identity_list **local_identities = NULL;
-    identity_list **local_private_ident = NULL;
-    stringlist_t** local_imported_keys = NULL;
-
-    PEP_STATUS status = session->cryptotech[PEP_crypt_OpenPGP].import_key(
-        session,
-        key_data,
-        size,
-        local_identities,
-        local_private_ident,
-        local_imported_keys,
-        changed_public_keys);
-
-    if (status == PEP_STATUS_OK) {
-        if (identities) {
-            *identities = local_identities;
-        } else {
-            free_identity_list(local_identities);
-        }
-
-        if (private_ident) {
-            *private_ident = local_private_ident;
-        } else {
-            free_identity_list(local_private_ident);
-        }
-
-        if (imported_keys) {
-            *imported_keys = local_imported_keys;
-        } else {
-            free_stringlist(local_imported_keys);
-        }
-    }
-
-    return status;
+    return session->cryptotech[PEP_crypt_OpenPGP].import_key(session, key_data,
+            size, identities, private_ident, imported_keys, changed_public_keys);
 }
 
 // 07.08.2023/IP - added method import_extrakey_with_fpr_return
