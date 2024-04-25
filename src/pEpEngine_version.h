@@ -6,6 +6,9 @@
  * @license   GNU General Public License 3.0 - see LICENSE.txt
  */
 
+
+// Changelog
+//
 // 29.08.2023/AT - bumped version to 3.3.2
 // 13.09.2023/DZ - bumped version to 3.3.3
 // 21.09.2023/AT - bumped version to 3.3.4
@@ -29,13 +32,14 @@
 // 01.03.2024/DZ - bump version to 3.3.24
 // 11.03.2024/DZ - bump version to 3.3.25
 // 18.04.2024/DZ - bump version to 3.3.26
+// 25.04.2024/DZ - bump version to 3.3.27
 
 #ifndef _PEP_ENGINE_VERSION_H_
 #define _PEP_ENGINE_VERSION_H_
 
 #define PEP_ENGINE_VERSION_MAJOR          3
 #define PEP_ENGINE_VERSION_MINOR          3
-#define PEP_ENGINE_VERSION_PATCH          26
+#define PEP_ENGINE_VERSION_PATCH          27
 
 // #define PEP_ENGINE_VERSION_RC             4   /* This is a Release Candidate. */
 
@@ -44,6 +48,6 @@
 /* PEP_ENGINE_VERSION_BRANCH_SUFFIX not defined. */
 
 /* The main version string for the user. */
-#define PEP_ENGINE_VERSION "3.3.26"
+#define PEP_ENGINE_VERSION "3.3.27"
 
 #endif /* #ifndef _PEP_ENGINE_VERSION_H_ */
