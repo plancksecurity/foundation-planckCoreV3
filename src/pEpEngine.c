@@ -4,8 +4,12 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
- // 07.08.2023/IP - added method import_extrakey_with_fpr_return & changed behaviour of handling identity flags when extrakey encryption is requested
+// Changelog
+//
+// 07.08.2023/IP - added method import_extrakey_with_fpr_return & changed behaviour of handling identity flags when extrakey encryption is requested
 // 18.10.2023/TC - added identities out param, additionally made the param names more descriptive, removed import_key_strict as it isn't used anymore.
+// 18.04.2024/DZ - fixed memory leaks
+
 #include "pEp_internal.h"
 #include "dynamic_api.h"
 #include "cryptotech.h"
@@ -3170,6 +3174,7 @@ DYNAMIC_API PEP_STATUS probe_encrypt(PEP_SESSION session, const char *fpr)
     size_t csize = 0;
     PEP_STATUS status = encrypt_and_sign(session, keylist, "planck", 4, &ctext, &csize);
     free(ctext);
+    free_stringlist(keylist);
 
     return status;
 }
@@ -3345,7 +3350,7 @@ DYNAMIC_API PEP_STATUS import_key_with_fpr_return(
         identity_list **identities,
         identity_list **private_ident,
         stringlist_t** imported_keys,
-        uint64_t* changed_public_keys        
+        uint64_t* changed_public_keys
     )
 {
     PEP_REQUIRE(session && key_data && size

@@ -1,9 +1,3 @@
-/*
- Changelog:
-
- * 2023-06 _decrypt_message() while working on Major version 3 does properly handle a sync key-reset via using the result without hard-overwritting it.
- */
-
 /**
  * @file     message_api.c
  * @brief    implementation of pEp engine API for message handling and evaluation and related functions
@@ -18,6 +12,7 @@
 
 // Changelog:
 //
+// 2023-06 _decrypt_message() while working on Major version 3 does properly handle a sync key-reset via using the result without hard-overwritting it.
 // 2023-06 get_trustwords() figures out the versions of input identities, if not set already.
 // 2023-07 search_opt_field() searches for an existing header field.
 // 2023-07 set_receiverRating add new bool parameter to decide whether to add signature with rating.
@@ -28,6 +23,7 @@
 // 23.11.2023/DZ - reconcile_identity_lists checks for emtpy identity_list
 // 26.02.2024/DZ - free after messageToSend()
 // 06.03.2024/DZ - mark obvious own identities as own, before trying to decrypt
+// 16.04.2024/DZ - fix memory leaks
 
 #include "pEp_internal.h"
 #include "message_api.h"
@@ -2381,15 +2377,17 @@ bool import_attached_keys(
             bl = bl->next;
         }
     }
-    if (pEp_sender_key)
+    if (pEp_sender_key) {
         *pEp_sender_key = _sender_key_retval;
-        
+    } else {
+        free(_sender_key_retval);
+    }
     if (imported_key_list) {
         if (!(*imported_key_list))
             *imported_key_list = _keylist;
-    }        
-    else 
+    } else {
         free_stringlist(_keylist);
+    }
         
     return remove;
 }
@@ -4063,8 +4061,8 @@ static PEP_STATUS verify_decrypted(PEP_SESSION session,
     }
     else {
         size_t csize, psize;
-        char* ctext;
-        char* ptext;
+        char* ctext = NULL;
+        char* ptext = NULL;
         get_crypto_text(src, &ctext, &csize);
         // reverify - we may have imported a key in the meantime
         // status = cryptotech[crypto].verify_text(session, ctext,
@@ -4075,7 +4073,7 @@ static PEP_STATUS verify_decrypted(PEP_SESSION session,
                                              NULL, 0,
                                              &ptext, &psize, keylist,
                                              NULL);
-        
+        free(ptext);
     }
 
     if (*decrypt_status != PEP_DECRYPTED_AND_VERIFIED)
@@ -4285,13 +4283,16 @@ static PEP_STATUS import_keys_from_decrypted_msg(PEP_SESSION session,
         *private_il = NULL;
 
     // check for private key in decrypted message attachment while importing
-    identity_list *_il = NULL;
     identity_list *_private_il = NULL;
 
-    bool _keys_were_imported = import_attached_keys(session, msg, is_pEp_msg,
-                                                    &_il, &_private_il,
+    bool _keys_were_imported = import_attached_keys(session,
+                                                    msg,
+                                                    is_pEp_msg,
+                                                    NULL,
+                                                    &_private_il,
                                                     keylist,
-                                                    changed_keys, pEp_sender_key);
+                                                    changed_keys,
+                                                    pEp_sender_key);
     bool _imported_private = false;
     if (_private_il && _private_il->ident && _private_il->ident->address)
         _imported_private = true;
@@ -4319,8 +4320,11 @@ static PEP_STATUS import_keys_from_decrypted_msg(PEP_SESSION session,
             il->ident->me = true;
         }
         free(own_id);
-        if (!status)
+        if (!status) {
             *private_il = _private_il;
+        } else {
+            free_identity_list(_private_il);
+        }
     }
     else {
         free_identity_list(_private_il);
@@ -5461,8 +5465,10 @@ static PEP_STATUS _decrypt_message(
                 status = update_identity(session, tmp_from);
                 if (status == PEP_CANNOT_FIND_IDENTITY) {
                     tmp_from->user_id = calloc(1, strlen(tmp_from->address) + 6);
-                    if (!tmp_from->user_id)
+                    if (!tmp_from->user_id) {
+                        free_identity_list(own_identities);
                         return PEP_OUT_OF_MEMORY;
+                    }
                     snprintf(tmp_from->user_id, strlen(tmp_from->address) + 6,
                              "TOFU_%s", tmp_from->address);        
                     status = PEP_STATUS_OK;
@@ -5526,8 +5532,11 @@ static PEP_STATUS _decrypt_message(
     //Heavily review this.
     if (enc_type != PEP_crypt_OpenPGP || !(src->enc_format == PEP_enc_PGP_MIME || src->enc_format == PEP_enc_PGP_MIME_Outlook1)) {
         keys_were_imported = import_attached_keys(session, 
-                                                  src, is_pEp_msg, &local_idents, NULL,
-                                                  &_imported_key_list, 
+                                                  src,
+                                                  is_pEp_msg,
+                                                  &local_idents,
+                                                  NULL,
+                                                  &_imported_key_list,
                                                   &_changed_keys,
                                                   &imported_sender_key_fpr);
     }
@@ -5632,9 +5641,6 @@ static PEP_STATUS _decrypt_message(
 
                 status = _check_and_set_default_key(session, src->from, sender_key);
                 free(imported_sender_key_fpr);
-                //Sascha: local_idents isn't used further ahead, at least currently and as such it is free'd.
-                free(local_idents);
-                local_idents = NULL;
                 imported_sender_key_fpr = NULL;
 
                 if (status == PEP_OUT_OF_MEMORY)
@@ -5644,16 +5650,14 @@ static PEP_STATUS _decrypt_message(
             }
         }
 
+        free(local_idents);
+        local_idents = NULL;
+
         if (imported_key_fprs)
             *imported_key_fprs = _imported_key_list;
         if (changed_public_keys)
             *changed_public_keys = _changed_keys;
         
-        if (imported_key_fprs)
-            *imported_key_fprs = _imported_key_list;
-        if (changed_public_keys)
-            *changed_public_keys = _changed_keys;
-
         // FIXME: double check for mem leaks from beginning of function in the unencrypted case!
         free(input_from_username); // in case we didn't use it (if we did, this is NULL)
 
@@ -5671,6 +5675,7 @@ static PEP_STATUS _decrypt_message(
                the multiple return points. */
             _update_or_myself_message(session, src); /* Ignore status. */
         }
+        free_identity_list(own_identities);
         return status;
     }
     /*** End check for and deal with unencrypted messages ***/
@@ -5691,6 +5696,7 @@ static PEP_STATUS _decrypt_message(
     if (src->recv_by && !EMPTYSTR(src->recv_by->address)) {
         status = myself(session, src->recv_by);
         if (status) {
+            free_identity_list(own_identities);
             free_stringlist(_imported_key_list);
             return status;
         }
@@ -5699,6 +5705,7 @@ static PEP_STATUS _decrypt_message(
     // FIXME: see above
     status = get_crypto_text(src, &ctext, &csize);
     if (status) {
+        free_identity_list(own_identities);
         free_stringlist(_imported_key_list);
         return status;
     }
@@ -6217,8 +6224,10 @@ static PEP_STATUS _decrypt_message(
                     status = update_identity(session, msg_from);
                     if (status == PEP_CANNOT_FIND_IDENTITY) {
                         msg_from->user_id = calloc(1, strlen(msg_from->address) + 6);
-                        if (!msg_from->user_id)
+                        if (!msg_from->user_id) {
+                            free_identity_list(own_identities);
                             return PEP_OUT_OF_MEMORY;
+                        }
                         snprintf(msg_from->user_id, strlen(msg_from->address) + 6,
                                  "TOFU_%s", msg_from->address);        
                         status = PEP_STATUS_OK;
@@ -6394,8 +6403,10 @@ static PEP_STATUS _decrypt_message(
                                             // FIXME: Factor out of send_key_reset_to_active_group_members
                                             message* outmsg = NULL;
                                             identity_list* reset_ident_list = new_identity_list(group_ident);
-                                            if (!group_ident)
+                                            if (!group_ident) {
+                                                free_identity_list(own_identities);
                                                 return PEP_OUT_OF_MEMORY;
+                                            }
 
                                             pEp_identity* manager = NULL;
                                             status = get_group_manager(session, group_ident, &manager);
@@ -6428,8 +6439,10 @@ static PEP_STATUS _decrypt_message(
                                                 // extra keys???
                                                 status = encrypt_message(session, outmsg, NULL, &enc_group_reset_msg, PEP_enc_auto, PEP_encrypt_flag_key_reset_only);
 
-                                                if (status != PEP_STATUS_OK)
+                                                if (status != PEP_STATUS_OK) {
+                                                    free_identity_list(own_identities);
                                                     return status;
+                                                }
 
                                                 _add_auto_consume(enc_group_reset_msg);
 
@@ -6656,12 +6669,17 @@ static PEP_STATUS _decrypt_message(
         }
     }
 
+    free(ptext);
+    free_identity_list(own_identities);
+    free(expected_signing_fingerprint);
+    free(imported_sender_key_fpr);
+
     if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
         UPGRADE_PROTOCOL_VERSION_IF_NEEDED(msg);
         return PEP_STATUS_OK;
-    }
-    else
+    } else {
         return decrypt_status;
+    }
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
