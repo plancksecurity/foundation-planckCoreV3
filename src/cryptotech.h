@@ -141,8 +141,12 @@ typedef PEP_STATUS (*get_key_rating_t)(
  *  @see import_key() - This wrapper function has a mismatched signature
  *  @see pgp_import_keydata() - This is one function that might be pointed to via an pointer of type import_key_t
  */
-typedef PEP_STATUS (*import_key_t)(PEP_SESSION session, const char *key_data,
-                                   size_t size, identity_list **idents, identity_list **private_idents, stringlist_t** imported_keys,
+typedef PEP_STATUS (*import_key_t)(PEP_SESSION session,
+                                   const char *key_data,
+                                   size_t size,
+                                   identity_list **idents,
+                                   identity_list **private_idents,
+                                   stringlist_t** imported_keys,
                                    uint64_t* changed_key_index);
 
 
