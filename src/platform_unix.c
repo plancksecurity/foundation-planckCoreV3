@@ -4,6 +4,10 @@
  * @license This file is under GNU General Public License 3.0. - see LICENSE.txt 
  */
 
+// Changelog:
+//
+// 16.04.2024/DZ - fix memory leaks
+
 #ifndef __MVS__
 #define _POSIX_C_SOURCE 200809L
 #endif
@@ -291,8 +295,11 @@ static char *_string_concatenate_3(const char *a, const char *b, const char *c)
     char *a_b = _string_concatenate_2(a, b);
     if (a_b == NULL)
         return NULL;
-    else
-        return _string_concatenate_2(a_b, c);
+    else {
+        char *result = _string_concatenate_2(a_b, c);
+        free(a_b);
+        return result;
+    }
 }
 
 #if !defined(BSD) && !defined(__APPLE__) && !defined(HAS_STRL)
@@ -597,9 +604,11 @@ static PEP_STATUS _move_files_from_old_to_new_if_necessary(void)
 #undef CHECK
 #undef CHECK_STATUS
 #undef MOVE
+    free(new_directory);
     return status;
 
  error:
+    free(new_directory);
     free(old_file);
     return status;
 }
@@ -1082,7 +1091,10 @@ error:
    variables still need to be expanded ...*/
 static char *_unix_local_db(void)
 {
-    return _string_concatenate_3(_per_user_directory(), "/", LOCAL_DB_FILENAME);
+    const char *directory = _per_user_directory();
+    char *result = _string_concatenate_3(directory, "/", LOCAL_DB_FILENAME);
+    free(directory);
+    return result;
 }
 
 /* Like _unix_local_db for the log database: compute the path, without touching
@@ -1090,7 +1102,10 @@ static char *_unix_local_db(void)
    notice that variables still need to be expanded ...*/
 static char *_unix_log_db(void)
 {
-    return _string_concatenate_3(_per_user_directory(), "/", LOG_DB_FILENAME);
+    const char *directory = _per_user_directory();
+    char *result = _string_concatenate_3(directory, "/", LOG_DB_FILENAME);
+    free(directory);
+    return result;
 }
 
 static char *_per_machine_directory(void) {

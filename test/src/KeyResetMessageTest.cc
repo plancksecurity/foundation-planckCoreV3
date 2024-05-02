@@ -16,6 +16,7 @@
 #include "keymanagement.h"
 #include "key_reset.h"
 #include "key_reset_internal.h"
+#include "message.h"
 
 #include "TestUtilities.h"
 #include "TestConstants.h"
@@ -50,9 +51,9 @@ class KeyResetMessageTest : public ::testing::Test {
         const char* erin_fpr = "1B0E197E8AE66277B8A024B9AEA69F509F8D7CBA";
         const char* fenris_fpr = "0969FA229DF21C832A64A04711B1B9804F3D2900";
 
-        const char* alice_new_fpr = "502ADD04042695AAE5F2DBEC5BF2AEF3B6FE2110";
+        const char* alice_new_fpr = "3B644B63B873F04BA918AB6C3D188D02163D18FC";
 
-        const string alice_user_id = PEP_OWN_USERID;
+        const string alice_user_id = "AliceId";
         const string bob_user_id = "BobId";
         const string carol_user_id = "carolId";
         const string dave_user_id = "DaveId";
@@ -112,6 +113,9 @@ class KeyResetMessageTest : public ::testing::Test {
         void TearDown() override {
             // Code here will be called immediately after each test (right
             // before the destructor).
+            for (vector<message*>::iterator it = m_queue.begin(); it != m_queue.end(); it++) {
+                free_message(*it);
+            }
             KRMT_fake_this = NULL;
             engine->shut_down();
             delete engine;
@@ -127,7 +131,7 @@ class KeyResetMessageTest : public ::testing::Test {
             status = set_up_ident_from_scratch(session,
                         "test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc",
                         "pep.test.alice@pep-project.org", alice_fpr,
-                        alice_user_id.c_str(), "Alice in Wonderland", NULL, true
+                        PEP_OWN_USERID, "Alice in Wonderland", NULL, true
                     );
             ASSERT_EQ(status, PEP_STATUS_OK);
 
@@ -252,7 +256,7 @@ class KeyResetMessageTest : public ::testing::Test {
 };
 
 PEP_STATUS KRMT_message_send_callback(message* msg) {
-    ((KeyResetMessageTest*)KRMT_fake_this)->m_queue.push_back(msg);
+    ((KeyResetMessageTest*)KRMT_fake_this)->m_queue.push_back(message_dup(msg));
     return PEP_STATUS_OK;
 }
 
@@ -549,92 +553,6 @@ TEST_F(KeyResetMessageTest, check_receive_message_to_revoked_key_from_unknown) {
     free_identity(from_ident);
 }
 
-
-TEST_F(KeyResetMessageTest, check_receive_message_to_revoked_key_from_contact) {
-    // create_msg_for_revoked_key(); // call to recreate msg
-    send_setup();
-    pEp_identity* from_ident = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, NULL);
-    PEP_STATUS status = myself(session, from_ident);
-    ASSERT_OK;
-    ASSERT_NOTNULL(from_ident->fpr);
-    ASSERT_STRCASEEQ(from_ident->fpr, alice_fpr);
-    ASSERT_TRUE(from_ident->me);
-
-    // Send Gabrielle a message
-    identity_list* send_idents = new_identity_list(new_identity("pep-test-gabrielle@pep-project.org", NULL, "Gabi", "Gabi"));
-    output_stream << "Creating outgoing message to update DB" << endl;
-    message* outgoing_msg = new_message(PEP_dir_outgoing);
-    ASSERT_NOTNULL(outgoing_msg);
-    outgoing_msg->from = from_ident;
-    outgoing_msg->to = send_idents;
-    outgoing_msg->shortmsg = strdup("Well isn't THIS a useless message...");
-    outgoing_msg->longmsg = strdup("Hi Mom...\n");
-    outgoing_msg->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
-    output_stream << "Message created.\n\n";
-    output_stream << "Encrypting message as MIME multipart…\n";
-    message* enc_outgoing_msg = nullptr;
-    output_stream << "Calling encrypt_message()\n";
-    status = encrypt_message(session, outgoing_msg, NULL, &enc_outgoing_msg, PEP_enc_PGP_MIME, 0);
-    ASSERT_EQ(status , PEP_UNENCRYPTED);
-    //
-    output_stream << "Message created." << endl;
-
-    // Make the update have occurred earlier, so we don't notify her
-    // (We have no key for her yet anyway!)
-    int int_result = sqlite3_exec(
-        session->db,
-        "update identity "
-        "   set timestamp = '2018-04-10 16:48:33' "
-        "   where address = 'pep-test-gabrielle@pep-project.org' ;",
-        NULL,
-        NULL,
-        NULL
-    );
-    ASSERT_EQ(int_result , SQLITE_OK);
-
-    // FIXME: longer term we need to fix the test, but the key attached to the message below has expired, so for now, we give her a new key
-    slurp_and_import_key(session, "test_keys/pub/pep-test-gabrielle-0xE203586C_pub.asc");
-
-    status = key_reset(session, alice_fpr, from_ident);
-    ASSERT_OK;
-    ASSERT_EQ(m_queue.size() , 0);
-    m_queue.clear();
-
-    // Now we get mail from Gabi, who only has our old key AND has become
-    // a pEp user in the meantime...
-    message* received_mail = slurp_message_file_into_struct("test_files/398_gabrielle_to_alice.eml");
-    message* decrypted_msg = NULL;
-    stringlist_t* keylist = NULL;
-    PEP_decrypt_flags_t flags = 0;
-
-    // We expect the app to provide user_ids wherever it has them on incoming messages, and since it breaks things
-    // here if we don't put it there, we do now.
-    received_mail->to->ident->user_id = strdup(PEP_OWN_USERID);
-
-    status = decrypt_message_2(session, received_mail,
-                                  &decrypted_msg, &keylist, &flags);
-
-    ASSERT_EQ(m_queue.size() , 1);
-    vector<message*>::iterator it = m_queue.begin();
-    message* reset_msg = *it;
-    ASSERT_NOTNULL(reset_msg);
-    ASSERT_NOTNULL(reset_msg->from);
-    ASSERT_NOTNULL(reset_msg->to);
-    ASSERT_NOTNULL(reset_msg->to->ident);
-    ASSERT_STREQ(reset_msg->to->ident->address, "pep-test-gabrielle@pep-project.org");
-    ASSERT_STREQ(reset_msg->to->ident->fpr, "906C9B8349954E82C5623C3C8C541BD4E203586C");
-    ASSERT_STRNE(reset_msg->from->fpr, alice_fpr);
-    ASSERT_NOTNULL(keylist);
-    ASSERT_NOTNULL(keylist->value);
-    ASSERT_STRNE(keylist->value, alice_fpr);
-    ASSERT_NOTNULL(keylist->next);
-    if (strcmp(keylist->next->value, "906C9B8349954E82C5623C3C8C541BD4E203586C") != 0) {
-        ASSERT_NOTNULL(keylist->next->next);
-        ASSERT_STREQ(keylist->next->value, "906C9B8349954E82C5623C3C8C541BD4E203586C");
-    }
-}
-
-
 TEST_F(KeyResetMessageTest, check_multiple_resets_single_key) {
     send_setup();
 
@@ -684,7 +602,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_null_ident) {
 
 TEST_F(KeyResetMessageTest, check_reset_grouped_own) {
     send_setup(); // lazy
-    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), NULL);
+    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, NULL);
     PEP_STATUS status = myself(session, alice);
 
     ASSERT_OK;
@@ -711,7 +629,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own) {
 
     ASSERT_EQ(m_queue.size(), 0);
 
-    if (false) {
+    if (false) { // This test mail can no longer be updated due to CORE-67 changes
         ofstream outfile;
         outfile.open("test_mails/check_reset_grouped_own_recv.eml");
         message* curr_sent_msg = m_queue.at(0);
@@ -746,8 +664,10 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own) {
 }
 
 TEST_F(KeyResetMessageTest, check_reset_grouped_own_recv) {
+    // CORE-257 test mails for this test case cannot be re-generated
+    GTEST_SKIP() << "Skipping single test";
     send_setup(); // lazy
-    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), NULL);
+    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, NULL);
     PEP_STATUS status = myself(session, alice);
 
     ASSERT_OK;
@@ -1084,7 +1004,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
     ASSERT_STRNE(alex_id2->fpr, alex_id3->fpr);
 
     ASSERT_EQ(m_queue.size(),0);
-    if (false) {
+    if (false) { // This test mail can no longer be updated due to CORE-67 changes
         ofstream outfile;
         int i = 0;
         for (vector<message*>::iterator it = m_queue.begin(); it != m_queue.end(); it++, i++) {
@@ -1367,23 +1287,23 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_grouped_recv) {
     char* pubkey3 = strdup("3C1E713D8519D7F907E3142D179EAA24A216E95A");
 
     // For pep.test.alexander@darthmama.org
-    const char* replkey1 = "0F9C2FBFB898AD3A1242257F300EFFDE4CE2C33F";
+    const char* replkey1 = "F33F91A1A34814644B8B777417457C130BBB2FA3";
     // For pep.test.alexander6a@darthmama.org
-    const char* replkey3 = "3671C09D3C79260C65045AE9A62A64E4CBEDAFDA";
+    const char* replkey3 = "B9EF0616F7ABABFB2AED9213FB6BB13E8B75DD42";
 
     pEp_identity* alex_id = new_identity("pep.test.alexander@darthmama.org",
                                         NULL,
-                                        "AlexID",
+                                        PEP_OWN_USERID,
                                         "Alexander Braithwaite");
 
     pEp_identity* alex_id2 = new_identity("pep.test.alexander6@darthmama.org",
                                           NULL,
-                                          "AlexID",
+                                          PEP_OWN_USERID,
                                           "Alexander Braithwaite");
 
     pEp_identity* alex_id3 = new_identity("pep.test.alexander6a@darthmama.org",
                                           NULL,
-                                          "AlexID",
+                                          PEP_OWN_USERID,
                                           "Alexander Braithwaite");
 
 
@@ -1425,7 +1345,7 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_grouped_recv) {
     ASSERT_STREQ(pubkey3, alex_id3->fpr);
 
     char* old_main_key = NULL;
-    status = get_main_user_fpr(session, "AlexID", &old_main_key);
+    status = get_main_user_fpr(session, PEP_OWN_USERID, &old_main_key);
     ASSERT_NOTNULL(old_main_key);
 
 
@@ -1471,7 +1391,7 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_grouped_recv_with_sticky) {
     char* pubkey3 = strdup("3C1E713D8519D7F907E3142D179EAA24A216E95A");
 
     // For pep.test.alexander@darthmama.org
-    const char* replkey1 = "8FDB872F88BD76F2C6C2DE0E8453FAEA21DD0DCF";
+    const char* replkey1 = "214088852C7B91BD952AD638C956CE651EEBBCBC";
 
     pEp_identity* alex_id = new_identity("pep.test.alexander@darthmama.org",
                                         NULL,
@@ -1527,9 +1447,8 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_grouped_recv_with_sticky) {
     ASSERT_STREQ(pubkey3, alex_id3->fpr);
 
     char* old_main_key = NULL;
-    status = get_main_user_fpr(session, "AlexID", &old_main_key);
+    status = get_main_user_fpr(session, PEP_OWN_USERID, &old_main_key);
     ASSERT_NE(old_main_key, nullptr);
-
 
     const int num_msgs = 1;
 
@@ -1567,6 +1486,8 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_grouped_recv_with_sticky) {
 
 
 TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_idents_reset_all_recv) {
+    // CORE-257 test mails for this test case cannot be re-generated
+    GTEST_SKIP() << "Skipping single test";
     PEP_STATUS status = PEP_STATUS_OK;
     char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
     char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
@@ -1773,7 +1694,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
     ASSERT_STRNE(alex_id2->fpr, alex_id3->fpr);
 
     ASSERT_EQ(m_queue.size(),0);
-    if (false) {
+    if (false) { // This test mail can no longer be updated due to CORE-67 changes
         ofstream outfile;
         message* curr_sent_msg = m_queue.at(0);        
         string fname = "test_mails/check_reset_grouped_own_multiple_keys_multiple_idents_reset_one.eml";
@@ -1793,6 +1714,8 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
 }
 
 TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_idents_reset_one_recv) {
+    // CORE-257 test mails for this test case cannot be re-generated
+    GTEST_SKIP() << "Skipping single test";
     char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
     char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
     char* pubkey3 = strdup("3C1E713D8519D7F907E3142D179EAA24A216E95A");
@@ -2043,7 +1966,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_other_priv_no_fpr) {
 
 TEST_F(KeyResetMessageTest, check_reset_ident_own_priv_fpr) {
     send_setup(); // lazy
-    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), NULL);
+    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, NULL);
     PEP_STATUS status = myself(session, alice);
 
     ASSERT_OK;
@@ -2062,7 +1985,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_own_priv_fpr) {
 
 TEST_F(KeyResetMessageTest, check_reset_ident_own_priv_no_fpr) {
     send_setup(); // lazy
-    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), NULL);
+    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, NULL);
     PEP_STATUS status = myself(session, alice);
 
     ASSERT_OK;

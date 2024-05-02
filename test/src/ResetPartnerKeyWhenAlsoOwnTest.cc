@@ -138,9 +138,9 @@ TEST_F(ResetPartnerKeyWhenAlsoOwnTest, do_not_remove)
 
     // Prove we can still decrypt the message, so we still have our original private key.
     // Nothing got deleted from the keyring.
-    message *msg_decrypted;
+    message *msg_decrypted = NULL;
     PEP_decrypt_flags_t flags_decrypted;
-    stringlist_t *keylist;
+    stringlist_t *keylist = NULL;
     status = decrypt_message_2(session, msg_encrypted, &msg_decrypted, &keylist, &flags_decrypted);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_STREQ(msg_decrypted->shortmsg, msg->shortmsg);

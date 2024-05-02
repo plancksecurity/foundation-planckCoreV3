@@ -592,9 +592,6 @@ action untrustThisKey
         return status;
 
     OCTET_STRING_fromBuf(&session->sync_state.keysync.key, "", 0);
-
-    exit(0);
-    return PEP_ILLEGAL_VALUE;
 ||
 
 action tellWeAreGrouped

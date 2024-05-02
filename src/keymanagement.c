@@ -68,8 +68,9 @@ PEP_STATUS validate_fpr(PEP_SESSION session,
     
     // N.B. Will not contain PEP_PASSPHRASE related returns here
     if (ident->me && own_must_contain_private) {
-        if (status != PEP_STATUS_OK || !has_private)
+        if (status != PEP_STATUS_OK || !has_private) {
             return PEP_KEY_UNSUITABLE;
+        }
     }
     else if (status != PEP_STATUS_OK && has_private) { // should never happen
         has_private = false;
@@ -212,8 +213,9 @@ PEP_STATUS validate_fpr(PEP_SESSION session,
         case PEP_ct_mistrusted:
             free(ident->fpr);
             ident->fpr = NULL;
-            ident->comm_type = ct;            
+            ident->comm_type = ct;
             status = PEP_KEY_UNSUITABLE;
+
         default:
             break;
     }            
@@ -1067,13 +1069,10 @@ PEP_STATUS _myself(PEP_SESSION session,
         identity->fpr = NULL;
     }
 
-    // this leads to crashes otherwise
-
-    if (EMPTYSTR(identity->user_id)) {
-        free(identity->user_id);
-        identity->user_id = strdup(PEP_OWN_USERID);
-        PEP_WEAK_ASSERT_ORELSE_RETURN(identity->user_id, PEP_OUT_OF_MEMORY);
-    }
+    // For own identities, it's always PEP_OWN_USERID
+    free(identity->user_id);
+    identity->user_id = strdup(PEP_OWN_USERID);
+    PEP_WEAK_ASSERT_ORELSE_RETURN(identity->user_id, PEP_OUT_OF_MEMORY);
 
     // Cache the input username, if there is one and it's not read_only; NULL
     // otherwise.  cached_input_username is never a pointer to an empty string.
@@ -1091,29 +1090,6 @@ PEP_STATUS _myself(PEP_SESSION session,
     char* default_own_id = NULL;
     status = get_default_own_userid(session, &default_own_id);
     
-    // Deal with non-default user_ids.
-    // FIXME: if non-default and read-only, reject totally?
-    if (default_own_id && strcmp(default_own_id, identity->user_id) != 0) {
-        if (read_only) {
-            free(identity->user_id);
-            identity->user_id = strdup(default_own_id);
-            PEP_WEAK_ASSERT_ORELSE_RETURN(identity->user_id, PEP_OUT_OF_MEMORY);
-        }
-        else {
-            status = set_userid_alias(session, default_own_id, identity->user_id);
-            // Do we want this to be fatal? For now, we'll do it...
-            if (status != PEP_STATUS_OK)
-                goto pEp_free;
-                
-            free(identity->user_id);
-            identity->user_id = strdup(default_own_id);
-            PEP_WEAK_ASSERT_ORELSE(identity->user_id, {
-                status = PEP_OUT_OF_MEMORY;
-                goto pEp_free;
-            });
-        }
-    }
-
     // NOTE: IF WE DON'T YET HAVE AN OWN_ID, WE IGNORE REFERENCES TO THIS ADDRESS IN THE
     // DB (WHICH MAY HAVE BEEN SET BEFORE MYSELF WAS CALLED BY RECEIVING AN EMAIL FROM
     // THIS ADDRESS), AS IT IS NOT AN OWN_IDENTITY AND HAS NO INFORMATION WE NEED OR WHAT TO
@@ -1539,8 +1515,9 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
     // Before we do anything, be sure the input fpr is even eligible to be trusted
     PEP_comm_type input_default_ct = PEP_ct_unknown;
     status = get_key_rating(session, ident->fpr, &input_default_ct);
-    if (input_default_ct < PEP_ct_strong_but_unconfirmed)
+    if (input_default_ct < PEP_ct_strong_but_unconfirmed) {
         return PEP_KEY_UNSUITABLE;
+    }
 
     status = set_pgp_keypair(session, ident->fpr);
     if (status != PEP_STATUS_OK)
@@ -1665,8 +1642,9 @@ DYNAMIC_API PEP_STATUS trust_own_key(
     if (status != PEP_STATUS_OK)
         return status;
             
-    if (ident->comm_type < PEP_ct_strong_but_unconfirmed)
+    if (ident->comm_type < PEP_ct_strong_but_unconfirmed) {
         return PEP_KEY_UNSUITABLE;
+    }
 
     ident->comm_type |= PEP_ct_confirmed;
     
@@ -1764,11 +1742,8 @@ PEP_STATUS _own_identities_retrieve(
                 minor_ver = (unsigned int) sqlite3_column_int(session->own_identities_retrieve, 7);
                 enc_format = (PEP_enc_format) sqlite3_column_int(session->own_identities_retrieve, 8);
 
-                int order1 = strcmp(address, SIGNING_IDENTITY_USER_ADDRESS);
-                int order2 = strcmp(username, SIGNING_IDENTITY_USER_NAME);
-
                 // only consider own identities that are not the signing identity
-                if (order1 && order2) {
+                if (!(flags & PEP_idf_signing)) {
                     pEp_identity *ident = new_identity(address, fpr, user_id, username);
                     if (!ident)
                         goto enomem;
@@ -2012,8 +1987,9 @@ DYNAMIC_API PEP_STATUS set_own_key(
     if (status != PEP_STATUS_OK)
         return status;
         
-    if (!private)
+    if (!private) {
         return PEP_KEY_UNSUITABLE;
+    }
  
     if (me->fpr)
         free(me->fpr);

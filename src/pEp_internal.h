@@ -5,14 +5,12 @@
  * @license GNU General Public License 3.0 - see LICENSE.txt
  */
 
-/*
- Changelog:
+//
+// Changelog:
 
- * 2023-07 _add_auto_consume() checks if header field already exists.
- * 2023-10-09/DZ Offer `untrust_this_key` as a more clearly defined
-   alternative to `key_reset_trust`.
-
- */
+// 2023-07 _add_auto_consume() checks if header field already exists.
+// 2023-10-09/DZ Offer `untrust_this_key` as a more clearly defined alternative to `key_reset_trust`.
+// 2024-06-03/DZ Put EMPTYSTR near the top.
 
 #ifndef PEP_INTERNAL_H
 #define PEP_INTERNAL_H
@@ -74,6 +72,10 @@
 #define VER_2_0 "2.0"
 #define VER_2_1 "2.1"
 #define VER_2_2 "2.2"
+
+#ifndef EMPTYSTR
+#define EMPTYSTR(STR) ((STR) == NULL || (STR)[0] == '\0')
+#endif
 
 #include "platform.h"
 
@@ -967,13 +969,13 @@ static inline char* _pEp_subj_copy(void) {
  */
 static inline bool is_me(PEP_SESSION session, const pEp_identity* test_ident) {
     bool retval = false;
-    if (test_ident && test_ident->user_id) {
+    if (test_ident) {
         char* def_id = NULL;
         get_default_own_userid(session, &def_id);
-        if (test_ident->me || 
-            (def_id && strcmp(def_id, test_ident->user_id) == 0)) {
-            retval = true;
-        }
+        retval = (
+            test_ident->me
+            || ( def_id && test_ident->user_id && strcmp(def_id, test_ident->user_id) == 0 )
+        );
         free(def_id);
     }
     return retval;
@@ -1110,10 +1112,6 @@ static inline void set_max_version(unsigned int first_maj, unsigned int first_mi
         *result_minor = second_minor;
     }    
 }
-
-#ifndef EMPTYSTR
-#define EMPTYSTR(STR) ((STR) == NULL || (STR)[0] == '\0')
-#endif
 
 /* Expand to an expression evaluating to the argument if non-NULL, and to a
    pointer to a statically-allocated empty string otherwise.  The expansion

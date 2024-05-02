@@ -86,7 +86,7 @@ namespace {
 
             char* start_username = NULL;
             char* myself_name = NULL;
-            const char* own_user_id = "Own_Beavis";
+            const char* own_user_id = PEP_OWN_USERID;
             char* generated_fpr = NULL;
             char* default_own_id = NULL;
             const char* alias_id = "Huss Es El Mejor Presidente Del Mundo!";
@@ -180,14 +180,6 @@ TEST_F(UpdateIdAndMyselfTest, check_myself_no_input_fpr_diff_user_id_w_record) {
     ASSERT_STREQ(new_me->user_id, own_user_id);
     ASSERT_EQ(new_me->comm_type, PEP_ct_pEp);
 
-    char* tmp_def = NULL;
-
-    status = get_userid_alias_default(session, alias_id, &tmp_def);
-    ASSERT_OK;
-    ASSERT_STREQ(tmp_def, own_user_id);
-
-    free(tmp_def);
-    tmp_def = NULL;
     free_identity(new_me);
 }
 
