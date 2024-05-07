@@ -1,6 +1,3 @@
-// Changelog
-// 31.10.2023/IP: added function to retrieve key_ids
-// 
 /**
  * @internal
  * @file    src/pgp_sequoia.h
@@ -16,7 +13,13 @@
  * @todo    more doc
  * @todo    tidy up tabs
  */
+
+// Changelog
+// 31.10.2023/IP: added function to retrieve key_ids
+// 
 // 18.10.2023/TC - removed pgp_import_keydata_strict as it is no longer used.
+// 07.05.2024/DZ - fix pgp_import_keydata declaration
+
 #ifndef PGP_SEQUOIA_H
 #define PGP_SEQUOIA_H
 
@@ -293,6 +296,7 @@ PEP_STATUS pgp_get_key_rating(
  *  @param[in]  session              session handle 
  *  @param[in]  key_data             const char *
  *  @param[in]  size                 size_t
+ *  @param[in]  idents               identity_list **
  *  @param[in]  private_idents       identity_list **
  *  @param[in]  imported_keys        stringlist_t **
  *  @param[in]  changed_key_index    uint64_t *
