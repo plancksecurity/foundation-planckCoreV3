@@ -5274,6 +5274,11 @@ static void fix_own_identity(
     const identity_list *all_own_identities,
     pEp_identity *identity)
 {
+    // Better safe than sorry, in case it gets invoked directly.
+    // E.g. `inner_message->from` may not always be defined.
+    if (!identity) {
+        return;
+    }
     identity_list *node = all_own_identities;
     while (node) {
         const pEp_identity *own_ident = node->ident;
