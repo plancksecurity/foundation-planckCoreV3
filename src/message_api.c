@@ -2908,8 +2908,8 @@ static PEP_STATUS encrypt_message_possibly_with_media_key(
     }
         
     if (enc_format == PEP_enc_none || !dest_keys_found ||
-        stringlist_length(keys)  == 0 ||
-        _rating(max_comm_type) < PEP_rating_reliable)
+        stringlist_length(keys) == 0 ||
+        (_rating(max_comm_type) < PEP_rating_reliable && max_comm_type != PEP_ct_OpenPGP_weak_unconfirmed))
     {
         LOG_TRACE("about to make the message unencrypted!");
         free_stringlist(keys);
