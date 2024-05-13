@@ -1864,7 +1864,7 @@ static PEP_rating decrypt_rating(PEP_STATUS status)
     case PEP_DECRYPTED:
     case PEP_VERIFY_SIGNER_KEY_REVOKED:
     case PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH:
-        return PEP_rating_unreliable;
+        return PEP_rating_mistrust;
 
     case PEP_DECRYPTED_AND_VERIFIED:
         return PEP_rating_reliable;
