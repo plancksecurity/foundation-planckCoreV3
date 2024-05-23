@@ -185,7 +185,8 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
     ASSERT_NOTNULL(keylist_used);
     ASSERT_EQ(rating, decrypted_msg->rating);
     ASSERT_NE(rating, 0);
-    ASSERT_TRUE(status == PEP_DECRYPTED && rating == PEP_rating_unreliable);
+    ASSERT_EQ(status, PEP_DECRYPTED);
+    ASSERT_EQ(rating, PEP_rating_mistrust);
     PEP_comm_type ct = encrypted_msg->from->comm_type;
     ASSERT_TRUE(ct == PEP_ct_pEp || ct == PEP_ct_pEp_unconfirmed || ct == PEP_ct_OpenPGP || ct == PEP_ct_OpenPGP_unconfirmed);
 
@@ -233,7 +234,8 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
     rating = decrypted_msg->rating;
     ASSERT_NOTNULL(keylist_used);
     ASSERT_NE(rating, 0);
-    ASSERT_TRUE(status == PEP_DECRYPTED && rating == PEP_rating_unreliable);
+    ASSERT_EQ(status, PEP_DECRYPTED);
+    ASSERT_EQ(rating, PEP_rating_mistrust);
     ct = encrypted_msg->from->comm_type;
     ASSERT_TRUE(ct == PEP_ct_pEp || ct == PEP_ct_pEp_unconfirmed || ct == PEP_ct_OpenPGP || ct == PEP_ct_OpenPGP_unconfirmed);
 
@@ -323,7 +325,8 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
     ASSERT_NOTNULL(keylist_used);
     ASSERT_NE(mimerating, 0);
 
-    ASSERT_TRUE(status == PEP_DECRYPTED && mimerating == PEP_rating_unreliable);
+    ASSERT_EQ(status, PEP_DECRYPTED);
+    ASSERT_EQ(mimerating, PEP_rating_mistrust);
 
     output_stream << "Decrypted message:" << endl;
     print_mail(dec_msg);
@@ -445,7 +448,8 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity_with_URI) {
     PEP_rating rating = decrypted_msg->rating;
     ASSERT_NOTNULL(keylist_used);
     ASSERT_NE(rating, 0);
-    ASSERT_TRUE(status == PEP_DECRYPTED && rating == PEP_rating_unreliable);
+    ASSERT_EQ(status, PEP_DECRYPTED);
+    ASSERT_EQ(rating, PEP_rating_mistrust);
     PEP_comm_type ct = encrypted_msg->from->comm_type;
     ASSERT_TRUE(ct == PEP_ct_pEp || ct == PEP_ct_pEp_unconfirmed || ct == PEP_ct_OpenPGP || ct == PEP_ct_OpenPGP_unconfirmed);
 
@@ -493,7 +497,8 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity_with_URI) {
     rating = decrypted_msg->rating;
     ASSERT_NOTNULL(keylist_used);
     ASSERT_NE(rating, 0);
-    ASSERT_TRUE(status == PEP_DECRYPTED && rating == PEP_rating_unreliable);
+    ASSERT_EQ(status, PEP_DECRYPTED);
+    ASSERT_EQ(rating, PEP_rating_mistrust);
     ct = encrypted_msg->from->comm_type;
     ASSERT_TRUE(ct == PEP_ct_pEp || ct == PEP_ct_pEp_unconfirmed || ct == PEP_ct_OpenPGP || ct == PEP_ct_OpenPGP_unconfirmed);
 

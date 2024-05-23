@@ -1864,7 +1864,7 @@ static PEP_rating decrypt_rating(PEP_STATUS status)
     case PEP_DECRYPTED:
     case PEP_VERIFY_SIGNER_KEY_REVOKED:
     case PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH:
-        return PEP_rating_unreliable;
+        return PEP_rating_mistrust;
 
     case PEP_DECRYPTED_AND_VERIFIED:
         return PEP_rating_reliable;
@@ -2908,8 +2908,8 @@ static PEP_STATUS encrypt_message_possibly_with_media_key(
     }
         
     if (enc_format == PEP_enc_none || !dest_keys_found ||
-        stringlist_length(keys)  == 0 ||
-        _rating(max_comm_type) < PEP_rating_reliable)
+        stringlist_length(keys) == 0 ||
+        (_rating(max_comm_type) < PEP_rating_reliable && max_comm_type != PEP_ct_OpenPGP_weak_unconfirmed))
     {
         LOG_TRACE("about to make the message unencrypted!");
         free_stringlist(keys);
@@ -5274,6 +5274,11 @@ static void fix_own_identity(
     const identity_list *all_own_identities,
     pEp_identity *identity)
 {
+    // Better safe than sorry, in case it gets invoked directly.
+    // E.g. `inner_message->from` may not always be defined.
+    if (!identity) {
+        return;
+    }
     identity_list *node = all_own_identities;
     while (node) {
         const pEp_identity *own_ident = node->ident;
