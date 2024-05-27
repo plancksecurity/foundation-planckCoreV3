@@ -4187,5 +4187,21 @@ DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color)
 
 DYNAMIC_API PEP_STATUS has_passphrase(PEP_SESSION session, const char *account, bool *has_passphrase)
 {
+    identity_list *own_identities = NULL;
+    PEP_STATUS status = own_identities_retrieve(session, &own_identities);
+    if (status != PEP_STATUS_OK) {
+        return status;
+    }
+
+    for (identity_list *identities = own_identities; identities; identities = identities->next) {
+        pEp_identity *identity = identities->ident;
+        if (!identity) {
+            continue;
+        }
+        if (!strcmp(identity->address, account)) {
+            // TODO: Ask the sequoia backend
+        }
+    }
+
     return PEP_ILLEGAL_VALUE;
 }
