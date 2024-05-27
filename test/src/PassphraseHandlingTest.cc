@@ -90,7 +90,7 @@ namespace {
 TEST_F(PassphraseHandlingTest, tyrell_no_passphrase) {
     ASSERT_TRUE(slurp_and_import_key(session, tyrell_no_passphrase_filename));
     bool passphrase_bool = false;
-    PEP_STATUS status = has_passphrase(tyrell_no_passphrase_email, &passphrase_bool);
+    PEP_STATUS status = has_passphrase(session, tyrell_no_passphrase_email, &passphrase_bool);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_FALSE(passphrase_bool);
 }
@@ -98,7 +98,7 @@ TEST_F(PassphraseHandlingTest, tyrell_no_passphrase) {
 TEST_F(PassphraseHandlingTest, tyrell_passphrase) {
     ASSERT_TRUE(slurp_and_import_key(session, tyrell_passphrase_filename));
     bool passphrase_bool = false;
-    PEP_STATUS status = has_passphrase(tyrell_passphrase_email, &passphrase_bool);
+    PEP_STATUS status = has_passphrase(session, tyrell_passphrase_email, &passphrase_bool);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_TRUE(passphrase_bool);
 }

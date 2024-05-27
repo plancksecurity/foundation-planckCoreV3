@@ -4185,7 +4185,7 @@ DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color)
     LOG_WARNING("deprecated function");
 }
 
-DYNAMIC_API PEP_STATUS has_passphrase(const char *account, bool *has_passphrase)
+DYNAMIC_API PEP_STATUS has_passphrase(PEP_SESSION session, const char *account, bool *has_passphrase)
 {
     return PEP_ILLEGAL_VALUE;
 }
