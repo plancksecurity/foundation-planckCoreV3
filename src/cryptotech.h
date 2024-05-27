@@ -247,7 +247,7 @@ typedef PEP_STATUS (*get_key_ids_t)(PEP_SESSION session,
                                  size_t csize,                                 
                                  stringlist_t **keylist);
 
-typedef PEP_STATUS (*has_passphrase_t)(PEP_SESSION session, const char *account, bool *result);
+typedef PEP_STATUS (*has_passphrase_t)(PEP_SESSION session, const pEp_identity *identity, bool *result);
 
 /**
  *  @struct    PEP_cryptotech_t
