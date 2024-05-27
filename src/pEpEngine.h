@@ -2176,6 +2176,22 @@ DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color);
  */
 DYNAMIC_API PEP_STATUS has_passphrase(PEP_SESSION session, const char *account, bool *has_passphrase);
 
+/**
+ *  <!--        unlock_keys_with_passphrase()       -->
+ *
+ *  @brief      Forces secret keys with a passphrase to get unlocked.
+ *
+ *              For every account/identity in the input, an operation requiring the passphrase
+ *              is executed.
+ *              Every account that would have returned `PEP_PASSPHRASE_REQUIRED` is returned
+ *              via `error_accounts`, and the overall return value is `PEP_PASSPHRASE_REQUIRED`.
+ *              If there is any other error, the corresponding status is returned and the
+ *              corresponding account is put as the only one in `error_accounts`.
+ */
+DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
+    const stringlist_t *accounts,
+    stringlist_t **error_accounts);
+
 #ifdef __cplusplus
 }
 #endif

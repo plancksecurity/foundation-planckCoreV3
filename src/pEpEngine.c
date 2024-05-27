@@ -4227,3 +4227,54 @@ DYNAMIC_API PEP_STATUS has_passphrase(PEP_SESSION session, const char *account, 
 
     return PEP_CANNOT_FIND_IDENTITY;
 }
+
+DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
+    const stringlist_t *accounts,
+    stringlist_t **error_accounts)
+{
+    PEP_REQUIRE(accounts);
+    PEP_REQUIRE(error_accounts);
+
+    identity_list *own_identities = NULL;
+    PEP_STATUS status = own_identities_retrieve(session, &own_identities);
+    if (status != PEP_STATUS_OK) {
+        return status;
+    }
+
+    for (stringlist_t *the_accounts = accounts; the_accounts; the_accounts = the_accounts->next) {
+        const char *account = the_accounts->value;
+        if (!account) {
+            continue;
+        }
+        for (identity_list *identities = own_identities; identities; identities = identities->next) {
+            pEp_identity *identity = identities->ident;
+            if (!identity) {
+                continue;
+            }
+            if (!strcmp(identity->address, account)) {
+                if (!identity->fpr) {
+                    continue;
+                }
+
+                // TODO: Ask the sequoia backend
+
+                const char *data = "DATA";
+                const size_t data_size = strlen(data) - 1;
+                char *signed_data = NULL;
+                size_t signed_data_size = 0;
+                status = sign_only(session, "DATA", data_size, identity->fpr, &signed_data, &signed_data_size);
+                if (status == PEP_STATUS_OK) {
+                    // nothing to do
+                } else if (status == PEP_PASSPHRASE_REQUIRED) {
+                    // add account to passphrase accounts, continue
+                } else {
+                    // other error
+                    // note the account as the only one in the list
+                    // signal the error
+                }
+            }
+        }
+    }
+
+    return PEP_CANNOT_FIND_IDENTITY;
+}
