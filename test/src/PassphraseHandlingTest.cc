@@ -68,27 +68,46 @@ namespace {
             }
             
             const char *tyrell_no_passphrase_email = "tyrell@example.com";
+            const char *tyrell_no_passphrase_username = "Eldon Tyrell (no passphrase)";
 
             const char *tyrell_no_passphrase_fpr = "C203044D09E2EC0BD56FD32B66C9C6A984B31398";
             const char *tyrell_no_passphrase_filename = "test_keys/passphrase_handling/tyrell_no_passphrase.pgp";
 
             const char *tyrell_passphrase_email = "tyrell_passphrase@example.com";
+            const char *tyrell_passphrase_username = "Eldon Tyrell (passphrase)";
             const char *tyell_passphrase = "blarg";
             const char *tyrell_passphrase_fpr = "DF862D31226F89F4662474AF42A7DE95EADE3B2C";
             const char *tyrell_passphrase_filename = "test_keys/passphrase_handling/tyrell_passphrase.pgp";
             
+            void myself(const char *filename, const char *username, const char *email, const char *fpr) {
+                ASSERT_TRUE(slurp_and_import_key(session, filename));
+
+                pEp_identity *tyrell_identity_no_passphrase = new_identity(email,
+                    fpr,
+                    PEP_OWN_USERID,
+                    username);
+                PEP_STATUS status = ::myself(session, tyrell_identity_no_passphrase);
+                free_identity(tyrell_identity_no_passphrase);
+                ASSERT_EQ(status, PEP_STATUS_OK);
+            }
+
         private:
             const char* test_suite_name;
             const char* test_name;
             string test_path;
             // Objects declared here can be used by all tests in the PassphraseHandlingTest suite.
-
     };
 
 }  // namespace
 
 TEST_F(PassphraseHandlingTest, tyrell_no_passphrase) {
     ASSERT_TRUE(slurp_and_import_key(session, tyrell_no_passphrase_filename));
+
+    this->myself(tyrell_no_passphrase_filename,
+        tyrell_no_passphrase_username,
+        tyrell_no_passphrase_email,
+        tyrell_no_passphrase_fpr);
+
     bool passphrase_bool = false;
     PEP_STATUS status = has_passphrase(session, tyrell_no_passphrase_email, &passphrase_bool);
     ASSERT_EQ(status, PEP_STATUS_OK);
@@ -97,6 +116,12 @@ TEST_F(PassphraseHandlingTest, tyrell_no_passphrase) {
 
 TEST_F(PassphraseHandlingTest, tyrell_passphrase) {
     ASSERT_TRUE(slurp_and_import_key(session, tyrell_passphrase_filename));
+
+    this->myself(tyrell_passphrase_filename,
+        tyrell_passphrase_username,
+        tyrell_passphrase_email,
+        tyrell_passphrase_fpr);
+
     bool passphrase_bool = false;
     PEP_STATUS status = has_passphrase(session, tyrell_passphrase_email, &passphrase_bool);
     ASSERT_EQ(status, PEP_STATUS_OK);
