@@ -56,6 +56,10 @@ namespace {
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
+
+                // Try to speed up key generation.
+                PEP_STATUS status = config_cipher_suite(session, PEP_CIPHER_SUITE_RSA2K);
+                ASSERT_EQ(status, PEP_STATUS_OK);
             }
 
             void TearDown() override {
@@ -70,14 +74,9 @@ namespace {
             const char *tyrell_no_passphrase_email = "tyrell@example.com";
             const char *tyrell_no_passphrase_username = "Eldon Tyrell (no passphrase)";
 
-            const char *tyrell_no_passphrase_fpr = "C203044D09E2EC0BD56FD32B66C9C6A984B31398";
-            const char *tyrell_no_passphrase_filename = "test_keys/passphrase_handling/tyrell_no_passphrase.pgp";
-
             const char *tyrell_passphrase_email = "tyrell_passphrase@example.com";
             const char *tyrell_passphrase_username = "Eldon Tyrell (passphrase)";
-            const char *tyell_passphrase = "blarg";
-            const char *tyrell_passphrase_fpr = "DF862D31226F89F4662474AF42A7DE95EADE3B2C";
-            const char *tyrell_passphrase_filename = "test_keys/passphrase_handling/tyrell_passphrase.pgp";
+            const char *tyrell_passphrase = "blarg";
             
         private:
             const char* test_suite_name;
@@ -89,15 +88,12 @@ namespace {
 }  // namespace
 
 TEST_F(PassphraseHandlingTest, tyrell_no_passphrase) {
-    pEp_identity *tyrell_identity = NULL;
-    PEP_STATUS status = set_up_ident_from_scratch(session,
-        tyrell_no_passphrase_filename,
-        tyrell_no_passphrase_email,
-        tyrell_no_passphrase_fpr,
+    pEp_identity *tyrell_identity = new_identity(tyrell_no_passphrase_email,
+        NULL,
         PEP_OWN_USERID,
-        tyrell_no_passphrase_username,
-        &tyrell_identity,
-        true);
+        tyrell_no_passphrase_username);
+    ASSERT_NOTNULL(tyrell_identity);
+    PEP_STATUS status = myself(session, tyrell_identity);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
     bool passphrase_bool = false;
@@ -107,15 +103,14 @@ TEST_F(PassphraseHandlingTest, tyrell_no_passphrase) {
 }
 
 TEST_F(PassphraseHandlingTest, tyrell_passphrase) {
-    pEp_identity *tyrell_identity = NULL;
-    PEP_STATUS status = set_up_ident_from_scratch(session,
-        tyrell_passphrase_filename,
-        tyrell_passphrase_email,
-        tyrell_passphrase_fpr,
+    PEP_STATUS status = config_passphrase_for_new_keys(session, true, tyrell_passphrase);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    pEp_identity *tyrell_identity = new_identity(tyrell_passphrase_email,
+        NULL,
         PEP_OWN_USERID,
-        tyrell_passphrase_username,
-        &tyrell_identity,
-        true);
+        tyrell_passphrase_username);
+    ASSERT_NOTNULL(tyrell_identity);
+    status = myself(session, tyrell_identity);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
     bool passphrase_bool = false;
