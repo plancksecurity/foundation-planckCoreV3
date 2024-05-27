@@ -4200,8 +4200,18 @@ DYNAMIC_API PEP_STATUS has_passphrase(PEP_SESSION session, const char *account, 
         }
         if (!strcmp(identity->address, account)) {
             // TODO: Ask the sequoia backend
+            const char *data = "DATA";
+            const size_t data_size = strlen(data) - 1;
+            char *signed_data = NULL;
+            size_t signed_data_size = 0;
+            if (!identity->fpr) {
+                continue;
+            }
+            status = sign_only(session, "DATA", data_size, identity->fpr, &signed_data, &signed_data_size);
+            printf("*** sign status %d\n", status);
+            free(signed_data);
         }
     }
 
-    return PEP_ILLEGAL_VALUE;
+    return PEP_CANNOT_FIND_IDENTITY;
 }
