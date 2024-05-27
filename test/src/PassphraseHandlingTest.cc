@@ -79,18 +79,6 @@ namespace {
             const char *tyrell_passphrase_fpr = "DF862D31226F89F4662474AF42A7DE95EADE3B2C";
             const char *tyrell_passphrase_filename = "test_keys/passphrase_handling/tyrell_passphrase.pgp";
             
-            void myself(const char *filename, const char *username, const char *email, const char *fpr) {
-                ASSERT_TRUE(slurp_and_import_key(session, filename));
-
-                pEp_identity *tyrell_identity_no_passphrase = new_identity(email,
-                    fpr,
-                    PEP_OWN_USERID,
-                    username);
-                PEP_STATUS status = ::myself(session, tyrell_identity_no_passphrase);
-                free_identity(tyrell_identity_no_passphrase);
-                ASSERT_EQ(status, PEP_STATUS_OK);
-            }
-
         private:
             const char* test_suite_name;
             const char* test_name;
@@ -101,29 +89,37 @@ namespace {
 }  // namespace
 
 TEST_F(PassphraseHandlingTest, tyrell_no_passphrase) {
-    ASSERT_TRUE(slurp_and_import_key(session, tyrell_no_passphrase_filename));
-
-    this->myself(tyrell_no_passphrase_filename,
-        tyrell_no_passphrase_username,
+    pEp_identity *tyrell_identity = NULL;
+    PEP_STATUS status = set_up_ident_from_scratch(session,
+        tyrell_no_passphrase_filename,
         tyrell_no_passphrase_email,
-        tyrell_no_passphrase_fpr);
+        tyrell_no_passphrase_fpr,
+        PEP_OWN_USERID,
+        tyrell_no_passphrase_username,
+        &tyrell_identity,
+        true);
+    ASSERT_EQ(status, PEP_STATUS_OK);
 
     bool passphrase_bool = false;
-    PEP_STATUS status = has_passphrase(session, tyrell_no_passphrase_email, &passphrase_bool);
+    status = has_passphrase(session, tyrell_no_passphrase_email, &passphrase_bool);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_FALSE(passphrase_bool);
 }
 
 TEST_F(PassphraseHandlingTest, tyrell_passphrase) {
-    ASSERT_TRUE(slurp_and_import_key(session, tyrell_passphrase_filename));
-
-    this->myself(tyrell_passphrase_filename,
-        tyrell_passphrase_username,
+    pEp_identity *tyrell_identity = NULL;
+    PEP_STATUS status = set_up_ident_from_scratch(session,
+        tyrell_passphrase_filename,
         tyrell_passphrase_email,
-        tyrell_passphrase_fpr);
+        tyrell_passphrase_fpr,
+        PEP_OWN_USERID,
+        tyrell_passphrase_username,
+        &tyrell_identity,
+        true);
+    ASSERT_EQ(status, PEP_STATUS_OK);
 
     bool passphrase_bool = false;
-    PEP_STATUS status = has_passphrase(session, tyrell_passphrase_email, &passphrase_bool);
+    status = has_passphrase(session, tyrell_passphrase_email, &passphrase_bool);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_TRUE(passphrase_bool);
 }
