@@ -247,6 +247,8 @@ typedef PEP_STATUS (*get_key_ids_t)(PEP_SESSION session,
                                  size_t csize,                                 
                                  stringlist_t **keylist);
 
+typedef PEP_STATUS (*has_passphrase_t)(PEP_SESSION session, const char *account, bool *result);
+
 /**
  *  @struct    PEP_cryptotech_t
  *  
@@ -281,6 +283,7 @@ typedef struct _PEP_cryptotech_t {
     find_private_keys_t find_private_keys;
     config_cipher_suite_t config_cipher_suite;
     get_key_ids_t get_key_ids;
+    has_passphrase_t has_passphrase;
 } PEP_cryptotech_t;
 
 extern PEP_cryptotech_t cryptotech[PEP_crypt__count]; ///< array of all supported cryptotech drivers/interfaces (?)

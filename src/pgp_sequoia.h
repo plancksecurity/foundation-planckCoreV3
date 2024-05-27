@@ -494,6 +494,8 @@ PEP_STATUS pgp_binary(const char **path);
 PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
         PEP_CIPHER_SUITE suite);
 
+PEP_STATUS pgp_has_passphrase(PEP_SESSION session, const char *account, bool *result);
+
 #define PGP_BINARY_PATH pgp_binary
 
 #endif
