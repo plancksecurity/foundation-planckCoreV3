@@ -67,13 +67,14 @@ namespace {
                 session = NULL;
             }
             
-            const char *tyrell_email = "tyrell@example.com";
+            const char *tyrell_no_passphrase_email = "tyrell@example.com";
 
             const char *tyrell_no_passphrase_fpr = "C203044D09E2EC0BD56FD32B66C9C6A984B31398";
             const char *tyrell_no_passphrase_filename = "test_keys/passphrase_handling/tyrell_no_passphrase.pgp";
 
+            const char *tyrell_passphrase_email = "tyrell_passphrase@example.com";
             const char *tyell_passphrase = "blarg";
-            const char *tyrell_passphrase_fpr = "3CDB34DA24EDB2CCA5E73E17234F29F29DD03985";
+            const char *tyrell_passphrase_fpr = "DF862D31226F89F4662474AF42A7DE95EADE3B2C";
             const char *tyrell_passphrase_filename = "test_keys/passphrase_handling/tyrell_passphrase.pgp";
             
         private:
@@ -89,7 +90,7 @@ namespace {
 TEST_F(PassphraseHandlingTest, tyrell_no_passphrase) {
     ASSERT_TRUE(slurp_and_import_key(session, tyrell_no_passphrase_filename));
     bool passphrase_bool = false;
-    PEP_STATUS status = has_passphrase(tyrell_email, &passphrase_bool);
+    PEP_STATUS status = has_passphrase(tyrell_no_passphrase_email, &passphrase_bool);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_FALSE(passphrase_bool);
 }
@@ -97,7 +98,7 @@ TEST_F(PassphraseHandlingTest, tyrell_no_passphrase) {
 TEST_F(PassphraseHandlingTest, tyrell_passphrase) {
     ASSERT_TRUE(slurp_and_import_key(session, tyrell_passphrase_filename));
     bool passphrase_bool = false;
-    PEP_STATUS status = has_passphrase(tyrell_email, &passphrase_bool);
+    PEP_STATUS status = has_passphrase(tyrell_passphrase_email, &passphrase_bool);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_TRUE(passphrase_bool);
 }
