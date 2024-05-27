@@ -8592,3 +8592,15 @@ PEP_STATUS try_encrypt_message(
 
     return status;
 }
+
+PEP_STATUS has_passphrase(PEP_SESSION session, const char *account, size_t size, bool *has_passphrase) {
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session, const char *accounts, size_t size, stringlist_t **error_accounts) {
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS manage_passphrase(PEP_SESSION session, const stringpair_list_t *accounts_with_old_passphrases, const char *new_passphrase, const size_t size, stringlist_t **error_accounts) {
+    return PEP_STATUS_OK;
+}
