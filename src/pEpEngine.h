@@ -9,6 +9,7 @@
 // 07.08.2023/IP - added method import_extrakey_with_fpr_return
 // 18.10.2023/TC - added identities out param, additionally made the param names more descriptive, removed import_key_strict as it isn't used anymore.
 // 26.02.2024/DZ - Document that messageToSend does not transfer ownership
+// 27.05.2024/DZ - Implement RFC-16 Passphrase Handling
 
 #ifndef PEP_ENGINE_H
 #define PEP_ENGINE_H
@@ -2159,13 +2160,21 @@ DYNAMIC_API PEP_STATUS reset_path_cache(void);
  */
 DYNAMIC_API void clear_path_cache(void);
 
-
 /* Temporary compatibility definitions
  * ***************************************************************** */
 
 /* These must go away, but I am temporarily introducing them so as not to
    break Engine users. */
 DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color);
+
+/**
+ *  <!--        has_passphrase()       -->
+ *
+ *  @brief      Checks if a given account has a passphrase set on its main key.
+ *
+ *              An account is defined by the email if its identity.
+ */
+DYNAMIC_API PEP_STATUS has_passphrase(const char *account, bool *has_passphrase);
 
 #ifdef __cplusplus
 }
