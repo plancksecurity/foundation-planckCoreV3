@@ -87,7 +87,7 @@ namespace {
 
 }  // namespace
 
-TEST_F(PassphraseHandlingTest, tyrell_no_passphrase) {
+TEST_F(PassphraseHandlingTest, has_passphrase_no_passphrase) {
     pEp_identity *tyrell_identity = new_identity(tyrell_no_passphrase_email,
         NULL,
         PEP_OWN_USERID,
@@ -102,7 +102,7 @@ TEST_F(PassphraseHandlingTest, tyrell_no_passphrase) {
     ASSERT_FALSE(passphrase_bool);
 }
 
-TEST_F(PassphraseHandlingTest, tyrell_passphrase) {
+TEST_F(PassphraseHandlingTest, has_passphrase_passphrase) {
     PEP_STATUS status = config_passphrase_for_new_keys(session, true, tyrell_passphrase);
     ASSERT_EQ(status, PEP_STATUS_OK);
     pEp_identity *tyrell_identity = new_identity(tyrell_passphrase_email,
