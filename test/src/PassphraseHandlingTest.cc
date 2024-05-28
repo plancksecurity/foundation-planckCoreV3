@@ -70,15 +70,26 @@ namespace {
                 status = myself(session, tyrell_identity);
                 ASSERT_EQ(status, PEP_STATUS_OK);
 
-                // own identity wit key passphrase
-                status = config_passphrase_for_new_keys(session, true, tyrell_passphrase);
+                // own identity with key passphrase 1
+                status = config_passphrase_for_new_keys(session, true, tyrell_passphrase_1);
                 ASSERT_EQ(status, PEP_STATUS_OK);
-                tyrell_identity_passphrase = new_identity(tyrell_passphrase_email,
+                tyrell_identity_passphrase_1 = new_identity(tyrell_passphrase_email_1,
                     NULL,
                     PEP_OWN_USERID,
-                    tyrell_passphrase_username);
-                ASSERT_NOTNULL(tyrell_identity_passphrase);
-                status = myself(session, tyrell_identity_passphrase);
+                    tyrell_passphrase_username_1);
+                ASSERT_NOTNULL(tyrell_identity_passphrase_1);
+                status = myself(session, tyrell_identity_passphrase_1);
+                ASSERT_EQ(status, PEP_STATUS_OK);
+
+                // own identity with key passphrase 2
+                status = config_passphrase_for_new_keys(session, true, tyrell_passphrase_2);
+                ASSERT_EQ(status, PEP_STATUS_OK);
+                tyrell_identity_passphrase_2 = new_identity(tyrell_passphrase_email_2,
+                    NULL,
+                    PEP_OWN_USERID,
+                    tyrell_passphrase_username_2);
+                ASSERT_NOTNULL(tyrell_identity_passphrase_2);
+                status = myself(session, tyrell_identity_passphrase_1);
                 ASSERT_EQ(status, PEP_STATUS_OK);
 
                 status = config_passphrase_for_new_keys(session, false, NULL);
@@ -87,7 +98,7 @@ namespace {
 
             void TearDown() override {
                 free_identity(tyrell_identity);
-                free_identity(tyrell_identity_passphrase);
+                free_identity(tyrell_identity_passphrase_1);
 
                 // Code here will be called immediately after each test (right
                 // before the destructor).
@@ -100,12 +111,18 @@ namespace {
             const char *tyrell_no_passphrase_email = "tyrell@example.com";
             const char *tyrell_no_passphrase_username = "Eldon Tyrell (no passphrase)";
 
-            const char *tyrell_passphrase_email = "tyrell_passphrase@example.com";
-            const char *tyrell_passphrase_username = "Eldon Tyrell (passphrase)";
-            const char *tyrell_passphrase = "blarg";
+            const char *tyrell_passphrase_email_1 = "tyrell_passphrase_1@example.com";
+            const char *tyrell_passphrase_username_1 = "Eldon Tyrell (passphrase 1)";
+
+            const char *tyrell_passphrase_email_2 = "tyrell_passphrase_2@example.com";
+            const char *tyrell_passphrase_username_2 = "Eldon Tyrell (passphrase 2)";
+
+            const char *tyrell_passphrase_1 = "blarg1";
+            const char *tyrell_passphrase_2 = "blarg2";
 
             pEp_identity *tyrell_identity;
-            pEp_identity *tyrell_identity_passphrase;
+            pEp_identity *tyrell_identity_passphrase_1;
+            pEp_identity *tyrell_identity_passphrase_2;
             
         private:
             const char* test_suite_name;
@@ -125,19 +142,19 @@ TEST_F(PassphraseHandlingTest, has_passphrase_no_passphrase) {
 
 TEST_F(PassphraseHandlingTest, has_passphrase_passphrase) {
     bool passphrase_bool = false;
-    PEP_STATUS status = has_passphrase(session, tyrell_passphrase_email, &passphrase_bool);
+    PEP_STATUS status = has_passphrase(session, tyrell_passphrase_email_1, &passphrase_bool);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_TRUE(passphrase_bool);
 }
 
 TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_one_identity_passphrase_required) {
-    stringpair_list_t *accounts_passphrases = new_stringpair_list(new_stringpair(tyrell_passphrase_email, ""));
+    stringpair_list_t *accounts_passphrases = new_stringpair_list(new_stringpair(tyrell_passphrase_email_1, ""));
 
     stringlist_t *errors = NULL;
     PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_passphrases, &errors);
     ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);
     ASSERT_EQ(stringlist_length(errors), 1);
-    ASSERT_EQ(string{errors->value}, string{tyrell_passphrase_email});
+    ASSERT_EQ(string{errors->value}, string{tyrell_passphrase_email_1});
 
     free_stringpair_list(accounts_passphrases);
 }
@@ -155,7 +172,7 @@ TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_one_identity_no_passp
 
 TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase) {
     stringpair_list_t *accounts_passphrases = new_stringpair_list(new_stringpair(tyrell_no_passphrase_email, ""));
-    stringpair_list_add(accounts_passphrases, new_stringpair(tyrell_no_passphrase_email, tyrell_passphrase));
+    stringpair_list_add(accounts_passphrases, new_stringpair(tyrell_no_passphrase_email, tyrell_passphrase_1));
     ASSERT_EQ(stringpair_list_length(accounts_passphrases), 2);
 
     stringlist_t *errors = NULL;
@@ -202,6 +219,19 @@ TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_empty_account) {
     ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
     ASSERT_EQ(stringlist_length(errors), 1);
     ASSERT_EQ(string{errors->value}, string{email});
+
+    free_stringpair_list(accounts_passphrases);
+}
+
+TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_all) {
+    stringpair_list_t *accounts_passphrases = new_stringpair_list(new_stringpair(tyrell_no_passphrase_email, ""));
+    stringpair_list_add(accounts_passphrases, new_stringpair(tyrell_passphrase_email_1, tyrell_passphrase_1));
+    stringpair_list_add(accounts_passphrases, new_stringpair(tyrell_passphrase_email_2, tyrell_passphrase_2));
+
+    stringlist_t *errors = NULL;
+    PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_passphrases, &errors);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(stringlist_length(errors), 0);
 
     free_stringpair_list(accounts_passphrases);
 }
