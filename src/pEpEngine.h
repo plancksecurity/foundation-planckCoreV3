@@ -2173,6 +2173,8 @@ DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color);
  *  @brief      Checks if a given account has a passphrase set on its main key.
  *
  *              An account is defined by the email if its identity.
+ *
+ *  @retval PEP_STATUS_OK No errors.
  */
 DYNAMIC_API PEP_STATUS has_passphrase(PEP_SESSION session, const char *account, bool *has_passphrase);
 
@@ -2187,6 +2189,9 @@ DYNAMIC_API PEP_STATUS has_passphrase(PEP_SESSION session, const char *account, 
  *              via `error_accounts`, and the overall return value is `PEP_PASSPHRASE_REQUIRED`.
  *              If there is _any other error_, the corresponding status is returned and the
  *              corresponding account is put _as the only one_ in `error_accounts`.
+ *
+ *  @retval PEP_CANNOT_FIND_IDENTITY No errors, none required of the given accounts require a passphrase.
+ *  @retval PEP_PASSPHRASE_REQUIRED No errors, at least one account requires a passphrase.
  */
 DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
     const stringlist_t *accounts,
