@@ -249,3 +249,17 @@ TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_mixed) {
 
     free_stringpair_list(accounts_passphrases);
 }
+
+TEST_F(PassphraseHandlingTest, manage_passphrase_happy_path) {
+    stringpair_list_t *accounts_passphrases = new_stringpair_list(new_stringpair(tyrell_passphrase_email_1, tyrell_passphrase_1));
+    stringpair_list_add(accounts_passphrases, new_stringpair(tyrell_passphrase_email_2, tyrell_passphrase_2));
+
+    const char *new_passphrase = "new_blarg";
+
+    stringlist_t *errors = NULL;
+    PEP_STATUS status = manage_passphrase(session, accounts_passphrases, new_passphrase, &errors);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(stringlist_length(errors), 0);
+
+    free_stringpair_list(accounts_passphrases);
+}
