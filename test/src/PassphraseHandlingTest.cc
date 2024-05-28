@@ -131,70 +131,70 @@ TEST_F(PassphraseHandlingTest, has_passphrase_passphrase) {
 }
 
 TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_one_identity_passphrase_required) {
-    stringlist_t *accounts_list = new_stringlist(tyrell_passphrase_email);
+    stringpair_list_t *accounts_passphrases = new_stringpair_list(new_stringpair(tyrell_passphrase_email, ""));
 
     stringlist_t *errors = NULL;
-    PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_list, &errors);
+    PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_passphrases, &errors);
     ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);
     ASSERT_EQ(stringlist_length(errors), 1);
 
-    free_stringlist(accounts_list);
+    free_stringpair_list(accounts_passphrases);
 }
 
 TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_one_identity_no_passphrase_required) {
-    stringlist_t *accounts_list = new_stringlist(tyrell_no_passphrase_email);
+    stringpair_list_t *accounts_passphrases = new_stringpair_list(new_stringpair(tyrell_no_passphrase_email, ""));
 
     stringlist_t *errors = NULL;
-    PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_list, &errors);
-    ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
+    PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_passphrases, &errors);
+    ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_EQ(stringlist_length(errors), 0);
 
-    free_stringlist(accounts_list);
+    free_stringpair_list(accounts_passphrases);
 }
 
 TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase) {
-    stringlist_t *accounts_list = new_stringlist(tyrell_no_passphrase_email);
-    stringlist_add(accounts_list, tyrell_passphrase_email);
-    ASSERT_EQ(stringlist_length(accounts_list), 2);
+    stringpair_list_t *accounts_passphrases = new_stringpair_list(new_stringpair(tyrell_no_passphrase_email, ""));
+    stringpair_list_add(accounts_passphrases, new_stringpair(tyrell_no_passphrase_email, tyrell_passphrase));
+    ASSERT_EQ(stringpair_list_length(accounts_passphrases), 2);
 
     stringlist_t *errors = NULL;
-    PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_list, &errors);
-    ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);
-    ASSERT_EQ(stringlist_length(errors), 1);
+    PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_passphrases, &errors);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(stringlist_length(errors), 0);
 
-    free_stringlist(accounts_list);
+    free_stringpair_list(accounts_passphrases);
 }
 
 TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_unknown_account) {
-    stringlist_t *accounts_list = new_stringlist("completely_bogus@example.com");
+    stringpair_list_t *accounts_passphrases = new_stringpair_list(new_stringpair("completely_bogus@example.com", ""));
 
     stringlist_t *errors = NULL;
-    PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_list, &errors);
+    PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_passphrases, &errors);
     ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
     ASSERT_EQ(stringlist_length(errors), 0);
 
-    free_stringlist(accounts_list);
+    free_stringpair_list(accounts_passphrases);
 }
 
 TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_unknown_accounts) {
-    stringlist_t *accounts_list = new_stringlist("completely_bogus@example.com");
-    stringlist_add(accounts_list, "bogus2@example.com");
+    stringpair_list_t *accounts_passphrases = new_stringpair_list(new_stringpair("completely_bogus@example.com", ""));
+    stringpair_list_add(accounts_passphrases, new_stringpair("bogus2@example.com", ""));
 
     stringlist_t *errors = NULL;
-    PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_list, &errors);
+    PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_passphrases, &errors);
     ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
     ASSERT_EQ(stringlist_length(errors), 0);
 
-    free_stringlist(accounts_list);
+    free_stringpair_list(accounts_passphrases);
 }
 
 TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_empty_account) {
-    stringlist_t *accounts_list = new_stringlist("");
+    stringpair_list_t *accounts_passphrases = new_stringpair_list(new_stringpair("", ""));
 
     stringlist_t *errors = NULL;
-    PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_list, &errors);
+    PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_passphrases, &errors);
     ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
     ASSERT_EQ(stringlist_length(errors), 0);
 
-    free_stringlist(accounts_list);
+    free_stringpair_list(accounts_passphrases);
 }

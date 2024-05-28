@@ -2194,7 +2194,7 @@ DYNAMIC_API PEP_STATUS has_passphrase(PEP_SESSION session, const char *account, 
  *  @retval PEP_PASSPHRASE_REQUIRED No errors, at least one account requires a passphrase.
  */
 DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
-    const stringlist_t *accounts,
+    const stringpair_list_t *accounts_with_passphrases,
     stringlist_t **error_accounts);
 
 /**
