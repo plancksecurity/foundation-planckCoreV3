@@ -142,6 +142,19 @@ TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase) {
     status = myself(session, tyrell_identity_passphrase);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
+    status = config_passphrase_for_new_keys(session, false, NULL);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    stringlist_t *accounts_list = new_stringlist(tyrell_no_passphrase_email);
+    stringlist_add(accounts_list, tyrell_passphrase_email);
+    ASSERT_EQ(stringlist_length(accounts_list), 2);
+
+    stringlist_t *errors = NULL;
+    status = unlock_keys_with_passphrase(session, accounts_list, &errors);
+    ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);
+    ASSERT_EQ(stringlist_length(errors), 1);
+
     free_identity(tyrell_identity);
     free_identity(tyrell_identity_passphrase);
+    free_stringlist(accounts_list);
 }
