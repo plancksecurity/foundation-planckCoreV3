@@ -253,9 +253,10 @@ typedef PEP_STATUS (*unlock_keys_with_passphrase_t)(PEP_SESSION session,
     const stringpair_list_t *accounts_with_passphrases,
     stringlist_t **error_accounts);
 
-typedef PEP_STATUS (*manage_passphrase_t)(const stringpair_list_t *accounts_with_old_passphrases,
-    const char *new_passphrase,
-    stringlist_t **error_accounts);
+typedef PEP_STATUS (*manage_passphrase_t)(PEP_SESSION session,
+    const pEp_identity *identity,
+    const char *old_passphrase,
+    const char *new_passphrase);
 
 /**
  *  @struct    PEP_cryptotech_t

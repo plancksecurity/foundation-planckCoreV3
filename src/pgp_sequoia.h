@@ -494,15 +494,16 @@ PEP_STATUS pgp_binary(const char **path);
 PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
         PEP_CIPHER_SUITE suite);
 
+PEP_STATUS pgp_manage_passphrase(PEP_SESSION session,
+    const pEp_identity *identity,
+    const char *old_passphrase,
+    const char *new_passphrase);
+
 /*
 PEP_STATUS pgp_has_passphrase(PEP_SESSION session, const pEp_identity *identity, bool *result);
 
 PEP_STATUS pgp_unlock_keys_with_passphrase(PEP_SESSION session,
     const stringpair_list_t *accounts_with_passphrases,
-    stringlist_t **error_accounts);
-
-PEP_STATUS pgp_manage_passphrase(const stringpair_list_t *accounts_with_old_passphrases,
-    const char *new_passphrase,
     stringlist_t **error_accounts);
 */
 
