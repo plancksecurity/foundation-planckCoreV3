@@ -4185,6 +4185,54 @@ DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color)
     LOG_WARNING("deprecated function");
 }
 
+static PEP_STATUS own_identity_by_address(PEP_SESSION session, const char *address, pEp_identity **identity)
+{
+    PEP_REQUIRE(address);
+    PEP_REQUIRE(identity);
+
+    if (EMPTYSTR(address)) {
+        return PEP_ILLEGAL_VALUE;
+    }
+
+    *identity = NULL;
+    
+    identity_list *own_identities = NULL;
+    pEp_identity *found_identity = NULL;
+    
+    PEP_STATUS status = own_identities_retrieve(session, &own_identities);
+    if (status != PEP_STATUS_OK) {
+        return status;
+    }
+
+    for (identity_list *identities = own_identities; identities; identities = identities->next) {
+        pEp_identity *identity = identities->ident;
+
+        if (!identity) {
+            continue;
+        }
+
+        if (!identity->address) {
+            continue;;
+        }
+
+        if (!identity->fpr) {
+            continue;
+        }
+
+        if (!strcmp(identity->address, address)) {
+            found_identity = identity_dup(identity);
+            break;
+        }
+    }
+
+    if (found_identity) {
+        *identity = found_identity;
+        return PEP_STATUS_OK;
+    } else {
+        return PEP_CANNOT_FIND_IDENTITY;
+    }
+}
+
 DYNAMIC_API PEP_STATUS has_passphrase(PEP_SESSION session, const char *account, bool *has_passphrase)
 {
     PEP_REQUIRE(account);
