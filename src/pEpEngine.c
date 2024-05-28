@@ -4206,8 +4206,6 @@ DYNAMIC_API PEP_STATUS has_passphrase(PEP_SESSION session, const char *account, 
                 continue;
             }
 
-            // TODO: Ask the sequoia backend
-
             const char *data = "DATA";
             const size_t data_size = strlen(data) - 1;
             char *signed_data = NULL;
@@ -4255,8 +4253,6 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
                 if (!identity->fpr) {
                     continue;
                 }
-
-                // TODO: Ask the sequoia backend
 
                 const char *data = "DATA";
                 const size_t data_size = strlen(data) - 1;
