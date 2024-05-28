@@ -164,3 +164,26 @@ TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase) {
 
     free_stringlist(accounts_list);
 }
+
+TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_unknown_account) {
+    stringlist_t *accounts_list = new_stringlist("completely_bogus@example.com");
+
+    stringlist_t *errors = NULL;
+    PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_list, &errors);
+    ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
+    ASSERT_EQ(stringlist_length(errors), 0);
+
+    free_stringlist(accounts_list);
+}
+
+TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_unknown_accounts) {
+    stringlist_t *accounts_list = new_stringlist("completely_bogus@example.com");
+    stringlist_add(accounts_list, "bogus2@example.com");
+
+    stringlist_t *errors = NULL;
+    PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_list, &errors);
+    ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
+    ASSERT_EQ(stringlist_length(errors), 0);
+
+    free_stringlist(accounts_list);
+}
