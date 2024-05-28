@@ -2192,6 +2192,7 @@ DYNAMIC_API PEP_STATUS has_passphrase(PEP_SESSION session, const char *account, 
  *
  *  @retval PEP_CANNOT_FIND_IDENTITY No errors, none required of the given accounts require a passphrase.
  *  @retval PEP_PASSPHRASE_REQUIRED No errors, at least one account requires a passphrase.
+ *  @retval PEP_ILLEGAL_VALUE Input values are not correct, e.g. NULL values in passphrases.
  */
 DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
     const stringpair_list_t *accounts_with_passphrases,
