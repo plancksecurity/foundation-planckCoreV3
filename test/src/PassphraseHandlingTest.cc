@@ -130,6 +130,28 @@ TEST_F(PassphraseHandlingTest, has_passphrase_passphrase) {
     ASSERT_TRUE(passphrase_bool);
 }
 
+TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_one_identity_passphrase_required) {
+    stringlist_t *accounts_list = new_stringlist(tyrell_passphrase_email);
+
+    stringlist_t *errors = NULL;
+    PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_list, &errors);
+    ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);
+    ASSERT_EQ(stringlist_length(errors), 1);
+
+    free_stringlist(accounts_list);
+}
+
+TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_one_identity_no_passphrase_required) {
+    stringlist_t *accounts_list = new_stringlist(tyrell_no_passphrase_email);
+
+    stringlist_t *errors = NULL;
+    PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_list, &errors);
+    ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
+    ASSERT_EQ(stringlist_length(errors), 0);
+
+    free_stringlist(accounts_list);
+}
+
 TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase) {
     stringlist_t *accounts_list = new_stringlist(tyrell_no_passphrase_email);
     stringlist_add(accounts_list, tyrell_passphrase_email);
