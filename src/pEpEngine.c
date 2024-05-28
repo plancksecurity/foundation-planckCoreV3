@@ -4275,30 +4275,34 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
     PEP_STATUS status_result = PEP_CANNOT_FIND_IDENTITY;
 
     for (stringpair_list_t *account_passphrase_pair = accounts_with_passphrases; account_passphrase_pair; account_passphrase_pair = account_passphrase_pair->next) {
-        const stringpair_t *account_passphrase = account_passphrase_pair->value;
+        const stringpair_t *current = account_passphrase_pair->value;
 
-        if (!account_passphrase) {
+        if (!current) {
             free_stringlist(*error_accounts);
             return PEP_ILLEGAL_VALUE;
         }
 
-        if (!account_passphrase->key) {
+        if (!current->key) {
             free_stringlist(*error_accounts);
             return PEP_ILLEGAL_VALUE;
         }
 
-        if (!account_passphrase->value) {
+        if (!current->value) {
             free_stringlist(*error_accounts);
             return PEP_ILLEGAL_VALUE;
         }
 
         pEp_identity *found_identity = NULL;
-        PEP_STATUS find_status = own_identity_by_address(session, account_passphrase->key, &found_identity);
+        PEP_STATUS find_status = own_identity_by_address(session, current->key, &found_identity);
         if (find_status != PEP_STATUS_OK) {
-            continue;
+            if (*error_accounts) {
+                free_stringlist(*error_accounts);
+            }
+            *error_accounts = new_stringlist(current);
+            return PEP_CANNOT_FIND_IDENTITY;
         }
 
-        PEP_STATUS config_status = config_passphrase(session, account_passphrase->value);
+        PEP_STATUS config_status = config_passphrase(session, current->value);
         if (config_status != PEP_STATUS_OK) {
             free_stringlist(*error_accounts);
             free_identity(found_identity);
@@ -4321,9 +4325,9 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
             // add account to passphrase accounts, continue with next account
             status_result = PEP_PASSPHRASE_REQUIRED;
             if (!*error_accounts) {
-                *error_accounts = new_stringlist(account_passphrase);
+                *error_accounts = new_stringlist(current);
             } else {
-                stringlist_add(*error_accounts, account_passphrase);
+                stringlist_add(*error_accounts, current);
             }
             break;
         } else {
@@ -4334,7 +4338,7 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
             if (*error_accounts) {
                 free_stringlist(*error_accounts);
             }
-            *error_accounts = new_stringlist(account_passphrase);
+            *error_accounts = new_stringlist(current);
             break;
         }
         if (status_result != PEP_CANNOT_FIND_IDENTITY && status_result != PEP_PASSPHRASE_REQUIRED) {
