@@ -4302,7 +4302,12 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
             return PEP_CANNOT_FIND_IDENTITY;
         }
 
-        PEP_STATUS config_status = config_passphrase(session, current->value);
+        PEP_STATUS config_status = PEP_STATUS_OK;
+        if (EMPTYSTR(current->value)) {
+            config_status = config_passphrase(session, NULL);
+        } else {
+            config_status = config_passphrase(session, current->value);
+        }
         if (config_status != PEP_STATUS_OK) {
             free_stringlist(*error_accounts);
             free_identity(found_identity);
