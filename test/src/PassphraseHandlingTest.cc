@@ -60,6 +60,29 @@ namespace {
                 // Try to speed up key generation.
                 PEP_STATUS status = config_cipher_suite(session, PEP_CIPHER_SUITE_RSA2K);
                 ASSERT_EQ(status, PEP_STATUS_OK);
+
+                // own identity without key passphrase
+                this->tyrell_identity = new_identity(tyrell_no_passphrase_email,
+                    NULL,
+                    PEP_OWN_USERID,
+                    tyrell_no_passphrase_username);
+                ASSERT_NOTNULL(tyrell_identity);
+                status = myself(session, tyrell_identity);
+                ASSERT_EQ(status, PEP_STATUS_OK);
+
+                // own identity wit key passphrase
+                status = config_passphrase_for_new_keys(session, true, tyrell_passphrase);
+                ASSERT_EQ(status, PEP_STATUS_OK);
+                this->tyrell_identity_passphrase = new_identity(tyrell_passphrase_email,
+                    NULL,
+                    PEP_OWN_USERID,
+                    tyrell_passphrase_username);
+                ASSERT_NOTNULL(tyrell_identity_passphrase);
+                status = myself(session, tyrell_identity_passphrase);
+                ASSERT_EQ(status, PEP_STATUS_OK);
+
+                status = config_passphrase_for_new_keys(session, false, NULL);
+                ASSERT_EQ(status, PEP_STATUS_OK);
             }
 
             void TearDown() override {
@@ -77,6 +100,9 @@ namespace {
             const char *tyrell_passphrase_email = "tyrell_passphrase@example.com";
             const char *tyrell_passphrase_username = "Eldon Tyrell (passphrase)";
             const char *tyrell_passphrase = "blarg";
+
+            pEp_identity *tyrell_identity;
+            pEp_identity *tyrell_identity_passphrase;
             
         private:
             const char* test_suite_name;
@@ -88,16 +114,8 @@ namespace {
 }  // namespace
 
 TEST_F(PassphraseHandlingTest, has_passphrase_no_passphrase) {
-    pEp_identity *tyrell_identity = new_identity(tyrell_no_passphrase_email,
-        NULL,
-        PEP_OWN_USERID,
-        tyrell_no_passphrase_username);
-    ASSERT_NOTNULL(tyrell_identity);
-    PEP_STATUS status = myself(session, tyrell_identity);
-    ASSERT_EQ(status, PEP_STATUS_OK);
-
     bool passphrase_bool = false;
-    status = has_passphrase(session, tyrell_no_passphrase_email, &passphrase_bool);
+    PEP_STATUS status = has_passphrase(session, tyrell_no_passphrase_email, &passphrase_bool);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_FALSE(passphrase_bool);
 
@@ -105,18 +123,8 @@ TEST_F(PassphraseHandlingTest, has_passphrase_no_passphrase) {
 }
 
 TEST_F(PassphraseHandlingTest, has_passphrase_passphrase) {
-    PEP_STATUS status = config_passphrase_for_new_keys(session, true, tyrell_passphrase);
-    ASSERT_EQ(status, PEP_STATUS_OK);
-    pEp_identity *tyrell_identity = new_identity(tyrell_passphrase_email,
-        NULL,
-        PEP_OWN_USERID,
-        tyrell_passphrase_username);
-    ASSERT_NOTNULL(tyrell_identity);
-    status = myself(session, tyrell_identity);
-    ASSERT_EQ(status, PEP_STATUS_OK);
-
     bool passphrase_bool = false;
-    status = has_passphrase(session, tyrell_passphrase_email, &passphrase_bool);
+    PEP_STATUS status = has_passphrase(session, tyrell_passphrase_email, &passphrase_bool);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_TRUE(passphrase_bool);
 
@@ -124,33 +132,12 @@ TEST_F(PassphraseHandlingTest, has_passphrase_passphrase) {
 }
 
 TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase) {
-    pEp_identity *tyrell_identity = new_identity(tyrell_no_passphrase_email,
-        NULL,
-        PEP_OWN_USERID,
-        tyrell_no_passphrase_username);
-    ASSERT_NOTNULL(tyrell_identity);
-    PEP_STATUS status = myself(session, tyrell_identity);
-    ASSERT_EQ(status, PEP_STATUS_OK);
-
-    status = config_passphrase_for_new_keys(session, true, tyrell_passphrase);
-    ASSERT_EQ(status, PEP_STATUS_OK);
-    pEp_identity *tyrell_identity_passphrase = new_identity(tyrell_passphrase_email,
-        NULL,
-        PEP_OWN_USERID,
-        tyrell_passphrase_username);
-    ASSERT_NOTNULL(tyrell_identity_passphrase);
-    status = myself(session, tyrell_identity_passphrase);
-    ASSERT_EQ(status, PEP_STATUS_OK);
-
-    status = config_passphrase_for_new_keys(session, false, NULL);
-    ASSERT_EQ(status, PEP_STATUS_OK);
-
     stringlist_t *accounts_list = new_stringlist(tyrell_no_passphrase_email);
     stringlist_add(accounts_list, tyrell_passphrase_email);
     ASSERT_EQ(stringlist_length(accounts_list), 2);
 
     stringlist_t *errors = NULL;
-    status = unlock_keys_with_passphrase(session, accounts_list, &errors);
+    PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_list, &errors);
     ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);
     ASSERT_EQ(stringlist_length(errors), 1);
 
