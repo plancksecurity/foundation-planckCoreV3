@@ -4302,16 +4302,16 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
             return PEP_CANNOT_FIND_IDENTITY;
         }
 
-        PEP_STATUS config_status = PEP_STATUS_OK;
+        PEP_STATUS config_passphrase_status = PEP_STATUS_OK;
         if (EMPTYSTR(current->value)) {
-            config_status = config_passphrase(session, NULL);
+            config_passphrase_status = config_passphrase(session, NULL);
         } else {
-            config_status = config_passphrase(session, current->value);
+            config_passphrase_status = config_passphrase(session, current->value);
         }
-        if (config_status != PEP_STATUS_OK) {
+        if (config_passphrase_status != PEP_STATUS_OK) {
             free_stringlist(*error_accounts);
             free_identity(found_identity);
-            return config_status;
+            return config_passphrase_status;
         }
 
         const char *data = "DATA";
@@ -4352,9 +4352,75 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
     return status_result;
 }
 
-DYNAMIC_API PEP_STATUS manage_passphrase(const stringpair_list_t *accounts_with_old_passphrases,
+DYNAMIC_API PEP_STATUS manage_passphrase(PEP_SESSION session,
+    const stringpair_list_t *accounts_with_passphrases,
     const char *new_passphrase,
     stringlist_t **error_accounts)
 {
-    return PEP_ILLEGAL_VALUE;
+    PEP_REQUIRE(accounts_with_passphrases);
+    PEP_REQUIRE(error_accounts);
+    *error_accounts = NULL;
+
+    PEP_STATUS status_result = PEP_CANNOT_FIND_IDENTITY;
+
+    for (stringpair_list_t *account_passphrase_pair = accounts_with_passphrases; account_passphrase_pair; account_passphrase_pair = account_passphrase_pair->next) {
+        const stringpair_t *current = account_passphrase_pair->value;
+
+        if (!current) {
+            free_stringlist(*error_accounts);
+            return PEP_ILLEGAL_VALUE;
+        }
+
+        if (!current->key) {
+            free_stringlist(*error_accounts);
+            return PEP_ILLEGAL_VALUE;
+        }
+
+        if (!current->value) {
+            free_stringlist(*error_accounts);
+            return PEP_ILLEGAL_VALUE;
+        }
+
+        pEp_identity *found_identity = NULL;
+        PEP_STATUS find_status = own_identity_by_address(session, current->key, &found_identity);
+        if (find_status != PEP_STATUS_OK) {
+            if (*error_accounts) {
+                free_stringlist(*error_accounts);
+            }
+            *error_accounts = new_stringlist(current->key);
+            return PEP_CANNOT_FIND_IDENTITY;
+        }
+
+        PEP_STATUS status = PEP_STATUS_OK;
+
+        free_identity(found_identity);
+
+        if (status == PEP_STATUS_OK) {
+            // nothing to do, can check next account
+            status_result = PEP_STATUS_OK;
+        } else if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
+            // add account to passphrase accounts, continue with next account
+            status_result = PEP_WRONG_PASSPHRASE;
+            if (!*error_accounts) {
+                *error_accounts = new_stringlist(current->key);
+            } else {
+                stringlist_add(*error_accounts, current->key);
+            }
+        } else {
+            // other error
+            // note the account as the only one in the list
+            // signal the error
+            status_result = status;
+            if (*error_accounts) {
+                free_stringlist(*error_accounts);
+            }
+            *error_accounts = new_stringlist(current);
+        }
+        if (status_result != PEP_STATUS_OK && status_result != PEP_WRONG_PASSPHRASE) {
+            // found another error, abort early
+            break;
+        }
+    }
+
+    return status_result;
 }
