@@ -62,7 +62,7 @@ namespace {
                 ASSERT_EQ(status, PEP_STATUS_OK);
 
                 // own identity without key passphrase
-                this->tyrell_identity = new_identity(tyrell_no_passphrase_email,
+                tyrell_identity = new_identity(tyrell_no_passphrase_email,
                     NULL,
                     PEP_OWN_USERID,
                     tyrell_no_passphrase_username);
@@ -73,7 +73,7 @@ namespace {
                 // own identity wit key passphrase
                 status = config_passphrase_for_new_keys(session, true, tyrell_passphrase);
                 ASSERT_EQ(status, PEP_STATUS_OK);
-                this->tyrell_identity_passphrase = new_identity(tyrell_passphrase_email,
+                tyrell_identity_passphrase = new_identity(tyrell_passphrase_email,
                     NULL,
                     PEP_OWN_USERID,
                     tyrell_passphrase_username);
@@ -86,6 +86,9 @@ namespace {
             }
 
             void TearDown() override {
+                free_identity(tyrell_identity);
+                free_identity(tyrell_identity_passphrase);
+
                 // Code here will be called immediately after each test (right
                 // before the destructor).
                 engine->shut_down();
@@ -118,8 +121,6 @@ TEST_F(PassphraseHandlingTest, has_passphrase_no_passphrase) {
     PEP_STATUS status = has_passphrase(session, tyrell_no_passphrase_email, &passphrase_bool);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_FALSE(passphrase_bool);
-
-    free_identity(tyrell_identity);
 }
 
 TEST_F(PassphraseHandlingTest, has_passphrase_passphrase) {
@@ -127,8 +128,6 @@ TEST_F(PassphraseHandlingTest, has_passphrase_passphrase) {
     PEP_STATUS status = has_passphrase(session, tyrell_passphrase_email, &passphrase_bool);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_TRUE(passphrase_bool);
-
-    free_identity(tyrell_identity);
 }
 
 TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase) {
@@ -141,7 +140,5 @@ TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase) {
     ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);
     ASSERT_EQ(stringlist_length(errors), 1);
 
-    free_identity(tyrell_identity);
-    free_identity(tyrell_identity_passphrase);
     free_stringlist(accounts_list);
 }
