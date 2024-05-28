@@ -730,7 +730,7 @@ PEP_STATUS normalize_fpr(PEP_SESSION session, char **normalized_fpr,
 
 
 PEP_STATUS has_passphrase(PEP_SESSION session, const char *account, const size_t size, bool *has_passphrase);
-PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session, const char *accounts, const size_t size, stringlist_t **error_accounts);
+PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session, const stringpair_list_t *accounts_with_passphrases, stringlist_t **error_accounts);
 PEP_STATUS manage_passphrase(PEP_SESSION session, const stringpair_list_t *accounts_with_old_passphrases, const char *new_passphrase, const size_t size, stringlist_t **error_accounts);
 
 

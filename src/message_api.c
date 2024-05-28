@@ -8597,7 +8597,7 @@ PEP_STATUS has_passphrase(PEP_SESSION session, const char *account, size_t size,
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session, const char *accounts, size_t size, stringlist_t **error_accounts) {
+PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session, const stringpair_list_t *accounts_with_passphrases, stringlist_t **error_accounts) {
     return PEP_STATUS_OK;
 }
 
