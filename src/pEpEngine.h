@@ -2190,7 +2190,7 @@ DYNAMIC_API PEP_STATUS has_passphrase(PEP_SESSION session, const char *account, 
  *              If there is _any other error_, the corresponding status is returned and the
  *              corresponding account is put _as the only one_ in `error_accounts`.
  *
- *  @retval PEP_CANNOT_FIND_IDENTITY The error list contains the first account that could not be found.
+ *  @retval PEP_CANNOT_FIND_IDENTITY The error list contains the _first_ account that could not be found.
  *  @retval PEP_PASSPHRASE_REQUIRED The error list contains the accounts that couldn't be unblocked.
  *  @retval PEP_ILLEGAL_VALUE Input values are not correct, e.g. NULL values in passphrases, no errors set.
  */

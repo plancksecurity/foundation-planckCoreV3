@@ -4298,7 +4298,7 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
             if (*error_accounts) {
                 free_stringlist(*error_accounts);
             }
-            *error_accounts = new_stringlist(current);
+            *error_accounts = new_stringlist(current->key);
             return PEP_CANNOT_FIND_IDENTITY;
         }
 

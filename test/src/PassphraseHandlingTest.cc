@@ -166,35 +166,41 @@ TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase) {
 }
 
 TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_unknown_account) {
-    stringpair_list_t *accounts_passphrases = new_stringpair_list(new_stringpair("completely_bogus@example.com", ""));
+    const char *email = "completely_bogus@example.com";
+    stringpair_list_t *accounts_passphrases = new_stringpair_list(new_stringpair(email, ""));
 
     stringlist_t *errors = NULL;
     PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_passphrases, &errors);
     ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
-    ASSERT_EQ(stringlist_length(errors), 0);
+    ASSERT_EQ(stringlist_length(errors), 1);
+    ASSERT_EQ(string{errors->value}, string{email});
 
     free_stringpair_list(accounts_passphrases);
 }
 
 TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_unknown_accounts) {
-    stringpair_list_t *accounts_passphrases = new_stringpair_list(new_stringpair("completely_bogus@example.com", ""));
+    const char *email = "completely_bogus@example.com";
+    stringpair_list_t *accounts_passphrases = new_stringpair_list(new_stringpair(email, ""));
     stringpair_list_add(accounts_passphrases, new_stringpair("bogus2@example.com", ""));
 
     stringlist_t *errors = NULL;
     PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_passphrases, &errors);
     ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
-    ASSERT_EQ(stringlist_length(errors), 0);
+    ASSERT_EQ(stringlist_length(errors), 1);
+    ASSERT_EQ(string{errors->value}, string{email});
 
     free_stringpair_list(accounts_passphrases);
 }
 
 TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_empty_account) {
-    stringpair_list_t *accounts_passphrases = new_stringpair_list(new_stringpair("", ""));
+    const char *email = "completely_bogus@example.com";
+    stringpair_list_t *accounts_passphrases = new_stringpair_list(new_stringpair(email, ""));
 
     stringlist_t *errors = NULL;
     PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_passphrases, &errors);
     ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
-    ASSERT_EQ(stringlist_length(errors), 0);
+    ASSERT_EQ(stringlist_length(errors), 1);
+    ASSERT_EQ(string{errors->value}, string{email});
 
     free_stringpair_list(accounts_passphrases);
 }
