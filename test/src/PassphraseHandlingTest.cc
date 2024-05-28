@@ -137,6 +137,7 @@ TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_one_identity_passphra
     PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_passphrases, &errors);
     ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);
     ASSERT_EQ(stringlist_length(errors), 1);
+    ASSERT_EQ(string{errors->value}, string{tyrell_passphrase_email});
 
     free_stringpair_list(accounts_passphrases);
 }

@@ -4325,9 +4325,9 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
             // add account to passphrase accounts, continue with next account
             status_result = PEP_PASSPHRASE_REQUIRED;
             if (!*error_accounts) {
-                *error_accounts = new_stringlist(current);
+                *error_accounts = new_stringlist(current->key);
             } else {
-                stringlist_add(*error_accounts, current);
+                stringlist_add(*error_accounts, current->key);
             }
             break;
         } else {
