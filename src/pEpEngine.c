@@ -4391,7 +4391,10 @@ DYNAMIC_API PEP_STATUS manage_passphrase(PEP_SESSION session,
             return PEP_CANNOT_FIND_IDENTITY;
         }
 
-        PEP_STATUS status = PEP_STATUS_OK;
+        PEP_STATUS status = session->cryptotech[PEP_crypt_OpenPGP].manage_passphrase(session,
+            found_identity,
+            current->value,
+            new_passphrase);
 
         free_identity(found_identity);
 
