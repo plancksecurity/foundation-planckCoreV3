@@ -89,7 +89,7 @@ namespace {
                     PEP_OWN_USERID,
                     tyrell_passphrase_username_2);
                 ASSERT_NOTNULL(tyrell_identity_passphrase_2);
-                status = myself(session, tyrell_identity_passphrase_1);
+                status = myself(session, tyrell_identity_passphrase_2);
                 ASSERT_EQ(status, PEP_STATUS_OK);
 
                 status = config_passphrase_for_new_keys(session, false, NULL);
@@ -152,7 +152,7 @@ TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_one_identity_passphra
 
     stringlist_t *errors = NULL;
     PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_passphrases, &errors);
-    ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);
+    ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);
     ASSERT_EQ(stringlist_length(errors), 1);
     ASSERT_EQ(string{errors->value}, string{tyrell_passphrase_email_1});
 
@@ -232,6 +232,20 @@ TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_all) {
     PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_passphrases, &errors);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_EQ(stringlist_length(errors), 0);
+
+    free_stringpair_list(accounts_passphrases);
+}
+
+TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_mixed) {
+    stringpair_list_t *accounts_passphrases = new_stringpair_list(new_stringpair(tyrell_no_passphrase_email, ""));
+    stringpair_list_add(accounts_passphrases, new_stringpair(tyrell_passphrase_email_1, tyrell_passphrase_2));
+    stringpair_list_add(accounts_passphrases, new_stringpair(tyrell_passphrase_email_2, tyrell_passphrase_1));
+
+    stringlist_t *errors = NULL;
+    PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_passphrases, &errors);
+    ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);
+    ASSERT_EQ(stringlist_length(errors), 2);
+    ASSERT_EQ(string{errors->value}, string{tyrell_passphrase_email_1});
 
     free_stringpair_list(accounts_passphrases);
 }

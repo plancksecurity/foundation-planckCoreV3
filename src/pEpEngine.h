@@ -2184,14 +2184,15 @@ DYNAMIC_API PEP_STATUS has_passphrase(PEP_SESSION session, const char *account, 
  *  @brief      Forces secret keys with a passphrase to get unlocked.
  *
  *              For every account/identity in the input, an operation requiring the passphrase
- *              is executed.
- *              Every account that would have returned `PEP_PASSPHRASE_REQUIRED` is returned
- *              via `error_accounts`, and the overall return value is `PEP_PASSPHRASE_REQUIRED`.
+ *              of its main (secret) key is executed.
+ *              Every account that would have returned `PEP_PASSPHRASE_REQUIRED`
+ *              or `PEP_WRONG_PASSPHRASE` is returned
+ *              via `error_accounts`, and the overall return value is `PEP_WRONG_PASSPHRASE`.
  *              If there is _any other error_, the corresponding status is returned and the
  *              corresponding account is put _as the only one_ in `error_accounts`.
  *
  *  @retval PEP_CANNOT_FIND_IDENTITY The error list contains the _first_ account that could not be found.
- *  @retval PEP_PASSPHRASE_REQUIRED The error list contains the accounts that couldn't be unblocked.
+ *  @retval PEP_WRONG_PASSPHRASE The error list contains the accounts that couldn't be unblocked.
  *  @retval PEP_ILLEGAL_VALUE Input values are not correct, e.g. NULL values in passphrases, no errors set.
  */
 DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,

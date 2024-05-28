@@ -4313,23 +4313,21 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
         const size_t data_size = strlen(data) - 1;
         char *signed_data = NULL;
         size_t signed_data_size = 0;
-        PEP_STATUS status = sign_only(session, "DATA", data_size, found_identity->fpr, &signed_data, &signed_data_size);
+        PEP_STATUS status = sign_only(session, data, data_size, found_identity->fpr, &signed_data, &signed_data_size);
 
         free_identity(found_identity);
 
         if (status == PEP_STATUS_OK) {
             // nothing to do, can check next account
             status_result = PEP_STATUS_OK;
-            break;
-        } else if (status == PEP_PASSPHRASE_REQUIRED) {
+        } else if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
             // add account to passphrase accounts, continue with next account
-            status_result = PEP_PASSPHRASE_REQUIRED;
+            status_result = PEP_WRONG_PASSPHRASE;
             if (!*error_accounts) {
                 *error_accounts = new_stringlist(current->key);
             } else {
                 stringlist_add(*error_accounts, current->key);
             }
-            break;
         } else {
             // other error
             // note the account as the only one in the list
@@ -4339,9 +4337,8 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
                 free_stringlist(*error_accounts);
             }
             *error_accounts = new_stringlist(current);
-            break;
         }
-        if (status_result != PEP_CANNOT_FIND_IDENTITY && status_result != PEP_PASSPHRASE_REQUIRED) {
+        if (status_result != PEP_STATUS_OK && status_result != PEP_WRONG_PASSPHRASE) {
             // found another error, abort early
             break;
         }
