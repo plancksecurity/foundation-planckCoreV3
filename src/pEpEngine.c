@@ -4272,12 +4272,6 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
     PEP_REQUIRE(error_accounts);
     *error_accounts = NULL;
 
-    identity_list *own_identities = NULL;
-    PEP_STATUS status = own_identities_retrieve(session, &own_identities);
-    if (status != PEP_STATUS_OK) {
-        return status;
-    }
-
     PEP_STATUS status_result = PEP_CANNOT_FIND_IDENTITY;
 
     for (stringpair_list_t *account_passphrase_pair = accounts_with_passphrases; account_passphrase_pair; account_passphrase_pair = account_passphrase_pair->next) {
@@ -4285,78 +4279,74 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
 
         if (!account_passphrase) {
             free_stringlist(*error_accounts);
-            free_identity_list(own_identities);
             return PEP_ILLEGAL_VALUE;
         }
 
         if (!account_passphrase->key) {
             free_stringlist(*error_accounts);
-            free_identity_list(own_identities);
             return PEP_ILLEGAL_VALUE;
         }
 
         if (!account_passphrase->value) {
             free_stringlist(*error_accounts);
-            free_identity_list(own_identities);
             return PEP_ILLEGAL_VALUE;
         }
 
-        for (identity_list *identities = own_identities; identities; identities = identities->next) {
-            pEp_identity *identity = identities->ident;
-            if (!identity) {
-                continue;
-            }
-            if (!strcmp(identity->address, account_passphrase->key)) {
-                if (!identity->fpr) {
-                    continue;
-                }
+        pEp_identity *found_identity = NULL;
+        PEP_STATUS find_status = own_identity_by_address(session, account_passphrase->key, &found_identity);
+        if (find_status != PEP_STATUS_OK) {
+            continue;
+        }
 
-                PEP_STATUS config_status = config_passphrase(session, account_passphrase->value);
-                if (config_status != PEP_STATUS_OK) {
-                    free_stringlist(*error_accounts);
-                    free_identity_list(own_identities);
-                    return config_status;
-                }
+        if (EMPTYSTR(found_identity->fpr)) {
+            free_identity(found_identity);
+            continue;
+        }
 
-                const char *data = "DATA";
-                const size_t data_size = strlen(data) - 1;
-                char *signed_data = NULL;
-                size_t signed_data_size = 0;
-                status = sign_only(session, "DATA", data_size, identity->fpr, &signed_data, &signed_data_size);
+        PEP_STATUS config_status = config_passphrase(session, account_passphrase->value);
+        if (config_status != PEP_STATUS_OK) {
+            free_stringlist(*error_accounts);
+            free_identity(found_identity);
+            return config_status;
+        }
 
-                if (status == PEP_STATUS_OK) {
-                    // nothing to do, can check next account
-                    status_result = PEP_STATUS_OK;
-                    break;
-                } else if (status == PEP_PASSPHRASE_REQUIRED) {
-                    // add account to passphrase accounts, continue with next account
-                    status_result = PEP_PASSPHRASE_REQUIRED;
-                    if (!*error_accounts) {
-                        *error_accounts = new_stringlist(account_passphrase);
-                    } else {
-                        stringlist_add(*error_accounts, account_passphrase);
-                    }
-                    break;
-                } else {
-                    // other error
-                    // note the account as the only one in the list
-                    // signal the error
-                    status_result = status;
-                    if (*error_accounts) {
-                        free_stringlist(*error_accounts);
-                    }
-                    *error_accounts = new_stringlist(account_passphrase);
-                    break;
-                }
+        const char *data = "DATA";
+        const size_t data_size = strlen(data) - 1;
+        char *signed_data = NULL;
+        size_t signed_data_size = 0;
+        PEP_STATUS status = sign_only(session, "DATA", data_size, found_identity->fpr, &signed_data, &signed_data_size);
+
+        free_identity(found_identity);
+
+        if (status == PEP_STATUS_OK) {
+            // nothing to do, can check next account
+            status_result = PEP_STATUS_OK;
+            break;
+        } else if (status == PEP_PASSPHRASE_REQUIRED) {
+            // add account to passphrase accounts, continue with next account
+            status_result = PEP_PASSPHRASE_REQUIRED;
+            if (!*error_accounts) {
+                *error_accounts = new_stringlist(account_passphrase);
+            } else {
+                stringlist_add(*error_accounts, account_passphrase);
             }
-            if (status_result != PEP_CANNOT_FIND_IDENTITY && status_result != PEP_PASSPHRASE_REQUIRED) {
-                // found another error, abort early
-                break;
+            break;
+        } else {
+            // other error
+            // note the account as the only one in the list
+            // signal the error
+            status_result = status;
+            if (*error_accounts) {
+                free_stringlist(*error_accounts);
             }
+            *error_accounts = new_stringlist(account_passphrase);
+            break;
+        }
+        if (status_result != PEP_CANNOT_FIND_IDENTITY && status_result != PEP_PASSPHRASE_REQUIRED) {
+            // found another error, abort early
+            break;
         }
     }
-
-    free_identity_list(own_identities);
 
     return status_result;
 }
