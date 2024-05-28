@@ -122,3 +122,26 @@ TEST_F(PassphraseHandlingTest, has_passphrase_passphrase) {
 
     free_identity(tyrell_identity);
 }
+
+TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase) {
+    pEp_identity *tyrell_identity = new_identity(tyrell_no_passphrase_email,
+        NULL,
+        PEP_OWN_USERID,
+        tyrell_no_passphrase_username);
+    ASSERT_NOTNULL(tyrell_identity);
+    PEP_STATUS status = myself(session, tyrell_identity);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    status = config_passphrase_for_new_keys(session, true, tyrell_passphrase);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    pEp_identity *tyrell_identity_passphrase = new_identity(tyrell_passphrase_email,
+        NULL,
+        PEP_OWN_USERID,
+        tyrell_passphrase_username);
+    ASSERT_NOTNULL(tyrell_identity_passphrase);
+    status = myself(session, tyrell_identity_passphrase);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    free_identity(tyrell_identity);
+    free_identity(tyrell_identity_passphrase);
+}
