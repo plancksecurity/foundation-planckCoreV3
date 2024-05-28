@@ -187,3 +187,14 @@ TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_unknown_accounts) {
 
     free_stringlist(accounts_list);
 }
+
+TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_empty_account) {
+    stringlist_t *accounts_list = new_stringlist("");
+
+    stringlist_t *errors = NULL;
+    PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_list, &errors);
+    ASSERT_EQ(status, PEP_CANNOT_FIND_IDENTITY);
+    ASSERT_EQ(stringlist_length(errors), 0);
+
+    free_stringlist(accounts_list);
+}
