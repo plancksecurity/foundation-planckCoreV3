@@ -100,6 +100,8 @@ TEST_F(PassphraseHandlingTest, has_passphrase_no_passphrase) {
     status = has_passphrase(session, tyrell_no_passphrase_email, &passphrase_bool);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_FALSE(passphrase_bool);
+
+    free_identity(tyrell_identity);
 }
 
 TEST_F(PassphraseHandlingTest, has_passphrase_passphrase) {
@@ -117,4 +119,6 @@ TEST_F(PassphraseHandlingTest, has_passphrase_passphrase) {
     status = has_passphrase(session, tyrell_passphrase_email, &passphrase_bool);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_TRUE(passphrase_bool);
+
+    free_identity(tyrell_identity);
 }
