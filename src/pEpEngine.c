@@ -4238,37 +4238,28 @@ DYNAMIC_API PEP_STATUS has_passphrase(PEP_SESSION session, const char *account, 
     PEP_REQUIRE(account);
     PEP_REQUIRE(has_passphrase);
 
-    identity_list *own_identities = NULL;
-    PEP_STATUS status = own_identities_retrieve(session, &own_identities);
+    pEp_identity *found_identity = NULL;
+    PEP_STATUS status = own_identity_by_address(session, account, &found_identity);
+
     if (status != PEP_STATUS_OK) {
         return status;
     }
 
-    for (identity_list *identities = own_identities; identities; identities = identities->next) {
-        pEp_identity *identity = identities->ident;
-        if (!identity) {
-            continue;
-        }
-        if (!strcmp(identity->address, account)) {
-            if (!identity->fpr) {
-                continue;
-            }
-
-            const char *data = "DATA";
-            const size_t data_size = strlen(data) - 1;
-            char *signed_data = NULL;
-            size_t signed_data_size = 0;
-            status = sign_only(session, "DATA", data_size, identity->fpr, &signed_data, &signed_data_size);
-            if (status == PEP_STATUS_OK) {
-                *has_passphrase = false;
-                free(signed_data);
-                return PEP_STATUS_OK;
-            } else if (status == PEP_PASSPHRASE_REQUIRED) {
-                *has_passphrase = true;
-                free(signed_data);
-                return PEP_STATUS_OK;
-            }
-        }
+    const char *data = "DATA";
+    const size_t data_size = strlen(data) - 1;
+    char *signed_data = NULL;
+    size_t signed_data_size = 0;
+    status = sign_only(session, "DATA", data_size, found_identity->fpr, &signed_data, &signed_data_size);
+    if (status == PEP_STATUS_OK) {
+        *has_passphrase = false;
+        free_identity(found_identity);
+        free(signed_data);
+        return PEP_STATUS_OK;
+    } else if (status == PEP_PASSPHRASE_REQUIRED) {
+        *has_passphrase = true;
+        free_identity(found_identity);
+        free(signed_data);
+        return PEP_STATUS_OK;
     }
 
     return PEP_CANNOT_FIND_IDENTITY;
