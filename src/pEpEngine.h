@@ -2197,6 +2197,20 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
     const stringlist_t *accounts,
     stringlist_t **error_accounts);
 
+/**
+ *  <!--        manage_passphrase()       -->
+ *
+ *  @brief      Sets (or unsets) a passphrase for a given set of accounts.
+ *
+ *              For every mapping of account/identity to old passphrase in the input,
+ *              sets the given new passphrase, or removes it (if empty).
+ *              Errors are reported as a list of accounts that gave the error.
+ */
+DYNAMIC_API PEP_STATUS manage_passphrase(const stringpair_list_t *accounts_with_old_passphrases,
+    const char *new_passphrase,
+    stringlist_t **error_accounts);
+
+
 #ifdef __cplusplus
 }
 #endif

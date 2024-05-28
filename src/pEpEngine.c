@@ -4301,3 +4301,10 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
 
     return status_result;
 }
+
+DYNAMIC_API PEP_STATUS manage_passphrase(const stringpair_list_t *accounts_with_old_passphrases,
+    const char *new_passphrase,
+    stringlist_t **error_accounts)
+{
+    return PEP_ILLEGAL_VALUE;
+}
