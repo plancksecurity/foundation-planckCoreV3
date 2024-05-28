@@ -4211,11 +4211,11 @@ static PEP_STATUS own_identity_by_address(PEP_SESSION session, const char *addre
             continue;
         }
 
-        if (!identity->address) {
+        if (EMPTYSTR(identity->address)) {
             continue;;
         }
 
-        if (!identity->fpr) {
+        if (EMPTYSTR(identity->fpr)) {
             continue;
         }
 
@@ -4295,11 +4295,6 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
         pEp_identity *found_identity = NULL;
         PEP_STATUS find_status = own_identity_by_address(session, account_passphrase->key, &found_identity);
         if (find_status != PEP_STATUS_OK) {
-            continue;
-        }
-
-        if (EMPTYSTR(found_identity->fpr)) {
-            free_identity(found_identity);
             continue;
         }
 
