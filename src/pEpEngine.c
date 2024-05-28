@@ -4250,14 +4250,13 @@ DYNAMIC_API PEP_STATUS has_passphrase(PEP_SESSION session, const char *account, 
     char *signed_data = NULL;
     size_t signed_data_size = 0;
     status = sign_only(session, "DATA", data_size, found_identity->fpr, &signed_data, &signed_data_size);
+    free_identity(found_identity);
     if (status == PEP_STATUS_OK) {
         *has_passphrase = false;
-        free_identity(found_identity);
         free(signed_data);
         return PEP_STATUS_OK;
     } else if (status == PEP_PASSPHRASE_REQUIRED) {
         *has_passphrase = true;
-        free_identity(found_identity);
         free(signed_data);
         return PEP_STATUS_OK;
     }
