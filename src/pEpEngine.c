@@ -4247,16 +4247,19 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
 
         if (!account_passphrase) {
             free_stringlist(*error_accounts);
+            free_identity_list(own_identities);
             return PEP_ILLEGAL_VALUE;
         }
 
         if (!account_passphrase->key) {
             free_stringlist(*error_accounts);
+            free_identity_list(own_identities);
             return PEP_ILLEGAL_VALUE;
         }
 
         if (!account_passphrase->value) {
             free_stringlist(*error_accounts);
+            free_identity_list(own_identities);
             return PEP_ILLEGAL_VALUE;
         }
 
@@ -4273,6 +4276,7 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
                 PEP_STATUS config_status = config_passphrase(session, account_passphrase->value);
                 if (config_status != PEP_STATUS_OK) {
                     free_stringlist(*error_accounts);
+                    free_identity_list(own_identities);
                     return config_status;
                 }
 
@@ -4313,6 +4317,8 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
             }
         }
     }
+
+    free_identity_list(own_identities);
 
     return status_result;
 }
