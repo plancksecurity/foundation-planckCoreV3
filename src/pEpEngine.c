@@ -4232,12 +4232,21 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
 {
     PEP_REQUIRE(accounts);
     PEP_REQUIRE(error_accounts);
+    *error_accounts = NULL;
 
-    identity_list *own_identities = NULL;
-    PEP_STATUS status = own_identities_retrieve(session, &own_identities);
+    // disable passwords
+    PEP_STATUS status = config_passphrase(session, NULL);
     if (status != PEP_STATUS_OK) {
         return status;
     }
+
+    identity_list *own_identities = NULL;
+    status = own_identities_retrieve(session, &own_identities);
+    if (status != PEP_STATUS_OK) {
+        return status;
+    }
+
+    PEP_STATUS status_result = PEP_CANNOT_FIND_IDENTITY;
 
     for (stringlist_t *the_accounts = accounts; the_accounts; the_accounts = the_accounts->next) {
         const char *account = the_accounts->value;
@@ -4259,18 +4268,36 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
                 char *signed_data = NULL;
                 size_t signed_data_size = 0;
                 status = sign_only(session, "DATA", data_size, identity->fpr, &signed_data, &signed_data_size);
+
                 if (status == PEP_STATUS_OK) {
-                    // nothing to do
+                    // nothing to do, check next
                 } else if (status == PEP_PASSPHRASE_REQUIRED) {
-                    // add account to passphrase accounts, continue
+                    // add account to passphrase accounts, continue with next account
+                    status_result = PEP_PASSPHRASE_REQUIRED;
+                    if (!*error_accounts) {
+                        *error_accounts = new_stringlist(account);
+                    } else {
+                        stringlist_add(*error_accounts, account);
+                    }
+                    break;
                 } else {
                     // other error
                     // note the account as the only one in the list
                     // signal the error
+                    status_result = status;
+                    if (*error_accounts) {
+                        free_stringlist(*error_accounts);
+                        *error_accounts = new_stringlist(account);
+                    }
+                    break;
                 }
+            }
+            if (status_result != PEP_CANNOT_FIND_IDENTITY && status_result != PEP_PASSPHRASE_REQUIRED) {
+                // found another error, abort early
+                break;
             }
         }
     }
 
-    return PEP_CANNOT_FIND_IDENTITY;
+    return status_result;
 }
