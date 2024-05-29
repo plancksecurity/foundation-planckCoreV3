@@ -269,6 +269,12 @@ TEST_F(PassphraseHandlingTest, manage_passphrase_happy_path) {
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_EQ(stringlist_length(errors), 0);
 
+    free_stringlist(errors);
+    errors = NULL;
+    status = unlock_keys_with_passphrase(session, accounts_passphrases_1, &errors);
+    ASSERT_NE(status, PEP_STATUS_OK);
+    ASSERT_EQ(stringlist_length(errors), 2);
+
     free_stringpair_list(accounts_passphrases_1);
 
     stringpair_list_t *accounts_passphrases_2 = new_stringpair_list(new_stringpair(tyrell_no_passphrase_email, ""));
