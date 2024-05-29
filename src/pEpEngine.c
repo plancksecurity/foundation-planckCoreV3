@@ -4383,7 +4383,7 @@ DYNAMIC_API PEP_STATUS manage_passphrase(PEP_SESSION session,
 
         pEp_identity *found_identity = NULL;
         PEP_STATUS find_status = own_identity_by_address(session, current->key, &found_identity);
-        if (find_status != PEP_STATUS_OK) {
+        if (find_status != PEP_STATUS_OK || EMPTYSTR(found_identity->fpr)) {
             if (*error_accounts) {
                 free_stringlist(*error_accounts);
             }
