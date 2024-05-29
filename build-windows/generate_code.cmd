@@ -1,7 +1,5 @@
 ::@ECHO OFF
 
-SET PY=%1\vcpkg\installed\x64-windows\tools\python3\python.exe
-
 :: The script is located in ...\pEpForWindowsAdapterSolution\PlanckCoreV3\build-windows\
 SET current_directory=%~dp0
 
