@@ -4185,7 +4185,8 @@ DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color)
     LOG_WARNING("deprecated function");
 }
 
-static PEP_STATUS own_identity_by_address(PEP_SESSION session, const char *address, pEp_identity **identity)
+static PEP_STATUS
+own_identity_by_address(PEP_SESSION session, const char *address, pEp_identity **identity)
 {
     PEP_REQUIRE(address);
     PEP_REQUIRE(identity);
@@ -4212,7 +4213,7 @@ static PEP_STATUS own_identity_by_address(PEP_SESSION session, const char *addre
         }
 
         if (EMPTYSTR(identity->address)) {
-            continue;;
+            continue;
         }
 
         if (EMPTYSTR(identity->fpr)) {
@@ -4233,7 +4234,8 @@ static PEP_STATUS own_identity_by_address(PEP_SESSION session, const char *addre
     }
 }
 
-DYNAMIC_API PEP_STATUS has_passphrase(PEP_SESSION session, const char *account, bool *has_passphrase)
+DYNAMIC_API PEP_STATUS
+has_passphrase(PEP_SESSION session, const char *account, bool *has_passphrase)
 {
     PEP_REQUIRE(account);
     PEP_REQUIRE(has_passphrase);
@@ -4249,7 +4251,8 @@ DYNAMIC_API PEP_STATUS has_passphrase(PEP_SESSION session, const char *account, 
     const size_t data_size = strlen(data) - 1;
     char *signed_data = NULL;
     size_t signed_data_size = 0;
-    status = sign_only(session, data, data_size, found_identity->fpr, &signed_data, &signed_data_size);
+    status =
+      sign_only(session, data, data_size, found_identity->fpr, &signed_data, &signed_data_size);
     free_identity(found_identity);
     if (status == PEP_STATUS_OK) {
         *has_passphrase = false;
@@ -4264,9 +4267,10 @@ DYNAMIC_API PEP_STATUS has_passphrase(PEP_SESSION session, const char *account, 
     return PEP_CANNOT_FIND_IDENTITY;
 }
 
-DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
-    const stringpair_list_t *accounts_with_passphrases,
-    stringlist_t **error_accounts)
+DYNAMIC_API PEP_STATUS
+unlock_keys_with_passphrase(PEP_SESSION session,
+                            const stringpair_list_t *accounts_with_passphrases,
+                            stringlist_t **error_accounts)
 {
     PEP_REQUIRE(accounts_with_passphrases);
     PEP_REQUIRE(error_accounts);
@@ -4274,7 +4278,9 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
 
     PEP_STATUS status_result = PEP_CANNOT_FIND_IDENTITY;
 
-    for (stringpair_list_t *account_passphrase_pair = accounts_with_passphrases; account_passphrase_pair; account_passphrase_pair = account_passphrase_pair->next) {
+    for (stringpair_list_t *account_passphrase_pair = accounts_with_passphrases;
+         account_passphrase_pair;
+         account_passphrase_pair = account_passphrase_pair->next) {
         const stringpair_t *current = account_passphrase_pair->value;
 
         if (!current) {
@@ -4319,7 +4325,8 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
         const size_t data_size = strlen(data) - 1;
         char *signed_data = NULL;
         size_t signed_data_size = 0;
-        PEP_STATUS status = sign_only(session, data, data_size, found_identity->fpr, &signed_data, &signed_data_size);
+        PEP_STATUS status =
+          sign_only(session, data, data_size, found_identity->fpr, &signed_data, &signed_data_size);
 
         free_identity(found_identity);
 
@@ -4353,10 +4360,11 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
     return status_result;
 }
 
-DYNAMIC_API PEP_STATUS manage_passphrase(PEP_SESSION session,
-    const stringpair_list_t *accounts_with_passphrases,
-    const char *new_passphrase,
-    stringlist_t **error_accounts)
+DYNAMIC_API PEP_STATUS
+manage_passphrase(PEP_SESSION session,
+                  const stringpair_list_t *accounts_with_passphrases,
+                  const char *new_passphrase,
+                  stringlist_t **error_accounts)
 {
     PEP_REQUIRE(accounts_with_passphrases);
     PEP_REQUIRE(error_accounts);
@@ -4364,7 +4372,9 @@ DYNAMIC_API PEP_STATUS manage_passphrase(PEP_SESSION session,
 
     PEP_STATUS status_result = PEP_CANNOT_FIND_IDENTITY;
 
-    for (stringpair_list_t *account_passphrase_pair = accounts_with_passphrases; account_passphrase_pair; account_passphrase_pair = account_passphrase_pair->next) {
+    for (stringpair_list_t *account_passphrase_pair = accounts_with_passphrases;
+         account_passphrase_pair;
+         account_passphrase_pair = account_passphrase_pair->next) {
         const stringpair_t *current = account_passphrase_pair->value;
 
         if (!current) {
@@ -4392,10 +4402,8 @@ DYNAMIC_API PEP_STATUS manage_passphrase(PEP_SESSION session,
             return PEP_CANNOT_FIND_IDENTITY;
         }
 
-        PEP_STATUS status = session->cryptotech[PEP_crypt_OpenPGP].manage_passphrase(session,
-            found_identity,
-            current->value,
-            new_passphrase);
+        PEP_STATUS status = session->cryptotech[PEP_crypt_OpenPGP].manage_passphrase(
+          session, found_identity, current->value, new_passphrase);
 
         free_identity(found_identity);
 
