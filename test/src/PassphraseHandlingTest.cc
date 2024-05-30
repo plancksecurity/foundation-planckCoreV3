@@ -272,7 +272,7 @@ TEST_F(PassphraseHandlingTest, manage_passphrase_happy_path) {
     free_stringlist(errors);
     errors = NULL;
     status = unlock_keys_with_passphrase(session, accounts_passphrases_1, &errors);
-    ASSERT_NE(status, PEP_STATUS_OK);
+    ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);
     ASSERT_EQ(stringlist_length(errors), 2);
 
     free_stringpair_list(accounts_passphrases_1);
