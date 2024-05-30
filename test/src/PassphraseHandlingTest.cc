@@ -373,3 +373,25 @@ TEST_F(PassphraseHandlingTest, manage_passphrase_no_original_passphrase) {
     free_stringlist(errors);
     free_stringpair_list(accounts_passphrases_2);
 }
+
+TEST_F(PassphraseHandlingTest, manage_passphrase_remove_passphrase) {
+    const char *new_passphrase = "";
+
+    stringpair_list_t *accounts_passphrases_1 = new_stringpair_list(new_stringpair(tyrell_passphrase_email_1, tyrell_passphrase_1));
+
+    stringlist_t *errors = NULL;
+    PEP_STATUS status = manage_passphrase(session, accounts_passphrases_1, new_passphrase, &errors);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(stringlist_length(errors), 0);
+
+    free_stringpair_list(accounts_passphrases_1);
+    accounts_passphrases_1 = new_stringpair_list(new_stringpair(tyrell_passphrase_email_1, new_passphrase));
+    free_stringlist(errors);
+    errors = NULL;
+    status = unlock_keys_with_passphrase(session, accounts_passphrases_1, &errors);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(stringlist_length(errors), 0);
+
+    free_stringlist(errors);
+    free_stringpair_list(accounts_passphrases_1);
+}

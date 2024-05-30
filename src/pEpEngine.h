@@ -2205,7 +2205,7 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
  *  @brief      Sets (or unsets) a passphrase for a given set of accounts.
  *
  *              For every mapping of account/identity to old passphrase in the input,
- *              sets the given new passphrase, or removes it (if empty).
+ *              sets the given new passphrase, or removes it (if the given new passphrase is empty).
  *              Passphrase errors are reported as a list of accounts that gave the error.
  *              If there is _any other error_, the corresponding status is returned and the
  *              corresponding account is put _as the only one_ in `error_accounts`.
