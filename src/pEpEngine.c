@@ -4249,6 +4249,13 @@ has_passphrase(PEP_SESSION session, const char *account, bool *has_passphrase)
         return status;
     }
 
+    // Ensure that session doesn't contain a previous passphrase.
+    status = config_passphrase(session, NULL);
+    if (status != PEP_STATUS_OK) {
+        free_identity(found_identity);
+        return status;
+    }
+
     const char *data = "DATA";
     const size_t data_size = strlen(data) - 1;
     char *signed_data = NULL;
@@ -4331,6 +4338,14 @@ unlock_keys_with_passphrase(PEP_SESSION session,
           sign_only(session, data, data_size, found_identity->fpr, &signed_data, &signed_data_size);
 
         free_identity(found_identity);
+
+        // Remove any passphrase from the session.
+        config_passphrase_status = config_passphrase(session, NULL);
+
+        if (config_passphrase_status != PEP_STATUS_OK) {
+            free_stringlist(*error_accounts);
+            return config_passphrase_status;
+        }
 
         if (status == PEP_STATUS_OK) {
             // nothing to do, can check next account
