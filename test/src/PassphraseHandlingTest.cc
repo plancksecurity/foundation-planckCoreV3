@@ -297,8 +297,8 @@ TEST_F(PassphraseHandlingTest, manage_passphrase_wrong_old_password) {
 
     stringlist_t *errors = NULL;
     PEP_STATUS status = manage_passphrase(session, accounts_passphrases_1, "doesn't matter anyways", &errors);
-    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
-    ASSERT_EQ(stringlist_length(errors), 1);
+    ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);
+    ASSERT_EQ(stringlist_length(errors), 2);
 
     free_stringlist(errors);
     free_stringpair_list(accounts_passphrases_1);
