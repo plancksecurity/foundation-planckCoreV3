@@ -1,6 +1,7 @@
 // Changelog
+//
 // 31.10.2023/IP: added function to retrieve key_ids
-// 
+// 30.05.2024/DZ: support passphrase management (RFC-16)
 
 /**
  * @file    cryptotech.h
