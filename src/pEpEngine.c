@@ -4304,6 +4304,7 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
 
         PEP_STATUS config_passphrase_status = PEP_STATUS_OK;
         if (EMPTYSTR(current->value)) {
+            // An empty or NULL passphrase means to not use any passphrase.
             config_passphrase_status = config_passphrase(session, NULL);
         } else {
             config_passphrase_status = config_passphrase(session, current->value);

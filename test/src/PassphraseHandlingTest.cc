@@ -375,16 +375,19 @@ TEST_F(PassphraseHandlingTest, manage_passphrase_no_original_passphrase) {
 }
 
 TEST_F(PassphraseHandlingTest, manage_passphrase_remove_passphrase) {
+    // Empty passphrase means "remove it", and also unset any passphrase when verifying.
     const char *new_passphrase = "";
 
     stringpair_list_t *accounts_passphrases_1 = new_stringpair_list(new_stringpair(tyrell_passphrase_email_1, tyrell_passphrase_1));
 
     stringlist_t *errors = NULL;
+    // Empty new passphrase -> Passphrase gets removed.
     PEP_STATUS status = manage_passphrase(session, accounts_passphrases_1, new_passphrase, &errors);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_EQ(stringlist_length(errors), 0);
 
     free_stringpair_list(accounts_passphrases_1);
+    // Empty passphrase -> The "unlock" check is done _without_ passphrase set.
     accounts_passphrases_1 = new_stringpair_list(new_stringpair(tyrell_passphrase_email_1, new_passphrase));
     free_stringlist(errors);
     errors = NULL;
