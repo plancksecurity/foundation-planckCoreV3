@@ -4249,7 +4249,7 @@ DYNAMIC_API PEP_STATUS has_passphrase(PEP_SESSION session, const char *account, 
     const size_t data_size = strlen(data) - 1;
     char *signed_data = NULL;
     size_t signed_data_size = 0;
-    status = sign_only(session, "DATA", data_size, found_identity->fpr, &signed_data, &signed_data_size);
+    status = sign_only(session, data, data_size, found_identity->fpr, &signed_data, &signed_data_size);
     free_identity(found_identity);
     if (status == PEP_STATUS_OK) {
         *has_passphrase = false;
