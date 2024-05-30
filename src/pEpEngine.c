@@ -4226,6 +4226,8 @@ own_identity_by_address(PEP_SESSION session, const char *address, pEp_identity *
         }
     }
 
+    free_identity_list(own_identities);
+
     if (found_identity) {
         *identity = found_identity;
         return PEP_STATUS_OK;
