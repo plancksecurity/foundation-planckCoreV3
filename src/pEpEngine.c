@@ -4399,10 +4399,10 @@ DYNAMIC_API PEP_STATUS manage_passphrase(PEP_SESSION session,
         free_identity(found_identity);
 
         if (status == PEP_STATUS_OK) {
-            // nothing to do, can check next account
+            // nothing special, ready for next account
             status_result = PEP_STATUS_OK;
         } else if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
-            // add account to passphrase accounts, continue with next account
+            // mark account as having a wrong passphrase, ready for next account
             status_result = PEP_WRONG_PASSPHRASE;
             if (!*error_accounts) {
                 *error_accounts = new_stringlist(current->key);
@@ -4410,17 +4410,16 @@ DYNAMIC_API PEP_STATUS manage_passphrase(PEP_SESSION session,
                 stringlist_add(*error_accounts, current->key);
             }
         } else {
-            // other error
-            // note the account as the only one in the list
-            // signal the error
+            // error not related to passphrases, preempts all other errors
             status_result = status;
             if (*error_accounts) {
                 free_stringlist(*error_accounts);
             }
             *error_accounts = new_stringlist(current);
         }
+
         if (status_result != PEP_STATUS_OK && status_result != PEP_WRONG_PASSPHRASE) {
-            // found another error, abort early
+            // found an error not related to passphrases, abort early
             break;
         }
     }

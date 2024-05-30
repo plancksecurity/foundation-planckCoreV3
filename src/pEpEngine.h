@@ -2206,7 +2206,11 @@ DYNAMIC_API PEP_STATUS unlock_keys_with_passphrase(PEP_SESSION session,
  *
  *              For every mapping of account/identity to old passphrase in the input,
  *              sets the given new passphrase, or removes it (if empty).
- *              Errors are reported as a list of accounts that gave the error.
+ *              Passphrase errors are reported as a list of accounts that gave the error.
+ *              If there is _any other error_, the corresponding status is returned and the
+ *              corresponding account is put _as the only one_ in `error_accounts`.
+ *
+ *  @retval PEP_WRONG_PASSPHRASE The error list contains the accounts that couldn't be unblocked.
  */
 DYNAMIC_API PEP_STATUS manage_passphrase(PEP_SESSION session,
     const stringpair_list_t *accounts_with_passphrases,
