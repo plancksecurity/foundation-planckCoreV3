@@ -67,11 +67,18 @@ class PassphraseHandlingTest : public ::testing::Test
         PEP_STATUS status = config_cipher_suite(session, PEP_CIPHER_SUITE_RSA2K);
         ASSERT_EQ(status, PEP_STATUS_OK);
 
-        // own identity without key passphrase
-        tyrell_identity = new_identity(
-          tyrell_no_passphrase_email, NULL, PEP_OWN_USERID, tyrell_no_passphrase_username);
-        ASSERT_NOTNULL(tyrell_identity);
-        status = myself(session, tyrell_identity);
+        // own identity without key passphrase 1
+        tyrell_identity_1 = new_identity(
+          tyrell_no_passphrase_email_1, NULL, PEP_OWN_USERID, tyrell_no_passphrase_username_1);
+        ASSERT_NOTNULL(tyrell_identity_1);
+        status = myself(session, tyrell_identity_1);
+        ASSERT_EQ(status, PEP_STATUS_OK);
+
+        // own identity without key passphrase 2
+        tyrell_identity_2 = new_identity(
+          tyrell_no_passphrase_email_2, NULL, PEP_OWN_USERID, tyrell_no_passphrase_username_2);
+        ASSERT_NOTNULL(tyrell_identity_2);
+        status = myself(session, tyrell_identity_2);
         ASSERT_EQ(status, PEP_STATUS_OK);
 
         // own identity with key passphrase 1
@@ -98,7 +105,7 @@ class PassphraseHandlingTest : public ::testing::Test
 
     void TearDown() override
     {
-        free_identity(tyrell_identity);
+        free_identity(tyrell_identity_1);
         free_identity(tyrell_identity_passphrase_1);
 
         // Code here will be called immediately after each test (right
@@ -109,8 +116,11 @@ class PassphraseHandlingTest : public ::testing::Test
         session = NULL;
     }
 
-    const char *tyrell_no_passphrase_email = "tyrell@example.com";
-    const char *tyrell_no_passphrase_username = "Eldon Tyrell (no passphrase)";
+    const char *tyrell_no_passphrase_email_1 = "tyrell_1@example.com";
+    const char *tyrell_no_passphrase_username_1 = "Eldon Tyrell 1 (no passphrase)";
+
+    const char *tyrell_no_passphrase_email_2 = "tyrell_2@example.com";
+    const char *tyrell_no_passphrase_username_2 = "Eldon Tyrell 2 (no passphrase)";
 
     const char *tyrell_passphrase_email_1 = "tyrell_passphrase_1@example.com";
     const char *tyrell_passphrase_username_1 = "Eldon Tyrell (passphrase 1)";
@@ -121,7 +131,8 @@ class PassphraseHandlingTest : public ::testing::Test
     const char *tyrell_passphrase_1 = "blarg1";
     const char *tyrell_passphrase_2 = "blarg2";
 
-    pEp_identity *tyrell_identity;
+    pEp_identity *tyrell_identity_1;
+    pEp_identity *tyrell_identity_2;
     pEp_identity *tyrell_identity_passphrase_1;
     pEp_identity *tyrell_identity_passphrase_2;
 
@@ -137,7 +148,7 @@ class PassphraseHandlingTest : public ::testing::Test
 TEST_F(PassphraseHandlingTest, has_passphrase_no_passphrase)
 {
     bool passphrase_bool = false;
-    PEP_STATUS status = has_passphrase(session, tyrell_no_passphrase_email, &passphrase_bool);
+    PEP_STATUS status = has_passphrase(session, tyrell_no_passphrase_email_1, &passphrase_bool);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_FALSE(passphrase_bool);
 }
@@ -168,7 +179,7 @@ TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_one_identity_passphra
 TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_one_identity_no_passphrase_required)
 {
     stringpair_list_t *accounts_passphrases =
-      new_stringpair_list(new_stringpair(tyrell_no_passphrase_email, ""));
+      new_stringpair_list(new_stringpair(tyrell_no_passphrase_email_1, ""));
 
     stringlist_t *errors = NULL;
     PEP_STATUS status = unlock_keys_with_passphrase(session, accounts_passphrases, &errors);
@@ -182,9 +193,9 @@ TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_one_identity_no_passp
 TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase)
 {
     stringpair_list_t *accounts_passphrases =
-      new_stringpair_list(new_stringpair(tyrell_no_passphrase_email, ""));
+      new_stringpair_list(new_stringpair(tyrell_no_passphrase_email_1, ""));
     stringpair_list_add(accounts_passphrases,
-                        new_stringpair(tyrell_no_passphrase_email, tyrell_passphrase_1));
+                        new_stringpair(tyrell_no_passphrase_email_1, tyrell_passphrase_1));
     ASSERT_EQ(stringpair_list_length(accounts_passphrases), 2);
 
     stringlist_t *errors = NULL;
@@ -245,7 +256,7 @@ TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_empty_account)
 TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_all)
 {
     stringpair_list_t *accounts_passphrases =
-      new_stringpair_list(new_stringpair(tyrell_no_passphrase_email, ""));
+      new_stringpair_list(new_stringpair(tyrell_no_passphrase_email_1, ""));
     stringpair_list_add(accounts_passphrases,
                         new_stringpair(tyrell_passphrase_email_1, tyrell_passphrase_1));
     stringpair_list_add(accounts_passphrases,
@@ -263,7 +274,7 @@ TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_all)
 TEST_F(PassphraseHandlingTest, unlock_keys_with_passphrase_mixed)
 {
     stringpair_list_t *accounts_passphrases =
-      new_stringpair_list(new_stringpair(tyrell_no_passphrase_email, ""));
+      new_stringpair_list(new_stringpair(tyrell_no_passphrase_email_1, ""));
     stringpair_list_add(accounts_passphrases,
                         new_stringpair(tyrell_passphrase_email_1, tyrell_passphrase_2));
     stringpair_list_add(accounts_passphrases,
@@ -302,7 +313,7 @@ TEST_F(PassphraseHandlingTest, manage_passphrase_happy_path)
     free_stringpair_list(accounts_passphrases_1);
 
     stringpair_list_t *accounts_passphrases_2 =
-      new_stringpair_list(new_stringpair(tyrell_no_passphrase_email, ""));
+      new_stringpair_list(new_stringpair(tyrell_no_passphrase_email_1, ""));
     stringpair_list_add(accounts_passphrases_2,
                         new_stringpair(tyrell_passphrase_email_1, new_passphrase));
     stringpair_list_add(accounts_passphrases_2,
@@ -384,7 +395,7 @@ TEST_F(PassphraseHandlingTest, manage_passphrase_no_original_passphrase)
 
     stringpair_list_t *accounts_passphrases_1 =
       new_stringpair_list(new_stringpair(tyrell_passphrase_email_1, tyrell_passphrase_1));
-    stringpair_list_add(accounts_passphrases_1, new_stringpair(tyrell_no_passphrase_email, ""));
+    stringpair_list_add(accounts_passphrases_1, new_stringpair(tyrell_no_passphrase_email_1, ""));
 
     stringlist_t *errors = NULL;
     PEP_STATUS status = manage_passphrase(session, accounts_passphrases_1, new_passphrase, &errors);
@@ -400,7 +411,7 @@ TEST_F(PassphraseHandlingTest, manage_passphrase_no_original_passphrase)
     free_stringpair_list(accounts_passphrases_1);
 
     stringpair_list_t *accounts_passphrases_2 =
-      new_stringpair_list(new_stringpair(tyrell_no_passphrase_email, new_passphrase));
+      new_stringpair_list(new_stringpair(tyrell_no_passphrase_email_1, new_passphrase));
     stringpair_list_add(accounts_passphrases_2,
                         new_stringpair(tyrell_passphrase_email_1, new_passphrase));
 
