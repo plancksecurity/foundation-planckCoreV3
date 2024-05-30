@@ -4195,10 +4195,10 @@ static PEP_STATUS own_identity_by_address(PEP_SESSION session, const char *addre
     }
 
     *identity = NULL;
-    
+
     identity_list *own_identities = NULL;
     pEp_identity *found_identity = NULL;
-    
+
     PEP_STATUS status = own_identities_retrieve(session, &own_identities);
     if (status != PEP_STATUS_OK) {
         return status;

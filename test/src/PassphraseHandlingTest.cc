@@ -107,7 +107,7 @@ namespace {
                 engine = NULL;
                 session = NULL;
             }
-            
+
             const char *tyrell_no_passphrase_email = "tyrell@example.com";
             const char *tyrell_no_passphrase_username = "Eldon Tyrell (no passphrase)";
 
@@ -123,7 +123,7 @@ namespace {
             pEp_identity *tyrell_identity;
             pEp_identity *tyrell_identity_passphrase_1;
             pEp_identity *tyrell_identity_passphrase_2;
-            
+
         private:
             const char* test_suite_name;
             const char* test_name;
