@@ -4236,6 +4236,18 @@ own_identity_by_address(PEP_SESSION session, const char *address, pEp_identity *
     }
 }
 
+static PEP_STATUS
+sign_something(PEP_SESSION session, const pEp_identity *identity)
+{
+    const char *data = "DATA";
+    const size_t data_size = strlen(data) - 1;
+    char *signed_data = NULL;
+    size_t signed_data_size = 0;
+    PEP_STATUS status = sign_only(session, data, data_size, identity->fpr, &signed_data, &signed_data_size);
+    free(signed_data);
+    return status;
+}
+
 DYNAMIC_API PEP_STATUS
 has_passphrase(PEP_SESSION session, const char *account, bool *has_passphrase)
 {
@@ -4256,20 +4268,13 @@ has_passphrase(PEP_SESSION session, const char *account, bool *has_passphrase)
         return status;
     }
 
-    const char *data = "DATA";
-    const size_t data_size = strlen(data) - 1;
-    char *signed_data = NULL;
-    size_t signed_data_size = 0;
-    status =
-      sign_only(session, data, data_size, found_identity->fpr, &signed_data, &signed_data_size);
+    status = sign_something(session, found_identity);
     free_identity(found_identity);
     if (status == PEP_STATUS_OK) {
         *has_passphrase = false;
-        free(signed_data);
         return PEP_STATUS_OK;
     } else if (status == PEP_PASSPHRASE_REQUIRED) {
         *has_passphrase = true;
-        free(signed_data);
         return PEP_STATUS_OK;
     }
 
@@ -4285,7 +4290,7 @@ unlock_keys_with_passphrase(PEP_SESSION session,
     PEP_REQUIRE(error_accounts);
     *error_accounts = NULL;
 
-    PEP_STATUS status_result = PEP_CANNOT_FIND_IDENTITY;
+    PEP_STATUS resulting_status = PEP_CANNOT_FIND_IDENTITY;
 
     for (stringpair_list_t *account_passphrase_pair = accounts_with_passphrases;
          account_passphrase_pair;
@@ -4330,13 +4335,7 @@ unlock_keys_with_passphrase(PEP_SESSION session,
             return config_passphrase_status;
         }
 
-        const char *data = "DATA";
-        const size_t data_size = strlen(data) - 1;
-        char *signed_data = NULL;
-        size_t signed_data_size = 0;
-        PEP_STATUS status =
-          sign_only(session, data, data_size, found_identity->fpr, &signed_data, &signed_data_size);
-
+        PEP_STATUS sign_status = sign_something(session, found_identity);
         free_identity(found_identity);
 
         // Remove any passphrase from the session.
@@ -4347,12 +4346,12 @@ unlock_keys_with_passphrase(PEP_SESSION session,
             return config_passphrase_status;
         }
 
-        if (status == PEP_STATUS_OK) {
+        if (sign_status == PEP_STATUS_OK) {
             // nothing to do, can check next account
-            status_result = PEP_STATUS_OK;
-        } else if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
+            resulting_status = PEP_STATUS_OK;
+        } else if (sign_status == PEP_PASSPHRASE_REQUIRED || sign_status == PEP_WRONG_PASSPHRASE) {
             // add account to passphrase accounts, continue with next account
-            status_result = PEP_WRONG_PASSPHRASE;
+            resulting_status = PEP_WRONG_PASSPHRASE;
             if (!*error_accounts) {
                 *error_accounts = new_stringlist(current->key);
             } else {
@@ -4362,19 +4361,19 @@ unlock_keys_with_passphrase(PEP_SESSION session,
             // other error
             // note the account as the only one in the list
             // signal the error
-            status_result = status;
+            resulting_status = sign_status;
             if (*error_accounts) {
                 free_stringlist(*error_accounts);
             }
             *error_accounts = new_stringlist(current);
         }
-        if (status_result != PEP_STATUS_OK && status_result != PEP_WRONG_PASSPHRASE) {
+        if (resulting_status != PEP_STATUS_OK && resulting_status != PEP_WRONG_PASSPHRASE) {
             // found another error, abort early
             break;
         }
     }
 
-    return status_result;
+    return resulting_status;
 }
 
 DYNAMIC_API PEP_STATUS
