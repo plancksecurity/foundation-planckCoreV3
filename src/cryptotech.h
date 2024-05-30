@@ -292,8 +292,6 @@ typedef struct _PEP_cryptotech_t {
     find_private_keys_t find_private_keys;
     config_cipher_suite_t config_cipher_suite;
     get_key_ids_t get_key_ids;
-    has_passphrase_t has_passphrase;
-    unlock_keys_with_passphrase_t unlock_keys_with_passphrase;
     manage_passphrase_t manage_passphrase;
 } PEP_cryptotech_t;
 

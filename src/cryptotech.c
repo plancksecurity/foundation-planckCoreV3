@@ -62,10 +62,6 @@ PEP_STATUS init_cryptotech(PEP_SESSION session, bool in_first)
         cryptotech[PEP_crypt_OpenPGP].config_cipher_suite = pgp_config_cipher_suite;
         cryptotech[PEP_crypt_OpenPGP].get_key_ids = pgp_get_key_ids;
         cryptotech[PEP_crypt_OpenPGP].manage_passphrase = pgp_manage_passphrase;
-        /*
-        cryptotech[PEP_crypt_OpenPGP].has_passphrase = pgp_has_passphrase;
-        cryptotech[PEP_crypt_OpenPGP].unlock_keys_with_passphrase = pgp_unlock_keys_with_passphrase;
-        */
 #ifdef PGP_BINARY_PATH
         cryptotech[PEP_crypt_OpenPGP].binary_path = PGP_BINARY_PATH;
 #endif
