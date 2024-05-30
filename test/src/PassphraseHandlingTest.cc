@@ -290,3 +290,16 @@ TEST_F(PassphraseHandlingTest, manage_passphrase_happy_path) {
     free_stringlist(errors);
     free_stringpair_list(accounts_passphrases_2);
 }
+
+TEST_F(PassphraseHandlingTest, manage_passphrase_wrong_old_password) {
+    stringpair_list_t *accounts_passphrases_1 = new_stringpair_list(new_stringpair(tyrell_passphrase_email_1, tyrell_passphrase_2));
+    stringpair_list_add(accounts_passphrases_1, new_stringpair(tyrell_passphrase_email_2, tyrell_passphrase_1));
+
+    stringlist_t *errors = NULL;
+    PEP_STATUS status = manage_passphrase(session, accounts_passphrases_1, "doesn't matter anyways", &errors);
+    ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
+    ASSERT_EQ(stringlist_length(errors), 1);
+
+    free_stringlist(errors);
+    free_stringpair_list(accounts_passphrases_1);
+}
