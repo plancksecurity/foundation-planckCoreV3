@@ -247,12 +247,6 @@ typedef PEP_STATUS (*get_key_ids_t)(PEP_SESSION session,
                                  size_t csize,                                 
                                  stringlist_t **keylist);
 
-typedef PEP_STATUS (*has_passphrase_t)(PEP_SESSION session, const pEp_identity *identity, bool *result);
-
-typedef PEP_STATUS (*unlock_keys_with_passphrase_t)(PEP_SESSION session,
-    const stringpair_list_t *accounts_with_passphrases,
-    stringlist_t **error_accounts);
-
 typedef PEP_STATUS (*manage_passphrase_t)(PEP_SESSION session,
     const pEp_identity *identity,
     const char *old_passphrase,
