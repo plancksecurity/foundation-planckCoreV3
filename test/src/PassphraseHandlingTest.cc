@@ -460,11 +460,11 @@ TEST_F(PassphraseHandlingTest, manage_passphrase_multi)
 
     stringpair_list_t *accounts_passphrases_1 =
       new_stringpair_list(new_stringpair(tyrell_no_passphrase_email_1, ""));
-    stringpair_list_add(accounts_passphrases_1,
-                        new_stringpair(tyrell_no_passphrase_email_2, ""));
+    stringpair_list_add(accounts_passphrases_1, new_stringpair(tyrell_no_passphrase_email_2, ""));
 
     stringlist_t *errors = NULL;
-    PEP_STATUS status = manage_passphrase(session, accounts_passphrases_1, new_passphrase_1, &errors);
+    PEP_STATUS status =
+      manage_passphrase(session, accounts_passphrases_1, new_passphrase_1, &errors);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_EQ(stringlist_length(errors), 0);
 
@@ -523,4 +523,79 @@ TEST_F(PassphraseHandlingTest, manage_passphrase_multi)
     free_stringpair_list(accounts_passphrases_1);
     free_stringpair_list(accounts_passphrases_2);
     free_stringpair_list(accounts_passphrases_3);
+}
+
+TEST_F(PassphraseHandlingTest, public_keys_stay_passphrase_less)
+{
+    const char *new_passphrase_1 = "new_blarg_1";
+    const char *new_passphrase_2 = "new_blarg_2";
+
+    // Set a passphrase on an own identity.
+
+    stringpair_list_t *accounts_passphrases_1 =
+      new_stringpair_list(new_stringpair(tyrell_no_passphrase_email_1, ""));
+
+    stringlist_t *errors = NULL;
+    PEP_STATUS status =
+      manage_passphrase(session, accounts_passphrases_1, new_passphrase_1, &errors);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(stringlist_length(errors), 0);
+
+    free_stringlist(errors);
+    errors = NULL;
+
+    // Set a passphrase on another own identity.
+    // Note that we never need it again for _encrypting to_ that identity.
+
+    stringpair_list_t *accounts_passphrases_2 =
+      new_stringpair_list(new_stringpair(tyrell_no_passphrase_email_2, ""));
+
+    status = manage_passphrase(session, accounts_passphrases_2, new_passphrase_2, &errors);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(stringlist_length(errors), 0);
+
+    free_stringlist(errors);
+    free_stringpair_list(accounts_passphrases_1);
+    free_stringpair_list(accounts_passphrases_2);
+
+    // Have to provide that for signing.
+    config_passphrase(session, new_passphrase_1);
+
+    message *msg = new_message(PEP_dir_outgoing);
+    msg->from = identity_dup(tyrell_identity_1);
+    msg->to = new_identity_list(tyrell_identity_2);
+    msg->shortmsg = strdup("short message");
+    msg->longmsg = strdup("long message");
+
+    message *encrypted_msg = NULL;
+    PEP_STATUS encrypt_status = encrypt_message(
+      session, msg, NULL, &encrypted_msg, PEP_enc_PGP_MIME, PEP_encrypt_flag_default);
+    ASSERT_EQ(encrypt_status, PEP_STATUS_OK);
+
+    config_passphrase(session, NULL);
+
+    message *decrypted_msg = NULL;
+    stringlist_t *keylist = NULL;
+    PEP_decrypt_flags_t decrypt_flags = 0;
+    PEP_STATUS decrypt_status =
+      decrypt_message_2(session, encrypted_msg, &decrypted_msg, &keylist, &decrypt_flags);
+    ASSERT_EQ(decrypt_status, PEP_PASSPHRASE_REQUIRED);
+
+    free_message(decrypted_msg);
+    decrypted_msg = NULL;
+    free_stringlist(keylist);
+    keylist = NULL;
+    decrypt_flags = 0;
+
+    // Need the secret key for decryption.
+    config_passphrase(session, new_passphrase_1);
+
+    decrypt_status =
+      decrypt_message_2(session, encrypted_msg, &decrypted_msg, &keylist, &decrypt_flags);
+    ASSERT_EQ(decrypt_status, PEP_STATUS_OK);
+
+    free_message(msg);
+    free_message(encrypted_msg);
+    free_message(decrypted_msg);
+    free_stringlist(keylist);
 }
