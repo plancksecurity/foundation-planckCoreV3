@@ -587,8 +587,18 @@ TEST_F(PassphraseHandlingTest, public_keys_stay_passphrase_less)
     keylist = NULL;
     decrypt_flags = 0;
 
-    // Need the secret key for decryption.
+    // Need either of the secret keys for decryption.
     config_passphrase(session, new_passphrase_1);
+
+    decrypt_status =
+      decrypt_message_2(session, encrypted_msg, &decrypted_msg, &keylist, &decrypt_flags);
+    ASSERT_EQ(decrypt_status, PEP_STATUS_OK);
+
+    free_message(decrypted_msg);
+    free_stringlist(keylist);
+
+    // Need either of the secret keys for decryption.
+    config_passphrase(session, new_passphrase_2);
 
     decrypt_status =
       decrypt_message_2(session, encrypted_msg, &decrypted_msg, &keylist, &decrypt_flags);
