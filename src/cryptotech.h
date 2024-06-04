@@ -1,6 +1,7 @@
 // Changelog
+//
 // 31.10.2023/IP: added function to retrieve key_ids
-// 
+// 30.05.2024/DZ: support passphrase management (RFC-16)
 
 /**
  * @file    cryptotech.h
@@ -247,6 +248,11 @@ typedef PEP_STATUS (*get_key_ids_t)(PEP_SESSION session,
                                  size_t csize,                                 
                                  stringlist_t **keylist);
 
+typedef PEP_STATUS (*manage_passphrase_t)(PEP_SESSION session,
+    const pEp_identity *identity,
+    const char *old_passphrase,
+    const char *new_passphrase);
+
 /**
  *  @struct    PEP_cryptotech_t
  *  
@@ -281,6 +287,7 @@ typedef struct _PEP_cryptotech_t {
     find_private_keys_t find_private_keys;
     config_cipher_suite_t config_cipher_suite;
     get_key_ids_t get_key_ids;
+    manage_passphrase_t manage_passphrase;
 } PEP_cryptotech_t;
 
 extern PEP_cryptotech_t cryptotech[PEP_crypt__count]; ///< array of all supported cryptotech drivers/interfaces (?)

@@ -494,6 +494,11 @@ PEP_STATUS pgp_binary(const char **path);
 PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
         PEP_CIPHER_SUITE suite);
 
+PEP_STATUS pgp_manage_passphrase(PEP_SESSION session,
+    const pEp_identity *identity,
+    const char *old_passphrase,
+    const char *new_passphrase);
+
 #define PGP_BINARY_PATH pgp_binary
 
 #endif
