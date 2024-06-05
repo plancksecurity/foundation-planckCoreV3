@@ -4236,18 +4236,6 @@ own_identity_by_address(PEP_SESSION session, const char *address, pEp_identity *
     }
 }
 
-static PEP_STATUS
-sign_something(PEP_SESSION session, const pEp_identity *identity)
-{
-    const char *data = "DATA";
-    const size_t data_size = strlen(data) - 1;
-    char *signed_data = NULL;
-    size_t signed_data_size = 0;
-    PEP_STATUS status = sign_only(session, data, data_size, identity->fpr, &signed_data, &signed_data_size);
-    free(signed_data);
-    return status;
-}
-
 DYNAMIC_API PEP_STATUS
 has_passphrase(PEP_SESSION session, const char *account, bool *has_passphrase)
 {
@@ -4268,8 +4256,9 @@ has_passphrase(PEP_SESSION session, const char *account, bool *has_passphrase)
         return status;
     }
 
-    status = sign_something(session, found_identity);
+    status = probe_encrypt(session, found_identity->fpr);
     free_identity(found_identity);
+
     if (status == PEP_STATUS_OK) {
         *has_passphrase = false;
         return PEP_STATUS_OK;
@@ -4339,7 +4328,7 @@ unlock_keys_with_passphrase(PEP_SESSION session,
             return config_passphrase_status;
         }
 
-        PEP_STATUS sign_status = sign_something(session, found_identity);
+        PEP_STATUS sign_status = probe_encrypt(session, found_identity->fpr);
         free_identity(found_identity);
 
         // Remove any passphrase from the session.
