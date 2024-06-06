@@ -9,6 +9,7 @@
 // 07.08.2023/IP - added method import_extrakey_with_fpr_return
 // 18.10.2023/TC - added identities out param, additionally made the param names more descriptive, removed import_key_strict as it isn't used anymore.
 // 26.02.2024/DZ - Document that messageToSend does not transfer ownership
+// 27.05.2024/DZ - Implement RFC-16 Passphrase Handling
 
 #ifndef PEP_ENGINE_H
 #define PEP_ENGINE_H
@@ -2159,13 +2160,69 @@ DYNAMIC_API PEP_STATUS reset_path_cache(void);
  */
 DYNAMIC_API void clear_path_cache(void);
 
-
 /* Temporary compatibility definitions
  * ***************************************************************** */
 
 /* These must go away, but I am temporarily introducing them so as not to
    break Engine users. */
 DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color);
+
+/**
+ *  <!--        has_passphrase()       -->
+ *
+ *  @brief Checks if a given account has a passphrase set on its main key.
+ *
+ *  An account is defined by the email if its identity.
+ *
+ *  @retval PEP_STATUS_OK No errors.
+ */
+DYNAMIC_API PEP_STATUS has_passphrase(PEP_SESSION session,
+                                      const char *account,
+                                      bool *has_passphrase);
+
+/**
+ *  <!--        unlock_keys_with_passphrase()       -->
+ *
+ *  @brief Forces secret keys with a passphrase to get unlocked.
+ *
+ *  For every account/identity in the input, an operation requiring the passphrase
+ *  of its main (secret) key is executed.
+ *  Every account that would have returned `PEP_PASSPHRASE_REQUIRED`
+ *  or `PEP_WRONG_PASSPHRASE` is returned
+ *  via `error_accounts`, and the overall return value is `PEP_WRONG_PASSPHRASE`.
+ *  If there is _any other error_, the corresponding status is returned and the
+ *  corresponding account is put _as the only one_ in `error_accounts`.
+ *
+ *  @retval PEP_CANNOT_FIND_IDENTITY The error list contains the _first_ account that could not
+ *  be found.
+ *  @retval PEP_WRONG_PASSPHRASE The error list contains the accounts that couldn't be
+ *  unblocked.
+ *  @retval PEP_ILLEGAL_VALUE Input values are not correct, e.g. NULL values in passphrases, no
+ *  errors set.
+ */
+DYNAMIC_API PEP_STATUS
+unlock_keys_with_passphrase(PEP_SESSION session,
+                            const stringpair_list_t *accounts_with_passphrases,
+                            stringlist_t **error_accounts);
+
+/**
+ *  <!--        manage_passphrase()       -->
+ *
+ *  @brief Sets (or unsets) a passphrase for a given set of accounts.
+ *
+ *  For every mapping of account/identity to old passphrase in the input,
+ *  sets the given new passphrase, or removes it (if the given new passphrase is
+ *  empty). Passphrase errors are reported as a list of accounts that gave the error. If there is
+ *  _any other error_, the corresponding status is returned and the corresponding account is put
+ *  _as the only one_ in `error_accounts`.
+ *
+ *  @retval PEP_WRONG_PASSPHRASE The error list contains the accounts that couldn't be
+ *  unblocked.
+ */
+DYNAMIC_API PEP_STATUS manage_passphrase(PEP_SESSION session,
+                                         const stringpair_list_t *accounts_with_passphrases,
+                                         const char *new_passphrase,
+                                         stringlist_t **error_accounts);
 
 #ifdef __cplusplus
 }
