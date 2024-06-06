@@ -4299,16 +4299,19 @@ unlock_keys_with_passphrase(PEP_SESSION session,
 
         if (!current) {
             free_stringlist(*error_accounts);
+            *error_accounts = NULL;
             return PEP_ILLEGAL_VALUE;
         }
 
         if (!current->key) {
             free_stringlist(*error_accounts);
+            *error_accounts = NULL;
             return PEP_ILLEGAL_VALUE;
         }
 
         if (!current->value) {
             free_stringlist(*error_accounts);
+            *error_accounts = NULL;
             return PEP_ILLEGAL_VALUE;
         }
 
@@ -4331,6 +4334,7 @@ unlock_keys_with_passphrase(PEP_SESSION session,
         }
         if (config_passphrase_status != PEP_STATUS_OK) {
             free_stringlist(*error_accounts);
+            *error_accounts = NULL;
             free_identity(found_identity);
             return config_passphrase_status;
         }
@@ -4343,6 +4347,7 @@ unlock_keys_with_passphrase(PEP_SESSION session,
 
         if (config_passphrase_status != PEP_STATUS_OK) {
             free_stringlist(*error_accounts);
+            *error_accounts = NULL;
             return config_passphrase_status;
         }
 
@@ -4395,16 +4400,19 @@ manage_passphrase(PEP_SESSION session,
 
         if (!current) {
             free_stringlist(*error_accounts);
+            *error_accounts = NULL;
             return PEP_ILLEGAL_VALUE;
         }
 
         if (!current->key) {
             free_stringlist(*error_accounts);
+            *error_accounts = NULL;
             return PEP_ILLEGAL_VALUE;
         }
 
         if (!current->value) {
             free_stringlist(*error_accounts);
+            *error_accounts = NULL;
             return PEP_ILLEGAL_VALUE;
         }
 
