@@ -4380,7 +4380,8 @@ manage_passphrase(PEP_SESSION session,
     PEP_REQUIRE(error_accounts);
     *error_accounts = NULL;
 
-    PEP_STATUS status_result = PEP_CANNOT_FIND_IDENTITY;
+    bool error_registered = false;
+    PEP_STATUS status_result = PEP_ILLEGAL_VALUE;
 
     for (stringpair_list_t *account_passphrase_pair = accounts_with_passphrases;
          account_passphrase_pair;
@@ -4422,9 +4423,12 @@ manage_passphrase(PEP_SESSION session,
 
         if (status == PEP_STATUS_OK) {
             // nothing special, ready for next account
-            status_result = PEP_STATUS_OK;
+            if (!error_registered) {
+                status_result = PEP_STATUS_OK;
+            }
         } else if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
             // mark account as having a wrong passphrase, ready for next account
+            error_registered = true;
             status_result = PEP_WRONG_PASSPHRASE;
             if (!*error_accounts) {
                 *error_accounts = new_stringlist(current->key);
@@ -4433,6 +4437,7 @@ manage_passphrase(PEP_SESSION session,
             }
         } else {
             // error not related to passphrases, preempts all other errors
+            error_registered = true;
             status_result = status;
             if (*error_accounts) {
                 free_stringlist(*error_accounts);
