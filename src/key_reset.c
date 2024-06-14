@@ -1323,6 +1323,7 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
     free(gen_ident->fpr);
     gen_ident->fpr = NULL;
     status = generate_keypair(session, gen_ident);
+    config_passphrase_for_new_keys(session, session->new_key_pass_enable, "");
 
     if (status != PEP_STATUS_OK) {
         goto planck_free;
