@@ -1186,6 +1186,8 @@ PEP_STATUS _myself(PEP_SESSION session,
             free(identity->fpr);
             identity->fpr = NULL;
             status = generate_keypair(session, identity);
+            // just after creating a key for new account we reset passphrase for new keys
+            config_passphrase_for_new_keys(session, session->new_key_pass_enable, "");
             PEP_WEAK_ASSERT_ORELSE_GOTO(status != PEP_OUT_OF_MEMORY, pEp_free);
                 
             if (status != PEP_STATUS_OK) {
