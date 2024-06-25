@@ -339,14 +339,14 @@ PEP_STATUS try_base_prepare_message(
     // https://dev.pep.foundation/Engine/MessageToSendPassphrase
 
     // first try with empty passphrase
-    char *passphrase = session->curr_passphrase;
-    session->curr_passphrase = NULL;
+    stringpair_list_t * passphrases = session->curr_passphrases;
+    session->curr_passphrases = NULL;
     status = base_prepare_message(session, me, partner, type, payload, size, fpr, result);
-    session->curr_passphrase = passphrase;
+    session->curr_passphrases = passphrases;
     if (!(status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE))
         return status;
 
-    if (!EMPTYSTR(session->curr_passphrase)) {
+    if (!stringpair_list_length(session->curr_passphrases)) {
         // try configured passphrase
         status = base_prepare_message(session, me, partner, type, payload, size, fpr, result);
         if (!(status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE))

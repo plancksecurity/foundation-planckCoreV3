@@ -264,10 +264,10 @@ DYNAMIC_API void release(PEP_SESSION session)
     /* ... And then finalise the database subsystem. */
     pEp_sql_finalize(session, out_last);
 
-    if (!EMPTYSTR(session->curr_passphrase)) {
-        free (session->curr_passphrase);
+    if (stringpair_list_length(session->curr_passphrases)) {
+        free_stringpair_list(session->curr_passphrases);
         /* In case the following freeing code still uses the field. */
-        session->curr_passphrase = NULL;
+        session->curr_passphrases = NULL;
     }
 
     release_transport_system(session, out_last);
@@ -577,16 +577,15 @@ DYNAMIC_API void config_unencrypted_subject(PEP_SESSION session, bool enable)
     session->unencrypted_subject = enable;
 }
 
-DYNAMIC_API PEP_STATUS config_passphrase(PEP_SESSION session, const char *passphrase) {
+DYNAMIC_API PEP_STATUS config_passphrase(PEP_SESSION session, const char *email, const char *passphrase) {
     PEP_REQUIRE(session);
 
     PEP_STATUS status = PEP_STATUS_OK;
-    free(session->curr_passphrase);
     if (!passphrase)
-        session->curr_passphrase = NULL;
+        stringpair_list_delete_by_key(session->curr_passphrases, email);
     else {
-        session->curr_passphrase = strdup(passphrase);
-        if (!session->curr_passphrase)
+        stringpair_list_add(session->curr_passphrases, new_stringpair(strdup(email), strdup(passphrase)));
+        if (!session->curr_passphrases)
             status = PEP_OUT_OF_MEMORY;
     }
     return status;
@@ -595,17 +594,17 @@ DYNAMIC_API PEP_STATUS config_passphrase(PEP_SESSION session, const char *passph
 DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys(PEP_SESSION session, bool enable, const char *passphrase) {
     PEP_REQUIRE(session);
 
-    session->new_key_pass_enable = enable;
+    //session->new_key_pass_enable = enable;
     PEP_STATUS status = PEP_STATUS_OK;
-
-    free(session->generation_passphrase);
-    if (EMPTYSTR(passphrase)) {
-        session->generation_passphrase = NULL;
-    } else {
-        session->generation_passphrase = strdup(passphrase);
-        if (!session->generation_passphrase)
-            status = PEP_OUT_OF_MEMORY;
-    }
+//
+//    free(session->generation_passphrase);
+//    if (EMPTYSTR(passphrase)) {
+//        session->generation_passphrase = NULL;
+//    } else {
+//        session->generation_passphrase = strdup(passphrase);
+//        if (!session->generation_passphrase)
+//            status = PEP_OUT_OF_MEMORY;
+//    }
     return status;    
 }
 
@@ -4250,7 +4249,7 @@ has_passphrase(PEP_SESSION session, const char *account, bool *has_passphrase)
     }
 
     // Ensure that session doesn't contain a previous passphrase.
-    status = config_passphrase(session, NULL);
+    status = config_passphrase(session, account, NULL);
     if (status != PEP_STATUS_OK) {
         free_identity(found_identity);
         return status;
@@ -4317,9 +4316,9 @@ unlock_keys_with_passphrase(PEP_SESSION session,
         PEP_STATUS config_passphrase_status = PEP_STATUS_OK;
         if (EMPTYSTR(current->value)) {
             // An empty or NULL passphrase means to not use any passphrase.
-            config_passphrase_status = config_passphrase(session, NULL);
+            config_passphrase_status = config_passphrase(session, current->key, NULL);
         } else {
-            config_passphrase_status = config_passphrase(session, current->value);
+            config_passphrase_status = config_passphrase(session, current->key, current->value);
         }
         if (config_passphrase_status != PEP_STATUS_OK) {
             free_stringlist(*error_accounts);
@@ -4332,7 +4331,7 @@ unlock_keys_with_passphrase(PEP_SESSION session,
         free_identity(found_identity);
 
         // Remove any passphrase from the session.
-        config_passphrase_status = config_passphrase(session, NULL);
+        config_passphrase_status = config_passphrase(session, current->key, NULL);
 
         if (config_passphrase_status != PEP_STATUS_OK) {
             free_stringlist(*error_accounts);

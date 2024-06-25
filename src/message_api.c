@@ -8556,14 +8556,14 @@ PEP_STATUS try_encrypt_message(
     // https://dev.pep.foundation/Engine/MessageToSendPassphrase
 
     // first try with empty passphrase
-    char* passphrase = session->curr_passphrase;
-    session->curr_passphrase = NULL;
+    stringpair_list_t * passphrases = session->curr_passphrases;
+    session->curr_passphrases = NULL;
     status = encrypt_message(session, src, extra, dst, enc_format, flags);
-    session->curr_passphrase = passphrase;
+    session->curr_passphrases = passphrases;
     if (!(status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE))
         return status;
 
-    if (!EMPTYSTR(session->curr_passphrase)) {
+    if (!stringpair_list_length(session->curr_passphrases)) {
         // try configured passphrase
         status = encrypt_message(session, src, extra, dst, enc_format, flags);
         if (!(status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE))

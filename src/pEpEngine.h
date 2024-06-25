@@ -1998,7 +1998,7 @@ DYNAMIC_API const char *per_machine_directory(void);
  *
  */
 
-DYNAMIC_API PEP_STATUS config_passphrase(PEP_SESSION session, const char *passphrase);
+DYNAMIC_API PEP_STATUS config_passphrase(PEP_SESSION session, const char *email, const char *passphrase);
 
 // FIXME: replace in canonical style
 //

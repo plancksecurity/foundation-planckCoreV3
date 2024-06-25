@@ -428,9 +428,10 @@ struct _pEpSession {
     void *cryptotech_cookie;
 
     // These four fields but be next.  Do not disappoint.
-    char* curr_passphrase;
-    bool new_key_pass_enable;
-    char* generation_passphrase;
+    stringpair_list_t *curr_passphrases;
+    //char* curr_passphrase;
+    //bool new_key_pass_enable;
+    //char* generation_passphrase;
     PEP_CIPHER_SUITE cipher_suite;
 
     messageToSend_t messageToSend;

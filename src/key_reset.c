@@ -1364,12 +1364,13 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
         goto planck_free;
     }
 
-    cached_passphrase = EMPTYSTR(session->curr_passphrase) ? NULL : strdup(session->curr_passphrase);
+    stringpair_list_t* maybe_found = stringpair_list_find_case_insensitive(session->curr_passphrases, ident->address);
+    cached_passphrase = !maybe_found ? NULL : strdup(maybe_found->value->value);
 
     // Note - this will be ignored right now by keygen for group identities.
     // Testing needs to make sure all callers set the flag appropriately before
     // we get into the current function.
-    config_passphrase(session, session->generation_passphrase);
+    //config_passphrase(session, session->generation_passphrase);
 
     // Install the new key as own
 
@@ -1404,7 +1405,7 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
     if (status == PEP_STATUS_OK)
         status = add_mistrusted_key(session, old_fpr);
 
-    config_passphrase(session, cached_passphrase);
+    //config_passphrase(session, cached_passphrase);
 
     // Whether new_key is NULL or not, if this key is equal to the current user default, we
     // replace it.
@@ -1442,10 +1443,10 @@ static PEP_STATUS _check_own_reset_passphrase_readiness(PEP_SESSION session,
     // that differs from the generation passphrase. We'll 
     // just check to make sure everything is in order for 
     // later use, however
-    if (session->new_key_pass_enable) {
-        if (EMPTYSTR(session->generation_passphrase))
-            return PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED;
-    }
+    //if (session->new_key_pass_enable) {
+    //    if (EMPTYSTR(session->generation_passphrase))
+    //        return PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED;
+    //}
                                 
     stringlist_t* test_key = NULL;
                               
@@ -1473,11 +1474,11 @@ static PEP_STATUS _check_own_reset_passphrase_readiness(PEP_SESSION session,
     if (status != PEP_STATUS_OK)
         return status;
                             
-    if (EMPTYSTR(session->curr_passphrase) && !EMPTYSTR(session->generation_passphrase)) {
-        // We'll need it as the current passphrase to sign 
-        // messages with the generated keys
-        config_passphrase(session, session->generation_passphrase);
-    }        
+    //if (EMPTYSTR(session->curr_passphrase) && !EMPTYSTR(session->generation_passphrase)) {
+    //    // We'll need it as the current passphrase to sign
+    //    // messages with the generated keys
+    //    config_passphrase(session, session->generation_passphrase);
+    //}
                                                           
     return PEP_STATUS_OK;                                                       
 }
@@ -1536,8 +1537,10 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
     status = _check_own_reset_passphrase_readiness(session, old_key);
     if (status != PEP_STATUS_OK)
         return status;
-    
-    char* cached_passphrase = EMPTYSTR(session->curr_passphrase) ? NULL : strdup(session->curr_passphrase);        
+
+    // THIS IS WRONG, WE NEED TO FIND ONE PASSPHRASE PER KEY?
+    //stringpair_list_t* maybe_found = stringpair_list_find_case_insensitive(session->curr_passphrases, key_idents->ident->address);
+    //char* cached_passphrase = !maybe_found ? NULL : strdup(maybe_found->value->value);
 
     // We need to create this list in either event because we only sync grouped
     // identities, so this is necessary for the command list:
@@ -1586,7 +1589,7 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
         // with the old key happens in here)
         // (N.B. For now, group encryption keys will ignore this
         // FIXME: I think group encryption keys probably have to do something different here anyway...
-        config_passphrase(session, session->generation_passphrase);
+        //config_passphrase(session, session->generation_passphrase);
 
         status = generate_own_commandlist_msg(session,
                                                grouped_idents,
@@ -1596,7 +1599,7 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
                                                old_key,
                                                &outmsg);
 
-        config_passphrase(session, cached_passphrase);
+        //config_passphrase(session, cached_passphrase);
 
         // Key-based errors here shouldn't happen.
         if (status != PEP_STATUS_OK)
@@ -1642,7 +1645,7 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
         //
         // All new keys have the same passphrase, if any
         //
-        config_passphrase(session, session->generation_passphrase);
+        //config_passphrase(session, session->generation_passphrase);
 
         for (curr_ident = grouped_idents; curr_ident && curr_ident->ident; curr_ident = curr_ident->next) {
             pEp_identity *ident = curr_ident->ident;
@@ -1698,7 +1701,7 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
             free_identity(tmp_ident);
         }
 
-        config_passphrase(session, cached_passphrase);
+        //config_passphrase(session, cached_passphrase);
 
         if (status == PEP_STATUS_OK)
             // cascade that mistrust for anyone using this key
@@ -1724,10 +1727,10 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
 
 pEp_error:
     // Just in case
-    config_passphrase(session, cached_passphrase);
+    //config_passphrase(session, cached_passphrase);
     free_stringlist(test_key);
     free_message(outmsg);
-    free(cached_passphrase);
+    //free(cached_passphrase);
     return status;
 }
 
@@ -1810,7 +1813,7 @@ PEP_STATUS _key_reset(
     identity_list* key_idents = NULL;
     stringlist_t* keys = NULL;
 
-    char* cached_passphrase = EMPTYSTR(session->curr_passphrase) ? NULL : strdup(session->curr_passphrase);
+    //char* cached_passphrase = EMPTYSTR(session->curr_passphrase) ? NULL : strdup(session->curr_passphrase);
     
     if (!EMPTYSTR(key_id)) {
         fpr_copy = strdup(key_id);
@@ -2086,8 +2089,8 @@ pEp_free:
     free_identity_list(key_idents);
     free_stringlist(keys);
     free(new_key);   
-    config_passphrase(session, cached_passphrase); 
-    free(cached_passphrase);
+    //config_passphrase(session, cached_passphrase);
+    //free(cached_passphrase);
     return status;
 }
 
