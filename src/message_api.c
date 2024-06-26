@@ -392,7 +392,7 @@ PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rati
     free_Sync_message(res);
     if (status)
         return status;
-
+    // PROBLEM: WHAT IS THE EMAIL TO USE HERE....?
     return base_decorate_message(session, msg, BASE_SYNC, payload, size, msg->recv_by->fpr);
 }
 
@@ -1656,10 +1656,10 @@ static PEP_STATUS encrypt_PGP_MIME(
     PEP_WEAK_ASSERT_ORELSE_GOTO(mimetext, pEp_error);
 
     if (flags & PEP_encrypt_flag_force_unsigned)
-        status = encrypt_only(session, keys, mimetext, strlen(mimetext),
+        status = encrypt_only(session, src->from->address, keys, mimetext, strlen(mimetext),
             &ctext, &csize);
     else
-        status = encrypt_and_sign(session, keys, mimetext, strlen(mimetext),
+        status = encrypt_and_sign(session, src->from->address, keys, mimetext, strlen(mimetext),
             &ctext, &csize);
     free(mimetext);
     if (ctext == NULL || status)

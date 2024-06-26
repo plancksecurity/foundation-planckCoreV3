@@ -3125,34 +3125,35 @@ DYNAMIC_API PEP_STATUS decrypt_and_verify(
 }
 
 DYNAMIC_API PEP_STATUS encrypt_and_sign(
-    PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
+    PEP_SESSION session, const char *email, const stringlist_t *keylist, const char *ptext,
     size_t psize, char **ctext, size_t *csize
     )
 {
-    PEP_REQUIRE(session && keylist && ptext && psize
+    PEP_REQUIRE(session && email && keylist && ptext && psize
                 && ctext && csize);
 
-    return session->cryptotech[PEP_crypt_OpenPGP].encrypt_and_sign(session,
+    return session->cryptotech[PEP_crypt_OpenPGP].encrypt_and_sign(session, email,
             keylist, ptext, psize, ctext, csize);
 }
 
 PEP_STATUS encrypt_only(
-    PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
+    PEP_SESSION session, const char *email, const stringlist_t *keylist, const char *ptext,
     size_t psize, char **ctext, size_t *csize
     )
 {
-    PEP_REQUIRE(session && keylist && ptext && psize
+    PEP_REQUIRE(session && email && keylist && ptext && psize
                 && ctext && csize);
 
     return session->cryptotech[PEP_crypt_OpenPGP].encrypt_only(session,
-            keylist, ptext, psize, ctext, csize);
+            email, keylist, ptext, psize, ctext, csize);
 }
 
 PEP_STATUS sign_only(PEP_SESSION session, 
                      const char *data, 
                      size_t data_size, 
-                     const char *fpr, 
-                     char **sign, 
+                     const char *email,
+                     const char *fpr,
+                     char **sign,
                      size_t *sign_size) {
     PEP_REQUIRE(session && data && data_size && ! EMPTYSTR(fpr)
                 && sign && sign_size);
@@ -3448,6 +3449,7 @@ DYNAMIC_API PEP_STATUS send_key(PEP_SESSION session, const char *pattern)
 
 DYNAMIC_API PEP_STATUS renew_key(
         PEP_SESSION session,
+        const char *email,
         const char *fpr,
         const timestamp *ts
     )
@@ -3455,11 +3457,12 @@ DYNAMIC_API PEP_STATUS renew_key(
     PEP_REQUIRE(session && ! EMPTYSTR(fpr)
                 /* ts is allowed to be NULL. */);
 
-    return session->cryptotech[PEP_crypt_OpenPGP].renew_key(session, fpr, ts);
+    return session->cryptotech[PEP_crypt_OpenPGP].renew_key(session, email, fpr, ts);
 }
 
-DYNAMIC_API PEP_STATUS revoke_key(
+DYNAMIC_API PEP_STATUS revoke_key( // PROBLEM: THIS IS NOT AN ACTION INVOLVING A CONCRETE ACCOUNT, SO HOW CAN WE KNOW WHICH PASSPHRASE TO ASK FOR???
         PEP_SESSION session,
+        const char *email, // WE SHOULDN'T HAVE ANY EMAIL PARAM...? BUT THE KEY TO REVOKE MUST BE OURS, RIGHT?
         const char *fpr,
         const char *reason
     )
@@ -3476,7 +3479,7 @@ DYNAMIC_API PEP_STATUS revoke_key(
     if (revoked)
         return PEP_STATUS_OK;
 
-    return session->cryptotech[PEP_crypt_OpenPGP].revoke_key(session, fpr,
+    return session->cryptotech[PEP_crypt_OpenPGP].revoke_key(session, email, fpr,
             reason);
 }
 

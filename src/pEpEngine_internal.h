@@ -666,6 +666,7 @@ PEP_STATUS set_default_identity_fpr(PEP_SESSION session,
 PEP_STATUS sign_only(PEP_SESSION session,
                      const char *data,
                      size_t data_size,
+                     const char *email,
                      const char *fpr,
                      char **sign,
                      size_t *sign_size);

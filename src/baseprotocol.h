@@ -67,6 +67,7 @@ PEP_STATUS base_decorate_message(
         base_protocol_type type,
         char *payload,
         size_t size,
+        const char *email,
         const char *fpr
     );
 

@@ -2273,7 +2273,7 @@ DYNAMIC_API PEP_STATUS group_dissolve(
         if (status != PEP_STATUS_OK)
             goto pEp_free;
 
-        status = revoke_key(session, group_identity->fpr, NULL);
+        status = revoke_key(session, group_identity->address, group_identity->fpr, NULL);
         if (status != PEP_STATUS_OK)
             goto pEp_free;
 

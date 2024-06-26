@@ -54,6 +54,7 @@ PEP_STATUS base_decorate_message(
         base_protocol_type type,
         char *payload,
         size_t size,
+        const char *email,
         const char *fpr
     )
 {
@@ -158,7 +159,7 @@ PEP_STATUS base_prepare_message(
                         "You can safely ignore it. It will be deleted automatically.\n");
     PEP_WEAK_ASSERT_ORELSE_GOTO(msg->longmsg, enomem);
 
-    status = base_decorate_message(session, msg, type, payload, size, fpr);
+    status = base_decorate_message(session, msg, type, payload, size, me->address, fpr);
     if (status == PEP_STATUS_OK)
         *result = msg;
     return status;

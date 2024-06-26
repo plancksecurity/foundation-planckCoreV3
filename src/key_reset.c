@@ -856,9 +856,14 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
                     status = PEP_OUT_OF_MEMORY;
                     goto pEp_free;
                 }
+                strcat(revp->key, " ");
+                strcat(revp->key, curr_ident->address);
             }
-            else    
+            else {
                 stringpair_list_add(rev_pairs, revp);
+                strcat(revp->key, " ");
+                strcat(revp->key, curr_ident->address);
+            }
                             
         }    
         
@@ -868,9 +873,12 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
     }
 
     // actually revoke - list only exists with own keys
+    // WE NEED TO ALSO HAVE THE EMAILS, BUT ITS ALREADY STRINGPAIRLIST, SO...?
     stringpair_list_t* curr_rev_pair = rev_pairs;
-    while (curr_rev_pair && curr_rev_pair->value) {
-        char* rev_key = curr_rev_pair->value->key;
+    while (curr_rev_pair && curr_rev_pair->value) { // IF HERE WE INCLUDE ALL EMAIL ADDRESSES, THEN YES WE CAN REVOKE EACH KEY WITH ITS EMAIL AND PASSPHRASE
+        char* rev_key_and_email = curr_rev_pair->value->key;
+        char* rev_key = strtok(rev_key_and_email, " ");
+        char* email = strtok(NULL, " ");
         char* new_key = curr_rev_pair->value->value;
             
         if (EMPTYSTR(rev_key) || EMPTYSTR(new_key))
@@ -879,7 +887,7 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         status = key_revoked(session, rev_key, &revoked);
         if (!revoked) {
             // key reset on old key
-            status = revoke_key(session, rev_key, NULL);
+            status = revoke_key(session, email, rev_key, NULL);
 
             if (status != PEP_STATUS_OK)
                 goto pEp_free;    
@@ -1352,7 +1360,7 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
     // Note that we reset this key for ANY own ident that has it. And if
     // tmp_ident did NOT have this key, it won't matter. We will reset this
     // key for all idents for this user.
-    status = revoke_key(session, old_fpr, NULL);
+    status = revoke_key(session, ident->address, old_fpr, NULL);
 
     if (status != PEP_STATUS_OK) {
         goto planck_free;
@@ -1436,6 +1444,7 @@ planck_free:
  *  @retval any other value on error
  */
 static PEP_STATUS _check_own_reset_passphrase_readiness(PEP_SESSION session,
+                                                        identity_list* idents,
                                                         const char* key) { 
 
     // Check generation setup
@@ -1443,10 +1452,13 @@ static PEP_STATUS _check_own_reset_passphrase_readiness(PEP_SESSION session,
     // that differs from the generation passphrase. We'll 
     // just check to make sure everything is in order for 
     // later use, however
-    //if (session->new_key_pass_enable) {
-    //    if (EMPTYSTR(session->generation_passphrase))
-    //        return PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED;
-    //}
+    if (session->new_key_pass_enable) {
+        identity_list *_il;
+        for (_il = idents; _il && _il->ident; _il = _il->next) {
+            if (!stringpair_list_find_case_insensitive(session->curr_passphrases, _il->ident->address))
+                return PEP_PASSPHRASE_REQUIRED;
+        }
+    }
                                 
     stringlist_t* test_key = NULL;
                               
@@ -1477,7 +1489,15 @@ static PEP_STATUS _check_own_reset_passphrase_readiness(PEP_SESSION session,
     //if (EMPTYSTR(session->curr_passphrase) && !EMPTYSTR(session->generation_passphrase)) {
     //    // We'll need it as the current passphrase to sign
     //    // messages with the generated keys
-    //    config_passphrase(session, session->generation_passphrase);
+    identity_list *_il;
+    for (_il = idents; _il && _il->ident; _il = _il->next) {
+        config_passphrase(
+                session,
+                _il->ident->address,
+                stringpair_list_find_case_insensitive(
+                        session->curr_passphrases, _il->ident->address)->value->value
+                );
+    }
     //}
                                                           
     return PEP_STATUS_OK;                                                       
@@ -1534,7 +1554,7 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
 
     // Make sure the signing password is set correctly and that 
     // we are also ready for keygen
-    status = _check_own_reset_passphrase_readiness(session, old_key);
+    status = _check_own_reset_passphrase_readiness(session, key_idents, old_key);
     if (status != PEP_STATUS_OK)
         return status;
 
@@ -1633,7 +1653,14 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
 
         // Ok, we've signed everything we need to with the old key,
         // Revoke that baby, in case we haven't already.
-        status = revoke_key(session, old_key, NULL);
+        // PICKING ANY IDENTITY ADDRESS FOR REVOKE CALL, DOES IT MAKE SENSE...? SINCE WE MAY HAVE SEVERAL IDENTITIES
+        // PROBLEM: IN SEQUOIA, WHAT HAPPENS IF ONLY SOME IDENTITIES HAVE PASSPHRASE AND SOME HAVE NOT?
+        // DO WE NEED A WAY TO CHOOSE WHICH IDENTITY ADDRESS TO USE HERE?
+        // NO, THE ACTUAL PROBLEM IS THAT WE WANT TO KNOW IF THE IDENTITY TO BE REVOKED HAS A PASSPHRASE
+        // BUT ACTUALLY WE GOT IDENTITIES BY MAIN KEY ID, WHICH MEANS ALL OF THEM GOT SAME FPR...?
+        // THEN IS THE ONLY POSSIBLE CONCLUSION THAT WE COULD USE ANY OF THE IDENTITY ADDRESSES FOR PASSPHRASE?
+        // NOT VERY CLEAR FOR ME AT THE MOMENT
+        status = revoke_key(session, grouped_idents->ident->address, old_key, NULL);
 
         // again, we should not have key-related issues here,
         // as we ensured the correct password earlier
@@ -2009,7 +2036,7 @@ PEP_STATUS _key_reset(
                     // Make sure we can even progress - if there are passphrase issues,
                     // bounce back to the caller now, because our attempts to make it work failed,
                     // even possibly with callback.
-                    status = _check_own_reset_passphrase_readiness(session, fpr_copy);
+                    status = _check_own_reset_passphrase_readiness(session, key_idents, fpr_copy);
                     if (status != PEP_STATUS_OK)
                         goto pEp_free;
 

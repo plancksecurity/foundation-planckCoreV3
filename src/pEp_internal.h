@@ -430,7 +430,7 @@ struct _pEpSession {
     // These four fields but be next.  Do not disappoint.
     stringpair_list_t *curr_passphrases;
     //char* curr_passphrase;
-    //bool new_key_pass_enable;
+    bool new_key_pass_enable;
     //char* generation_passphrase;
     PEP_CIPHER_SUITE cipher_suite;
 
@@ -720,7 +720,7 @@ sql_reset_and_clear_bindings(sqlite3_stmt *s);
  *  @warning    NOT to be exposed to the outside!!!!!
  */
 PEP_STATUS encrypt_only(
-        PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
+        PEP_SESSION session, const char *email, const stringlist_t *keylist, const char *ptext,
         size_t psize, char **ctext, size_t *csize
 );
 

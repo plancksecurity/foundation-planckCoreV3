@@ -513,7 +513,7 @@ action receivedKeysAreDefaultKeys
             for (identity_list *_il_own = own_ident; _il_own && _il_own->ident ; _il_own = _il_own->next) {
                 if(strcmp(_il_updated->ident->address, _il_own->ident->address) == 0){
                     status = send_key_reset_to_recents(session, _il_own->ident, _il_own->ident->fpr, _il_updated->ident->fpr);
-                    status = revoke_key(session, _il_own->ident->fpr, NULL);
+                    status = revoke_key(session, _il_own->ident->address, _il_own->ident->fpr, NULL);
                     status = set_revoked(session, _il_own->ident->fpr, _il_updated->ident->fpr, time(NULL));
                     status = set_own_key(session, _il_updated->ident, _il_updated->ident->fpr);
                     if (status != PEP_STATUS_OK && status != PEP_KEY_UNSUITABLE)

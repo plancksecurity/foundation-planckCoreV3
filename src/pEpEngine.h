@@ -389,7 +389,7 @@ typedef int (*inject_sync_event_t)(SYNC_EVENT ev, void *management);
  *           to ensure signing/encryption can occur successfully. 
  *  
  */
-typedef PEP_STATUS (*ensure_passphrase_t)(PEP_SESSION session, const char* fpr);
+typedef PEP_STATUS (*ensure_passphrase_t)(PEP_SESSION session, const char* email, const char* fpr);
 
 /**
  *  <!--       init()       -->
@@ -714,7 +714,7 @@ DYNAMIC_API PEP_STATUS verify_text(
  */
 
 DYNAMIC_API PEP_STATUS encrypt_and_sign(
-        PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
+        PEP_SESSION session, const char *email, const stringlist_t *keylist, const char *ptext,
         size_t psize, char **ctext, size_t *csize
     );
 
@@ -1626,6 +1626,7 @@ DYNAMIC_API PEP_STATUS get_key_rating(
 
 DYNAMIC_API PEP_STATUS renew_key(
         PEP_SESSION session,
+        const char *email,
         const char *fpr,
         const timestamp *ts
     );
@@ -1653,6 +1654,7 @@ DYNAMIC_API PEP_STATUS renew_key(
 
 DYNAMIC_API PEP_STATUS revoke_key(
         PEP_SESSION session,
+        const char *email,
         const char *fpr,
         const char *reason
     );

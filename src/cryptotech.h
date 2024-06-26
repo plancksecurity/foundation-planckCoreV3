@@ -64,7 +64,7 @@ typedef PEP_STATUS (*verify_text_t)(
  *  @see encrypt_and_sign()
  */
 typedef PEP_STATUS (*encrypt_and_sign_t)(
-        PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
+        PEP_SESSION session, const char *email, const stringlist_t *keylist, const char *ptext,
         size_t psize, char **ctext, size_t *csize
     );
 
@@ -74,7 +74,7 @@ typedef PEP_STATUS (*encrypt_and_sign_t)(
  *  @see encrypt_only()
  */
 typedef PEP_STATUS (*encrypt_only_t)(
-        PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
+        PEP_SESSION session, const char *email, const stringlist_t *keylist, const char *ptext,
         size_t psize, char **ctext, size_t *csize
     );
 
@@ -170,7 +170,7 @@ typedef PEP_STATUS (*send_key_t)(PEP_SESSION session, const char *pattern);
  *  @copydoc renew_key()
  *  @see renew_key()
  */
-typedef PEP_STATUS (*renew_key_t)(PEP_SESSION session, const char *fpr,
+typedef PEP_STATUS (*renew_key_t)(PEP_SESSION session, const char *email, const char *fpr,
         const timestamp *ts);
 
 /**
@@ -178,7 +178,7 @@ typedef PEP_STATUS (*renew_key_t)(PEP_SESSION session, const char *fpr,
  *  @copydoc revoke_key()
  *  @see revoke_key()
  */
-typedef PEP_STATUS (*revoke_key_t)(PEP_SESSION session, const char *fpr,
+typedef PEP_STATUS (*revoke_key_t)(PEP_SESSION session, const char *email, const char *fpr,
         const char *reason);
 
 /**

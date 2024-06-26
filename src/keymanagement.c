@@ -162,7 +162,7 @@ PEP_STATUS validate_fpr(PEP_SESSION session,
         !revoked && expired) {
         // extend key
         timestamp *ts = new_timestamp(time(NULL) + KEY_EXPIRE_DELTA);
-        status = renew_key(session, fpr, ts);
+        status = renew_key(session, ident->address, fpr, ts);
         free_timestamp(ts);
 
         if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE)
@@ -1273,7 +1273,7 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
         status = key_revoked(session, ident->fpr, &revoked);
 
         if (!revoked)
-            revoke_key(session, ident->fpr, NULL);
+            revoke_key(session, ident->address, ident->fpr, NULL);
     }
     else {
         if (ident->fpr) {
