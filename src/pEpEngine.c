@@ -609,6 +609,16 @@ DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys(PEP_SESSION session, bool 
     return status;    
 }
 
+DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys_by_email(
+    PEP_SESSION session,
+    bool enable,
+    const char *account_email,
+    const char *passphrase)
+{
+    // TODO: To be implemented.
+    return PEP_STATUS_OK;
+}
+
 DYNAMIC_API void config_service_log(PEP_SESSION session, bool enable)
 {
     PEP_REQUIRE_ORELSE(session, { return; });
