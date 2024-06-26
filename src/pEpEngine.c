@@ -4469,4 +4469,5 @@ DYNAMIC_API PEP_STATUS configure_account_passphrases(PEP_SESSION session,
 {
     free_stringpair_list(session->account_passphrases);
     session->account_passphrases = account_passphrases;
+    return PEP_STATUS_OK;
 }
