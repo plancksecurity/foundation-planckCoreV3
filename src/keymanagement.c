@@ -2022,7 +2022,7 @@ DYNAMIC_API PEP_STATUS set_own_imported_key(
     PEP_STATUS status = PEP_STATUS_OK;
 
     // Last, but not least, be sure we can encrypt with it
-    status = probe_encrypt(session, fpr);
+    status = probe_encrypt(session, me->address, fpr);
     if (status)
         return status;
 

@@ -1478,10 +1478,10 @@ static PEP_STATUS _check_own_reset_passphrase_readiness(PEP_SESSION session,
     
     // Check to see that this key has its passphrase set as the configured 
     // passphrase, IF it has one. If not, bail early.
-    status = probe_encrypt(session, key);
+    status = probe_encrypt(session, idents->ident->address, key);
     if (PASS_ERROR(status)) {
-        if (ensure_key_cb)
-            status = ensure_key_cb(session, key);
+        if (ensure_key_cb) // FIXME WHAT IS THE EMAIL TO USE HERE?
+            status = ensure_key_cb(session, idents->ident->address, key);
     }
     if (status != PEP_STATUS_OK)
         return status;

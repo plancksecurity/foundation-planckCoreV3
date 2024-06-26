@@ -393,7 +393,7 @@ PEP_STATUS set_receiverRating(PEP_SESSION session, message *msg, PEP_rating rati
     if (status)
         return status;
     // PROBLEM: WHAT IS THE EMAIL TO USE HERE....?
-    return base_decorate_message(session, msg, BASE_SYNC, payload, size, msg->recv_by->fpr);
+    return base_decorate_message(session, msg, BASE_SYNC, payload, size, msg->from->address, msg->recv_by->fpr);
 }
 
 /**
@@ -1497,7 +1497,7 @@ static PEP_STATUS encrypt_PGP_inline(
     char *ctext = NULL;
     size_t csize = 0;
 
-    PEP_STATUS status = encrypt_and_sign(session, keys, src->longmsg,
+    PEP_STATUS status = encrypt_and_sign(session, src->from->address, keys, src->longmsg,
             strlen(src->longmsg), &ctext, &csize);
     if (status)
         return status;
@@ -1528,7 +1528,7 @@ static PEP_STATUS encrypt_PGP_inline(
     bloblist_t *ad = dst->attachments;
 
     if (!EMPTYSTR(src->longmsg_formatted)) {
-        status = encrypt_and_sign(session, keys, src->longmsg_formatted,
+        status = encrypt_and_sign(session, src->from->address, keys, src->longmsg_formatted,
                 strlen(src->longmsg_formatted), &ctext, &csize);
         if (status)
             return status;
@@ -1563,7 +1563,7 @@ static PEP_STATUS encrypt_PGP_inline(
                 value = as->value;
                 size = as->size;
             }
-            status = encrypt_and_sign(session, keys, value, size, &ctext,
+            status = encrypt_and_sign(session, src->from->address, keys, value, size, &ctext,
                     &csize);
             if (value != as->value)
                 free(value);
@@ -2816,7 +2816,7 @@ static PEP_STATUS encrypt_message_possibly_with_media_key(
     //}
 
     // is a passphrase needed?
-    status = probe_encrypt(session, src->from->fpr);
+    status = probe_encrypt(session, src->from->address, src->from->fpr);
     if (failed_test(status))
         return status;
 
@@ -3184,7 +3184,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
         goto pEp_free;
 
     // is a passphrase needed?
-    status = probe_encrypt(session, own_identity->fpr);
+    status = probe_encrypt(session, own_identity->address, own_identity->fpr);
     if (failed_test(status))
         goto pEp_free;
 
@@ -3233,10 +3233,10 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
     size_t encrypted_key_size = 0;
     
     if (flags & PEP_encrypt_flag_force_unsigned)
-        status = encrypt_only(session, keys, priv_key_data, priv_key_size,
+        status = encrypt_only(session, src->from->address, keys, priv_key_data, priv_key_size,
                               &encrypted_key_text, &encrypted_key_size);
     else
-        status = encrypt_and_sign(session, keys, priv_key_data, priv_key_size,
+        status = encrypt_and_sign(session, src->from->address, keys, priv_key_data, priv_key_size,
                                   &encrypted_key_text, &encrypted_key_size);
     
     if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
@@ -3374,7 +3374,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         return PEP_KEY_NOT_FOUND; // FIXME: Error condition
  
     // is a passphrase needed?
-    status = probe_encrypt(session, target_fpr);
+    status = probe_encrypt(session, target_id->address, target_fpr);
     if (failed_test(status))
         return status;
 
@@ -4668,7 +4668,7 @@ static bool reject_fpr(PEP_SESSION session, const char* fpr) {
         status = key_expired(session, fpr, time(NULL), &reject);
         if (reject) {
             timestamp *ts = new_timestamp(time(NULL) + KEY_EXPIRE_DELTA);
-            status = renew_key(session, fpr, ts);
+            //status = renew_key(session, fpr, ts);
             free_timestamp(ts);
             if (status == PEP_STATUS_OK)
                 reject = false;

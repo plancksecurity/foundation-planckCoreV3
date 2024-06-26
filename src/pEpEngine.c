@@ -3163,7 +3163,7 @@ PEP_STATUS sign_only(PEP_SESSION session,
                          
 }
 
-DYNAMIC_API PEP_STATUS probe_encrypt(PEP_SESSION session, const char *fpr)
+DYNAMIC_API PEP_STATUS probe_encrypt(PEP_SESSION session, const char *email, const char *fpr)
 {
     PEP_REQUIRE(session && ! EMPTYSTR(fpr));
 
@@ -3173,7 +3173,7 @@ DYNAMIC_API PEP_STATUS probe_encrypt(PEP_SESSION session, const char *fpr)
 
     char *ctext = NULL;
     size_t csize = 0;
-    PEP_STATUS status = encrypt_and_sign(session, keylist, "planck", 4, &ctext, &csize);
+    PEP_STATUS status = encrypt_and_sign(session, email, keylist, "planck", 4, &ctext, &csize);
     free(ctext);
     free_stringlist(keylist);
 
@@ -4258,7 +4258,7 @@ has_passphrase(PEP_SESSION session, const char *account, bool *has_passphrase)
         return status;
     }
 
-    status = probe_encrypt(session, found_identity->fpr);
+    status = probe_encrypt(session, account, found_identity->fpr);
     free_identity(found_identity);
 
     if (status == PEP_STATUS_OK) {
@@ -4330,7 +4330,7 @@ unlock_keys_with_passphrase(PEP_SESSION session,
             return config_passphrase_status;
         }
 
-        PEP_STATUS sign_status = probe_encrypt(session, found_identity->fpr);
+        PEP_STATUS sign_status = probe_encrypt(session, found_identity->address, found_identity->fpr);
         free_identity(found_identity);
 
         // Remove any passphrase from the session.
