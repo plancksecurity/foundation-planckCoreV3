@@ -4463,3 +4463,10 @@ manage_passphrase(PEP_SESSION session,
 
     return status_result;
 }
+
+DYNAMIC_API PEP_STATUS configure_account_passphrases(PEP_SESSION session,
+    stringpair_list_t *account_passphrases)
+{
+    free_stringpair_list(session->account_passphrases);
+    session->account_passphrases = account_passphrases;
+}
