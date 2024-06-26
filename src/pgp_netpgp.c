@@ -498,7 +498,7 @@ unlock_netpgp:
 }
 
 PEP_STATUS pgp_sign_only(
-    PEP_SESSION session, const char* fpr, const char *ptext,
+    PEP_SESSION session, const char* email, const char* fpr, const char *ptext,
     size_t psize, char **stext, size_t *ssize
     )
 {
@@ -634,7 +634,7 @@ unlock_netpgp:
 
 
 PEP_STATUS pgp_encrypt_and_sign(
-    PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
+    PEP_SESSION session, const char *email, const stringlist_t *keylist, const char *ptext,
     size_t psize, char **ctext, size_t *csize
     )
 {
@@ -682,7 +682,7 @@ PEP_STATUS pgp_encrypt_and_sign(
 }
 
 PEP_STATUS pgp_encrypt_only(
-        PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
+        PEP_SESSION session, const char *email, const stringlist_t *keylist, const char *ptext,
         size_t psize, char **ctext, size_t *csize
     )
 {
@@ -1360,6 +1360,7 @@ unlock_netpgp:
 
 PEP_STATUS pgp_renew_key(
         PEP_SESSION session,
+        const char *email,
         const char *fprstr,
         const timestamp *ts
     )
@@ -1452,6 +1453,7 @@ unlock_netpgp:
 
 PEP_STATUS pgp_revoke_key(
         PEP_SESSION session,
+        const char *email,
         const char *fprstr,
         const char *reason
     )

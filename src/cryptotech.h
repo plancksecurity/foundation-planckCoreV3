@@ -85,7 +85,7 @@ typedef PEP_STATUS (*encrypt_only_t)(
  *  @see pgp_sign_only() - This is one function that might be pointed to via an pointer of type sign_only_t
  */
 typedef PEP_STATUS (*sign_only_t)(
-        PEP_SESSION session, const char* fpr, const char *ptext,
+        PEP_SESSION session, const char* email, const char* fpr, const char *ptext,
         size_t psize, char **stext, size_t *ssize
     );
 

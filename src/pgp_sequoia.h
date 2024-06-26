@@ -115,7 +115,7 @@ PEP_STATUS pgp_get_key_ids(PEP_SESSION session,
  *  @retval any other value on error
  */
 PEP_STATUS pgp_encrypt_and_sign(
-        PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
+        PEP_SESSION session, const char *email, const stringlist_t *keylist, const char *ptext,
         size_t psize, char **ctext, size_t *csize
     );
 
@@ -136,7 +136,7 @@ PEP_STATUS pgp_encrypt_and_sign(
  *  @retval any other value on error
  */
 PEP_STATUS pgp_sign_only(
-        PEP_SESSION session, const char* fpr, const char *ptext,
+        PEP_SESSION session, const char* email, const char* fpr, const char *ptext,
         size_t psize, char **stext, size_t *ssize
     );
 
@@ -157,7 +157,7 @@ PEP_STATUS pgp_sign_only(
  *  @retval any other value on error
  */
 PEP_STATUS pgp_encrypt_only(
-        PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
+        PEP_SESSION session, const char *email, const stringlist_t *keylist, const char *ptext,
         size_t psize, char **ctext, size_t *csize
     );
 
@@ -360,6 +360,7 @@ PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern);
  */
 PEP_STATUS pgp_renew_key(
         PEP_SESSION session,
+        const char *email,
         const char *fpr,
         const timestamp *ts
     );
@@ -377,6 +378,7 @@ PEP_STATUS pgp_renew_key(
  */
 PEP_STATUS pgp_revoke_key(
         PEP_SESSION session,
+        const char *email,
         const char *fpr,
         const char *reason
     );

@@ -581,7 +581,7 @@ DYNAMIC_API PEP_STATUS config_passphrase(PEP_SESSION session, const char *email,
     PEP_REQUIRE(session);
 
     PEP_STATUS status = PEP_STATUS_OK;
-    if (!passphrase)
+    if (EMPTYSTR(passphrase))
         stringpair_list_delete_by_key(session->curr_passphrases, email);
     else {
         stringpair_list_add(session->curr_passphrases, new_stringpair(strdup(email), strdup(passphrase)));
@@ -3158,7 +3158,7 @@ PEP_STATUS sign_only(PEP_SESSION session,
     PEP_REQUIRE(session && data && data_size && ! EMPTYSTR(fpr)
                 && sign && sign_size);
 
-    return session->cryptotech[PEP_crypt_OpenPGP].sign_only(session,
+    return session->cryptotech[PEP_crypt_OpenPGP].sign_only(session, email,
                                 fpr, data, data_size, sign, sign_size);
                          
 }
