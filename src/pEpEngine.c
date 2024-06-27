@@ -4470,10 +4470,6 @@ DYNAMIC_API PEP_STATUS configure_account_passphrases(PEP_SESSION session,
 
 PEP_STATUS config_generation_passphrase_from_session_by_email(PEP_SESSION session, const char *account_email)
 {
-    if (!session->new_key_pass_enable) {
-        return PEP_STATUS_OK;
-    }
-
     for (stringpair_list_t *current = session->account_passphrases; current && current->value; current = current->next) {
         stringpair_t *pair = current->value;
         if (pair->key && !strcmp(pair->key, account_email)) {
@@ -4481,7 +4477,7 @@ PEP_STATUS config_generation_passphrase_from_session_by_email(PEP_SESSION sessio
         }
     }
 
-    return PEP_STATUS_OK;
+    return config_passphrase_for_new_keys(session, false, NULL);
 }
 
 PEP_STATUS config_generation_passphrase_from_session_by_fingerprint(PEP_SESSION session, const char *fingerprint)
@@ -4498,5 +4494,5 @@ PEP_STATUS config_generation_passphrase_from_session_by_fingerprint(PEP_SESSION 
         }
     }
 
-    return PEP_STATUS_OK;
+    return config_passphrase_for_new_keys(session, false, NULL);
 }
