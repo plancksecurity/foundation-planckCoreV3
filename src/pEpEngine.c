@@ -3470,6 +3470,8 @@ DYNAMIC_API PEP_STATUS renew_key(
     PEP_REQUIRE(session && ! EMPTYSTR(fpr)
                 /* ts is allowed to be NULL. */);
 
+    config_generation_passphrase_from_session_by_fingerprint(session, fpr);
+
     return session->cryptotech[PEP_crypt_OpenPGP].renew_key(session, fpr, ts);
 }
 
