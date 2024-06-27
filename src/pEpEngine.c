@@ -272,6 +272,7 @@ DYNAMIC_API void release(PEP_SESSION session)
 
     release_transport_system(session, out_last);
     release_cryptotech(session, out_last);
+    free_stringpair_list(session->account_passphrases);
     LOG_API("session %p finalised", session);
     pEp_log_finalize(session);
     free(session);
