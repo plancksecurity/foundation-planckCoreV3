@@ -4491,3 +4491,20 @@ PEP_STATUS config_generation_passphrase_from_session_by_email(PEP_SESSION sessio
 
     return PEP_STATUS_OK;
 }
+
+PEP_STATUS config_generation_passphrase_from_session_by_fingerprint(PEP_SESSION session, const char *fingerprint)
+{
+    identity_list *all_own_identities = NULL;
+    PEP_STATUS status = own_identities_retrieve(session, &all_own_identities);
+    if (status != PEP_STATUS_OK) {
+        return status;
+    }
+
+    for (identity_list *current = all_own_identities; current && current->ident; current = current->next) {
+        if (current->ident->fpr && current->ident->address && !strcmp(current->ident->fpr, fingerprint)) {
+            return config_generation_passphrase_from_session_by_email(session, current->ident->address);
+        }
+    }
+
+    return PEP_STATUS_OK;
+}
