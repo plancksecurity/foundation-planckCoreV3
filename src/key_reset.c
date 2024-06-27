@@ -1438,6 +1438,7 @@ planck_free:
  */
 static PEP_STATUS _check_own_reset_passphrase_readiness(PEP_SESSION session,
                                                         const char* key) { 
+    config_generation_passphrase_from_session_by_fingerprint(session, key);
 
     // Check generation setup
     // Because of the above, we can support a signing passphrase 
