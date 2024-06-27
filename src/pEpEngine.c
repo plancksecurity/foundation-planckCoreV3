@@ -176,6 +176,9 @@ DYNAMIC_API PEP_STATUS init(
            Notice that this mismatch between headers and library versions has
            never caused problems in practice, even if it does look dangerous. */
     }
+    
+    _session->account_passphrases = NULL;
+
     _LOG_EVENT("p≡p Engine %s   protocol %s   SQLite %s",
                PEP_ENGINE_VERSION_LONG, PEP_PROTOCOL_VERSION,
                sqlite3_libversion());
