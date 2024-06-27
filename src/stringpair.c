@@ -213,18 +213,19 @@ DYNAMIC_API void free_stringpair_list(stringpair_list_t *stringpair_list)
     }
 }
 
-// ONLY DELETES ONE.
-DYNAMIC_API stringpair_list_t *stringpair_list_delete_by_key(
+DYNAMIC_API stringpair_list_t *stringpair_list_delete_by_key_maybe_free(
         stringpair_list_t *sp_list,
-        const char *key
-    )
+        const char *key,
+        const bool free_if_empty
+)
 {
-
-    if (EMPTYSTR(key) || !sp_list)
+    if (!sp_list)
         return NULL;
 
     if (sp_list->value == NULL) {
-        free_stringpair_list(sp_list);
+        if (free_if_empty) {
+            free_stringpair_list(sp_list);
+        }
         return NULL;
     }
 
@@ -234,7 +235,8 @@ DYNAMIC_API stringpair_list_t *stringpair_list_delete_by_key(
     stringpair_list_t *_sl;
     stringpair_list_t *last = NULL;
     for (_sl = sp_list; _sl && _sl->value && _sl->value->key; _sl = _sl->next) {
-        if (!EMPTYSTR(_sl->value->key) && strcmp(_sl->value->key, key) == 0) {
+        printf("%s", _sl->value->key);
+        if (strcmp(_sl->value->key, key) == 0) {
             if (last == NULL)
                 sp_list = sp_list->next;
             else
@@ -246,6 +248,15 @@ DYNAMIC_API stringpair_list_t *stringpair_list_delete_by_key(
         last = _sl;
     }
     return sp_list;
+}
+
+// ONLY DELETES ONE.
+DYNAMIC_API stringpair_list_t *stringpair_list_delete_by_key(
+        stringpair_list_t *sp_list,
+        const char *key
+    )
+{
+    return stringpair_list_delete_by_key_maybe_free(sp_list, key, true);
 }
 
 /* Exactly like strcasecmp, but guaranteed to be defined as a function and not

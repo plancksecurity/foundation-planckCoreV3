@@ -237,6 +237,12 @@ DYNAMIC_API stringpair_list_t *stringpair_list_delete_by_key(
         const char *key
     );
 
+DYNAMIC_API stringpair_list_t *stringpair_list_delete_by_key_maybe_free(
+        stringpair_list_t *sp_list,
+        const char *key,
+        const bool free_if_empty
+);
+
 
 #ifdef __cplusplus
 }

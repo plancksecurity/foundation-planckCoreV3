@@ -582,7 +582,7 @@ DYNAMIC_API PEP_STATUS config_passphrase(PEP_SESSION session, const char *email,
 
     PEP_STATUS status = PEP_STATUS_OK;
     if (EMPTYSTR(passphrase))
-        stringpair_list_delete_by_key(session->curr_passphrases, email);
+        stringpair_list_delete_by_key_maybe_free(session->curr_passphrases, email, false);
     else {
         stringpair_list_add(session->curr_passphrases, new_stringpair(strdup(email), strdup(passphrase)));
         if (!session->curr_passphrases)
