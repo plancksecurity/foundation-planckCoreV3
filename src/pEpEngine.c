@@ -4476,7 +4476,7 @@ DYNAMIC_API PEP_STATUS configure_account_passphrases(PEP_SESSION session,
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS config_passphrase_for_new_keys_from_session(PEP_SESSION session, const char *account_email)
+PEP_STATUS config_generation_passphrase_from_session_by_email(PEP_SESSION session, const char *account_email)
 {
     if (!session->new_key_pass_enable) {
         return PEP_STATUS_OK;
