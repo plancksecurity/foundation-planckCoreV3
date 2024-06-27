@@ -1300,6 +1300,8 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
                                                                   char* old_fpr) {
     PEP_REQUIRE(session && ident && ident->address && old_fpr);
 
+    config_passphrase_for_new_keys_from_session(session, ident->address);
+
     // Variables that are handled in the free block at the end
 
     char *new_key = NULL;
