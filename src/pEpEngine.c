@@ -4475,3 +4475,19 @@ DYNAMIC_API PEP_STATUS configure_account_passphrases(PEP_SESSION session,
     session->account_passphrases = account_passphrases;
     return PEP_STATUS_OK;
 }
+
+PEP_STATUS config_passphrase_for_new_keys_from_session(PEP_SESSION session, const char *account_email)
+{
+    if (!session->new_key_pass_enable) {
+        return PEP_STATUS_OK;
+    }
+
+    for (stringpair_list_t *current = session->account_passphrases; current && current->value; current = current->next) {
+        stringpair_t *pair = current->value;
+        if (pair->key && !strcmp(pair->key, account_email)) {
+            return config_passphrase_for_new_keys(session, true, pair->value);
+        }
+    }
+
+    return PEP_STATUS_OK;
+}

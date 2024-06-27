@@ -721,6 +721,11 @@ PEP_STATUS exists_identity_entry(PEP_SESSION session, pEp_identity* identity,
  */
 PEP_STATUS force_set_identity_username(PEP_SESSION session, pEp_identity* identity, const char* username);
 
+/**
+ * @brief Tries to set the account-specific key passphrase from the session as the generation passphrase.
+ */
+PEP_STATUS config_passphrase_for_new_keys_from_session(PEP_SESSION session, const char *account_email);
+
 #ifdef __cplusplus
 }
 #endif
