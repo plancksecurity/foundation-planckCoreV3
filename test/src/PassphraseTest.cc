@@ -11,6 +11,10 @@
 
 #include <gtest/gtest.h>
 
+using std::string;
+using std::vector;
+using std::tuple;
+
 #define PPTEST_DUMP 0
 
 namespace {
@@ -1179,8 +1183,13 @@ TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase_decry
 
 TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase_decrypt_wrongphrase) {
     const char* pass = "lyrium";    
-    PEP_STATUS status = config_passphrase_for_new_keys(session, true, pass  );
+    const char *email = "fenris@darthmama.org";
+    vector<tuple<string, string>> account_passphrases = {
+        {email, pass}
+    };
+    PEP_STATUS status = configure_account_passphrases(session, account_passphrases);
     ASSERT_EQ(status, PEP_STATUS_OK);    
+
     pEp_identity* my_ident = new_identity("fenris@darthmama.org", NULL, "FENRIS", "Fenris Hawke");    
     status = myself(session, my_ident);
     ASSERT_EQ(status, PEP_STATUS_OK);
@@ -1200,19 +1209,19 @@ TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase_decry
     msg->to = new_identity_list(to_ident);
     msg->shortmsg = strdup("This is an exciting message from Fenris!");
     msg->longmsg = strdup("Not\nVery\nExciting\n");   
-    
-    status = config_passphrase(session, pass);    
-    ASSERT_EQ(status, PEP_STATUS_OK);    
-    
+
+    status = config_passphrase(session, pass);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(enc_msg);
 
     pass = "bob";
-    status = config_passphrase(session, pass);    
-    ASSERT_EQ(status, PEP_STATUS_OK);    
-    
+    status = config_passphrase(session, pass);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
     free_message(msg);
     msg = NULL;
     stringlist_t* keylist_used = NULL;
