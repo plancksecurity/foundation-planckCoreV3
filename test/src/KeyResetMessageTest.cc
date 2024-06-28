@@ -3121,14 +3121,14 @@ TEST_F(KeyResetMessageTest, check_reset_key_gen_key_pass_required) {
     ASSERT_NOTNULL(found_key);
     ASSERT_NOTNULL(found_key->value);
 
-    // Note: This now gets overridden if there is no account-specific passphrase set.
     session->new_key_pass_enable = true;
     
     pEp_identity* alice2 = new_identity("alice@example.org", alice2_fpr, "ALICE", "Alice");
     status = set_own_key(session, alice2, alice2_fpr);
     
     status = key_reset_identity(session, alice2, alice2_fpr);
-    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(status, PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED);
+
 }
 
 /*

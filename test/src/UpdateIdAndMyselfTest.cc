@@ -499,10 +499,7 @@ TEST_F(UpdateIdAndMyselfTest, check_key_update_identity_only_revoked_mistrusted)
 
 TEST_F(UpdateIdAndMyselfTest, check_myself_gen_password) {
     PEP_STATUS status;
-
-    // This generation passphrase now gets ignored.
     config_passphrase_for_new_keys(session, true, "test");
-
     pEp_identity* testy = new_identity("testy@darthmama.org", NULL, PEP_OWN_USERID, "Testy McKeys");
     testy->me = true;
     testy->comm_type = PEP_ct_pEp;
@@ -515,7 +512,7 @@ TEST_F(UpdateIdAndMyselfTest, check_myself_gen_password) {
     ASSERT_NE(testy->fpr[0], '\0');
         
     status = probe_encrypt(session, testy->fpr);
-    ASSERT_OK;
+    ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);
     config_passphrase(session, "test");
     status = probe_encrypt(session, testy->fpr);
     ASSERT_OK;
@@ -533,7 +530,7 @@ TEST_F(UpdateIdAndMyselfTest, check_myself_gen_password_required) {
     ASSERT_OK;    
 
     status = myself(session, testy);    
-    ASSERT_EQ(status, PEP_STATUS_OK); // myself will not ask for a gen passphrase anymore
+    ASSERT_EQ(status, PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED);
 }
 
 TEST_F(UpdateIdAndMyselfTest, check_myself_gen_password_disable) {

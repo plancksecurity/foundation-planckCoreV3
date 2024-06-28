@@ -1097,10 +1097,7 @@ TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase) {
 }
 
 TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase_decrypt_nopass) {
-    // Note: This is basically ignored now, in favor of email-associated
-    // generation passphrases.
     PEP_STATUS status = config_passphrase_for_new_keys(session, true, "lyrium");
-
     ASSERT_EQ(status, PEP_STATUS_OK);    
     pEp_identity* my_ident = new_identity("fenris@darthmama.org", NULL, "FENRIS", "Fenris Hawke");    
     status = myself(session, my_ident);
@@ -1124,10 +1121,8 @@ TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase_decry
         
     message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
-
-    // since the generation passphrase is ignored, encryption succeeds
-    ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NOTNULL(enc_msg);
+    ASSERT_EQ(status, PEP_PASSPHRASE_REQUIRED);
+    ASSERT_NULL(enc_msg);
     
     free_message(msg);
 }
@@ -1177,10 +1172,8 @@ TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase_decry
 }
 
 TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase_decrypt_wrongphrase) {
-    // This passphrase is basically ignored now.
     const char* pass = "lyrium";    
     PEP_STATUS status = config_passphrase_for_new_keys(session, true, pass  );
-
     ASSERT_EQ(status, PEP_STATUS_OK);    
     pEp_identity* my_ident = new_identity("fenris@darthmama.org", NULL, "FENRIS", "Fenris Hawke");    
     status = myself(session, my_ident);
@@ -1219,11 +1212,8 @@ TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase_decry
     stringlist_t* keylist_used = NULL;
     PEP_decrypt_flags_t flags = 0;
     status = decrypt_message_2(session, enc_msg, &msg, &keylist_used, &flags);
-
-    // decryption now succeeds, the gen passphrase got ignored
-    ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NOTNULL(msg);
-    free_message(msg);
+    ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);
+    ASSERT_NULL(msg);
 
     free_message(enc_msg);    
 }
