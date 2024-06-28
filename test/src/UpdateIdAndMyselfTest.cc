@@ -21,6 +21,9 @@
 
 #include <gtest/gtest.h>
 
+using std::string;
+using std::vector;
+using std::tuple;
 
 namespace {
 
@@ -498,9 +501,14 @@ TEST_F(UpdateIdAndMyselfTest, check_key_update_identity_only_revoked_mistrusted)
 }
 
 TEST_F(UpdateIdAndMyselfTest, check_myself_gen_password) {
-    PEP_STATUS status;
-    config_passphrase_for_new_keys(session, true, "test");
-    pEp_identity* testy = new_identity("testy@darthmama.org", NULL, PEP_OWN_USERID, "Testy McKeys");
+    const char* email = "testy@darthmama.org";
+    vector<tuple<string, string>> account_passphrases = {
+        {email, "test"}
+    };
+    PEP_STATUS status = configure_account_passphrases(session, account_passphrases);
+    ASSERT_OK;
+
+    pEp_identity* testy = new_identity(email, NULL, PEP_OWN_USERID, "Testy McKeys");
     testy->me = true;
     testy->comm_type = PEP_ct_pEp;
     status = set_identity(session, testy);
@@ -521,6 +529,8 @@ TEST_F(UpdateIdAndMyselfTest, check_myself_gen_password) {
 TEST_F(UpdateIdAndMyselfTest, check_myself_gen_password_required) {
     PEP_STATUS status;
     
+    // When no account-specific passphrases have been set,
+    // this now gets ignored.
     session->new_key_pass_enable = true;
     
     pEp_identity* testy = new_identity("testy@darthmama.org", NULL, PEP_OWN_USERID, "Testy McKeys");
@@ -529,8 +539,11 @@ TEST_F(UpdateIdAndMyselfTest, check_myself_gen_password_required) {
     status = set_identity(session, testy);
     ASSERT_OK;    
 
-    status = myself(session, testy);    
-    ASSERT_EQ(status, PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED);
+    status = myself(session, testy);
+
+    // PEP_PASSPHRASE_FOR_NEW_KEYS_REQUIRED will not be returned anymore,
+    // even though `session->new_key_pass_enable` is set.
+    ASSERT_EQ(status, PEP_STATUS_OK);
 }
 
 TEST_F(UpdateIdAndMyselfTest, check_myself_gen_password_disable) {
