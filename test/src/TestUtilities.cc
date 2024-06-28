@@ -863,3 +863,21 @@ void print_mail(message* msg) {
     cout << outmsg << endl;
     free(outmsg);
 }
+
+void configure_account_passphrases(PEP_SESSION session,
+    const std::vector<std::tuple<std::string, std::string>>& tuples)
+{
+    stringpair_list_t *account_passphrases = nullptr;
+
+    for (const auto& t : tuples) {
+        auto email = std::get<0>(t);
+        auto passphrase = std::get<1>(t);
+        stringpair_t *pair = new_stringpair(email.c_str(), passphrase.c_str());
+        stringpair_list_t *list = stringpair_list_add(account_passphrases, pair);
+        if (!account_passphrases) {
+            account_passphrases = list;
+        }
+    }
+
+    ::configure_account_passphrases(session, account_passphrases);
+}
