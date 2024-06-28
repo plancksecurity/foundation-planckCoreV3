@@ -176,6 +176,9 @@ DYNAMIC_API PEP_STATUS init(
            Notice that this mismatch between headers and library versions has
            never caused problems in practice, even if it does look dangerous. */
     }
+    
+    _session->account_passphrases = NULL;
+
     _LOG_EVENT("p≡p Engine %s   protocol %s   SQLite %s",
                PEP_ENGINE_VERSION_LONG, PEP_PROTOCOL_VERSION,
                sqlite3_libversion());
@@ -272,6 +275,7 @@ DYNAMIC_API void release(PEP_SESSION session)
 
     release_transport_system(session, out_last);
     release_cryptotech(session, out_last);
+    free_stringpair_list(session->account_passphrases);
     LOG_API("session %p finalised", session);
     pEp_log_finalize(session);
     free(session);
@@ -607,16 +611,6 @@ DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys(PEP_SESSION session, bool 
             status = PEP_OUT_OF_MEMORY;
     }
     return status;    
-}
-
-DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys_by_email(
-    PEP_SESSION session,
-    bool enable,
-    const char *account_email,
-    const char *passphrase)
-{
-    // TODO: To be implemented.
-    return PEP_STATUS_OK;
 }
 
 DYNAMIC_API void config_service_log(PEP_SESSION session, bool enable)
@@ -3466,6 +3460,8 @@ DYNAMIC_API PEP_STATUS renew_key(
     PEP_REQUIRE(session && ! EMPTYSTR(fpr)
                 /* ts is allowed to be NULL. */);
 
+    config_generation_passphrase_from_session_by_fingerprint(session, fpr);
+
     return session->cryptotech[PEP_crypt_OpenPGP].renew_key(session, fpr, ts);
 }
 
@@ -4462,4 +4458,41 @@ manage_passphrase(PEP_SESSION session,
     }
 
     return status_result;
+}
+
+DYNAMIC_API PEP_STATUS configure_account_passphrases(PEP_SESSION session,
+    stringpair_list_t *account_passphrases)
+{
+    free_stringpair_list(session->account_passphrases);
+    session->account_passphrases = account_passphrases;
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS config_generation_passphrase_from_session_by_email(PEP_SESSION session, const char *account_email)
+{
+    for (stringpair_list_t *current = session->account_passphrases; current && current->value; current = current->next) {
+        stringpair_t *pair = current->value;
+        if (pair->key && !strcmp(pair->key, account_email)) {
+            return config_passphrase_for_new_keys(session, true, pair->value);
+        }
+    }
+
+    return config_passphrase_for_new_keys(session, false, NULL);
+}
+
+PEP_STATUS config_generation_passphrase_from_session_by_fingerprint(PEP_SESSION session, const char *fingerprint)
+{
+    identity_list *all_own_identities = NULL;
+    PEP_STATUS status = own_identities_retrieve(session, &all_own_identities);
+    if (status != PEP_STATUS_OK) {
+        return status;
+    }
+
+    for (identity_list *current = all_own_identities; current && current->ident; current = current->next) {
+        if (current->ident->fpr && current->ident->address && !strcmp(current->ident->fpr, fingerprint)) {
+            return config_generation_passphrase_from_session_by_email(session, current->ident->address);
+        }
+    }
+
+    return config_passphrase_for_new_keys(session, false, NULL);
 }

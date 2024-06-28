@@ -656,6 +656,9 @@ struct _pEpSession {
        pEp_refresh_database_connections in engine_sql.h */
     bool can_refresh_database_connections;
 
+    // A list of (account_email, passphrase) tuples.
+    stringpair_list_t *account_passphrases;
+
 #ifndef NDEBUG
     int debug_color;
 #endif

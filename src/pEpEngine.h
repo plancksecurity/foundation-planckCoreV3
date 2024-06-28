@@ -2044,33 +2044,6 @@ DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys(PEP_SESSION session,
                                                 const char *passphrase);
 
 /**
- * <!-- config_passphrase_for_new_keys_by_email -->
- *
- * @brief Sets a passphrase for own new keys for the given account/email.
- *
- * The primary use of this is for new accounts, since for those the wrapper
- * cannot deduce a passphrase from previous unlock/manage calls.
- *
- * An account-specific passphrase, if set, will always take precedence over the general one
- * (see `config_passphrase_for_new_keys`).
- *
- * Having disabled an account-specific passphrase, but set a general one, will lead
- * to undefined behavior.
- *
- *  @param[in] session session handle
- *  @param[in] enable Set to false for disabling passphrases for new keys for this account,
- *      which will also remove any passphrase for the given account from any caches.
- *  @param[in] account_email The account email to set or remove the passphrase for
- *  @param[in] passphrase The passphrase to use for new keys
- *
- */
-DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys_by_email(
-    PEP_SESSION session,
-    bool enable,
-    const char *account_email,
-    const char *passphrase);
-
-/**
  *  <!--       set_ident_enc_format()       -->
  *  
  *  @brief Set the default encryption format for this identity.
@@ -2251,6 +2224,16 @@ DYNAMIC_API PEP_STATUS manage_passphrase(PEP_SESSION session,
                                          const stringpair_list_t *accounts_with_passphrases,
                                          const char *new_passphrase,
                                          stringlist_t **error_accounts);
+
+/**
+ * <!-- configure_account_passphrases -->
+ *
+ * @brief Stores the given list of (account_email, passphrase) in the session,
+ *  freeing the previous value.
+ *
+ */
+DYNAMIC_API PEP_STATUS configure_account_passphrases(PEP_SESSION session,
+    stringpair_list_t *account_passphrases);
 
 #ifdef __cplusplus
 }

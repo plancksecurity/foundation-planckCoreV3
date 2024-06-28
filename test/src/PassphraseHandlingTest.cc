@@ -11,6 +11,10 @@
 
 #include <gtest/gtest.h>
 
+using std::string;
+using std::vector;
+using std::tuple;
+
 namespace {
 
 // Tests for RFC-16 Passphrase Handling
@@ -81,9 +85,16 @@ class PassphraseHandlingTest : public ::testing::Test
         status = myself(session, tyrell_identity_2);
         ASSERT_EQ(status, PEP_STATUS_OK);
 
-        // own identity with key passphrase 1
-        status = config_passphrase_for_new_keys(session, true, tyrell_passphrase_1);
+        // set up generation passphrases
+        vector<tuple<string, string>> account_passphrases{
+          {tyrell_passphrase_email_1, tyrell_passphrase_1},
+          {tyrell_passphrase_email_2, tyrell_passphrase_2},
+          {tyrell_passphrase_email_3, tyrell_passphrase_3}
+        };
+        status = configure_account_passphrases(session, account_passphrases);
         ASSERT_EQ(status, PEP_STATUS_OK);
+
+        // own identity with key passphrase 1
         tyrell_identity_passphrase_1 = new_identity(
           tyrell_passphrase_email_1, NULL, PEP_OWN_USERID, tyrell_passphrase_username_1);
         ASSERT_NOTNULL(tyrell_identity_passphrase_1);
@@ -91,8 +102,6 @@ class PassphraseHandlingTest : public ::testing::Test
         ASSERT_EQ(status, PEP_STATUS_OK);
 
         // own identity with key passphrase 2
-        status = config_passphrase_for_new_keys(session, true, tyrell_passphrase_2);
-        ASSERT_EQ(status, PEP_STATUS_OK);
         tyrell_identity_passphrase_2 = new_identity(
           tyrell_passphrase_email_2, NULL, PEP_OWN_USERID, tyrell_passphrase_username_2);
         ASSERT_NOTNULL(tyrell_identity_passphrase_2);
@@ -100,8 +109,6 @@ class PassphraseHandlingTest : public ::testing::Test
         ASSERT_EQ(status, PEP_STATUS_OK);
 
         // own identity with key passphrase 3
-        status = config_passphrase_for_new_keys(session, true, tyrell_passphrase_3);
-        ASSERT_EQ(status, PEP_STATUS_OK);
         tyrell_identity_passphrase_3 = new_identity(
           tyrell_passphrase_email_3, NULL, PEP_OWN_USERID, tyrell_passphrase_username_3);
         ASSERT_NOTNULL(tyrell_identity_passphrase_3);
