@@ -91,7 +91,8 @@ class PassphraseHandlingTest : public ::testing::Test
           {tyrell_passphrase_email_2, tyrell_passphrase_2},
           {tyrell_passphrase_email_3, tyrell_passphrase_3}
         };
-        configure_account_passphrases(session, account_passphrases);
+        status = configure_account_passphrases(session, account_passphrases);
+        ASSERT_EQ(status, PEP_STATUS_OK);
 
         // own identity with key passphrase 1
         tyrell_identity_passphrase_1 = new_identity(

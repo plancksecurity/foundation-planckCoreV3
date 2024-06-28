@@ -1102,10 +1102,11 @@ TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase_decry
     vector<tuple<string, string>> account_passphrases{
         {fenris_email, "lyrium"}
     };
-    configure_account_passphrases(session, account_passphrases);
+    PEP_STATUS status = configure_account_passphrases(session, account_passphrases);
+    ASSERT_EQ(status, PEP_STATUS_OK);
 
     pEp_identity* my_ident = new_identity(fenris_email, NULL, "FENRIS", "Fenris Hawke");
-    PEP_STATUS status = myself(session, my_ident);
+    status = myself(session, my_ident);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(my_ident->fpr);
     

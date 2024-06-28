@@ -238,5 +238,5 @@ class NullBuffer : public std::streambuf {
 
 #endif
 
-void configure_account_passphrases(PEP_SESSION session,
+PEP_STATUS configure_account_passphrases(PEP_SESSION session,
     const std::vector<std::tuple<std::string, std::string>>& tuples);

@@ -864,7 +864,7 @@ void print_mail(message* msg) {
     free(outmsg);
 }
 
-void configure_account_passphrases(PEP_SESSION session,
+PEP_STATUS configure_account_passphrases(PEP_SESSION session,
     const std::vector<std::tuple<std::string, std::string>>& tuples)
 {
     stringpair_list_t *account_passphrases = nullptr;
@@ -879,5 +879,5 @@ void configure_account_passphrases(PEP_SESSION session,
         }
     }
 
-    ::configure_account_passphrases(session, account_passphrases);
+    return ::configure_account_passphrases(session, account_passphrases);
 }
