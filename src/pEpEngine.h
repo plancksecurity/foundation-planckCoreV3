@@ -2042,8 +2042,7 @@ DYNAMIC_API PEP_STATUS config_passphrase(PEP_SESSION session, const char *email,
  */
 
 DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys(PEP_SESSION session, 
-                                                bool enable, 
-                                                const char *passphrase);
+                                                bool enable);
 /**
  *  <!--       set_ident_enc_format()       -->
  *  

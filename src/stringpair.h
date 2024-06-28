@@ -138,6 +138,11 @@ DYNAMIC_API stringpair_list_t *stringpair_list_add(
         stringpair_t *value
     );
 
+DYNAMIC_API stringpair_list_t *stringpair_list_add_unique(
+        stringpair_list_t *stringpair_list,
+        stringpair_t *value
+);
+
 
 /**
  *  <!--       stringpair_list_append()       -->

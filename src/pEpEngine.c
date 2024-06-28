@@ -584,17 +584,17 @@ DYNAMIC_API PEP_STATUS config_passphrase(PEP_SESSION session, const char *email,
     if (EMPTYSTR(passphrase))
         stringpair_list_delete_by_key_maybe_free(session->curr_passphrases, email, false);
     else {
-        stringpair_list_add(session->curr_passphrases, new_stringpair(strdup(email), strdup(passphrase)));
+        stringpair_list_add_unique(session->curr_passphrases, new_stringpair(strdup(email), strdup(passphrase)));
         if (!session->curr_passphrases)
             status = PEP_OUT_OF_MEMORY;
     }
     return status;
 }
 
-DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys(PEP_SESSION session, bool enable, const char *passphrase) {
+DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys(PEP_SESSION session, bool enable) {
     PEP_REQUIRE(session);
 
-    //session->new_key_pass_enable = enable;
+    session->new_key_pass_enable = enable;
     PEP_STATUS status = PEP_STATUS_OK;
 //
 //    free(session->generation_passphrase);

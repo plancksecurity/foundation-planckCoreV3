@@ -119,6 +119,44 @@ DYNAMIC_API stringpair_list_t *stringpair_list_dup(
     
 }
 
+DYNAMIC_API stringpair_list_t *stringpair_list_add_unique(
+        stringpair_list_t *stringpair_list,
+        stringpair_t *value
+)
+{
+    assert(value);
+
+    if (!value)
+        return NULL;
+
+    // empty list (no nodes)
+    if (stringpair_list == NULL)
+        return new_stringpair_list(value);
+
+    if (stringpair_list->value == NULL && stringpair_list->next) {
+        return NULL; // invalid list
+    }
+
+    stringpair_list_t* list_curr = stringpair_list;
+    stringpair_list_t* prev = list_curr;
+
+    // Traverse the list to find a matching key or reach the end
+    while (list_curr != NULL) {
+        if (strcmp(list_curr->value->key, value->key) == 0) {
+            // Key matches, replace the value
+            list_curr->value = value;
+            return list_curr;
+        }
+        prev = list_curr;
+        list_curr = list_curr->next;
+    }
+
+    // Key not found, add a new node to the end of the list
+    prev->next = new_stringpair_list(value);
+
+    return prev->next;
+}
+
 DYNAMIC_API stringpair_list_t *stringpair_list_add(
         stringpair_list_t *stringpair_list,
         stringpair_t *value
