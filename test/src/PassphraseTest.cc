@@ -1097,10 +1097,15 @@ TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase) {
 }
 
 TEST_F(PassphraseTest, check_fenris_encrypted_key_generate_with_passphrase_decrypt_nopass) {
-    PEP_STATUS status = config_passphrase_for_new_keys(session, true, "lyrium");
-    ASSERT_EQ(status, PEP_STATUS_OK);    
-    pEp_identity* my_ident = new_identity("fenris@darthmama.org", NULL, "FENRIS", "Fenris Hawke");    
-    status = myself(session, my_ident);
+    const char *fenris_email = "fenris@darthmama.org";
+    // set up generation passphrases
+    vector<tuple<string, string>> account_passphrases{
+        {fenris_email, "lyrium"}
+    };
+    configure_account_passphrases(session, account_passphrases);
+
+    pEp_identity* my_ident = new_identity(fenris_email, NULL, "FENRIS", "Fenris Hawke");
+    PEP_STATUS status = myself(session, my_ident);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(my_ident->fpr);
     
