@@ -40,15 +40,20 @@ using namespace std;
 # define LOG(...) do {} while (false)
 #endif
 
-pthread_mutex_t the_mutex
-#if defined(GNULINUX)
-= PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
-#else
-= PTHREAD_RECURSIVE_MUTEX_INITIALIZER;
-#endif
+pthread_mutex_t the_mutex;
+bool the_mutex_initialized = false;
 
 // Constructor
 Engine::Engine(string engine_home_dir) {
+    if (!the_mutex_initialized) {
+        pthread_mutexattr_t mutex_attr;
+        pthread_mutexattr_init(&mutex_attr);
+        pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE);
+        pthread_mutex_init(&the_mutex, &mutex_attr);
+        pthread_mutexattr_destroy(&mutex_attr);
+        the_mutex_initialized = true;
+    }
+
     // FIXME: deal with base
     engine_home = engine_home_dir;
             
