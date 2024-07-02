@@ -4384,7 +4384,11 @@ manage_passphrase(PEP_SESSION session,
 {
     PEP_REQUIRE(accounts_with_passphrases);
     PEP_REQUIRE(error_accounts);
-    *error_accounts = NULL;
+
+    PEP_STATUS unlock_status = unlock_keys_with_passphrase(session, accounts_with_passphrases, error_accounts);
+    if (unlock_status != PEP_STATUS_OK) {
+        return unlock_status;
+    }
 
     bool error_registered = false;
     PEP_STATUS status_result = PEP_ILLEGAL_VALUE;
