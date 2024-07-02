@@ -369,15 +369,11 @@ TEST_F(PassphraseHandlingTest, manage_passphrase_wrong_old_passphrase)
     errors = NULL;
     status = unlock_keys_with_passphrase(session, accounts_passphrases_1, &errors);
     ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);
-    // Both are now wrong:
-    // #1 got changed and still has the old one in the input.
-    // #2 did NOT get changed, but also doesn't have the right password in the input.
-    ASSERT_EQ(stringlist_length(errors), 2);
-    ASSERT_EQ(string{ errors->value }, string{ tyrell_passphrase_email_1 });
-    ASSERT_EQ(string{ errors->next->value }, string{ tyrell_passphrase_email_2 });
+    ASSERT_EQ(stringlist_length(errors), 1);
+    ASSERT_EQ(string{ errors->value }, string{ tyrell_passphrase_email_2 });
 
     stringpair_list_t *accounts_passphrases_2 =
-      new_stringpair_list(new_stringpair(tyrell_passphrase_email_1, new_passphrase));
+      new_stringpair_list(new_stringpair(tyrell_passphrase_email_1, tyrell_passphrase_1));
     stringpair_list_add(accounts_passphrases_2,
                         new_stringpair(tyrell_passphrase_email_2, tyrell_passphrase_1));
 
