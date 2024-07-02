@@ -4347,8 +4347,9 @@ unlock_keys_with_passphrase(PEP_SESSION session,
         }
 
         if (sign_status == PEP_STATUS_OK) {
-            // Only change the overall status if it is still the original
-            if (resulting_status == PEP_CANNOT_FIND_IDENTITY) {
+            // Set the overall status to OK only if it has not been set already
+            // to wrong passphrase (which should accumulate).
+            if (resulting_status != PEP_WRONG_PASSPHRASE) {
                 resulting_status = PEP_STATUS_OK;
             }
         } else if (sign_status == PEP_PASSPHRASE_REQUIRED || sign_status == PEP_WRONG_PASSPHRASE) {
