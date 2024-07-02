@@ -4347,8 +4347,10 @@ unlock_keys_with_passphrase(PEP_SESSION session,
         }
 
         if (sign_status == PEP_STATUS_OK) {
-            // nothing to do, can check next account
-            resulting_status = PEP_STATUS_OK;
+            // Only change the overall status if it is still the original
+            if (resulting_status == PEP_CANNOT_FIND_IDENTITY) {
+                resulting_status = PEP_STATUS_OK;
+            }
         } else if (sign_status == PEP_PASSPHRASE_REQUIRED || sign_status == PEP_WRONG_PASSPHRASE) {
             // add account to passphrase accounts, continue with next account
             resulting_status = PEP_WRONG_PASSPHRASE;
