@@ -4347,8 +4347,11 @@ unlock_keys_with_passphrase(PEP_SESSION session,
         }
 
         if (sign_status == PEP_STATUS_OK) {
-            // nothing to do, can check next account
-            resulting_status = PEP_STATUS_OK;
+            // Set the overall status to OK only if it has not been set already
+            // to wrong passphrase (which should accumulate).
+            if (resulting_status != PEP_WRONG_PASSPHRASE) {
+                resulting_status = PEP_STATUS_OK;
+            }
         } else if (sign_status == PEP_PASSPHRASE_REQUIRED || sign_status == PEP_WRONG_PASSPHRASE) {
             // add account to passphrase accounts, continue with next account
             resulting_status = PEP_WRONG_PASSPHRASE;
@@ -4384,7 +4387,11 @@ manage_passphrase(PEP_SESSION session,
 {
     PEP_REQUIRE(accounts_with_passphrases);
     PEP_REQUIRE(error_accounts);
-    *error_accounts = NULL;
+
+    PEP_STATUS unlock_status = unlock_keys_with_passphrase(session, accounts_with_passphrases, error_accounts);
+    if (unlock_status != PEP_STATUS_OK) {
+        return unlock_status;
+    }
 
     bool error_registered = false;
     PEP_STATUS status_result = PEP_ILLEGAL_VALUE;

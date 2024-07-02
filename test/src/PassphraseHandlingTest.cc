@@ -369,15 +369,11 @@ TEST_F(PassphraseHandlingTest, manage_passphrase_wrong_old_passphrase)
     errors = NULL;
     status = unlock_keys_with_passphrase(session, accounts_passphrases_1, &errors);
     ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);
-    // Both are now wrong:
-    // #1 got changed and still has the old one in the input.
-    // #2 did NOT get changed, but also doesn't have the right password in the input.
-    ASSERT_EQ(stringlist_length(errors), 2);
-    ASSERT_EQ(string{ errors->value }, string{ tyrell_passphrase_email_1 });
-    ASSERT_EQ(string{ errors->next->value }, string{ tyrell_passphrase_email_2 });
+    ASSERT_EQ(stringlist_length(errors), 1);
+    ASSERT_EQ(string{ errors->value }, string{ tyrell_passphrase_email_2 });
 
     stringpair_list_t *accounts_passphrases_2 =
-      new_stringpair_list(new_stringpair(tyrell_passphrase_email_1, new_passphrase));
+      new_stringpair_list(new_stringpair(tyrell_passphrase_email_1, tyrell_passphrase_1));
     stringpair_list_add(accounts_passphrases_2,
                         new_stringpair(tyrell_passphrase_email_2, tyrell_passphrase_1));
 
@@ -701,6 +697,173 @@ TEST_F(PassphraseHandlingTest, manage_passphrase_last_incorrect)
     string wrong_email = string{ errors->value };
     string expected = string{ tyrell_passphrase_email_3 };
     ASSERT_EQ(expected, wrong_email);
+
+    free_stringlist(errors);
+    free_stringpair_list(accounts_passphrases_1);
+}
+
+TEST_F(PassphraseHandlingTest, all_or_nothing_first_incorrect)
+{
+    const char *new_passphrase = "new_blarg_1";
+
+    stringpair_list_t *accounts_passphrases_1 =
+      new_stringpair_list(new_stringpair(tyrell_passphrase_email_1,  "not correct"));
+    stringpair_list_add(accounts_passphrases_1,
+                        new_stringpair(tyrell_passphrase_email_2, tyrell_passphrase_2));
+    stringpair_list_add(accounts_passphrases_1,
+                        new_stringpair(tyrell_passphrase_email_3, tyrell_passphrase_3));
+
+    stringlist_t *errors = NULL;
+    PEP_STATUS status = manage_passphrase(session, accounts_passphrases_1, new_passphrase, &errors);
+    ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);
+    ASSERT_EQ(stringlist_length(errors), 1);
+    ASSERT_NOTNULL(errors->value);
+
+    string wrong_email = string{ errors->value };
+    string expected = string{ tyrell_passphrase_email_1 };
+    ASSERT_EQ(expected, wrong_email);
+
+    free_stringlist(errors);
+    errors = NULL;
+
+    // check that no passphrase has been changed
+
+    stringpair_list_t *accounts_passphrases_unlock =
+      new_stringpair_list(new_stringpair(tyrell_passphrase_email_1, tyrell_passphrase_1));
+    stringpair_list_add(accounts_passphrases_unlock,
+                        new_stringpair(tyrell_passphrase_email_2, tyrell_passphrase_2));
+    stringpair_list_add(accounts_passphrases_unlock,
+                        new_stringpair(tyrell_passphrase_email_3, tyrell_passphrase_3));
+
+    status = unlock_keys_with_passphrase(session, accounts_passphrases_unlock, &errors);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NULL(errors);
+
+    free_stringlist(errors);
+    free_stringpair_list(accounts_passphrases_1);
+}
+
+TEST_F(PassphraseHandlingTest, all_or_nothing_middle_incorrect)
+{
+    const char *new_passphrase = "new_blarg_1";
+
+    stringpair_list_t *accounts_passphrases_1 =
+      new_stringpair_list(new_stringpair(tyrell_passphrase_email_1, tyrell_passphrase_1));
+    stringpair_list_add(accounts_passphrases_1,
+                        new_stringpair(tyrell_passphrase_email_2, "not correct"));
+    stringpair_list_add(accounts_passphrases_1,
+                        new_stringpair(tyrell_passphrase_email_3, tyrell_passphrase_3));
+
+    stringlist_t *errors = NULL;
+    PEP_STATUS status = manage_passphrase(session, accounts_passphrases_1, new_passphrase, &errors);
+    ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);
+    ASSERT_EQ(stringlist_length(errors), 1);
+    ASSERT_NOTNULL(errors->value);
+
+    string wrong_email = string{ errors->value };
+    string expected = string{ tyrell_passphrase_email_2 };
+    ASSERT_EQ(expected, wrong_email);
+
+    free_stringlist(errors);
+    errors = NULL;
+
+    // check that no passphrase has been changed
+
+    stringpair_list_t *accounts_passphrases_unlock =
+      new_stringpair_list(new_stringpair(tyrell_passphrase_email_1, tyrell_passphrase_1));
+    stringpair_list_add(accounts_passphrases_unlock,
+                        new_stringpair(tyrell_passphrase_email_2, tyrell_passphrase_2));
+    stringpair_list_add(accounts_passphrases_unlock,
+                        new_stringpair(tyrell_passphrase_email_3, tyrell_passphrase_3));
+
+    status = unlock_keys_with_passphrase(session, accounts_passphrases_unlock, &errors);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NULL(errors);
+
+    free_stringlist(errors);
+    free_stringpair_list(accounts_passphrases_1);
+}
+
+TEST_F(PassphraseHandlingTest, all_or_nothing_last_incorrect)
+{
+    const char *new_passphrase = "new_blarg_1";
+
+    stringpair_list_t *accounts_passphrases_1 =
+      new_stringpair_list(new_stringpair(tyrell_passphrase_email_1, tyrell_passphrase_1));
+    stringpair_list_add(accounts_passphrases_1,
+                        new_stringpair(tyrell_passphrase_email_2, tyrell_passphrase_2));
+    stringpair_list_add(accounts_passphrases_1,
+                        new_stringpair(tyrell_passphrase_email_3, "not correct"));
+
+    stringlist_t *errors = NULL;
+    PEP_STATUS status = manage_passphrase(session, accounts_passphrases_1, new_passphrase, &errors);
+    ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);
+    ASSERT_EQ(stringlist_length(errors), 1);
+    ASSERT_NOTNULL(errors->value);
+
+    string wrong_email = string{ errors->value };
+    string expected = string{ tyrell_passphrase_email_3 };
+    ASSERT_EQ(expected, wrong_email);
+
+    free_stringlist(errors);
+    errors = NULL;
+
+    // check that no passphrase has been changed
+
+    stringpair_list_t *accounts_passphrases_unlock =
+      new_stringpair_list(new_stringpair(tyrell_passphrase_email_1, tyrell_passphrase_1));
+    stringpair_list_add(accounts_passphrases_unlock,
+                        new_stringpair(tyrell_passphrase_email_2, tyrell_passphrase_2));
+    stringpair_list_add(accounts_passphrases_unlock,
+                        new_stringpair(tyrell_passphrase_email_3, tyrell_passphrase_3));
+
+    status = unlock_keys_with_passphrase(session, accounts_passphrases_unlock, &errors);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NULL(errors);
+
+    free_stringlist(errors);
+    free_stringpair_list(accounts_passphrases_1);
+}
+
+TEST_F(PassphraseHandlingTest, all_or_nothing_last_two_incorrect)
+{
+    const char *new_passphrase = "new_blarg_1";
+
+    stringpair_list_t *accounts_passphrases_1 =
+      new_stringpair_list(new_stringpair(tyrell_passphrase_email_1, tyrell_passphrase_1));
+    stringpair_list_add(accounts_passphrases_1,
+                        new_stringpair(tyrell_passphrase_email_2, "not correct"));
+    stringpair_list_add(accounts_passphrases_1,
+                        new_stringpair(tyrell_passphrase_email_3, "not correct"));
+
+    stringlist_t *errors = NULL;
+    PEP_STATUS status = manage_passphrase(session, accounts_passphrases_1, new_passphrase, &errors);
+    ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);
+    ASSERT_EQ(stringlist_length(errors), 2);
+    ASSERT_NOTNULL(errors->value);
+
+    string wrong_email_1 = string{ errors->value };
+    string expected_1 = string{ tyrell_passphrase_email_2 };
+    ASSERT_EQ(expected_1, wrong_email_1);
+    string wrong_email_2 = string{ errors->next->value };
+    string expected_2 = string{ tyrell_passphrase_email_3 };
+    ASSERT_EQ(expected_2, wrong_email_2);
+
+    free_stringlist(errors);
+    errors = NULL;
+
+    // check that no passphrase has been changed
+
+    stringpair_list_t *accounts_passphrases_unlock =
+      new_stringpair_list(new_stringpair(tyrell_passphrase_email_1, tyrell_passphrase_1));
+    stringpair_list_add(accounts_passphrases_unlock,
+                        new_stringpair(tyrell_passphrase_email_2, tyrell_passphrase_2));
+    stringpair_list_add(accounts_passphrases_unlock,
+                        new_stringpair(tyrell_passphrase_email_3, tyrell_passphrase_3));
+
+    status = unlock_keys_with_passphrase(session, accounts_passphrases_unlock, &errors);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NULL(errors);
 
     free_stringlist(errors);
     free_stringpair_list(accounts_passphrases_1);
