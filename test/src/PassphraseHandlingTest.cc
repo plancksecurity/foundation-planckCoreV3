@@ -702,7 +702,7 @@ TEST_F(PassphraseHandlingTest, manage_passphrase_last_incorrect)
     free_stringpair_list(accounts_passphrases_1);
 }
 
-TEST_F(PassphraseHandlingTest, all_or_nothing)
+TEST_F(PassphraseHandlingTest, all_or_nothing_middle_incorrect)
 {
     const char *new_passphrase = "new_blarg_1";
 
