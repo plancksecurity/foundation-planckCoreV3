@@ -1787,7 +1787,7 @@ PEP_STATUS pEp_sql_init(PEP_SESSION session) {
             LOG_NONOK("failed executing early first-session SQLite"
                       " statements: %s",
                       pEp_sql_status_to_status_text(session, int_result));
-            FAIL(PEP_UNKNOWN_DB_ERROR);
+            //FAIL(PEP_UNKNOWN_DB_ERROR);
         }
     }
 
