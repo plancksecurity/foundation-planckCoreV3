@@ -389,14 +389,14 @@ PEP_STATUS pgp_revoke_key(
  *  
  *  @param[in]  session        session handle 
  *  @param[in]  fpr            const char*
- *  @param[in]  when           const time_t
+ *  @param[in]  when           const int64_t
  *  @param[in]  expired        bool*
  *  
  */
 PEP_STATUS pgp_key_expired(
         PEP_SESSION session,
         const char *fpr,
-        const time_t when,
+        const int64_t when,
         bool *expired
     );
 
@@ -425,13 +425,13 @@ PEP_STATUS pgp_key_revoked(
  *  
  *  @param[in]   session        session handle 
  *  @param[in]   fpr            const char*
- *  @param[out]  created        time_t*
+ *  @param[out]  created        int64_t*
  *  
  */
 PEP_STATUS pgp_key_created(
         PEP_SESSION session,
         const char *fpr,
-        time_t *created
+        int64_t *created
     );
 
 /**

@@ -187,7 +187,7 @@ typedef PEP_STATUS (*revoke_key_t)(PEP_SESSION session, const char *fpr,
  *  @see key_expired()
  */
 typedef PEP_STATUS (*key_expired_t)(PEP_SESSION session, const char *fpr,
-        const time_t when, bool *expired);
+        const int64_t when, bool *expired);
 
 /**
  *  @brief Signature for crypto drivers to implement for key_revoked()
@@ -203,7 +203,7 @@ typedef PEP_STATUS (*key_revoked_t)(PEP_SESSION session, const char *fpr,
  *  @see key_created()
  */
 typedef PEP_STATUS (*key_created_t)(PEP_SESSION session, const char *fpr,
-        time_t *created);
+        int64_t *created);
 
 /**
  *  @brief Signature for crypto drivers to implement for binary_path()
