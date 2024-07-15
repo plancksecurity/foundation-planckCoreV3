@@ -2042,6 +2042,7 @@ DYNAMIC_API PEP_STATUS config_passphrase(PEP_SESSION session, const char *passph
 DYNAMIC_API PEP_STATUS config_passphrase_for_new_keys(PEP_SESSION session, 
                                                 bool enable, 
                                                 const char *passphrase);
+
 /**
  *  <!--       set_ident_enc_format()       -->
  *  
@@ -2223,6 +2224,16 @@ DYNAMIC_API PEP_STATUS manage_passphrase(PEP_SESSION session,
                                          const stringpair_list_t *accounts_with_passphrases,
                                          const char *new_passphrase,
                                          stringlist_t **error_accounts);
+
+/**
+ * <!-- configure_account_passphrases -->
+ *
+ * @brief Stores the given list of (account_email, passphrase) in the session,
+ *  freeing the previous value.
+ *
+ */
+DYNAMIC_API PEP_STATUS configure_account_passphrases(PEP_SESSION session,
+    stringpair_list_t *account_passphrases);
 
 #ifdef __cplusplus
 }

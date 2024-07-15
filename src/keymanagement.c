@@ -1249,6 +1249,7 @@ pEp_free:
 DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
 {
     PEP_REQUIRE(session && identity && ! EMPTYSTR(identity->address));
+    config_generation_passphrase_from_session_by_email(session, identity->address);
     return _myself(session, identity, true, true, false, false);
 }
 

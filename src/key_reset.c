@@ -1300,6 +1300,8 @@ static PEP_STATUS _do_full_reset_on_single_own_ungrouped_identity(PEP_SESSION se
                                                                   char* old_fpr) {
     PEP_REQUIRE(session && ident && ident->address && old_fpr);
 
+    config_generation_passphrase_from_session_by_email(session, ident->address);
+
     // Variables that are handled in the free block at the end
 
     char *new_key = NULL;
@@ -1436,6 +1438,7 @@ planck_free:
  */
 static PEP_STATUS _check_own_reset_passphrase_readiness(PEP_SESSION session,
                                                         const char* key) { 
+    config_generation_passphrase_from_session_by_fingerprint(session, key);
 
     // Check generation setup
     // Because of the above, we can support a signing passphrase 

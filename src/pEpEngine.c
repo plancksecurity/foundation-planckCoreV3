@@ -176,6 +176,9 @@ DYNAMIC_API PEP_STATUS init(
            Notice that this mismatch between headers and library versions has
            never caused problems in practice, even if it does look dangerous. */
     }
+    
+    _session->account_passphrases = NULL;
+
     _LOG_EVENT("p≡p Engine %s   protocol %s   SQLite %s",
                PEP_ENGINE_VERSION_LONG, PEP_PROTOCOL_VERSION,
                sqlite3_libversion());
@@ -272,6 +275,7 @@ DYNAMIC_API void release(PEP_SESSION session)
 
     release_transport_system(session, out_last);
     release_cryptotech(session, out_last);
+    free_stringpair_list(session->account_passphrases);
     LOG_API("session %p finalised", session);
     pEp_log_finalize(session);
     free(session);
@@ -3456,6 +3460,8 @@ DYNAMIC_API PEP_STATUS renew_key(
     PEP_REQUIRE(session && ! EMPTYSTR(fpr)
                 /* ts is allowed to be NULL. */);
 
+    config_generation_passphrase_from_session_by_fingerprint(session, fpr);
+
     return session->cryptotech[PEP_crypt_OpenPGP].renew_key(session, fpr, ts);
 }
 
@@ -4341,8 +4347,11 @@ unlock_keys_with_passphrase(PEP_SESSION session,
         }
 
         if (sign_status == PEP_STATUS_OK) {
-            // nothing to do, can check next account
-            resulting_status = PEP_STATUS_OK;
+            // Set the overall status to OK only if it has not been set already
+            // to wrong passphrase (which should accumulate).
+            if (resulting_status != PEP_WRONG_PASSPHRASE) {
+                resulting_status = PEP_STATUS_OK;
+            }
         } else if (sign_status == PEP_PASSPHRASE_REQUIRED || sign_status == PEP_WRONG_PASSPHRASE) {
             // add account to passphrase accounts, continue with next account
             resulting_status = PEP_WRONG_PASSPHRASE;
@@ -4378,9 +4387,14 @@ manage_passphrase(PEP_SESSION session,
 {
     PEP_REQUIRE(accounts_with_passphrases);
     PEP_REQUIRE(error_accounts);
-    *error_accounts = NULL;
 
-    PEP_STATUS status_result = PEP_CANNOT_FIND_IDENTITY;
+    PEP_STATUS unlock_status = unlock_keys_with_passphrase(session, accounts_with_passphrases, error_accounts);
+    if (unlock_status != PEP_STATUS_OK) {
+        return unlock_status;
+    }
+
+    bool error_registered = false;
+    PEP_STATUS status_result = PEP_ILLEGAL_VALUE;
 
     for (stringpair_list_t *account_passphrase_pair = accounts_with_passphrases;
          account_passphrase_pair;
@@ -4422,9 +4436,12 @@ manage_passphrase(PEP_SESSION session,
 
         if (status == PEP_STATUS_OK) {
             // nothing special, ready for next account
-            status_result = PEP_STATUS_OK;
+            if (!error_registered) {
+                status_result = PEP_STATUS_OK;
+            }
         } else if (status == PEP_PASSPHRASE_REQUIRED || status == PEP_WRONG_PASSPHRASE) {
             // mark account as having a wrong passphrase, ready for next account
+            error_registered = true;
             status_result = PEP_WRONG_PASSPHRASE;
             if (!*error_accounts) {
                 *error_accounts = new_stringlist(current->key);
@@ -4433,6 +4450,7 @@ manage_passphrase(PEP_SESSION session,
             }
         } else {
             // error not related to passphrases, preempts all other errors
+            error_registered = true;
             status_result = status;
             if (*error_accounts) {
                 free_stringlist(*error_accounts);
@@ -4447,4 +4465,41 @@ manage_passphrase(PEP_SESSION session,
     }
 
     return status_result;
+}
+
+DYNAMIC_API PEP_STATUS configure_account_passphrases(PEP_SESSION session,
+    stringpair_list_t *account_passphrases)
+{
+    free_stringpair_list(session->account_passphrases);
+    session->account_passphrases = account_passphrases;
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS config_generation_passphrase_from_session_by_email(PEP_SESSION session, const char *account_email)
+{
+    for (stringpair_list_t *current = session->account_passphrases; current && current->value; current = current->next) {
+        stringpair_t *pair = current->value;
+        if (pair->key && !strcmp(pair->key, account_email)) {
+            return config_passphrase_for_new_keys(session, true, pair->value);
+        }
+    }
+
+    return config_passphrase_for_new_keys(session, false, NULL);
+}
+
+PEP_STATUS config_generation_passphrase_from_session_by_fingerprint(PEP_SESSION session, const char *fingerprint)
+{
+    identity_list *all_own_identities = NULL;
+    PEP_STATUS status = own_identities_retrieve(session, &all_own_identities);
+    if (status != PEP_STATUS_OK) {
+        return status;
+    }
+
+    for (identity_list *current = all_own_identities; current && current->ident; current = current->next) {
+        if (current->ident->fpr && current->ident->address && !strcmp(current->ident->fpr, fingerprint)) {
+            return config_generation_passphrase_from_session_by_email(session, current->ident->address);
+        }
+    }
+
+    return config_passphrase_for_new_keys(session, false, NULL);
 }
