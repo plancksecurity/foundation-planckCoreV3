@@ -8,6 +8,9 @@
 include ../Makefile.conf
 
 ifneq ($(BUILD_FOR),OS/390)
+    ifeq ($(MACOS_STATIC_HOMEBREW), 0)
+        LDFLAGS += -shared
+    endif
 endif
 
 NO_SOURCE=
@@ -30,6 +33,9 @@ CPPFLAGS+= -DSQLITE_THREADSAFE=1
 LDFLAGS+= -L../asn.1
 LDFLAGS+= -L$(PREFIX)/lib
 ifneq ($(BUILD_FOR),OS/390)
+    ifeq ($(MACOS_STATIC_HOMEBREW), 0)
+        LDFLAGS += -shared
+    endif
     LDLIBS+= -lc
 endif
 LDLIBS+= -lasn1
