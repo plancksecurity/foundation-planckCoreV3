@@ -4475,16 +4475,38 @@ DYNAMIC_API PEP_STATUS configure_account_passphrases(PEP_SESSION session,
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS config_generation_passphrase_from_session_by_email(PEP_SESSION session, const char *account_email)
+PEP_STATUS passphrase_from_session_by_email(PEP_SESSION session, const char *account_email, char **passphrase)
 {
+    *passphrase = NULL;
+
     for (stringpair_list_t *current = session->account_passphrases; current && current->value; current = current->next) {
         stringpair_t *pair = current->value;
         if (pair->key && !strcmp(pair->key, account_email)) {
-            return config_passphrase_for_new_keys(session, true, pair->value);
+            *passphrase = strdup(pair->value);
+            return PEP_STATUS_OK;
         }
     }
 
-    return config_passphrase_for_new_keys(session, false, NULL);
+    // No passphrase found, but that's not an error.
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS config_generation_passphrase_from_session_by_email(PEP_SESSION session, const char *account_email)
+{
+    char *passphrase = NULL;
+
+    PEP_STATUS status = passphrase_from_session_by_email(session, account_email, &passphrase);
+
+    if (status != PEP_STATUS_OK) {
+        return status;
+    }
+
+    if (!passphrase) {
+        return config_passphrase_for_new_keys(session, false, NULL);
+    }
+
+    status = config_passphrase_for_new_keys(session, true, passphrase);
+    free(passphrase);
 }
 
 PEP_STATUS config_generation_passphrase_from_session_by_fingerprint(PEP_SESSION session, const char *fingerprint)
