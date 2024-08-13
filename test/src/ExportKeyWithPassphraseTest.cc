@@ -15,6 +15,8 @@
 
 #include <gtest/gtest.h>
 
+using namespace std;
+
 namespace {
 
 // The fixture for ExportKeyWithPassphraseTest
@@ -103,7 +105,7 @@ TEST_F(ExportKeyWithPassphraseTest, check_export_passphrase_less_key_with_passph
     PEP_STATUS status = myself(session, own);
     ASSERT_EQ(PEP_STATUS_OK, status);
 
-    char *fpr1 = strdup(own->fpr);
+    string fpr1{own->fpr};
 
     const char *passphrase = "pass";
 
@@ -125,8 +127,8 @@ TEST_F(ExportKeyWithPassphraseTest, check_export_passphrase_less_key_with_passph
     status = myself(session, own);
     ASSERT_EQ(PEP_STATUS_OK, status);
 
-    char *fpr2 = strdup(own->fpr);
-    ASSERT_NE(0, strcmp(fpr1, fpr2));
+    string fpr2{own->fpr};
+    ASSERT_NE(fpr1, fpr2);
 
     identity_list *identities = nullptr;
     status = import_key(session, key_data, key_size, &identities);
@@ -135,6 +137,4 @@ TEST_F(ExportKeyWithPassphraseTest, check_export_passphrase_less_key_with_passph
 
     free_identity(own);
     free(key_data);
-    free(fpr1);
-    free(fpr2);
 }
