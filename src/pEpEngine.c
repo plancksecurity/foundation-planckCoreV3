@@ -4491,6 +4491,26 @@ PEP_STATUS passphrase_from_session_by_email(PEP_SESSION session, const char *acc
     return PEP_STATUS_OK;
 }
 
+PEP_STATUS passphrase_from_session_by_fingerprint(PEP_SESSION session, const char *fingerprint, char **passphrase)
+{
+    *passphrase = NULL;
+
+    identity_list *all_own_identities = NULL;
+    PEP_STATUS status = own_identities_retrieve(session, &all_own_identities);
+    if (status != PEP_STATUS_OK) {
+        return status;
+    }
+
+    for (identity_list *current = all_own_identities; current && current->ident; current = current->next) {
+        if (current->ident->fpr && current->ident->address && !strcmp(current->ident->fpr, fingerprint)) {
+            return passphrase_from_session_by_email(session, current->ident->address, passphrase);
+        }
+    }
+
+    // No passphrase found, but that's not an error.
+    return PEP_STATUS_OK;
+}
+
 PEP_STATUS config_generation_passphrase_from_session_by_email(PEP_SESSION session, const char *account_email)
 {
     char *passphrase = NULL;
@@ -4507,21 +4527,26 @@ PEP_STATUS config_generation_passphrase_from_session_by_email(PEP_SESSION sessio
 
     status = config_passphrase_for_new_keys(session, true, passphrase);
     free(passphrase);
+
+    return status;
 }
 
 PEP_STATUS config_generation_passphrase_from_session_by_fingerprint(PEP_SESSION session, const char *fingerprint)
 {
-    identity_list *all_own_identities = NULL;
-    PEP_STATUS status = own_identities_retrieve(session, &all_own_identities);
+    char *passphrase = NULL;
+
+    PEP_STATUS status = passphrase_from_session_by_fingerprint(session, fingerprint, &passphrase);
+
     if (status != PEP_STATUS_OK) {
         return status;
     }
 
-    for (identity_list *current = all_own_identities; current && current->ident; current = current->next) {
-        if (current->ident->fpr && current->ident->address && !strcmp(current->ident->fpr, fingerprint)) {
-            return config_generation_passphrase_from_session_by_email(session, current->ident->address);
-        }
+    if (!passphrase) {
+        return config_passphrase_for_new_keys(session, false, NULL);
     }
 
-    return config_passphrase_for_new_keys(session, false, NULL);
+    status = config_passphrase_for_new_keys(session, true, passphrase);
+    free(passphrase);
+
+    return status;
 }
