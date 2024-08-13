@@ -87,6 +87,12 @@ class ExportKeyWithPassphraseTest : public ::testing::Test
         session = NULL;
     }
 
+    bool has_passphrase(string fingerprint)
+    {
+        PEP_STATUS status = probe_encrypt(session, fingerprint.c_str());
+        return false;
+    }
+
   private:
     const char *test_suite_name;
     const char *test_name;
@@ -105,11 +111,13 @@ TEST_F(ExportKeyWithPassphraseTest, check_export_passphrase_less_key_with_passph
     PEP_STATUS status = myself(session, own);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
-    string fpr1{own->fpr};
+    string fpr{ own->fpr };
+
+    ASSERT_FALSE(has_passphrase(fpr));
 
     const char *passphrase = "pass";
 
-    status = configure_account_passphrases(session, {{email, passphrase}});
+    status = configure_account_passphrases(session, { { email, passphrase } });
     ASSERT_EQ(status, PEP_STATUS_OK);
 
     char *key_data = nullptr;
@@ -120,11 +128,15 @@ TEST_F(ExportKeyWithPassphraseTest, check_export_passphrase_less_key_with_passph
     status = export_secret_key(session, own->fpr, &key_data, &key_size);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
-    // It should not be possible to import the key, because of its passphrase.
     identity_list *identities = nullptr;
-    status = import_key(session, key_data, key_size, &identities);
-    ASSERT_NE(status, PEP_STATUS_OK);
-    ASSERT_NE(status, PEP_KEY_IMPORTED);
+    identity_list *private_identities = nullptr;
+    stringlist_t *imported_keys = nullptr;
+    uint64_t changed_keys = 0;
+    status = import_key_with_fpr_return(
+      session, key_data, key_size, &identities, &private_identities, &imported_keys, &changed_keys);
+    ASSERT_EQ(status, PEP_KEY_IMPORTED);
+
+    ASSERT_TRUE(has_passphrase(fpr));
 
     free_identity(own);
     free(key_data);
@@ -136,7 +148,7 @@ TEST_F(ExportKeyWithPassphraseTest, check_export_passphrase_key)
     const char *username = "someone";
     const char *passphrase = "pass";
 
-    PEP_STATUS status = configure_account_passphrases(session, {{email, passphrase}});
+    PEP_STATUS status = configure_account_passphrases(session, { { email, passphrase } });
     ASSERT_EQ(status, PEP_STATUS_OK);
 
     pEp_identity *own = new_identity(email, nullptr, PEP_OWN_USERID, username);
@@ -144,7 +156,7 @@ TEST_F(ExportKeyWithPassphraseTest, check_export_passphrase_key)
     status = myself(session, own);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
-    string fpr1{own->fpr};
+    string fpr1{ own->fpr };
 
     char *key_data = nullptr;
     size_t key_size = 0;
