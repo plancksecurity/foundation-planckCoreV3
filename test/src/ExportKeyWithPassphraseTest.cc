@@ -116,7 +116,6 @@ TEST_F(ExportKeyWithPassphraseTest, check_export_passphrase_less_key_with_passph
     // Implementation should detect that the key is not passphrase-protected,
     // and put a passphrase on the result.
     status = export_secret_key(session, own->fpr, &key_data, &key_size);
-    free(key_data);
     ASSERT_EQ(PEP_STATUS_OK, status);
 
     status = key_reset_all_own_keys(session);
@@ -129,7 +128,13 @@ TEST_F(ExportKeyWithPassphraseTest, check_export_passphrase_less_key_with_passph
     char *fpr2 = strdup(own->fpr);
     ASSERT_NE(0, strcmp(fpr1, fpr2));
 
+    identity_list *identities = nullptr;
+    status = import_key(session, key_data, key_size, &identities);
+    ASSERT_NE(PEP_STATUS_OK, status);
+    ASSERT_NE(PEP_KEY_IMPORTED, status);
+
     free_identity(own);
+    free(key_data);
     free(fpr1);
     free(fpr2);
 }
