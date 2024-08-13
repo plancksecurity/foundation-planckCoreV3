@@ -3210,7 +3210,7 @@ DYNAMIC_API PEP_STATUS export_key(
     PEP_REQUIRE(session && ! EMPTYSTR(fpr) && key_data && size);
 
     return session->cryptotech[PEP_crypt_OpenPGP].export_key(session, fpr,
-            key_data, size, false);
+            key_data, size, NULL, false);
 }
 
 DYNAMIC_API PEP_STATUS export_secret_key(
@@ -3220,11 +3220,24 @@ DYNAMIC_API PEP_STATUS export_secret_key(
     PEP_REQUIRE(session && ! EMPTYSTR(fpr) && key_data && size);
 
     // don't accept key IDs but full fingerprints only
-    if (strlen(fpr) < 16)
+    if (strlen(fpr) < 16) {
         return PEP_ILLEGAL_VALUE;
+    }
 
-    return session->cryptotech[PEP_crypt_OpenPGP].export_key(session, fpr,
-            key_data, size, true);
+    char *passphrase = NULL;
+
+    PEP_STATUS status = passphrase_from_session_by_fingerprint(session, fpr, &passphrase);
+
+    if (status != PEP_STATUS_OK) {
+        return status;
+    }
+
+    status = session->cryptotech[PEP_crypt_OpenPGP].export_key(session, fpr,
+            key_data, size, passphrase, true);
+
+    free(passphrase);
+
+    return status;
 }
 
 // Deprecated
