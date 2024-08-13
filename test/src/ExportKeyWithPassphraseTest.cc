@@ -65,6 +65,10 @@ class ExportKeyWithPassphraseTest : public ::testing::Test
         ASSERT_NOTNULL(engine->session);
         session = engine->session;
 
+        // Try to speed up key generation.
+        PEP_STATUS status = config_cipher_suite(session, PEP_CIPHER_SUITE_RSA2K);
+        ASSERT_EQ(status, PEP_STATUS_OK);
+
         // Engine is up. Keep on truckin'
     }
 
@@ -90,4 +94,42 @@ class ExportKeyWithPassphraseTest : public ::testing::Test
 
 } // namespace
 
-TEST_F(ExportKeyWithPassphraseTest, check_export_key_no_key) {}
+TEST_F(ExportKeyWithPassphraseTest, check_export_passphrase_less_key_with_passphrase)
+{
+    const char *email = "someone@example.com";
+    const char *username = "someone";
+    pEp_identity *own = new_identity(email, nullptr, PEP_OWN_USERID, username);
+
+    PEP_STATUS status = myself(session, own);
+    ASSERT_EQ(PEP_STATUS_OK, status);
+
+    char *fpr1 = strdup(own->fpr);
+
+    const char *passphrase = "pass";
+
+    status = configure_account_passphrases(session, {{email, passphrase}});
+    ASSERT_EQ(PEP_STATUS_OK, status);
+
+    char *key_data = nullptr;
+    size_t key_size = 0;
+
+    // Implementation should detect that the key is not passphrase-protected,
+    // and put a passphrase on the result.
+    status = export_secret_key(session, own->fpr, &key_data, &key_size);
+    free(key_data);
+    ASSERT_EQ(PEP_STATUS_OK, status);
+
+    status = key_reset_all_own_keys(session);
+    ASSERT_EQ(PEP_STATUS_OK, status);
+    free(own->fpr);
+    own->fpr = nullptr;
+    status = myself(session, own);
+    ASSERT_EQ(PEP_STATUS_OK, status);
+
+    char *fpr2 = strdup(own->fpr);
+    ASSERT_NE(0, strcmp(fpr1, fpr2));
+
+    free_identity(own);
+    free(fpr1);
+    free(fpr2);
+}
