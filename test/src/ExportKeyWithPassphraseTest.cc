@@ -103,14 +103,14 @@ TEST_F(ExportKeyWithPassphraseTest, check_export_passphrase_less_key_with_passph
     pEp_identity *own = new_identity(email, nullptr, PEP_OWN_USERID, username);
 
     PEP_STATUS status = myself(session, own);
-    ASSERT_EQ(PEP_STATUS_OK, status);
+    ASSERT_EQ(status, PEP_STATUS_OK);
 
     string fpr1{own->fpr};
 
     const char *passphrase = "pass";
 
     status = configure_account_passphrases(session, {{email, passphrase}});
-    ASSERT_EQ(PEP_STATUS_OK, status);
+    ASSERT_EQ(status, PEP_STATUS_OK);
 
     char *key_data = nullptr;
     size_t key_size = 0;
@@ -118,22 +118,22 @@ TEST_F(ExportKeyWithPassphraseTest, check_export_passphrase_less_key_with_passph
     // Implementation should detect that the key is not passphrase-protected,
     // and put a passphrase on the result.
     status = export_secret_key(session, own->fpr, &key_data, &key_size);
-    ASSERT_EQ(PEP_STATUS_OK, status);
+    ASSERT_EQ(status, PEP_STATUS_OK);
 
     status = key_reset_all_own_keys(session);
-    ASSERT_EQ(PEP_STATUS_OK, status);
+    ASSERT_EQ(status, PEP_STATUS_OK);
     free(own->fpr);
     own->fpr = nullptr;
     status = myself(session, own);
-    ASSERT_EQ(PEP_STATUS_OK, status);
+    ASSERT_EQ(status, PEP_STATUS_OK);
 
     string fpr2{own->fpr};
     ASSERT_NE(fpr1, fpr2);
 
     identity_list *identities = nullptr;
     status = import_key(session, key_data, key_size, &identities);
-    ASSERT_NE(PEP_STATUS_OK, status);
-    ASSERT_NE(PEP_KEY_IMPORTED, status);
+    ASSERT_NE(status, PEP_STATUS_OK);
+    ASSERT_NE(status, PEP_KEY_IMPORTED);
 
     free_identity(own);
     free(key_data);
