@@ -137,6 +137,8 @@ TEST_F(ExportKeyWithPassphraseTest, export_key_with_passphrase_fail)
     // Export should fail
     status = export_secret_key(session, own->fpr, &key_data, &key_size);
     ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);
+    ASSERT_NULL(key_data);
+    ASSERT_EQ(key_size, 0);
 }
 
 TEST_F(ExportKeyWithPassphraseTest, export_passphrase_less_key_with_passphrase)
@@ -163,6 +165,8 @@ TEST_F(ExportKeyWithPassphraseTest, export_passphrase_less_key_with_passphrase)
     // and put a passphrase on the result.
     status = export_secret_key(session, own->fpr, &key_data, &key_size);
     ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NOTNULL(key_data);
+    ASSERT_GT(key_size, 0);
 
     reset_core();
 
@@ -202,6 +206,52 @@ TEST_F(ExportKeyWithPassphraseTest, export_key_with_passphrase)
 
     status = export_secret_key(session, own->fpr, &key_data, &key_size);
     ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NOTNULL(key_data);
+    ASSERT_GT(key_size, 0);
+
+    reset_core();
+
+    identity_list *identities = nullptr;
+    identity_list *private_identities = nullptr;
+    stringlist_t *imported_keys = nullptr;
+    uint64_t changed_keys = 0;
+    status = import_key_with_fpr_return(
+      session, key_data, key_size, &identities, &private_identities, &imported_keys, &changed_keys);
+    ASSERT_EQ(status, PEP_KEY_IMPORTED);
+
+    ASSERT_TRUE(has_passphrase(fpr));
+
+    free_identity(own);
+    free(key_data);
+}
+
+TEST_F(ExportKeyWithPassphraseTest, export_old_key_with_passphrase)
+{
+    const char *email = "someone@example.com";
+    const char *username = "someone";
+    pEp_identity *own = new_identity(email, nullptr, PEP_OWN_USERID, username);
+
+    const char *passphrase = "pass";
+    PEP_STATUS status = configure_account_passphrases(session, { { email, passphrase } });
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    status = myself(session, own);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    string fpr{ own->fpr };
+
+    ASSERT_TRUE(has_passphrase(fpr));
+
+    status = key_reset_all_own_keys(session);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    char *key_data = nullptr;
+    size_t key_size = 0;
+
+    status = export_secret_key(session, fpr.c_str(), &key_data, &key_size);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NOTNULL(key_data);
+    ASSERT_GT(key_size, 0);
 
     reset_core();
 
