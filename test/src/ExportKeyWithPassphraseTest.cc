@@ -229,18 +229,18 @@ TEST_F(ExportKeyWithPassphraseTest, export_old_key_with_passphrase)
 {
     const char *email = "someone@example.com";
     const char *username = "someone";
-    pEp_identity *own = new_identity(email, nullptr, PEP_OWN_USERID, username);
+    pEp_identity *own1 = new_identity(email, nullptr, PEP_OWN_USERID, username);
 
     const char *passphrase = "pass";
     PEP_STATUS status = configure_account_passphrases(session, { { email, passphrase } });
     ASSERT_EQ(status, PEP_STATUS_OK);
 
-    status = myself(session, own);
+    status = myself(session, own1);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
-    string fpr{ own->fpr };
+    string fpr1{ own1->fpr };
 
-    ASSERT_TRUE(has_passphrase(fpr));
+    ASSERT_TRUE(has_passphrase(fpr1));
 
     status = config_passphrase_for_new_keys(session, true, passphrase);
     ASSERT_EQ(status, PEP_STATUS_OK);
@@ -251,10 +251,17 @@ TEST_F(ExportKeyWithPassphraseTest, export_old_key_with_passphrase)
     status = key_reset_all_own_keys(session);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
+    pEp_identity *own2 = new_identity(email, nullptr, PEP_OWN_USERID, username);
+    status = myself(session, own2);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    string fpr2{ own2->fpr };
+    ASSERT_NE(fpr1, fpr2);
+
     char *key_data = nullptr;
     size_t key_size = 0;
 
-    status = export_secret_key(session, fpr.c_str(), &key_data, &key_size);
+    status = export_secret_key(session, fpr1.c_str(), &key_data, &key_size);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NOTNULL(key_data);
     ASSERT_GT(key_size, 0);
@@ -269,8 +276,9 @@ TEST_F(ExportKeyWithPassphraseTest, export_old_key_with_passphrase)
       session, key_data, key_size, &identities, &private_identities, &imported_keys, &changed_keys);
     ASSERT_EQ(status, PEP_KEY_IMPORTED);
 
-    ASSERT_TRUE(has_passphrase(fpr));
+    ASSERT_TRUE(has_passphrase(fpr1));
 
-    free_identity(own);
+    free_identity(own1);
+    free_identity(own2);
     free(key_data);
 }
