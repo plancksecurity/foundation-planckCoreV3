@@ -139,7 +139,7 @@ TEST_F(ExportKeyWithPassphraseTest, export_key_with_passphrase_fail)
     ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);
 }
 
-TEST_F(ExportKeyWithPassphraseTest, check_export_passphrase_less_key_with_passphrase)
+TEST_F(ExportKeyWithPassphraseTest, export_passphrase_less_key_with_passphrase)
 {
     const char *email = "someone@example.com";
     const char *username = "someone";
@@ -180,7 +180,7 @@ TEST_F(ExportKeyWithPassphraseTest, check_export_passphrase_less_key_with_passph
     free(key_data);
 }
 
-TEST_F(ExportKeyWithPassphraseTest, check_key_with_passphrase)
+TEST_F(ExportKeyWithPassphraseTest, export_key_with_passphrase)
 {
     const char *email = "someone@example.com";
     const char *username = "someone";
