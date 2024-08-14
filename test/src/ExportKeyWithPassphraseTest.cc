@@ -258,6 +258,22 @@ TEST_F(ExportKeyWithPassphraseTest, export_old_key_with_passphrase)
     string fpr2{ own2->fpr };
     ASSERT_NE(fpr1, fpr2);
 
+    bool fpr1_found = false;
+    bool fpr2_found = false;
+    identity_list *all_own_identities = NULL;
+    status = own_identities_retrieve(session, &all_own_identities);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    for (identity_list *current = all_own_identities; current && current->ident;
+         current = current->next) {
+        if (current->ident->fpr && current->ident->address) {
+            if (!strcmp(current->ident->fpr, fpr1.c_str())) {
+                fpr1_found = true;
+            } else if (!strcmp(current->ident->fpr, fpr2.c_str())) {
+                fpr2_found = true;
+            }
+        }
+    }
+
     char *key_data = nullptr;
     size_t key_size = 0;
 
