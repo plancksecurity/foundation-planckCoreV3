@@ -93,6 +93,12 @@ class ExportKeyWithPassphraseTest : public ::testing::Test
         return false;
     }
 
+    void reset_core()
+    {
+      TearDown();
+      SetUp();
+    }
+
   private:
     const char *test_suite_name;
     const char *test_name;
@@ -153,6 +159,8 @@ TEST_F(ExportKeyWithPassphraseTest, check_export_passphrase_less_key_with_passph
     // and put a passphrase on the result.
     status = export_secret_key(session, own->fpr, &key_data, &key_size);
     ASSERT_EQ(status, PEP_STATUS_OK);
+
+    reset_core();
 
     identity_list *identities = nullptr;
     identity_list *private_identities = nullptr;
