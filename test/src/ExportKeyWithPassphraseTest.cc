@@ -242,6 +242,12 @@ TEST_F(ExportKeyWithPassphraseTest, export_old_key_with_passphrase)
 
     ASSERT_TRUE(has_passphrase(fpr));
 
+    status = config_passphrase_for_new_keys(session, true, passphrase);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    status = config_passphrase(session, passphrase);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
     status = key_reset_all_own_keys(session);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
