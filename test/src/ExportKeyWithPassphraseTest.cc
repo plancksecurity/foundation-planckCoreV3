@@ -102,6 +102,32 @@ class ExportKeyWithPassphraseTest : public ::testing::Test
 
 } // namespace
 
+TEST_F(ExportKeyWithPassphraseTest, export_key_with_passphrase_fail)
+{
+    // Own identity with passphrase
+    const char *email = "someone@example.com";
+    const char *username = "someone";
+    pEp_identity *own = new_identity(email, nullptr, PEP_OWN_USERID, username);
+
+    const char *passphrase = "pass";
+    PEP_STATUS status = configure_account_passphrases(session, { { email, passphrase } });
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    status = myself(session, own);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    // remove knowledge about a passphrase
+    status = configure_account_passphrases(session, { { email, "" } });
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    char *key_data = nullptr;
+    size_t key_size = 0;
+
+    // Export should fail
+    status = export_secret_key(session, own->fpr, &key_data, &key_size);
+    ASSERT_EQ(status, PEP_WRONG_PASSPHRASE);
+}
+
 TEST_F(ExportKeyWithPassphraseTest, check_export_passphrase_less_key_with_passphrase)
 {
     const char *email = "someone@example.com";
