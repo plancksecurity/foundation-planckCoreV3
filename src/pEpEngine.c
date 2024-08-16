@@ -3210,7 +3210,7 @@ DYNAMIC_API PEP_STATUS export_key(
     PEP_REQUIRE(session && ! EMPTYSTR(fpr) && key_data && size);
 
     return session->cryptotech[PEP_crypt_OpenPGP].export_key(session, fpr,
-            key_data, size, false);
+            key_data, size, NULL, false);
 }
 
 DYNAMIC_API PEP_STATUS export_secret_key(
@@ -3220,11 +3220,24 @@ DYNAMIC_API PEP_STATUS export_secret_key(
     PEP_REQUIRE(session && ! EMPTYSTR(fpr) && key_data && size);
 
     // don't accept key IDs but full fingerprints only
-    if (strlen(fpr) < 16)
+    if (strlen(fpr) < 16) {
         return PEP_ILLEGAL_VALUE;
+    }
 
-    return session->cryptotech[PEP_crypt_OpenPGP].export_key(session, fpr,
-            key_data, size, true);
+    char *passphrase = NULL;
+
+    PEP_STATUS status = passphrase_from_session_by_fingerprint(session, fpr, &passphrase);
+
+    if (status != PEP_STATUS_OK) {
+        return status;
+    }
+
+    status = session->cryptotech[PEP_crypt_OpenPGP].export_key(session, fpr,
+            key_data, size, passphrase, true);
+
+    free(passphrase);
+
+    return status;
 }
 
 // Deprecated
@@ -4475,20 +4488,26 @@ DYNAMIC_API PEP_STATUS configure_account_passphrases(PEP_SESSION session,
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS config_generation_passphrase_from_session_by_email(PEP_SESSION session, const char *account_email)
+PEP_STATUS passphrase_from_session_by_email(PEP_SESSION session, const char *account_email, char **passphrase)
 {
+    *passphrase = NULL;
+
     for (stringpair_list_t *current = session->account_passphrases; current && current->value; current = current->next) {
         stringpair_t *pair = current->value;
         if (pair->key && !strcmp(pair->key, account_email)) {
-            return config_passphrase_for_new_keys(session, true, pair->value);
+            *passphrase = strdup(pair->value);
+            return PEP_STATUS_OK;
         }
     }
 
-    return config_passphrase_for_new_keys(session, false, NULL);
+    // No passphrase found, but that's not an error.
+    return PEP_STATUS_OK;
 }
 
-PEP_STATUS config_generation_passphrase_from_session_by_fingerprint(PEP_SESSION session, const char *fingerprint)
+PEP_STATUS passphrase_from_session_by_fingerprint(PEP_SESSION session, const char *fingerprint, char **passphrase)
 {
+    *passphrase = NULL;
+
     identity_list *all_own_identities = NULL;
     PEP_STATUS status = own_identities_retrieve(session, &all_own_identities);
     if (status != PEP_STATUS_OK) {
@@ -4497,9 +4516,50 @@ PEP_STATUS config_generation_passphrase_from_session_by_fingerprint(PEP_SESSION 
 
     for (identity_list *current = all_own_identities; current && current->ident; current = current->next) {
         if (current->ident->fpr && current->ident->address && !strcmp(current->ident->fpr, fingerprint)) {
-            return config_generation_passphrase_from_session_by_email(session, current->ident->address);
+            return passphrase_from_session_by_email(session, current->ident->address, passphrase);
         }
     }
 
-    return config_passphrase_for_new_keys(session, false, NULL);
+    // No passphrase found, but that's not an error.
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS config_generation_passphrase_from_session_by_email(PEP_SESSION session, const char *account_email)
+{
+    char *passphrase = NULL;
+
+    PEP_STATUS status = passphrase_from_session_by_email(session, account_email, &passphrase);
+
+    if (status != PEP_STATUS_OK) {
+        return status;
+    }
+
+    if (!passphrase) {
+        return config_passphrase_for_new_keys(session, false, NULL);
+    }
+
+    status = config_passphrase_for_new_keys(session, true, passphrase);
+    free(passphrase);
+
+    return status;
+}
+
+PEP_STATUS config_generation_passphrase_from_session_by_fingerprint(PEP_SESSION session, const char *fingerprint)
+{
+    char *passphrase = NULL;
+
+    PEP_STATUS status = passphrase_from_session_by_fingerprint(session, fingerprint, &passphrase);
+
+    if (status != PEP_STATUS_OK) {
+        return status;
+    }
+
+    if (!passphrase) {
+        return config_passphrase_for_new_keys(session, false, NULL);
+    }
+
+    status = config_passphrase_for_new_keys(session, true, passphrase);
+    free(passphrase);
+
+    return status;
 }

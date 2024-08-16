@@ -104,6 +104,7 @@ typedef PEP_STATUS (*delete_keypair_t)(PEP_SESSION session, const char *fpr);
  */
 typedef PEP_STATUS (*export_key_t)(
         PEP_SESSION session, const char *fpr, char **key_data, size_t *size,
+        const char *passphrase,
         bool secret
     );
 

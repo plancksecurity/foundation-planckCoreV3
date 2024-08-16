@@ -214,6 +214,7 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr);
  */
 PEP_STATUS pgp_export_keydata(
         PEP_SESSION session, const char *fpr, char **key_data, size_t *size,
+        const char *passphrase,
         bool secret
     );
 
