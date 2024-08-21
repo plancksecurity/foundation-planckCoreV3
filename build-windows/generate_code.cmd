@@ -7,8 +7,7 @@ SET current_directory=%~dp0
 SET engine_directory=%current_directory:~0,-15%
 ECHO %engine_directory%
 
-SET yml2_directory=%1\yml2
-SET YML2PROC="%yml2_directory%\yml2proc"
+SET YML2PROC=%PY% %PYTHON_SCRIPTS%\yml2proc
 
 :: Create the system.db
 PUSHD %engine_directory%\db
@@ -23,7 +22,7 @@ CD ..\codegen
 :: Make sure YML2 is installed
 %PY% -m pip install --upgrade pip
 %PY% -m pip install wheel
-%PY% -m pip install yml2
+%PY% -m pip install git+https://github.com/plancksecurity/foundation-yml2.git@a5a1378
 
 :: Generate code in ...\PlanckCoreV3\codegen
 CD ..\..\PlanckCoreV3\codegen
@@ -31,39 +30,37 @@ CD ..\..\PlanckCoreV3\codegen
 :: Generate the Sync code
 IF NOT EXIST generated MKDIR generated
 
-ECHO %PY% %YML2PROC% -E utf-8 -y gen_actions.ysl2 sync.fsm
-ECHO define actfile = "./sync.act"; | %PY% %YML2PROC% - gen_actions.ysl2 | %PY% %YML2PROC% -X - sync.fsm -o sync.act.gen
+ECHO %YML2PROC% -E utf-8 -y gen_actions.ysl2 sync.fsm
+ECHO define actfile = "./sync.act"; | %YML2PROC% - gen_actions.ysl2 | %YML2PROC% -X - sync.fsm -o sync.act.gen
 IF %ERRORLEVEL% NEQ 0 GOTO end
 
-ECHO %PY% %YML2PROC% -E utf-8 -y gen_codec.ysl2 distribution.fsm
-%PY% %YML2PROC% -E utf-8 -y gen_codec.ysl2 distribution.fsm
+ECHO %YML2PROC% -E utf-8 -y gen_codec.ysl2 distribution.fsm
+%YML2PROC% -E utf-8 -y gen_codec.ysl2 distribution.fsm
 IF %ERRORLEVEL% NEQ 0 GOTO end
 
-ECHO %PY% %YML2PROC% -E utf-8 -y gen_codec.ysl2 sync.fsm
-%PY% %YML2PROC% -E utf-8 -y gen_codec.ysl2 sync.fsm
+ECHO %YML2PROC% -E utf-8 -y gen_codec.ysl2 sync.fsm
+%YML2PROC% -E utf-8 -y gen_codec.ysl2 sync.fsm
 IF %ERRORLEVEL% NEQ 0 GOTO end
 
-ECHO %PY% %YML2PROC% -E utf-8 -y gen_messages.ysl2 sync.fsm
-%PY% %YML2PROC% -E utf-8 -y gen_messages.ysl2 sync.fsm
+ECHO %YML2PROC% -E utf-8 -y gen_messages.ysl2 sync.fsm
+%YML2PROC% -E utf-8 -y gen_messages.ysl2 sync.fsm
 IF %ERRORLEVEL% NEQ 0 GOTO end
 
-ECHO %PY% %YML2PROC% -E utf-8 -y gen_messages.ysl2 distribution.fsm
-%PY% %YML2PROC% -E utf-8 -y gen_messages.ysl2 distribution.fsm
+ECHO %YML2PROC% -E utf-8 -y gen_messages.ysl2 distribution.fsm
+%YML2PROC% -E utf-8 -y gen_messages.ysl2 distribution.fsm
 IF %ERRORLEVEL% NEQ 0 GOTO end
 
-ECHO %PY% %YML2PROC% -E utf-8 -y gen_message_func.ysl2 sync.fsm
-%PY% %YML2PROC% -E utf-8 -y gen_message_func.ysl2 sync.fsm
+ECHO %YML2PROC% -E utf-8 -y gen_message_func.ysl2 sync.fsm
+%YML2PROC% -E utf-8 -y gen_message_func.ysl2 sync.fsm
 IF %ERRORLEVEL% NEQ 0 GOTO end
 
-ECHO %PY% %YML2PROC% -E utf-8 -y gen_statemachine.ysl2 sync.fsm
-%PY% %YML2PROC% -E utf-8 -y gen_statemachine.ysl2 sync.fsm
+ECHO %YML2PROC% -E utf-8 -y gen_statemachine.ysl2 sync.fsm
+%YML2PROC% -E utf-8 -y gen_statemachine.ysl2 sync.fsm
 IF %ERRORLEVEL% NEQ 0 GOTO end
 
-ECHO %PY% %YML2PROC% -E utf-8 -y gen_messages.ysl2 storage.fsm
-%PY% %YML2PROC% -E utf-8 -y gen_messages.ysl2 storage.fsm
+ECHO %YML2PROC% -E utf-8 -y gen_messages.ysl2 storage.fsm
+%YML2PROC% -E utf-8 -y gen_messages.ysl2 storage.fsm
 IF %ERRORLEVEL% NEQ 0 GOTO end
-
-
 
 XCOPY /y generated\*.asn1 ..\asn.1\
 XCOPY /y generated\*.c ..\src\
