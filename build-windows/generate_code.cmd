@@ -19,11 +19,6 @@ MOVE system.db "%ProgramData%\pEp\system.db"
 :: Generate code in ...\PlanckCoreV3\codegen
 CD ..\codegen
 
-:: Make sure YML2 is installed
-%PY% -m pip install --upgrade pip
-%PY% -m pip install wheel
-%PY% -m pip install git+https://github.com/plancksecurity/foundation-yml2.git@a5a1378
-
 :: Generate code in ...\PlanckCoreV3\codegen
 CD ..\..\PlanckCoreV3\codegen
 
