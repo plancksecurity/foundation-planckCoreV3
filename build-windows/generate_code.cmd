@@ -7,8 +7,6 @@ SET current_directory=%~dp0
 SET engine_directory=%current_directory:~0,-15%
 ECHO %engine_directory%
 
-SET YML2PROC=%PY% %PYTHON_SCRIPTS%\yml2proc
-
 :: Create the system.db
 PUSHD %engine_directory%\db
 CALL make_systemdb %1
