@@ -1,3 +1,19 @@
+ECHO "Generate CoreV3 files"
+ECHO "PROCESSOR_ARCHITECTURE:%PROCESSOR_ARCHITECTURE%"
+ECHO "PROCESSOR_ARCHITEW6432:%PROCESSOR_ARCHITEW6432%"
+
+SET vcpkg_platform=x86-windows
+IF "%PROCESSOR_ARCHITECTURE%"=="AMD64" SET vcpkg_platform=x64-windows
+IF "%PROCESSOR_ARCHITECTURE%"=="IA64" SET vcpkg_platform=x64-windows
+IF "%PROCESSOR_ARCHITECTURE%"=="ARM64" SET vcpkg_platform=arm64-windows
+
+IF "%PROCESSOR_ARCHITEW6432%"=="AMD64" SET vcpkg_platform=x64-windows
+IF "%PROCESSOR_ARCHITEW6432%"=="IA64" SET vcpkg_platform=x64-windows
+IF "%PROCESSOR_ARCHITEW6432%"=="ARM64" SET vcpkg_platform=arm64-windows
+
+SET PY=%USERPROFILE%\vcpkg\installed\%vcpkg_platform%\tools\python3\python.exe
+SET YML2PROC=%PY% %1\yml2\yml2proc
+
 ::@ECHO OFF
 
 :: The script is located in ...\pEpForWindowsAdapterSolution\PlanckCoreV3\build-windows\
