@@ -1,46 +1,90 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x86">
+      <Configuration>Debug</Configuration>
+      <Platform>x86</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM">
+      <Configuration>Release</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x86">
+      <Configuration>Release</Configuration>
+      <Platform>x86</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{146E69F8-E1DA-456A-B048-6DD29D9ACF6B}</ProjectGuid>
-    <Keyword>Win32Proj</Keyword>
+    <Keyword>x64Proj</Keyword>
     <RootNamespace>pEpEngine</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <PreferredToolArchitecture />
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <PreferredToolArchitecture />
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <PreferredToolArchitecture>x86</PreferredToolArchitecture>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <PreferredToolArchitecture>x86</PreferredToolArchitecture>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)'=='Debug'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)'=='Release'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
     <LinkIncremental>true</LinkIncremental>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <IncludePath>$(IncludePath)</IncludePath>
@@ -48,23 +92,27 @@
     <PreBuildEventUseInBuild>true</PreBuildEventUseInBuild>
     <PreLinkEventUseInBuild>true</PreLinkEventUseInBuild>
     <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
-    <CodeAnalysisRuleSet>C:\Program Files (x86)\Microsoft Visual Studio 14.0\Team Tools\Static Analysis Tools\Rule Sets\NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Linkage-libiconv>
     </Linkage-libiconv>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <PreBuildEventUseInBuild>true</PreBuildEventUseInBuild>
     <PreLinkEventUseInBuild>true</PreLinkEventUseInBuild>
     <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
-    <CodeAnalysisRuleSet>C:\Program Files (x86)\Microsoft Visual Studio 14.0\Team Tools\Static Analysis Tools\Rule Sets\NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <Linkage-libiconv>
     </Linkage-libiconv>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+  <PropertyGroup Condition="'$(Platform)'=='Win32'">
+    <OutDir>$(SolutionDir)\x86\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Platform)'!='Win32'">
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
@@ -72,29 +120,41 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PEPENGINE_EXPORTS;_CRT_SECURE_NO_WARNINGS;USE_SEQUOIA;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <EnablePREfast>false</EnablePREfast>
-      <AdditionalIncludeDirectories>$(SolutionDir)PlanckCoreV3\asn.1;$(SolutionDir);$(SolutionDir)libetpan\build-windows\include;$(SolutionDir)Tools\asn1c\share\asn1c;$(SolutionDir)sequoia\openpgp-ffi\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)PlanckCoreV3\asn.1;$(SolutionDir);$(SolutionDir)libetpan\build-windows\include;$(SolutionDir)Tools\asn1c\share\asn1c;$(SolutionDir)sequoia\openpgp-ffi\include;$(SolutionDir)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>Default</CompileAs>
       <DisableSpecificWarnings>4703</DisableSpecificWarnings>
     </ClCompile>
-    <Link>
+    <Link Condition="'$(Platform)'!='Win32'">
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Shlwapi.lib; pep_engine_sequoia_backend.dll.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ShowProgress>NotSet</ShowProgress>
-      <AdditionalLibraryDirectories>$(SolutionDir)planckCoreSequoiaBackend\target\$(ConfigurationName);C:\msys64\mingw32\lib</AdditionalLibraryDirectories>
+      <RandomizedBaseAddress>true</RandomizedBaseAddress>
+      <SuppressStartupBanner>false</SuppressStartupBanner>
+      <AdditionalDependencies>Shlwapi.lib;libpEpasn1.lib;pep_engine_sequoia_backend.dll.lib;libetpan.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;iconv.lib;$(CoreLibraryDependencies);%(AdditionalDependencies);</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\$(Platform)\$(Configuration);</AdditionalLibraryDirectories>
+    </Link>
+    <Link Condition="'$(Platform)'=='Win32'">
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <SuppressStartupBanner>false</SuppressStartupBanner>
+      <AdditionalDependencies>Shlwapi.lib;libpEpasn1.lib;pep_engine_sequoia_backend.dll.lib;libetpan.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;iconv.lib;$(CoreLibraryDependencies);%(AdditionalDependencies);</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\x86\$(Configuration);</AdditionalLibraryDirectories>
     </Link>
-    <PreBuildEvent>
-      <Command>set NETTLE_HAVE_CV448=yes &amp;&amp; PUSHD $(SolutionDir)\PlanckCoreSequoiaBackend &amp;&amp; cargo rustc -- -A deprecated -L $(SolutionDir)botan  &amp;&amp; copy $(SolutionDir)botan\botan.dll $(SolutionDir)$(Configuration) &amp;&amp; copy target\$(Configuration)\deps\pep_engine_sequoia_backend.dll* $(SolutionDir)$(Configuration) &amp;&amp; POPD </Command>
-    </PreBuildEvent>
-    <PostBuildEvent>
-      <Command>xcopy "$(SolutionDir)sequoia\target\debug\sequoia_openpgp_ffi.dll" "$(TargetDir)" /Y</Command>
-      <Command>
-      </Command>
-    </PostBuildEvent>
+    <Lib Condition="'$(Platform)'!='Win32'">
+      <AdditionalLibraryDirectories>$(SolutionDir)\$(Platform)\$(Configuration);</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Shlwapi.lib;libpEpasn1.lib;pep_engine_sequoia_backend.dll.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
+    </Lib>
+    <Lib Condition="'$(Platform)'=='Win32'">
+      <AdditionalLibraryDirectories>$(SolutionDir)\x86\$(Configuration);</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Shlwapi.lib;libpEpasn1.lib;pep_engine_sequoia_backend.dll.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
+    </Lib>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -104,29 +164,37 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PEPENGINE_EXPORTS;USE_SEQUOIA;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>false</SDLCheck>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(SolutionDir)PlanckCoreV3\asn.1;$(SolutionDir);$(SolutionDir)libetpan\build-windows\include;$(SolutionDir)Tools\asn1c\share\asn1c;$(SolutionDir)sequoia\openpgp-ffi\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)PlanckCoreV3\asn.1;$(SolutionDir);$(SolutionDir)libetpan\build-windows\include;$(SolutionDir)Tools\asn1c\share\asn1c;$(SolutionDir)sequoia\openpgp-ffi\include;$(SolutionDir)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ControlFlowGuard>Guard</ControlFlowGuard>
       <EnablePREfast>false</EnablePREfast>
       <DisableSpecificWarnings>4703</DisableSpecificWarnings>
     </ClCompile>
-    <Link>
+    <Link Condition="'$(Platform)'=='Win32'">
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Shlwapi.lib;pep_engine_sequoia_backend.dll.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)planckCoreSequoiaBackend\target\$(ConfigurationName);C:\msys64\mingw32\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Shlwapi.lib;libpEpasn1.lib;pep_engine_sequoia_backend.dll.lib;libetpan.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;iconv.lib;$(CoreLibraryDependencies);%(AdditionalDependencies);</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\x86\$(Configuration);</AdditionalLibraryDirectories>
     </Link>
-    <PreBuildEvent>
-      <Command>set NETTLE_HAVE_CV448=yes &amp;&amp; PUSHD $(SolutionDir)\PlanckCoreSequoiaBackend &amp;&amp; cargo rustc --release -- -A deprecated -L $(SolutionDir)botan &amp;&amp; copy $(SolutionDir)botan\botan.dll $(SolutionDir)$(Configuration)&amp;&amp; copy target\$(Configuration)\deps\pep_engine_sequoia_backend.dll* $(SolutionDir)$(Configuration) &amp;&amp; POPD </Command>
-    </PreBuildEvent>
-    <PostBuildEvent>
-      <Command>xcopy "$(SolutionDir)sequoia\target\release\sequoia_openpgp_ffi.dll" "$(TargetDir)" /Y</Command>
-      <Command>
-      </Command>
-    </PostBuildEvent>
+    <Link Condition="'$(Platform)'!='Win32'">
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>Shlwapi.lib;libpEpasn1.lib;pep_engine_sequoia_backend.dll.lib;libetpan.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;iconv.lib;$(CoreLibraryDependencies);%(AdditionalDependencies);</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\$(Platform)\$(Configuration);</AdditionalLibraryDirectories>
+    </Link>
+    <Lib Condition="'$(Platform)'=='Win32'">
+      <AdditionalDependencies>Shlwapi.lib;pep_engine_sequoia_backend.dll.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\x86\$(Configuration);</AdditionalLibraryDirectories>
+    </Lib>
+    <Lib Condition="'$(Platform)'!='Win32'">
+      <AdditionalDependencies>Shlwapi.lib;pep_engine_sequoia_backend.dll.lib;ws2_32.lib;userenv.lib;dbghelp.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\$(Platform)\$(Configuration);</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\src\base64.c" />
@@ -248,11 +316,13 @@
     <Text Include="..\LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\libetpan\build-windows\libetpan\libetpan.vcxproj">
+    <ProjectReference Include="$(SolutionDir)\libetpan\build-windows\libetpan\libetpan.vcxproj">
       <Project>{ba4ded3c-e56f-4484-bfc3-9c13e461a1be}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\libPlanckTransport\build-windows\libpEpTransport.vcxproj">
+    <ProjectReference Include="$(SolutionDir)\libPlanckTransport\build-windows\libpEpTransport.vcxproj">
       <Project>{13f8fc08-53f8-4615-8445-3d713c0374e4}</Project>
+    </ProjectReference>
+    <ProjectReference Include="$(SolutionDir)\planckCoreSequoiaBackend\build-win64\pEpEngineSequoiaBackendProject.vcxproj">
     </ProjectReference>
     <ProjectReference Include="libpEpasn1\libpEpasn1.vcxproj">
       <Project>{9a67164d-b8f8-4601-a24b-28afe774d41c}</Project>
